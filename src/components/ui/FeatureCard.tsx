@@ -7,7 +7,7 @@ interface CardProps {
   description: string;
   linkText: string;
   href: string;
-  color: 'cyan' | 'purple'; // Enforcing brand colors
+  color: 'cyan' | 'purple';
 }
 
 export const FeatureCard = ({ title, description, linkText, href, color }: CardProps) => {
@@ -16,10 +16,16 @@ export const FeatureCard = ({ title, description, linkText, href, color }: CardP
     purple: "group-hover:text-neon-purple group-hover:border-neon-purple/50"
   };
 
+  // HELPER: Tailwind v4 prefers full class names over string interpolation for detection
+  const gradientClass = color === 'cyan' 
+    ? "from-neon-cyan" 
+    : "from-neon-purple";
+
   return (
     <Link href={href} className="group relative p-12 md:p-16 border border-white/5 bg-bg-panel/50 hover:bg-bg-panel transition-all duration-500 overflow-hidden">
       {/* Hover Gradient Background */}
-      <div className={`absolute inset-0 opacity-0 group-hover:opacity-10 transition-opacity duration-500 bg-gradient-to-br from-${color === 'cyan' ? 'neon-cyan' : 'neon-purple'} to-transparent`} />
+      {/* FIX: Updated to 'bg-linear-to-br' (v4 syntax) */}
+      <div className={`absolute inset-0 opacity-0 group-hover:opacity-10 transition-opacity duration-500 bg-linear-to-br ${gradientClass} to-transparent`} />
       
       <div className="relative z-10">
         <h3 className={`text-3xl font-bold mb-4 text-text-main transition-colors ${colorClasses[color]}`}>
