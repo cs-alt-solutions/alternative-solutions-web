@@ -28,12 +28,10 @@ export default function Home() {
             <p className="text-xl md:text-2xl text-text-muted max-w-3xl mx-auto mb-14 leading-relaxed font-light">
               {WEBSITE_COPY.HERO.SUBHEAD}
             </p>
+            {/* CLEANUP: Removed the secondary "View Services" button to reduce clutter. Focus is now 100% on the primary CTA. */}
             <div className="flex flex-col sm:flex-row items-center justify-center gap-6">
               <Link href="/shift-studio" className="btn-brand">
                 {WEBSITE_COPY.HERO.CTA_PRIMARY}
-              </Link>
-              <Link href="/services" className="btn-secondary">
-                {WEBSITE_COPY.HERO.CTA_SECONDARY}
               </Link>
             </div>
         </div>
@@ -42,7 +40,8 @@ export default function Home() {
       <Mission />
 
       {/* --- SERVICES GRID --- */}
-      <section className="py-32 px-6 z-10">
+      {/* ADDED: id="services" for smooth scrolling anchor */}
+      <section id="services" className="py-32 px-6 z-10 scroll-mt-20">
         <div className="max-w-7xl mx-auto">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             {tiers.map((tier, idx) => (
@@ -51,7 +50,7 @@ export default function Home() {
                 TITLE={tier.TITLE} 
                 PRICE={tier.PRICE} 
                 DESC={tier.DESC} 
-                FEATURES={tier.FEATURES} // Ensure this is passed now that we updated the component!
+                FEATURES={tier.FEATURES} 
                 accent={tier.accent} 
               />
             ))}
