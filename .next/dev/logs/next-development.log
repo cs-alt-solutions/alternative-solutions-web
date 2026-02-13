@@ -1,0 +1,19 @@
+[00:00:02.561] Server  LOG     ✓ Ready in 1864ms
+[00:00:08.004] Server  LOG     ○ Compiling / ...
+[00:00:09.213] Browser INFO    %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
+[00:03:51.209] Server  LOG     ✓ Compiled in 136ms
+[00:04:06.634] Server  ERROR   ⨯ TypeError: Cannot read properties of undefined (reading 'TIER_3')
+[00:04:06.865] Browser ERROR   uncaughtError: TypeError: Cannot read properties of undefined (reading 'TIER_3')
+[00:05:17.925] Browser INFO    %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
+[00:05:36.700] Server  LOG     ✓ Compiled in 108ms
+[00:06:59.129] Server  LOG     ✓ Compiled in 500ms
+[00:06:59.395] Browser INFO    %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
+[00:09:22.858] Server  LOG     ✓ Compiled in 89ms
+[00:11:05.970] Browser INFO    %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
+[00:11:08.969] Browser INFO    %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
+[00:11:49.568] Browser INFO    %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
+[00:11:52.737] Browser INFO    %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
+[00:12:18.979] Browser INFO    %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
+[00:12:20.726] Browser INFO    %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
+[00:12:53.867] Server  LOG     ✓ Compiled in 1411ms
+[00:12:54.654] Browser INFO    %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
