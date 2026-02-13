@@ -4,7 +4,8 @@ import Link from 'next/link';
 import { WEBSITE_COPY } from '@/utils/glossary';
 import Mission from '@/components/Mission';
 import HowWeWork from '@/components/HowWeWork';
-import ServiceCard from '@/components/ServiceCard';
+// CHANGED: Using a relative path to bypass alias resolution issues
+import ServiceCard from '../components/ServiceCard'; 
 
 export default function Home() {
   const tiers = [
@@ -14,10 +15,11 @@ export default function Home() {
   ];
 
   return (
-    <main className="flex flex-col min-h-screen relative">
+    <main className="flex flex-col min-h-screen relative overflow-hidden bg-bg-app">
+      {/* --- HERO SECTION --- */}
       <section className="relative pt-32 pb-24 px-6 text-center z-10">
         <div className="max-w-7xl mx-auto">
-            <h1 className="text-6xl md:text-9xl font-black tracking-tighter mb-8 text-white leading-[0.9]">
+            <h1 className="text-6xl md:text-9xl font-black tracking-tighter mb-8 text-white leading-[0.9] uppercase">
               {WEBSITE_COPY.HERO.TITLE.split(' ')[0]} <br />
               <span className="text-gradient-cyan">{WEBSITE_COPY.HERO.TITLE.split(' ').slice(1).join(' ')}</span>
             </h1>
@@ -25,25 +27,43 @@ export default function Home() {
               {WEBSITE_COPY.HERO.SUBHEAD}
             </p>
             <div className="flex flex-col sm:flex-row items-center justify-center gap-6">
-              <Link href="/shift-studio" className="btn-brand">{WEBSITE_COPY.HERO.CTA_PRIMARY}</Link>
-              <Link href="/services" className="btn-secondary">{WEBSITE_COPY.HERO.CTA_SECONDARY}</Link>
+              <Link href="/shift-studio" className="btn-brand">
+                {WEBSITE_COPY.HERO.CTA_PRIMARY}
+              </Link>
+              <Link href="/services" className="btn-secondary">
+                {WEBSITE_COPY.HERO.CTA_SECONDARY}
+              </Link>
             </div>
         </div>
       </section>
 
       <Mission />
 
+      {/* --- SERVICES GRID --- */}
       <section className="py-32 px-6 z-10">
         <div className="max-w-7xl mx-auto">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             {tiers.map((tier, idx) => (
-              <ServiceCard key={idx} {...tier} />
+              <ServiceCard 
+                key={idx} 
+                TITLE={tier.TITLE} 
+                PRICE={tier.PRICE} 
+                DESC={tier.DESC} 
+                accent={tier.accent} 
+              />
             ))}
           </div>
         </div>
       </section>
 
       <HowWeWork />
+
+      {/* --- FOOTER --- */}
+      <footer className="border-t border-border-subtle py-12 text-center z-10 relative">
+        <p className="text-text-muted text-xs font-mono uppercase tracking-widest opacity-60">
+            © 2026 Alternative Solutions // Est. Virginia
+        </p>
+      </footer>
     </main>
   );
 }

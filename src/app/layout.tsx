@@ -19,7 +19,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body className="antialiased bg-bg-app text-white">
         <nav className="sticky top-0 z-50 backdrop-blur-md border-b border-border-subtle bg-bg-app/80">
           <div className="max-w-7xl mx-auto px-8 h-20 flex items-center justify-between">
-            <Link href="/" className="flex items-center gap-3 group">
+            <Link href="/" className="flex items-center gap-3">
               <div className="w-3 h-3 bg-brand-primary rounded-sm shadow-[0_0_10px_rgba(6,182,212,0.8)]" />
               <span className="font-bold text-lg tracking-tight uppercase">{WEBSITE_COPY.NAV.BRAND}</span>
             </Link>

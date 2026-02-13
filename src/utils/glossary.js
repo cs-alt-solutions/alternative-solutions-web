@@ -3,13 +3,13 @@ export const WEBSITE_COPY = {
   NAV: {
     BRAND: "ALTERNATIVE SOLUTIONS",
     SERVICES: "SERVICES",
-    SHIFT_STUDIO: "SHIFT STUDIO",
+    SHIFT_STUDIO: "SHIFT STUDIO (BETA)",
     LOGIN: "CLIENT PORTAL"
   },
   HERO: {
     TITLE: "SMARTER BUSINESS SYSTEMS.",
     SUBHEAD: "Stop fighting with spreadsheets. We build custom software and simple tools to help your business run smoother.",
-    CTA_PRIMARY: "TRY SHIFT STUDIO",
+    CTA_PRIMARY: "JOIN THE WAITLIST",
     CTA_SECONDARY: "VIEW SERVICES"
   },
   MISSION: {
@@ -21,7 +21,7 @@ export const WEBSITE_COPY = {
     SUBTITLE: "Better systems, built in a fraction of the time.",
     STEP_1: {
       TITLE: "STRATEGIC ANALYSIS",
-      DESC: "We deep-dive into your workflow as a Business Analyst to find the real friction points before writing code."
+      DESC: "We don't just take orders. We deep-dive into your workflow as a Business Analyst to find the real friction points before writing code."
     },
     STEP_2: {
       TITLE: "AI-POWERED SPEED",
@@ -29,25 +29,29 @@ export const WEBSITE_COPY = {
     },
     STEP_3: {
       TITLE: "SCALABLE CODE",
-      DESC: "No 'plug-and-play' hacks. We build custom, foundational frameworks that you own."
+      DESC: "No 'plug-and-play' hacks. We build custom, foundational frameworks that you own, ensuring your tech grows as fast as your business does."
     }
   },
   SERVICES_PAGE: {
+    HERO: {
+      TITLE: "TECH BUILT BY A HUMAN, FOR THE HUMANS.",
+      SUBTITLE: "Your software shouldn't be another thing you have to manage. It should be the thing that gives you your time back."
+    },
+    STORY: {
+      TITLE: "WHY 'ALTERNATIVE'?",
+      DESC: "Most tech companies want to sell you a subscription and forget you. We look at your business through a sharp eye for foundations, not just features."
+    },
     TIERS: {
-      ONE: { TITLE: "The Automator", PRICE: "Quick Fixes", DESC: "Custom scripts and small-scale automation." },
-      TWO: { TITLE: "The Connector", PRICE: "Integrations", DESC: "Making your apps talk to each other seamlessly." },
-      THREE: { TITLE: "The Architect", PRICE: "Full Systems", DESC: "Ground-up custom software built to scale." }
+      ONE: { TITLE: "The Automator", PRICE: "Quick Fixes", DESC: "Custom scripts and small-scale automation to stop the manual leak in your day." },
+      TWO: { TITLE: "The Connector", PRICE: "Integrations", DESC: "Making your apps talk to each other. We bridge the gap between your tools so you don't have to." },
+      THREE: { TITLE: "The Architect", PRICE: "Full Systems", DESC: "Ground-up custom software. Scalable, professional frameworks built to be the permanent engine of your business." }
     }
   },
   SHIFT_STUDIO_PAGE: {
+    STATUS: "DEVELOPMENT IN PROGRESS",
     HERO: {
       TITLE: "SHIFT YOUR SHOP INTO OVERDRIVE.",
-      SUBHEAD: "The ultimate command center for Etsy sellers. Stop guessing and start growing with AI-powered insights."
-    },
-    FEATURES: {
-      ONE: { TITLE: "SEO ARCHITECT", DESC: "A search strategy that puts your products in front of the right humans." },
-      TWO: { TITLE: "INVENTORY INTELLIGENCE", DESC: "Real-time tracking and predictive restock alerts." },
-      THREE: { TITLE: "AI COPYWRITER", DESC: "Generate high-converting descriptions in your unique voice." }
+      SUBHEAD: "The ultimate command center for Etsy sellers is almost here. Join the private beta for AI-powered insights and automated workflow."
     }
   }
 };

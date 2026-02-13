@@ -1,4 +1,3 @@
-/* src/components/HowWeWork.tsx */
 import { WEBSITE_COPY } from '@/utils/glossary';
 
 export default function HowWeWork() {

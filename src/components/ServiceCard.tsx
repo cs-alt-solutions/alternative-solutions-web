@@ -20,8 +20,12 @@ export default function ServiceCard({ TITLE, PRICE, DESC, accent }: ServiceCardP
         <span className={`text-[10px] font-mono px-2 py-1 rounded uppercase mb-6 inline-block border ${accentClasses[accent] || "border-white/20"}`}>
           {PRICE}
         </span>
-        <h3 className="text-2xl font-bold text-white mb-4 group-hover:text-brand-accent transition-colors uppercase tracking-tight">{TITLE}</h3>
-        <p className="text-text-muted leading-relaxed font-light">{DESC}</p>
+        <h3 className="text-2xl font-bold text-white mb-4 group-hover:text-brand-accent transition-colors uppercase tracking-tight">
+          {TITLE}
+        </h3>
+        <p className="text-text-muted leading-relaxed font-light">
+          {DESC}
+        </p>
       </div>
     </div>
   );
