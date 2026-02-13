@@ -1,7 +1,7 @@
 /* src/app/dashboard/page.tsx */
 import React from 'react';
 import Link from 'next/link';
-import { MOCK_DB } from '@/data/store'; // IMPORTING SINGLE SOURCE OF TRUTH
+import { MOCK_DB } from '@/data/store'; 
 import { 
   LayoutDashboard, 
   CheckSquare, 
@@ -12,7 +12,8 @@ import {
   Plus,
   Cpu,
   ShieldCheck,
-  Activity
+  Activity,
+  Ticket // <--- IMPORTED
 } from 'lucide-react';
 
 export default function CommandConsole() {
@@ -32,6 +33,13 @@ export default function CommandConsole() {
         <nav className="flex-1 p-4 space-y-1">
           <div className="text-[10px] font-mono text-white/40 uppercase tracking-widest mb-2 px-3 mt-4">Modules</div>
           <NavItem icon={LayoutDashboard} label="Overview" active />
+          
+          {/* --- NEW WAITLIST MODULE --- */}
+          <Link href="/dashboard/waitlist" className="block">
+             <NavItem icon={Ticket} label="Waitlist" />
+          </Link>
+          {/* --------------------------- */}
+
           <NavItem icon={CheckSquare} label="Task Queue" />
           <NavItem icon={Users} label="Client Database" />
           
@@ -107,7 +115,6 @@ export default function CommandConsole() {
                    {projects.map((project) => (
                      <tr key={project.id} className="hover:bg-white/2 transition-colors group"> 
                        <td className="px-6 py-4 font-medium text-white transition-colors">
-                         {/* ADDED: Link to the Project Detail Page */}
                          <Link href={`/dashboard/project/${project.id}`} className="hover:text-brand-primary hover:underline underline-offset-4 decoration-brand-primary/50">
                             {project.name}
                          </Link>
