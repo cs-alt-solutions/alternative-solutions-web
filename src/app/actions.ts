@@ -2,18 +2,31 @@
 
 import { WEBSITE_COPY } from '@/utils/glossary';
 import { revalidatePath } from 'next/cache';
-import { MOCK_DB } from '@/data/store'; // We need to import the bucket!
+import { MOCK_DB } from '@/data/store';
 
 export async function joinWaitlist(email: string) {
   const { API } = WEBSITE_COPY;
 
+  // 1. Basic Validation
   if (!email || !email.includes('@')) {
     return { success: false, message: API.WAITLIST.ERR_INVALID };
   }
 
   try {
-    // ACTUAL DATA PUSH
-    // We're pushing a new entry into our mock data array
+    // 2. Duplicate Check
+    // We check the existing waitlist in the MOCK_DB for a matching email.
+    const isDuplicate = MOCK_DB.waitlist.some(
+      (entry) => entry.email.toLowerCase() === email.toLowerCase()
+    );
+
+    if (isDuplicate) {
+      return { 
+        success: false, 
+        message: API.WAITLIST.ERR_DUPLICATE // "Already on the list."
+      };
+    }
+
+    // 3. Data Persistence
     MOCK_DB.waitlist.push({
       id: `w${MOCK_DB.waitlist.length + 1}`,
       email: email,
@@ -24,7 +37,7 @@ export async function joinWaitlist(email: string) {
 
     console.log(`>>> LEAD STORED: ${email}`);
 
-    // This triggers the dashboard to fetch the updated MOCK_DB
+    // Refresh the dashboard data
     revalidatePath('/dashboard/waitlist');
 
     return { 
