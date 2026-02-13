@@ -9,7 +9,7 @@ export const WEBSITE_COPY = {
   HERO: {
     TITLE: "SMARTER BUSINESS SYSTEMS.",
     SUBHEAD: "Stop fighting with spreadsheets. We build custom software and simple tools to help your business run smoother.",
-    CTA_PRIMARY: "JOIN THE WAITLIST",
+    CTA_PRIMARY: "JOIN BETA WAITLIST",
     CTA_SECONDARY: "VIEW SERVICES"
   },
   MISSION: {
@@ -75,6 +75,44 @@ export const WEBSITE_COPY = {
           "Future-Proof Scalability"
         ]
       }
+    }
+  },
+  JOIN_PAGE: {
+    TITLE: "SHIFT STUDIO.",
+    SUBHEAD: "The command center for creators is currently in private testing. Join the list to secure your invite when we open the doors.",
+    INPUT_PLACEHOLDER: "enter your email address...",
+    BTN_SUBMIT: "REQUEST ACCESS",
+    SUCCESS_MSG: "YOU'RE ON THE LIST. STAY TUNED.",
+    HYPE: {
+      VIDEO_TITLE: "STOP JUGGLING APPS.",
+      VIDEO_DESC: "See the vision behind the system. We're combining inventory, financials, and sales into one glass pane.",
+      PODCAST_TITLE: "THE AUDIO LOGS",
+      PODCAST_DESC: "Listen to the development journey and the philosophy behind Shift Studio.",
+      CARDS: [
+        {
+          TITLE: "THE WORKSHOP",
+          DESC: "Track raw materials, build stages, and finished goods. Know exactly what you have on the shelf."
+        },
+        {
+          TITLE: "THE LEDGER",
+          DESC: "Real profit analysis. Not just 'Revenue', but actual money in your pocket after materials and fees."
+        },
+        {
+          TITLE: "THE REACH",
+          DESC: "Future modules will connect directly to your sales channels. One inventory. Everywhere."
+        }
+      ],
+      // NEW MANIFESTO
+      MANIFESTO: {
+        TITLE: "THE MAKER'S DILEMMA",
+        TEXT: "You started this to create, not to be an accountant. But somewhere between the first sale and the hundredth, you became a professional spreadsheet wrangler. We are building the alternative."
+      },
+      // NEW FAQ
+      FAQ: [
+        { q: "When does the Beta start?", a: "We are rolling out invites in small batches starting late Q1 2026." },
+        { q: "Is this just for Etsy sellers?", a: "No. While we love Etsy, Shift Studio is designed for anyone who makes physical goods and sells them anywhere (In-person, Shopify, etc)." },
+        { q: "Is it free?", a: "Beta testers get free access for the duration of the testing period in exchange for honest feedback." }
+      ]
     }
   },
   SHIFT_STUDIO_PAGE: {

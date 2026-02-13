@@ -38,11 +38,9 @@ export default function Home() {
           </p>
 
           <div className="flex flex-col md:flex-row items-center justify-center gap-4 pt-8">
-             <Link href="/dashboard/waitlist" className="btn-brand px-8 py-4 text-xs font-bold uppercase tracking-[0.2em] flex items-center gap-3">
+             {/* CTA Now says "JOIN BETA WAITLIST" - Redundancy Removed */}
+             <Link href="/join" className="btn-brand px-8 py-4 text-xs font-bold uppercase tracking-[0.2em] flex items-center gap-3">
                {HERO.CTA_PRIMARY} <ArrowRight size={16} />
-             </Link>
-             <Link href="#services" className="px-8 py-4 rounded border border-white/10 hover:bg-white/5 text-xs font-bold uppercase tracking-[0.2em] transition-colors text-white">
-               {HERO.CTA_SECONDARY}
              </Link>
           </div>
         </div>
