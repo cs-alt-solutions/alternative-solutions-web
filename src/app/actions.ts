@@ -2,28 +2,29 @@
 
 import { WEBSITE_COPY } from '@/utils/glossary';
 import { revalidatePath } from 'next/cache';
+import { MOCK_DB } from '@/data/store'; // We need to import the bucket!
 
-/**
- * Lead Capture Engine
- * This action handles waitlist submissions and ensures the dashboard
- * stays in sync without a manual refresh.
- */
 export async function joinWaitlist(email: string) {
   const { API } = WEBSITE_COPY;
 
-  // Validation Check
   if (!email || !email.includes('@')) {
     return { success: false, message: API.WAITLIST.ERR_INVALID };
   }
 
   try {
-    // PIPELINE LOGIC:
-    // Once Supabase is ready, we'll insert this directly into our 'waitlist' table.
-    // For now, we log the lead to the server console and trigger a UI update.
-    console.log(`>>> LEAD CAPTURED: ${email} | Timestamp: ${new Date().toISOString()}`);
+    // ACTUAL DATA PUSH
+    // We're pushing a new entry into our mock data array
+    MOCK_DB.waitlist.push({
+      id: `w${MOCK_DB.waitlist.length + 1}`,
+      email: email,
+      date: new Date().toISOString().split('T')[0],
+      status: 'Pending',
+      source: 'Home'
+    });
 
-    // This tells Next.js to dump the old cache of the dashboard
-    // so the next time you look at it, it's fresh.
+    console.log(`>>> LEAD STORED: ${email}`);
+
+    // This triggers the dashboard to fetch the updated MOCK_DB
     revalidatePath('/dashboard/waitlist');
 
     return { 
