@@ -1,16 +1,15 @@
 /* src/app/services/page.tsx */
 import React from 'react';
-/* FIXED: Up two levels to reach src/utils/ */
 import { WEBSITE_COPY } from '../../utils/glossary'; 
-/* FIXED: Up two levels to reach src/components/ */
 import ServiceCard from '../../components/ServiceCard'; 
 import { ShieldCheck, Zap, Globe, MessageSquare } from 'lucide-react';
 
 export default function ServicesPage() {
+  // Mapping tiers with explicit accent typing to clear the 'string' vs 'teal|blue|purple' error
   const tiers = [
-    { ...WEBSITE_COPY.SERVICES_PAGE.TIERS.ONE, accent: "teal", Icon: Zap },
-    { ...WEBSITE_COPY.SERVICES_PAGE.TIERS.TWO, accent: "blue", Icon: Globe },
-    { ...WEBSITE_COPY.SERVICES_PAGE.TIERS.THREE, accent: "purple", Icon: ShieldCheck },
+    { ...WEBSITE_COPY.SERVICES_PAGE.TIERS.ONE, accent: "teal" as const, Icon: Zap },
+    { ...WEBSITE_COPY.SERVICES_PAGE.TIERS.TWO, accent: "blue" as const, Icon: Globe },
+    { ...WEBSITE_COPY.SERVICES_PAGE.TIERS.THREE, accent: "purple" as const, Icon: ShieldCheck },
   ];
 
   return (
@@ -58,6 +57,7 @@ export default function ServicesPage() {
                   TITLE={tier.TITLE} 
                   PRICE={tier.PRICE} 
                   DESC={tier.DESC} 
+                  FEATURES={tier.FEATURES} // Passing the new details
                   accent={tier.accent} 
                 />
                 <div className="absolute top-6 right-6 text-white/5 group-hover:text-brand-primary/20 transition-colors">

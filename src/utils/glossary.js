@@ -42,16 +42,52 @@ export const WEBSITE_COPY = {
       DESC: "Most tech companies want to sell you a subscription and forget you. We look at your business through a sharp eye for foundations, not just features."
     },
     TIERS: {
-      ONE: { TITLE: "The Automator", PRICE: "Quick Fixes", DESC: "Custom scripts and small-scale automation to stop the manual leak in your day." },
-      TWO: { TITLE: "The Connector", PRICE: "Integrations", DESC: "Making your apps talk to each other. We bridge the gap between your tools so you don't have to." },
-      THREE: { TITLE: "The Architect", PRICE: "Full Systems", DESC: "Ground-up custom software. Scalable, professional frameworks built to be the permanent engine of your business." }
+      ONE: { 
+        TITLE: "The Automator", 
+        PRICE: "Quick Fixes", 
+        DESC: "Custom scripts and small-scale automation to stop the manual leak in your day.",
+        FEATURES: [
+          "Custom Zapier/Make Integrations",
+          "Automated Email Responders",
+          "Data Entry Workflows",
+          "Single-Task Tooling"
+        ]
+      },
+      TWO: { 
+        TITLE: "The Connector", 
+        PRICE: "Integrations", 
+        DESC: "Making your apps talk to each other. We bridge the gap between your tools so you don't have to.",
+        FEATURES: [
+          "Cross-Platform Syncing",
+          "Inventory Management Pipelines",
+          "Automated Client Onboarding",
+          "Multi-Step Workflow Logic"
+        ]
+      },
+      THREE: { 
+        TITLE: "The Architect", 
+        PRICE: "Full Systems", 
+        DESC: "Ground-up custom software. Scalable, professional frameworks built to be the permanent engine of your business.",
+        FEATURES: [
+          "End-to-End Custom Software",
+          "Private Client Portals",
+          "Advanced Analytics Dashboards",
+          "Future-Proof Scalability"
+        ]
+      }
     }
   },
   SHIFT_STUDIO_PAGE: {
-    STATUS: "DEVELOPMENT IN PROGRESS",
+    STATUS: "ENGINEERING IN PROGRESS",
     HERO: {
-      TITLE: "SHIFT YOUR SHOP INTO OVERDRIVE.",
-      SUBHEAD: "The ultimate command center for Etsy sellers is almost here. Join the private beta for AI-powered insights and automated workflow."
+      TITLE: "OWN THE WORKSHOP. MASTER THE SALE.",
+      SUBHEAD: "The command center for creators who sell everywhere. From workshop builds and inventory management to deep financials—stop juggling apps and start scaling your craft."
+    },
+    ROADMAP: {
+      PHASE_1_TITLE: "Phase 1: The Engine",
+      PHASE_1_DESC: "Workshop & Financial Management. Build tracking, material costs, and profit margin analysis for any sales channel.",
+      PHASE_2_TITLE: "Phase 2: The Reach",
+      PHASE_2_DESC: "Multi-Channel Marketing & AI. Automated listing insights for Etsy, FB Marketplace, and local sales."
     }
   }
 };

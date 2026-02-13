@@ -1,17 +1,19 @@
 /* src/app/page.tsx */
 import React from 'react';
 import Link from 'next/link';
-import { WEBSITE_COPY } from '@/utils/glossary';
-import Mission from '@/components/Mission';
-import HowWeWork from '@/components/HowWeWork';
-// CHANGED: Using a relative path to bypass alias resolution issues
+
+// FIXED: Move from ../../ to ../ to correctly reference the src directory
+import { WEBSITE_COPY } from '../utils/glossary'; 
 import ServiceCard from '../components/ServiceCard'; 
+
+import Mission from '../components/Mission';
+import HowWeWork from '../components/HowWeWork';
 
 export default function Home() {
   const tiers = [
-    { ...WEBSITE_COPY.SERVICES_PAGE.TIERS.ONE, accent: "teal" },
-    { ...WEBSITE_COPY.SERVICES_PAGE.TIERS.TWO, accent: "blue" },
-    { ...WEBSITE_COPY.SERVICES_PAGE.TIERS.THREE, accent: "purple" },
+    { ...WEBSITE_COPY.SERVICES_PAGE.TIERS.ONE, accent: "teal" as const },
+    { ...WEBSITE_COPY.SERVICES_PAGE.TIERS.TWO, accent: "blue" as const },
+    { ...WEBSITE_COPY.SERVICES_PAGE.TIERS.THREE, accent: "purple" as const },
   ];
 
   return (
@@ -49,6 +51,7 @@ export default function Home() {
                 TITLE={tier.TITLE} 
                 PRICE={tier.PRICE} 
                 DESC={tier.DESC} 
+                FEATURES={tier.FEATURES} // Ensure this is passed now that we updated the component!
                 accent={tier.accent} 
               />
             ))}

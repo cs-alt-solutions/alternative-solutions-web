@@ -1,8 +1,7 @@
 /* src/app/shift-studio/page.tsx */
 import React from 'react';
-/* FIXED: Up two levels to reach src/utils/ */
 import { WEBSITE_COPY } from '../../utils/glossary'; 
-import { Timer, Rocket, Lock, Mail } from 'lucide-react';
+import { Timer, Rocket, Lock, Mail, Hammer, BarChart3 } from 'lucide-react';
 
 export default function ShiftStudioInfo() {
   return (
@@ -22,21 +21,29 @@ export default function ShiftStudioInfo() {
           {WEBSITE_COPY.SHIFT_STUDIO_PAGE.HERO.SUBHEAD}
         </p>
 
-        {/* Roadmap */}
+        {/* Updated Roadmap: Focus on Management & Financials */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-20 text-left">
            <div className="p-8 rounded-xl border border-white/5 bg-white/2 group hover:border-brand-primary/30 transition-colors">
-              <Rocket className="text-brand-accent mb-4 group-hover:scale-110 transition-transform" />
-              <h3 className="font-bold text-white mb-2 uppercase tracking-tight">Phase 1: Foundation</h3>
-              <p className="text-sm text-text-muted leading-relaxed">Finalizing core SEO and Inventory engines. Release: Q2 2026.</p>
+              <Hammer className="text-brand-accent mb-4 group-hover:scale-110 transition-transform" />
+              <h3 className="font-bold text-white mb-2 uppercase tracking-tight">
+                {WEBSITE_COPY.SHIFT_STUDIO_PAGE.ROADMAP.PHASE_1_TITLE}
+              </h3>
+              <p className="text-sm text-text-muted leading-relaxed">
+                {WEBSITE_COPY.SHIFT_STUDIO_PAGE.ROADMAP.PHASE_1_DESC}
+              </p>
            </div>
            <div className="p-8 rounded-xl border border-white/5 bg-white/2 group hover:border-brand-secondary/30 transition-colors">
-              <Timer className="text-brand-secondary mb-4 group-hover:scale-110 transition-transform" />
-              <h3 className="font-bold text-white mb-2 uppercase tracking-tight">Phase 2: AI Integration</h3>
-              <p className="text-sm text-text-muted leading-relaxed">Connecting the generative copy engine for your unique voice.</p>
+              <BarChart3 className="text-brand-secondary mb-4 group-hover:scale-110 transition-transform" />
+              <h3 className="font-bold text-white mb-2 uppercase tracking-tight">
+                {WEBSITE_COPY.SHIFT_STUDIO_PAGE.ROADMAP.PHASE_2_TITLE}
+              </h3>
+              <p className="text-sm text-text-muted leading-relaxed">
+                {WEBSITE_COPY.SHIFT_STUDIO_PAGE.ROADMAP.PHASE_2_DESC}
+              </p>
            </div>
         </div>
 
-        {/* Waitlist */}
+        {/* Waitlist remains the focus for capture */}
         <div className="bg-linear-to-b from-white/5 to-transparent p-12 rounded-3xl border border-white/10">
           <Mail className="mx-auto text-brand-primary mb-4" size={32} />
           <h2 className="text-2xl font-bold text-white mb-2 uppercase tracking-tight font-mono">Secure Your Beta Spot</h2>
