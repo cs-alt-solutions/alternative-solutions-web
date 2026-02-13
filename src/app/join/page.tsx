@@ -16,8 +16,10 @@ export default function JoinPage() {
   return (
     <main className="min-h-screen bg-bg-app flex flex-col relative overflow-x-hidden font-sans text-white">
       
-      {/* Background FX */}
-      <div className="fixed inset-0 bg-[linear-gradient(to_right,#80808012_1px,transparent_1px),linear-gradient(to_bottom,#80808012_1px,transparent_1px)] bg-size-[24px_24px] pointer-events-none" />
+      {/* BACKGROUND FX: Stardust Constellation */}
+      <div className="fixed inset-0 bg-stardust pointer-events-none" />
+      
+      {/* Background Accent Orb */}
       <div className="absolute top-0 right-0 w-125 h-125 bg-brand-primary/10 rounded-full blur-[120px] pointer-events-none" />
       
       {/* Back Link */}
@@ -98,13 +100,15 @@ export default function JoinPage() {
             <div className="relative border-l border-white/10 ml-3 space-y-12">
                 {/* Phase 1 */}
                 <div className="relative pl-12">
-                    <div className="absolute -left-[5px] top-2 w-2.5 h-2.5 rounded-full bg-brand-primary ring-4 ring-black" />
+                    {/* FIXED: -left-[5px] -> -left-1.25 */}
+                    <div className="absolute -left-1.25 top-2 w-2.5 h-2.5 rounded-full bg-brand-primary ring-4 ring-black" />
                     <h3 className="text-xl font-bold text-white mb-2">{roadmap.PHASE_1_TITLE}</h3>
                     <p className="text-text-muted max-w-xl">{roadmap.PHASE_1_DESC}</p>
                 </div>
                  {/* Phase 2 */}
                  <div className="relative pl-12 opacity-50">
-                    <div className="absolute -left-[5px] top-2 w-2.5 h-2.5 rounded-full bg-white/20 ring-4 ring-black" />
+                    {/* FIXED: -left-[5px] -> -left-1.25 */}
+                    <div className="absolute -left-1.25 top-2 w-2.5 h-2.5 rounded-full bg-white/20 ring-4 ring-black" />
                     <h3 className="text-xl font-bold text-white mb-2">{roadmap.PHASE_2_TITLE}</h3>
                     <p className="text-text-muted max-w-xl">{roadmap.PHASE_2_DESC}</p>
                 </div>

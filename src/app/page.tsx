@@ -16,10 +16,10 @@ export default function Home() {
       
       {/* --- HERO SECTION --- */}
       <section className="relative pt-32 pb-20 px-6 md:px-12 flex flex-col items-center justify-center text-center min-h-[80vh]">
-        {/* Background Grid Effect */}
-        <div className="absolute inset-0 bg-[linear-gradient(to_right,#80808012_1px,transparent_1px),linear-gradient(to_bottom,#80808012_1px,transparent_1px)] bg-size-[24px_24px] pointer-events-none" />
+        {/* UPDATED: Stardust Background */}
+        <div className="absolute inset-0 bg-stardust pointer-events-none" />
         
-        {/* Glowing Orbs */}
+        {/* Glowing Orbs - Kept these, they look great with stardust */}
         <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-brand-primary/10 rounded-full blur-[100px] pointer-events-none" />
         <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-brand-secondary/10 rounded-full blur-[100px] pointer-events-none" />
 
@@ -38,7 +38,6 @@ export default function Home() {
           </p>
 
           <div className="flex flex-col md:flex-row items-center justify-center gap-4 pt-8">
-             {/* CTA Now says "JOIN BETA WAITLIST" - Redundancy Removed */}
              <Link href="/join" className="btn-brand px-8 py-4 text-xs font-bold uppercase tracking-[0.2em] flex items-center gap-3">
                {HERO.CTA_PRIMARY} <ArrowRight size={16} />
              </Link>
