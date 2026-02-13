@@ -2,7 +2,8 @@
 import React from 'react';
 import Link from 'next/link';
 import { WEBSITE_COPY } from '@/utils/glossary';
-import Mission from '@/components/Mission'; // This was the unused import
+import Mission from '@/components/Mission';
+import HowWeWork from '@/components/HowWeWork';
 
 export default function Home() {
   return (
@@ -48,15 +49,18 @@ export default function Home() {
         </div>
       </section>
 
-      {/* --- MISSION SECTION (Fixes the Error) --- */}
+      {/* --- MISSION STATEMENT --- */}
       <Mission />
+
+      {/* --- HYBRID PROCESS --- */}
+      <HowWeWork />
 
       {/* --- THE SERVICE BENTO GRID --- */}
       <section className="px-6 py-32 z-10 relative">
         <div className="max-w-7xl mx-auto">
             <div className="grid grid-cols-1 md:grid-cols-12 gap-6">
               
-              {/* TIER 3 (Large Card) */}
+              {/* TIER 3: Custom Software (The Flagship) */}
               <div className="md:col-span-7 card-bento group min-h-100 flex flex-col justify-between">
                 <div>
                   <span className="text-[10px] font-mono border border-brand-primary/30 px-2 py-1 rounded text-brand-accent uppercase mb-4 inline-block">
@@ -68,14 +72,14 @@ export default function Home() {
                 <div className="absolute inset-0 bg-linear-to-tr from-brand-primary/5 via-transparent to-transparent pointer-events-none" />
               </div>
 
-              {/* TIER 2 (Medium Card) */}
+              {/* TIER 2: App Connections */}
               <div className="md:col-span-5 card-bento flex flex-col justify-center">
                   <h3 className="text-2xl font-bold mb-3 text-white">{WEBSITE_COPY.SERVICES.TIER_2.TITLE}</h3>
                   <p className="text-text-muted mb-6">{WEBSITE_COPY.SERVICES.TIER_2.DESC}</p>
                   <span className="text-xs font-mono text-brand-secondary uppercase tracking-widest">{WEBSITE_COPY.SERVICES.TIER_2.TAG}</span>
               </div>
 
-              {/* TIER 1 (Standard Card) */}
+              {/* TIER 1: Quick Fixes */}
               <div className="md:col-span-6 card-bento">
                  <span className="text-[10px] font-mono border border-border-subtle px-2 py-1 rounded text-text-muted uppercase mb-4 inline-block">
                     {WEBSITE_COPY.SERVICES.TIER_1.TAG}
@@ -84,10 +88,18 @@ export default function Home() {
                  <p className="text-text-muted text-sm">{WEBSITE_COPY.SERVICES.TIER_1.DESC}</p>
               </div>
 
+              {/* PLACEHOLDER: Closing the Grid */}
+              <div className="md:col-span-6 card-bento flex items-center justify-center border-dashed border-white/10 bg-transparent">
+                 <Link href="/services" className="text-text-muted hover:text-brand-accent transition-colors font-mono text-xs uppercase tracking-widest">
+                    View Full Capabilities →
+                 </Link>
+              </div>
+
             </div>
         </div>
       </section>
 
+      {/* --- FOOTER --- */}
       <footer className="border-t border-border-subtle py-12 text-center bg-bg-app z-10 relative">
         <p className="text-text-muted text-xs font-mono uppercase tracking-widest opacity-60">
             © 2026 Alternative Solutions // Est. Virginia
