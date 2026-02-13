@@ -29,9 +29,12 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
               <Link href="/#services" className="text-xs font-mono text-text-muted hover:text-brand-accent transition-colors uppercase tracking-widest">{WEBSITE_COPY.NAV.SERVICES}</Link>
               <Link href="/shift-studio" className="text-xs font-mono text-text-muted hover:text-brand-accent transition-colors uppercase tracking-widest">{WEBSITE_COPY.NAV.SHIFT_STUDIO}</Link>
             </div>
-            <Link href="/login" className="px-5 py-2 rounded-full text-xs font-bold bg-white/5 hover:bg-white/10 border border-white/10 transition-colors uppercase tracking-wide">
+            
+            {/* UPDATED: Changed from /login to /dashboard for direct access */}
+            <Link href="/dashboard" className="px-5 py-2 rounded-full text-xs font-bold bg-white/5 hover:bg-white/10 border border-white/10 transition-colors uppercase tracking-wide">
               {WEBSITE_COPY.NAV.LOGIN}
             </Link>
+            
           </div>
         </nav>
         {children}

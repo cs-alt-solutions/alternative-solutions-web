@@ -1,6 +1,7 @@
 /* src/app/dashboard/page.tsx */
 import React from 'react';
 import Link from 'next/link';
+import { MOCK_DB } from '@/data/store'; // IMPORTING SINGLE SOURCE OF TRUTH
 import { 
   LayoutDashboard, 
   CheckSquare, 
@@ -15,18 +16,13 @@ import {
 } from 'lucide-react';
 
 export default function CommandConsole() {
-  // Mock Data: This is where we pretend the system is "alive"
-  const projects = [
-    { id: 1, name: "Alt // Solutions Web", status: "Live", priority: "High", progress: 100 },
-    { id: 2, name: "Shift Studio (Alpha)", status: "In Dev", priority: "Critical", progress: 45 },
-    { id: 3, name: "Client: Ducky's Auto", status: "Pending", priority: "Medium", progress: 10 },
-  ];
+  // We now pull live from our "Ghost DB"
+  const projects = MOCK_DB.projects;
 
   return (
-    <div className="min-h-screen bg-[#050505] flex font-sans text-text-main overflow-hidden">
+    <div className="min-h-screen bg-bg-app flex font-sans text-text-main overflow-hidden">
       
       {/* --- SIDEBAR --- */}
-      {/* FIXED: bg-[#0A0A0A] -> bg-bg-app */}
       <aside className="w-64 border-r border-white/5 bg-bg-app flex flex-col z-20">
         <div className="h-16 flex items-center px-6 border-b border-white/5">
            <div className="w-2 h-2 bg-brand-primary rounded-full shadow-[0_0_10px_rgba(6,182,212,0.8)] mr-3 animate-pulse" />
@@ -54,12 +50,8 @@ export default function CommandConsole() {
 
       {/* --- MAIN CONTENT AREA --- */}
       <main className="flex-1 flex flex-col relative">
-        {/* Background Grid FX */}
-        {/* FIXED: bg-[size:24px_24px] -> bg-size-[24px_24px] */}
         <div className="absolute inset-0 bg-[linear-gradient(to_right,#80808012_1px,transparent_1px),linear-gradient(to_bottom,#80808012_1px,transparent_1px)] bg-size-[24px_24px] pointer-events-none" />
         
-        {/* Top Bar */}
-        {/* FIXED: bg-[#0A0A0A]/80 -> bg-bg-app/80 */}
         <header className="h-16 border-b border-white/5 bg-bg-app/80 backdrop-blur-md flex items-center justify-between px-8 sticky top-0 z-10">
            <div className="flex items-center gap-4">
              <h1 className="text-sm font-bold uppercase tracking-widest text-white/80">Command Center</h1>
@@ -85,21 +77,16 @@ export default function CommandConsole() {
            </div>
         </header>
 
-        {/* Dashboard Content */}
         <div className="p-8 overflow-y-auto relative z-0">
            
-           {/* Stats Row */}
            <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
-             <StatCard title="Total Projects" value="3" icon={LayoutDashboard} />
+             <StatCard title="Total Projects" value={projects.length.toString()} icon={LayoutDashboard} />
              <StatCard title="System Health" value="100%" icon={Activity} accent />
              <StatCard title="Pending Tasks" value="12" icon={CheckSquare} />
              <StatCard title="Active Clients" value="1" icon={Users} />
            </div>
 
-           {/* Active Projects Table */}
-           {/* FIXED: bg-[#0A0A0A] -> bg-bg-app */}
            <div className="bg-bg-app border border-white/5 rounded-xl overflow-hidden shadow-2xl">
-             {/* FIXED: bg-white/[0.02] -> bg-white/2 */}
              <div className="p-4 border-b border-white/5 flex justify-between items-center bg-white/2">
                <h3 className="font-bold text-xs uppercase tracking-widest text-white/80">Active Workflows</h3>
                <button className="btn-brand px-3 py-1.5 flex items-center gap-2 text-[10px] h-auto">
@@ -118,10 +105,12 @@ export default function CommandConsole() {
                  </thead>
                  <tbody className="divide-y divide-white/5">
                    {projects.map((project) => (
-                     <tr key={project.id} className="hover:bg-white/2 transition-colors group cursor-pointer"> 
-                       {/* FIXED: hover:bg-white/[0.02] -> hover:bg-white/2 above */}
-                       <td className="px-6 py-4 font-medium text-white group-hover:text-brand-primary transition-colors">
-                         {project.name}
+                     <tr key={project.id} className="hover:bg-white/2 transition-colors group"> 
+                       <td className="px-6 py-4 font-medium text-white transition-colors">
+                         {/* ADDED: Link to the Project Detail Page */}
+                         <Link href={`/dashboard/project/${project.id}`} className="hover:text-brand-primary hover:underline underline-offset-4 decoration-brand-primary/50">
+                            {project.name}
+                         </Link>
                        </td>
                        <td className="px-6 py-4">
                          <Badge status={project.status} />
@@ -150,8 +139,7 @@ export default function CommandConsole() {
   );
 }
 
-// --- SUB-COMPONENTS (Built for Speed) ---
-
+// --- SUB-COMPONENTS ---
 function NavItem({ icon: Icon, label, active = false }: { icon: any, label: string, active?: boolean }) {
   return (
     <button className={`w-full flex items-center gap-3 px-3 py-2 rounded-md text-xs font-medium transition-all group ${
@@ -170,11 +158,9 @@ function StatCard({ title, value, icon: Icon, accent = false }: { title: string,
     <div className={`p-5 rounded-xl border transition-all relative overflow-hidden group ${
       accent 
       ? 'bg-brand-primary/5 border-brand-primary/30' 
-      : 'bg-bg-app border-white/5 hover:border-white/10' // FIXED: bg-[#0A0A0A] -> bg-bg-app
+      : 'bg-bg-app border-white/5 hover:border-white/10'
     }`}>
-      {/* FIXED: blur-[40px] -> blur-2xl */}
       {accent && <div className="absolute -right-6 -top-6 w-24 h-24 bg-brand-primary/10 blur-2xl rounded-full" />}
-      
       <div className="flex justify-between items-start mb-4">
          <h4 className="text-white/40 text-[10px] font-mono uppercase tracking-widest">{title}</h4>
          <Icon size={16} className={accent ? "text-brand-accent" : "text-white/20 group-hover:text-white/40 transition-colors"} />
@@ -185,14 +171,13 @@ function StatCard({ title, value, icon: Icon, accent = false }: { title: string,
 }
 
 function Badge({ status }: { status: string }) {
-  const styles = {
+  const styles: any = {
     "Live": "bg-emerald-500/10 text-emerald-500 border-emerald-500/20",
     "In Dev": "bg-brand-primary/10 text-brand-primary border-brand-primary/20",
     "Pending": "bg-orange-500/10 text-orange-500 border-orange-500/20",
-  }[status] || "bg-white/10 text-white";
-
+  };
   return (
-    <span className={`px-2 py-0.5 rounded text-[10px] uppercase font-bold tracking-wider border ${styles}`}>
+    <span className={`px-2 py-0.5 rounded text-[10px] uppercase font-bold tracking-wider border ${styles[status] || "bg-white/10 text-white"}`}>
       {status}
     </span>
   );
