@@ -7,6 +7,7 @@ export const WEBSITE_COPY = {
     LOGIN: "CLIENT PORTAL"
   },
   HERO: {
+    TITLE: "SMARTER BUSINESS SYSTEMS.",
     SUBHEAD: "Stop fighting with spreadsheets. We build custom software and simple tools to help your business run smoother.",
     CTA_PRIMARY: "TRY SHIFT STUDIO",
     CTA_SECONDARY: "VIEW SERVICES"
@@ -20,32 +21,33 @@ export const WEBSITE_COPY = {
     SUBTITLE: "Better systems, built in a fraction of the time.",
     STEP_1: {
       TITLE: "STRATEGIC ANALYSIS",
-      DESC: "We don't just take orders. We deep-dive into your workflow as a Business Analyst to find the real friction points before writing a single line of code."
+      DESC: "We deep-dive into your workflow as a Business Analyst to find the real friction points before writing code."
     },
     STEP_2: {
       TITLE: "AI-POWERED SPEED",
-      DESC: "As an AI-Powered Architect, I use advanced tools to handle the heavy lifting, turning months of development into weeks or even days."
+      DESC: "As an AI-Powered Architect, I use advanced tools to handle the heavy lifting, turning months of development into weeks."
     },
     STEP_3: {
       TITLE: "SCALABLE CODE",
-      DESC: "No 'plug-and-play' hacks. We build custom, foundational frameworks that you own, ensuring your tech grows as fast as your business does."
+      DESC: "No 'plug-and-play' hacks. We build custom, foundational frameworks that you own."
     }
   },
-  SERVICES: {
-    TIER_1: {
-      TITLE: "TIME-SAVING TOOLS",
-      DESC: "Fix the small stuff that slows you down. We build simple tools to automate reports, fix data entry, and organize your files.",
-      TAG: "QUICK FIXES"
+  SERVICES_PAGE: {
+    TIERS: {
+      ONE: { TITLE: "The Automator", PRICE: "Quick Fixes", DESC: "Custom scripts and small-scale automation." },
+      TWO: { TITLE: "The Connector", PRICE: "Integrations", DESC: "Making your apps talk to each other seamlessly." },
+      THREE: { TITLE: "The Architect", PRICE: "Full Systems", DESC: "Ground-up custom software built to scale." }
+    }
+  },
+  SHIFT_STUDIO_PAGE: {
+    HERO: {
+      TITLE: "SHIFT YOUR SHOP INTO OVERDRIVE.",
+      SUBHEAD: "The ultimate command center for Etsy sellers. Stop guessing and start growing with AI-powered insights."
     },
-    TIER_2: {
-      TITLE: "CONNECTING YOUR APPS",
-      DESC: "Stop copy-pasting data between systems. We make your accounting, inventory, and sales software talk to each other.",
-      TAG: "INTEGRATIONS"
-    },
-    TIER_3: {
-      TITLE: "CUSTOM SOFTWARE",
-      DESC: "Outgrowing your current tools? We build custom web and mobile apps tailored exactly to how your business works.",
-      TAG: "FULL SYSTEMS"
+    FEATURES: {
+      ONE: { TITLE: "SEO ARCHITECT", DESC: "A search strategy that puts your products in front of the right humans." },
+      TWO: { TITLE: "INVENTORY INTELLIGENCE", DESC: "Real-time tracking and predictive restock alerts." },
+      THREE: { TITLE: "AI COPYWRITER", DESC: "Generate high-converting descriptions in your unique voice." }
     }
   }
 };
