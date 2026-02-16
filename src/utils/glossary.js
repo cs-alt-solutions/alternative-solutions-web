@@ -109,6 +109,14 @@ export const WEBSITE_COPY = {
   },
 
   DASHBOARD: {
+    COMMON: {
+      BRAND_VERSION: "Alt // OS v1.0",
+      STATUS_ONLINE: "SYSTEM ONLINE",
+      SEARCH_PLACEHOLDER: "Search database...",
+      HEALTH_OPTIMAL: "OPTIMAL",
+      ACTION_REVIEW: "REVIEW",
+      ACTION_INTAKE: "INTAKE"
+    },
     SIDEBAR: {
       MODULES_HEADER: "Modules",
       OVERVIEW: "Overview",
@@ -168,28 +176,6 @@ export const WEBSITE_COPY = {
         SEND_LOGS: "BROADCAST DEV LOG",
         INVITE: "ISSUE BATCH KEYS",
         CLEAR: "CLEAR"
-      },
-      PROJECT_BOARD: {
-        BACK_BTN: "BACK TO COMMAND",
-        ADD_TASK: "INITIALIZE TASK",
-        NOT_FOUND: "PROJECT UNAVAILABLE OR UNAUTHORIZED",
-        COLUMNS: {
-          TODO: "BACKLOG",
-          IN_PROGRESS: "IN PROGRESS",
-          REVIEW: "AWAITING REVIEW",
-          DONE: "SYSTEM LIVE"
-        }
-      }
-    },
-    PROJECT_BOARD: {
-      BACK_BTN: "BACK TO COMMAND",
-      ADD_TASK: "INITIALIZE TASK",
-      NOT_FOUND: "PROJECT UNAVAILABLE OR UNAUTHORIZED",
-      COLUMNS: {
-        TODO: "BACKLOG",
-        IN_PROGRESS: "IN PROGRESS",
-        REVIEW: "AWAITING REVIEW",
-        DONE: "SYSTEM LIVE"
       }
     }
   },
