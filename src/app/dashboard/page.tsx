@@ -2,6 +2,7 @@
 import React from 'react';
 import Link from 'next/link';
 import { MOCK_DB } from '@/data/store'; 
+import { WEBSITE_COPY } from '@/utils/glossary';
 import { 
   LayoutDashboard, 
   CheckSquare, 
@@ -9,16 +10,33 @@ import {
   Settings, 
   Search, 
   Bell, 
-  Plus,
   Cpu,
   ShieldCheck,
   Activity,
-  Ticket // <--- IMPORTED
+  Ticket,
+  Inbox,
+  FileText,
+  AlertCircle,
+  Terminal
 } from 'lucide-react';
 
 export default function CommandConsole() {
-  // We now pull live from our "Ghost DB"
-  const projects = MOCK_DB.projects;
+  const sidebarCopy = WEBSITE_COPY.DASHBOARD.SIDEBAR;
+  const overviewCopy = WEBSITE_COPY.DASHBOARD.OVERVIEW;
+
+  // --- DATA PIPELINE LOGIC ---
+  // 1. Beta Pipeline (Shift Studio)
+  const pendingBeta = MOCK_DB.waitlist.filter(w => w.source === 'Shift Studio' && w.status === 'Pending');
+  
+  // 2. Agency Pipeline (Alternative Solutions)
+  const agencyInquiries = MOCK_DB.waitlist.filter(w => w.source === 'Agency Inquiry' && w.status !== 'Onboarded');
+  
+  // 3. Internal Engineering
+  const internalProjects = MOCK_DB.projects.filter(p => p.client === 'Internal');
+  const openTasksCount = internalProjects.reduce((acc, p) => acc + p.tasks.filter(t => t.status !== 'Done').length, 0);
+
+  // Combine actions for the Priority Queue
+  const priorityQueue = [...pendingBeta, ...agencyInquiries].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
 
   return (
     <div className="min-h-screen bg-bg-app flex font-sans text-text-main overflow-hidden">
@@ -31,27 +49,33 @@ export default function CommandConsole() {
         </div>
         
         <nav className="flex-1 p-4 space-y-1">
-          <div className="text-[10px] font-mono text-white/40 uppercase tracking-widest mb-2 px-3 mt-4">Modules</div>
-          <NavItem icon={LayoutDashboard} label="Overview" active />
-          
-          {/* --- NEW WAITLIST MODULE --- */}
-          <Link href="/dashboard/waitlist" className="block">
-             <NavItem icon={Ticket} label="Waitlist" />
+          <div className="text-[10px] font-mono text-white/40 uppercase tracking-widest mb-2 px-3 mt-4">
+            {sidebarCopy.MODULES_HEADER}
+          </div>
+          <Link href="/dashboard" className="block">
+            <NavItem icon={LayoutDashboard} label={sidebarCopy.OVERVIEW} active />
           </Link>
-          {/* --------------------------- */}
-
-          <NavItem icon={CheckSquare} label="Task Queue" />
-          <NavItem icon={Users} label="Client Database" />
           
-          <div className="text-[10px] font-mono text-white/40 uppercase tracking-widest mb-2 px-3 mt-6">System</div>
-          <NavItem icon={Cpu} label="AI Agents" />
-          <NavItem icon={ShieldCheck} label="Security" />
-          <NavItem icon={Settings} label="Config" />
+          <Link href="/dashboard/waitlist" className="block">
+             <NavItem icon={Ticket} label={sidebarCopy.WAITLIST} />
+          </Link>
+          
+          <NavItem icon={Inbox} label={sidebarCopy.INTAKE} />
+          <NavItem icon={FileText} label={sidebarCopy.AUDITS} />
+          <NavItem icon={CheckSquare} label={sidebarCopy.TASKS} />
+          <NavItem icon={Users} label={sidebarCopy.CLIENTS} />
+          
+          <div className="text-[10px] font-mono text-white/40 uppercase tracking-widest mb-2 px-3 mt-6">
+            {sidebarCopy.SYSTEM_HEADER}
+          </div>
+          <NavItem icon={Cpu} label={sidebarCopy.AGENTS} />
+          <NavItem icon={ShieldCheck} label={sidebarCopy.SECURITY} />
+          <NavItem icon={Settings} label={sidebarCopy.CONFIG} />
         </nav>
 
         <div className="p-4 border-t border-white/5 bg-black/20">
            <Link href="/" className="text-[10px] text-text-muted hover:text-white transition-colors flex items-center gap-2 font-mono uppercase">
-             ← Exit to Public Site
+             {sidebarCopy.EXIT}
            </Link>
         </div>
       </aside>
@@ -62,7 +86,7 @@ export default function CommandConsole() {
         
         <header className="h-16 border-b border-white/5 bg-bg-app/80 backdrop-blur-md flex items-center justify-between px-8 sticky top-0 z-10">
            <div className="flex items-center gap-4">
-             <h1 className="text-sm font-bold uppercase tracking-widest text-white/80">Command Center</h1>
+             <h1 className="text-sm font-bold uppercase tracking-widest text-white/80">{overviewCopy.TITLE}</h1>
              <span className="px-2 py-0.5 rounded text-[10px] bg-brand-primary/10 text-brand-primary border border-brand-primary/20 font-mono">
                SYSTEM ONLINE
              </span>
@@ -87,57 +111,92 @@ export default function CommandConsole() {
 
         <div className="p-8 overflow-y-auto relative z-0">
            
+           {/* THE HUD */}
            <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
-             <StatCard title="Total Projects" value={projects.length.toString()} icon={LayoutDashboard} />
-             <StatCard title="System Health" value="100%" icon={Activity} accent />
-             <StatCard title="Pending Tasks" value="12" icon={CheckSquare} />
-             <StatCard title="Active Clients" value="1" icon={Users} />
+             <StatCard title={overviewCopy.STATS.BETA_PENDING} value={pendingBeta.length.toString()} icon={Ticket} />
+             <StatCard title={overviewCopy.STATS.AGENCY_LEADS} value={agencyInquiries.length.toString()} icon={Inbox} />
+             <StatCard title={overviewCopy.STATS.DEV_TASKS} value={openTasksCount.toString()} icon={Terminal} />
+             <StatCard title={overviewCopy.STATS.SYSTEM_HEALTH} value="OPTIMAL" icon={Activity} accent />
            </div>
 
-           <div className="bg-bg-app border border-white/5 rounded-xl overflow-hidden shadow-2xl">
-             <div className="p-4 border-b border-white/5 flex justify-between items-center bg-white/2">
-               <h3 className="font-bold text-xs uppercase tracking-widest text-white/80">Active Workflows</h3>
-               <button className="btn-brand px-3 py-1.5 flex items-center gap-2 text-[10px] h-auto">
-                 <Plus size={12} /> Initialize Project
-               </button>
-             </div>
-             <div className="p-0">
-               <table className="w-full text-left text-sm">
-                 <thead className="bg-black/40 text-white/40 font-mono text-[10px] uppercase">
-                   <tr>
-                     <th className="px-6 py-3 font-normal">Project ID</th>
-                     <th className="px-6 py-3 font-normal">Status</th>
-                     <th className="px-6 py-3 font-normal">Health</th>
-                     <th className="px-6 py-3 font-normal text-right">Progress</th>
-                   </tr>
-                 </thead>
-                 <tbody className="divide-y divide-white/5">
-                   {projects.map((project) => (
-                     <tr key={project.id} className="hover:bg-white/2 transition-colors group"> 
-                       <td className="px-6 py-4 font-medium text-white transition-colors">
-                         <Link href={`/dashboard/project/${project.id}`} className="hover:text-brand-primary hover:underline underline-offset-4 decoration-brand-primary/50">
-                            {project.name}
-                         </Link>
-                       </td>
-                       <td className="px-6 py-4">
-                         <Badge status={project.status} />
-                       </td>
-                       <td className="px-6 py-4 text-white/60 text-xs font-mono">
-                         {project.priority}
-                       </td>
-                       <td className="px-6 py-4 text-right">
-                         <div className="w-24 ml-auto h-1.5 bg-white/10 rounded-full overflow-hidden">
-                           <div 
-                              className="h-full bg-brand-primary rounded-full" 
-                              style={{ width: `${project.progress}%` }} 
-                           />
-                         </div>
-                       </td>
-                     </tr>
-                   ))}
-                 </tbody>
-               </table>
-             </div>
+           {/* THE SPLIT VIEW */}
+           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              
+              {/* LEFT: Priority Action Queue */}
+              <div className="bg-black/40 border border-white/5 rounded-xl overflow-hidden shadow-2xl backdrop-blur-sm flex flex-col h-[500px]">
+                <div className="p-4 border-b border-white/5 bg-white/2 flex items-center gap-3">
+                  <AlertCircle size={16} className="text-orange-500" />
+                  <h3 className="font-bold text-xs uppercase tracking-widest text-white/80">{overviewCopy.PANELS.ACTION_REQD}</h3>
+                </div>
+                <div className="flex-1 overflow-auto p-2">
+                  {priorityQueue.length === 0 ? (
+                    <div className="h-full flex items-center justify-center text-xs font-mono text-white/30 uppercase">
+                      {overviewCopy.EMPTY_STATE}
+                    </div>
+                  ) : (
+                    <div className="space-y-2">
+                      {priorityQueue.map(item => (
+                        <div key={item.id} className="p-4 rounded-lg bg-white/5 border border-white/5 flex items-center justify-between hover:bg-white/10 transition-colors">
+                          <div>
+                            <div className="text-sm font-medium text-white mb-1">{item.email}</div>
+                            <div className="flex items-center gap-2">
+                              <span className={`text-[10px] font-mono uppercase tracking-widest ${item.source === 'Shift Studio' ? 'text-brand-primary' : 'text-emerald-400'}`}>
+                                {item.source}
+                              </span>
+                              <span className="text-white/30 text-[10px] font-mono">• {item.date}</span>
+                            </div>
+                          </div>
+                          {item.source === 'Shift Studio' ? (
+                             <Link href="/dashboard/waitlist" className="px-3 py-1.5 rounded bg-brand-primary/10 text-brand-primary border border-brand-primary/20 text-[10px] font-mono uppercase hover:bg-brand-primary/20 transition-colors">
+                               Review
+                             </Link>
+                          ) : (
+                            <button className="px-3 py-1.5 rounded bg-white/10 text-white border border-white/20 text-[10px] font-mono uppercase hover:bg-white/20 transition-colors">
+                               Intake
+                             </button>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* RIGHT: Engineering Bay */}
+              <div className="bg-black/40 border border-white/5 rounded-xl overflow-hidden shadow-2xl backdrop-blur-sm flex flex-col h-[500px]">
+                <div className="p-4 border-b border-white/5 bg-white/2 flex items-center gap-3">
+                  <Terminal size={16} className="text-brand-primary" />
+                  <h3 className="font-bold text-xs uppercase tracking-widest text-white/80">{overviewCopy.PANELS.ENGINEERING}</h3>
+                </div>
+                <div className="flex-1 overflow-auto p-4">
+                  <div className="space-y-6">
+                    {internalProjects.map(project => (
+                      <div key={project.id} className="space-y-3">
+                        <div className="flex justify-between items-end">
+                           <Link href={`/dashboard/project/${project.id}`} className="text-sm font-bold text-white uppercase tracking-wider hover:text-brand-primary transition-colors">
+                             {project.name}
+                           </Link>
+                           <span className="text-[10px] font-mono text-white/50">{project.progress}%</span>
+                        </div>
+                        <div className="w-full h-1.5 bg-white/5 rounded-full overflow-hidden">
+                           <div className="h-full bg-brand-primary rounded-full relative">
+                             <div className="absolute inset-0 bg-white/20 w-full h-full animate-[shimmer_2s_infinite] -translate-x-full" />
+                           </div>
+                        </div>
+                        <div className="space-y-1.5">
+                          {project.tasks.filter(t => t.status !== 'Done').slice(0, 3).map(task => (
+                             <div key={task.id} className="flex items-center gap-3 text-xs text-white/60">
+                               <div className="w-1 h-1 rounded-full bg-orange-500" />
+                               {task.title}
+                             </div>
+                          ))}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+
            </div>
 
         </div>
@@ -149,14 +208,14 @@ export default function CommandConsole() {
 // --- SUB-COMPONENTS ---
 function NavItem({ icon: Icon, label, active = false }: { icon: any, label: string, active?: boolean }) {
   return (
-    <button className={`w-full flex items-center gap-3 px-3 py-2 rounded-md text-xs font-medium transition-all group ${
+    <div className={`w-full flex items-center gap-3 px-3 py-2 rounded-md text-xs font-medium transition-all group cursor-pointer ${
       active 
       ? 'bg-brand-primary/10 text-brand-primary border border-brand-primary/20' 
       : 'text-white/50 hover:bg-white/5 hover:text-white'
     }`}>
       <Icon size={16} className={active ? "text-brand-primary" : "text-white/40 group-hover:text-white"} />
       {label}
-    </button>
+    </div>
   );
 }
 
@@ -174,18 +233,5 @@ function StatCard({ title, value, icon: Icon, accent = false }: { title: string,
       </div>
       <div className="text-2xl font-black text-white tracking-tight">{value}</div>
     </div>
-  );
-}
-
-function Badge({ status }: { status: string }) {
-  const styles: any = {
-    "Live": "bg-emerald-500/10 text-emerald-500 border-emerald-500/20",
-    "In Dev": "bg-brand-primary/10 text-brand-primary border-brand-primary/20",
-    "Pending": "bg-orange-500/10 text-orange-500 border-orange-500/20",
-  };
-  return (
-    <span className={`px-2 py-0.5 rounded text-[10px] uppercase font-bold tracking-wider border ${styles[status] || "bg-white/10 text-white"}`}>
-      {status}
-    </span>
   );
 }

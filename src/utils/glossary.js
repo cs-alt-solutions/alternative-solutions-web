@@ -108,27 +108,42 @@ export const WEBSITE_COPY = {
     }
   },
 
-  SHIFT_STUDIO_PAGE: {
-    STATUS: "ENGINEERING IN PROGRESS",
-    HERO: {
-      TITLE: "OWN THE WORKSHOP. MASTER THE SALE.",
-      SUBHEAD: "The command center for creators who sell everywhere. From workshop builds and inventory management to deep financials—stop juggling apps and start scaling your craft.",
-    },
-    ROADMAP: {
-      PHASE_1_TITLE: "Phase 1: The Engine",
-      PHASE_1_DESC: "Workshop & Financial Management. Build tracking, material costs, and profit margin analysis.",
-      PHASE_2_TITLE: "Phase 2: The Reach",
-      PHASE_2_DESC: "Multi-Channel Marketing & AI. Automated listing insights for Etsy and Marketplace.",
-    },
-  },
-
   DASHBOARD: {
+    SIDEBAR: {
+      MODULES_HEADER: "Modules",
+      OVERVIEW: "Overview",
+      WAITLIST: "Waitlist Command",
+      INTAKE: "Client Intake",
+      AUDITS: "Consulting Hub",
+      TASKS: "Task Queue",
+      CLIENTS: "Client Database",
+      SYSTEM_HEADER: "System",
+      AGENTS: "AI Agents",
+      SECURITY: "Security",
+      CONFIG: "Config",
+      EXIT: "← Exit to Public Site"
+    },
+    OVERVIEW: {
+      TITLE: "SYSTEM COMMAND",
+      STATS: {
+        BETA_PENDING: "PENDING TESTERS",
+        AGENCY_LEADS: "NEW INQUIRIES",
+        DEV_TASKS: "OPEN DEV TASKS",
+        SYSTEM_HEALTH: "SYSTEM HEALTH"
+      },
+      PANELS: {
+        ACTION_REQD: "PRIORITY ACTION QUEUE",
+        ENGINEERING: "INTERNAL ENGINEERING"
+      },
+      EMPTY_STATE: "QUEUE CLEAR. AWAITING INPUT."
+    },
     WAITLIST: {
-      TITLE: "LEAD COMMAND",
-      LEAD_COUNT: "ACTIVE LEADS:",
+      TITLE: "BETA COMMAND",
+      LEAD_COUNT: "ACTIVE TESTERS:",
       EXPORT_BTN: "EXPORT CSV",
       FILTER_LABEL: "FILTER BY:",
       COLUMNS: {
+        SELECT: "SEL",
         EMAIL: "EMAIL",
         SOURCE: "ENTRY POINT",
         JOINED: "TIMESTAMP",
@@ -141,17 +156,30 @@ export const WEBSITE_COPY = {
         INVITED: "INVITED",
         ONBOARDED: "ONBOARDED",
       },
+      ROW_ACTIONS: {
+        SEND_UPDATE: "SEND DEV LOG",
+        INVITE: "SEND KEYS (INVITE)",
+        RESEND_INVITE: "RESEND KEYS (BUMP)",
+        FORCE_ONBOARD: "FORCE ONBOARD (MANUAL)",
+        VIEW_PROFILE: "VIEW WORKSPACE"
+      },
+      BULK_ACTIONS: {
+        SELECTED: "TESTERS SELECTED",
+        SEND_LOGS: "BROADCAST DEV LOG",
+        INVITE: "ISSUE BATCH KEYS",
+        CLEAR: "CLEAR"
+      },
       PROJECT_BOARD: {
-      BACK_BTN: "BACK TO COMMAND",
-      ADD_TASK: "INITIALIZE TASK",
-      NOT_FOUND: "PROJECT UNAVAILABLE OR UNAUTHORIZED",
-      COLUMNS: {
-        TODO: "BACKLOG",
-        IN_PROGRESS: "IN PROGRESS",
-        REVIEW: "AWAITING REVIEW",
-        DONE: "SYSTEM LIVE"
+        BACK_BTN: "BACK TO COMMAND",
+        ADD_TASK: "INITIALIZE TASK",
+        NOT_FOUND: "PROJECT UNAVAILABLE OR UNAUTHORIZED",
+        COLUMNS: {
+          TODO: "BACKLOG",
+          IN_PROGRESS: "IN PROGRESS",
+          REVIEW: "AWAITING REVIEW",
+          DONE: "SYSTEM LIVE"
+        }
       }
-    }
     },
     PROJECT_BOARD: {
       BACK_BTN: "BACK TO COMMAND",

@@ -19,3 +19,8 @@
     * `--bg-app`: Deepest Black (#09090b)
     * `--brand-primary`: Cyan/Teal (#06b6d4)
     * `--brand-secondary`: Slate Blue (#3b82f6)
+
+## 5. THE CORE VS. WORKSPACE BOUNDARY (Isolation Protocol)
+* **Core Components (`src/components/core/`):** Strict structural elements (buttons, inputs, cards, grids). These are universal, entirely agnostic to specific business logic, and reusable for any future project.
+* **Workspace/HQ (`src/components/workspace/` & `src/app/hq/`):** The custom command center. All specific client management, auditing logic, and bespoke features live *only* here.
+* **Strict Contamination Ban:** Workspace-specific data, layouts, or bespoke concepts must never pollute the Core framework.
