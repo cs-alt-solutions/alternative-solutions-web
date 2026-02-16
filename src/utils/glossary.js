@@ -43,7 +43,7 @@ export const WEBSITE_COPY = {
     },
     STORY: {
       TITLE: "WHY 'ALTERNATIVE'?",
-      DESC: "Because the standard way is broken. Most tech agencies tie you to third-party data trackers. We build zero-dependency, foundational frameworks you actually own.",
+      DESC: "Because the standard way is broken. Most tech agencies sell you bloat you don't need and tie you to third-party data trackers. We build zero-dependency, foundational frameworks you actually own.",
     },
     TIERS: {
       ONE: { 
@@ -106,6 +106,20 @@ export const WEBSITE_COPY = {
         { q: "Is it free?", a: "Beta testers get free access for feedback." },
       ],
     }
+  },
+
+  SHIFT_STUDIO_PAGE: {
+    STATUS: "ENGINEERING IN PROGRESS",
+    HERO: {
+      TITLE: "OWN THE WORKSHOP. MASTER THE SALE.",
+      SUBHEAD: "The command center for creators who sell everywhere. From workshop builds and inventory management to deep financials—stop juggling apps and start scaling your craft.",
+    },
+    ROADMAP: {
+      PHASE_1_TITLE: "Phase 1: The Engine",
+      PHASE_1_DESC: "Workshop & Financial Management. Build tracking, material costs, and profit margin analysis.",
+      PHASE_2_TITLE: "Phase 2: The Reach",
+      PHASE_2_DESC: "Multi-Channel Marketing & AI. Automated listing insights for Etsy and Marketplace.",
+    },
   },
 
   DASHBOARD: {
@@ -204,6 +218,28 @@ export const WEBSITE_COPY = {
         SEND_LOGS: "BROADCAST DEV LOG",
         INVITE: "ISSUE BATCH KEYS",
         CLEAR: "CLEAR"
+      },
+      PROJECT_BOARD: {
+        BACK_BTN: "BACK TO COMMAND",
+        ADD_TASK: "INITIALIZE TASK",
+        NOT_FOUND: "PROJECT UNAVAILABLE OR UNAUTHORIZED",
+        COLUMNS: {
+          TODO: "BACKLOG",
+          IN_PROGRESS: "IN PROGRESS",
+          REVIEW: "AWAITING REVIEW",
+          DONE: "SYSTEM LIVE"
+        }
+      }
+    },
+    PROJECT_BOARD: {
+      BACK_BTN: "BACK TO COMMAND",
+      ADD_TASK: "INITIALIZE TASK",
+      NOT_FOUND: "PROJECT UNAVAILABLE OR UNAUTHORIZED",
+      COLUMNS: {
+        TODO: "BACKLOG",
+        IN_PROGRESS: "IN PROGRESS",
+        REVIEW: "AWAITING REVIEW",
+        DONE: "SYSTEM LIVE"
       }
     }
   },

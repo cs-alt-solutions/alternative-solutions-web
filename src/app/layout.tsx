@@ -14,7 +14,11 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" className={`${inter.variable} ${jetbrains.variable} scroll-smooth`}> 
+    <html 
+      lang="en" 
+      className={`${inter.variable} ${jetbrains.variable} scroll-smooth`}
+      data-scroll-behavior="smooth" // This attribute resolves the Next.js console warning
+    > 
       <body className="antialiased bg-bg-app text-white">
         <Navbar />
         {children}
