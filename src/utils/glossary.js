@@ -141,6 +141,17 @@ export const WEBSITE_COPY = {
         INVITED: "INVITED",
         ONBOARDED: "ONBOARDED",
       },
+      PROJECT_BOARD: {
+      BACK_BTN: "BACK TO COMMAND",
+      ADD_TASK: "INITIALIZE TASK",
+      NOT_FOUND: "PROJECT UNAVAILABLE OR UNAUTHORIZED",
+      COLUMNS: {
+        TODO: "BACKLOG",
+        IN_PROGRESS: "IN PROGRESS",
+        REVIEW: "AWAITING REVIEW",
+        DONE: "SYSTEM LIVE"
+      }
+    }
     },
     PROJECT_BOARD: {
       BACK_BTN: "BACK TO COMMAND",

@@ -21,16 +21,13 @@ export default function Navbar() {
           <span className="font-bold text-lg tracking-tight uppercase">{WEBSITE_COPY.NAV.BRAND}</span>
         </Link>
 
-        {/* DESKTOP NAVIGATION (Hidden on Mobile) */}
+        {/* DESKTOP NAVIGATION (Client Portal Removed) */}
         <div className="hidden md:flex items-center gap-8">
           <Link href="/#services" className="text-xs font-mono text-text-muted hover:text-brand-accent transition-colors uppercase tracking-widest">{WEBSITE_COPY.NAV.SERVICES}</Link>
           <Link href="/shift-studio" className="text-xs font-mono text-text-muted hover:text-brand-accent transition-colors uppercase tracking-widest">{WEBSITE_COPY.NAV.SHIFT_STUDIO}</Link>
-          <Link href="/dashboard" className="px-5 py-2 rounded-full text-xs font-bold bg-white/5 hover:bg-white/10 border border-white/10 transition-colors uppercase tracking-wide">
-            {WEBSITE_COPY.NAV.LOGIN}
-          </Link>
         </div>
 
-        {/* MOBILE TOGGLE BUTTON (Hidden on Desktop) */}
+        {/* MOBILE TOGGLE BUTTON */}
         <button 
           className="md:hidden p-2 text-text-muted hover:text-white transition-colors z-50"
           onClick={toggleMenu}
@@ -40,7 +37,7 @@ export default function Navbar() {
         </button>
       </div>
 
-      {/* MOBILE DROP-DOWN MENU */}
+      {/* MOBILE DROP-DOWN MENU (Client Portal Removed) */}
       <div 
         className={`md:hidden absolute top-20 left-0 w-full bg-bg-app/95 backdrop-blur-xl border-b border-border-subtle transition-all duration-300 ease-in-out ${
           isOpen ? 'opacity-100 translate-y-0 visible' : 'opacity-0 -translate-y-4 invisible'
@@ -53,11 +50,6 @@ export default function Navbar() {
           <Link href="/shift-studio" onClick={toggleMenu} className="text-sm font-mono text-text-muted hover:text-brand-accent transition-colors uppercase tracking-widest">
             {WEBSITE_COPY.NAV.SHIFT_STUDIO}
           </Link>
-          <div className="pt-6 mt-2 border-t border-white/5">
-            <Link href="/dashboard" onClick={toggleMenu} className="inline-block px-8 py-3 rounded-full text-xs font-bold bg-white/5 hover:bg-white/10 border border-white/10 transition-colors uppercase tracking-wide">
-              {WEBSITE_COPY.NAV.LOGIN}
-            </Link>
-          </div>
         </div>
       </div>
     </nav>
