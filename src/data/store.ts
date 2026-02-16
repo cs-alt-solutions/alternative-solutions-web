@@ -83,3 +83,32 @@ export const MOCK_DB: { projects: Project[]; waitlist: WaitlistEntry[] } = {
 export const getProjectById = (id: string) => {
   return MOCK_DB.projects.find(p => p.id === id);
 };
+/* src/data/store.ts additions */
+
+export type AudioLog = {
+  id: string;
+  title: string;
+  duration: string;
+  date: string;
+  description: string;
+  audioUrl: string; // Placeholder for the actual file
+};
+
+export const AUDIO_LOGS: AudioLog[] = [
+  {
+    id: "log-01",
+    title: "THE GENESIS: WHY ALTERNATIVE?",
+    duration: "04:12",
+    date: "2026-02-10",
+    description: "Breaking down the philosophy of building for the 'small humans' and the problem with big-box tech.",
+    audioUrl: "#"
+  },
+  {
+    id: "log-02",
+    title: "SHIFT STUDIO: THE WORKSHOP ENGINE",
+    duration: "06:45",
+    date: "2026-02-12",
+    description: "A deep dive into how we're building the inventory system to think like a maker, not an accountant.",
+    audioUrl: "#"
+  }
+];

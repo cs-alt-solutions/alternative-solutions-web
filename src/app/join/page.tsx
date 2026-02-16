@@ -3,14 +3,25 @@ import React from 'react';
 import Link from 'next/link';
 import { WEBSITE_COPY } from '@/utils/glossary';
 import JoinForm from '@/components/JoinForm';
-import { ChevronLeft, Play, Mic, Box, TrendingUp, Share2, MapPin, CheckCircle2 } from 'lucide-react';
+import AudioLogEntry from '@/components/AudioLogEntry';
+import { AUDIO_LOGS } from '@/data/store';
+import { 
+  ChevronLeft, 
+  Play, 
+  Mic, 
+  Box, 
+  TrendingUp, 
+  Share2, 
+  MapPin, 
+  CheckCircle2 
+} from 'lucide-react';
 
 export default function JoinPage() {
   const { JOIN_PAGE, SHIFT_STUDIO_PAGE } = WEBSITE_COPY;
   const hype = JOIN_PAGE.HYPE;
   const roadmap = SHIFT_STUDIO_PAGE.ROADMAP;
 
-  // Icons for the cards
+  // Icons for the features grid
   const ICONS = [Box, TrendingUp, Share2];
 
   return (
@@ -90,6 +101,29 @@ export default function JoinPage() {
             })}
         </div>
 
+        {/* --- AUDIO LOGS SECTION --- */}
+        <div className="mb-32 grid grid-cols-1 lg:grid-cols-3 gap-12">
+            <div className="lg:col-span-1 space-y-6">
+                <div className="w-16 h-16 rounded-2xl bg-bg-surface-200 border border-white/10 flex items-center justify-center shadow-xl">
+                    <Mic size={28} className="text-brand-accent" />
+                </div>
+                <div>
+                    <h3 className="text-2xl font-black text-white uppercase tracking-tight mb-2">
+                        {hype.PODCAST_TITLE}
+                    </h3>
+                    <p className="text-text-muted leading-relaxed">
+                        {hype.PODCAST_DESC}
+                    </p>
+                </div>
+            </div>
+
+            <div className="lg:col-span-2 grid gap-4">
+                {AUDIO_LOGS.map((log) => (
+                    <AudioLogEntry key={log.id} log={log} />
+                ))}
+            </div>
+        </div>
+
         {/* --- ROADMAP VISUAL --- */}
         <div className="mb-32">
             <div className="flex items-center gap-4 mb-12">
@@ -100,37 +134,17 @@ export default function JoinPage() {
             <div className="relative border-l border-white/10 ml-3 space-y-12">
                 {/* Phase 1 */}
                 <div className="relative pl-12">
-                    {/* FIXED: -left-[5px] -> -left-1.25 */}
                     <div className="absolute -left-1.25 top-2 w-2.5 h-2.5 rounded-full bg-brand-primary ring-4 ring-black" />
                     <h3 className="text-xl font-bold text-white mb-2">{roadmap.PHASE_1_TITLE}</h3>
                     <p className="text-text-muted max-w-xl">{roadmap.PHASE_1_DESC}</p>
                 </div>
                  {/* Phase 2 */}
                  <div className="relative pl-12 opacity-50">
-                    {/* FIXED: -left-[5px] -> -left-1.25 */}
                     <div className="absolute -left-1.25 top-2 w-2.5 h-2.5 rounded-full bg-white/20 ring-4 ring-black" />
                     <h3 className="text-xl font-bold text-white mb-2">{roadmap.PHASE_2_TITLE}</h3>
                     <p className="text-text-muted max-w-xl">{roadmap.PHASE_2_DESC}</p>
                 </div>
             </div>
-        </div>
-
-        {/* --- PODCAST / AUDIO SECTION --- */}
-        <div className="w-full bg-linear-to-r from-bg-surface-100 to-bg-surface-200 border border-white/5 rounded-2xl p-8 md:p-12 flex flex-col md:flex-row items-center gap-8 relative overflow-hidden mb-32">
-            <div className="absolute top-0 right-0 w-64 h-64 bg-brand-secondary/10 rounded-full blur-[80px] pointer-events-none" />
-            
-            <div className="w-24 h-24 rounded-2xl bg-black border border-white/10 flex items-center justify-center shrink-0 shadow-xl">
-                <Mic size={32} className="text-brand-accent" />
-            </div>
-            
-            <div className="flex-1 text-center md:text-left space-y-2">
-                <h3 className="text-2xl font-black text-white uppercase tracking-tight">{hype.PODCAST_TITLE}</h3>
-                <p className="text-text-muted max-w-xl">{hype.PODCAST_DESC}</p>
-            </div>
-
-            <button className="px-6 py-3 rounded-full bg-white text-black font-bold text-xs uppercase tracking-widest hover:bg-brand-accent transition-colors shrink-0">
-                Listen Now
-            </button>
         </div>
 
         {/* --- FAQ SECTION --- */}
