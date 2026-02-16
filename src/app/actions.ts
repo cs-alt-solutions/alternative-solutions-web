@@ -1,54 +1,31 @@
-"use server";
+/* src/app/actions.ts */
+'use server';
 
-import { WEBSITE_COPY } from '@/utils/glossary';
+import { MOCK_DB, WaitlistEntry } from '@/data/store';
 import { revalidatePath } from 'next/cache';
-import { MOCK_DB } from '@/data/store';
 
-export async function joinWaitlist(email: string) {
-  const { API } = WEBSITE_COPY;
+export async function joinWaitlist(formData: FormData) {
+  const email = formData.get('email') as string;
+  const source = (formData.get('source') as 'Home' | 'Shift Studio') || 'Home';
 
-  // 1. Basic Validation
-  if (!email || !email.includes('@')) {
-    return { success: false, message: API.WAITLIST.ERR_INVALID };
+  if (!email) {
+    return { error: 'Email is required' };
   }
 
-  try {
-    // 2. Duplicate Check
-    // We check the existing waitlist in the MOCK_DB for a matching email.
-    const isDuplicate = MOCK_DB.waitlist.some(
-      (entry) => entry.email.toLowerCase() === email.toLowerCase()
-    );
+  // 1. Construct the new lead entry
+  const newEntry: WaitlistEntry = {
+    id: `w-${Date.now()}`,
+    email,
+    date: new Date().toISOString().split('T')[0], // Formats as YYYY-MM-DD
+    status: 'Pending',
+    source,
+  };
 
-    if (isDuplicate) {
-      return { 
-        success: false, 
-        message: API.WAITLIST.ERR_DUPLICATE // "Already on the list."
-      };
-    }
+  // 2. Push to our database (currently MOCK_DB, eventually Postgres/Firebase)
+  MOCK_DB.waitlist.unshift(newEntry); // unshift puts the newest lead at the top
 
-    // 3. Data Persistence
-    MOCK_DB.waitlist.push({
-      id: `w${MOCK_DB.waitlist.length + 1}`,
-      email: email,
-      date: new Date().toISOString().split('T')[0],
-      status: 'Pending',
-      source: 'Home'
-    });
+  // 3. Command Next.js to refresh the dashboard instantly
+  revalidatePath('/dashboard/waitlist');
 
-    console.log(`>>> LEAD STORED: ${email}`);
-
-    // Refresh the dashboard data
-    revalidatePath('/dashboard/waitlist');
-
-    return { 
-      success: true, 
-      message: API.WAITLIST.SUCCESS 
-    };
-  } catch (error) {
-    console.error('Waitlist Pipe Failure:', error);
-    return { 
-      success: false, 
-      message: API.WAITLIST.ERR_SERVER 
-    };
-  }
+  return { success: true };
 }

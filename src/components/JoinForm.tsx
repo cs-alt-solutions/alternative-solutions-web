@@ -1,86 +1,52 @@
-"use client";
+/* src/components/JoinForm.tsx */
+'use client';
 
-import React, { useState } from 'react';
+import React, { useRef, useState } from 'react';
 import { WEBSITE_COPY } from '@/utils/glossary';
-import { ArrowRight, CheckCircle, Loader2, AlertCircle } from 'lucide-react';
 import { joinWaitlist } from '@/app/actions';
+import { ArrowRight, CheckCircle2 } from 'lucide-react';
 
-export default function JoinForm() {
+export default function JoinForm({ source = 'Home' }: { source?: 'Home' | 'Shift Studio' }) {
   const { JOIN_PAGE } = WEBSITE_COPY;
-  const [email, setEmail] = useState('');
-  const [status, setStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
-  const [message, setMessage] = useState('');
+  const [submitted, setSubmitted] = useState(false);
+  const formRef = useRef<HTMLFormElement>(null);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!email) return;
-
-    setStatus('loading');
-    
-    // Fire the server action
-    const result = await joinWaitlist(email);
-
-    if (result.success) {
-      setStatus('success');
-      setMessage(result.message);
-    } else {
-      setStatus('error');
-      setMessage(result.message);
-      // Let them try again after 3 seconds
-      setTimeout(() => setStatus('idle'), 3000);
+  // The bridge to our Server Action
+  async function action(formData: FormData) {
+    const res = await joinWaitlist(formData);
+    if (res?.success) {
+      setSubmitted(true);
+      formRef.current?.reset();
     }
-  };
+  }
 
-  if (status === 'success') {
+  // What the user sees after a successful submission
+  if (submitted) {
     return (
-      <div className="bg-emerald-500/10 border border-emerald-500/20 rounded-xl p-8 text-center animate-in fade-in zoom-in duration-300">
-        <div className="flex justify-center mb-4">
-          <CheckCircle className="text-emerald-400 w-12 h-12" />
-        </div>
-        <h3 className="text-xl font-bold text-white tracking-widest uppercase">
-            {message || JOIN_PAGE.SUCCESS_MSG}
-        </h3>
+      <div className="flex items-center gap-3 text-brand-primary border border-brand-primary/20 bg-brand-primary/5 px-6 py-4 rounded-full max-w-md w-full">
+        <CheckCircle2 size={20} />
+        <span className="text-xs font-bold uppercase tracking-widest">{JOIN_PAGE.SUCCESS_MSG}</span>
       </div>
     );
   }
 
+  // The active capture form
   return (
-    <div className="w-full max-w-md mx-auto space-y-4">
-      <form onSubmit={handleSubmit} className="space-y-4">
-        <div className="relative group">
-          <input 
-            type="email" 
-            placeholder={JOIN_PAGE.INPUT_PLACEHOLDER}
-            className="w-full bg-bg-surface-200 border border-white/10 rounded-lg px-6 py-4 text-white placeholder:text-white/20 focus:outline-none focus:border-brand-primary/50 transition-all text-center md:text-left"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            disabled={status === 'loading'}
-            required
-          />
-          <div className="absolute inset-0 rounded-lg bg-brand-primary/5 opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity" />
-        </div>
-
-        <button 
-          type="submit" 
-          disabled={status === 'loading'}
-          className="btn-brand w-full flex items-center justify-center gap-2"
-        >
-          {status === 'loading' ? (
-            <Loader2 className="animate-spin" size={16} />
-          ) : (
-            <>
-              {JOIN_PAGE.BTN_SUBMIT} <ArrowRight size={16} />
-            </>
-          )}
-        </button>
-      </form>
-
-      {status === 'error' && (
-        <div className="flex items-center justify-center gap-2 text-rose-400 text-xs uppercase tracking-widest animate-in fade-in slide-in-from-top-1">
-          <AlertCircle size={14} />
-          {message}
-        </div>
-      )}
-    </div>
+    <form ref={formRef} action={action} className="flex flex-col sm:flex-row gap-3 w-full max-w-md">
+      {/* Hidden field so the dashboard knows WHERE the lead came from */}
+      <input type="hidden" name="source" value={source} />
+      
+      <input 
+        type="email" 
+        name="email"
+        required
+        placeholder={JOIN_PAGE.INPUT_PLACEHOLDER}
+        className="flex-1 bg-black/50 border border-white/10 rounded-full px-6 py-3 text-sm focus:outline-none focus:border-brand-primary/50 transition-colors text-white placeholder:text-white/20"
+      />
+      
+      <button type="submit" className="btn-brand flex items-center justify-center gap-2 px-6">
+        {JOIN_PAGE.BTN_SUBMIT} <ArrowRight size={16} />
+      </button>
+    </form>
   );
 }

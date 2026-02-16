@@ -7,63 +7,61 @@ export const WEBSITE_COPY = {
     LOGIN: "CLIENT PORTAL",
   },
 
-  // FIXED: Added back for src/app/page.tsx
   HERO: {
-    TITLE: "SMARTER BUSINESS SYSTEMS.",
-    SUBHEAD: "Stop fighting with spreadsheets. We build custom software and simple tools to help your business run smoother.",
-    CTA_PRIMARY: "JOIN BETA WAITLIST",
-    CTA_SECONDARY: "VIEW SERVICES",
+    TITLE: "SYSTEMS THAT ACTUALLY WORK.",
+    SUBHEAD: "Stop wrestling with spreadsheets and duct-taped apps. We build rock-solid, custom software so you can stop managing tech and get back to your business.",
+    CTA_PRIMARY: "JOIN THE WAITLIST",
+    CTA_SECONDARY: "SEE HOW WE WORK",
   },
 
   MISSION: {
-    TITLE: "BUILT FOR THE SMALL HUMANS.",
-    DESC: "You don't need a million-dollar budget to have a professional system. We specialize in building custom solutions for entrepreneurs and small businesses that work as hard as you do.",
+    TITLE: "NO PLUG-AND-PLAY NONSENSE.",
+    DESC: "You don't need another generic monthly subscription that only solves half your problem. We dig into how you actually work, find the friction, and build a foundational framework you own.",
   },
 
   HOW_IT_WORKS: {
-    TITLE: "THE HYBRID EDGE",
-    SUBTITLE: "Better systems, built in a fraction of the time.",
+    TITLE: "THE HYBRID APPROACH",
+    SUBTITLE: "We combine deep business analysis with AI development speed.",
     STEP_1: {
-      TITLE: "STRATEGIC ANALYSIS",
-      DESC: "We don't just take orders. We deep-dive into your workflow as a Business Analyst to find the real friction points before writing code.",
+      TITLE: "FIND THE LEAK",
+      DESC: "We don't just write code. We map out your daily workflow to find exactly where you are losing time and money.",
     },
     STEP_2: {
-      TITLE: "AI-POWERED SPEED",
-      DESC: "As an AI-Powered Architect, I use advanced tools to handle the heavy lifting, turning months of development into weeks.",
+      TITLE: "AI-ACCELERATED BUILD",
+      DESC: "By leveraging AI for the heavy lifting of development, we turn what used to be months of expensive coding into a few weeks.",
     },
     STEP_3: {
-      TITLE: "SCALABLE CODE",
-      DESC: "No 'plug-and-play' hacks. We build custom, foundational frameworks that you own, ensuring your tech grows as fast as your business does.",
+      TITLE: "OWN YOUR FOUNDATION",
+      DESC: "We deliver custom, scalable tools built specifically for your exact needs. No workarounds. No forcing your process into a pre-made box.",
     },
   },
 
-  // FIXED: Added back for src/app/page.tsx
   SERVICES_PAGE: {
     HERO: {
-      TITLE: "TECH BUILT BY A HUMAN, FOR THE HUMANS.",
-      SUBTITLE: "Your software shouldn't be another thing you have to manage. It should be the thing that gives you your time back.",
+      TITLE: "TECH BUILT TO GIVE YOUR TIME BACK.",
+      SUBTITLE: "Software shouldn't be a part-time job. It should be the invisible engine running your business.",
     },
     STORY: {
       TITLE: "WHY 'ALTERNATIVE'?",
-      DESC: "Most tech companies want to sell you a subscription and forget you. We look at your business through a sharp eye for foundations, not just features.",
+      DESC: "Because the standard way is broken. Most tech agencies sell you bloat you don't need. We build exactly what you need to thrive, nothing you don't.",
     },
     TIERS: {
       ONE: { 
         TITLE: "The Automator", 
         PRICE: "Quick Fixes", 
-        DESC: "Custom scripts and small-scale automation to stop the manual leak in your day.",
+        DESC: "Custom scripts to stop the manual data entry. We make your current tools do the boring work for you.",
         FEATURES: ["Custom Integrations", "Email Responders", "Data Pipelines", "Single-Task Tooling"],
       },
       TWO: { 
         TITLE: "The Connector", 
         PRICE: "Integrations", 
-        DESC: "Making your apps talk to each other. We bridge the gap between your tools so you don't have to.",
+        DESC: "We bridge the gap. We make your separate apps talk to each other so your inventory, sales, and emails actually sync up.",
         FEATURES: ["Cross-Platform Syncing", "Inventory Pipelines", "Automated Onboarding", "Workflow Logic"],
       },
       THREE: { 
         TITLE: "The Architect", 
         PRICE: "Full Systems", 
-        DESC: "Ground-up custom software. Scalable, professional frameworks built to be the permanent engine of your business.",
+        DESC: "Ground-up custom software. A professional, scalable framework built to be the permanent home for your operations.",
         FEATURES: ["End-to-End Software", "Client Portals", "Analytics Dashboards", "Future-Proof Scale"],
       },
     },
@@ -75,7 +73,6 @@ export const WEBSITE_COPY = {
     INPUT_PLACEHOLDER: "enter your email address...",
     BTN_SUBMIT: "REQUEST ACCESS",
     SUCCESS_MSG: "YOU'RE ON THE LIST. STAY TUNED.",
-    // FIXED: Expanded HYPE block for src/app/join/page.tsx
     HYPE: {
       VIDEO_TITLE: "STOP JUGGLING APPS.",
       VIDEO_DESC: "Combining inventory, financials, and sales into one glass pane.",
@@ -106,7 +103,6 @@ export const WEBSITE_COPY = {
     }
   },
 
-  // FIXED: Added back for src/app/shift-studio/page.tsx
   SHIFT_STUDIO_PAGE: {
     STATUS: "ENGINEERING IN PROGRESS",
     HERO: {
@@ -125,7 +121,6 @@ export const WEBSITE_COPY = {
     WAITLIST: {
       TITLE: "LEAD COMMAND",
       LEAD_COUNT: "ACTIVE LEADS:",
-      // FIXED: Added missing dashboard properties
       EXPORT_BTN: "EXPORT CSV",
       FILTER_LABEL: "FILTER BY:",
       COLUMNS: {
