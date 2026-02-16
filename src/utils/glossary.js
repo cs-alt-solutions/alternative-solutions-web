@@ -67,7 +67,6 @@ export const WEBSITE_COPY = {
     },
   },
 
-  // --- NEW: THE AGENCY HOOK ---
   AGENCY_HOOK: {
     TITLE: "READY TO STOP THE LEAK?",
     SUBHEAD: "Let's map out your workflow and find the friction. Request a custom systems audit and let's build a foundation you actually own.",
@@ -143,6 +142,17 @@ export const WEBSITE_COPY = {
         ONBOARDED: "ONBOARDED",
       },
     },
+    PROJECT_BOARD: {
+      BACK_BTN: "BACK TO COMMAND",
+      ADD_TASK: "INITIALIZE TASK",
+      NOT_FOUND: "PROJECT UNAVAILABLE OR UNAUTHORIZED",
+      COLUMNS: {
+        TODO: "BACKLOG",
+        IN_PROGRESS: "IN PROGRESS",
+        REVIEW: "AWAITING REVIEW",
+        DONE: "SYSTEM LIVE"
+      }
+    }
   },
 
   API: {
