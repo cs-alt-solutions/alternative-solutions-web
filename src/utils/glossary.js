@@ -43,7 +43,7 @@ export const WEBSITE_COPY = {
     },
     STORY: {
       TITLE: "WHY 'ALTERNATIVE'?",
-      DESC: "Because the standard way is broken. Most tech agencies sell you bloat you don't need. We build exactly what you need to thrive, nothing you don't.",
+      DESC: "Because the standard way is broken. Most tech agencies sell you bloat you don't need and tie you to third-party data trackers. We build zero-dependency, foundational frameworks you actually own.",
     },
     TIERS: {
       ONE: { 
@@ -62,7 +62,7 @@ export const WEBSITE_COPY = {
         TITLE: "The Architect", 
         PRICE: "Full Systems", 
         DESC: "Ground-up custom software. A professional, scalable framework built to be the permanent home for your operations.",
-        FEATURES: ["End-to-End Software", "Client Portals", "Analytics Dashboards", "Future-Proof Scale"],
+        FEATURES: ["End-to-End Software", "Client Portals", "Zero-Dependency Analytics", "Future-Proof Scale"],
       },
     },
   },
@@ -133,6 +133,23 @@ export const WEBSITE_COPY = {
     },
     OVERVIEW: {
       TITLE: "SYSTEM COMMAND",
+      DIRECTIVE: {
+        TITLE: "THE DAILY DIRECTIVE",
+        SUBTITLE: "SYSTEM-GENERATED ACTION PLAN",
+        EMPTY: "ALL SYSTEMS CLEAR. AWAITING COMMAND.",
+        TYPES: {
+          LEAD: "NEW INQUIRY",
+          TASK: "ACTIVE DEV TASK",
+        },
+        ACTIONS: {
+          PROCESS: "PROCESS",
+          EXECUTE: "EXECUTE",
+        }
+      },
+      LIVE_FEED: {
+        TITLE: "NETWORK PULSE",
+        NEW_BETA: "BETA ACCESS REQUESTED"
+      },
       STATS: {
         BETA_PENDING: "PENDING TESTERS",
         AGENCY_LEADS: "NEW INQUIRIES",
@@ -143,7 +160,15 @@ export const WEBSITE_COPY = {
         ACTION_REQD: "PRIORITY ACTION QUEUE",
         ENGINEERING: "INTERNAL ENGINEERING"
       },
-      EMPTY_STATE: "QUEUE CLEAR. AWAITING INPUT."
+      EMPTY_STATE: "QUEUE CLEAR. AWAITING INPUT.",
+      TELEMETRY: {
+        TITLE: "NETWORK TELEMETRY",
+        CHART_LABEL: "REQUEST VOLUME (LAST 12 HOURS)",
+        METRICS: {
+          TRAFFIC: "LIVE TRAFFIC (24H)",
+          CONVERSION: "WAITLIST CONVERSION"
+        }
+      }
     },
     WAITLIST: {
       TITLE: "BETA COMMAND",
