@@ -4,6 +4,7 @@ import Hero from '@/components/Hero';
 import Mission from '@/components/Mission';
 import HowWeWork from '@/components/HowWeWork';
 import ServicesSection from '@/components/ServicesSection';
+import AgencyHook from '@/components/AgencyHook';
 import Footer from '@/components/Footer';
 
 export default function Home() {
@@ -13,6 +14,7 @@ export default function Home() {
       <Mission />
       <HowWeWork />
       <ServicesSection />
+      <AgencyHook />
       <Footer />
     </main>
   );

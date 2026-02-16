@@ -6,12 +6,12 @@ import { WEBSITE_COPY } from '@/utils/glossary';
 import { joinWaitlist } from '@/app/actions';
 import { ArrowRight, CheckCircle2 } from 'lucide-react';
 
-export default function JoinForm({ source = 'Home' }: { source?: 'Home' | 'Shift Studio' }) {
+// STRCIT TYPING: 'source' is now required. 
+export default function JoinForm({ source }: { source: 'Shift Studio' | 'Agency Inquiry' }) {
   const { JOIN_PAGE } = WEBSITE_COPY;
   const [submitted, setSubmitted] = useState(false);
   const formRef = useRef<HTMLFormElement>(null);
 
-  // The bridge to our Server Action
   async function action(formData: FormData) {
     const res = await joinWaitlist(formData);
     if (res?.success) {
@@ -20,7 +20,6 @@ export default function JoinForm({ source = 'Home' }: { source?: 'Home' | 'Shift
     }
   }
 
-  // What the user sees after a successful submission
   if (submitted) {
     return (
       <div className="flex items-center gap-3 text-brand-primary border border-brand-primary/20 bg-brand-primary/5 px-6 py-4 rounded-full max-w-md w-full">
@@ -30,10 +29,9 @@ export default function JoinForm({ source = 'Home' }: { source?: 'Home' | 'Shift
     );
   }
 
-  // The active capture form
   return (
     <form ref={formRef} action={action} className="flex flex-col sm:flex-row gap-3 w-full max-w-md">
-      {/* Hidden field so the dashboard knows WHERE the lead came from */}
+      {/* This hidden field safely passes our required source to the backend */}
       <input type="hidden" name="source" value={source} />
       
       <input 

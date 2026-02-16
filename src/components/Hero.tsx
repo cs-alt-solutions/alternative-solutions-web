@@ -31,8 +31,9 @@ export default function Hero() {
         </p>
 
         <div className="flex flex-col md:flex-row items-center justify-center gap-4 pt-8">
-           <Link href="/join" className="btn-brand px-8 py-4 text-xs font-bold uppercase tracking-[0.2em] flex items-center gap-3">
-             {HERO.CTA_PRIMARY} <ArrowRight size={16} />
+           {/* UPDATED: Route to Services to keep the Agency funnel pure */}
+           <Link href="/#services" className="btn-brand px-8 py-4 text-xs font-bold uppercase tracking-[0.2em] flex items-center gap-3">
+             {HERO.CTA_SECONDARY} <ArrowRight size={16} />
            </Link>
         </div>
       </div>

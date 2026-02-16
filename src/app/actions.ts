@@ -6,7 +6,9 @@ import { revalidatePath } from 'next/cache';
 
 export async function joinWaitlist(formData: FormData) {
   const email = formData.get('email') as string;
-  const source = (formData.get('source') as 'Home' | 'Shift Studio') || 'Home';
+  
+  // STRICT TYPING: Only accepts our defined pathways. 
+  const source = (formData.get('source') as 'Shift Studio' | 'Agency Inquiry') || 'Shift Studio';
 
   if (!email) {
     return { error: 'Email is required' };

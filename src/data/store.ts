@@ -20,13 +20,13 @@ export type Project = {
   tasks: Task[];
 };
 
-// NEW: Waitlist Type
+// UPDATED: Waitlist Type now includes Agency Inquiry
 export type WaitlistEntry = {
   id: string;
   email: string;
   date: string;
   status: 'Pending' | 'Invited' | 'Onboarded';
-  source: 'Home' | 'Shift Studio';
+  source: 'Shift Studio' | 'Agency Inquiry'; // <--- ADDED HERE
 };
 
 // --- MOCK DATABASE ---
@@ -71,10 +71,9 @@ export const MOCK_DB: { projects: Project[]; waitlist: WaitlistEntry[] } = {
       ]
     }
   ],
-  // NEW: Mock Waitlist Data
   waitlist: [
     { id: "w1", email: "ducky@example.com", date: "2026-02-10", status: "Pending", source: "Shift Studio" },
-    { id: "w2", email: "investor@venture.com", date: "2026-02-11", status: "Invited", source: "Home" },
+    { id: "w2", email: "investor@venture.com", date: "2026-02-11", status: "Invited", source: "Agency Inquiry" },
     { id: "w3", email: "fan@gmail.com", date: "2026-02-12", status: "Pending", source: "Shift Studio" },
   ]
 };
@@ -83,15 +82,15 @@ export const MOCK_DB: { projects: Project[]; waitlist: WaitlistEntry[] } = {
 export const getProjectById = (id: string) => {
   return MOCK_DB.projects.find(p => p.id === id);
 };
-/* src/data/store.ts additions */
 
+// --- AUDIO LOGS DATA ---
 export type AudioLog = {
   id: string;
   title: string;
   duration: string;
   date: string;
   description: string;
-  audioUrl: string; // Placeholder for the actual file
+  audioUrl: string; 
 };
 
 export const AUDIO_LOGS: AudioLog[] = [

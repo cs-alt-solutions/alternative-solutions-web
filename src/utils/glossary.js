@@ -67,6 +67,12 @@ export const WEBSITE_COPY = {
     },
   },
 
+  // --- NEW: THE AGENCY HOOK ---
+  AGENCY_HOOK: {
+    TITLE: "READY TO STOP THE LEAK?",
+    SUBHEAD: "Let's map out your workflow and find the friction. Request a custom systems audit and let's build a foundation you actually own.",
+  },
+
   JOIN_PAGE: {
     TITLE: "SHIFT STUDIO.",
     SUBHEAD: "The command center for creators is currently in private testing. Join the list to secure access.",
