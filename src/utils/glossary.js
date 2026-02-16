@@ -43,7 +43,7 @@ export const WEBSITE_COPY = {
     },
     STORY: {
       TITLE: "WHY 'ALTERNATIVE'?",
-      DESC: "Because the standard way is broken. Most tech agencies sell you bloat you don't need and tie you to third-party data trackers. We build zero-dependency, foundational frameworks you actually own.",
+      DESC: "Because the standard way is broken. Most tech agencies tie you to third-party data trackers. We build zero-dependency, foundational frameworks you actually own.",
     },
     TIERS: {
       ONE: { 
@@ -135,20 +135,23 @@ export const WEBSITE_COPY = {
       TITLE: "SYSTEM COMMAND",
       DIRECTIVE: {
         TITLE: "THE DAILY DIRECTIVE",
-        SUBTITLE: "SYSTEM-GENERATED ACTION PLAN",
+        SUBTITLE: "HEAVY LIFTING ONLY",
         EMPTY: "ALL SYSTEMS CLEAR. AWAITING COMMAND.",
-        TYPES: {
-          LEAD: "NEW INQUIRY",
-          TASK: "ACTIVE DEV TASK",
-        },
-        ACTIONS: {
-          PROCESS: "PROCESS",
-          EXECUTE: "EXECUTE",
-        }
+        TYPES: { LEAD: "NEW INQUIRY", TASK: "ACTIVE DEV TASK" },
+        ACTIONS: { PROCESS: "PROCESS", EXECUTE: "EXECUTE" }
       },
       LIVE_FEED: {
         TITLE: "NETWORK PULSE",
         NEW_BETA: "BETA ACCESS REQUESTED"
+      },
+      INFRASTRUCTURE: {
+        TITLE: "TECH STACK OVERWATCH",
+        SUBTITLE: "LIVE SERVICE STATUS",
+        PLATFORMS: {
+          GITHUB: "GITHUB (CODE)",
+          VERCEL: "VERCEL (DEPLOY)",
+          SUPABASE: "SUPABASE (DATA)"
+        }
       },
       STATS: {
         BETA_PENDING: "PENDING TESTERS",
