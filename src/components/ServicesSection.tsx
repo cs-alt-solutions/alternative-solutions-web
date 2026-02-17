@@ -2,11 +2,11 @@
 import React from 'react';
 import { WEBSITE_COPY } from '@/utils/glossary';
 import ServiceCard from '@/components/ServiceCard';
-import JoinForm from '@/components/JoinForm'; // Ensure this is imported
-import { Lock } from 'lucide-react';
+import JoinForm from '@/components/JoinForm';
+import { HardHat, Construction } from 'lucide-react';
 
 export default function ServicesSection() {
-  const { SERVICES_PAGE, ACCESS_HOOK } = WEBSITE_COPY; // Correctly pulling ACCESS_HOOK
+  const { SERVICES_PAGE, ACCESS_HOOK } = WEBSITE_COPY;
   const tiers = SERVICES_PAGE.TIERS;
 
   return (
@@ -34,24 +34,37 @@ export default function ServicesSection() {
           <ServiceCard TITLE={tiers.THREE.TITLE} PRICE={tiers.THREE.PRICE} DESC={tiers.THREE.DESC} FEATURES={tiers.THREE.FEATURES} index="03" />
         </div>
 
-        {/* THE NEW GATEKEEPER - Using "ACCESS_HOOK" */}
-        <div className="mt-32 text-center flex flex-col items-center max-w-3xl mx-auto p-12 rounded-2xl border border-white/5 bg-black/40 backdrop-blur-sm relative overflow-hidden group shadow-2xl">
-           <div className="absolute top-0 left-1/2 -translate-x-1/2 w-32 h-1 bg-brand-primary/50 blur-sm group-hover:bg-brand-primary transition-colors duration-500" />
+        {/* THE POPPY CONSTRUCTION GATEKEEPER */}
+        <div className="mt-32 text-center flex flex-col items-center max-w-3xl mx-auto p-12 rounded-2xl border-2 border-brand-primary/20 bg-black/60 backdrop-blur-xl relative overflow-hidden group shadow-[0_0_50px_rgba(6,182,212,0.1)]">
            
-           <Lock size={32} className="text-brand-primary/50 mb-6 group-hover:text-brand-primary transition-colors duration-300" />
+           {/* Industrial Corner Brackets */}
+           <div className="absolute top-0 left-0 w-8 h-8 border-t-2 border-l-2 border-brand-primary opacity-40" />
+           <div className="absolute top-0 right-0 w-8 h-8 border-t-2 border-r-2 border-brand-primary opacity-40" />
+           <div className="absolute bottom-0 left-0 w-8 h-8 border-b-2 border-l-2 border-brand-primary opacity-40" />
+           <div className="absolute bottom-0 right-0 w-8 h-8 border-b-2 border-r-2 border-brand-primary opacity-40" />
            
-           <h4 className="text-2xl font-black uppercase tracking-widest text-white mb-4">
+           {/* Top "Caution" Glow Line */}
+           <div className="absolute top-0 left-0 w-full h-1 bg-linear-to-r from-transparent via-brand-primary to-transparent opacity-50 group-hover:opacity-100 transition-opacity duration-500" />
+           
+           <div className="relative mb-6">
+              <HardHat size={40} className="text-brand-primary mb-2 animate-bounce" />
+              <Construction size={20} className="text-brand-primary/40 absolute -right-4 -bottom-1" />
+           </div>
+           
+           <h4 className="text-3xl font-black uppercase tracking-widest text-white mb-4 italic">
              {ACCESS_HOOK.TITLE}
            </h4>
            
-           <p className="text-sm text-text-muted mb-10 leading-relaxed max-w-xl mx-auto">
+           <p className="text-sm text-text-muted mb-10 leading-relaxed max-w-xl mx-auto font-mono uppercase tracking-tight">
              {ACCESS_HOOK.SUBHEAD}
            </p>
            
            <div className="w-full relative z-20">
-             {/* Using the updated JoinForm with 'Restricted Access' source */}
              <JoinForm source="Restricted Access" />
            </div>
+
+           {/* Animated Background Mesh */}
+           <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,#06b6d405_0%,transparent_70%)] pointer-events-none" />
         </div>
       </div>
     </section>

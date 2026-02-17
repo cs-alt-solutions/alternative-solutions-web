@@ -69,17 +69,17 @@ export const WEBSITE_COPY = {
   },
 
   ACCESS_HOOK: {
-    TITLE: "THE PRIVATE ECOSYSTEM",
-    SUBHEAD: "Access to the Architect's logs and Shift Studio is reserved for the community. Enter your details to unlock the full site and join the journey.",
+    TITLE: "THE WORKSHOP ACCESS",
+    SUBHEAD: "We're currently deep in the build phase. Drop your details below to unlock the full site, explore the Architect's logs, and get notified as new modules go live.",
     FIELDS: {
-      NAME: "Full Name",
+      NAME: "What's your name?",
       EMAIL: "Email Address",
-      PHONE: "Phone Number (Optional)",
+      PHONE: "Phone (Optional)",
       SMS_CONSENT: "Is it cool if we text you in the future with occasional updates?"
     },
-    BTN_SUBMIT: "UNLOCK ACCESS",
-    SUCCESS_MSG: "ACCESS GRANTED. WELCOME TO THE FOUNDATION.",
-    AUTO_SIGNUP: "HEY, YOU WEREN'T SIGNED UP YET—BUT NO WORRIES, WE GOT YOU. ACCESS UNLOCKED."
+    BTN_SUBMIT: "UNLOCK THE WORKSHOP",
+    SUCCESS_MSG: "ACCESS GRANTED. WELCOME TO THE BUILD.",
+    AUTO_SIGNUP: "HEY, YOU WEREN'T ON THE LIST YET—BUT NO WORRIES, WE SIGNED YOU UP. WELCOME IN."
   },
   JOIN_PAGE: {
     TITLE: "SHIFT STUDIO.",
