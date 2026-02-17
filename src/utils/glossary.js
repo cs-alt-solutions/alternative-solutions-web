@@ -327,7 +327,7 @@ export const WEBSITE_COPY = {
   SUPPORT_MODULE: {
     TITLE: "BACK THE FOUNDATION",
     DESC: "We are architecting a new way to work—focused on high-impact systems that buy our time back. If you believe in the hybrid approach and want to support the build, you can contribute here.",
-    STRIPE_LINK: "https://support.alternativesolutions.io/00wdR981ReCK4AZ2Zn97G00", 
+    STRIPE_LINK: "https://support.alternativesolutions.io/b/00wdR981ReCK4AZ2Zn97G00", 
     BTN_TEXT: "SUPPORT THE VISION"
   },
 
