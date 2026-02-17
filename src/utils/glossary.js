@@ -4,6 +4,7 @@ export const WEBSITE_COPY = {
     BRAND: "ALTERNATIVE SOLUTIONS",
     SERVICES: "SERVICES",
     SHIFT_STUDIO: "SHIFT STUDIO (BETA)",
+    ARCHITECT: "THE ARCHITECT",
     LOGIN: "CLIENT PORTAL",
   },
 
@@ -300,6 +301,36 @@ export const WEBSITE_COPY = {
     }
   },
 
+  SUPPORT_MODULE: {
+    TITLE: "BACK THE FOUNDATION",
+    DESC: "We are architecting a new way to work—focused on high-impact systems that buy our time back. If you believe in the hybrid approach and want to support the build, you can contribute here.",
+    STRIPE_LINK: "https://support.alternativesolutions.io/00wdR981ReCK4AZ2Zn97G00", 
+    BTN_TEXT: "SUPPORT THE VISION"
+  },
+
+  BEHIND_THE_ARCHITECT: {
+    TITLE: "THE HYBRID ARCHITECT",
+    SUBTITLE: "Synthesis over Specialization. Concept over Routine.",
+    BIO: {
+      JOURNEY_TITLE: "THE LIFELONG APPRENTICESHIP",
+      JOURNEY_DESC: "While others spent decades in a single lane, I spent mine traversing the entire infrastructure of modern industry. From the logistics floors of Amazon to the experience-driven halls of Disney; from managing teams to operating heavy machinery; from cleaning to corporate training. Family and friends saw 'job hopping.' I saw a masterclass in how the world actually fits together. I don't just write code; I connect concepts that specialists miss.",
+      PHILOSOPHY_TITLE: "THE ARCHITECT'S MANIFESTO",
+      PHILOSOPHY_DESC: "Specialties are vital, but they create silos. I am the bridge between the teacher and the doer. My 20-hour work week isn't a shortcut; it's the result of a lifelong education in efficiency. I build foundational frameworks so that business owners can stop wrestling with tech and start reclaiming their lives.",
+    },
+    HISTORY: [
+      { role: "Logistics & Flow", company: "Amazon" },
+      { role: "Experience Architecture", company: "Disney" },
+      { role: "Operations & Management", company: "Lowe's" },
+      { role: "Systems Integration", company: "Alternative Solutions" }
+    ],
+    SKILLSET: [
+      "AI-Powered Solution Architect",
+      "Concept Synthesis Specialist",
+      "Cross-Industry Business Analyst",
+      "Hybrid Mindset Twin"
+    ]
+  },
+
   API: {
     WAITLIST: {
       SUCCESS: "Added to the list.",
@@ -309,6 +340,7 @@ export const WEBSITE_COPY = {
     }
   }
 };
+
 export const ACTION_MESSAGES = {
   WAITLIST: {
     ERRORS: {

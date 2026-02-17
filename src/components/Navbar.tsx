@@ -1,6 +1,5 @@
 /* src/components/Navbar.tsx */
 'use client';
-
 import React, { useState } from 'react';
 import Link from 'next/link';
 import { WEBSITE_COPY } from '@/utils/glossary';
@@ -9,49 +8,42 @@ import { Menu, X } from 'lucide-react';
 export default function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
 
-  const toggleMenu = () => setIsOpen(!isOpen);
-
   return (
-    <nav className="sticky top-0 z-50 backdrop-blur-md border-b border-border-subtle bg-bg-app/80">
-      <div className="max-w-7xl mx-auto px-6 md:px-8 h-20 flex items-center justify-between">
-        
-        {/* BRAND LOGO */}
-        <Link href="/" className="flex items-center gap-3 z-50" onClick={() => setIsOpen(false)}>
-          <div className="w-3 h-3 bg-brand-primary rounded-sm shadow-[0_0_10px_rgba(6,182,212,0.8)]" />
-          <span className="font-bold text-lg tracking-tight uppercase">{WEBSITE_COPY.NAV.BRAND}</span>
+    <nav className="fixed top-0 w-full z-50 backdrop-blur-md border-b border-white/5 bg-black/80">
+      <div className="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
+        <Link href="/" className="flex items-center gap-3">
+          <div className="w-3 h-3 bg-cyan-500 rounded-sm" />
+          <span className="font-bold text-lg tracking-tight uppercase">
+            {WEBSITE_COPY.NAV.BRAND}
+          </span>
         </Link>
 
-        {/* DESKTOP NAVIGATION (Client Portal Removed) */}
+        {/* Desktop Links */}
         <div className="hidden md:flex items-center gap-8">
-          <Link href="/#services" className="text-xs font-mono text-text-muted hover:text-brand-accent transition-colors uppercase tracking-widest">{WEBSITE_COPY.NAV.SERVICES}</Link>
-          <Link href="/shift-studio" className="text-xs font-mono text-text-muted hover:text-brand-accent transition-colors uppercase tracking-widest">{WEBSITE_COPY.NAV.SHIFT_STUDIO}</Link>
+          <Link href="/shift-studio" className="text-xs font-mono text-zinc-400 hover:text-cyan-400 uppercase tracking-widest transition-colors">
+            {WEBSITE_COPY.NAV.SHIFT_STUDIO}
+          </Link>
+          <Link href="/architect" className="text-xs font-mono text-zinc-400 hover:text-cyan-400 uppercase tracking-widest transition-colors">
+            {WEBSITE_COPY.NAV.ARCHITECT}
+          </Link>
         </div>
 
-        {/* MOBILE TOGGLE BUTTON */}
-        <button 
-          className="md:hidden p-2 text-text-muted hover:text-white transition-colors z-50"
-          onClick={toggleMenu}
-          aria-label="Toggle Menu"
-        >
+        <button className="md:hidden text-zinc-400" onClick={() => setIsOpen(!isOpen)}>
           {isOpen ? <X size={24} /> : <Menu size={24} />}
         </button>
       </div>
 
-      {/* MOBILE DROP-DOWN MENU (Client Portal Removed) */}
-      <div 
-        className={`md:hidden absolute top-20 left-0 w-full bg-bg-app/95 backdrop-blur-xl border-b border-border-subtle transition-all duration-300 ease-in-out ${
-          isOpen ? 'opacity-100 translate-y-0 visible' : 'opacity-0 -translate-y-4 invisible'
-        }`}
-      >
-        <div className="flex flex-col px-6 py-8 space-y-6 text-center shadow-2xl">
-          <Link href="/#services" onClick={toggleMenu} className="text-sm font-mono text-text-muted hover:text-brand-accent transition-colors uppercase tracking-widest">
-            {WEBSITE_COPY.NAV.SERVICES}
-          </Link>
-          <Link href="/shift-studio" onClick={toggleMenu} className="text-sm font-mono text-text-muted hover:text-brand-accent transition-colors uppercase tracking-widest">
+      {/* Mobile Menu */}
+      {isOpen && (
+        <div className="md:hidden bg-black border-b border-white/5 flex flex-col p-6 gap-6">
+          <Link href="/shift-studio" onClick={() => setIsOpen(false)} className="text-xs font-mono uppercase tracking-widest text-zinc-400">
             {WEBSITE_COPY.NAV.SHIFT_STUDIO}
           </Link>
+          <Link href="/architect" onClick={() => setIsOpen(false)} className="text-xs font-mono uppercase tracking-widest text-zinc-400">
+            {WEBSITE_COPY.NAV.ARCHITECT}
+          </Link>
         </div>
-      </div>
+      )}
     </nav>
   );
 }
