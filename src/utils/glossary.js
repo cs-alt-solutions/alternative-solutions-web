@@ -70,17 +70,16 @@ export const WEBSITE_COPY = {
 
   ACCESS_HOOK: {
     TITLE: "THE PRIVATE ECOSYSTEM",
-    SUBHEAD: "Alternative Solutions is currently operating as a closed ecosystem. Submit your information below to request access and unlock the Architect's logs and Shift Studio.",
+    SUBHEAD: "Access to the Architect's logs and Shift Studio is reserved for the community. Enter your details to unlock the full site and join the journey.",
     FIELDS: {
       NAME: "Full Name",
       EMAIL: "Email Address",
       PHONE: "Phone Number (Optional)",
       SMS_CONSENT: "Is it cool if we text you in the future with occasional updates?"
     },
-    BTN_SUBMIT: "REQUEST ACCESS",
-    SUCCESS_MSG: "REQUEST RECEIVED. YOU ARE ON THE LIST.",
-    // Added for our new auto-persistence logic
-    AUTO_SIGNUP: "HEY, YOU WEREN'T SIGNED UP YET—BUT NO WORRIES, WE GOT YOU. YOU'RE IN."
+    BTN_SUBMIT: "UNLOCK ACCESS",
+    SUCCESS_MSG: "ACCESS GRANTED. WELCOME TO THE FOUNDATION.",
+    AUTO_SIGNUP: "HEY, YOU WEREN'T SIGNED UP YET—BUT NO WORRIES, WE GOT YOU. ACCESS UNLOCKED."
   },
   JOIN_PAGE: {
     TITLE: "SHIFT STUDIO.",

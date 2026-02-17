@@ -9,7 +9,7 @@ import { ArrowRight, CheckCircle2, Loader2, RefreshCw } from 'lucide-react';
 export default function JoinForm({ source }: { source: 'Shift Studio' | 'Restricted Access' }) {
   const [status, setStatus] = useState<'idle' | 'loading' | 'success'>('idle');
   const [mode, setMode] = useState<'apply' | 'returning'>('apply');
-  const [successMessage, setSuccessMessage] = useState('');
+  const [message, setMessage] = useState('');
   const formRef = useRef<HTMLFormElement>(null);
 
   async function action(formData: FormData) {
@@ -17,13 +17,17 @@ export default function JoinForm({ source }: { source: 'Shift Studio' | 'Restric
     const res = await joinWaitlist(formData);
     
     if (res?.success) {
+      // 1. Set Access in Browser
+      localStorage.setItem('alt_solutions_access', 'true');
+      
+      // 2. Notify Navbar to show links immediately
+      window.dispatchEvent(new Event('accessGranted'));
+
       setStatus('success');
-      // Logic: If it's a returning user without an existing record, or they used 'Returning' mode
-      if (res.isNew) {
-        setSuccessMessage(WEBSITE_COPY.ACCESS_HOOK.AUTO_SIGNUP);
-      } else {
-        setSuccessMessage(WEBSITE_COPY.ACCESS_HOOK.SUCCESS_MSG);
-      }
+      
+      if (res.isNew) setMessage(WEBSITE_COPY.ACCESS_HOOK.AUTO_SIGNUP);
+      else setMessage(WEBSITE_COPY.ACCESS_HOOK.SUCCESS_MSG);
+      
       formRef.current?.reset();
     } else {
       setStatus('idle');
@@ -35,7 +39,7 @@ export default function JoinForm({ source }: { source: 'Shift Studio' | 'Restric
       <div className="flex flex-col items-center justify-center gap-4 text-brand-primary border border-brand-primary/20 bg-brand-primary/5 px-8 py-8 rounded-xl w-full mx-auto animate-in fade-in zoom-in duration-500 text-center">
         <CheckCircle2 size={32} />
         <span className="text-xs font-bold uppercase tracking-widest leading-relaxed max-w-sm">
-          {successMessage}
+          {message}
         </span>
       </div>
     );
@@ -67,7 +71,7 @@ export default function JoinForm({ source }: { source: 'Shift Studio' | 'Restric
           </>
         ) : (
           <div className="space-y-1.5 animate-in slide-in-from-top-2">
-            <label className="text-[10px] font-mono text-text-muted uppercase tracking-widest pl-2">ENTER EMAIL TO RESUME ACCESS</label>
+            <label className="text-[10px] font-mono text-text-muted uppercase tracking-widest pl-2">ENTER EMAIL TO UNLOCK SITE</label>
             <input type="email" name="email" required className="w-full bg-black/50 border border-white/10 rounded-lg px-4 py-3 text-sm focus:outline-none focus:border-brand-primary/50 transition-colors text-white" />
           </div>
         )}
@@ -78,11 +82,12 @@ export default function JoinForm({ source }: { source: 'Shift Studio' | 'Restric
       </form>
 
       <button 
+        type="button"
         onClick={() => setMode(mode === 'apply' ? 'returning' : 'apply')}
         className="mt-6 text-[10px] font-mono text-white/40 hover:text-brand-primary transition-colors flex items-center justify-center gap-2 w-full uppercase tracking-[0.2em]"
       >
         <RefreshCw size={12} />
-        {mode === 'apply' ? "I've already requested access" : "I need to sign up"}
+        {mode === 'apply' ? "I've already joined" : "I need to join"}
       </button>
     </div>
   );
