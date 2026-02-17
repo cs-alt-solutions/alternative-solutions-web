@@ -70,13 +70,16 @@ export const WEBSITE_COPY = {
   AGENCY_HOOK: {
     TITLE: "READY TO STOP THE LEAK?",
     SUBHEAD: "Let's map out your workflow and find the friction. Request a custom systems audit and let's build a foundation you actually own.",
+    INPUT_PLACEHOLDER: "enter your work email...",
+    BTN_SUBMIT: "REQUEST AUDIT",
+    SUCCESS_MSG: "REQUEST RECEIVED. WE WILL BE IN TOUCH."
   },
 
   JOIN_PAGE: {
     TITLE: "SHIFT STUDIO.",
     SUBHEAD: "The command center for creators is currently in private testing. Join the list to secure access.",
     INPUT_PLACEHOLDER: "enter your email address...",
-    BTN_SUBMIT: "REQUEST ACCESS",
+    BTN_SUBMIT: "REQUEST BETA ACCESS",
     SUCCESS_MSG: "YOU'RE ON THE LIST. STAY TUNED.",
     HYPE: {
       VIDEO_TITLE: "STOP JUGGLING APPS.",
@@ -251,5 +254,15 @@ export const WEBSITE_COPY = {
       ERR_INVALID: "Invalid email address.",
       ERR_SERVER: "Server error. Try again later.",
     }
+  }
+};
+export const ACTION_MESSAGES = {
+  WAITLIST: {
+    ERRORS: {
+      EMAIL_REQUIRED: "Email is required to join the waitlist.",
+      EMAIL_DUPLICATE: "This email is already on our waitlist. We'll be in touch soon!",
+      GENERIC_FAIL: "Failed to join waitlist. Please try again later.",
+    },
+    SUCCESS: "Successfully joined the waitlist!"
   }
 };

@@ -1,7 +1,7 @@
 /* src/app/dashboard/page.tsx */
 import React from 'react';
 import Link from 'next/link';
-import { MOCK_DB } from '@/data/store'; 
+import { supabase } from '@/utils/supabase'; // <-- INJECTING THE LIVE CLIENT
 import { WEBSITE_COPY } from '@/utils/glossary';
 import NavItem from '@/components/core/NavItem';
 import StatCard from '@/components/core/StatCard';
@@ -11,35 +11,35 @@ import TelemetryPanel from '@/components/workspace/TelemetryPanel';
 import DailyDirectivePanel, { DirectiveItem } from '@/components/workspace/DailyDirectivePanel';
 import NetworkPulse from '@/components/workspace/NetworkPulse';
 import PlatformTrackerPanel from '@/components/workspace/PlatformTrackerPanel';
+import { Project, WaitlistEntry } from '@/data/store'; // Keeping our types!
 import { 
-  LayoutDashboard, 
-  CheckSquare, 
-  Users, 
-  Settings, 
-  Search, 
-  Bell, 
-  Cpu,
-  ShieldCheck,
-  Activity,
-  Ticket,
-  Inbox,
-  FileText,
-  Terminal
+  LayoutDashboard, CheckSquare, Users, Settings, Search, Bell, 
+  Cpu, ShieldCheck, Activity, Ticket, Inbox, FileText, Terminal
 } from 'lucide-react';
 
-export default function CommandConsole() {
+export default async function CommandConsole() {
   const sidebarCopy = WEBSITE_COPY.DASHBOARD.SIDEBAR;
   const overviewCopy = WEBSITE_COPY.DASHBOARD.OVERVIEW;
   const commonCopy = WEBSITE_COPY.DASHBOARD.COMMON;
 
-  // --- DATA PIPELINE LOGIC ---
-  const pendingBeta = MOCK_DB.waitlist.filter(w => w.source === 'Shift Studio' && w.status === 'Pending');
-  const agencyInquiries = MOCK_DB.waitlist.filter(w => w.source === 'Agency Inquiry' && w.status !== 'Onboarded');
-  const internalProjects = MOCK_DB.projects.filter(p => p.client === 'Internal');
-  const openTasksCount = internalProjects.reduce((acc, p) => acc + p.tasks.filter(t => t.status !== 'Done').length, 0);
+  // --- LIVE DATA PIPELINE LOGIC ---
+  // Fetching waitlist and projects (with their nested tasks) concurrently
+  const [ { data: waitlistData }, { data: projectsData } ] = await Promise.all([
+    supabase.from('waitlist').select('*').order('date', { ascending: false }),
+    supabase.from('projects').select('*, tasks(*)') // Pulls projects and their related tasks
+  ]);
+
+  const waitlist = (waitlistData as WaitlistEntry[]) || [];
+  const projects = (projectsData as Project[]) || [];
+
+  const pendingBeta = waitlist.filter(w => w.source === 'Shift Studio' && w.status === 'Pending');
+  const agencyInquiries = waitlist.filter(w => w.source === 'Agency Inquiry' && w.status !== 'Onboarded');
+  const internalProjects = projects.filter(p => p.client === 'Internal');
+  
+  const openTasksCount = internalProjects.reduce((acc, p) => acc + (p.tasks?.filter(t => t.status !== 'Done').length || 0), 0);
   const priorityQueue = [...pendingBeta, ...agencyInquiries].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
 
-  // --- THE DAILY DIRECTIVE GENERATOR (HEAVY LIFTING ONLY) ---
+  // --- THE DAILY DIRECTIVE GENERATOR ---
   const generatedDirectives: DirectiveItem[] = [];
   agencyInquiries.forEach(lead => {
     generatedDirectives.push({
@@ -51,7 +51,7 @@ export default function CommandConsole() {
     });
   });
   internalProjects.forEach(project => {
-    project.tasks.filter(t => t.status === 'In Progress').forEach(task => {
+    project.tasks?.filter(t => t.status === 'In Progress').forEach(task => {
       generatedDirectives.push({
         id: task.id,
         type: 'TASK',

@@ -1,30 +1,43 @@
 /* src/app/actions.ts */
 'use server';
 
-import { MOCK_DB, WaitlistEntry } from '@/data/store';
+import { supabase } from '@/utils/supabase';
 import { revalidatePath } from 'next/cache';
+import { ACTION_MESSAGES } from '@/utils/glossary';
 
 export async function joinWaitlist(formData: FormData) {
   const email = formData.get('email') as string;
   
   // STRICT TYPING: Only accepts our defined pathways. 
-  const source = (formData.get('source') as 'Shift Studio' | 'Agency Inquiry') || 'Shift Studio';
+  const source = (formData.get('source') as string) || 'Shift Studio';
 
   if (!email) {
-    return { error: 'Email is required' };
+    return { error: ACTION_MESSAGES.WAITLIST.ERRORS.EMAIL_REQUIRED };
   }
 
-  // 1. Construct the new lead entry
-  const newEntry: WaitlistEntry = {
-    id: `w-${Date.now()}`,
-    email,
-    date: new Date().toISOString().split('T')[0], // Formats as YYYY-MM-DD
-    status: 'Pending',
-    source,
-  };
+  // 1. Push to our live Supabase database
+  const { error } = await supabase
+    .from('waitlist')
+    .insert([
+      { 
+        email, 
+        source, 
+        status: 'Pending' 
+      }
+    ]);
 
-  // 2. Push to our database (currently MOCK_DB, eventually Postgres/Firebase)
-  MOCK_DB.waitlist.unshift(newEntry); // unshift puts the newest lead at the top
+  // 2. Error Handling & Glossary Routing
+  if (error) {
+    console.error("Database Error:", error.message);
+    
+    // Postgres unique constraint violation (User already applied)
+    if (error.code === '23505') {
+      return { error: ACTION_MESSAGES.WAITLIST.ERRORS.EMAIL_DUPLICATE };
+    }
+    
+    // Catch-all failure
+    return { error: ACTION_MESSAGES.WAITLIST.ERRORS.GENERIC_FAIL };
+  }
 
   // 3. Command Next.js to refresh the dashboard instantly
   revalidatePath('/dashboard/waitlist');

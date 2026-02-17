@@ -1,25 +1,47 @@
 /* src/app/dashboard/waitlist/page.tsx */
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { MOCK_DB } from '@/data/store';
+import { supabase } from '@/utils/supabase'; // <-- INJECTING THE LIVE CLIENT
 import { WEBSITE_COPY } from '@/utils/glossary';
-import { ArrowLeft, Download, Filter, Mail, Key, X } from 'lucide-react';
+import { ArrowLeft, Download, Filter, Mail, Key, X, Loader2 } from 'lucide-react';
 import WaitlistRow from '@/components/dashboard/WaitlistRow';
+import { WaitlistEntry } from '@/data/store';
 
 export default function BetaWaitlistCommand() {
   const copy = WEBSITE_COPY.DASHBOARD.WAITLIST;
-  const betaTesters = MOCK_DB.waitlist.filter(entry => entry.source === 'Shift Studio');
   
-  // Bulk Selection State
+  // LIVE DATA STATES
+  const [betaTesters, setBetaTesters] = useState<WaitlistEntry[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+
+  // FETCH FROM DATABASE ON LOAD
+  useEffect(() => {
+    async function fetchWaitlist() {
+      const { data, error } = await supabase
+        .from('waitlist')
+        .select('*')
+        .eq('source', 'Shift Studio') // Only grab the Beta testers here
+        .order('date', { ascending: false });
+
+      if (error) {
+        console.error("Failed to fetch waitlist:", error);
+      } else {
+        setBetaTesters(data || []);
+      }
+      setIsLoading(false);
+    }
+
+    fetchWaitlist();
+  }, []);
 
   const handleSelectAll = () => {
     if (selectedIds.size === betaTesters.length) {
-      setSelectedIds(new Set()); // Deselect all
+      setSelectedIds(new Set()); 
     } else {
-      setSelectedIds(new Set(betaTesters.map(t => t.id))); // Select all
+      setSelectedIds(new Set(betaTesters.map(t => t.id))); 
     }
   };
 
@@ -54,7 +76,7 @@ export default function BetaWaitlistCommand() {
             </div>
           </div>
 
-          <div className="bg-black/40 border border-white/5 rounded-xl shadow-2xl flex-1 flex flex-col backdrop-blur-sm relative z-20">
+          <div className="bg-black/40 border border-white/5 rounded-xl shadow-2xl flex-1 flex flex-col backdrop-blur-sm relative z-20 overflow-hidden">
              
              <div className="p-4 border-b border-white/5 flex justify-between items-center bg-white/2">
                 <div className="flex items-center gap-2 bg-black/50 border border-white/10 rounded-md px-3 py-1.5 focus-within:border-brand-primary/50 transition-colors">
@@ -73,37 +95,42 @@ export default function BetaWaitlistCommand() {
                 </button>
              </div>
 
-             <div className="flex-1 overflow-auto">
-                <table className="w-full text-left text-sm">
-                   <thead className="bg-black/60 sticky top-0 z-10 text-white/40 font-mono text-[10px] uppercase border-b border-white/5">
-                     <tr>
-                       <th className="px-6 py-4 font-normal tracking-wider w-12">
-                         {/* SELECT ALL CHECKBOX */}
-                         <input 
-                           type="checkbox" 
-                           checked={selectedIds.size === betaTesters.length && betaTesters.length > 0}
-                           onChange={handleSelectAll}
-                           className="w-4 h-4 bg-black/50 border border-white/20 rounded-sm appearance-none checked:bg-brand-primary checked:border-brand-primary cursor-pointer relative after:content-['✓'] after:absolute after:text-black after:text-[10px] after:font-bold after:top-1/2 after:left-1/2 after:-translate-x-1/2 after:-translate-y-1/2 after:opacity-0 checked:after:opacity-100 transition-all"
+             <div className="flex-1 overflow-auto relative">
+                {isLoading ? (
+                  <div className="absolute inset-0 flex items-center justify-center">
+                    <Loader2 className="animate-spin text-brand-primary/50" size={24} />
+                  </div>
+                ) : (
+                  <table className="w-full text-left text-sm">
+                     <thead className="bg-black/60 sticky top-0 z-10 text-white/40 font-mono text-[10px] uppercase border-b border-white/5">
+                       <tr>
+                         <th className="px-6 py-4 font-normal tracking-wider w-12">
+                           <input 
+                             type="checkbox" 
+                             checked={selectedIds.size === betaTesters.length && betaTesters.length > 0}
+                             onChange={handleSelectAll}
+                             className="w-4 h-4 bg-black/50 border border-white/20 rounded-sm appearance-none checked:bg-brand-primary checked:border-brand-primary cursor-pointer relative after:content-['✓'] after:absolute after:text-black after:text-[10px] after:font-bold after:top-1/2 after:left-1/2 after:-translate-x-1/2 after:-translate-y-1/2 after:opacity-0 checked:after:opacity-100 transition-all"
+                           />
+                         </th>
+                         <th className="px-6 py-4 font-normal tracking-wider">{copy.COLUMNS.EMAIL}</th>
+                         <th className="px-6 py-4 font-normal tracking-wider">{copy.COLUMNS.SOURCE}</th>
+                         <th className="px-6 py-4 font-normal tracking-wider">{copy.COLUMNS.JOINED}</th>
+                         <th className="px-6 py-4 font-normal tracking-wider">{copy.COLUMNS.STATUS}</th>
+                         <th className="px-6 py-4 font-normal tracking-wider text-right">{copy.COLUMNS.ACTIONS}</th>
+                       </tr>
+                     </thead>
+                     <tbody>
+                       {betaTesters.map(entry => (
+                         <WaitlistRow 
+                           key={entry.id} 
+                           entry={entry} 
+                           isSelected={selectedIds.has(entry.id)}
+                           onToggleSelect={() => handleToggleSelect(entry.id)}
                          />
-                       </th>
-                       <th className="px-6 py-4 font-normal tracking-wider">{copy.COLUMNS.EMAIL}</th>
-                       <th className="px-6 py-4 font-normal tracking-wider">{copy.COLUMNS.SOURCE}</th>
-                       <th className="px-6 py-4 font-normal tracking-wider">{copy.COLUMNS.JOINED}</th>
-                       <th className="px-6 py-4 font-normal tracking-wider">{copy.COLUMNS.STATUS}</th>
-                       <th className="px-6 py-4 font-normal tracking-wider text-right">{copy.COLUMNS.ACTIONS}</th>
-                     </tr>
-                   </thead>
-                   <tbody>
-                     {betaTesters.map(entry => (
-                       <WaitlistRow 
-                         key={entry.id} 
-                         entry={entry} 
-                         isSelected={selectedIds.has(entry.id)}
-                         onToggleSelect={() => handleToggleSelect(entry.id)}
-                       />
-                     ))}
-                   </tbody>
-                </table>
+                       ))}
+                     </tbody>
+                  </table>
+                )}
              </div>
           </div>
        </div>
