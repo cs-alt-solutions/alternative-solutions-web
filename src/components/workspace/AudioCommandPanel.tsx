@@ -43,7 +43,7 @@ export default function AudioCommandPanel() {
 
   const processFile = (selectedFile: File) => {
     if (!selectedFile.type.startsWith('audio/')) {
-      setErrorMsg('INVALID FORMAT. UPLOAD AUDIO FILES ONLY.');
+      setErrorMsg(copy.ERRORS.INVALID_FORMAT);
       setStatus('error');
       return;
     }
@@ -53,7 +53,7 @@ export default function AudioCommandPanel() {
     setErrorMsg('');
 
     const today = new Date().toISOString().split('T')[0];
-    setTitle(`LOG // ${today}`);
+    setTitle(`${copy.INPUTS.DEFAULT_PREFIX} ${today}`);
 
     const objectUrl = URL.createObjectURL(selectedFile);
     const audio = new Audio(objectUrl);
@@ -135,8 +135,8 @@ export default function AudioCommandPanel() {
                 }`}
               >
                 <UploadCloud size={24} className={`mb-3 ${isDragging ? 'text-brand-primary' : 'text-white/40'}`} />
-                <p className="text-xs font-bold text-white uppercase tracking-widest mb-1">Upload Transmission</p>
-                <p className="text-[10px] text-text-muted font-mono uppercase">Drag & Drop Google Audio File</p>
+                <p className="text-xs font-bold text-white uppercase tracking-widest mb-1">{copy.INPUTS.UPLOAD_TITLE}</p>
+                <p className="text-[10px] text-text-muted font-mono uppercase">{copy.INPUTS.UPLOAD_DESC}</p>
                 <input 
                   type="file" 
                   accept="audio/*" 
@@ -153,7 +153,7 @@ export default function AudioCommandPanel() {
                     <FileAudio size={16} className="text-brand-primary shrink-0" />
                     <div className="truncate">
                       <p className="text-xs font-bold text-white truncate">{file.name}</p>
-                      <p className="text-[10px] text-text-muted font-mono">{duration} // READY</p>
+                      <p className="text-[10px] text-text-muted font-mono">{duration} {copy.INPUTS.READY_STATUS}</p>
                     </div>
                   </div>
                   <button type="button" onClick={clearFile} className="text-white/40 hover:text-white p-1">
@@ -211,7 +211,7 @@ export default function AudioCommandPanel() {
                   disabled={status === 'loading'}
                   className="w-full bg-brand-primary hover:bg-brand-primary/90 text-black font-bold rounded py-2.5 text-[10px] font-mono uppercase tracking-widest flex items-center justify-center gap-2 transition-all"
                 >
-                  <Mic2 size={14} /> {status === 'loading' ? 'UPLINKING TO SUPABASE...' : copy.BTN_PUBLISH}
+                  <Mic2 size={14} /> {status === 'loading' ? copy.BTN_UPLOADING : copy.BTN_PUBLISH}
                 </button>
               </form>
             )}

@@ -85,10 +85,10 @@ export const WEBSITE_COPY = {
     HYPE: {
       VIDEO_TITLE: "STOP JUGGLING APPS.",
       VIDEO_DESC: "Combining inventory, financials, and sales into one glass pane.",
-      PODCAST_TITLE: "THE AUDIO LOGS",
+      PODCAST_TITLE: "THE ARCHITECT'S PODCAST",
       PODCAST_DESC: "Listen to the development journey and the philosophy behind Shift Studio.",
       AUDIO_PLAYER: {
-        PREFIX: "LOG //",
+        PREFIX: "EPISODE //",
         STREAMING: "STREAMING...",
         ENCRYPTED: "ENCRYPTED"
       },
@@ -132,10 +132,10 @@ export const WEBSITE_COPY = {
   },
 
   PUBLIC_LOGS: {
-    TITLE: "THE AUDIO LOGS",
-    SUBHEAD: "TRANSMISSIONS FROM THE ARCHITECT",
+    TITLE: "THE ARCHITECT'S PODCAST",
+    SUBHEAD: "TRANSMISSIONS & STRATEGY",
     DESC: "Listen to the philosophy, the build process, and the strategies behind Alternative Solutions.",
-    EMPTY: "AWAITING INCOMING TRANSMISSIONS..."
+    EMPTY: "AWAITING INCOMING EPISODES..."
   },
 
   DASHBOARD: {
@@ -206,20 +206,26 @@ export const WEBSITE_COPY = {
     },
     AUDIO_COMMAND: {
       TITLE: "BROADCAST TRANSMISSION",
-      SUBTITLE: "AUDIO LOG UPLINK",
+      SUBTITLE: "PODCAST UPLINK",
       INPUTS: {
-        TITLE: "Transmission Title...",
-        DESC: "Log summary & directives...",
+        TITLE: "Episode Title...",
+        DESC: "Episode summary & directives...",
         DURATION: "MM:SS",
         URL: "Audio Stream URL (Optional)",
         CATEGORY_PUBLIC: "PUBLIC (Landing Page)",
-        CATEGORY_BETA: "BETA (Shift Studio)"
+        CATEGORY_BETA: "BETA (Shift Studio)",
+        UPLOAD_TITLE: "UPLOAD EPISODE",
+        UPLOAD_DESC: "Drag & Drop Audio File",
+        READY_STATUS: "// READY",
+        DEFAULT_PREFIX: "EPISODE //"
       },
       BTN_PUBLISH: "INITIALIZE BROADCAST",
+      BTN_UPLOADING: "UPLINKING TO SUPABASE...",
       SUCCESS: "TRANSMISSION LIVE",
       ERRORS: {
         REQUIRED: "TITLE, DESC, AND DURATION REQUIRED.",
-        FAIL: "TRANSMISSION FAILED. RETRY."
+        FAIL: "TRANSMISSION FAILED. RETRY.",
+        INVALID_FORMAT: "INVALID FORMAT. UPLOAD AUDIO FILES ONLY."
       }
     },
     WAITLIST: {
@@ -270,12 +276,12 @@ export const WEBSITE_COPY = {
       TITLE: "BROADCAST & MEDIA",
       SUBTITLE: "MASTER COMMAND",
       TABS: {
-        AUDIO: "AUDIO LOGS",
+        AUDIO: "PODCAST EPISODES",
         SOCIAL: "SOCIAL NETWORK",
         CAMPAIGNS: "EMAIL CAMPAIGNS",
       },
       AUDIO_MODULE: {
-        LEAD_COUNT: "ACTIVE LOGS:",
+        LEAD_COUNT: "ACTIVE EPISODES:",
         COLUMNS: {
           TITLE: "TITLE & DESC",
           CATEGORY: "CHANNEL",
@@ -289,7 +295,8 @@ export const WEBSITE_COPY = {
           ARCHIVE: "ARCHIVE",
           SAVE: "SAVE",
           CANCEL: "CANCEL",
-          TOGGLE_VIS: "TOGGLE VISIBILITY"
+          TOGGLE_VIS: "TOGGLE VISIBILITY",
+          CONFIRM_ARCHIVE: "Are you sure you want to archive this episode?"
         },
         STATUS: {
           ACTIVE: "LIVE",

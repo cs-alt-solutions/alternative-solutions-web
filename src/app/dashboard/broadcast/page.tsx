@@ -36,7 +36,7 @@ export default function BroadcastHub() {
   }, [activeTab]);
 
   async function handleArchive(id: string) {
-    if (!window.confirm("Are you sure you want to archive this transmission?")) return;
+    if (!window.confirm(audioCopy.ACTIONS.CONFIRM_ARCHIVE)) return;
     const formData = new FormData();
     formData.append('id', id);
     await archiveAudioLog(formData);
