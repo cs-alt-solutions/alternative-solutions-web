@@ -34,7 +34,7 @@ export default async function PublicAudioLogs() {
       </div>
       
       {/* Scrollable container so it doesn't break the layout if you upload 20 logs */}
-      <div className="space-y-3 flex flex-col max-h-[350px] overflow-y-auto pr-2">
+      <div className="space-y-3 flex flex-col max-h-87.5 overflow-y-auto pr-2">
         {audioLogs.map((log: any) => (
           <div key={log.id} className="w-full">
              <AudioLogEntry log={log} />

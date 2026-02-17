@@ -12,7 +12,7 @@ export default function Home() {
   return (
     <main className="min-h-screen flex flex-col bg-bg-app font-sans text-white overflow-x-hidden relative">
       {/* Universal Background for the top section */}
-      <div className="absolute top-0 left-0 w-full h-[100vh] bg-stardust pointer-events-none z-0" />
+      <div className="absolute top-0 left-0 w-full h-screen bg-stardust pointer-events-none z-0" />
       
       {/* SPLIT CONSOLE LAYOUT: Hero Left, Logs Right */}
       <div className="relative z-10 max-w-7xl mx-auto px-6 pt-32 pb-16 w-full">
