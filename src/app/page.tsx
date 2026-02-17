@@ -9,7 +9,7 @@ import Footer from '@/components/Footer';
 export default function Home() {
   return (
     <main className="min-h-screen flex flex-col bg-bg-app font-sans text-white overflow-x-hidden relative">
-      {/* Universal Background for the top section */}
+      {/* Universal Background */}
       <div className="absolute top-0 left-0 w-full h-screen bg-stardust pointer-events-none z-0" />
       
       {/* FOCUSED HERO LAYOUT */}
@@ -19,8 +19,7 @@ export default function Home() {
       
       <Mission />
       <HowWeWork />
-      <ServicesSection />
-      {/* Removed the AgencyHook to maintain the closed-ecosystem mystery */}
+      <ServicesSection /> {/* This now contains the Restricted Access gatekeeper */}
       <Footer />
     </main>
   );
