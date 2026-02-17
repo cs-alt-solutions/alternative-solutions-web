@@ -4,20 +4,23 @@
 import React, { useRef, useState } from 'react';
 import { WEBSITE_COPY } from '@/utils/glossary';
 import { joinWaitlist } from '@/app/actions';
-import { ArrowRight, CheckCircle2, Loader2 } from 'lucide-react';
+import { ArrowRight, CheckCircle2, Loader2, AlertTriangle } from 'lucide-react';
 
 export default function JoinForm({ source }: { source: 'Shift Studio' | 'Restricted Access' }) {
-  const [status, setStatus] = useState<'idle' | 'loading' | 'success'>('idle');
+  const [status, setStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
+  const [errorMessage, setErrorMessage] = useState('');
   const formRef = useRef<HTMLFormElement>(null);
 
   async function action(formData: FormData) {
     setStatus('loading');
+    setErrorMessage('');
     const res = await joinWaitlist(formData);
     if (res?.success) {
       setStatus('success');
       formRef.current?.reset();
     } else {
-      setStatus('idle');
+      setStatus('error');
+      setErrorMessage(res?.error || 'Failed to submit application.');
     }
   }
 
@@ -37,6 +40,14 @@ export default function JoinForm({ source }: { source: 'Shift Studio' | 'Restric
     );
   }
 
+  // --- ERROR BANNER ---
+  const ErrorBanner = () => status === 'error' ? (
+    <div className="flex items-center gap-3 text-red-400 bg-red-400/10 border border-red-400/20 px-4 py-3 rounded-lg text-[10px] font-mono mb-4 animate-in fade-in duration-300">
+      <AlertTriangle size={14} className="shrink-0" />
+      <span className="uppercase tracking-widest">{errorMessage}</span>
+    </div>
+  ) : null;
+
   // --- THE COMMUNITY GATEKEEPER ---
   if (source === 'Restricted Access') {
     const copy = WEBSITE_COPY.ACCESS_HOOK;
@@ -45,6 +56,8 @@ export default function JoinForm({ source }: { source: 'Shift Studio' | 'Restric
     return (
       <form ref={formRef} action={action} className="flex flex-col gap-5 w-full text-left animate-in fade-in duration-500">
         <input type="hidden" name="source" value={source} />
+        
+        <ErrorBanner />
         
         <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
           <div className="space-y-1.5">
@@ -87,18 +100,21 @@ export default function JoinForm({ source }: { source: 'Shift Studio' | 'Restric
   const copy = WEBSITE_COPY.JOIN_PAGE;
   
   return (
-    <form ref={formRef} action={action} className="flex flex-col sm:flex-row gap-3 w-full max-w-md mx-auto animate-in fade-in duration-500">
-      <input type="hidden" name="source" value={source} />
-      <input 
-        type="email" 
-        name="email" 
-        required 
-        placeholder={copy.INPUT_PLACEHOLDER} 
-        className="flex-1 bg-black/50 border border-white/10 rounded-full px-6 py-3 text-sm focus:outline-none focus:border-brand-primary/50 transition-colors text-white placeholder:text-white/20" 
-      />
-      <button type="submit" disabled={status === 'loading'} className="btn-brand flex items-center justify-center gap-2 px-6 rounded-full disabled:opacity-50">
-        {status === 'loading' ? <Loader2 size={16} className="animate-spin" /> : <>{copy.BTN_SUBMIT} <ArrowRight size={16} /></>}
-      </button>
+    <form ref={formRef} action={action} className="flex flex-col w-full max-w-md mx-auto animate-in fade-in duration-500">
+      <ErrorBanner />
+      <div className="flex flex-col sm:flex-row gap-3">
+        <input type="hidden" name="source" value={source} />
+        <input 
+          type="email" 
+          name="email" 
+          required 
+          placeholder={copy.INPUT_PLACEHOLDER} 
+          className="flex-1 bg-black/50 border border-white/10 rounded-full px-6 py-3 text-sm focus:outline-none focus:border-brand-primary/50 transition-colors text-white placeholder:text-white/20" 
+        />
+        <button type="submit" disabled={status === 'loading'} className="btn-brand flex items-center justify-center gap-2 px-6 rounded-full disabled:opacity-50">
+          {status === 'loading' ? <Loader2 size={16} className="animate-spin" /> : <>{copy.BTN_SUBMIT} <ArrowRight size={16} /></>}
+        </button>
+      </div>
     </form>
   );
 }

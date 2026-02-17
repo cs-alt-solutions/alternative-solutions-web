@@ -10,7 +10,7 @@ export async function joinWaitlist(formData: FormData) {
   const email = formData.get('email') as string;
   const source = (formData.get('source') as string) || 'Shift Studio';
   
-  // New Community Building Fields
+  // Community Building Fields
   const name = formData.get('name') as string | null;
   const phone = formData.get('phone') as string | null;
   const sms_consent = formData.get('sms_consent') === 'on'; 
@@ -20,7 +20,14 @@ export async function joinWaitlist(formData: FormData) {
   }
 
   // Construct the payload dynamically 
-  const payload: any = { email, source, status: 'Pending' };
+  const payload: any = { 
+    email, 
+    source, 
+    status: 'Pending',
+    date: new Date().toISOString(),
+    created_at: new Date().toISOString()
+  };
+  
   if (name) payload.name = name;
   if (phone) payload.phone = phone;
   payload.sms_consent = sms_consent;
@@ -30,10 +37,15 @@ export async function joinWaitlist(formData: FormData) {
     .insert([payload]);
 
   if (error) {
+    // 1. Log the raw, ugly error to your server console so YOU can see it.
     console.error("Database Error:", error.message);
+    
+    // 2. Handle the specific "Duplicate Email" case (Postgres Code 23505)
     if (error.code === '23505') {
       return { error: ACTION_MESSAGES.WAITLIST.ERRORS.EMAIL_DUPLICATE };
     }
+    
+    // 3. THE FIX: Never return error.message. Always use the Glossary fallback.
     return { error: ACTION_MESSAGES.WAITLIST.ERRORS.GENERIC_FAIL };
   }
 
