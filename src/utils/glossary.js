@@ -68,12 +68,17 @@ export const WEBSITE_COPY = {
     },
   },
 
-  AGENCY_HOOK: {
-    TITLE: "READY TO STOP THE LEAK?",
-    SUBHEAD: "Let's map out your workflow and find the friction. Request a custom systems audit and let's build a foundation you actually own.",
-    INPUT_PLACEHOLDER: "enter your work email...",
-    BTN_SUBMIT: "REQUEST AUDIT",
-    SUCCESS_MSG: "REQUEST RECEIVED. WE WILL BE IN TOUCH."
+  ACCESS_HOOK: {
+    TITLE: "THE PRIVATE ECOSYSTEM",
+    SUBHEAD: "Alternative Solutions is currently operating as a closed ecosystem. Submit your information below to request access and unlock the Architect's logs and Shift Studio.",
+    FIELDS: {
+      NAME: "Full Name",
+      EMAIL: "Email Address",
+      PHONE: "Phone Number (Optional)",
+      SMS_CONSENT: "Is it cool if we text you in the future with occasional updates?"
+    },
+    BTN_SUBMIT: "REQUEST ACCESS",
+    SUCCESS_MSG: "REQUEST RECEIVED. YOU ARE ON THE LIST."
   },
 
   JOIN_PAGE: {

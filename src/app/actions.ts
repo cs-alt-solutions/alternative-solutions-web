@@ -5,18 +5,29 @@ import { supabase } from '@/utils/supabase';
 import { revalidatePath } from 'next/cache';
 import { ACTION_MESSAGES } from '@/utils/glossary';
 
-// --- WAITLIST PIPELINE ---
+// --- WAITLIST & INTAKE PIPELINE ---
 export async function joinWaitlist(formData: FormData) {
   const email = formData.get('email') as string;
   const source = (formData.get('source') as string) || 'Shift Studio';
+  
+  // New Community Building Fields
+  const name = formData.get('name') as string | null;
+  const phone = formData.get('phone') as string | null;
+  const sms_consent = formData.get('sms_consent') === 'on'; 
 
   if (!email) {
     return { error: ACTION_MESSAGES.WAITLIST.ERRORS.EMAIL_REQUIRED };
   }
 
+  // Construct the payload dynamically 
+  const payload: any = { email, source, status: 'Pending' };
+  if (name) payload.name = name;
+  if (phone) payload.phone = phone;
+  payload.sms_consent = sms_consent;
+
   const { error } = await supabase
     .from('waitlist')
-    .insert([{ email, source, status: 'Pending' }]);
+    .insert([payload]);
 
   if (error) {
     console.error("Database Error:", error.message);
