@@ -78,9 +78,10 @@ export const WEBSITE_COPY = {
       SMS_CONSENT: "Is it cool if we text you in the future with occasional updates?"
     },
     BTN_SUBMIT: "REQUEST ACCESS",
-    SUCCESS_MSG: "REQUEST RECEIVED. YOU ARE ON THE LIST."
+    SUCCESS_MSG: "REQUEST RECEIVED. YOU ARE ON THE LIST.",
+    // Added for our new auto-persistence logic
+    AUTO_SIGNUP: "HEY, YOU WEREN'T SIGNED UP YET—BUT NO WORRIES, WE GOT YOU. YOU'RE IN."
   },
-
   JOIN_PAGE: {
     TITLE: "SHIFT STUDIO.",
     SUBHEAD: "The command center for creators is currently in private testing. Join the list to secure access.",

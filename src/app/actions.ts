@@ -5,52 +5,55 @@ import { supabase } from '@/utils/supabase';
 import { revalidatePath } from 'next/cache';
 import { ACTION_MESSAGES } from '@/utils/glossary';
 
-// --- WAITLIST & INTAKE PIPELINE ---
 export async function joinWaitlist(formData: FormData) {
   const email = formData.get('email') as string;
-  const source = (formData.get('source') as string) || 'Shift Studio';
-  
-  // Community Building Fields
+  const source = (formData.get('source') as string) || 'Restricted Access';
   const name = formData.get('name') as string | null;
   const phone = formData.get('phone') as string | null;
   const sms_consent = formData.get('sms_consent') === 'on'; 
 
-  if (!email) {
-    return { error: ACTION_MESSAGES.WAITLIST.ERRORS.EMAIL_REQUIRED };
+  if (!email) return { error: ACTION_MESSAGES.WAITLIST.ERRORS.EMAIL_REQUIRED };
+
+  // 1. CHECK IF USER EXISTS
+  const { data: existingUser } = await supabase
+    .from('waitlist')
+    .select('email, name')
+    .eq('email', email)
+    .single();
+
+  // 2. RETURNING USER LOGIC
+  if (existingUser) {
+    // If they have a name, they are officially "in"
+    if (existingUser.name) {
+      return { success: true, returning: true };
+    }
+    // If they exist but name is missing, update them (Auto-Complete)
+    if (name) {
+      await supabase.from('waitlist').update({ name, phone, sms_consent }).eq('email', email);
+      return { success: true };
+    }
   }
 
-  // Construct the payload dynamically 
+  // 3. NEW USER / AUTO-SIGNUP LOGIC
   const payload: any = { 
     email, 
     source, 
     status: 'Pending',
     date: new Date().toISOString(),
-    created_at: new Date().toISOString()
+    name: name || 'New Access Request', // Default name if they skipped via return button
+    phone,
+    sms_consent
   };
-  
-  if (name) payload.name = name;
-  if (phone) payload.phone = phone;
-  payload.sms_consent = sms_consent;
 
-  const { error } = await supabase
-    .from('waitlist')
-    .insert([payload]);
+  const { error } = await supabase.from('waitlist').insert([payload]);
 
   if (error) {
-    // 1. Log the raw, ugly error to your server console so YOU can see it.
     console.error("Database Error:", error.message);
-    
-    // 2. Handle the specific "Duplicate Email" case (Postgres Code 23505)
-    if (error.code === '23505') {
-      return { error: ACTION_MESSAGES.WAITLIST.ERRORS.EMAIL_DUPLICATE };
-    }
-    
-    // 3. THE FIX: Never return error.message. Always use the Glossary fallback.
     return { error: ACTION_MESSAGES.WAITLIST.ERRORS.GENERIC_FAIL };
   }
 
   revalidatePath('/dashboard/waitlist');
-  return { success: true };
+  return { success: true, isNew: !existingUser && !name };
 }
 
 // --- AUDIO BROADCAST PIPELINES ---
