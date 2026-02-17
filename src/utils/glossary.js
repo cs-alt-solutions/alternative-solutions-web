@@ -142,6 +142,7 @@ export const WEBSITE_COPY = {
       AUDITS: "Consulting Hub",
       TASKS: "Task Queue",
       CLIENTS: "Client Database",
+      BROADCAST: "Broadcast Hub",
       SYSTEM_HEADER: "System",
       AGENTS: "AI Agents",
       SECURITY: "Security",
@@ -190,6 +191,22 @@ export const WEBSITE_COPY = {
         }
       }
     },
+    AUDIO_COMMAND: {
+      TITLE: "BROADCAST TRANSMISSION",
+      SUBTITLE: "AUDIO LOG UPLINK",
+      INPUTS: {
+        TITLE: "Transmission Title...",
+        DESC: "Log summary & directives...",
+        DURATION: "MM:SS",
+        URL: "Audio Stream URL (Optional)"
+      },
+      BTN_PUBLISH: "INITIALIZE BROADCAST",
+      SUCCESS: "TRANSMISSION LIVE",
+      ERRORS: {
+        REQUIRED: "TITLE, DESC, AND DURATION REQUIRED.",
+        FAIL: "TRANSMISSION FAILED. RETRY."
+      }
+    },
     WAITLIST: {
       TITLE: "BETA COMMAND",
       LEAD_COUNT: "ACTIVE TESTERS:",
@@ -233,6 +250,36 @@ export const WEBSITE_COPY = {
           DONE: "SYSTEM LIVE"
         }
       }
+    },
+    MEDIA_HUB: {
+      TITLE: "BROADCAST & MEDIA",
+      TABS: {
+        AUDIO: "AUDIO LOGS",
+        SOCIAL: "SOCIAL NETWORK",
+        CAMPAIGNS: "EMAIL CAMPAIGNS",
+      },
+      AUDIO_MODULE: {
+        LEAD_COUNT: "ACTIVE LOGS:",
+        COLUMNS: {
+          TITLE: "TITLE & DESC",
+          DATE: "DATE",
+          DURATION: "DURATION",
+          STATUS: "STATE",
+          ACTIONS: "CONTROL",
+        },
+        ACTIONS: {
+          EDIT: "EDIT",
+          ARCHIVE: "ARCHIVE",
+          SAVE: "SAVE",
+          CANCEL: "CANCEL",
+          TOGGLE_VIS: "TOGGLE VISIBILITY"
+        },
+        STATUS: {
+          ACTIVE: "LIVE",
+          INACTIVE: "ON HOLD"
+        }
+      },
+      COMING_SOON: "MODULE IN DEVELOPMENT. AWAITING DEPLOYMENT."
     },
     PROJECT_BOARD: {
       BACK_BTN: "BACK TO COMMAND",

@@ -1,7 +1,7 @@
 /* src/app/dashboard/page.tsx */
 import React from 'react';
 import Link from 'next/link';
-import { supabase } from '@/utils/supabase'; // <-- INJECTING THE LIVE CLIENT
+import { supabase } from '@/utils/supabase'; 
 import { WEBSITE_COPY } from '@/utils/glossary';
 import NavItem from '@/components/core/NavItem';
 import StatCard from '@/components/core/StatCard';
@@ -11,10 +11,11 @@ import TelemetryPanel from '@/components/workspace/TelemetryPanel';
 import DailyDirectivePanel, { DirectiveItem } from '@/components/workspace/DailyDirectivePanel';
 import NetworkPulse from '@/components/workspace/NetworkPulse';
 import PlatformTrackerPanel from '@/components/workspace/PlatformTrackerPanel';
-import { Project, WaitlistEntry } from '@/data/store'; // Keeping our types!
+import AudioCommandPanel from '@/components/workspace/AudioCommandPanel'; 
+import { Project, WaitlistEntry } from '@/data/store'; 
 import { 
   LayoutDashboard, CheckSquare, Users, Settings, Search, Bell, 
-  Cpu, ShieldCheck, Activity, Ticket, Inbox, FileText, Terminal
+  Cpu, ShieldCheck, Activity, Ticket, Inbox, FileText, Terminal, Radio 
 } from 'lucide-react';
 
 export default async function CommandConsole() {
@@ -23,10 +24,9 @@ export default async function CommandConsole() {
   const commonCopy = WEBSITE_COPY.DASHBOARD.COMMON;
 
   // --- LIVE DATA PIPELINE LOGIC ---
-  // Fetching waitlist and projects (with their nested tasks) concurrently
   const [ { data: waitlistData }, { data: projectsData } ] = await Promise.all([
     supabase.from('waitlist').select('*').order('date', { ascending: false }),
-    supabase.from('projects').select('*, tasks(*)') // Pulls projects and their related tasks
+    supabase.from('projects').select('*, tasks(*)') 
   ]);
 
   const waitlist = (waitlistData as WaitlistEntry[]) || [];
@@ -87,6 +87,11 @@ export default async function CommandConsole() {
           <NavItem icon={CheckSquare} label={sidebarCopy.TASKS} />
           <NavItem icon={Users} label={sidebarCopy.CLIENTS} />
           
+          {/* THE NEW MASTER HUB LINK */}
+          <Link href="/dashboard/broadcast" className="block">
+            <NavItem icon={Radio} label={sidebarCopy.BROADCAST} />
+          </Link>
+          
           <div className="text-[10px] font-mono text-white/40 uppercase tracking-widest mb-2 px-3 mt-6">
             {sidebarCopy.SYSTEM_HEADER}
           </div>
@@ -146,9 +151,16 @@ export default async function CommandConsole() {
               <PlatformTrackerPanel copy={overviewCopy.INFRASTRUCTURE} />
            </div>
 
-           <div className="w-full pb-12">
-              <TelemetryPanel copy={overviewCopy.TELEMETRY} />
+           {/* --- THE AUDIO COMMAND GRID --- */}
+           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 pb-12">
+              <div className="lg:col-span-2">
+                 <TelemetryPanel copy={overviewCopy.TELEMETRY} />
+              </div>
+              <div className="lg:col-span-1">
+                 <AudioCommandPanel />
+              </div>
            </div>
+
         </div>
       </main>
     </div>
