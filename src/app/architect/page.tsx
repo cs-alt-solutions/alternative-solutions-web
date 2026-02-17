@@ -1,6 +1,7 @@
 /* src/app/architect/page.tsx */
 import React from 'react';
 import { WEBSITE_COPY } from '@/utils/glossary';
+import PublicAudioLogs from '@/components/PublicAudioLogs';
 
 export default function ArchitectPage() {
   const { TITLE, SUBTITLE, BIO, SKILLSET, HISTORY } = WEBSITE_COPY.BEHIND_THE_ARCHITECT;
@@ -41,6 +42,11 @@ export default function ArchitectPage() {
               <p className="italic text-zinc-300">
                 "{BIO.PHILOSOPHY_DESC}"
               </p>
+            </section>
+
+            {/* THE PODCAST MODULE */}
+            <section className="my-12">
+               <PublicAudioLogs />
             </section>
 
             {/* INDUSTRIAL HISTORY LIST */}
