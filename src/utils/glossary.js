@@ -86,6 +86,11 @@ export const WEBSITE_COPY = {
       VIDEO_DESC: "Combining inventory, financials, and sales into one glass pane.",
       PODCAST_TITLE: "THE AUDIO LOGS",
       PODCAST_DESC: "Listen to the development journey and the philosophy behind Shift Studio.",
+      AUDIO_PLAYER: {
+        PREFIX: "LOG //",
+        STREAMING: "STREAMING...",
+        ENCRYPTED: "ENCRYPTED"
+      },
       CARDS: [
         {
           TITLE: "THE WORKSHOP",
@@ -253,6 +258,7 @@ export const WEBSITE_COPY = {
     },
     MEDIA_HUB: {
       TITLE: "BROADCAST & MEDIA",
+      SUBTITLE: "MASTER COMMAND",
       TABS: {
         AUDIO: "AUDIO LOGS",
         SOCIAL: "SOCIAL NETWORK",

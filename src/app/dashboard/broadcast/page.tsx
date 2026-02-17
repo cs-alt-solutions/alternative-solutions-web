@@ -75,7 +75,7 @@ export default function BroadcastHub() {
                <div className="flex items-center gap-2 mt-1">
                  <Radio size={12} className="text-brand-primary animate-pulse" />
                  <span className="text-[10px] font-mono text-brand-primary uppercase tracking-widest">
-                   MASTER COMMAND
+                   {copy.SUBTITLE}
                  </span>
                </div>
             </div>

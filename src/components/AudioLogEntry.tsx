@@ -3,12 +3,15 @@
 
 import React, { useRef, useState, useEffect } from 'react';
 import { Play, Pause, Mic2, RotateCcw } from 'lucide-react';
+import { WEBSITE_COPY } from '@/utils/glossary';
 
 export default function AudioLogEntry({ log }: { log: any }) {
   const audioRef = useRef<HTMLAudioElement>(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
+
+  const playerCopy = WEBSITE_COPY.JOIN_PAGE.HYPE.AUDIO_PLAYER;
 
   // --- THE DATE FORMATTER ---
   const formattedDate = new Date(log.date || log.created_at).toLocaleDateString('en-US', {
@@ -81,7 +84,7 @@ export default function AudioLogEntry({ log }: { log: any }) {
           <div className="flex items-center gap-2 mb-2">
             <Mic2 size={12} className={`text-brand-primary ${isPlaying ? 'animate-pulse' : ''}`} />
             <span className="text-[10px] text-text-muted font-mono uppercase tracking-tighter">
-              LOG // {formattedDate}
+              {playerCopy.PREFIX} {formattedDate}
             </span>
           </div>
           <h4 className="text-sm font-bold text-white mb-1 group-hover:text-brand-primary transition-colors">
@@ -144,7 +147,7 @@ export default function AudioLogEntry({ log }: { log: any }) {
 
           {/* Status Indicator */}
           <span className="text-[10px] font-mono uppercase opacity-50 font-bold text-brand-primary tracking-widest">
-            {isPlaying ? 'STREAMING...' : 'ENCRYPTED'}
+            {isPlaying ? playerCopy.STREAMING : playerCopy.ENCRYPTED}
           </span>
           
         </div>
