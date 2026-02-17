@@ -240,7 +240,8 @@ export const WEBSITE_COPY = {
       FILTER_LABEL: "FILTER BY:",
       COLUMNS: {
         SELECT: "SEL",
-        EMAIL: "EMAIL",
+        USER: "USER ID",
+        CONTACT: "CONTACT",
         SOURCE: "ENTRY POINT",
         JOINED: "TIMESTAMP",
         STATUS: "STATE",

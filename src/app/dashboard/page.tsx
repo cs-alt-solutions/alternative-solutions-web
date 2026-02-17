@@ -25,6 +25,7 @@ export default async function CommandConsole() {
 
   // --- LIVE DATA PIPELINE LOGIC ---
   const [ { data: waitlistData }, { data: projectsData } ] = await Promise.all([
+    // FIX: Reverted to sorting by your original 'date' column
     supabase.from('waitlist').select('*').order('date', { ascending: false }),
     supabase.from('projects').select('*, tasks(*)') 
   ]);
@@ -32,24 +33,33 @@ export default async function CommandConsole() {
   const waitlist = (waitlistData as WaitlistEntry[]) || [];
   const projects = (projectsData as Project[]) || [];
 
-  const pendingBeta = waitlist.filter(w => w.source === 'Shift Studio' && w.status === 'Pending');
+  const pendingBeta = waitlist.filter(w => (w.source === 'Shift Studio' || w.source === 'Restricted Access') && w.status === 'Pending');
   const agencyInquiries = waitlist.filter(w => w.source === 'Agency Inquiry' && w.status !== 'Onboarded');
   const internalProjects = projects.filter(p => p.client === 'Internal');
   
   const openTasksCount = internalProjects.reduce((acc, p) => acc + (p.tasks?.filter(t => t.status !== 'Done').length || 0), 0);
-  const priorityQueue = [...pendingBeta, ...agencyInquiries].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+  
+  const priorityQueue = [...pendingBeta, ...agencyInquiries].sort((a, b) => {
+    const dateB = b.date || b.created_at || 0;
+    const dateA = a.date || a.created_at || 0;
+    return new Date(dateB).getTime() - new Date(dateA).getTime();
+  });
 
   // --- THE DAILY DIRECTIVE GENERATOR ---
   const generatedDirectives: DirectiveItem[] = [];
   agencyInquiries.forEach(lead => {
+    const rawDate = lead.date || lead.created_at;
+    const displayDate = rawDate ? new Date(rawDate).toLocaleDateString() : 'Recent';
+    
     generatedDirectives.push({
       id: lead.id,
       type: 'LEAD',
-      title: lead.email,
-      subtitle: `Agency Lead: ${lead.date}`,
+      title: lead.name || lead.email,
+      subtitle: `Agency Lead: ${displayDate}`,
       link: '/dashboard/intake'
     });
   });
+  
   internalProjects.forEach(project => {
     project.tasks?.filter(t => t.status === 'In Progress').forEach(task => {
       generatedDirectives.push({
@@ -87,7 +97,6 @@ export default async function CommandConsole() {
           <NavItem icon={CheckSquare} label={sidebarCopy.TASKS} />
           <NavItem icon={Users} label={sidebarCopy.CLIENTS} />
           
-          {/* THE NEW MASTER HUB LINK */}
           <Link href="/dashboard/broadcast" className="block">
             <NavItem icon={Radio} label={sidebarCopy.BROADCAST} />
           </Link>

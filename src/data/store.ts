@@ -21,13 +21,17 @@ export type Project = {
 };
 
 // UPDATED: Waitlist Type now includes Agency Inquiry
-export type WaitlistEntry = {
+export interface WaitlistEntry {
   id: string;
   email: string;
-  date: string;
+  source: string;
+  date?: string;
+  created_at?: string;
   status: 'Pending' | 'Invited' | 'Onboarded';
-  source: 'Shift Studio' | 'Agency Inquiry'; // <--- ADDED HERE
-};
+  name?: string;
+  phone?: string;
+  sms_consent?: boolean;
+}
 
 // --- MOCK DATABASE ---
 export const MOCK_DB: { projects: Project[]; waitlist: WaitlistEntry[] } = {

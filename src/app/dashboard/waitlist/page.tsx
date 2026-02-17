@@ -3,7 +3,7 @@
 
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { supabase } from '@/utils/supabase'; // <-- INJECTING THE LIVE CLIENT
+import { supabase } from '@/utils/supabase'; 
 import { WEBSITE_COPY } from '@/utils/glossary';
 import { ArrowLeft, Download, Filter, Mail, Key, X, Loader2 } from 'lucide-react';
 import WaitlistRow from '@/components/dashboard/WaitlistRow';
@@ -12,18 +12,16 @@ import { WaitlistEntry } from '@/data/store';
 export default function BetaWaitlistCommand() {
   const copy = WEBSITE_COPY.DASHBOARD.WAITLIST;
   
-  // LIVE DATA STATES
   const [betaTesters, setBetaTesters] = useState<WaitlistEntry[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
 
-  // FETCH FROM DATABASE ON LOAD
   useEffect(() => {
     async function fetchWaitlist() {
       const { data, error } = await supabase
         .from('waitlist')
         .select('*')
-        .eq('source', 'Shift Studio') // Only grab the Beta testers here
+        // FIX: Reverted to sorting by your original 'date' column
         .order('date', { ascending: false });
 
       if (error) {
@@ -112,7 +110,8 @@ export default function BetaWaitlistCommand() {
                              className="w-4 h-4 bg-black/50 border border-white/20 rounded-sm appearance-none checked:bg-brand-primary checked:border-brand-primary cursor-pointer relative after:content-['✓'] after:absolute after:text-black after:text-[10px] after:font-bold after:top-1/2 after:left-1/2 after:-translate-x-1/2 after:-translate-y-1/2 after:opacity-0 checked:after:opacity-100 transition-all"
                            />
                          </th>
-                         <th className="px-6 py-4 font-normal tracking-wider">{copy.COLUMNS.EMAIL}</th>
+                         <th className="px-6 py-4 font-normal tracking-wider">{copy.COLUMNS.USER}</th>
+                         <th className="px-6 py-4 font-normal tracking-wider">{copy.COLUMNS.CONTACT}</th>
                          <th className="px-6 py-4 font-normal tracking-wider">{copy.COLUMNS.SOURCE}</th>
                          <th className="px-6 py-4 font-normal tracking-wider">{copy.COLUMNS.JOINED}</th>
                          <th className="px-6 py-4 font-normal tracking-wider">{copy.COLUMNS.STATUS}</th>
@@ -135,7 +134,6 @@ export default function BetaWaitlistCommand() {
           </div>
        </div>
 
-       {/* THE FLOATING BULK COMMAND BAR */}
        {selectedIds.size > 0 && (
          <div className="fixed bottom-8 left-1/2 -translate-x-1/2 bg-bg-app/95 backdrop-blur-2xl border border-brand-primary/30 shadow-[0_0_40px_rgba(6,182,212,0.15)] rounded-full px-2 py-2 flex items-center gap-2 z-50 animate-in slide-in-from-bottom-10 fade-in duration-300">
             <div className="px-4 py-2 flex items-center gap-3 border-r border-white/10">
