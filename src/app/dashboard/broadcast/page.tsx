@@ -115,6 +115,7 @@ export default function BroadcastHub() {
                        <thead className="bg-black/60 sticky top-0 z-10 text-white/40 font-mono text-[10px] uppercase border-b border-white/5">
                          <tr>
                            <th className="px-6 py-4 font-normal tracking-wider">{audioCopy.COLUMNS.TITLE}</th>
+                           <th className="px-6 py-4 font-normal tracking-wider w-32">{audioCopy.COLUMNS.CATEGORY}</th>
                            <th className="px-6 py-4 font-normal tracking-wider w-32">{audioCopy.COLUMNS.DATE}</th>
                            <th className="px-6 py-4 font-normal tracking-wider w-32">{audioCopy.COLUMNS.DURATION}</th>
                            <th className="px-6 py-4 font-normal tracking-wider w-32">{audioCopy.COLUMNS.STATUS}</th>
@@ -125,7 +126,7 @@ export default function BroadcastHub() {
                          {logs.map(log => (
                            <tr key={log.id} className="hover:bg-white/5 transition-colors group">
                              {editingId === log.id ? (
-                               <td colSpan={5} className="p-4">
+                               <td colSpan={6} className="p-4">
                                  <form onSubmit={(e) => handleSave(e, log.id)} className="flex items-start gap-4 bg-black/50 p-4 rounded-lg border border-brand-primary/30">
                                    <div className="flex-1 space-y-3">
                                      <input 
@@ -134,6 +135,14 @@ export default function BroadcastHub() {
                                        className="w-full bg-transparent border-b border-white/10 px-2 py-1 text-white text-sm focus:outline-none focus:border-brand-primary"
                                        required
                                      />
+                                     <select 
+                                       name="category" 
+                                       defaultValue={log.category || 'PUBLIC'}
+                                       className="w-full bg-black/50 border-b border-white/10 px-2 py-1 text-white/70 text-xs focus:outline-none focus:border-brand-primary"
+                                     >
+                                       <option value="PUBLIC">PUBLIC</option>
+                                       <option value="BETA">BETA</option>
+                                     </select>
                                      <textarea 
                                        name="description" 
                                        defaultValue={log.description} 
@@ -157,6 +166,15 @@ export default function BroadcastHub() {
                                  <td className="px-6 py-4">
                                    <p className="font-bold text-white mb-1">{log.title}</p>
                                    <p className="text-xs text-white/50 line-clamp-1">{log.description}</p>
+                                 </td>
+                                 <td className="px-6 py-4 font-mono text-[10px]">
+                                   <span className={`px-2 py-1 rounded border ${
+                                     log.category === 'BETA' 
+                                       ? 'bg-purple-500/10 text-purple-400 border-purple-500/20' 
+                                       : 'bg-blue-500/10 text-blue-400 border-blue-500/20'
+                                   }`}>
+                                     {log.category || 'PUBLIC'}
+                                   </span>
                                  </td>
                                  <td className="px-6 py-4 font-mono text-[10px] text-white/70">
                                    {new Date(log.date || log.created_at).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }).toUpperCase()}

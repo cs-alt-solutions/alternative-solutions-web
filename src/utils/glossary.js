@@ -131,6 +131,13 @@ export const WEBSITE_COPY = {
     },
   },
 
+  PUBLIC_LOGS: {
+    TITLE: "THE AUDIO LOGS",
+    SUBHEAD: "TRANSMISSIONS FROM THE ARCHITECT",
+    DESC: "Listen to the philosophy, the build process, and the strategies behind Alternative Solutions.",
+    EMPTY: "AWAITING INCOMING TRANSMISSIONS..."
+  },
+
   DASHBOARD: {
     COMMON: {
       BRAND_VERSION: "Alt // OS v1.0",
@@ -204,7 +211,9 @@ export const WEBSITE_COPY = {
         TITLE: "Transmission Title...",
         DESC: "Log summary & directives...",
         DURATION: "MM:SS",
-        URL: "Audio Stream URL (Optional)"
+        URL: "Audio Stream URL (Optional)",
+        CATEGORY_PUBLIC: "PUBLIC (Landing Page)",
+        CATEGORY_BETA: "BETA (Shift Studio)"
       },
       BTN_PUBLISH: "INITIALIZE BROADCAST",
       SUCCESS: "TRANSMISSION LIVE",
@@ -269,6 +278,7 @@ export const WEBSITE_COPY = {
         LEAD_COUNT: "ACTIVE LOGS:",
         COLUMNS: {
           TITLE: "TITLE & DESC",
+          CATEGORY: "CHANNEL",
           DATE: "DATE",
           DURATION: "DURATION",
           STATUS: "STATE",

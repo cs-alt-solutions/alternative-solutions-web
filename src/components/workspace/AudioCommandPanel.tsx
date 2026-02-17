@@ -4,7 +4,7 @@
 import React, { useRef, useState } from 'react';
 import { WEBSITE_COPY } from '@/utils/glossary';
 import { publishAudioLog } from '@/app/actions';
-import { Mic2, Radio, CheckCircle2, AlertTriangle, UploadCloud, X, FileAudio } from 'lucide-react';
+import { Mic2, Radio, CheckCircle2, AlertTriangle, UploadCloud, X, FileAudio, Globe, LayoutDashboard } from 'lucide-react';
 
 export default function AudioCommandPanel() {
   const copy = WEBSITE_COPY.DASHBOARD.AUDIO_COMMAND;
@@ -15,12 +15,11 @@ export default function AudioCommandPanel() {
   const [errorMsg, setErrorMsg] = useState('');
   const [isDragging, setIsDragging] = useState(false);
   
-  // Smart Auto-Fill States
   const [file, setFile] = useState<File | null>(null);
   const [title, setTitle] = useState('');
   const [duration, setDuration] = useState('');
+  const [category, setCategory] = useState<'PUBLIC' | 'BETA'>('PUBLIC');
 
-  // --- DRAG & DROP LOGIC ---
   const handleDragOver = (e: React.DragEvent) => {
     e.preventDefault();
     setIsDragging(true);
@@ -42,9 +41,7 @@ export default function AudioCommandPanel() {
     }
   };
 
-  // --- THE SMART INGESTION ENGINE ---
   const processFile = (selectedFile: File) => {
-    // Ensure it's an audio file
     if (!selectedFile.type.startsWith('audio/')) {
       setErrorMsg('INVALID FORMAT. UPLOAD AUDIO FILES ONLY.');
       setStatus('error');
@@ -55,11 +52,9 @@ export default function AudioCommandPanel() {
     setStatus('idle');
     setErrorMsg('');
 
-    // 1. Auto-Title Generation
     const today = new Date().toISOString().split('T')[0];
     setTitle(`LOG // ${today}`);
 
-    // 2. Auto-Duration Calculation (Browser Magic)
     const objectUrl = URL.createObjectURL(selectedFile);
     const audio = new Audio(objectUrl);
     audio.addEventListener('loadedmetadata', () => {
@@ -67,7 +62,7 @@ export default function AudioCommandPanel() {
       const seconds = Math.floor(audio.duration % 60);
       const formattedDuration = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
       setDuration(formattedDuration);
-      URL.revokeObjectURL(objectUrl); // Clean up memory
+      URL.revokeObjectURL(objectUrl);
     });
   };
 
@@ -77,14 +72,14 @@ export default function AudioCommandPanel() {
     setDuration('');
   };
 
-  // --- THE UPLINK SUBMISSION ---
   async function handleBroadcast(formData: FormData) {
     setStatus('loading');
     
-    // Append the physical file to our formData pipeline
     if (file) {
       formData.append('audioFile', file);
     }
+    
+    formData.append('category', category);
     
     const res = await publishAudioLog(formData);
     
@@ -127,7 +122,6 @@ export default function AudioCommandPanel() {
               </div>
             )}
             
-            {/* STATE 1: THE DROPZONE */}
             {!file ? (
               <div 
                 onDragOver={handleDragOver}
@@ -152,10 +146,8 @@ export default function AudioCommandPanel() {
                 />
               </div>
             ) : (
-              /* STATE 2: THE FORM */
               <form ref={formRef} action={handleBroadcast} className="space-y-4 animate-in fade-in duration-300">
                 
-                {/* Selected File Card */}
                 <div className="flex items-center justify-between bg-brand-primary/5 border border-brand-primary/20 rounded p-3">
                   <div className="flex items-center gap-3 overflow-hidden">
                     <FileAudio size={16} className="text-brand-primary shrink-0" />
@@ -169,6 +161,31 @@ export default function AudioCommandPanel() {
                   </button>
                 </div>
 
+                <div className="grid grid-cols-2 gap-2 mb-2">
+                  <button
+                    type="button"
+                    onClick={() => setCategory('PUBLIC')}
+                    className={`flex items-center justify-center gap-2 py-2 px-3 rounded text-[10px] font-mono uppercase tracking-widest transition-all border ${
+                      category === 'PUBLIC' 
+                        ? 'bg-brand-primary/20 border-brand-primary/50 text-brand-primary' 
+                        : 'bg-black/50 border-white/10 text-white/40 hover:text-white'
+                    }`}
+                  >
+                    <Globe size={14} /> {copy.INPUTS.CATEGORY_PUBLIC}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setCategory('BETA')}
+                    className={`flex items-center justify-center gap-2 py-2 px-3 rounded text-[10px] font-mono uppercase tracking-widest transition-all border ${
+                      category === 'BETA' 
+                        ? 'bg-brand-primary/20 border-brand-primary/50 text-brand-primary' 
+                        : 'bg-black/50 border-white/10 text-white/40 hover:text-white'
+                    }`}
+                  >
+                    <LayoutDashboard size={14} /> {copy.INPUTS.CATEGORY_BETA}
+                  </button>
+                </div>
+
                 <input 
                   type="text" 
                   name="title" 
@@ -179,7 +196,6 @@ export default function AudioCommandPanel() {
                   required
                 />
                 
-                {/* Hidden field so the duration gets submitted with the FormData */}
                 <input type="hidden" name="duration" value={duration} />
 
                 <textarea 

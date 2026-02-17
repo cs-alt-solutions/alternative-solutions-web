@@ -35,6 +35,7 @@ export async function publishAudioLog(formData: FormData) {
   const title = formData.get('title') as string;
   const description = formData.get('description') as string;
   const duration = formData.get('duration') as string;
+  const category = (formData.get('category') as string) || 'PUBLIC';
   const audioFile = formData.get('audioFile') as File | null;
 
   if (!title || !description || !duration || !audioFile) {
@@ -45,7 +46,6 @@ export async function publishAudioLog(formData: FormData) {
     const fileExt = audioFile.name.split('.').pop();
     const fileName = `${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`;
     
-    // Convert Web File to Node Buffer for Supabase Storage
     const arrayBuffer = await audioFile.arrayBuffer();
     const buffer = Buffer.from(arrayBuffer);
 
@@ -68,13 +68,21 @@ export async function publishAudioLog(formData: FormData) {
 
     const { error: dbError } = await supabase
       .from('audio_logs')
-      .insert([{ title, description, duration, audio_url: publicUrl, status: 'ACTIVE' }]);
+      .insert([{ 
+        title, 
+        description, 
+        duration, 
+        category, 
+        audio_url: publicUrl, 
+        status: 'ACTIVE' 
+      }]);
 
     if (dbError) {
       console.error("Database Error:", dbError.message);
       return { error: 'Failed to broadcast transmission.' };
     }
 
+    revalidatePath('/');
     revalidatePath('/shift-studio');
     revalidatePath('/dashboard/broadcast');
     return { success: true };
@@ -89,12 +97,13 @@ export async function updateAudioLog(formData: FormData) {
   const id = formData.get('id') as string;
   const title = formData.get('title') as string;
   const description = formData.get('description') as string;
+  const category = formData.get('category') as string;
 
   if (!id || !title || !description) return { error: 'Missing required fields' };
 
   const { error } = await supabase
     .from('audio_logs')
-    .update({ title, description })
+    .update({ title, description, category })
     .eq('id', id);
 
   if (error) {
@@ -102,6 +111,7 @@ export async function updateAudioLog(formData: FormData) {
     return { error: 'Failed to update transmission' };
   }
 
+  revalidatePath('/');
   revalidatePath('/shift-studio');
   revalidatePath('/dashboard/broadcast');
   return { success: true };
@@ -125,6 +135,7 @@ export async function toggleAudioLogStatus(formData: FormData) {
     return { error: 'Failed to update visibility' };
   }
 
+  revalidatePath('/');
   revalidatePath('/shift-studio');
   revalidatePath('/dashboard/broadcast');
   return { success: true };
@@ -145,6 +156,7 @@ export async function archiveAudioLog(formData: FormData) {
     return { error: 'Failed to archive transmission' };
   }
 
+  revalidatePath('/');
   revalidatePath('/shift-studio');
   revalidatePath('/dashboard/broadcast');
   return { success: true };

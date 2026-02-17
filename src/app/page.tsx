@@ -4,6 +4,7 @@ import Hero from '@/components/Hero';
 import Mission from '@/components/Mission';
 import HowWeWork from '@/components/HowWeWork';
 import ServicesSection from '@/components/ServicesSection';
+import PublicAudioLogs from '@/components/PublicAudioLogs'; // This import will now resolve
 import AgencyHook from '@/components/AgencyHook';
 import Footer from '@/components/Footer';
 
@@ -14,6 +15,7 @@ export default function Home() {
       <Mission />
       <HowWeWork />
       <ServicesSection />
+      <PublicAudioLogs />
       <AgencyHook />
       <Footer />
     </main>

@@ -5,7 +5,7 @@ import JoinForm from '@/components/JoinForm';
 import AudioLogEntry from '@/components/AudioLogEntry';
 import { supabase } from '@/utils/supabase';
 import { 
-  Settings, Play, Box, TrendingUp, Share2, MapPin, CheckCircle2, Mic2
+  Settings, Box, TrendingUp, Share2, MapPin, CheckCircle2, Mic2
 } from 'lucide-react';
 
 export default async function ShiftStudioPage() {
@@ -13,12 +13,11 @@ export default async function ShiftStudioPage() {
   const { ROADMAP, HERO, STATUS } = SHIFT_STUDIO_PAGE;
   const hype = JOIN_PAGE.HYPE;
 
-  // --- LIVE DATA PIPELINE ---
-  // The Shield: Only show logs where status is ACTIVE
   const { data: audioLogs } = await supabase
     .from('audio_logs')
     .select('*')
     .eq('status', 'ACTIVE') 
+    .eq('category', 'BETA')
     .order('date', { ascending: false });
 
   const ICONS = [Box, TrendingUp, Share2];
