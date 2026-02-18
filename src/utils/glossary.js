@@ -9,54 +9,61 @@ export const WEBSITE_COPY = {
   },
 
   HERO: {
-    TITLE: "SYSTEMS THAT ACTUALLY WORK.",
-    SUBHEAD: "Stop wrestling with spreadsheets and duct-taped apps. We build rock-solid, custom software so you can stop managing tech and get back to your business.",
-    CTA_PRIMARY: "JOIN THE WAITLIST",
-    CTA_SECONDARY: "SEE HOW WE WORK",
+    TITLE: "WORK LESS. OPERATE BETTER.",
+    SUBHEAD: "You didn't start a business to become a full-time data-entry clerk. I build custom, AI-accelerated systems that handle the heavy lifting so you can get your life back. No generic monthly subscriptions. No forcing your unique process into a pre-made box. Just a rock-solid, digital foundation built specifically for how you actually work.",
+    CTA_PRIMARY: "ENTER THE WORKSHOP",
+    CTA_SECONDARY: "SEE HOW I BUILD",
   },
 
-  MISSION: {
-    TITLE: "NO PLUG-AND-PLAY NONSENSE.",
-    DESC: "You don't need another generic monthly subscription that only solves half your problem. We dig into how you actually work, find the friction, and build a foundational framework you own.",
+  ORIGIN_STORY: {
+    TITLE: "THE LIFELONG APPRENTICESHIP",
+    DESC_1: "If you look at my history, you’ll see Amazon, Disney, Lowe’s, construction sites, and retail floors. The corporate world calls that job-hopping. I call it a masterclass in how the real world operates.",
+    DESC_2: "I spent years climbing into management trying to fix broken systems from the inside, only to be told: 'We want better results, but you can't change the process.'",
+    DESC_3: "So, I stopped fighting red tape and built my own workshop. Now, I use that cross-industry mastery and AI to build custom tools for entrepreneurs who just need their business to work.",
+    CTA: "EXPLORE THE ARCHITECT'S LOGS",
+    FALLBACK: {
+      INITIALS: "AS",
+      TEXT: "IMAGE PENDING: DROP CARICATURE.PNG IN PUBLIC FOLDER"
+    }
   },
 
   HOW_IT_WORKS: {
     TITLE: "THE HYBRID APPROACH",
-    SUBTITLE: "We combine deep business analysis with AI development speed.",
+    SUBTITLE: "Combining deep business analysis with AI development speed.",
     STEP_1: {
       TITLE: "FIND THE LEAK",
-      DESC: "We don't just write code. We map out your daily workflow to find exactly where you are losing time and money.",
+      DESC: "I map out your daily workflow to find exactly where you are losing time and money.",
     },
     STEP_2: {
       TITLE: "AI-ACCELERATED BUILD",
-      DESC: "By leveraging AI for the heavy lifting of development, we turn what used to be months of expensive coding into a few weeks.",
+      DESC: "I leverage AI for the heavy lifting, turning what used to be months of expensive coding into a few weeks.",
     },
     STEP_3: {
       TITLE: "OWN YOUR FOUNDATION",
-      DESC: "We deliver custom, scalable tools built specifically for your exact needs. No workarounds. No forcing your process into a pre-made box.",
+      DESC: "You get a custom, scalable tool built specifically for your exact needs. You own it. No endless SaaS subscriptions.",
     },
   },
 
   SERVICES_PAGE: {
     HERO: {
-      TITLE: "TECH BUILT TO GIVE YOUR TIME BACK.",
+      TITLE: "TECH BUILT TO GIVE YOU YOUR TIME BACK.",
       SUBTITLE: "Software shouldn't be a part-time job. It should be the invisible engine running your business.",
     },
     STORY: {
-      TITLE: "WHY 'ALTERNATIVE'?",
-      DESC: "Because the standard way is broken. Most tech agencies sell you bloat you don't need and tie you to third-party data trackers. We build zero-dependency, foundational frameworks you actually own.",
+      TITLE: "THE WORKSHOP CAPABILITIES",
+      DESC: "Whether you need a quick script to fix a data leak or a ground-up operational portal, I build zero-dependency frameworks you actually own.",
     },
     TIERS: {
       ONE: { 
         TITLE: "The Automator", 
         PRICE: "Quick Fixes", 
-        DESC: "Custom scripts to stop the manual data entry. We make your current tools do the boring work for you.",
+        DESC: "Custom scripts to stop manual data entry. I make your current tools do the boring work for you.",
         FEATURES: ["Custom Integrations", "Email Responders", "Data Pipelines", "Single-Task Tooling"],
       },
       TWO: { 
         TITLE: "The Connector", 
         PRICE: "Integrations", 
-        DESC: "We bridge the gap. We make your separate apps talk to each other so your inventory, sales, and emails actually sync up.",
+        DESC: "I bridge the gap. Making your separate apps talk to each other so your inventory, sales, and emails actually sync up.",
         FEATURES: ["Cross-Platform Syncing", "Inventory Pipelines", "Automated Onboarding", "Workflow Logic"],
       },
       THREE: { 
@@ -68,19 +75,65 @@ export const WEBSITE_COPY = {
     },
   },
 
+  PRODUCT_TEASER: {
+    TAG: "PRODUCT DEVELOPMENT",
+    TITLE: "CURRENTLY ENGINEERING: SHIFT STUDIO",
+    DESC: "The ultimate command center for creators who sell everywhere. From workshop builds to deep financials—stop juggling apps.",
+    LINK_TEXT: "Explore the Beta",
+  },
+
+  TRANSPARENCY: {
+    TITLE: "NO BLACK BOXES.",
+    DESC: "Most tech companies hide behind jargon, take your deposit, and disappear for months. I build with the garage door open. This website isn't a static brochure—it’s a live, breathing timeline. I believe in radical transparency, speed, and absolute accountability. At the end of my workday, I log my progress, my roadblocks, and the actual systems I’m shipping. Whether I'm building custom infrastructure for a client or engineering my own platforms, you get a front-row seat to how the engine is built."
+  },
+
   ACCESS_HOOK: {
     TITLE: "THE WORKSHOP ACCESS",
-    SUBHEAD: "We're currently deep in the build phase. Drop your details below to unlock the full site, explore the Architect's logs, and get notified as new modules go live.",
+    SUBHEAD: "The Workshop is currently deep in the build phase. Drop your details below to unlock the full site, explore the Architect's daily logs, and watch the build in real-time.",
     FIELDS: {
       NAME: "What's your name?",
       EMAIL: "Email Address",
-      PHONE: "Phone (Optional)",
+      PHONE: "Phone Number (Optional)",
       SMS_CONSENT: "Is it cool if we text you in the future with occasional updates?"
     },
     BTN_SUBMIT: "UNLOCK THE WORKSHOP",
     SUCCESS_MSG: "ACCESS GRANTED. WELCOME TO THE BUILD.",
     AUTO_SIGNUP: "HEY, YOU WEREN'T ON THE LIST YET—BUT NO WORRIES, WE SIGNED YOU UP. WELCOME IN."
   },
+
+  ARCHITECT_PAGE: {
+    HERO: {
+      TITLE: "THE ARCHITECT'S LOGS",
+      SUBTITLE: "The Journey Tracker. Raw, unfiltered logs of the build process, the roadblocks, and the wins.",
+    },
+    MANIFESTO: {
+      TITLE: "THE FULL STORY",
+      PARAGRAPHS: [
+        "If you look at my history, you’ll see the logistics floors of Amazon, the experience-driven halls of Disney, Lowe’s, construction sites, restaurant kitchens, and retail floors. The corporate world calls that job-hopping. I call it a masterclass in how the real world operates.",
+        "I didn’t move around because I couldn’t keep a job. I moved because I was desperately trying to fix broken systems from the inside. I stepped up into leadership—project management at a corporate franchise, supervisor at Lowe's, trainer at Amazon and Disney—thinking a title would finally give me the power to improve things.",
+        "But no matter the role, I hit the exact same wall. I would find the friction, map out a smarter way to operate, and the corporate response was always: 'We want better results, but you can't change the process.'",
+        "I realized you can't fix a machine that refuses to evolve. So, I stopped fighting their red tape and built my own workshop.",
+        "I am a single mother who built this company, this website, and my software platform simultaneously from the ground up, with zero safety net. I know exactly what it takes to do more with less. Alternative Solutions isn’t just a tech agency. It’s the culmination of everything I’ve learned across a dozen industries, combined with the raw speed of AI development. I build custom, foundational tools for entrepreneurs who just need their systems to actually work, so they can get back to their lives."
+      ]
+    },
+    CATEGORIES: {
+      BUILD: "The Build",
+      HUSTLE: "The Hustle",
+      EVOLUTION: "The Evolution"
+    },
+    TRACKER: {
+      TITLE: "LIVE FEED",
+      SUBTITLE: "TRANSMISSIONS FROM THE WORKSHOP",
+      FILTERS: { ALL: "All Logs" },
+      PLACEHOLDER: {
+        TAG: "SYSTEM NOTIFICATION",
+        DATE: "DATETIME_PENDING",
+        TITLE: "TRACKER INITIALIZATION...",
+        DESC: "The live database for the Journey Tracker is currently being wired up in the backend. Audio logs and text transmissions regarding client interactions, wins, and roadblocks will populate here shortly."
+      }
+    }
+  },
+
   JOIN_PAGE: {
     TITLE: "SHIFT STUDIO.",
     SUBHEAD: "The command center for creators is currently in private testing. Join the list to secure access.",
@@ -113,7 +166,7 @@ export const WEBSITE_COPY = {
       ],
       MANIFESTO: {
         TITLE: "THE MAKER'S DILEMMA",
-        TEXT: "You started this to create, not to be an accountant. But somewhere between the first sale and the hundredth, you became a professional spreadsheet wrangler. We are building the alternative.",
+        TEXT: "You started this to create, not to be an accountant. But somewhere between the first sale and the hundredth, you became a professional spreadsheet wrangler. I am building the alternative.",
       },
       FAQ: [
         { q: "When does the Beta start?", a: "Rollouts begin late Q1 2026." },
