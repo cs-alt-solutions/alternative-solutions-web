@@ -206,9 +206,15 @@ export const WEBSITE_COPY = {
       ACTION_INTAKE: "INTAKE"
     },
     SIDEBAR: {
+      GROUPS: {
+        COMMAND: "Command",
+        OPERATIONS: "Operations",
+        STUDIO: "Studio",
+        SYSTEM: "System"
+      },
       MODULES_HEADER: "Modules",
       OVERVIEW: "Overview",
-      WAITLIST: "Waitlist Command",
+      WAITLIST: "Beta Command",
       INTAKE: "Client Intake",
       AUDITS: "Consulting Hub",
       TASKS: "Task Queue",
@@ -262,6 +268,27 @@ export const WEBSITE_COPY = {
         }
       }
     },
+    INTERNAL_TASKS: {
+      TITLE: "ENGINEERING ROADMAP",
+      SUBTITLE: "SYSTEM BUILD & BACKLOG",
+      BTN_ADD: "LOG DIRECTIVE",
+      COLUMNS: {
+        BACKLOG: "PARKING LOT",
+        ACTIVE: "IN PROGRESS",
+        REVIEW: "TESTING / REVIEW",
+        DONE: "DEPLOYED"
+      },
+      TAGS: {
+        FEATURE: "FEATURE",
+        BUG: "BUG",
+        INFRA: "INFRASTRUCTURE"
+      },
+      PRIORITY: {
+        HIGH: "HIGH",
+        MED: "MEDIUM",
+        LOW: "LOW"
+      }
+    },
     AUDIO_COMMAND: {
       TITLE: "BROADCAST TRANSMISSION",
       SUBTITLE: "PODCAST UPLINK",
@@ -291,43 +318,78 @@ export const WEBSITE_COPY = {
       LEAD_COUNT: "ACTIVE TESTERS:",
       EXPORT_BTN: "EXPORT CSV",
       FILTER_LABEL: "FILTER BY:",
+      TABS: {
+        QUEUE: "ACCESS QUEUE",
+        FEEDBACK: "INTEL & TRIAGE"
+      },
       COLUMNS: {
         SELECT: "SEL",
-        USER: "USER ID",
-        CONTACT: "CONTACT",
-        SOURCE: "ENTRY POINT",
+        USER: "USER",
+        PROJECT: "TESTING TARGET",
+        IMPACT: "FEEDBACK QUALITY",
         JOINED: "TIMESTAMP",
-        STATUS: "STATE",
+        STATUS: "ACCESS STATE",
         ACTIONS: "CONTROL",
       },
       STATUSES: {
         ALL: "ALL STATUSES",
         PENDING: "PENDING",
-        INVITED: "INVITED",
-        ONBOARDED: "ONBOARDED",
+        INVITED: "ACCESS GRANTED",
+        ONBOARDED: "ACTIVE",
       },
       ROW_ACTIONS: {
-        SEND_UPDATE: "SEND DEV LOG",
-        INVITE: "SEND KEYS (INVITE)",
-        RESEND_INVITE: "RESEND KEYS (BUMP)",
-        FORCE_ONBOARD: "FORCE ONBOARD (MANUAL)",
-        VIEW_PROFILE: "VIEW WORKSPACE"
+        SEND_UPDATE: "SEND UPDATE",
+        INVITE: "GRANT ACCESS (INVITE)",
+        RESEND_INVITE: "RESEND ACCESS LINK",
+        MARK_INSIGHTFUL: "MARK AS INSIGHTFUL",
+        QUARANTINE: "QUARANTINE (REVOKE ACCESS)",
+        VIEW_PROFILE: "VIEW USER"
       },
       BULK_ACTIONS: {
-        SELECTED: "TESTERS SELECTED",
-        SEND_LOGS: "BROADCAST DEV LOG",
-        INVITE: "ISSUE BATCH KEYS",
+        SELECTED: "USERS SELECTED",
+        SEND_LOGS: "SEND UPDATE EMAIL",
+        INVITE: "ISSUE BATCH ACCESS",
         CLEAR: "CLEAR"
       },
-      PROJECT_BOARD: {
-        BACK_BTN: "BACK TO COMMAND",
-        ADD_TASK: "INITIALIZE TASK",
-        NOT_FOUND: "PROJECT UNAVAILABLE OR UNAUTHORIZED",
+      INVITE_MODAL: {
+        TITLE: "AUTHORIZE BETA ACCESS",
+        SUBTITLE: "REVIEW THE EXPECTATIONS",
+        CONTRACT_HEADER: "THE BETA AGREEMENT",
+        CONTRACT_TERMS: [
+          "1. This is a working workshop, not a finished showroom.",
+          "2. If it breaks, report it. Feedback helps us build faster.",
+          "3. Your honest perspective directly influences the roadmap.",
+          "4. EXPECT DUST: Data persistence is not guaranteed in Beta. Keep backups of critical financials.",
+          "5. OPERATOR CREDIT: High-impact suggestions that reach production will be credited to your callsign in the release logs (opt-out available)."
+        ],
+        WARNING: "By clicking authorize, secure access links and the rules of engagement will be emailed to the selected users.",
+        BTN_CANCEL: "CANCEL",
+        BTN_DEPLOY: "AUTHORIZE ACCESS"
+      },
+      FEEDBACK_VIEW: {
+        EMPTY: "INBOX ZERO. NO PENDING REPORTS.",
+        TITLE: "FEEDBACK TRIAGE",
+        FOLDERS: {
+          INBOX: "UNREVIEWED INBOX",
+          BUGS: "VERIFIED BUGS",
+          ROADMAP: "ROADMAP PARKING LOT",
+          ARCHIVE: "ARCHIVED"
+        },
+        AI_SUMMARY: {
+          TITLE: "AI TRIAGE ASSISTANT",
+          DESC: "I have pre-processed the incoming reports. I am detecting 1 probable bug requiring validation, and 1 new feature suggestion for the Roadmap."
+        },
         COLUMNS: {
-          TODO: "BACKLOG",
-          IN_PROGRESS: "IN PROGRESS",
-          REVIEW: "AWAITING REVIEW",
-          DONE: "SYSTEM LIVE"
+          TESTER: "USER",
+          AI_TAG: "AI CLASSIFICATION",
+          REPORT: "FEEDBACK REPORT",
+          IMPACT: "SEVERITY"
+        },
+        ACTIONS: {
+          VALIDATE_BUG: "VALIDATE BUG",
+          VALIDATE_FEATURE: "PARK IN ROADMAP",
+          REJECT: "ARCHIVE (NO ACTION)",
+          OVERRIDE: "OVERRIDE AI"
         }
       }
     },
@@ -388,7 +450,7 @@ export const WEBSITE_COPY = {
     TITLE: "THE HYBRID ARCHITECT",
     SUBTITLE: "Synthesis over Specialization. Concept over Routine.",
     BIO: {
-      JOURNEY_TITLE: "THE LIFELONG APPRENTICESHIP",
+      JOURNEY_TITLE: "THE LIFELONG Apprenticeship",
       JOURNEY_DESC: "While others spent decades in a single lane, I spent mine traversing the entire infrastructure of modern industry. From the logistics floors of Amazon to the experience-driven halls of Disney; from managing teams to operating heavy machinery; from cleaning to corporate training. Family and friends saw 'job hopping.' I saw a masterclass in how the world actually fits together. I don't just write code; I connect concepts that specialists miss.",
       PHILOSOPHY_TITLE: "THE ARCHITECT'S MANIFESTO",
       PHILOSOPHY_DESC: "Specialties are vital, but they create silos. I am the bridge between the teacher and the doer. My 20-hour work week isn't a shortcut; it's the result of a lifelong education in efficiency. I build foundational frameworks so that business owners can stop wrestling with tech and start reclaiming their lives.",
