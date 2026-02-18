@@ -212,12 +212,11 @@ export const WEBSITE_COPY = {
         STUDIO: "Studio",
         SYSTEM: "System"
       },
-      MODULES_HEADER: "Modules",
       OVERVIEW: "Overview",
       WAITLIST: "Beta Command",
       INTAKE: "Client Intake",
       AUDITS: "Consulting Hub",
-      TASKS: "Task Queue",
+      TASKS: "Strategic Planner",
       CLIENTS: "Client Database",
       BROADCAST: "Broadcast Hub",
       SYSTEM_HEADER: "System",
@@ -268,25 +267,31 @@ export const WEBSITE_COPY = {
         }
       }
     },
-    INTERNAL_TASKS: {
-      TITLE: "ENGINEERING ROADMAP",
-      SUBTITLE: "SYSTEM BUILD & BACKLOG",
+    STRATEGIC_PLANNER: {
+      TITLE: "STRATEGIC BUILD PLANNER",
+      SUBTITLE: "AI-ACCELERATED DEVELOPMENT & LIFESTYLE FLOW",
       BTN_ADD: "LOG DIRECTIVE",
-      COLUMNS: {
-        BACKLOG: "PARKING LOT",
-        ACTIVE: "IN PROGRESS",
-        REVIEW: "TESTING / REVIEW",
-        DONE: "DEPLOYED"
+      AI_BRIEF: {
+        TITLE: "LEAD ARCHITECT BRIEFING",
+        GAME_PLAN: "PLAN OF ATTACK"
       },
-      TAGS: {
-        FEATURE: "FEATURE",
-        BUG: "BUG",
-        INFRA: "INFRASTRUCTURE"
+      VELOCITY: {
+        TITLE: "VELOCITY & VITALITY",
+        INDUSTRY: "INDUSTRY STANDARD",
+        ARCHITECT: "ARCHITECT SPEED",
+        SAVINGS: "TIME RECLAIMED",
+        FREEDOM: "LIFESTYLE HOURS"
       },
-      PRIORITY: {
-        HIGH: "HIGH",
-        MED: "MEDIUM",
-        LOW: "LOW"
+      SECTIONS: {
+        WEEKLY: "THE WEEKLY FLOW",
+        MONTHLY: "MONTHLY LEDGER (GOOGLE SYNC)", // NEW
+        TRANSMISSIONS: "PERSONAL TRANSMISSIONS",
+        PARKING_LOT: "THE IDEAS LEDGER",
+        HISTORY: "THE HISTORICAL RECORD"
+      },
+      TABS: {
+        WEEKLY: "WEEKLY FLOW",
+        MONTHLY: "MONTHLY COMMAND"
       }
     },
     AUDIO_COMMAND: {

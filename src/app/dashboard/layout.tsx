@@ -5,7 +5,7 @@ import { WEBSITE_COPY } from '@/utils/glossary';
 import NavItem from '@/components/core/NavItem';
 import { 
   LayoutDashboard, CheckSquare, Users, Settings, Search, Bell, 
-  Cpu, ShieldCheck, Ticket, Inbox, FileText, Mic 
+  Cpu, ShieldCheck, Ticket, Inbox, FileText, Mic, CalendarDays 
 } from 'lucide-react';
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
@@ -22,7 +22,6 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         </div>
         
         <nav className="flex-1 p-4 space-y-1 overflow-y-auto">
-          {/* GROUP: COMMAND */}
           <div className="text-[10px] font-mono text-white/40 uppercase tracking-widest mb-2 px-3 mt-4">
             {sidebarCopy.GROUPS.COMMAND}
           </div>
@@ -30,7 +29,6 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             <NavItem icon={LayoutDashboard} label={sidebarCopy.OVERVIEW} />
           </Link>
 
-          {/* GROUP: OPERATIONS */}
           <div className="text-[10px] font-mono text-white/40 uppercase tracking-widest mb-2 px-3 mt-8">
             {sidebarCopy.GROUPS.OPERATIONS}
           </div>
@@ -39,20 +37,18 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           </Link>
           <NavItem icon={Inbox} label={sidebarCopy.INTAKE} />
           <NavItem icon={FileText} label={sidebarCopy.AUDITS} />
-          <Link href="/dashboard/tasks" className="block">
-            <NavItem icon={CheckSquare} label={sidebarCopy.TASKS} />
-          </Link>
           <NavItem icon={Users} label={sidebarCopy.CLIENTS} />
           
-          {/* GROUP: STUDIO */}
           <div className="text-[10px] font-mono text-white/40 uppercase tracking-widest mb-2 px-3 mt-8">
             {sidebarCopy.GROUPS.STUDIO}
           </div>
+          <Link href="/dashboard/tasks" className="block">
+            <NavItem icon={CalendarDays} label={sidebarCopy.TASKS} />
+          </Link>
           <Link href="/dashboard/broadcast" className="block">
             <NavItem icon={Mic} label={sidebarCopy.BROADCAST} />
           </Link>
           
-          {/* GROUP: SYSTEM */}
           <div className="text-[10px] font-mono text-white/40 uppercase tracking-widest mb-2 px-3 mt-8">
             {sidebarCopy.GROUPS.SYSTEM}
           </div>
