@@ -268,56 +268,49 @@ export const WEBSITE_COPY = {
       }
     },
     STRATEGIC_PLANNER: {
-      TITLE: "STRATEGIC BUILD PLANNER",
-      SUBTITLE: "AI-ACCELERATED DEVELOPMENT & LIFESTYLE FLOW",
-      BTN_ADD: "LOG DIRECTIVE",
-      AI_BRIEF: {
-        TITLE: "LEAD ARCHITECT BRIEFING",
-        GAME_PLAN: "PLAN OF ATTACK"
-      },
-      VELOCITY: {
-        TITLE: "VELOCITY & VITALITY",
-        INDUSTRY: "INDUSTRY STANDARD",
-        ARCHITECT: "ARCHITECT SPEED",
-        SAVINGS: "TIME RECLAIMED",
-        FREEDOM: "LIFESTYLE HOURS"
-      },
-      SECTIONS: {
-        WEEKLY: "THE WEEKLY FLOW",
-        MONTHLY: "MONTHLY LEDGER (GOOGLE SYNC)", // NEW
-        TRANSMISSIONS: "PERSONAL TRANSMISSIONS",
-        PARKING_LOT: "THE IDEAS LEDGER",
-        HISTORY: "THE HISTORICAL RECORD"
-      },
-      TABS: {
-        WEEKLY: "WEEKLY FLOW",
-        MONTHLY: "MONTHLY COMMAND"
-      }
+    TITLE: "STRATEGIC BUILD PLANNER",
+    SUBTITLE: "AI-ACCELERATED DEVELOPMENT & LIFESTYLE FLOW",
+    BTN_ADD: "LOG DIRECTIVE",
+    AI_BRIEF: {
+      TITLE: "LEAD ARCHITECT BRIEFING",
+      GAME_PLAN: "PLAN OF ATTACK",
+      DEFAULT_MSG: "Ready to initialize the build sequence. Awaiting current day telemetry."
     },
-    AUDIO_COMMAND: {
-      TITLE: "BROADCAST TRANSMISSION",
-      SUBTITLE: "PODCAST UPLINK",
-      INPUTS: {
-        TITLE: "Episode Title...",
-        DESC: "Episode summary & directives...",
-        DURATION: "MM:SS",
-        URL: "Audio Stream URL (Optional)",
-        CATEGORY_PUBLIC: "PUBLIC (Landing Page)",
-        CATEGORY_BETA: "BETA (Shift Studio)",
-        UPLOAD_TITLE: "UPLOAD EPISODE",
-        UPLOAD_DESC: "Drag & Drop Audio File",
-        READY_STATUS: "// READY",
-        DEFAULT_PREFIX: "EPISODE //"
-      },
-      BTN_PUBLISH: "INITIALIZE BROADCAST",
-      BTN_UPLOADING: "UPLINKING TO SUPABASE...",
-      SUCCESS: "TRANSMISSION LIVE",
-      ERRORS: {
-        REQUIRED: "TITLE, DESC, AND DURATION REQUIRED.",
-        FAIL: "TRANSMISSION FAILED. RETRY.",
-        INVALID_FORMAT: "INVALID FORMAT. UPLOAD AUDIO FILES ONLY."
-      }
+    VELOCITY: {
+      TITLE: "VELOCITY & VITALITY",
+      SAVINGS: "TIME RECLAIMED",
+      FREEDOM: "LIFESTYLE HOURS",
+      INDUSTRY_LABEL: "Industry Standard:",
+      ARCHITECT_LABEL: "Architect Speed:"
     },
+    SECTIONS: {
+      LIFESTYLE: "Lifestyle Blocks",
+      BUILD: "Build Slots",
+      IDEAS: "The Ideas Ledger",
+      TRANSMISSION: "Personal Transmission",
+      DEBRIEF: "Daily Debrief & Content Feed"
+    },
+    TABS: {
+      WEEKLY: "WEEKLY FLOW",
+      MONTHLY: "MONTHLY COMMAND"
+    },
+    PLACEHOLDERS: {
+      CLEAR: "Clear Workspace",
+      MINDSET: "Today's mindset, thoughts, or roadblocks...",
+      CAL_INIT: "System Initializing // Integration Pending",
+      PHASE_1: "Phase 1: API Link",
+      PHASE_1_DESC: "Connect to Google Calendar API to pull real-time lifestyle blocks into the weekly flow.",
+      PHASE_2: "Phase 2: Auto-Triage",
+      PHASE_2_DESC: "AI will automatically reshuffle the 'Plan of Attack' based on calendar conflicts.",
+      REFLECTION_PROMPT: "How did this build go? Any tangents or alternative wins?"
+    },
+    ACTIONS: {
+      AUDIO: "RECORD AUDIO",
+      BROADCAST: "BROADCAST LOG",
+      SYNC: "Initialize Google Auth Sync",
+      AUTHORIZE: "AUTHORIZE BUILD"
+    }
+  },
     WAITLIST: {
       TITLE: "BETA COMMAND",
       LEAD_COUNT: "ACTIVE TESTERS:",
