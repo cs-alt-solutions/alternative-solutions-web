@@ -314,7 +314,8 @@ export const WEBSITE_COPY = {
         PHASE_1_DESC: "Connect to Google Calendar API to pull real-time lifestyle blocks into the weekly flow.",
         PHASE_2: "Phase 2: Auto-Triage",
         PHASE_2_DESC: "AI will automatically reshuffle the 'Plan of Attack' based on calendar conflicts.",
-        REFLECTION_PROMPT: "How did this build go? Any tangents or alternative wins?"
+        REFLECTION_PROMPT: "How did this build go? Any tangents or alternative wins?",
+        UPLOADING_MEDIA: "INTERCEPTING VISUAL DATA..."
       },
       ACTIONS: {
         AUDIO: "RECORD AUDIO",

@@ -28,7 +28,6 @@ export async function joinWaitlist(formData: FormData) {
     ]);
 
   if (error) {
-    // If the email is already in the database, this is a success for "Resume Access"
     if (error.code === '23505') {
       return { success: true, isNew: false };
     }
@@ -36,13 +35,12 @@ export async function joinWaitlist(formData: FormData) {
     return { error: 'Failed to join the waitlist. Please try again.', success: false };
   }
 
-  // Successfully added a brand new email
   return { success: true, isNew: true };
 }
 
 /**
  * STRATEGIC BUILD PLANNER
- * Securely injects new directives (Features, Infra, Bugs) into the Ideas Ledger.
+ * Securely injects new directives (Features, Infra, Bugs) into the Ideas Ledger or Active Flow.
  */
 export async function logIdeaDirective(formData: FormData) {
   const title = formData.get('title') as string;
@@ -52,10 +50,8 @@ export async function logIdeaDirective(formData: FormData) {
   const phasesRaw = formData.get('phases') as string;
   const scheduledDate = formData.get('scheduled_date') as string;
 
-  // TITANIUM ARMOR: Validate Title
   if (!title) return { success: false, error: 'TITLE_REQUIRED' };
 
-  // Parse structured phases
   let phases = [];
   try {
     phases = JSON.parse(phasesRaw || '[]');
@@ -72,8 +68,7 @@ export async function logIdeaDirective(formData: FormData) {
       priority: priority || 'LOW',
       status: 'BACKLOG',
       phases: phases,
-      // If no date provided, database defaults to NOW()
-      scheduled_date: scheduledDate || new Date().toISOString()
+      scheduled_date: scheduledDate ? scheduledDate : null 
     }]);
 
   if (error) {
@@ -86,8 +81,84 @@ export async function logIdeaDirective(formData: FormData) {
 }
 
 /**
+ * STRATEGIC BUILD PLANNER: TOGGLE TASK STATUS
+ * Toggles a directive between DONE and BACKLOG.
+ */
+export async function toggleDirectiveStatus(formData: FormData) {
+  const id = formData.get('id') as string;
+  const targetStatus = formData.get('targetStatus') as string;
+  
+  const { error } = await supabase
+    .from('ideas_ledger')
+    .update({ status: targetStatus })
+    .eq('id', id);
+
+  if (error) {
+    console.error("CRITICAL: Directive Status Update Failure", error);
+    return { success: false };
+  }
+
+  revalidatePath('/dashboard/tasks');
+  return { success: true };
+}
+
+/**
+ * STRATEGIC BUILD PLANNER: TRIAGE / RESCHEDULE
+ * Pushes an unfinished task to Today, or sends it back to the Ledger.
+ */
+export async function rescheduleDirective(formData: FormData) {
+  const id = formData.get('id') as string;
+  const target = formData.get('target') as string; 
+  
+  const newDate = target === 'TODAY' ? new Date().toISOString() : null;
+
+  const { error } = await supabase
+    .from('ideas_ledger')
+    .update({ scheduled_date: newDate })
+    .eq('id', id);
+
+  if (error) {
+    console.error("CRITICAL: Directive Triage Failure", error);
+    return { success: false };
+  }
+
+  revalidatePath('/dashboard/tasks');
+  return { success: true };
+}
+
+/**
+ * BROADCAST HUB: CREATE TEXT TRANSMISSION
+ * Saves a daily mindset or debrief directly to the broadcast feed.
+ */
+export async function createTextBroadcast(formData: FormData) {
+  const description = formData.get('description') as string;
+
+  if (!description) return { success: false, error: 'NO_CONTENT' };
+
+  // Auto-generate a clean, standard title based on today's date
+  const title = `Transmission // ${new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}`;
+
+  const { error } = await supabase
+    .from('audio_logs')
+    .insert([{ 
+      title, 
+      description, 
+      category: 'MINDSET', 
+      status: 'ACTIVE' 
+    }]);
+
+  if (error) {
+    console.error("CRITICAL: Transmission Broadcast Failure", error);
+    return { success: false };
+  }
+
+  revalidatePath('/dashboard/tasks');
+  revalidatePath('/dashboard/broadcast');
+  return { success: true };
+}
+
+/**
  * BROADCAST HUB: MEDIA MANAGEMENT
- * Handles metadata updates for podcast episodes.
  */
 export async function updateAudioLog(formData: FormData) {
   const id = formData.get('id') as string;
@@ -111,7 +182,6 @@ export async function updateAudioLog(formData: FormData) {
 
 /**
  * BROADCAST HUB: VISIBILITY TOGGLE
- * Switches episodes between ACTIVE and INACTIVE states.
  */
 export async function toggleAudioLogStatus(formData: FormData) {
   const id = formData.get('id') as string;
@@ -134,7 +204,6 @@ export async function toggleAudioLogStatus(formData: FormData) {
 
 /**
  * BROADCAST HUB: ARCHIVE
- * Permanently removes an episode entry from the system.
  */
 export async function archiveAudioLog(formData: FormData) {
   const id = formData.get('id') as string;
@@ -151,4 +220,37 @@ export async function archiveAudioLog(formData: FormData) {
 
   revalidatePath('/dashboard/broadcast');
   return { success: true };
+}
+/**
+ * BROADCAST HUB: MEDIA INTERCEPTOR
+ * Catches pasted screenshots and routes them directly to Supabase Storage.
+ */
+export async function uploadMedia(formData: FormData) {
+  const file = formData.get('file') as File;
+  
+  if (!file) {
+    return { success: false, error: 'NO_FILE' };
+  }
+
+  // Generate a unique, clean filename
+  const fileExt = file.name.split('.').pop() || 'png';
+  const fileName = `${Date.now()}-${Math.random().toString(36).substring(2)}.${fileExt}`;
+  const filePath = `transmissions/${fileName}`;
+
+  // Fire to the 'workshop_media' bucket
+  const { error } = await supabase.storage
+    .from('workshop_media')
+    .upload(filePath, file);
+
+  if (error) {
+    console.error("CRITICAL: Media Upload Failure", error);
+    return { success: false };
+  }
+
+  // Grab the public URL so we can render it in the feed
+  const { data: publicUrlData } = supabase.storage
+    .from('workshop_media')
+    .getPublicUrl(filePath);
+
+  return { success: true, url: publicUrlData.publicUrl };
 }
