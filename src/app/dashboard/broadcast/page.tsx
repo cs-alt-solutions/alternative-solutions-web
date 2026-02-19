@@ -1,97 +1,69 @@
-/* src/app/dashboard/page.tsx */
+/* src/app/dashboard/broadcast/page.tsx */
 import React from 'react';
-import { supabase } from '@/utils/supabase'; 
+import { supabase } from '@/utils/supabase';
 import { WEBSITE_COPY } from '@/utils/glossary';
-import StatCard from '@/components/core/StatCard';
-import PriorityQueuePanel from '@/components/workspace/PriorityQueuePanel';
-import EngineeringPanel from '@/components/workspace/EngineeringPanel';
-import TelemetryPanel from '@/components/workspace/TelemetryPanel';
-import DailyDirectivePanel, { DirectiveItem } from '@/components/workspace/DailyDirectivePanel';
-import NetworkPulse from '@/components/workspace/NetworkPulse';
-import PlatformTrackerPanel from '@/components/workspace/PlatformTrackerPanel';
-import { Project, WaitlistEntry } from '@/data/store'; 
-import { Ticket, Inbox, Terminal, Activity } from 'lucide-react';
+import { Radio, Mic2, Share2, Mail, Plus } from 'lucide-react';
+import EpisodeManager from '@/components/dashboard/broadcast/EpisodeManager';
 
-export default async function CommandConsole() {
-  const overviewCopy = WEBSITE_COPY.DASHBOARD.OVERVIEW;
-  const commonCopy = WEBSITE_COPY.DASHBOARD.COMMON;
-
-  // --- LIVE DATA PIPELINE LOGIC ---
-  const [ { data: waitlistData }, { data: projectsData } ] = await Promise.all([
-    supabase.from('waitlist').select('*').order('date', { ascending: false }),
-    supabase.from('projects').select('*, tasks(*)') 
-  ]);
-
-  // TITANIUM ARMOR: Filter out any corrupted or null database rows instantly
-  const waitlist = (waitlistData as WaitlistEntry[])?.filter(Boolean) || [];
-  const projects = (projectsData as Project[])?.filter(Boolean) || [];
-
-  const pendingBeta = waitlist.filter(w => (w?.source === 'Shift Studio' || w?.source === 'Restricted Access') && w?.status === 'Pending');
-  const agencyInquiries = waitlist.filter(w => w?.source === 'Agency Inquiry' && w?.status !== 'Onboarded');
-  const internalProjects = projects.filter(p => p?.client === 'Internal');
+export default async function BroadcastHub() {
+  const hubCopy = WEBSITE_COPY.DASHBOARD.MEDIA_HUB;
   
-  const openTasksCount = internalProjects.reduce((acc, p) => acc + (p?.tasks?.filter(t => t?.status !== 'Done').length || 0), 0);
-  
-  // SAFE SORT: Using ?. prevents the "Cannot read properties of undefined (reading 'date')" crash
-  const priorityQueue = [...pendingBeta, ...agencyInquiries].sort((a, b) => {
-    const dateB = b?.date || b?.created_at || 0;
-    const dateA = a?.date || a?.created_at || 0;
-    return new Date(dateB).getTime() - new Date(dateA).getTime();
-  });
+  // --- DATA PIPELINE: FETCHING ALL EPISODES ---
+  const { data: episodes } = await supabase
+    .from('audio_logs')
+    .select('*')
+    .order('date', { ascending: false });
 
-  // --- THE DAILY DIRECTIVE GENERATOR ---
-  const generatedDirectives: DirectiveItem[] = [];
-  agencyInquiries.forEach(lead => {
-    if (!lead) return;
-    const rawDate = lead?.date || lead?.created_at;
-    const displayDate = rawDate ? new Date(rawDate).toLocaleDateString() : 'Recent';
-    
-    generatedDirectives.push({
-      id: lead?.id || Math.random().toString(),
-      type: 'LEAD',
-      title: lead?.name || lead?.email || 'Unknown Contact',
-      subtitle: `Agency Lead: ${displayDate}`,
-      link: '/dashboard/intake'
-    });
-  });
-  
-  internalProjects.forEach(project => {
-    if (!project) return;
-    project?.tasks?.filter(t => t?.status === 'In Progress').forEach(task => {
-      generatedDirectives.push({
-        id: task?.id || Math.random().toString(),
-        type: 'TASK',
-        title: task?.title || 'Unnamed Task',
-        subtitle: `Dev: ${project?.name || 'Unknown'}`,
-        link: `/dashboard/project/${project?.id}`
-      });
-    });
-  });
+  const activeCount = episodes?.filter(e => e.status === 'ACTIVE').length || 0;
 
   return (
     <div className="p-8 relative">
-       {pendingBeta.length > 0 && (
-         <NetworkPulse feed={pendingBeta} copy={overviewCopy.LIVE_FEED} />
-       )}
-       
-       <DailyDirectivePanel items={generatedDirectives.slice(0, 5)} copy={overviewCopy.DIRECTIVE} />
-       
-       <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
-         <StatCard title={overviewCopy.STATS.BETA_PENDING} value={pendingBeta.length.toString()} icon={Ticket} />
-         <StatCard title={overviewCopy.STATS.AGENCY_LEADS} value={agencyInquiries.length.toString()} icon={Inbox} />
-         <StatCard title={overviewCopy.STATS.DEV_TASKS} value={openTasksCount.toString()} icon={Terminal} />
-         <StatCard title={overviewCopy.STATS.SYSTEM_HEALTH} value={commonCopy.HEALTH_OPTIMAL} icon={Activity} accent />
-       </div>
+      {/* HEADER SECTION */}
+      <header className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-12 border-b border-white/5 pb-8">
+        <div>
+          <div className="flex items-center gap-2 mb-2">
+            <Radio className="text-brand-primary animate-pulse" size={16} />
+            <span className="text-xs font-mono tracking-[0.2em] text-brand-primary uppercase">
+              {hubCopy.SUBTITLE}
+            </span>
+          </div>
+          <h1 className="text-4xl font-black tracking-tighter text-white uppercase">
+            {hubCopy.TITLE}
+          </h1>
+        </div>
 
-       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
-          <PriorityQueuePanel queue={priorityQueue} copy={overviewCopy.PANELS} commonCopy={commonCopy} />
-          <EngineeringPanel projects={internalProjects} copy={overviewCopy.PANELS} />
-          <PlatformTrackerPanel copy={overviewCopy.INFRASTRUCTURE} />
-       </div>
+        <button className="flex items-center gap-2 bg-brand-primary text-black px-6 py-3 rounded-lg font-bold hover:scale-105 transition-transform">
+          <Plus size={18} strokeWidth={3} />
+          <span>NEW TRANSMISSION</span>
+        </button>
+      </header>
 
-       <div className="mb-8">
-          <TelemetryPanel copy={overviewCopy.TELEMETRY} />
-       </div>
+      {/* TABS: AUDIO / SOCIAL / CAMPAIGNS */}
+      <nav className="flex gap-8 mb-8 border-b border-white/5">
+        <button className="pb-4 border-b-2 border-brand-primary text-brand-primary font-bold flex items-center gap-2">
+          <Mic2 size={16} /> {hubCopy.TABS.AUDIO}
+        </button>
+        <button className="pb-4 text-text-muted hover:text-white transition-colors flex items-center gap-2">
+          <Share2 size={16} /> {hubCopy.TABS.SOCIAL}
+        </button>
+        <button className="pb-4 text-text-muted hover:text-white transition-colors flex items-center gap-2">
+          <Mail size={16} /> {hubCopy.TABS.CAMPAIGNS}
+        </button>
+      </nav>
+
+      {/* EPISODE MANAGEMENT MODULE */}
+      <section className="bg-bg-surface-200/30 border border-white/5 rounded-2xl p-6">
+        <div className="flex items-center justify-between mb-6">
+          <h2 className="text-sm font-mono text-text-muted uppercase tracking-widest">
+            {hubCopy.AUDIO_MODULE.LEAD_COUNT} <span className="text-white">{activeCount}</span>
+          </h2>
+        </div>
+        
+        <EpisodeManager 
+          initialEpisodes={episodes || []} 
+          copy={hubCopy.AUDIO_MODULE} 
+        />
+      </section>
     </div>
   );
 }
