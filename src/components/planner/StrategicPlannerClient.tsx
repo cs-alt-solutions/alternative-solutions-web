@@ -3,6 +3,7 @@
 
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { WEBSITE_COPY } from '@/utils/glossary';
 import { 
   ArrowLeft, Plus, Calendar, CalendarDays, ExternalLink,
@@ -40,20 +41,26 @@ interface Props {
 }
 
 export default function StrategicPlannerClient({ initialDraft, initialLedger }: Props) {
+  const router = useRouter();
   const copy = WEBSITE_COPY.DASHBOARD.STRATEGIC_PLANNER;
+  
   const [selectedDay, setSelectedDay] = useState('MON');
   const [activeTab, setActiveTab] = useState<'WEEKLY' | 'MONTHLY'>('WEEKLY');
   const [isModalOpen, setIsModalOpen] = useState(false);
   
-  // We initialize straight from the server payload
   const [activeDraft, setActiveDraft] = useState<any>(initialDraft);
 
-  // If the server pushes a new draft via revalidatePath, keep UI in sync
+  // 1. CACHE BUSTER: Forces Next.js to ping the server for fresh data when navigating here
+  useEffect(() => {
+    router.refresh();
+  }, [router]);
+
+  // 2. STATE SYNC: Keeps our client UI perfectly aligned with server data
   useEffect(() => {
     setActiveDraft(initialDraft);
   }, [initialDraft]);
 
-  // Transform ledger data instantly without useEffect
+  // 3. SYNCHRONOUS TRANSFORMS: No need for useEffect, we calculate on render
   const ideasLedger = initialLedger
     .filter(task => task.scheduled_date === null)
     .map(task => ({
@@ -168,7 +175,7 @@ export default function StrategicPlannerClient({ initialDraft, initialLedger }: 
 
                         <DailyDebriefPanel 
                           tasks={currentDayData?.tasks || []} 
-                          onTaskUpdate={() => {}} 
+                          onTaskUpdate={() => { router.refresh(); }} 
                         />
                       </div>
 
