@@ -181,12 +181,24 @@ export const WEBSITE_COPY = {
       TITLE: "OWN THE WORKSHOP. MASTER THE SALE.",
       SUBHEAD: "The command center for creators who sell everywhere. From workshop builds and inventory management to deep financials—stop juggling apps and start scaling your craft.",
     },
+    PODCAST_FEED: {
+      FALLBACK: "AWAITING INCOMING TRANSMISSIONS..."
+    },
+    SECTIONS: {
+      PHILOSOPHY: "The Philosophy",
+      FLIGHT_PLAN: "The Flight Plan",
+      FAQ: "Frequent Inquiries"
+    },
     ROADMAP: {
       PHASE_1_TITLE: "Phase 1: The Engine",
       PHASE_1_DESC: "Workshop & Financial Management. Build tracking, material costs, and profit margin analysis.",
       PHASE_2_TITLE: "Phase 2: The Reach",
       PHASE_2_DESC: "Multi-Channel Marketing & AI. Automated listing insights for Etsy and Marketplace.",
     },
+    BOTTOM_CTA: {
+      TITLE: "Ready to take control?",
+      DESC: "Secure your spot for the Shift Studio closed beta rollout."
+    }
   },
 
   PUBLIC_LOGS: {
@@ -268,49 +280,49 @@ export const WEBSITE_COPY = {
       }
     },
     STRATEGIC_PLANNER: {
-    TITLE: "STRATEGIC BUILD PLANNER",
-    SUBTITLE: "AI-ACCELERATED DEVELOPMENT & LIFESTYLE FLOW",
-    BTN_ADD: "LOG DIRECTIVE",
-    AI_BRIEF: {
-      TITLE: "LEAD ARCHITECT BRIEFING",
-      GAME_PLAN: "PLAN OF ATTACK",
-      DEFAULT_MSG: "Ready to initialize the build sequence. Awaiting current day telemetry."
+      TITLE: "STRATEGIC BUILD PLANNER",
+      SUBTITLE: "AI-ACCELERATED DEVELOPMENT & LIFESTYLE FLOW",
+      BTN_ADD: "LOG DIRECTIVE",
+      AI_BRIEF: {
+        TITLE: "LEAD ARCHITECT BRIEFING",
+        GAME_PLAN: "PLAN OF ATTACK",
+        DEFAULT_MSG: "Ready to initialize the build sequence. Awaiting current day telemetry."
+      },
+      VELOCITY: {
+        TITLE: "VELOCITY & VITALITY",
+        SAVINGS: "TIME RECLAIMED",
+        FREEDOM: "LIFESTYLE HOURS",
+        INDUSTRY_LABEL: "Industry Standard:",
+        ARCHITECT_LABEL: "Architect Speed:"
+      },
+      SECTIONS: {
+        LIFESTYLE: "Lifestyle Blocks",
+        BUILD: "Build Slots",
+        IDEAS: "The Ideas Ledger",
+        TRANSMISSION: "Personal Transmission",
+        DEBRIEF: "Daily Debrief & Content Feed"
+      },
+      TABS: {
+        WEEKLY: "WEEKLY FLOW",
+        MONTHLY: "MONTHLY COMMAND"
+      },
+      PLACEHOLDERS: {
+        CLEAR: "Clear Workspace",
+        MINDSET: "Today's mindset, thoughts, or roadblocks...",
+        CAL_INIT: "System Initializing // Integration Pending",
+        PHASE_1: "Phase 1: API Link",
+        PHASE_1_DESC: "Connect to Google Calendar API to pull real-time lifestyle blocks into the weekly flow.",
+        PHASE_2: "Phase 2: Auto-Triage",
+        PHASE_2_DESC: "AI will automatically reshuffle the 'Plan of Attack' based on calendar conflicts.",
+        REFLECTION_PROMPT: "How did this build go? Any tangents or alternative wins?"
+      },
+      ACTIONS: {
+        AUDIO: "RECORD AUDIO",
+        BROADCAST: "BROADCAST LOG",
+        SYNC: "Initialize Google Auth Sync",
+        AUTHORIZE: "AUTHORIZE BUILD"
+      }
     },
-    VELOCITY: {
-      TITLE: "VELOCITY & VITALITY",
-      SAVINGS: "TIME RECLAIMED",
-      FREEDOM: "LIFESTYLE HOURS",
-      INDUSTRY_LABEL: "Industry Standard:",
-      ARCHITECT_LABEL: "Architect Speed:"
-    },
-    SECTIONS: {
-      LIFESTYLE: "Lifestyle Blocks",
-      BUILD: "Build Slots",
-      IDEAS: "The Ideas Ledger",
-      TRANSMISSION: "Personal Transmission",
-      DEBRIEF: "Daily Debrief & Content Feed"
-    },
-    TABS: {
-      WEEKLY: "WEEKLY FLOW",
-      MONTHLY: "MONTHLY COMMAND"
-    },
-    PLACEHOLDERS: {
-      CLEAR: "Clear Workspace",
-      MINDSET: "Today's mindset, thoughts, or roadblocks...",
-      CAL_INIT: "System Initializing // Integration Pending",
-      PHASE_1: "Phase 1: API Link",
-      PHASE_1_DESC: "Connect to Google Calendar API to pull real-time lifestyle blocks into the weekly flow.",
-      PHASE_2: "Phase 2: Auto-Triage",
-      PHASE_2_DESC: "AI will automatically reshuffle the 'Plan of Attack' based on calendar conflicts.",
-      REFLECTION_PROMPT: "How did this build go? Any tangents or alternative wins?"
-    },
-    ACTIONS: {
-      AUDIO: "RECORD AUDIO",
-      BROADCAST: "BROADCAST LOG",
-      SYNC: "Initialize Google Auth Sync",
-      AUTHORIZE: "AUTHORIZE BUILD"
-    }
-  },
     WAITLIST: {
       TITLE: "BETA COMMAND",
       LEAD_COUNT: "ACTIVE TESTERS:",

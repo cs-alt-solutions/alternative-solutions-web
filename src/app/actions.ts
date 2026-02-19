@@ -5,6 +5,42 @@ import { supabase } from '@/utils/supabase';
 import { revalidatePath } from 'next/cache';
 
 /**
+ * BETA COMMAND: WAITLIST
+ * Handles new beta access requests from the public site.
+ */
+export async function joinWaitlist(formData: FormData) {
+  const email = formData.get('email') as string;
+  const source = formData.get('source') as string || 'Unknown';
+
+  if (!email) {
+    return { error: 'Email is required' };
+  }
+
+  // Attempt to insert into the Supabase waitlist table
+  const { error } = await supabase
+    .from('waitlist') 
+    .insert([
+      { 
+        email, 
+        source, 
+        status: 'PENDING' 
+      }
+    ]);
+
+  if (error) {
+    // If the email is already in the database, this is a success for "Resume Access"
+    if (error.code === '23505') {
+      return { success: true, isNew: false };
+    }
+    console.error("CRITICAL: Waitlist Join Failure", error);
+    return { error: 'Failed to join the waitlist. Please try again.', success: false };
+  }
+
+  // Successfully added a brand new email
+  return { success: true, isNew: true };
+}
+
+/**
  * STRATEGIC BUILD PLANNER
  * Securely injects new directives (Features, Infra, Bugs) into the Ideas Ledger.
  */

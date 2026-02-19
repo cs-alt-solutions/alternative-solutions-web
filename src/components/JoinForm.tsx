@@ -1,7 +1,7 @@
 /* src/components/JoinForm.tsx */
 'use client';
 
-import React, { useRef, useState } from 'react';
+import React, { useRef, useState, useEffect } from 'react';
 import { WEBSITE_COPY } from '@/utils/glossary';
 import { joinWaitlist } from '@/app/actions';
 import { ArrowRight, CheckCircle2, Loader2, RefreshCw } from 'lucide-react';
@@ -11,6 +11,15 @@ export default function JoinForm({ source }: { source: 'Shift Studio' | 'Restric
   const [mode, setMode] = useState<'apply' | 'returning'>('apply');
   const [message, setMessage] = useState('');
   const formRef = useRef<HTMLFormElement>(null);
+
+  // --- THE SMART CHECK: Auto-detect existing access ---
+  useEffect(() => {
+    if (typeof window !== 'undefined' && localStorage.getItem('alt_solutions_access') === 'true') {
+      setStatus('success');
+      setMessage(WEBSITE_COPY.JOIN_PAGE.SUCCESS_MSG);
+    }
+  }, []);
+  // --------------------------------------------------
 
   async function action(formData: FormData) {
     setStatus('loading');
