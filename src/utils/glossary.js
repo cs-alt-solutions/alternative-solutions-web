@@ -322,7 +322,14 @@ export const WEBSITE_COPY = {
         BROADCAST: "BROADCAST LOG",
         SYNC: "Initialize Google Auth Sync",
         AUTHORIZE: "AUTHORIZE BUILD"
-      }
+      },
+      ZERO_STATE: {
+        TITLE: "FRESH START",
+        SUBTITLE: "MONDAY MORNING BLANK CANVAS",
+        DESCRIPTION: "The week is unwritten. No clutter, no noise. Initialize your weekly roll-up to begin tracking your transmissions and daily progress.",
+        BTN_START: "INITIALIZE NEW WEEK"
+      },
+      LOGGING_INDICATOR: "LOGGING TO:"
     },
     WAITLIST: {
       TITLE: "BETA COMMAND",
@@ -405,6 +412,13 @@ export const WEBSITE_COPY = {
       }
     },
     MEDIA_HUB: {
+      STUDIO: {
+        TITLE: "FRIDAY STUDIO",
+        SUBTITLE: "WEEKLY ROLL-UP PREVIEW",
+        NO_NOTES: "No transmissions logged for this episode yet.",
+        BTN_PUBLISH: "PUBLISH EPISODE",
+        BTN_START_DRAFT: "INITIALIZE WEEKLY DRAFT"
+      },
       TITLE: "BROADCAST & MEDIA",
       SUBTITLE: "MASTER COMMAND",
       TABS: {

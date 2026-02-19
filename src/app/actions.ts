@@ -6,31 +6,21 @@ import { revalidatePath } from 'next/cache';
 
 /**
  * BETA COMMAND: WAITLIST
- * Handles new beta access requests from the public site.
  */
 export async function joinWaitlist(formData: FormData) {
   const email = formData.get('email') as string;
   const source = formData.get('source') as string || 'Unknown';
 
   if (!email) {
-    return { error: 'Email is required' };
+    return { error: 'Email is required', success: false };
   }
 
-  // Attempt to insert into the Supabase waitlist table
   const { error } = await supabase
     .from('waitlist') 
-    .insert([
-      { 
-        email, 
-        source, 
-        status: 'PENDING' 
-      }
-    ]);
+    .insert([{ email, source, status: 'PENDING' }]);
 
   if (error) {
-    if (error.code === '23505') {
-      return { success: true, isNew: false };
-    }
+    if (error.code === '23505') return { success: true, isNew: false };
     console.error("CRITICAL: Waitlist Join Failure", error);
     return { error: 'Failed to join the waitlist. Please try again.', success: false };
   }
@@ -40,7 +30,6 @@ export async function joinWaitlist(formData: FormData) {
 
 /**
  * STRATEGIC BUILD PLANNER
- * Securely injects new directives (Features, Infra, Bugs) into the Ideas Ledger or Active Flow.
  */
 export async function logIdeaDirective(formData: FormData) {
   const title = formData.get('title') as string;
@@ -53,11 +42,7 @@ export async function logIdeaDirective(formData: FormData) {
   if (!title) return { success: false, error: 'TITLE_REQUIRED' };
 
   let phases = [];
-  try {
-    phases = JSON.parse(phasesRaw || '[]');
-  } catch (e) {
-    phases = [];
-  }
+  try { phases = JSON.parse(phasesRaw || '[]'); } catch (e) { phases = []; }
 
   const { error } = await supabase
     .from('ideas_ledger')
@@ -82,7 +67,6 @@ export async function logIdeaDirective(formData: FormData) {
 
 /**
  * STRATEGIC BUILD PLANNER: TOGGLE TASK STATUS
- * Toggles a directive between DONE and BACKLOG.
  */
 export async function toggleDirectiveStatus(formData: FormData) {
   const id = formData.get('id') as string;
@@ -104,12 +88,10 @@ export async function toggleDirectiveStatus(formData: FormData) {
 
 /**
  * STRATEGIC BUILD PLANNER: TRIAGE / RESCHEDULE
- * Pushes an unfinished task to Today, or sends it back to the Ledger.
  */
 export async function rescheduleDirective(formData: FormData) {
   const id = formData.get('id') as string;
   const target = formData.get('target') as string; 
-  
   const newDate = target === 'TODAY' ? new Date().toISOString() : null;
 
   const { error } = await supabase
@@ -127,25 +109,55 @@ export async function rescheduleDirective(formData: FormData) {
 }
 
 /**
- * BROADCAST HUB: CREATE TEXT TRANSMISSION
- * Saves a daily mindset or debrief directly to the broadcast feed.
+ * BROADCAST HUB: START WEEKLY DRAFT (PARENT)
+ * Initializes a new draft episode and returns the data for an instant UI update.
  */
-export async function createTextBroadcast(formData: FormData) {
-  const description = formData.get('description') as string;
-
-  if (!description) return { success: false, error: 'NO_CONTENT' };
-
-  // Auto-generate a clean, standard title based on today's date
-  const title = `Transmission // ${new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}`;
-
-  const { error } = await supabase
+export async function startDraftEpisode(formData: FormData) {
+  const title = `Week of ${new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}`;
+  
+  const { data, error } = await supabase
     .from('audio_logs')
     .insert([{ 
       title, 
-      description, 
-      category: 'MINDSET', 
-      status: 'ACTIVE' 
-    }]);
+      description: 'Pending Weekly Roll-up', 
+      category: 'BUILD', 
+      status: 'DRAFT' 
+    }])
+    .select(); // Grabs the row we just created!
+
+  if (error) {
+    console.error("CRITICAL: Draft Initialization Failure", error);
+    return { success: false, message: error.message };
+  }
+  
+  revalidatePath('/dashboard/tasks');
+  revalidatePath('/dashboard/broadcast');
+  return { success: true, draft: data[0] };
+}
+
+/**
+ * BROADCAST HUB: CREATE TEXT TRANSMISSION (CHILD)
+ */
+export async function createTextBroadcast(formData: FormData) {
+  const content = formData.get('description') as string;
+  if (!content) return { success: false, error: 'NO_CONTENT' };
+
+  const { data: drafts } = await supabase
+    .from('audio_logs')
+    .select('id')
+    .eq('status', 'DRAFT')
+    .order('created_at', { ascending: false })
+    .limit(1);
+
+  if (!drafts || drafts.length === 0) {
+    return { success: false, error: 'NO_ACTIVE_DRAFT' };
+  }
+
+  const activeDraftId = drafts[0].id;
+
+  const { error } = await supabase
+    .from('transmissions')
+    .insert([{ episode_id: activeDraftId, content }]);
 
   if (error) {
     console.error("CRITICAL: Transmission Broadcast Failure", error);
@@ -221,33 +233,28 @@ export async function archiveAudioLog(formData: FormData) {
   revalidatePath('/dashboard/broadcast');
   return { success: true };
 }
+
 /**
  * BROADCAST HUB: MEDIA INTERCEPTOR
- * Catches pasted screenshots and routes them directly to Supabase Storage.
  */
 export async function uploadMedia(formData: FormData) {
   const file = formData.get('file') as File;
   
-  if (!file) {
-    return { success: false, error: 'NO_FILE' };
-  }
+  if (!file) return { success: false, error: 'NO_FILE' };
 
-  // Generate a unique, clean filename
   const fileExt = file.name.split('.').pop() || 'png';
   const fileName = `${Date.now()}-${Math.random().toString(36).substring(2)}.${fileExt}`;
   const filePath = `transmissions/${fileName}`;
 
-  // Fire to the 'workshop_media' bucket
   const { error } = await supabase.storage
     .from('workshop_media')
     .upload(filePath, file);
 
   if (error) {
     console.error("CRITICAL: Media Upload Failure", error);
-    return { success: false };
+    return { success: false, message: error.message };
   }
 
-  // Grab the public URL so we can render it in the feed
   const { data: publicUrlData } = supabase.storage
     .from('workshop_media')
     .getPublicUrl(filePath);
