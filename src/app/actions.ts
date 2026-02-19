@@ -121,9 +121,11 @@ export async function startDraftEpisode(formData: FormData) {
       title, 
       description: 'Pending Weekly Roll-up', 
       category: 'BUILD', 
-      status: 'DRAFT' 
+      status: 'DRAFT',
+      duration: '00:00',
+      audio_url: '' // <-- Satisfies the strict NOT NULL constraint
     }])
-    .select(); // Grabs the row we just created!
+    .select(); 
 
   if (error) {
     console.error("CRITICAL: Draft Initialization Failure", error);
