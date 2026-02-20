@@ -10,7 +10,7 @@ import {
   AlertTriangle, CheckCircle2, Bot, Bug, Inbox, FolderArchive, Map
 } from 'lucide-react';
 import WaitlistRow from '@/components/dashboard/WaitlistRow';
-import { WaitlistEntry } from '@/types'; // Fixed: Now using central types instead of broken store path
+import { WaitlistEntry } from '@/types'; // Fixed: Now correctly pulling from central types
 
 const MOCK_TELEMETRY = [
   { 
