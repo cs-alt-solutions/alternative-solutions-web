@@ -2,7 +2,7 @@
 import React from 'react';
 import Link from 'next/link';
 import { Terminal } from 'lucide-react';
-import { Project } from '@/types'; // Fixed import from central types
+import { Project } from '@/types'; 
 
 interface EngineeringPanelProps {
   projects?: Project[];
@@ -14,7 +14,9 @@ export default function EngineeringPanel({ projects = [], copy }: EngineeringPan
     <div className="bg-black/40 border border-white/5 rounded-xl overflow-hidden shadow-2xl backdrop-blur-sm flex flex-col h-125 group hover:border-brand-primary/20 transition-all">
       <div className="p-4 border-b border-white/5 bg-white/2 flex items-center gap-3">
         <Terminal size={16} className="text-brand-primary" />
-        <h3 className="font-bold text-xs uppercase tracking-widest text-white/80">{copy.ENGINEERING || 'INTERNAL ENGINEERING'}</h3>
+        <h3 className="font-bold text-xs uppercase tracking-widest text-white/80">
+          {copy?.ENGINEERING || 'INTERNAL ENGINEERING'}
+        </h3>
       </div>
       
       <div className="flex-1 overflow-auto p-4 custom-scrollbar">
