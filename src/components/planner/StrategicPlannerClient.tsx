@@ -1,120 +1,67 @@
-/* src/components/planner/StrategicPlannerClient.tsx */
 'use client';
 
-import React, { useState, useMemo } from 'react';
-import { WEBSITE_COPY } from '@/utils/glossary';
-import { Task } from '@/types';
-import VelocityStats from './VelocityStats';
-import AiBriefingPanel from './AiBriefingPanel';
-import WeeklyFlowWheel from './WeeklyFlowWheel';
-import IdeasLedgerPanel from './IdeasLedgerPanel';
-import DailyDebriefPanel from './DailyDebriefPanel';
-import TransmissionPanel from './TransmissionPanel';
-import LogDirectiveModal from './LogDirectiveModal';
-import { Plus, LayoutDashboard, Calendar } from 'lucide-react';
+import React, { useState } from 'react';
+import GoalTracker from './GoalTracker';
+import { Directive } from '../../utils/glossary';
+// Ensure this path exists or update it to your global.css location
+import '../../app/globals.css'; 
 
-interface StrategicPlannerClientProps {
-  initialTasks: Task[];
-}
+const StrategicPlannerClient: React.FC = () => {
+  const [isModalOpen, setModalOpen] = useState(false);
+  const [directives, setDirectives] = useState<Directive[]>([]);
 
-export default function StrategicPlannerClient({ initialTasks }: StrategicPlannerClientProps) {
-  const copy = WEBSITE_COPY.DASHBOARD.STRATEGIC_PLANNER;
-  
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [view, setView] = useState<'WEEKLY' | 'MONTHLY'>('WEEKLY');
-  const [selectedDay, setSelectedDay] = useState(new Date().getDay());
-  const [tasks, setTasks] = useState<Task[]>(initialTasks);
-
-  // Logic: Separate ledger ideas from scheduled flow tasks
-  const ledgerTasks = useMemo(() => 
-    tasks.filter(t => !t.scheduled_date || t.priority === 'Low'), 
-  [tasks]);
-
-  const activeTasks = useMemo(() => 
-    tasks.filter(t => t.scheduled_date && t.status !== 'Done'), 
-  [tasks]);
-
-  const handleTaskUpdate = (updatedTask: Task) => {
-    setTasks(prev => prev.map(t => t.id === updatedTask.id ? updatedTask : t));
+  const handleAddDirective = (newDirective: Omit<Directive, 'id' | 'status'>) => {
+    const directive: Directive = { 
+      ...newDirective, 
+      id: Date.now(), 
+      status: 'pending' 
+    };
+    setDirectives([...directives, directive]);
+    setModalOpen(false);
   };
 
   return (
-    <div className="p-8 space-y-8 animate-in fade-in duration-700 max-w-7xl mx-auto">
-      <header className="flex flex-col md:flex-row md:items-center justify-between gap-6">
-        <div>
-          <h1 className="text-4xl font-black text-white uppercase tracking-tighter italic">
-            {copy.TITLE}
-          </h1>
-          <p className="text-text-muted text-xs font-mono uppercase tracking-[0.3em] mt-2">
-            {copy.SUBTITLE}
-          </p>
+    <div className="planner-wrapper">
+      <header className="planner-header">
+        <div className="title-group">
+          <h1 className="text-2xl font-bold">STRATEGIC BUILD PLANNER</h1>
+          <p className="text-sm opacity-70">AN ACCELERATED DEVELOPMENT & LIFESTYLE PLUG</p>
         </div>
-
-        <div className="flex items-center gap-3">
-          <div className="flex bg-black/40 border border-white/5 p-1 rounded-lg">
-            <button 
-              onClick={() => setView('WEEKLY')}
-              className={`px-4 py-2 rounded text-[10px] font-mono uppercase transition-all ${view === 'WEEKLY' ? 'bg-brand-primary text-black font-bold' : 'text-white/40'}`}
-            >
-              <LayoutDashboard size={14} className="inline mr-2" /> {copy.TABS.WEEKLY}
-            </button>
-            <button 
-              onClick={() => setView('MONTHLY')}
-              className={`px-4 py-2 rounded text-[10px] font-mono uppercase transition-all ${view === 'MONTHLY' ? 'bg-brand-primary text-black font-bold' : 'text-white/40'}`}
-            >
-              <Calendar size={14} className="inline mr-2" /> {copy.TABS.MONTHLY}
-            </button>
-          </div>
-
+        <div className="flex gap-4">
+          <button className="px-4 py-2 bg-gray-800 rounded">WEEKLY PLAN</button>
           <button 
-            onClick={() => setIsModalOpen(true)}
-            className="flex items-center gap-2 bg-white text-black px-6 py-3 rounded-xl font-bold text-[10px] font-mono uppercase hover:bg-brand-primary transition-all"
+            className="px-4 py-2 bg-blue-600 rounded font-bold"
+            onClick={() => setModalOpen(true)}
           >
-            <Plus size={16} /> {copy.BTN_ADD}
+            + LOG DIRECTIVE
           </button>
         </div>
       </header>
 
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-        <div className="lg:col-span-4">
-          <VelocityStats copy={copy.VELOCITY} />
-        </div>
-        <div className="lg:col-span-8">
-          <AiBriefingPanel copy={copy.AI_BRIEF} hasActiveDraft={false} />
-        </div>
+      <div className="mt-8">
+        <GoalTracker activeDirectives={directives} />
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-        <div className="lg:col-span-7 space-y-6">
-          <div className="bg-bg-surface-100 border border-white/5 rounded-2xl p-6 relative overflow-hidden">
-            <h3 className="text-[10px] font-mono text-white/40 uppercase tracking-[0.2em] mb-6 flex items-center gap-2">
-              <div className="w-1.5 h-1.5 rounded-full bg-brand-primary animate-pulse" />
-              {copy.SECTIONS.BUILD}
-            </h3>
-            <WeeklyFlowWheel 
-              copy={copy.PLACEHOLDERS} 
-              days={['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT']}
-              selectedDay={selectedDay}
-              onSelectDay={setSelectedDay}
-            />
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mt-8">
+        <section className="col-span-1">
+          <div className="p-6 bg-gray-900 border border-gray-800 rounded-lg">
+            <h3 className="text-lg mb-4">VELOCITY & VITALITY</h3>
+            <div className="flex items-baseline gap-2">
+              <span className="text-4xl font-mono text-blue-400">12.5</span>
+              <span className="text-xs">HRS / WEEK</span>
+            </div>
           </div>
-          <TransmissionPanel copy={copy.ACTIONS} draftTitle="Current Transmission Alpha" />
-        </div>
+        </section>
 
-        <div className="lg:col-span-5 space-y-6">
-          <IdeasLedgerPanel copy={copy.SECTIONS} tasks={ledgerTasks} />
-          <DailyDebriefPanel 
-            copy={copy.SECTIONS} 
-            tasks={activeTasks} 
-            onTaskUpdate={handleTaskUpdate} 
-          />
-        </div>
+        <section className="col-span-1">
+          <div className="p-6 bg-gray-900 border border-gray-800 rounded-lg">
+            <h3 className="text-lg mb-4">LEAD ARCHITECT BRIEFING</h3>
+            <p className="text-sm text-gray-400 italic">Standing by for next directive...</p>
+          </div>
+        </section>
       </div>
-
-      <LogDirectiveModal 
-        isOpen={isModalOpen} 
-        onClose={() => setIsModalOpen(false)} 
-      />
     </div>
   );
-}
+};
+
+export default StrategicPlannerClient;
