@@ -8,24 +8,27 @@ import { ArrowLeft, Plus, Activity, Calendar } from 'lucide-react';
 
 /**
  * PROJECT WORKSPACE
- * Architecture: Fetches data directly from Supabase to resolve build errors.
+ * Architecture: Fetches project and task data directly from Supabase.
+ * This replaces the broken local 'store' import to fix the build error.
  */
 export default async function ProjectWorkspace({ params }: { params: { id: string } }) {
+  const { id } = params;
   const copy = WEBSITE_COPY.DASHBOARD.PROJECT_BOARD;
 
-  // Fetch Project Details from Supabase
+  // 1. Fetch Project Details from Supabase
   const { data: project, error: projectError } = await supabase
     .from('projects')
     .select('*')
-    .eq('id', params.id)
+    .eq('id', id)
     .single();
 
-  // Fetch Associated Tasks
+  // 2. Fetch Associated Tasks
   const { data: tasks, error: tasksError } = await supabase
     .from('tasks')
     .select('*')
-    .eq('project_id', params.id);
+    .eq('project_id', id);
 
+  // If the project doesn't exist in the DB, show the glossary error message
   if (projectError || !project) {
     return (
       <div className="min-h-screen bg-bg-app flex items-center justify-center font-mono text-brand-primary uppercase tracking-widest text-sm">
@@ -34,7 +37,7 @@ export default async function ProjectWorkspace({ params }: { params: { id: strin
     );
   }
 
-  // Column logic: Filter tasks by status from the database results
+  // Filter tasks into columns based on status
   const columns = [
     { id: 'Todo', title: copy.COLUMNS.TODO, tasks: tasks?.filter((t) => t.status === 'Todo') || [] },
     { id: 'In Progress', title: copy.COLUMNS.IN_PROGRESS, tasks: tasks?.filter((t) => t.status === 'In Progress') || [] },
@@ -62,8 +65,8 @@ export default async function ProjectWorkspace({ params }: { params: { id: strin
               </span>
             </div>
             <div className="flex items-center gap-4 text-xs text-text-muted font-mono uppercase tracking-wider">
-               <span className="flex items-center gap-1"><Calendar size={12}/> Due: {project.due_date}</span>
-               <span className="flex items-center gap-1"><Activity size={12}/> Client: {project.client_name}</span>
+               <span className="flex items-center gap-1"><Calendar size={12}/> Due: {project.due_date || 'TBD'}</span>
+               <span className="flex items-center gap-1"><Activity size={12}/> Client: {project.client_name || 'Internal'}</span>
             </div>
           </div>
         </div>
