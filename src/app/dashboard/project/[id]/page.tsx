@@ -1,16 +1,32 @@
 /* src/app/dashboard/project/[id]/page.tsx */
 import React from 'react';
 import Link from 'next/link';
-import { getProjectById } from '@/data/store';
 import { WEBSITE_COPY } from '@/utils/glossary';
-import TaskCard from '@/components/dashboard/TaskCard'; // <-- EXTERNAL COMPONENT
+import { supabase } from '@/utils/supabase';
+import TaskCard from '@/components/dashboard/TaskCard';
 import { ArrowLeft, Plus, Activity, Calendar } from 'lucide-react';
 
-export default function ProjectWorkspace({ params }: { params: { id: string } }) {
-  const project = getProjectById(params.id);
+/**
+ * PROJECT WORKSPACE (Target: Dynamic Supabase Integration)
+ * Architecture: Fetches project and task data directly from the 'projects' and 'tasks' tables.
+ */
+export default async function ProjectWorkspace({ params }: { params: { id: string } }) {
   const copy = WEBSITE_COPY.DASHBOARD.PROJECT_BOARD;
 
-  if (!project) {
+  // 1. Fetch Project Details from Supabase
+  const { data: project, error: projectError } = await supabase
+    .from('projects')
+    .select('*')
+    .eq('id', params.id)
+    .single();
+
+  // 2. Fetch Associated Tasks
+  const { data: tasks, error: tasksError } = await supabase
+    .from('tasks')
+    .select('*')
+    .eq('project_id', params.id);
+
+  if (projectError || !project) {
     return (
       <div className="min-h-screen bg-bg-app flex items-center justify-center font-mono text-brand-primary uppercase tracking-widest text-sm">
         {copy.NOT_FOUND}
@@ -18,12 +34,12 @@ export default function ProjectWorkspace({ params }: { params: { id: string } })
     );
   }
 
-  // Driven entirely by the Glossary
+  // Filter tasks into columns based on status
   const columns = [
-    { id: 'Todo', title: copy.COLUMNS.TODO, tasks: project.tasks.filter((t: any) => t.status === 'Todo') },
-    { id: 'In Progress', title: copy.COLUMNS.IN_PROGRESS, tasks: project.tasks.filter((t: any) => t.status === 'In Progress') },
-    { id: 'Review', title: copy.COLUMNS.REVIEW, tasks: project.tasks.filter((t: any) => t.status === 'Review') },
-    { id: 'Done', title: copy.COLUMNS.DONE, tasks: project.tasks.filter((t: any) => t.status === 'Done') },
+    { id: 'Todo', title: copy.COLUMNS.TODO, tasks: tasks?.filter((t) => t.status === 'Todo') || [] },
+    { id: 'In Progress', title: copy.COLUMNS.IN_PROGRESS, tasks: tasks?.filter((t) => t.status === 'In Progress') || [] },
+    { id: 'Review', title: copy.COLUMNS.REVIEW, tasks: tasks?.filter((t) => t.status === 'Review') || [] },
+    { id: 'Done', title: copy.COLUMNS.DONE, tasks: tasks?.filter((t) => t.status === 'Done') || [] },
   ];
 
   return (
@@ -46,8 +62,8 @@ export default function ProjectWorkspace({ params }: { params: { id: string } })
               </span>
             </div>
             <div className="flex items-center gap-4 text-xs text-text-muted font-mono uppercase tracking-wider">
-               <span className="flex items-center gap-1"><Calendar size={12}/> Due: {project.dueDate}</span>
-               <span className="flex items-center gap-1"><Activity size={12}/> Client: {project.client}</span>
+               <span className="flex items-center gap-1"><Calendar size={12}/> Due: {project.due_date}</span>
+               <span className="flex items-center gap-1"><Activity size={12}/> Client: {project.client_name}</span>
             </div>
           </div>
         </div>
@@ -57,9 +73,9 @@ export default function ProjectWorkspace({ params }: { params: { id: string } })
              <div className="text-[10px] font-mono uppercase tracking-widest text-text-muted mb-1">System Progress</div>
              <div className="flex items-center gap-3">
                <div className="w-32 h-1.5 bg-white/10 rounded-full overflow-hidden">
-                 <div className="h-full bg-brand-primary rounded-full" style={{ width: `${project.progress}%` }} />
+                 <div className="h-full bg-brand-primary rounded-full" style={{ width: `${project.progress || 0}%` }} />
                </div>
-               <span className="text-xs font-bold text-white w-8">{project.progress}%</span>
+               <span className="text-xs font-bold text-white w-8">{project.progress || 0}%</span>
              </div>
           </div>
           <button className="btn-brand px-4 py-2 text-[10px] flex items-center gap-2 h-auto">
