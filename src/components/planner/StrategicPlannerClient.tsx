@@ -1,7 +1,7 @@
 /* src/components/planner/StrategicPlannerClient.tsx */
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { WEBSITE_COPY } from '@/utils/glossary';
@@ -17,7 +17,6 @@ import LogDirectiveModal from '@/components/planner/LogDirectiveModal';
 import DailyDebriefPanel from '@/components/planner/DailyDebriefPanel';
 import IdeasLedgerPanel from '@/components/planner/IdeasLedgerPanel';
 import TransmissionPanel from '@/components/planner/TransmissionPanel';
-import InitializeWeekModule from '@/components/planner/InitializeWeekModule';
 
 interface DayFlow {
   day: string;
@@ -27,72 +26,28 @@ interface DayFlow {
   tasks: any[];
 }
 
-const INITIAL_WEEK: DayFlow[] = [
-  { day: 'MON', status: 'ACTIVE', date: 'Feb 23', lifeEvents: ['Doctor Appt (10am)'], tasks: [] },
-  { day: 'TUE', status: 'PENDING', date: 'Feb 24', lifeEvents: ['Laundry/House'], tasks: [] },
-  { day: 'WED', status: 'PENDING', date: 'Feb 25', lifeEvents: [], tasks: [] },
-  { day: 'THU', status: 'PENDING', date: 'Feb 26', lifeEvents: ['Errands'], tasks: [] },
-  { day: 'FRI', status: 'PENDING', date: 'Feb 27', lifeEvents: [], tasks: [] }
-];
-
 interface Props {
-  initialDraft: any;
-  initialLedger: any[];
+  ideasLedger: any[];
+  weekFlow: DayFlow[];
 }
 
-export default function StrategicPlannerClient({ initialDraft, initialLedger }: Props) {
+export default function StrategicPlannerClient({ ideasLedger, weekFlow }: Props) {
   const router = useRouter();
   const copy = WEBSITE_COPY.DASHBOARD.STRATEGIC_PLANNER;
   
   const [selectedDay, setSelectedDay] = useState('MON');
   const [activeTab, setActiveTab] = useState<'WEEKLY' | 'MONTHLY'>('WEEKLY');
   const [isModalOpen, setIsModalOpen] = useState(false);
-  
-  const [activeDraft, setActiveDraft] = useState<any>(initialDraft);
-
-  // 1. CACHE BUSTER: Forces Next.js to ping the server for fresh data when navigating here
-  useEffect(() => {
-    router.refresh();
-  }, [router]);
-
-  // 2. STATE SYNC: Keeps our client UI perfectly aligned with server data
-  useEffect(() => {
-    setActiveDraft(initialDraft);
-  }, [initialDraft]);
-
-  // 3. SYNCHRONOUS TRANSFORMS: No need for useEffect, we calculate on render
-  const ideasLedger = initialLedger
-    .filter(task => task.scheduled_date === null)
-    .map(task => ({
-      id: task.id,
-      title: task.title,
-      type: task.type || 'FEATURE',
-      time: 'TBD',
-      reflection: task.description || '',
-      status: task.status || 'BACKLOG'
-    }));
-
-  const weekFlow = INITIAL_WEEK.map(dayObj => {
-    const tasksForDay = initialLedger
-      .filter(task => {
-        if (!task.scheduled_date) return false;
-        const taskDayName = new Date(task.scheduled_date)
-          .toLocaleDateString('en-US', { weekday: 'short' })
-          .toUpperCase();
-        return taskDayName === dayObj.day;
-      })
-      .map(task => ({
-        id: task.id,
-        title: task.title,
-        type: task.type || 'FEATURE',
-        time: 'TBD',
-        reflection: task.description || '',
-        status: task.status || 'BACKLOG'
-      }));
-    return { ...dayObj, tasks: tasksForDay };
-  });
 
   const currentDayData = weekFlow.find(d => d.day === selectedDay);
+
+  const getThisWeekTitle = () => {
+    const now = new Date();
+    const day = now.getDay();
+    const diff = now.getDate() - day + (day === 0 ? -6 : 1);
+    const monday = new Date(now.setDate(diff));
+    return `Week of ${monday.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}`;
+  };
 
   return (
     <div className="min-h-screen bg-bg-app text-text-main p-8 relative overflow-hidden flex flex-col font-sans">
@@ -137,8 +92,8 @@ export default function StrategicPlannerClient({ initialDraft, initialLedger }: 
               <aside className="lg:col-span-1 space-y-6">
                  <AiBriefingPanel 
                     copy={copy.AI_BRIEF} 
-                    message={activeDraft ? "Active draft detected. All clear for transmissions." : "Awaiting weekly initialization to commence logging."} 
-                    gamePlan={['Execute database sync', 'Clear active roadmap']}
+                    message={copy.AI_BRIEF.ACTIVE_MSG || "Active draft detected. All clear for transmissions."} 
+                    gamePlan={copy.AI_BRIEF.GAME_PLAN_TASKS || ['Execute database sync', 'Clear active roadmap']}
                  />
                  <VelocityStats copy={copy.VELOCITY} savings="142 HOURS" freedom="24 HOURS KEPT" />
                  <IdeasLedgerPanel copy={copy.SECTIONS.IDEAS} ideas={ideasLedger} />
@@ -147,44 +102,37 @@ export default function StrategicPlannerClient({ initialDraft, initialLedger }: 
               <main className="lg:col-span-3 space-y-6">
                  <WeeklyFlowWheel days={weekFlow} selectedDay={selectedDay} onSelectDay={setSelectedDay} />
 
-                 {!activeDraft ? (
-                   <InitializeWeekModule 
-                      copy={copy.ZERO_STATE} 
-                      onInitialized={(draft) => setActiveDraft(draft)} 
-                   />
-                 ) : (
-                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                      <div className="space-y-6">
-                        <section>
-                          <h3 className="text-[10px] font-mono text-white/30 uppercase tracking-[0.2em] mb-4 flex items-center gap-2">
-                            <Coffee size={12} /> {copy.SECTIONS.LIFESTYLE}
-                          </h3>
-                          <div className="space-y-2">
-                            {currentDayData?.lifeEvents.length === 0 ? (
-                               <div className="p-4 border border-dashed border-white/10 rounded-lg text-[10px] font-mono text-white/20 uppercase text-center">{copy.PLACEHOLDERS.CLEAR}</div>
-                            ) : (
-                              currentDayData?.lifeEvents.map((event, i) => (
-                                <div key={i} className="p-4 bg-white/2 border border-white/5 rounded-lg flex items-center justify-between">
-                                  <span className="text-xs text-white/70 uppercase font-bold tracking-tight">{event}</span>
-                                  <Heart size={14} className="text-brand-secondary/40" />
-                                </div>
-                              ))
-                            )}
-                          </div>
-                        </section>
+                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className="space-y-6">
+                      <section>
+                        <h3 className="text-[10px] font-mono text-white/30 uppercase tracking-[0.2em] mb-4 flex items-center gap-2">
+                          <Coffee size={12} /> {copy.SECTIONS.LIFESTYLE}
+                        </h3>
+                        <div className="space-y-2">
+                          {currentDayData?.lifeEvents.length === 0 ? (
+                              <div className="p-4 border border-dashed border-white/10 rounded-lg text-[10px] font-mono text-white/20 uppercase text-center">{copy.PLACEHOLDERS.CLEAR}</div>
+                          ) : (
+                            currentDayData?.lifeEvents.map((event, i) => (
+                              <div key={i} className="p-4 bg-white/2 border border-white/5 rounded-lg flex items-center justify-between">
+                                <span className="text-xs text-white/70 uppercase font-bold tracking-tight">{event}</span>
+                                <Heart size={14} className="text-brand-secondary/40" />
+                              </div>
+                            ))
+                          )}
+                        </div>
+                      </section>
 
-                        <DailyDebriefPanel 
-                          tasks={currentDayData?.tasks || []} 
-                          onTaskUpdate={() => { router.refresh(); }} 
-                        />
-                      </div>
-
-                      <TransmissionPanel 
-                        copy={copy} 
-                        draftTitle={activeDraft.title} 
+                      <DailyDebriefPanel 
+                        tasks={currentDayData?.tasks || []} 
+                        onTaskUpdate={() => { router.refresh(); }} 
                       />
-                   </div>
-                 )}
+                    </div>
+
+                    <TransmissionPanel 
+                      copy={copy} 
+                      draftTitle={getThisWeekTitle()} 
+                    />
+                 </div>
               </main>
             </div>
           ) : (

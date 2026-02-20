@@ -286,7 +286,9 @@ export const WEBSITE_COPY = {
       AI_BRIEF: {
         TITLE: "LEAD ARCHITECT BRIEFING",
         GAME_PLAN: "PLAN OF ATTACK",
-        DEFAULT_MSG: "Ready to initialize the build sequence. Awaiting current day telemetry."
+        DEFAULT_MSG: "Ready to initialize the build sequence. Awaiting current day telemetry.",
+        ACTIVE_MSG: "Active draft detected. All clear for transmissions.",
+        GAME_PLAN_TASKS: ['Execute database sync', 'Clear active roadmap']
       },
       VELOCITY: {
         TITLE: "VELOCITY & VITALITY",
@@ -428,6 +430,8 @@ export const WEBSITE_COPY = {
       },
       AUDIO_MODULE: {
         LEAD_COUNT: "ACTIVE EPISODES:",
+        NO_TEXT_FALLBACK: "Visual asset attached. No text transmitted.",
+        ACTIVE_DRAFT_BADGE: "ACTIVE DRAFT",
         COLUMNS: {
           TITLE: "TITLE & DESC",
           CATEGORY: "CHANNEL",

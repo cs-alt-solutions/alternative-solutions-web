@@ -109,54 +109,53 @@ export async function rescheduleDirective(formData: FormData) {
 }
 
 /**
- * BROADCAST HUB: START WEEKLY DRAFT (PARENT)
- * Initializes a new draft episode and returns the data for an instant UI update.
- */
-export async function startDraftEpisode(formData: FormData) {
-  const title = `Week of ${new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}`;
-  
-  const { data, error } = await supabase
-    .from('audio_logs')
-    .insert([{ 
-      title, 
-      description: 'Pending Weekly Roll-up', 
-      category: 'BUILD', 
-      status: 'DRAFT',
-      duration: '00:00',
-      audio_url: '' // <-- Satisfies the strict NOT NULL constraint
-    }])
-    .select(); 
-
-  if (error) {
-    console.error("CRITICAL: Draft Initialization Failure", error);
-    return { success: false, message: error.message };
-  }
-  
-  revalidatePath('/dashboard/tasks');
-  revalidatePath('/dashboard/broadcast');
-  return { success: true, draft: data[0] };
-}
-
-/**
- * BROADCAST HUB: CREATE TEXT TRANSMISSION (CHILD)
+ * BROADCAST HUB: CREATE TEXT TRANSMISSION (LAZY INIT)
+ * If an episode for the current week doesn't exist, it creates it instantly.
  */
 export async function createTextBroadcast(formData: FormData) {
   const content = formData.get('description') as string;
   if (!content) return { success: false, error: 'NO_CONTENT' };
 
-  const { data: drafts } = await supabase
+  // 1. Calculate the current week's Monday
+  const now = new Date();
+  const day = now.getDay();
+  const diff = now.getDate() - day + (day === 0 ? -6 : 1);
+  const monday = new Date(now.setDate(diff));
+  const currentWeekTitle = `Week of ${monday.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}`;
+
+  // 2. Check if this week's draft already exists
+  const { data: existingDrafts } = await supabase
     .from('audio_logs')
     .select('id')
-    .eq('status', 'DRAFT')
-    .order('created_at', { ascending: false })
+    .eq('title', currentWeekTitle)
     .limit(1);
 
-  if (!drafts || drafts.length === 0) {
-    return { success: false, error: 'NO_ACTIVE_DRAFT' };
+  let activeDraftId;
+
+  // 3. LAZY CREATION: If it doesn't exist, build it silently.
+  if (!existingDrafts || existingDrafts.length === 0) {
+    const { data: newDraft, error: createError } = await supabase
+      .from('audio_logs')
+      .insert([{ 
+        title: currentWeekTitle, 
+        description: 'Auto-Generated Weekly Log', 
+        category: 'BUILD', 
+        status: 'DRAFT',
+        duration: '00:00',
+        audio_url: '' 
+      }])
+      .select('id');
+      
+    if (createError) {
+      console.error("CRITICAL: Lazy Episode Creation Failed", createError);
+      return { success: false };
+    }
+    activeDraftId = newDraft[0].id;
+  } else {
+    activeDraftId = existingDrafts[0].id;
   }
 
-  const activeDraftId = drafts[0].id;
-
+  // 4. Attach the transmission
   const { error } = await supabase
     .from('transmissions')
     .insert([{ episode_id: activeDraftId, content }]);

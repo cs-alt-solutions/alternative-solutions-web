@@ -1,80 +1,74 @@
-/* src/app/dashboard/page.tsx */
+/* src/app/dashboard/tasks/page.tsx */
 import React from 'react';
-import { supabase } from '@/utils/supabase'; 
-import { WEBSITE_COPY } from '@/utils/glossary';
-import StatCard from '@/components/core/StatCard';
-import PriorityQueuePanel from '@/components/workspace/PriorityQueuePanel';
-import EngineeringPanel from '@/components/workspace/EngineeringPanel';
-import TelemetryPanel from '@/components/workspace/TelemetryPanel';
-import { Project, WaitlistEntry } from '@/data/store'; 
-import { Ticket, Inbox, Terminal, Activity } from 'lucide-react';
+import { supabase } from '@/utils/supabase';
+import StrategicPlannerClient from '@/components/planner/StrategicPlannerClient';
+import { DayFlow } from '@/types';
+import { unstable_noStore as noStore } from 'next/cache';
 
-export default async function CommandConsole() {
-  const overviewCopy = WEBSITE_COPY.DASHBOARD.OVERVIEW;
-  const commonCopy = WEBSITE_COPY.DASHBOARD.COMMON;
+export const dynamic = 'force-dynamic';
+export const revalidate = 0; 
 
-  // --- DATA PIPELINE WITH ERROR BOUNDARIES ---
-  let waitlist: WaitlistEntry[] = [];
-  let projects: Project[] = [];
+const INITIAL_WEEK: DayFlow[] = [
+  { day: 'MON', status: 'ACTIVE', date: 'Feb 23', lifeEvents: ['Doctor Appt (10am)'], tasks: [] },
+  { day: 'TUE', status: 'PENDING', date: 'Feb 24', lifeEvents: ['Laundry/House'], tasks: [] },
+  { day: 'WED', status: 'PENDING', date: 'Feb 25', lifeEvents: [], tasks: [] },
+  { day: 'THU', status: 'PENDING', date: 'Feb 26', lifeEvents: ['Errands'], tasks: [] },
+  { day: 'FRI', status: 'PENDING', date: 'Feb 27', lifeEvents: [], tasks: [] }
+];
 
-  try {
-    const [ { data: waitlistData }, { data: projectsData } ] = await Promise.all([
-      supabase.from('waitlist').select('*').order('date', { ascending: false }),
-      supabase.from('projects').select('*, tasks(*)') 
-    ]);
-    
-    // ARMOR: Boolean filter removes any nulls or undefineds before they hit state
-    waitlist = (waitlistData as WaitlistEntry[] || []).filter(Boolean);
-    projects = (projectsData as Project[] || []).filter(Boolean);
-  } catch (error) {
-    console.error("CRITICAL: Dashboard Data Pipeline Failure", error);
-  }
+export default async function StrategicPlannerPage() {
+  noStore(); // THE NUCLEAR OPTION: Completely disables Next.js caching for this route.
 
-  // LOGIC SEGMENTATION
-  const pendingBeta = waitlist.filter(w => 
-    w && (w.source === 'Shift Studio' || w.source === 'Restricted Access') && w.status === 'Pending'
-  );
-  
-  const agencyInquiries = waitlist.filter(w => 
-    w && w.source === 'Agency Inquiry' && w.status !== 'Onboarded'
-  );
-  
-  const internalProjects = projects.filter(p => p && p.client === 'Internal');
-  
-  const openTasksCount = internalProjects.reduce((acc, p) => 
-    acc + (p.tasks?.filter(t => t.status !== 'Done').length || 0), 0
-  );
-  
-  const priorityQueue = [...pendingBeta, ...agencyInquiries].sort((a, b) => {
-    const dateB = b.date || b.created_at || 0;
-    const dateA = a.date || a.created_at || 0;
-    return new Date(dateB).getTime() - new Date(dateA).getTime();
+  const { data: draftData } = await supabase
+    .from('audio_logs')
+    .select('*')
+    .eq('status', 'DRAFT')
+    .order('created_at', { ascending: false })
+    .limit(1);
+
+  const { data: directiveData } = await supabase
+    .from('ideas_ledger')
+    .select('*')
+    .order('created_at', { ascending: false });
+
+  const rawLedger = directiveData || [];
+
+  const ideasLedger = rawLedger
+    .filter(task => task.scheduled_date === null)
+    .map(task => ({
+      id: task.id,
+      title: task.title,
+      type: task.type || 'FEATURE',
+      time: 'TBD',
+      reflection: task.description || '',
+      status: task.status || 'BACKLOG'
+    }));
+
+  const weekFlow = INITIAL_WEEK.map(dayObj => {
+    const tasksForDay = rawLedger
+      .filter(task => {
+        if (!task.scheduled_date) return false;
+        const taskDayName = new Date(task.scheduled_date)
+          .toLocaleDateString('en-US', { weekday: 'short' })
+          .toUpperCase();
+        return taskDayName === dayObj.day;
+      })
+      .map(task => ({
+        id: task.id,
+        title: task.title,
+        type: task.type || 'FEATURE',
+        time: 'TBD',
+        reflection: task.description || '',
+        status: task.status || 'BACKLOG'
+      }));
+    return { ...dayObj, tasks: tasksForDay };
   });
 
   return (
-    <div className="p-8">
-       {/* TOP TELEMETRY */}
-       <div className="mb-8">
-          <TelemetryPanel copy={overviewCopy.TELEMETRY} />
-       </div>
-
-       {/* HIGH-LEVEL STATS */}
-       <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
-         <StatCard title={overviewCopy.STATS.BETA_PENDING} value={pendingBeta.length.toString()} icon={Ticket} />
-         <StatCard title={overviewCopy.STATS.AGENCY_LEADS} value={agencyInquiries.length.toString()} icon={Inbox} />
-         <StatCard title={overviewCopy.STATS.DEV_TASKS} value={openTasksCount.toString()} icon={Terminal} />
-         <StatCard title={overviewCopy.STATS.SYSTEM_HEALTH} value={commonCopy.HEALTH_OPTIMAL} icon={Activity} accent />
-       </div>
-
-       {/* THE WORKSPACE GRID */}
-       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          <div className="lg:col-span-1">
-             <PriorityQueuePanel queue={priorityQueue} copy={overviewCopy.PANELS} commonCopy={commonCopy} />
-          </div>
-          <div className="lg:col-span-2">
-             <EngineeringPanel projects={internalProjects} copy={overviewCopy.PANELS} />
-          </div>
-       </div>
-    </div>
+    <StrategicPlannerClient 
+      initialDraft={draftData?.[0] || null} 
+      ideasLedger={ideasLedger}
+      weekFlow={weekFlow}
+    />
   );
 }

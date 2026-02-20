@@ -2,9 +2,8 @@
 import React from 'react';
 import { supabase } from '@/utils/supabase';
 import { WEBSITE_COPY } from '@/utils/glossary';
-import { Radio, Mic2, Share2, Mail, Plus } from 'lucide-react';
+import { Radio, Mic2, Share2, Mail } from 'lucide-react';
 import EpisodeManager from '@/components/dashboard/broadcast/EpisodeManager';
-import { startDraftEpisode } from '@/app/actions';
 
 export default async function BroadcastHub() {
   const hubCopy = WEBSITE_COPY.DASHBOARD.MEDIA_HUB;
@@ -15,12 +14,6 @@ export default async function BroadcastHub() {
     .order('created_at', { ascending: false });
 
   const activeCount = episodes?.filter(e => e.status === 'ACTIVE').length || 0;
-
-  // REFACTORED: This wrapper perfectly appeases TypeScript's form requirements
-  const initDraft = async (formData: FormData) => {
-    'use server';
-    await startDraftEpisode(formData);
-  };
 
   return (
     <div className="p-8 relative">
@@ -36,13 +29,6 @@ export default async function BroadcastHub() {
             {hubCopy.TITLE}
           </h1>
         </div>
-
-        <form action={initDraft}>
-          <button type="submit" className="flex items-center gap-2 bg-brand-primary text-black px-6 py-3 rounded-lg font-bold hover:scale-105 transition-transform shadow-[0_0_15px_rgba(6,182,212,0.4)]">
-            <Plus size={18} strokeWidth={3} />
-            <span>INITIALIZE WEEKLY DRAFT</span>
-          </button>
-        </form>
       </header>
 
       <nav className="flex gap-8 mb-8 border-b border-white/5">
