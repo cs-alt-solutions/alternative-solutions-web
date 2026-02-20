@@ -1,4 +1,10 @@
 /* src/utils/glossary.js */
+
+/**
+ * WEBSITE_COPY
+ * The Single Source of Truth for all UI strings.
+ * Adheres to ARCHITECTURE.MD Rule #3.
+ */
 export const WEBSITE_COPY = {
   NAV: {
     BRAND: "ALTERNATIVE SOLUTIONS",
