@@ -1,11 +1,10 @@
 "use client";
 /* src/components/dashboard/WaitlistRow.tsx */
 import React, { useState } from 'react';
-import { WaitlistEntry } from '@/types'; // FIX: Pointing to unified types
+import { WaitlistEntry } from '@/types';
 import { WEBSITE_COPY } from '@/utils/glossary';
 import { 
-  MoreVertical, Mail, Key, UserCheck, RefreshCw, 
-  ExternalLink, MessageSquare, Lightbulb, ShieldAlert 
+  MoreVertical, Mail, UserCheck, ShieldAlert 
 } from 'lucide-react';
 
 export default function WaitlistRow({ entry }: { entry: WaitlistEntry }) {
@@ -43,7 +42,6 @@ export default function WaitlistRow({ entry }: { entry: WaitlistEntry }) {
           <MoreVertical size={16} />
         </button>
 
-        {/* Action Menu Backdrop */}
         {showActions && (
           <>
             <div 
@@ -53,11 +51,13 @@ export default function WaitlistRow({ entry }: { entry: WaitlistEntry }) {
             <div className="absolute right-4 top-12 w-48 bg-bg-surface-200 border border-white/10 rounded-lg shadow-xl z-20 py-2 overflow-hidden">
               <button className="w-full px-4 py-2 flex items-center gap-3 text-xs text-text-muted hover:bg-white/5 hover:text-white transition-all">
                 <UserCheck size={14} className="text-brand-primary" />
-                {copy?.ACTIONS?.APPROVE || "Approve Entry"}
+                {/* FIX: Changed from ACTIONS.APPROVE to ROW_ACTIONS.INVITE */}
+                {copy.ROW_ACTIONS.INVITE}
               </button>
               <button className="w-full px-4 py-2 flex items-center gap-3 text-xs text-text-muted hover:bg-white/5 hover:text-white transition-all">
                 <ShieldAlert size={14} className="text-red-500/70" />
-                {copy?.ACTIONS?.REJECT || "Reject Entry"}
+                {/* FIX: Changed from ACTIONS.REJECT to ROW_ACTIONS.QUARANTINE */}
+                {copy.ROW_ACTIONS.QUARANTINE}
               </button>
             </div>
           </>

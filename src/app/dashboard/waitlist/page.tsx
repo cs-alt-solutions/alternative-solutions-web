@@ -1,9 +1,8 @@
 /* src/app/dashboard/waitlist/page.tsx */
 import React from 'react';
-import { supabase } from '@/utils/supabase'; // 
+import { supabase } from '@/utils/supabase'; 
 import { WEBSITE_COPY } from '@/utils/glossary';
 import WaitlistRow from '@/components/dashboard/WaitlistRow';
-import { Users, Filter, Download } from 'lucide-react';
 
 export default async function WaitlistManagementPage() {
   const copy = WEBSITE_COPY.DASHBOARD.WAITLIST;
@@ -22,7 +21,8 @@ export default async function WaitlistManagementPage() {
             {copy.TITLE}
           </h1>
           <p className="text-text-muted text-sm font-mono uppercase tracking-widest mt-1">
-            {entries?.length || 0} {copy.SUBTITLE}
+            {/* FIX: Using LEAD_COUNT to match glossary.js */}
+            {entries?.length || 0} {copy.LEAD_COUNT}
           </p>
         </div>
       </header>
@@ -31,9 +31,9 @@ export default async function WaitlistManagementPage() {
         <table className="w-full text-left border-collapse">
           <thead>
             <tr className="bg-white/5 border-b border-white/10">
-              <th className="py-4 px-4 text-[10px] font-mono text-text-muted uppercase tracking-[0.2em]">{copy.TABLE.EMAIL}</th>
-              <th className="py-4 px-4 text-[10px] font-mono text-text-muted uppercase tracking-[0.2em]">{copy.TABLE.SOURCE}</th>
-              <th className="py-4 px-4 text-[10px] font-mono text-text-muted uppercase tracking-[0.2em]">{copy.TABLE.STATUS}</th>
+              <th className="py-4 px-4 text-[10px] font-mono text-text-muted uppercase tracking-[0.2em]">{copy.COLUMNS.USER}</th>
+              <th className="py-4 px-4 text-[10px] font-mono text-text-muted uppercase tracking-[0.2em]">{copy.COLUMNS.PROJECT}</th>
+              <th className="py-4 px-4 text-[10px] font-mono text-text-muted uppercase tracking-[0.2em]">{copy.COLUMNS.STATUS}</th>
               <th className="py-4 px-4"></th>
             </tr>
           </thead>
