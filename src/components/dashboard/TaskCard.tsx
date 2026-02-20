@@ -1,6 +1,6 @@
 /* src/components/dashboard/TaskCard.tsx */
 import React from 'react';
-import { Task } from '@/data/store'; 
+import { Task } from '@/types'; // Fix: Pointing to unified types
 
 export default function TaskCard({ task }: { task: Task }) {
   // Industrial styling based on task priority
@@ -26,7 +26,7 @@ export default function TaskCard({ task }: { task: Task }) {
       
       <div className="flex items-center justify-between mt-auto pt-3 border-t border-white/5">
          <div className="w-6 h-6 rounded-full bg-linear-to-br from-brand-primary/20 to-brand-secondary/20 border border-white/10 flex items-center justify-center text-[10px] font-bold text-white uppercase shadow-inner">
-           {task.assignee.charAt(0)}
+           {task.assignee?.charAt(0) || 'U'}
          </div>
          <span className="text-[10px] font-mono text-text-muted uppercase tracking-widest">{task.status}</span>
       </div>

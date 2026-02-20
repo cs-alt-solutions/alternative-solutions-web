@@ -1,49 +1,31 @@
 /* src/types/index.ts */
 
-export type Task = {
-  id: string;
-  title: string;
-  status: 'Todo' | 'In Progress' | 'Review' | 'Done';
-  assignee: string;
-  priority: 'Low' | 'Medium' | 'High' | 'Critical';
-};
-
-export type Project = {
-  id: string;
-  name: string;
-  client: string;
-  status: 'Live' | 'In Dev' | 'Pending';
-  priority: 'Low' | 'Medium' | 'High' | 'Critical';
-  progress: number;
-  dueDate: string;
-  tasks: Task[];
-};
-
 export interface WaitlistEntry {
   id: string;
   email: string;
   source: string;
-  date?: string;
-  created_at?: string;
-  status: 'Pending' | 'Invited' | 'Onboarded';
-  name?: string;
-  phone?: string;
-  sms_consent?: boolean;
+  status: 'PENDING' | 'REVIEWED' | 'ARCHIVED';
+  created_at: string;
 }
 
-export type AudioLog = {
+export interface Task {
   id: string;
   title: string;
-  duration: string;
-  date: string;
-  description: string;
-  audioUrl: string; 
-};
+  description?: string;
+  priority: 'Critical' | 'High' | 'Medium' | 'Low';
+  status: 'BACKLOG' | 'IN_PROGRESS' | 'COMPLETED';
+  assignee: string;
+  scheduled_date?: string;
+  phases?: string[];
+}
 
-export interface DayFlow {
-  day: string;
-  status: string;
-  date: string;
-  lifeEvents: string[];
-  tasks: any[];
+export interface AudioLog {
+  id: string;
+  title: string;
+  description: string;
+  category: string;
+  status: 'DRAFT' | 'ACTIVE' | 'INACTIVE';
+  duration: string;
+  audio_url: string;
+  created_at: string;
 }
