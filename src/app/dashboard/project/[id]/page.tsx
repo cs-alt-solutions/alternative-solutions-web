@@ -7,20 +7,20 @@ import TaskCard from '@/components/dashboard/TaskCard';
 import { ArrowLeft, Plus, Activity, Calendar } from 'lucide-react';
 
 /**
- * PROJECT WORKSPACE (Target: Dynamic Supabase Integration)
- * Architecture: Fetches project and task data directly from the 'projects' and 'tasks' tables.
+ * PROJECT WORKSPACE
+ * Architecture: Fetches data directly from Supabase to resolve build errors.
  */
 export default async function ProjectWorkspace({ params }: { params: { id: string } }) {
   const copy = WEBSITE_COPY.DASHBOARD.PROJECT_BOARD;
 
-  // 1. Fetch Project Details from Supabase
+  // Fetch Project Details from Supabase
   const { data: project, error: projectError } = await supabase
     .from('projects')
     .select('*')
     .eq('id', params.id)
     .single();
 
-  // 2. Fetch Associated Tasks
+  // Fetch Associated Tasks
   const { data: tasks, error: tasksError } = await supabase
     .from('tasks')
     .select('*')
@@ -34,7 +34,7 @@ export default async function ProjectWorkspace({ params }: { params: { id: strin
     );
   }
 
-  // Filter tasks into columns based on status
+  // Column logic: Filter tasks by status from the database results
   const columns = [
     { id: 'Todo', title: copy.COLUMNS.TODO, tasks: tasks?.filter((t) => t.status === 'Todo') || [] },
     { id: 'In Progress', title: copy.COLUMNS.IN_PROGRESS, tasks: tasks?.filter((t) => t.status === 'In Progress') || [] },
