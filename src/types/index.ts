@@ -13,10 +13,17 @@ export interface Task {
   title: string;
   description?: string;
   priority: 'Critical' | 'High' | 'Medium' | 'Low';
-  status: 'BACKLOG' | 'IN_PROGRESS' | 'COMPLETED' | 'Done'; // Added 'Done' to match component logic
+  status: 'BACKLOG' | 'IN_PROGRESS' | 'COMPLETED' | 'Done'; // Added 'Done'
   assignee: string;
   scheduled_date?: string;
   phases?: string[];
+}
+
+export interface Project {
+  id: string;
+  name: string;
+  progress: number;
+  tasks?: Task[];
 }
 
 export interface AudioLog {
@@ -28,12 +35,4 @@ export interface AudioLog {
   duration: string;
   audio_url: string;
   created_at: string;
-}
-
-// ADDED: Project interface to resolve the build error
-export interface Project {
-  id: string;
-  name: string;
-  progress: number;
-  tasks?: Task[];
 }

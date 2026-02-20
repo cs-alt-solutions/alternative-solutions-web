@@ -1,47 +1,55 @@
 /* src/components/planner/AiBriefingPanel.tsx */
-'use client';
-
 import React from 'react';
-import { Cpu, Terminal } from 'lucide-react';
+import { Sparkles, Terminal, ChevronRight } from 'lucide-react';
 
 interface AiBriefingProps {
-  copy: any;
-  hasActiveDraft: boolean; // Fixed missing property
+  copy: {
+    TITLE: string;
+    GAME_PLAN: string;
+    DEFAULT_MSG: string;
+    ACTIVE_MSG: string;
+    GAME_PLAN_TASKS: string[];
+  };
+  hasActiveDraft: boolean;
 }
 
 export default function AiBriefingPanel({ copy, hasActiveDraft }: AiBriefingProps) {
-  const briefing = copy.AI_BRIEF;
+  // SAFETY GUARD: Prevent Runtime TypeError if copy is undefined
+  if (!copy) return null;
 
   return (
-    <div className="bg-black/30 border border-white/5 rounded-xl p-6 relative overflow-hidden group hover:border-brand-primary/20 transition-all">
+    <div className="bg-bg-surface-100 border border-white/5 rounded-2xl p-6 relative overflow-hidden h-full group">
       <div className="flex items-center justify-between mb-6">
-        <h3 className="text-[10px] font-mono text-white/30 uppercase tracking-[0.2em] flex items-center gap-2">
-          <Cpu size={12} className="text-brand-primary" /> {briefing.TITLE}
-        </h3>
-        <div className={`px-2 py-0.5 rounded-full text-[8px] font-mono border uppercase tracking-widest ${
-          hasActiveDraft ? 'bg-brand-primary/10 text-brand-primary border-brand-primary/20' : 'bg-white/5 text-white/20 border-white/5'
-        }`}>
-          {hasActiveDraft ? 'ACTIVE_SESSION' : 'IDLE_WAIT'}
+        <div className="flex items-center gap-3">
+          <div className="w-8 h-8 rounded bg-brand-primary/10 flex items-center justify-center text-brand-primary">
+            <Sparkles size={16} />
+          </div>
+          <h3 className="text-[10px] font-mono text-white uppercase tracking-widest">{copy.TITLE}</h3>
+        </div>
+        <div className="px-2 py-1 rounded bg-white/5 border border-white/10 text-[9px] font-mono text-white/40 uppercase tracking-tighter">
+          Intelligence Live
         </div>
       </div>
 
-      <div className="space-y-4">
-        <p className="text-sm text-white/60 font-light leading-relaxed">
-          {hasActiveDraft ? briefing.ACTIVE_MSG : briefing.DEFAULT_MSG}
-        </p>
-        
-        <div className="pt-4 border-t border-white/5">
-           <div className="text-[10px] font-mono text-brand-primary uppercase tracking-widest mb-3 flex items-center gap-2">
-             <Terminal size={10} /> {briefing.GAME_PLAN}
-           </div>
-           <ul className="space-y-2">
-             {briefing.GAME_PLAN_TASKS.map((task: string, idx: number) => (
-               <li key={idx} className="text-[11px] text-white/40 flex items-center gap-3">
-                 <span className="w-1 h-1 bg-brand-primary/40 rounded-full" />
-                 {task}
-               </li>
-             ))}
-           </ul>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+        <div className="space-y-4">
+          <div className="flex items-center gap-2 text-[10px] font-mono text-brand-primary uppercase italic">
+            <Terminal size={12} /> {copy.GAME_PLAN}
+          </div>
+          <div className="space-y-2">
+            {copy.GAME_PLAN_TASKS.map((task, idx) => (
+              <div key={idx} className="flex items-center justify-between p-2 rounded bg-white/2 border border-white/5 group/task hover:border-brand-primary/20 transition-all">
+                <span className="text-[10px] font-mono text-white/60">{task}</span>
+                <ChevronRight size={12} className="text-white/10 group-hover/task:text-brand-primary" />
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <div className="bg-black/40 rounded-xl p-4 border border-white/5 relative">
+          <p className="text-[10px] font-mono text-white/40 leading-relaxed uppercase italic">
+            {hasActiveDraft ? copy.ACTIVE_MSG : copy.DEFAULT_MSG}
+          </p>
         </div>
       </div>
     </div>
