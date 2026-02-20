@@ -1,3 +1,4 @@
+"use client";
 /* src/components/dashboard/WaitlistRow.tsx */
 import React, { useState } from 'react';
 import { WaitlistEntry } from '@/types'; // FIX: Pointing to unified types
@@ -41,6 +42,26 @@ export default function WaitlistRow({ entry }: { entry: WaitlistEntry }) {
         >
           <MoreVertical size={16} />
         </button>
+
+        {/* Action Menu Backdrop */}
+        {showActions && (
+          <>
+            <div 
+              className="fixed inset-0 z-10" 
+              onClick={() => setShowActions(false)} 
+            />
+            <div className="absolute right-4 top-12 w-48 bg-bg-surface-200 border border-white/10 rounded-lg shadow-xl z-20 py-2 overflow-hidden">
+              <button className="w-full px-4 py-2 flex items-center gap-3 text-xs text-text-muted hover:bg-white/5 hover:text-white transition-all">
+                <UserCheck size={14} className="text-brand-primary" />
+                {copy?.ACTIONS?.APPROVE || "Approve Entry"}
+              </button>
+              <button className="w-full px-4 py-2 flex items-center gap-3 text-xs text-text-muted hover:bg-white/5 hover:text-white transition-all">
+                <ShieldAlert size={14} className="text-red-500/70" />
+                {copy?.ACTIONS?.REJECT || "Reject Entry"}
+              </button>
+            </div>
+          </>
+        )}
       </td>
     </tr>
   );
