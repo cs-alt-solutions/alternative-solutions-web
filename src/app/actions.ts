@@ -262,3 +262,56 @@ export async function uploadMedia(formData: FormData) {
 
   return { success: true, url: publicUrlData.publicUrl };
 }
+/**
+ * BROADCAST HUB: PUBLISH AUDIO LOG
+ * Handles the full sequence: Storage Upload -> Database Entry
+ */
+export async function publishAudioLog(formData: FormData) {
+  const file = formData.get('audioFile') as File;
+  const title = formData.get('title') as string;
+  const description = formData.get('description') as string;
+  const category = formData.get('category') as string;
+  const duration = formData.get('duration') as string;
+
+  if (!file) return { success: false, error: 'NO_FILE_PROVIDED' };
+
+  // 1. Upload to Storage
+  const fileExt = file.name.split('.').pop();
+  const fileName = `${Date.now()}.${fileExt}`;
+  const filePath = `episodes/${fileName}`;
+
+  const { error: uploadError } = await supabase.storage
+    .from('workshop_media')
+    .upload(filePath, file);
+
+  if (uploadError) {
+    console.error("CRITICAL: Audio Upload Failure", uploadError);
+    return { success: false, error: 'UPLOAD_FAILED' };
+  }
+
+  // 2. Get Public URL
+  const { data: { publicUrl } } = supabase.storage
+    .from('workshop_media')
+    .getPublicUrl(filePath);
+
+  // 3. Create Database Entry
+  const { error: dbError } = await supabase
+    .from('audio_logs')
+    .insert([{
+      title,
+      description,
+      category,
+      duration,
+      audio_url: publicUrl,
+      status: 'ACTIVE'
+    }]);
+
+  if (dbError) {
+    console.error("CRITICAL: DB Entry Failure", dbError);
+    return { success: false, error: 'DATABASE_ERROR' };
+  }
+
+  revalidatePath('/dashboard/broadcast');
+  revalidatePath('/dashboard/tasks');
+  return { success: true };
+}

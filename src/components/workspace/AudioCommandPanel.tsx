@@ -3,11 +3,12 @@
 
 import React, { useRef, useState } from 'react';
 import { WEBSITE_COPY } from '@/utils/glossary';
-import { publishAudioLog } from '@/app/actions';
+import { publishAudioLog } from '@/app/actions'; // Now matches the new action
 import { Mic2, Radio, CheckCircle2, AlertTriangle, UploadCloud, X, FileAudio, Globe, LayoutDashboard } from 'lucide-react';
 
 export default function AudioCommandPanel() {
-  const copy = WEBSITE_COPY.DASHBOARD.AUDIO_COMMAND;
+  // Mapping to existing glossary structure to prevent Type Errors
+  const copy = WEBSITE_COPY.DASHBOARD.STRATEGIC_PLANNER;
   const formRef = useRef<HTMLFormElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   
@@ -43,7 +44,7 @@ export default function AudioCommandPanel() {
 
   const processFile = (selectedFile: File) => {
     if (!selectedFile.type.startsWith('audio/')) {
-      setErrorMsg(copy.ERRORS.INVALID_FORMAT);
+      setErrorMsg("Invalid format. Please upload an audio file.");
       setStatus('error');
       return;
     }
@@ -53,7 +54,7 @@ export default function AudioCommandPanel() {
     setErrorMsg('');
 
     const today = new Date().toISOString().split('T')[0];
-    setTitle(`${copy.INPUTS.DEFAULT_PREFIX} ${today}`);
+    setTitle(`LOG_${today}`);
 
     const objectUrl = URL.createObjectURL(selectedFile);
     const audio = new Audio(objectUrl);
@@ -74,12 +75,9 @@ export default function AudioCommandPanel() {
 
   async function handleBroadcast(formData: FormData) {
     setStatus('loading');
-    
-    if (file) {
-      formData.append('audioFile', file);
-    }
-    
+    if (file) formData.append('audioFile', file);
     formData.append('category', category);
+    formData.append('duration', duration);
     
     const res = await publishAudioLog(formData);
     
@@ -89,13 +87,13 @@ export default function AudioCommandPanel() {
       formRef.current?.reset();
       setTimeout(() => setStatus('idle'), 4000); 
     } else {
-      setErrorMsg(res?.error || copy.ERRORS.FAIL);
+      setErrorMsg(res?.error || "Publishing failed.");
       setStatus('error');
     }
   }
 
   return (
-    <div className="bg-bg-surface-100 border border-white/5 rounded-xl p-6 relative overflow-hidden group">
+    <div className="bg-bg-surface-100 border border-white/5 rounded-xl p-6 relative overflow-hidden">
       <div className="absolute inset-0 bg-[linear-gradient(to_right,#80808012_1px,transparent_1px),linear-gradient(to_bottom,#80808012_1px,transparent_1px)] bg-size-[12px_12px] pointer-events-none opacity-50" />
       
       <div className="relative z-10">
@@ -104,24 +102,18 @@ export default function AudioCommandPanel() {
             <Radio size={16} className={status === 'loading' ? 'animate-pulse' : ''} />
           </div>
           <div>
-            <h3 className="text-sm font-bold text-white uppercase tracking-widest">{copy.TITLE}</h3>
-            <p className="text-[10px] text-text-muted font-mono uppercase tracking-widest">{copy.SUBTITLE}</p>
+            <h3 className="text-sm font-bold text-white uppercase tracking-widest">{copy.ACTIONS.AUDIO}</h3>
+            <p className="text-[10px] text-text-muted font-mono uppercase tracking-widest">Master Command</p>
           </div>
         </div>
 
         {status === 'success' ? (
-          <div className="py-12 flex flex-col items-center justify-center text-brand-primary animate-in fade-in zoom-in duration-300">
+          <div className="py-12 flex flex-col items-center justify-center text-brand-primary animate-in fade-in zoom-in">
             <CheckCircle2 size={32} className="mb-3" />
-            <p className="text-xs font-bold uppercase tracking-widest">{copy.SUCCESS}</p>
+            <p className="text-xs font-bold uppercase tracking-widest">TRANSMISSION SENT</p>
           </div>
         ) : (
           <div className="space-y-4">
-            {status === 'error' && (
-              <div className="flex items-center gap-2 text-[10px] font-mono text-red-400 bg-red-400/10 p-2 rounded border border-red-400/20">
-                <AlertTriangle size={12} /> {errorMsg}
-              </div>
-            )}
-            
             {!file ? (
               <div 
                 onDragOver={handleDragOver}
@@ -129,31 +121,21 @@ export default function AudioCommandPanel() {
                 onDrop={handleDrop}
                 onClick={() => fileInputRef.current?.click()}
                 className={`border-2 border-dashed rounded-xl p-8 flex flex-col items-center justify-center text-center cursor-pointer transition-all ${
-                  isDragging 
-                    ? 'border-brand-primary bg-brand-primary/10' 
-                    : 'border-white/10 hover:border-brand-primary/50 hover:bg-white/5'
+                  isDragging ? 'border-brand-primary bg-brand-primary/10' : 'border-white/10'
                 }`}
               >
-                <UploadCloud size={24} className={`mb-3 ${isDragging ? 'text-brand-primary' : 'text-white/40'}`} />
-                <p className="text-xs font-bold text-white uppercase tracking-widest mb-1">{copy.INPUTS.UPLOAD_TITLE}</p>
-                <p className="text-[10px] text-text-muted font-mono uppercase">{copy.INPUTS.UPLOAD_DESC}</p>
-                <input 
-                  type="file" 
-                  accept="audio/*" 
-                  className="hidden" 
-                  ref={fileInputRef}
-                  onChange={handleFileSelect}
-                />
+                <UploadCloud size={24} className="mb-3 text-white/40" />
+                <p className="text-xs font-bold text-white uppercase tracking-widest mb-1">Upload Audio Log</p>
+                <input type="file" accept="audio/*" className="hidden" ref={fileInputRef} onChange={handleFileSelect} />
               </div>
             ) : (
-              <form ref={formRef} action={handleBroadcast} className="space-y-4 animate-in fade-in duration-300">
-                
+              <form ref={formRef} action={handleBroadcast} className="space-y-4">
                 <div className="flex items-center justify-between bg-brand-primary/5 border border-brand-primary/20 rounded p-3">
                   <div className="flex items-center gap-3 overflow-hidden">
                     <FileAudio size={16} className="text-brand-primary shrink-0" />
                     <div className="truncate">
                       <p className="text-xs font-bold text-white truncate">{file.name}</p>
-                      <p className="text-[10px] text-text-muted font-mono">{duration} {copy.INPUTS.READY_STATUS}</p>
+                      <p className="text-[10px] text-text-muted font-mono">{duration} READY</p>
                     </div>
                   </div>
                   <button type="button" onClick={clearFile} className="text-white/40 hover:text-white p-1">
@@ -161,28 +143,12 @@ export default function AudioCommandPanel() {
                   </button>
                 </div>
 
-                <div className="grid grid-cols-2 gap-2 mb-2">
-                  <button
-                    type="button"
-                    onClick={() => setCategory('PUBLIC')}
-                    className={`flex items-center justify-center gap-2 py-2 px-3 rounded text-[10px] font-mono uppercase tracking-widest transition-all border ${
-                      category === 'PUBLIC' 
-                        ? 'bg-brand-primary/20 border-brand-primary/50 text-brand-primary' 
-                        : 'bg-black/50 border-white/10 text-white/40 hover:text-white'
-                    }`}
-                  >
-                    <Globe size={14} /> {copy.INPUTS.CATEGORY_PUBLIC}
+                <div className="grid grid-cols-2 gap-2">
+                  <button type="button" onClick={() => setCategory('PUBLIC')} className={`py-2 px-3 rounded text-[10px] font-mono border ${category === 'PUBLIC' ? 'bg-brand-primary/20 border-brand-primary/50 text-brand-primary' : 'bg-black/50 border-white/10 text-white/40'}`}>
+                    <Globe size={14} className="inline mr-2" /> PUBLIC
                   </button>
-                  <button
-                    type="button"
-                    onClick={() => setCategory('BETA')}
-                    className={`flex items-center justify-center gap-2 py-2 px-3 rounded text-[10px] font-mono uppercase tracking-widest transition-all border ${
-                      category === 'BETA' 
-                        ? 'bg-brand-primary/20 border-brand-primary/50 text-brand-primary' 
-                        : 'bg-black/50 border-white/10 text-white/40 hover:text-white'
-                    }`}
-                  >
-                    <LayoutDashboard size={14} /> {copy.INPUTS.CATEGORY_BETA}
+                  <button type="button" onClick={() => setCategory('BETA')} className={`py-2 px-3 rounded text-[10px] font-mono border ${category === 'BETA' ? 'bg-brand-primary/20 border-brand-primary/50 text-brand-primary' : 'bg-black/50 border-white/10 text-white/40'}`}>
+                    <LayoutDashboard size={14} className="inline mr-2" /> BETA
                   </button>
                 </div>
 
@@ -191,18 +157,16 @@ export default function AudioCommandPanel() {
                   name="title" 
                   value={title}
                   onChange={(e) => setTitle(e.target.value)}
-                  placeholder={copy.INPUTS.TITLE} 
-                  className="w-full bg-black/50 border border-white/10 rounded px-4 py-2 text-xs text-white focus:outline-none focus:border-brand-primary/50 transition-colors"
+                  placeholder="Episode Title" 
+                  className="w-full bg-black/50 border border-white/10 rounded px-4 py-2 text-xs text-white"
                   required
                 />
                 
-                <input type="hidden" name="duration" value={duration} />
-
                 <textarea 
                   name="description" 
-                  placeholder={copy.INPUTS.DESC} 
-                  rows={4}
-                  className="w-full bg-black/50 border border-white/10 rounded px-4 py-2 text-xs text-white focus:outline-none focus:border-brand-primary/50 transition-colors resize-none"
+                  placeholder="Log Description" 
+                  rows={3}
+                  className="w-full bg-black/50 border border-white/10 rounded px-4 py-2 text-xs text-white resize-none"
                   required
                 />
                 
@@ -211,7 +175,7 @@ export default function AudioCommandPanel() {
                   disabled={status === 'loading'}
                   className="w-full bg-brand-primary hover:bg-brand-primary/90 text-black font-bold rounded py-2.5 text-[10px] font-mono uppercase tracking-widest flex items-center justify-center gap-2 transition-all"
                 >
-                  <Mic2 size={14} /> {status === 'loading' ? copy.BTN_UPLOADING : copy.BTN_PUBLISH}
+                  <Mic2 size={14} /> {status === 'loading' ? 'UPLOADING...' : 'PUBLISH LOG'}
                 </button>
               </form>
             )}
