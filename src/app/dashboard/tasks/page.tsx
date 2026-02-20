@@ -3,68 +3,24 @@ import React from 'react';
 import { supabase } from '@/utils/supabase';
 import StrategicPlannerClient from '@/components/planner/StrategicPlannerClient';
 
-export const dynamic = 'force-dynamic';
-export const revalidate = 0; 
-
-interface DayFlow {
-  day: string;
-  status: string;
-  date: string;
-  lifeEvents: string[];
-  tasks: any[];
-}
-
-const INITIAL_WEEK: DayFlow[] = [
-  { day: 'MON', status: 'ACTIVE', date: 'Feb 23', lifeEvents: ['Doctor Appt (10am)'], tasks: [] },
-  { day: 'TUE', status: 'PENDING', date: 'Feb 24', lifeEvents: ['Laundry/House'], tasks: [] },
-  { day: 'WED', status: 'PENDING', date: 'Feb 25', lifeEvents: [], tasks: [] },
-  { day: 'THU', status: 'PENDING', date: 'Feb 26', lifeEvents: ['Errands'], tasks: [] },
-  { day: 'FRI', status: 'PENDING', date: 'Feb 27', lifeEvents: [], tasks: [] }
-];
-
 export default async function StrategicPlannerPage() {
-  const { data: directiveData } = await supabase
-    .from('ideas_ledger')
+  // Fetch data directly from Supabase for the Build Hub
+  const { data: draftData } = await supabase
+    .from('weekly_drafts')
     .select('*')
-    .order('created_at', { ascending: false });
+    .order('created_at', { ascending: false })
+    .limit(1);
 
-  const rawLedger = directiveData || [];
-
-  const ideasLedger = rawLedger
-    .filter(task => task.scheduled_date === null)
-    .map(task => ({
-      id: task.id,
-      title: task.title,
-      type: task.type || 'FEATURE',
-      time: 'TBD',
-      reflection: task.description || '',
-      status: task.status || 'BACKLOG'
-    }));
-
-  const weekFlow = INITIAL_WEEK.map(dayObj => {
-    const tasksForDay = rawLedger
-      .filter(task => {
-        if (!task.scheduled_date) return false;
-        const taskDayName = new Date(task.scheduled_date)
-          .toLocaleDateString('en-US', { weekday: 'short' })
-          .toUpperCase();
-        return taskDayName === dayObj.day;
-      })
-      .map(task => ({
-        id: task.id,
-        title: task.title,
-        type: task.type || 'FEATURE',
-        time: 'TBD',
-        reflection: task.description || '',
-        status: task.status || 'BACKLOG'
-      }));
-    return { ...dayObj, tasks: tasksForDay };
-  });
+  const { data: ideasLedger } = await supabase.from('ideas_ledger').select('*');
+  const { data: weekFlow } = await supabase.from('weekly_flow').select('*');
 
   return (
-    <StrategicPlannerClient 
-      ideasLedger={ideasLedger}
-      weekFlow={weekFlow}
-    />
+    <main className="min-h-screen bg-bg-app">
+      <StrategicPlannerClient 
+        initialData={draftData?.[0] || null} 
+        ideasLedger={ideasLedger || []} 
+        weekFlow={weekFlow || []} 
+      />
+    </main>
   );
 }

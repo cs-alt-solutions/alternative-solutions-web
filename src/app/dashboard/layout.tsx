@@ -17,7 +17,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const commonCopy = WEBSITE_COPY.DASHBOARD.COMMON;
   const overviewCopy = WEBSITE_COPY.DASHBOARD.OVERVIEW;
 
-  // STRICT ROUTING LOGIC: Prevents "Catching" mismatches
+  // STRICT ROUTING LOGIC: Prevents header mismatches
   const getPageTitle = () => {
     if (pathname === '/dashboard/broadcast') return sidebarCopy.BROADCAST;
     if (pathname === '/dashboard/tasks') return sidebarCopy.TASKS;
@@ -39,11 +39,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             {sidebarCopy.GROUPS.COMMAND}
           </div>
           <Link href="/dashboard">
-            <NavItem 
-              icon={LayoutDashboard} 
-              label={sidebarCopy.OVERVIEW} 
-              active={pathname === '/dashboard'} 
-            />
+            <NavItem icon={LayoutDashboard} label={sidebarCopy.OVERVIEW} active={pathname === '/dashboard'} />
           </Link>
 
           <div className="text-[10px] font-mono text-white/40 uppercase tracking-widest mb-2 px-3 mt-8">
@@ -52,7 +48,6 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           <Link href="/dashboard/waitlist">
              <NavItem icon={Ticket} label={sidebarCopy.WAITLIST} active={pathname === '/dashboard/waitlist'} />
           </Link>
-          <NavItem icon={Inbox} label={sidebarCopy.INTAKE} />
           
           <div className="text-[10px] font-mono text-white/40 uppercase tracking-widest mb-2 px-3 mt-8">
             {sidebarCopy.GROUPS.STUDIO}

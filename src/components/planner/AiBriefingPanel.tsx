@@ -1,30 +1,49 @@
+/* src/components/planner/AiBriefingPanel.tsx */
+'use client';
+
 import React from 'react';
-import { Activity, Sparkles } from 'lucide-react';
+import { Cpu, Terminal } from 'lucide-react';
 
 interface AiBriefingProps {
   copy: any;
-  message: string;
-  gamePlan: string[];
+  hasActiveDraft: boolean; // Fixed missing property
 }
 
-export default function AiBriefingPanel({ copy, message, gamePlan }: AiBriefingProps) {
+export default function AiBriefingPanel({ copy, hasActiveDraft }: AiBriefingProps) {
+  const briefing = copy.AI_BRIEF;
+
   return (
-    <section className="bg-linear-to-b from-brand-primary/10 to-transparent border border-brand-primary/20 rounded-2xl p-6 relative overflow-hidden">
-      <div className="absolute top-0 right-0 p-4 opacity-10"><Sparkles size={48} /></div>
-      <h3 className="text-xs font-black text-brand-primary uppercase tracking-widest mb-4 flex items-center gap-2">
-        <Activity size={14} /> {copy.TITLE}
-      </h3>
-      <p className="text-sm text-white/80 font-light leading-relaxed mb-4 italic">"{message}"</p>
-      <div className="pt-4 border-t border-white/5">
-        <span className="text-[10px] font-mono text-white/40 uppercase">{copy.GAME_PLAN}</span>
-        <ul className="mt-2 space-y-2">
-          {gamePlan.map((item, i) => (
-            <li key={i} className="text-xs text-white/60 flex items-center gap-2">
-              <div className="w-1 h-1 bg-brand-primary rounded-full" /> {item}
-            </li>
-          ))}
-        </ul>
+    <div className="bg-black/30 border border-white/5 rounded-xl p-6 relative overflow-hidden group hover:border-brand-primary/20 transition-all">
+      <div className="flex items-center justify-between mb-6">
+        <h3 className="text-[10px] font-mono text-white/30 uppercase tracking-[0.2em] flex items-center gap-2">
+          <Cpu size={12} className="text-brand-primary" /> {briefing.TITLE}
+        </h3>
+        <div className={`px-2 py-0.5 rounded-full text-[8px] font-mono border uppercase tracking-widest ${
+          hasActiveDraft ? 'bg-brand-primary/10 text-brand-primary border-brand-primary/20' : 'bg-white/5 text-white/20 border-white/5'
+        }`}>
+          {hasActiveDraft ? 'ACTIVE_SESSION' : 'IDLE_WAIT'}
+        </div>
       </div>
-    </section>
+
+      <div className="space-y-4">
+        <p className="text-sm text-white/60 font-light leading-relaxed">
+          {hasActiveDraft ? briefing.ACTIVE_MSG : briefing.DEFAULT_MSG}
+        </p>
+        
+        <div className="pt-4 border-t border-white/5">
+           <div className="text-[10px] font-mono text-brand-primary uppercase tracking-widest mb-3 flex items-center gap-2">
+             <Terminal size={10} /> {briefing.GAME_PLAN}
+           </div>
+           <ul className="space-y-2">
+             {briefing.GAME_PLAN_TASKS.map((task: string, idx: number) => (
+               <li key={idx} className="text-[11px] text-white/40 flex items-center gap-3">
+                 <span className="w-1 h-1 bg-brand-primary/40 rounded-full" />
+                 {task}
+               </li>
+             ))}
+           </ul>
+        </div>
+      </div>
+    </div>
   );
 }

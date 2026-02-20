@@ -1,74 +1,68 @@
-/* src/app/dashboard/tasks/page.tsx */
+/* src/app/dashboard/page.tsx */
 import React from 'react';
-import { supabase } from '@/utils/supabase';
-import StrategicPlannerClient from '@/components/planner/StrategicPlannerClient';
-import { DayFlow } from '@/types';
-import { unstable_noStore as noStore } from 'next/cache';
+import { WEBSITE_COPY } from '@/utils/glossary';
+import DailyDirectivePanel from '@/components/workspace/DailyDirectivePanel';
+import NetworkPulse from '@/components/workspace/NetworkPulse';
+import PriorityQueuePanel from '@/components/workspace/PriorityQueuePanel';
+import EngineeringPanel from '@/components/workspace/EngineeringPanel';
+import PlatformTrackerPanel from '@/components/workspace/PlatformTrackerPanel';
+import TelemetryPanel from '@/components/workspace/TelemetryPanel';
 
-export const dynamic = 'force-dynamic';
-export const revalidate = 0; 
+/**
+ * DASHBOARD OVERVIEW (COMMAND CENTER)
+ * High-level system telemetry. 
+ * Fix: Explicitly passing arrays to children to prevent 'undefined' crashes.
+ */
+export default function DashboardOverview() {
+  const copy = WEBSITE_COPY.DASHBOARD.OVERVIEW;
+  const commonCopy = WEBSITE_COPY.DASHBOARD.COMMON;
 
-const INITIAL_WEEK: DayFlow[] = [
-  { day: 'MON', status: 'ACTIVE', date: 'Feb 23', lifeEvents: ['Doctor Appt (10am)'], tasks: [] },
-  { day: 'TUE', status: 'PENDING', date: 'Feb 24', lifeEvents: ['Laundry/House'], tasks: [] },
-  { day: 'WED', status: 'PENDING', date: 'Feb 25', lifeEvents: [], tasks: [] },
-  { day: 'THU', status: 'PENDING', date: 'Feb 26', lifeEvents: ['Errands'], tasks: [] },
-  { day: 'FRI', status: 'PENDING', date: 'Feb 27', lifeEvents: [], tasks: [] }
-];
-
-export default async function StrategicPlannerPage() {
-  noStore(); // THE NUCLEAR OPTION: Completely disables Next.js caching for this route.
-
-  const { data: draftData } = await supabase
-    .from('audio_logs')
-    .select('*')
-    .eq('status', 'DRAFT')
-    .order('created_at', { ascending: false })
-    .limit(1);
-
-  const { data: directiveData } = await supabase
-    .from('ideas_ledger')
-    .select('*')
-    .order('created_at', { ascending: false });
-
-  const rawLedger = directiveData || [];
-
-  const ideasLedger = rawLedger
-    .filter(task => task.scheduled_date === null)
-    .map(task => ({
-      id: task.id,
-      title: task.title,
-      type: task.type || 'FEATURE',
-      time: 'TBD',
-      reflection: task.description || '',
-      status: task.status || 'BACKLOG'
-    }));
-
-  const weekFlow = INITIAL_WEEK.map(dayObj => {
-    const tasksForDay = rawLedger
-      .filter(task => {
-        if (!task.scheduled_date) return false;
-        const taskDayName = new Date(task.scheduled_date)
-          .toLocaleDateString('en-US', { weekday: 'short' })
-          .toUpperCase();
-        return taskDayName === dayObj.day;
-      })
-      .map(task => ({
-        id: task.id,
-        title: task.title,
-        type: task.type || 'FEATURE',
-        time: 'TBD',
-        reflection: task.description || '',
-        status: task.status || 'BACKLOG'
-      }));
-    return { ...dayObj, tasks: tasksForDay };
-  });
+  // Placeholder arrays to keep the UI stable while we wire up the DB fetches
+  const systemProjects: any[] = [];
+  const priorityQueue: any[] = [];
+  const dailyDirectives: any[] = [];
+  const networkFeed: any[] = [];
 
   return (
-    <StrategicPlannerClient 
-      initialDraft={draftData?.[0] || null} 
-      ideasLedger={ideasLedger}
-      weekFlow={weekFlow}
-    />
+    <div className="p-8 space-y-8 animate-in fade-in duration-700">
+      {/* MISSION CRITICAL OVERWATCH */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <div className="lg:col-span-2">
+          <DailyDirectivePanel 
+            copy={copy.DIRECTIVE} 
+            items={dailyDirectives} 
+          />
+        </div>
+        <div className="lg:col-span-1">
+          <NetworkPulse 
+            copy={copy.LIVE_FEED} 
+            feed={networkFeed} 
+          />
+        </div>
+      </div>
+
+      {/* OPERATIONS & INFRASTRUCTURE */}
+      <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
+        <div className="lg:col-span-1">
+          <PriorityQueuePanel 
+            copy={copy.PANELS.ACTION_REQD} 
+            commonCopy={commonCopy}
+            queue={priorityQueue} 
+          />
+        </div>
+        <div className="lg:col-span-2">
+          <EngineeringPanel 
+            copy={copy.PANELS.ENGINEERING} 
+            projects={systemProjects} 
+          />
+        </div>
+        <div className="lg:col-span-1">
+          <PlatformTrackerPanel copy={copy.INFRASTRUCTURE} />
+        </div>
+      </div>
+
+      {/* SYSTEM TELEMETRY */}
+      <TelemetryPanel copy={copy.TELEMETRY} />
+    </div>
   );
 }

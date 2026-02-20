@@ -1,33 +1,30 @@
-import React from 'react';
+/* src/components/planner/WeeklyFlowWheel.tsx */
+'use client';
 
-interface DayData {
-  day: string;
-  date: string;
-  status: string;
-}
+import React from 'react';
+import { CalendarDays } from 'lucide-react';
 
 interface WeeklyFlowWheelProps {
-  days: DayData[];
-  selectedDay: string;
-  onSelectDay: (day: string) => void;
+  copy: any; // Interface updated to accept glossary data
+  flow: any[];
 }
 
-export default function WeeklyFlowWheel({ days, selectedDay, onSelectDay }: WeeklyFlowWheelProps) {
+export default function WeeklyFlowWheel({ copy, flow }: WeeklyFlowWheelProps) {
   return (
-    <div className="flex justify-between items-center gap-2 bg-black/20 p-2 rounded-xl border border-white/5">
-      {days.map((d, i) => (
-        <button 
-          key={i} 
-          onClick={() => onSelectDay(d.day)}
-          className={`flex-1 flex flex-col items-center py-3 rounded-lg border transition-all ${
-            selectedDay === d.day ? 'bg-brand-primary text-black border-brand-primary shadow-[0_0_15px_rgba(6,182,212,0.3)] scale-105' : 
-            'bg-white/2 border-white/5 text-white/40 hover:text-white hover:bg-white/5'
-          }`}
-        >
-          <span className="text-[10px] font-black tracking-widest">{d.day}</span>
-          <span className="text-[9px] font-mono opacity-60">{d.date}</span>
-        </button>
-      ))}
+    <div className="bg-black/30 border border-white/5 rounded-xl p-6 group hover:border-brand-primary/20 transition-all">
+      <div className="flex items-center justify-between mb-6">
+        <h3 className="text-[10px] font-mono text-white/30 uppercase tracking-[0.2em] flex items-center gap-2">
+          <CalendarDays size={12} /> {copy.SECTIONS.LIFESTYLE}
+        </h3>
+      </div>
+
+      <div className="h-48 flex items-center justify-center border border-dashed border-white/5 rounded-lg relative overflow-hidden">
+        {/* Visual placeholder for the wheel/calendar integration */}
+        <div className="absolute inset-0 bg-brand-primary/5 animate-pulse" />
+        <span className="text-[10px] font-mono text-white/20 uppercase tracking-widest relative z-10">
+          {copy.PLACEHOLDERS.CAL_INIT}
+        </span>
+      </div>
     </div>
   );
 }

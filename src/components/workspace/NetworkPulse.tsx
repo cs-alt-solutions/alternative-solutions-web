@@ -1,31 +1,46 @@
+/* src/components/workspace/NetworkPulse.tsx */
+'use client';
+
 import React from 'react';
-import { Radio, Ticket } from 'lucide-react';
-import { WaitlistEntry } from '@/data/store';
+import { Activity, Radio } from 'lucide-react';
 
-interface NetworkPulseProps { feed: WaitlistEntry[]; copy: any; }
+interface NetworkPulseProps {
+  copy: any;
+  feed?: any[]; // Optional to prevent crashes
+}
 
-export default function NetworkPulse({ feed, copy }: NetworkPulseProps) {
-  if (feed.length === 0) return null;
+/**
+ * NETWORK PULSE
+ * Logic: Monitors real-time system activity.
+ * Fix: Added a default empty array for 'feed' to prevent .length errors.
+ */
+export default function NetworkPulse({ copy, feed = [] }: NetworkPulseProps) {
+  // If no activity, we display an idle state instead of crashing or returning null
+  const hasActivity = feed && feed.length > 0;
+
   return (
-    <div className="fixed bottom-8 right-8 z-50 flex flex-col items-end gap-3 pointer-events-none">
-      <div className="flex items-center gap-2 mb-1 bg-black/60 backdrop-blur-md px-3 py-1.5 rounded-full border border-white/5 shadow-xl">
-        <Radio size={12} className="text-brand-primary animate-pulse" />
-        <span className="text-[10px] font-mono uppercase tracking-widest text-white/70">{copy.TITLE}</span>
+    <section className="bg-black/30 border border-white/5 rounded-xl p-6 group hover:border-brand-primary/20 transition-all">
+      <div className="flex items-center justify-between mb-6">
+        <h3 className="text-[10px] font-mono text-white/30 uppercase tracking-[0.2em] flex items-center gap-2">
+          <Activity size={12} className="text-brand-primary" /> {copy.TITLE}
+        </h3>
+        <div className="flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-brand-primary/5 border border-brand-primary/10 text-[8px] font-mono text-brand-primary uppercase tracking-widest">
+          <Radio size={10} className={hasActivity ? "animate-pulse" : ""} /> 
+          {hasActivity ? "LIVE_TRAFFIC" : "SYSTEM_IDLE"}
+        </div>
       </div>
-      <div className="flex flex-col-reverse gap-2">
-        {feed.slice(0, 3).map((item, index) => (
-          <div key={item.id} className="pointer-events-auto bg-black/80 backdrop-blur-xl border border-white/10 p-3 rounded-lg shadow-2xl w-72 flex items-start gap-3 animate-in slide-in-from-right-8 fade-in duration-500" style={{ animationDelay: `${index * 150}ms`, animationFillMode: 'backwards' }}>
-            <div className="w-8 h-8 rounded-full bg-brand-primary/10 border border-brand-primary/30 flex items-center justify-center shrink-0">
-               <Ticket size={14} className="text-brand-primary" />
-            </div>
-            <div className="flex-1 min-w-0">
-               <div className="text-[10px] font-mono text-brand-primary uppercase tracking-widest mb-0.5">{copy.NEW_BETA}</div>
-               <div className="text-sm font-bold text-white truncate">{item.email}</div>
-               <div className="text-[10px] font-mono text-white/40 mt-1">{item.date}</div>
-            </div>
+
+      <div className="min-h-32 flex flex-col items-center justify-center border border-dashed border-white/5 rounded-lg text-center p-8">
+        {!hasActivity ? (
+          <p className="text-[10px] font-mono text-white/20 uppercase tracking-[0.2em]">
+            {copy.NEW_BETA || "WAITING_FOR_PULSE..."}
+          </p>
+        ) : (
+          <div className="w-full space-y-3">
+             {/* Future: Map through network events here */}
           </div>
-        ))}
+        )}
       </div>
-    </div>
+    </section>
   );
 }
