@@ -36,23 +36,38 @@ export default function Navbar() {
           </span>
         </Link>
 
-        {/* REVEALED NAV: Visible on all screens once access is granted */}
-        {hasAccess && (
-          <div className="flex items-center gap-4 md:gap-8 animate-in fade-in slide-in-from-right-4 duration-700">
-            <Link 
-              href="/architect" 
-              className="text-[9px] md:text-[10px] font-mono text-white/60 hover:text-brand-primary transition-colors uppercase tracking-widest md:tracking-[0.2em] whitespace-nowrap"
-            >
-              {nav.ARCHITECT}
-            </Link>
-            <Link 
-              href="/shift-studio" 
-              className="text-[9px] md:text-[10px] font-mono text-white/60 hover:text-brand-primary transition-colors uppercase tracking-widest md:tracking-[0.2em] whitespace-nowrap"
-            >
-              {nav.SHIFT_STUDIO}
-            </Link>
-          </div>
-        )}
+        <div className="flex items-center gap-6 md:gap-8">
+          
+          {/* REVEALED NAV: Visible only to authenticated operatives */}
+          {hasAccess && (
+            <div className="flex items-center gap-4 md:gap-8 animate-in fade-in slide-in-from-right-4 duration-700">
+              <Link 
+                href="/architect" 
+                className="text-[9px] md:text-[10px] font-mono text-white/60 hover:text-brand-primary transition-colors uppercase tracking-widest md:tracking-[0.2em] whitespace-nowrap"
+              >
+                {nav.ARCHITECT}
+              </Link>
+              
+              {/* This links to your actual workspace/dashboard once they are in */}
+              <Link 
+                href="/dashboard" 
+                className="text-[9px] md:text-[10px] font-mono text-white/60 hover:text-brand-primary transition-colors uppercase tracking-widest md:tracking-[0.2em] whitespace-nowrap"
+              >
+                WORKSPACE
+              </Link>
+            </div>
+          )}
+
+          {/* THE BLUEPRINT FUNNEL: Always visible to attract new collaborators */}
+          <Link 
+            href="/blueprint" 
+            className="text-[10px] md:text-xs font-mono font-bold text-brand-primary border border-brand-primary/50 hover:bg-brand-primary/10 px-4 py-2 rounded transition-all uppercase tracking-[0.2em] whitespace-nowrap shadow-[0_0_15px_rgba(6,182,212,0.15)]"
+          >
+            {/* If you add 'BLUEPRINT: "The Blueprint"' to your glossary, you can use nav.BLUEPRINT here */}
+            THE BLUEPRINT
+          </Link>
+
+        </div>
       </div>
     </nav>
   );
