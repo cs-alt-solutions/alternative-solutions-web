@@ -5,7 +5,7 @@ import { WEBSITE_COPY } from '@/utils/glossary';
 
 export default function ProductsPage() {
   const copy = WEBSITE_COPY.PUBLIC_SITE.ECOSYSTEM;
-  const shiftStudioCopy = WEBSITE_COPY.PUBLIC_SITE.HOME.BENTO.PRODUCT; // Reusing logic
+  const shiftStudioCopy = WEBSITE_COPY.PUBLIC_SITE.HOME.BENTO.PRODUCT; // Reuses Shift Studio description from home
 
   return (
     <main className="min-h-screen bg-bg-app text-slate-300 relative overflow-hidden font-sans pt-32 pb-24">
@@ -46,7 +46,7 @@ export default function ProductsPage() {
           <div className="relative bg-bg-app/50 border border-violet-500/30 border-dashed rounded-2xl p-10 overflow-hidden flex flex-col justify-center items-center text-center shadow-[inset_0_0_30px_rgba(139,92,246,0.05)]">
             <svg className="w-16 h-16 text-violet-500/50 mb-6 animate-pulse" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="1"><path strokeLinecap="round" strokeLinejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" /></svg>
             <h3 className="text-xl text-violet-300 font-bold mb-2">{copy.CLASSIFIED.TITLE}</h3>
-            <p className="text-sm text-violet-500/70 font-mono tracking-widest">{copy.CLASSIFIED.STATUS}</p>
+            <p className="text-sm text-violet-500/70 font-mono tracking-widest uppercase">{copy.CLASSIFIED.STATUS}</p>
           </div>
         </div>
 

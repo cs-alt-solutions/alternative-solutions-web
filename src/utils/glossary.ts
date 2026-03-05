@@ -17,7 +17,7 @@ export const WEBSITE_COPY = {
         TITLE_1: "WORK LESS.",
         TITLE_2: "OPERATE BETTER.",
         SUBHEAD: "The industry standard software is bloated, expensive, and broken.",
-        SUBHEAD_ITALIC: "We are building the alternative."
+        SUBHEAD_ITALIC: "I am building the alternative."
       },
       BENTO: {
         PRODUCT: {
