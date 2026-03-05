@@ -3,11 +3,9 @@
 
 import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { WEBSITE_COPY } from '@/utils/glossary';
 
 export default function Navbar() {
   const [hasAccess, setHasAccess] = useState(false);
-  const nav = WEBSITE_COPY.NAV;
 
   useEffect(() => {
     const checkAccess = () => {
@@ -26,45 +24,55 @@ export default function Navbar() {
   }, []);
 
   return (
-    <nav className="fixed top-0 w-full z-50 backdrop-blur-md border-b border-white/5 bg-black/80">
+    <nav className="fixed top-0 w-full z-50 backdrop-blur-xl border-b border-white/5 bg-bg-app/70 font-sans">
       <div className="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
         
-        <Link href="/" className="flex items-center gap-3 group shrink-0">
-          <div className="w-3 h-3 bg-brand-primary rounded-sm shadow-[0_0_10px_rgba(6,182,212,0.3)] group-hover:bg-white transition-colors" />
-          <span className="font-bold text-sm md:text-lg tracking-tight uppercase text-white group-hover:text-brand-primary transition-colors">
-            {nav.BRAND}
+        {/* THE BRAND (HOME) */}
+        <Link href="/" className="flex items-center gap-4 group shrink-0">
+          <div className="w-3 h-3 bg-cyan-400 rounded-full shadow-[0_0_15px_rgba(34,211,238,0.5)] group-hover:bg-fuchsia-400 group-hover:shadow-[0_0_15px_rgba(232,121,249,0.5)] transition-all duration-500" />
+          <span className="font-black text-lg md:text-xl tracking-widest text-white group-hover:text-cyan-400 transition-colors duration-300 uppercase">
+            Alternative Solutions
           </span>
         </Link>
 
-        <div className="flex items-center gap-6 md:gap-8">
+        <div className="flex items-center gap-8 md:gap-10">
           
+          {/* PUBLIC LINKS */}
+          <div className="hidden md:flex items-center gap-8 font-bold text-xs">
+            <Link 
+              href="/products" 
+              className="text-slate-300 hover:text-amber-400 hover:drop-shadow-[0_0_8px_rgba(245,158,11,0.8)] transition-all duration-300 uppercase tracking-widest"
+            >
+              The Ecosystem
+            </Link>
+            
+            <Link 
+              href="/founder" 
+              className="text-slate-300 hover:text-fuchsia-400 hover:drop-shadow-[0_0_8px_rgba(232,121,249,0.8)] transition-all duration-300 uppercase tracking-widest"
+            >
+              The Story
+            </Link>
+          </div>
+
           {/* REVEALED NAV: Visible only to authenticated operatives */}
           {hasAccess && (
-            <div className="flex items-center gap-4 md:gap-8 animate-in fade-in slide-in-from-right-4 duration-700">
-              <Link 
-                href="/architect" 
-                className="text-[9px] md:text-[10px] font-mono text-white/60 hover:text-brand-primary transition-colors uppercase tracking-widest md:tracking-[0.2em] whitespace-nowrap"
-              >
-                {nav.ARCHITECT}
-              </Link>
-              
-              {/* This links to your actual workspace/dashboard once they are in */}
+            <div className="flex items-center animate-in fade-in slide-in-from-right-4 duration-700 border-l border-white/10 pl-8">
               <Link 
                 href="/dashboard" 
-                className="text-[9px] md:text-[10px] font-mono text-white/60 hover:text-brand-primary transition-colors uppercase tracking-widest md:tracking-[0.2em] whitespace-nowrap"
+                className="text-xs font-bold text-white hover:text-cyan-400 transition-colors flex items-center gap-3 drop-shadow-[0_0_8px_rgba(34,211,238,0.5)] uppercase tracking-widest"
               >
-                WORKSPACE
+                <span className="w-2 h-2 bg-cyan-400 rounded-full animate-pulse"></span>
+                Workspace
               </Link>
             </div>
           )}
 
-          {/* THE BLUEPRINT FUNNEL: Always visible to attract new collaborators */}
+          {/* THE BETA FUNNEL: The glowing CTA */}
           <Link 
             href="/blueprint" 
-            className="text-[10px] md:text-xs font-mono font-bold text-brand-primary border border-brand-primary/50 hover:bg-brand-primary/10 px-4 py-2 rounded transition-all uppercase tracking-[0.2em] whitespace-nowrap shadow-[0_0_15px_rgba(6,182,212,0.15)]"
+            className="text-xs font-bold text-emerald-400 border border-emerald-500/50 hover:bg-emerald-400 hover:text-black px-5 py-2.5 rounded-lg transition-all shadow-[0_0_20px_rgba(52,211,153,0.15)] hover:shadow-[0_0_30px_rgba(52,211,153,0.4)] ml-2 uppercase tracking-widest"
           >
-            {/* If you add 'BLUEPRINT: "The Blueprint"' to your glossary, you can use nav.BLUEPRINT here */}
-            THE BLUEPRINT
+            BETA CENTER
           </Link>
 
         </div>

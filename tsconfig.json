@@ -33,9 +33,12 @@
     "**/*.ts",
     "**/*.tsx",
     "**/*.mts",
+    "**/*.js",     // <-- ADD THIS
+    "**/*.jsx",    // <-- ADD THIS
     ".next/types/**/*.ts",
-    ".next/dev/types/**/*.ts"
-, "src/components/planner/StrategicBuildPlaner.js"  ],
+    ".next/dev/types/**/*.ts",
+    "src/components/planner/StrategicBuildPlaner.js" 
+  ],
   "exclude": [
     "node_modules"
   ]
