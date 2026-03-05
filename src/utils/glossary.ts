@@ -17,7 +17,7 @@ export const WEBSITE_COPY = {
         TITLE_1: "WORK LESS.",
         TITLE_2: "OPERATE BETTER.",
         SUBHEAD: "The industry standard software is bloated, expensive, and broken.",
-        SUBHEAD_ITALIC: "I am building the alternative."
+        SUBHEAD_ITALIC: "We are building the alternative."
       },
       BENTO: {
         PRODUCT: {
@@ -93,6 +93,11 @@ export const WEBSITE_COPY = {
         TITLE_1: "POKE A",
         TITLE_2: "HOLE.",
         DESC: "We’ve lived in a bubble of broken systems and \"good enough\" software for too long. I’m not here to fix the bubble—I’m here to pop it."
+      },
+      GLITCHBOT: {
+        TAG: "SYSTEM INTERCEPT // GLITCH_BOT",
+        TITLE: "\"I am the bridge.\"",
+        DESC: "Courtney writes the code. You break the software. I sit in the middle and process the friction logs. You submit a bug, I verify the data, and you earn your rank. No corporate fluff—just clean data and permanent rewards."
       },
       REWARDS: {
         TITLE: "You build the bricks.\nYou keep the keys.",
@@ -172,7 +177,6 @@ export const WEBSITE_COPY = {
     BOTTOM_CTA: { TITLE: "Ready to take control?", DESC: "Secure your spot for the Shift Studio closed beta rollout." }
   },
   DASHBOARD: {
-    // Preserved to keep internal routing alive
     COMMON: { BRAND_VERSION: "Alt // OS v1.0", STATUS_ONLINE: "SYSTEM ONLINE", ACTION_REVIEW: "REVIEW" },
     SIDEBAR: { GROUPS: { COMMAND: "Command", OPERATIONS: "Operations", STUDIO: "Studio", SYSTEM: "System" }, OVERVIEW: "Overview", WAITLIST: "Beta Command", TASKS: "Strategic Planner", BROADCAST: "Broadcast Hub", AGENTS: "AI Agents", CONFIG: "Config", EXIT: "← Exit to Public Site" },
     WAITLIST: { TITLE: "Beta Command", LEAD_COUNT: "Total Scanned", ROW_ACTIONS: { INVITE: "Send Invite", QUARANTINE: "Quarantine User" } },
@@ -183,7 +187,6 @@ export const WEBSITE_COPY = {
   }
 };
 
-// Types preserved
 export interface StrategicGoal { id: string; label: string; color: string; description: string; }
 export const STRATEGIC_GOALS: Record<string, StrategicGoal> = {
   WEBSITE: { id: 'goal_website', label: 'Alternative Solutions Brand', color: '#00D1FF', description: 'The digital face.' },

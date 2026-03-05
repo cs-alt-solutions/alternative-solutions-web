@@ -6,6 +6,7 @@ import { Radio, Mic2, Share2, Mail } from 'lucide-react';
 import EpisodeManager from '@/components/dashboard/broadcast/EpisodeManager';
 
 export default async function BroadcastHub() {
+  // Logic: Pulling from the unified MEDIA_HUB block
   const hubCopy = WEBSITE_COPY.DASHBOARD.MEDIA_HUB;
   
   const { data: episodes } = await supabase
@@ -46,13 +47,15 @@ export default async function BroadcastHub() {
       <section className="bg-bg-surface-200/30 border border-white/5 rounded-2xl p-6">
         <div className="flex items-center justify-between mb-6">
           <h2 className="text-sm font-mono text-text-muted uppercase tracking-widest">
-            {hubCopy.AUDIO_MODULE?.LEAD_COUNT || "ACTIVE FEEDS:"} <span className="text-white">{activeCount}</span>
+            {/* BUILD FIX: Replaced AUDIO_MODULE with standard label */}
+            ACTIVE FEEDS: <span className="text-white">{activeCount}</span>
           </h2>
         </div>
         
+        {/* We pass an empty object for copy if AUDIO_MODULE is deprecated */}
         <EpisodeManager 
           initialEpisodes={episodes || []} 
-          copy={hubCopy.AUDIO_MODULE || {}} 
+          copy={{}} 
         />
       </section>
     </div>
