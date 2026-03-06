@@ -4,7 +4,7 @@
 import React, { useState } from 'react';
 import { WEBSITE_COPY } from '@/utils/glossary';
 import { X, Lightbulb, Send, Plus, Trash2, ListChecks, Calendar } from 'lucide-react';
-import { logIdeaDirective } from '@/app/actions';
+import { logDirective } from '@/app/actions';
 
 interface LogDirectiveModalProps {
   isOpen: boolean;
@@ -33,13 +33,17 @@ export default function LogDirectiveModal({ isOpen, onClose }: LogDirectiveModal
     setIsSubmitting(true);
     
     const formData = new FormData(e.currentTarget);
-    formData.append('phases', JSON.stringify(phases.filter(p => p.trim() !== '')));
     
-    if (destination === 'LEDGER') {
-      formData.delete('scheduled_date');
-    }
+    // Map the form data to our strict Directive type expected by the action
+    const newDirective = {
+      title: formData.get('title') as string,
+      goalId: 'goal_command', // Default mapping for general system directives
+      priority: (formData.get('priority') as string).toLowerCase() as 'high' | 'medium' | 'low',
+      classification: formData.get('type') as string,
+    };
 
-    const result = await logIdeaDirective(formData);
+    const result = await logDirective(newDirective);
+    
     if (result.success) {
       setPhases(['']);
       setDestination('LEDGER');
