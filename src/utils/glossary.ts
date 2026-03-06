@@ -11,79 +11,104 @@ export const WEBSITE_COPY = {
   
   PUBLIC_SITE: {
     HOME: {
-      HERO: {
-        TAG: "NO VC FUNDING. NO CORPORATE FLUFF. JUST REAL TOOLS.",
-        TITLE_1: "WORK LESS.",
-        TITLE_2: "OPERATE BETTER.",
-        SUBHEAD: "The industry standard software is bloated, expensive, and broken.",
-        SUBHEAD_ITALIC: "We are building the alternative."
-      },
-      BENTO: {
-        PRODUCT: {
-          TAG: "The Flagship",
-          TITLE: "Shift Studio",
-          DESC: "Stop duct-taping platforms together. Shift Studio connects your sales, marketing, operations, and inventory into one high-performance engine.",
-          CTA: "Enter The Studio"
+        HERO: {
+          TAG: "SYSTEM INITIALIZATION",
+          TITLE_1: "BUILDING THE",
+          TITLE_2: "FOUNDATION.",
+          SUBHEAD: "We don't do cookie-cutter templates. We architect custom, high-performance ecosystems driven by AI and built for scale.",
+          SUBHEAD_ITALIC: ""
         },
-        STORY: {
-          TAG: "The Story",
-          TITLE: "Who is building this?",
-          DESC: "No massive tech company. Just 20 years of cross-industry intel and the drive to do the f****** work.",
-          CTA: "Read the Manifesto"
-        },
-        BETA: {
-          TAG: "// Universal Testing Ground",
-          TITLE: "Break the software. Earn your seat.",
-          DESC: "Test our products in the real world and tell us exactly where they break. You report the friction, we write the code.",
-          CTA: "Enter Beta Center"
+        BENTO: {
+          PRODUCT: {
+            TAG: "THE ENGINE",
+            TITLE: "ENTER THE ECOSYSTEM",
+            DESC: "Stop wrestling with disconnected systems. Explore the hybrid frameworks and AI-powered architecture built to run your business.",
+            CTA: "Initialize Sequence",
+            LINK: "/products"
+          },
+          STORY: {
+            TAG: "THE ARCHITECT",
+            TITLE: "BUILT DIFFERENT.",
+            DESC: "No corporate boxes. No fragile workarounds. Just a relentlessly strong foundation built by a neurodivergent mind.",
+            CTA: "View Telemetry",
+            LINK: "/founder"
+          },
+          BETA: {
+            TAG: "CO-OP MODE",
+            TITLE: "INITIATE CONTACT",
+            DESC: "Enter the co-op environment to start building.",
+            CTA: "Initiate Contact",
+            LINK: "/co-op"
+          },
+          TECH: {
+            TAG: "INTERNAL WIRING",
+            TITLE: "AI ARCHITECTURE",
+            DESC: "We don't build fake AI wrappers. We use AI internally as a relentless coding partner to construct bulletproof systems.",
+            CTA: ""
+          }
         }
       },
-      FOOTER: {
-        TITLE: "Built different. Because it had to be.",
-        COPYRIGHT: "Alternative Solutions LLC // Est. 2025"
-      }
-    },
+      
     ECOSYSTEM: {
       HEADER: {
         TITLE: "The Ecosystem",
-        DESC: "Alternative Solutions is an expanding network of tools designed to fix broken industries."
+        DESC: "For 20 years, the industry forced you to duct-tape disconnected apps together. We aren't building one massive, bloated 'all-in-one' app to replace them. We are building a unified network of specialized engines that share the same brain. No duct tape required."
       },
       ACTIVE: {
-        TAG: "// Active Deployments",
-        STATUS: "STATUS: V1 BETA ACTIVE"
+        TAG: "// BUILT FOR THE SOLO CREATOR",
+        STATUS: "THE COMMERCE ENGINE // V1 BETA"
       },
       CLASSIFIED: {
-        TITLE: "PROJECT CLASSIFIED",
-        STATUS: "IN DEVELOPMENT // STANDBY"
+        TITLE: "THE NEXT NODE",
+        STATUS: "EXPANDING THE NETWORK..."
       },
       CO_OP: {
-        TITLE_1: "Got an idea?",
-        TITLE_2: "Let's build it.",
-        DESC_1: "I connect concepts across industries. You have the boots-on-the-ground experience.",
-        DESC_2: "Why wait for a massive tech company? Let's team up.",
+        TITLE_1: "Got a friction point?",
+        TITLE_2: "Let's connect it.",
+        DESC_1: "The whole point of an ecosystem is that everything works together. I connect concepts across industries. You have the boots-on-the-ground experience.",
+        DESC_2: "Why wait for a corporation to build another disconnected app? Let's team up.",
         DESC_3: "Service for service. Value for value.",
         CARD_TITLE: "The Co-Op Program",
-        CARD_DESC: "Submit your friction points or app ideas. We build them together.",
+        CARD_DESC: "Submit your daily friction points. If it aligns with the ecosystem, we build the solution together.",
         CTA: "Pitch an Idea"
       }
     },
     FOUNDER: {
       HEADER: {
-        TAG: "THE MANIFESTO // DEC 2025",
-        TITLE_1: "WHO GETS TO SAY",
-        TITLE_2: "WHAT YOU'RE WORTH?"
+        TAG: "THE ORIGIN STORY", 
+        TITLE_1: "BUILT DIFFERENT.",
+        TITLE_2: "LITERALLY."
       },
       CONTENT: {
-        P1_A: "I’m done with the 'termination' culture. Alternative Solutions isn't just an app—",
-        P1_B: "it’s the culture I’ve been dying to have my entire life.",
-        P2: "For 20 years, I watched industries build walls. They degraded the 'job hoppers' because they were afraid of someone who understood the whole map.",
-        BOX_TAG: "THE CONCEPT REPOSITORY",
-        BOX_QUOTE: "\"I spent two decades getting paid to master every concept they tried to hide. I traded college for reality.\"",
-        P3: "We work together. Service for service. Value for value. No separate houses. No fake professionalism. Just people who f****** do the work."
+        // THE NEW NEURODIVERGENT INTRO
+        INTRO: "I don't fit into a standard corporate box. As a Gemini, a twin, and someone navigating the world with ADHD, Autism, and Dyslexia, my entire life has been wired around finding the alternative way to operate. The standard manual never worked for me, so I had to write my own.",
+        
+        THE_HYBRID: "For two decades, I lived the ultimate corporate trap: they hand you a vague title, underpay you, give you a pile of disconnected systems, and expect you to architect their entire process from scratch. They wanted the brain of an analyst and the execution of a developer, all on a discount. I spent years connecting their dots and fixing their broken workflows before I realized I didn't need their permission. I took the skills, ignored their labels, added AI to the mix, and built my own hybrid framework to create the connected ecosystem they never could.",
+        
+        // THE REFINED SUPERPOWER QUOTE
+        BOX_TAG: "PASSIVE ABILITY // THE REWIRING",
+        BOX_QUOTE: "\"Corporate tech is just bad wiring. Where others see a tangled mess of disconnected systems, my AuDHD sees exactly how to rewire them into one unified engine. I don't force bad connections—I build the foundation right from the start.\"",
+        
+        P3: "I'm not here to sell you a gimmick. Every tech company right now is slapping an 'AI' label on their software just to sound cool. I don't build fake AI crap. I use AI internally—as a relentless coding partner—to harness raw processing power and cross-industry knowledge. The result isn't a trendy 'AI app'—it's a high-performance, foundational engine built to actually run your business.",
+
+        // THE NEW NEUROPLASTICITY SECTION
+        THE_MINDSET_TITLE: "TECH WIRING MEETS BRAIN WIRING",
+        THE_MINDSET: "Here is the raw truth: rewiring your business isn't just a tech problem. It's a neuroplasticity problem. Your brain has spent years building deep, rigid neural pathways around surviving chaotic, broken systems. When we drop in a unified framework, you have to actively break those old survival habits and form new pathways to trust the automation. If you aren't willing to adapt your mind and learn a new way to operate, no software is going to save you. The true rewiring has to happen in your tech stack, and in your head.",
+        NEURO_LINK_TEXT: "Explore Neuroplasticity & How the Brain Adapts →",
+        NEURO_LINK_URL: "https://my.clevelandclinic.org/health/articles/neuroplasticity", // A solid, readable medical breakdown
+      },
+      STATS: {
+        TITLE: "ARCHITECT'S TELEMETRY",
+        ROLE: "Lead Solutions Architect",
+        // THE UPGRADED CLASS BUILD
+        CLASS: "Hybrid (Dev + Analyst + Behaviorist + AI)",
+        WIRING: "AuDHD + Dyslexic", 
+        FUEL: "Coffee, Dark Romantasy, Endless Playlists & Inherited Sarcasm",
+        CO_WORKERS: "5 Cats & an 8-Year-Old Boss"
       },
       FOOTER: {
-        TITLE: "Ready to break the bubble?",
-        CTA: "Join The Movement"
+        TITLE: "Ready to build something real?",
+        CTA: "Enter The Ecosystem"
       }
     },
     BLUEPRINT: {

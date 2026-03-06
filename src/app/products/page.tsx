@@ -5,16 +5,16 @@ import { WEBSITE_COPY } from '@/utils/glossary';
 
 export default function ProductsPage() {
   const copy = WEBSITE_COPY.PUBLIC_SITE.ECOSYSTEM;
-  const shiftStudioCopy = WEBSITE_COPY.PUBLIC_SITE.HOME.BENTO.PRODUCT; // Reuses Shift Studio description from home
+  // Pointing specifically to the Shift Studio data object
+  const shiftStudioDetails = WEBSITE_COPY.SHIFT_STUDIO_PAGE;
 
   return (
     <main className="min-h-screen bg-bg-app text-slate-300 relative overflow-hidden font-sans pt-32 pb-24">
       <div className="absolute inset-0 bg-[url('/grid.svg')] bg-center [mask-image:linear-gradient(180deg,white,rgba(255,255,255,0))] opacity-10 pointer-events-none"></div>
-      <div className="absolute top-1/4 right-1/4 w-125 h-125 bg-blue-500/10 rounded-full blur-[150px] pointer-events-none"></div>
-      <div className="absolute bottom-1/4 left-1/4 w-125 h-125 bg-amber-500/10 rounded-full blur-[150px] pointer-events-none"></div>
-
+      
       <div className="relative max-w-6xl mx-auto px-6">
         
+        {/* HEADER SECTION */}
         <div className="text-center mb-24 animate-in fade-in slide-in-from-bottom-8 duration-1000">
           <h1 className="text-white text-5xl md:text-8xl font-black tracking-tightest mb-8 uppercase drop-shadow-[0_0_15px_rgba(255,255,255,0.2)]">
             {copy.HEADER.TITLE}
@@ -24,25 +24,28 @@ export default function ProductsPage() {
           </p>
         </div>
 
+        {/* ACTIVE DEPLOYMENTS SECTOR */}
         <h2 className="text-cyan-400 font-mono text-xl tracking-widest mb-8 uppercase border-b border-cyan-900/50 pb-4 drop-shadow-[0_0_8px_rgba(34,211,238,0.8)]">
           {copy.ACTIVE.TAG}
         </h2>
 
-        <div className="grid md:grid-cols-2 gap-8 mb-32">
-          {/* SHIFT STUDIO */}
+        <div className="grid md:grid-cols-2 gap-8 mb-16">
+          {/* SHIFT STUDIO ENGINE */}
           <Link href="/products/shift-studio" className="group relative bg-bg-app/90 border border-cyan-900/50 hover:border-cyan-400/80 rounded-2xl p-10 overflow-hidden transition-all duration-300 shadow-[0_0_20px_rgba(34,211,238,0.1)] hover:shadow-[0_0_40px_rgba(34,211,238,0.3)]">
             <div className="absolute top-0 right-0 p-6 opacity-10 font-mono text-8xl font-black text-cyan-500 group-hover:scale-110 transition-transform">01</div>
             <div className="inline-block border border-cyan-400/50 bg-cyan-950/50 px-3 py-1 rounded-full font-mono text-cyan-400 text-[10px] tracking-widest mb-6 uppercase shadow-[0_0_10px_rgba(34,211,238,0.3)]">
               {copy.ACTIVE.STATUS}
             </div>
-            <h3 className="text-4xl text-white font-black mb-4 tracking-tight">{shiftStudioCopy.TITLE}</h3>
-            <p className="text-slate-300 leading-relaxed mb-8">{shiftStudioCopy.DESC}</p>
+            <h3 className="text-4xl text-white font-black mb-4 tracking-tight">SHIFT STUDIO</h3>
+            <p className="text-slate-300 leading-relaxed mb-8">
+              {shiftStudioDetails.HERO.SUBHEAD}
+            </p>
             <div className="text-cyan-400 font-bold tracking-wide flex items-center gap-2 group-hover:gap-4 transition-all drop-shadow-[0_0_5px_rgba(34,211,238,0.8)]">
-              {shiftStudioCopy.CTA} <span>→</span>
+              INITIALIZE PROJECT <span>→</span>
             </div>
           </Link>
 
-          {/* CLASSIFIED */}
+          {/* CLASSIFIED / FUTURE NODE */}
           <div className="relative bg-bg-app/50 border border-violet-500/30 border-dashed rounded-2xl p-10 overflow-hidden flex flex-col justify-center items-center text-center shadow-[inset_0_0_30px_rgba(139,92,246,0.05)]">
             <svg className="w-16 h-16 text-violet-500/50 mb-6 animate-pulse" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="1"><path strokeLinecap="round" strokeLinejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" /></svg>
             <h3 className="text-xl text-violet-300 font-bold mb-2">{copy.CLASSIFIED.TITLE}</h3>
@@ -50,7 +53,7 @@ export default function ProductsPage() {
           </div>
         </div>
 
-        {/* THE COLLABORATION */}
+        {/* THE COLLABORATION / GARDEN SECTOR */}
         <div className="bg-bg-app/90 border border-amber-500/30 rounded-3xl p-12 md:p-20 relative overflow-hidden shadow-[0_0_50px_rgba(245,158,11,0.1)]">
           <div className="absolute -top-10 -right-10 w-96 h-96 bg-amber-500/10 rounded-full blur-[100px] pointer-events-none animate-pulse"></div>
 
@@ -58,7 +61,9 @@ export default function ProductsPage() {
             <div>
               <h2 className="text-4xl md:text-5xl font-black text-white mb-6 leading-tight">
                 {copy.CO_OP.TITLE_1}<br/>
-                <span className="text-transparent bg-clip-text bg-linear-to-r from-amber-400 via-orange-500 to-amber-400 animate-text-gradient drop-shadow-[0_0_15px_rgba(245,158,11,0.5)]">{copy.CO_OP.TITLE_2}</span>
+                <span className="text-transparent bg-clip-text bg-linear-to-r from-amber-400 via-orange-500 to-amber-400 animate-text-gradient drop-shadow-[0_0_15px_rgba(245,158,11,0.5)]">
+                    {copy.CO_OP.TITLE_2}
+                </span>
               </h2>
               <div className="space-y-6 text-lg text-slate-300 font-light leading-relaxed">
                 <p>{copy.CO_OP.DESC_1}</p>

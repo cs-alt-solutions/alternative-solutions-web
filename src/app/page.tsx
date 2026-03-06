@@ -2,84 +2,121 @@
 import React from 'react';
 import Link from 'next/link';
 import { WEBSITE_COPY } from '@/utils/glossary';
+import { BrainCircuit, Terminal, Blocks, ArrowRight, Cpu } from 'lucide-react';
 
 export default function HomePage() {
-  // Pulling directly from the single source of truth
   const copy = WEBSITE_COPY.PUBLIC_SITE.HOME;
 
   return (
-    <main className="min-h-screen bg-bg-app text-slate-300 relative overflow-hidden font-sans">
-      <div className="absolute inset-0 bg-[url('/grid.svg')] bg-center [mask-image:linear-gradient(180deg,white,rgba(255,255,255,0))] opacity-10 pointer-events-none"></div>
-      <div className="absolute top-[-10%] left-[-10%] w-150 h-150 bg-cyan-500/10 rounded-full blur-[150px] pointer-events-none animate-pulse"></div>
-      <div className="absolute bottom-[-10%] right-[-10%] w-150 h-150 bg-fuchsia-500/10 rounded-full blur-[150px] pointer-events-none"></div>
+    <main className="min-h-screen bg-bg-app text-slate-300 relative overflow-x-hidden font-sans pt-32 pb-24">
+      {/* Ambient Backgrounds - Updated with canonical Tailwind classes */}
+      <div className="absolute inset-0 bg-[url('/grid.svg')] bg-center [mask-image:linear-gradient(180deg,white,rgba(255,255,255,0))] opacity-10 pointer-events-none" />
+      <div className="absolute top-20 left-10 w-125 h-125 bg-brand-primary/10 rounded-full blur-[150px] pointer-events-none animate-pulse" />
+      <div className="absolute bottom-10 right-10 w-100 h-100 bg-fuchsia-600/10 rounded-full blur-[150px] pointer-events-none" />
 
-      <div className="relative max-w-7xl mx-auto px-6 py-32 md:py-40">
+      <div className="relative max-w-7xl mx-auto px-6">
         
-        <section className="text-center mb-32 animate-in fade-in slide-in-from-bottom-12 duration-1000">
-          <div className="inline-block border border-cyan-400/30 bg-cyan-950/40 px-6 py-2 rounded-full text-cyan-400 text-sm font-bold mb-10 shadow-[0_0_20px_rgba(34,211,238,0.15)] backdrop-blur-sm tracking-widest uppercase">
-            {copy.HERO.TAG}
-          </div>
-          
-          <h1 className="text-white text-6xl md:text-[8rem] font-black tracking-tighter mb-8 leading-none drop-shadow-2xl">
-            {copy.HERO.TITLE_1}<br />
-            <span className="text-transparent bg-clip-text bg-linear-to-r from-cyan-400 via-fuchsia-400 to-amber-400 animate-text-gradient">{copy.HERO.TITLE_2}</span>
+        {/* HERO SECTION */}
+        <section className="mb-20 animate-in fade-in slide-in-from-bottom-8 duration-1000">
+          <h1 className="text-white text-6xl md:text-8xl font-black tracking-tighter mb-6 leading-none uppercase drop-shadow-[0_0_20px_rgba(255,255,255,0.2)]">
+            {copy?.HERO?.TITLE_1 || "BUILDING THE"} <br />
+            <span className="text-transparent bg-clip-text bg-linear-to-r from-brand-primary via-fuchsia-400 to-brand-primary animate-text-gradient">
+              {copy?.HERO?.TITLE_2 || "FOUNDATION."}
+            </span>
           </h1>
-          
-          <p className="text-xl md:text-3xl text-slate-300 max-w-3xl mx-auto leading-relaxed font-light mb-16">
-            {copy.HERO.SUBHEAD}
-            <br className="hidden md:block" />
-            <span className="text-white font-bold italic drop-shadow-[0_0_10px_rgba(255,255,255,0.5)]">{copy.HERO.SUBHEAD_ITALIC}</span>
+          <p className="text-xl text-slate-400 font-light max-w-2xl leading-relaxed">
+            {copy?.HERO?.SUBHEAD || "We don't do cookie-cutter templates. We architect custom, high-performance ecosystems driven by AI and built for scale."}
           </p>
         </section>
 
-        <section className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-32">
+        {/* BENTO GRID */}
+        <div className="grid grid-cols-1 md:grid-cols-12 gap-6">
           
-          {/* PRODUCT */}
-          <Link href="/products/shift-studio" className="md:col-span-2 group relative bg-bg-app/80 backdrop-blur-md border border-cyan-900/50 hover:border-cyan-400/80 rounded-3xl p-10 md:p-16 overflow-hidden transition-all duration-500 shadow-[0_0_30px_rgba(34,211,238,0.05)] hover:shadow-[0_0_50px_rgba(34,211,238,0.25)]">
-            <div className="absolute top-0 right-0 p-8 opacity-10 font-mono text-9xl font-black text-cyan-500 group-hover:scale-110 group-hover:opacity-20 transition-all duration-700">01</div>
-            <h3 className="font-mono text-cyan-400 tracking-widest text-sm mb-6 uppercase drop-shadow-[0_0_8px_rgba(34,211,238,0.8)]">{copy.BENTO.PRODUCT.TAG}</h3>
-            <h2 className="text-4xl md:text-5xl text-white font-black mb-6 tracking-tight">{copy.BENTO.PRODUCT.TITLE}</h2>
-            <p className="text-xl text-slate-300 font-light leading-relaxed max-w-xl mb-12">{copy.BENTO.PRODUCT.DESC}</p>
-            <div className="inline-flex items-center gap-3 text-cyan-400 font-bold tracking-widest uppercase bg-cyan-950/30 px-6 py-3 rounded-full border border-cyan-500/30 group-hover:bg-cyan-400 group-hover:text-black transition-all">
-              {copy.BENTO.PRODUCT.CTA} <span className="group-hover:translate-x-2 transition-transform">→</span>
-            </div>
-          </Link>
-
-          {/* STORY */}
-          <Link href="/founder" className="group relative bg-bg-app/80 backdrop-blur-md border border-fuchsia-900/50 hover:border-fuchsia-400/80 rounded-3xl p-10 overflow-hidden transition-all duration-500 shadow-[0_0_30px_rgba(232,121,249,0.05)] hover:shadow-[0_0_50px_rgba(232,121,249,0.25)] flex flex-col justify-between">
+          {/* MAIN ECOSYSTEM CARD (Spans 8 cols) - Mapped to copy.BENTO.PRODUCT */}
+          <Link 
+            href={copy?.BENTO?.PRODUCT?.LINK || "/products"}
+            className="md:col-span-12 lg:col-span-8 group relative bg-black/40 border border-white/5 hover:border-brand-primary/30 rounded-3xl p-10 overflow-hidden transition-all duration-500 backdrop-blur-md shadow-xl flex flex-col justify-between min-h-87.5"
+          >
+            <div className="absolute top-0 right-0 w-64 h-64 bg-brand-primary/10 rounded-full blur-[80px] group-hover:bg-brand-primary/20 transition-colors duration-500 pointer-events-none" />
+            
             <div>
-              <h3 className="font-mono text-fuchsia-400 tracking-widest text-sm mb-6 uppercase drop-shadow-[0_0_8px_rgba(232,121,249,0.8)]">{copy.BENTO.STORY.TAG}</h3>
-              <h2 className="text-3xl text-white font-black mb-4 tracking-tight">{copy.BENTO.STORY.TITLE}</h2>
-              <p className="text-slate-300 font-light leading-relaxed mb-8">{copy.BENTO.STORY.DESC}</p>
+              <div className="flex items-center gap-3 mb-6">
+                <Blocks className="text-brand-primary" size={28} />
+                <span className="text-[10px] font-mono text-brand-primary uppercase tracking-widest">
+                  {copy?.BENTO?.PRODUCT?.TAG || "THE ENGINE"}
+                </span>
+              </div>
+              <h2 className="text-4xl md:text-5xl font-black text-white uppercase tracking-tight mb-4">
+                {copy?.BENTO?.PRODUCT?.TITLE || "ENTER THE ECOSYSTEM"}
+              </h2>
+              <p className="text-lg text-slate-300 font-light max-w-xl">
+                {copy?.BENTO?.PRODUCT?.DESC || "Stop wrestling with disconnected systems. Explore the hybrid frameworks and AI-powered architecture built to run your business."}
+              </p>
             </div>
-            <div className="text-fuchsia-400 font-bold tracking-widest uppercase text-sm group-hover:text-fuchsia-300 transition-colors">
-              {copy.BENTO.STORY.CTA} <span className="opacity-0 group-hover:opacity-100 transition-opacity ml-2">→</span>
+
+            <div className="mt-12 flex items-center gap-2 text-brand-primary font-mono text-xs uppercase tracking-widest group-hover:gap-4 transition-all duration-300">
+              {copy?.BENTO?.PRODUCT?.CTA || "Initialize Sequence"} <ArrowRight size={16} />
             </div>
           </Link>
 
-          {/* BETA */}
-          <Link href="/blueprint" className="md:col-span-3 group relative bg-bg-app/80 backdrop-blur-md border border-emerald-900/50 hover:border-emerald-400/80 rounded-3xl p-10 md:p-12 overflow-hidden transition-all duration-500 shadow-[0_0_30px_rgba(52,211,153,0.05)] hover:shadow-[0_0_50px_rgba(52,211,153,0.25)] flex flex-col md:flex-row items-start md:items-center justify-between gap-8">
-            <div className="absolute inset-0 bg-[url('/grid.svg')] bg-center opacity-10 group-hover:opacity-30 transition-opacity pointer-events-none"></div>
-            <div className="relative z-10 max-w-3xl">
-              <h3 className="font-mono text-emerald-400 tracking-widest text-sm mb-4 uppercase drop-shadow-[0_0_8px_rgba(52,211,153,0.8)]">{copy.BENTO.BETA.TAG}</h3>
-              <h2 className="text-3xl md:text-4xl text-white font-black mb-4 tracking-tight">{copy.BENTO.BETA.TITLE}</h2>
-              <p className="text-lg text-slate-300 font-light leading-relaxed">{copy.BENTO.BETA.DESC}</p>
+          {/* THE ORIGIN STORY CARD (Spans 4 cols) */}
+          <Link 
+            href={copy?.BENTO?.STORY?.LINK || "/founder"} 
+            className="md:col-span-6 lg:col-span-4 group relative bg-black/40 border border-white/5 hover:border-fuchsia-500/30 rounded-3xl p-8 overflow-hidden transition-all duration-500 backdrop-blur-md shadow-xl flex flex-col justify-between min-h-87.5"
+          >
+            <div className="absolute top-0 right-0 w-32 h-32 bg-fuchsia-500/10 rounded-full blur-[50px] group-hover:bg-fuchsia-500/20 transition-colors duration-500 pointer-events-none" />
+            
+            <div>
+              <div className="w-12 h-12 rounded-xl bg-fuchsia-500/10 border border-fuchsia-500/20 flex items-center justify-center mb-6 text-fuchsia-400 group-hover:scale-110 group-hover:bg-fuchsia-500/20 transition-all duration-500">
+                <BrainCircuit size={24} />
+              </div>
+              <div className="text-[10px] font-mono text-fuchsia-400 uppercase tracking-widest mb-2">
+                {copy?.BENTO?.STORY?.TAG || "THE ARCHITECT"}
+              </div>
+              <h3 className="text-2xl md:text-3xl font-black text-white uppercase tracking-tight mb-3">
+                {copy?.BENTO?.STORY?.TITLE || "BUILT DIFFERENT."}
+              </h3>
+              <p className="text-sm text-slate-400 font-light leading-relaxed">
+                {copy?.BENTO?.STORY?.DESC || "No corporate boxes. No fragile workarounds. Just a relentlessly strong foundation built by a neurodivergent mind."}
+              </p>
             </div>
-            <div className="relative z-10 shrink-0 bg-emerald-400/10 text-emerald-400 border border-emerald-400/50 font-black uppercase tracking-widest px-8 py-4 rounded-lg group-hover:bg-emerald-400 group-hover:text-black transition-all shadow-[0_0_20px_rgba(52,211,153,0.2)]">
-              {copy.BENTO.BETA.CTA}
+
+            <div className="mt-8 flex items-center gap-2 text-fuchsia-400 font-mono text-[10px] uppercase tracking-widest group-hover:gap-4 transition-all duration-300">
+              {copy?.BENTO?.STORY?.CTA || "View Telemetry"} <ArrowRight size={16} />
             </div>
           </Link>
 
-        </section>
+          {/* CO-OP / CONTACT CARD (Spans 6 cols) - Mapped to copy.BENTO.BETA */}
+          <Link
+            href={copy?.BENTO?.BETA?.LINK || "/co-op"}
+            className="md:col-span-6 lg:col-span-6 group relative bg-white/5 border border-white/10 hover:border-white/20 rounded-3xl p-8 overflow-hidden transition-all duration-500 backdrop-blur-md flex flex-col justify-between min-h-50"
+          >
+             <div className="flex justify-between items-start mb-8">
+               <Terminal className="text-slate-400 group-hover:text-white transition-colors" size={28} />
+               <div className="w-2 h-2 rounded-full bg-brand-primary animate-pulse" />
+             </div>
+             <div>
+               <div className="text-[10px] font-mono text-slate-400 uppercase tracking-widest mb-2">
+                 {copy?.BENTO?.BETA?.TAG || "CO-OP MODE"}
+               </div>
+               <h3 className="text-2xl font-black text-white uppercase tracking-tight flex items-center gap-3">
+                 {copy?.BENTO?.BETA?.TITLE || "INITIATE CONTACT"} <ArrowRight size={20} className="opacity-0 -translate-x-4 group-hover:opacity-100 group-hover:translate-x-0 transition-all duration-300" />
+               </h3>
+             </div>
+          </Link>
 
-        <section className="text-center max-w-2xl mx-auto pt-16 border-t border-white/5">
-          <div className="w-12 h-12 bg-white/5 border border-white/10 rounded-full flex items-center justify-center mx-auto mb-8 text-white">
-            <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>
+          {/* AI PHILOSOPHY CARD (Spans 6 cols) */}
+          <div className="md:col-span-6 lg:col-span-6 bg-black/60 border border-brand-primary/20 border-dashed rounded-3xl p-8 backdrop-blur-md flex flex-col justify-center relative overflow-hidden group hover:border-brand-primary/40 transition-colors min-h-50">
+            <Cpu className="text-brand-primary/40 mb-4 group-hover:text-brand-primary/60 transition-colors" size={24} />
+            <h4 className="text-white/50 font-mono text-[10px] tracking-widest uppercase mb-2">
+              {copy?.BENTO?.TECH?.TAG || "INTERNAL WIRING"}
+            </h4>
+            <p className="text-slate-300 font-light text-sm">
+              {copy?.BENTO?.TECH?.DESC || "We don't build fake AI wrappers. We use AI internally as a relentless coding partner to construct bulletproof systems."}
+            </p>
           </div>
-          <h3 className="text-2xl font-bold text-white mb-4">{copy.FOOTER.TITLE}</h3>
-          <p className="text-slate-500 font-mono text-sm tracking-widest uppercase">{copy.FOOTER.COPYRIGHT}</p>
-        </section>
 
+        </div>
       </div>
     </main>
   );
