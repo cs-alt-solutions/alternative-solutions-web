@@ -43,7 +43,7 @@ export default async function ShiftStudioPage() {
             </p>
         </section>
 
-        {/* NEW: THE EVIDENCE (ASYMMETRIC GRID) */}
+        {/* THE EVIDENCE (ASYMMETRIC GRID WITH LAYERED ENGINE) */}
         <section className="mb-32 animate-in fade-in slide-in-from-bottom-12 duration-1000 delay-300">
           <div className="flex items-center justify-center gap-3 mb-16">
             <Camera size={14} className="text-brand-primary" />
@@ -52,25 +52,51 @@ export default async function ShiftStudioPage() {
             </h2>
           </div>
           
-          <div className="space-y-32 max-w-7xl mx-auto">
-            {EVIDENCE.MODULES.map((mod, index) => {
-              // Alternate layout: Even index = Image Left, Odd = Image Right
+          <div className="space-y-32 md:space-y-40 max-w-7xl mx-auto">
+            {EVIDENCE.MODULES.map((mod: any, index: number) => {
               const isImageLeft = index % 2 === 0;
 
               return (
                 <div key={mod.ID} className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-16 items-center">
                   
-                  {/* The Screenshot (Spans 8 columns out of 12 for massive focus) */}
+                  {/* The Screenshot Engine (Handles Single or Layered Compositions) */}
                   <div className={`lg:col-span-8 ${isImageLeft ? 'lg:order-1' : 'lg:order-2'}`}>
-                    <SystemMonitor 
-                      src={mod.IMAGE} 
-                      alt={mod.TITLE} 
-                      caption={mod.CAPTION}
-                      priority={true} 
-                    />
+                    
+                    {mod.SECONDARY_IMAGE ? (
+                      /* LAYERED COMPOSITION (Workshop + Inventory) */
+                      <div className="relative pb-12 md:pb-24 pr-4 md:pr-12">
+                        {/* Background / Main Monitor */}
+                        <div className="w-full md:w-5/6">
+                          <SystemMonitor 
+                            src={mod.IMAGE} 
+                            alt={`${mod.TITLE} Primary`} 
+                            caption={mod.CAPTION}
+                            priority={true} 
+                          />
+                        </div>
+                        {/* Foreground / Overlapping Monitor */}
+                        <div className="w-[85%] md:w-3/4 absolute bottom-0 right-0 z-10 transform translate-y-8 md:translate-y-12">
+                          <SystemMonitor 
+                            src={mod.SECONDARY_IMAGE} 
+                            alt={`${mod.TITLE} Secondary`} 
+                            caption={mod.SECONDARY_CAPTION} 
+                            priority={false} 
+                          />
+                        </div>
+                      </div>
+                    ) : (
+                      /* STANDARD SINGLE COMPOSITION */
+                      <SystemMonitor 
+                        src={mod.IMAGE} 
+                        alt={mod.TITLE} 
+                        caption={mod.CAPTION}
+                        priority={true} 
+                      />
+                    )}
+
                   </div>
 
-                  {/* The Intel Data Panel (Spans 4 columns) */}
+                  {/* The Intel Data Panel */}
                   <div className={`lg:col-span-4 space-y-8 ${isImageLeft ? 'lg:order-2' : 'lg:order-1'}`}>
                     <div>
                       <h3 className="text-3xl font-black uppercase tracking-tight text-white mb-4 leading-none">
@@ -81,7 +107,6 @@ export default async function ShiftStudioPage() {
                       </p>
                     </div>
 
-                    {/* Fun Facts / Data Points */}
                     <div className="space-y-3 pt-6 border-t border-white/5">
                       {mod.FACTS.map((fact: string, i: number) => (
                         <div key={i} className="flex items-start gap-3">
@@ -98,7 +123,7 @@ export default async function ShiftStudioPage() {
           </div>
         </section>
 
-        {/* INTEL FEED (Moved Below the Evidence) */}
+        {/* INTEL FEED (Anchored below Evidence) */}
         <section className="mb-40 max-w-4xl mx-auto">
             <div className="bg-black/40 border border-white/5 rounded-2xl p-6 backdrop-blur-md shadow-2xl">
                  <div className="flex items-center justify-between mb-6 border-b border-white/5 pb-4">

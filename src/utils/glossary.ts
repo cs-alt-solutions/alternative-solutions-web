@@ -176,9 +176,17 @@ export const WEBSITE_COPY = {
           ID: "board",
           IMAGE: "/images/shift-board.png",
           CAPTION: "ACTIVE PROJECT FLOW // KANBAN",
-          TITLE: "The Workshop Board.",
-          DESC: "Stop wondering where the build is at. Track every project phase from raw material to shipped product without opening a separate project management app.",
-          FACTS: ["Visual build stages", "Client timeline tracking", "Zero-friction handoffs"]
+          SECONDARY_IMAGE: "/images/shift-inventory.png", 
+          SECONDARY_CAPTION: "INVENTORY & LOGISTICS // LIVE",
+          
+          // THE UPGRADED NARRATIVE
+          TITLE: "The Workshop & Inventory Core.",
+          DESC: "This isn't just a project board. It's where the making meets the managing. Build your products from raw materials to final pricing, while simultaneously managing the live logistics and inventory that power them—all in one natively connected flow.",
+          FACTS: [
+            "Raw materials to final pricing", 
+            "Live inventory & logistics sync", 
+            "Natively connected workflows"
+          ]
         },
         {
           ID: "ledger",
