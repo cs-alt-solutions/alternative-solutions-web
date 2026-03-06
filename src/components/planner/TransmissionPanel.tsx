@@ -3,7 +3,7 @@
 
 import React, { useState } from 'react';
 import { MessageCircle, Mic, Share2, Loader2, Radio } from 'lucide-react';
-import { createTextBroadcast, uploadMedia } from '@/app/actions';
+import { logPulse } from '@/app/actions';
 
 interface TransmissionPanelProps {
   copy: any;
@@ -17,9 +17,10 @@ export default function TransmissionPanel({ copy, draftTitle }: TransmissionPane
   const handleBroadcast = async () => {
     if (!content) return;
     setIsUploading(true);
-    const formData = new FormData();
-    formData.append('description', content);
-    await createTextBroadcast(formData);
+    
+    // We use the existing logPulse action to record the transmission
+    await logPulse('TRANSMISSION', content);
+    
     setContent('');
     setIsUploading(false);
   };
@@ -32,7 +33,7 @@ export default function TransmissionPanel({ copy, draftTitle }: TransmissionPane
             <Radio size={16} className={isUploading ? 'animate-pulse' : ''} />
           </div>
           <div>
-            <h3 className="text-sm font-bold text-white uppercase tracking-widest">{copy.TRANSMISSION}</h3>
+            <h3 className="text-sm font-bold text-white uppercase tracking-widest">{copy?.TRANSMISSION || 'TRANSMISSION'}</h3>
             <p className="text-[10px] text-text-muted font-mono uppercase tracking-widest">{draftTitle}</p>
           </div>
         </div>
@@ -57,10 +58,10 @@ export default function TransmissionPanel({ copy, draftTitle }: TransmissionPane
         <button
           onClick={handleBroadcast}
           disabled={isUploading || !content}
-          className="bg-brand-primary text-black px-6 py-2 rounded-lg font-bold text-[10px] font-mono uppercase flex items-center gap-2 hover:bg-brand-primary/90 disabled:opacity-50 transition-all"
+          className="bg-brand-primary text-black px-6 py-2 rounded-lg font-bold text-[10px] font-mono uppercase flex items-center gap-2 hover:bg-brand-primary/90 disabled:opacity-50 transition-all shadow-[0_0_15px_rgba(6,182,212,0.3)]"
         >
           {isUploading ? <Loader2 size={14} className="animate-spin" /> : <MessageCircle size={14} />}
-          {copy.BROADCAST}
+          {copy?.BROADCAST || 'BROADCAST'}
         </button>
       </div>
     </div>
