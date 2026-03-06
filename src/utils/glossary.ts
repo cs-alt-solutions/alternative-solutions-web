@@ -129,6 +129,13 @@ export const WEBSITE_COPY = {
     }
   },
 
+  // --- NEW REGISTRY ENTRY: PUBLIC AUDIO LOGS ---
+  PUBLIC_LOGS: {
+    SUBHEAD: "GLOBAL TRANSMISSIONS",
+    TITLE: "PUBLIC AUDIO LOGS",
+    DESC: "Unfiltered transmissions, raw strategy, and architectural updates from the build. No clearance required."
+  },
+
   // --- INTERNAL / PRESERVED BLOCKS ---
   ACCESS_HOOK: {
     FIELDS: {
