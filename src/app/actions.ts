@@ -15,14 +15,27 @@ export async function logPulse(eventType: string, message: string) {
 export async function joinWaitlist(formData: FormData) {
   const email = formData.get('email') as string;
   const source = formData.get('source') as string || 'Workshop';
-  if (!email) return { error: 'Email is required', success: false };
+  
+  if (!email) {
+    return { success: false, error: 'Email is required', isNew: false };
+  }
 
   const { error } = await supabase.from('waitlist').insert([{ email, source, status: 'PENDING' }]);
-  if (error) return { error: error.message, success: false };
+  
+  if (error) {
+    // If the email already exists, Postgres throws a unique violation (23505)
+    // We catch this to treat them as a successful "returning" user
+    if (error.code === '23505') {
+      return { success: true, isNew: false };
+    }
+    return { success: false, error: error.message, isNew: false };
+  }
 
   await logPulse('BETA_REQUEST', `New request from ${email}`);
   revalidatePath('/dashboard');
-  return { success: true };
+  
+  // Successful insert means they are a new entry
+  return { success: true, isNew: true };
 }
 
 // --- STUDIO: BROADCAST ---
