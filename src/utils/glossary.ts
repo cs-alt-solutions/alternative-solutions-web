@@ -129,14 +129,12 @@ export const WEBSITE_COPY = {
     }
   },
 
-  // --- NEW REGISTRY ENTRY: PUBLIC AUDIO LOGS ---
   PUBLIC_LOGS: {
     SUBHEAD: "GLOBAL TRANSMISSIONS",
     TITLE: "PUBLIC AUDIO LOGS",
     DESC: "Unfiltered transmissions, raw strategy, and architectural updates from the build. No clearance required."
   },
 
-  // --- INTERNAL / PRESERVED BLOCKS ---
   ACCESS_HOOK: {
     FIELDS: {
       NAME: "What's your name?",
@@ -191,6 +189,14 @@ export const WEBSITE_COPY = {
     OVERVIEW: { TITLE: "SYSTEM COMMAND", DIRECTIVE: { TITLE: "THE DAILY DIRECTIVE", SUBTITLE: "HEAVY LIFTING ONLY", EMPTY: "ALL SYSTEMS CLEAR. AWAITING COMMAND.", TYPES: { LEAD: "NEW INQUIRY", TASK: "ACTIVE DEV TASK" }, ACTIONS: { PROCESS: "PROCESS", EXECUTE: "EXECUTE" } }, LIVE_FEED: { TITLE: "NETWORK PULSE", NEW_BETA: "WAITING_FOR_PULSE..." }, INFRASTRUCTURE: { TITLE: "TECH STACK OVERWATCH", SUBTITLE: "LIVE SERVICE STATUS", PLATFORMS: { GITHUB: "GITHUB (CODE)", VERCEL: "VERCEL (DEPLOY)", SUPABASE: "SUPABASE (DATA)" } }, PANELS: { ACTION_REQD: "PRIORITY ACTION QUEUE", ENGINEERING: "INTERNAL ENGINEERING" }, TELEMETRY: { TITLE: "NETWORK TELEMETRY", CHART_LABEL: "REQUEST VOLUME", METRICS: { TRAFFIC: "LIVE TRAFFIC", CONVERSION: "CONVERSION" } } },
     MEDIA_HUB: { TITLE: "BROADCAST HUB", SUBTITLE: "GLOBAL COMMS", TABS: { AUDIO: "Audio Logs", SOCIAL: "Social", CAMPAIGNS: "Campaigns" }, STUDIO: { TITLE: "STUDIO COMMAND", NO_NOTES: "No transmissions detected.", BTN_PUBLISH: "AUTHORIZE" } },
     STRATEGIC_PLANNER: { BTN_ADD: "LOG DIRECTIVE", ACTIONS: { AUDIO: "RECORD AUDIO", AUTHORIZE: "AUTHORIZE BUILD" } }
+  },
+  
+  // --- NEW REGISTRY ENTRY: SUPPORT MODULE ---
+  SUPPORT_MODULE: {
+    TITLE: "FUEL THE ENGINE",
+    DESC: "We build independent software without VC funding. Your support goes directly into server costs, development time, and keeping the ecosystem free of corporate fluff.",
+    STRIPE_LINK: "https://buy.stripe.com/test_placeholder", // Replace with actual Stripe link
+    BTN_TEXT: "CONTRIBUTE"
   }
 };
 
