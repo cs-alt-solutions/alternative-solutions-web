@@ -153,7 +153,7 @@ export const WEBSITE_COPY = {
     STATUS: "CURRENTLY BUILDING // SECTOR 01",
     HERO: {
       TITLE: "STOP RUNNING TWO BUSINESSES.",
-      SUBHEAD: "You built this to make things—not to be an IT manager. Shift Studio combines your workshop, your finances, and your sales into a single engine so you can get back to the work that matters.",
+      SUBHEAD: "You didn't start a business to duct-tape five different apps together. Shift Studio unifies your inventory, sales, and finances into a single, high-performance framework so you can focus on what actually drives revenue.",
     },
     PODCAST_FEED: { 
       TITLE: "DEV INTEL FEED", 
