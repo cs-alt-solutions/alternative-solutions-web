@@ -1,9 +1,11 @@
+/* src/components/shift-studio/FaqSection.tsx */
 import React from 'react';
 import { WEBSITE_COPY } from '@/utils/glossary';
 import { CheckCircle2 } from 'lucide-react';
 
 export default function FaqSection() {
-  const { SECTORS } = WEBSITE_COPY.SHIFT_STUDIO_PAGE;
+  // Correctly pathing through PUBLIC_SITE
+  const { SECTORS } = WEBSITE_COPY.PUBLIC_SITE.SHIFT_STUDIO_PAGE;
   const { FAQ } = WEBSITE_COPY.JOIN_PAGE.HYPE;
 
   return (

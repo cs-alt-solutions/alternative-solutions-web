@@ -5,8 +5,8 @@ import { WEBSITE_COPY } from '@/utils/glossary';
 
 export default function ProductsPage() {
   const copy = WEBSITE_COPY.PUBLIC_SITE.ECOSYSTEM;
-  // Pointing specifically to the Shift Studio data object
-  const shiftStudioDetails = WEBSITE_COPY.SHIFT_STUDIO_PAGE;
+  // CORRECTED PATH:
+  const shiftStudioDetails = WEBSITE_COPY.PUBLIC_SITE.SHIFT_STUDIO_PAGE;
 
   return (
     <main className="min-h-screen bg-bg-app text-slate-300 relative overflow-hidden font-sans pt-32 pb-24">
