@@ -20,6 +20,11 @@ export const WEBSITE_COPY = {
     BETA_CENTER: "BETA CENTER",
   },
   
+  // ADD THIS BLOCK:
+  GLOBAL_FOOTER: {
+    LEGAL_ENTITY: "Alternative Solutions IO LLC. All rights reserved.",
+    TAGLINE: "Built by Humans."
+  },
   PUBLIC_SITE: {
     HOME: {
       HERO: {
@@ -45,6 +50,14 @@ export const WEBSITE_COPY = {
         STORY: { TAG: "THE ARCHITECT", TITLE: "BUILT DIFFERENT.", DESC: "No corporate boxes. No fragile workarounds. Just a relentlessly strong foundation built by a neurodivergent mind.", CTA: "View Telemetry", LINK: "/founder" },
         BETA: { TAG: "CO-OP MODE", TITLE: "JOIN THE BUILD", DESC: "I am building the tools I actually want to use. Grab a spot on the waitlist and help me shape the ecosystem.", CTA: "Apply for Access", LINK: "/blueprint" },
         TECH: { TAG: "INTERNAL WIRING", TITLE: "AI AS A PARTNER", DESC: "I don't sell generic AI wrappers. I use AI internally as a relentless coding partner to architect bulletproof systems faster.", CTA: "" }
+      },
+      LAUNCH_TELEMETRY: {
+        COUNTDOWN_LABEL: "BETA ACCESS INITIALIZING IN",
+        COUNTDOWN_TARGET: "2026-04-01T00:00:00", // Your target date
+        SPOTS_LABEL: "EXCLUSIVE FUNDING SLOTS REMAINING",
+        SPOTS_REMAINING: 15, // Update this as they sell
+        SPOTS_TOTAL: 20,
+        CTA_URGENCY: "Secure your legacy rate before the grid closes."
       }
     },
     
@@ -253,7 +266,35 @@ export const WEBSITE_COPY = {
   },
 
   SUPPORT_MODULE: { TITLE: "FUEL THE ENGINE", DESC: "I build independent software without VC funding. Your support goes directly into server costs.", STRIPE_LINK: "https://buy.stripe.com/test_placeholder", BTN_TEXT: "CONTRIBUTE" },
-  FOUNDING_MEMBER: { TITLE: "BECOME A FOUNDING MEMBER", DESC: "This is an early-access beta. Secure your spot at the legacy rate forever.", FUTURE_PRICE: "$49.00", FUTURE_LABEL: "V1.0 PUBLIC RELEASE", MIN_WARNING: "Minimum contribution is $5.00/month.", STRIPE_LINK: "YOUR_LIVE_STRIPE_LINK_HERE", BTN_TEXT: "SECURE MY SPOT", LOCKED_LABEL: "LOCKED LEGACY RATE", BILLING_CYCLE: "RECURRING MONTHLY", SUCCESS: { TITLE: "ACCESS GRANTED.", DESC: "Welcome to the engine.", BTN_ENTER: "INITIALIZE STUDIO", STUDIO_URL: "https://studio.alternativesolutions.com" } }
+  FOUNDING_MEMBER: { 
+    TITLE: "BECOME A FOUNDING MEMBER", 
+    DESC: "This is an early-access beta. Secure your spot at the legacy rate forever.", 
+    FUTURE_PRICE: "$49.00", 
+    FUTURE_LABEL: "V1.0 PUBLIC RELEASE", 
+    MIN_WARNING: "Minimum contribution is $5.00/month.", 
+    STRIPE_LINK: "https://support.alternativesolutions.io/b/bJefZh81R1PY7Nb8jH97G02", 
+    BTN_TEXT: "SECURE MY SPOT", 
+    LOCKED_LABEL: "LOCKED LEGACY RATE", 
+    BILLING_CYCLE: "RECURRING MONTHLY", 
+    SUCCESS: { 
+      TITLE: "ACCESS GRANTED.", 
+      DESC: "Welcome to the engine.", 
+      BTN_ENTER: "INITIALIZE STUDIO", 
+      STUDIO_URL: "https://studio.alternativesolutions.io" 
+    },
+    DISCLAIMER: {
+      TITLE: "BEFORE YOU SUBSCRIBE.",
+      DESC: "Alternative Solutions is a one-person lab. Before you lock in your legacy rate, I need to make sure you know exactly what you're getting into:",
+      POINTS: [
+        "I acknowledge this is a recurring $5/month subscription (and I'm stoked to lock this rate in forever instead of paying $49 later).",
+        "I understand the app isn't live yet. I am joining as an 'Early Funder' to fund the final stretch of development and unlock exclusive 'First 20' perks before the beta even drops.",
+        "I understand that when the V1 Beta does launch, it will be clunky. I will definitely encounter bugs, missing features, and friction.",
+        "I know I am here to help Courtney test and shape the final product, not just consume a finished app."
+      ],
+      BTN_CANCEL: "NOPE, I'M OUT",
+      BTN_CONFIRM: "I'M READY. LET'S BUILD."
+    }
+  }
 };
 
 export interface StrategicGoal { id: string; label: string; color: string; description: string; }

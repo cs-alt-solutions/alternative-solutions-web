@@ -1,16 +1,36 @@
 /* src/components/home/HomeHero.tsx */
-import React from 'react';
+'use client';
+
+import React, { useState, useEffect } from 'react';
 import { WEBSITE_COPY } from '@/utils/glossary';
-import { Waypoints, Sparkle, ArrowRightLeft } from 'lucide-react';
+import { Activity, Zap, Timer } from 'lucide-react';
 
 export default function HomeHero() {
-  const { HERO } = WEBSITE_COPY.PUBLIC_SITE.HOME;
+  const { HERO, LAUNCH_TELEMETRY } = WEBSITE_COPY.PUBLIC_SITE.HOME;
+  const [timeLeft, setTimeLeft] = useState({ days: 0, hours: 0, minutes: 0, seconds: 0 });
+
+  // Logic: Real-time Countdown Timer
+  useEffect(() => {
+    const target = new Date(LAUNCH_TELEMETRY.COUNTDOWN_TARGET).getTime();
+    const interval = setInterval(() => {
+      const now = new Date().getTime();
+      const difference = target - now;
+
+      setTimeLeft({
+        days: Math.floor(difference / (1000 * 60 * 60 * 24)),
+        hours: Math.floor((difference % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60)),
+        minutes: Math.floor((difference % (1000 * 60 * 60)) / (1000 * 60)),
+        seconds: Math.floor((difference % (1000 * 60)) / 1000),
+      });
+    }, 1000);
+    return () => clearInterval(interval);
+  }, [LAUNCH_TELEMETRY.COUNTDOWN_TARGET]);
 
   return (
     <section className="mb-24 pt-10 md:pt-16 animate-in fade-in slide-in-from-bottom-8 duration-1000">
-      <div className="flex flex-col lg:flex-row items-center justify-between gap-12">
+      <div className="flex flex-col lg:flex-row items-center justify-between gap-16">
         
-        {/* LEFT COLUMN: THE TEXT */}
+        {/* LEFT COLUMN: THE VISION */}
         <div className="w-full lg:w-3/5 text-center lg:text-left relative z-10">
           <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded bg-white/5 text-[10px] font-mono font-bold text-white/40 uppercase tracking-widest mb-8 border border-white/10 shadow-inner">
              <div className="w-1.5 h-1.5 bg-brand-primary rounded-full animate-pulse" />
@@ -27,32 +47,63 @@ export default function HomeHero() {
           </p>
         </div>
 
-        {/* RIGHT COLUMN: THE ARCHITECTURAL SILHOUETTE */}
-        <div className="hidden lg:flex w-full lg:w-2/5 justify-center relative pointer-events-none select-none h-96 items-center">
-           
-           {/* Ambient Core Glows */}
-           <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-72 h-72 bg-brand-primary/20 rounded-full blur-[100px] animate-pulse" />
-           <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-48 h-48 bg-fuchsia-500/10 rounded-full blur-[80px]" />
-           
-           {/* Decorative Blueprint Grid (Masked to fade out at edges) */}
-           <div className="absolute inset-0 bg-[linear-gradient(to_right,#06b6d415_1px,transparent_1px),linear-gradient(to_bottom,#06b6d415_1px,transparent_1px)] bg-size-[32px_32px] mask-[radial-gradient(ellipse_at_center,white,transparent_60%)]" />
+        {/* RIGHT COLUMN: THE SYSTEM TELEMETRY */}
+        <div className="w-full lg:w-2/5 relative">
+          <div className="bg-black/60 border border-brand-primary/20 rounded-3xl p-8 backdrop-blur-xl shadow-[0_0_50px_rgba(6,182,212,0.1)] relative overflow-hidden group">
+            
+            {/* Ambient Pulse Background */}
+            <div className="absolute -top-24 -right-24 w-64 h-64 bg-brand-primary/10 rounded-full blur-[80px] group-hover:bg-brand-primary/20 transition-all duration-700" />
+            
+            {/* 1. SPOTS REMAINING COUNTER */}
+            <div className="relative z-10 mb-10 pb-8 border-b border-white/5">
+              <div className="flex items-center gap-2 text-[10px] font-mono text-brand-primary uppercase tracking-[0.2em] mb-4">
+                <Activity size={14} className="animate-pulse" /> {LAUNCH_TELEMETRY.SPOTS_LABEL}
+              </div>
+              <div className="flex items-baseline gap-4">
+                <span className="text-7xl font-black text-white italic tracking-tighter drop-shadow-[0_0_15px_rgba(255,255,255,0.3)]">
+                  {LAUNCH_TELEMETRY.SPOTS_REMAINING}
+                </span>
+                <span className="text-xl font-mono text-white/20 uppercase">/ {LAUNCH_TELEMETRY.SPOTS_TOTAL} SLOTS</span>
+              </div>
+              {/* Progress Bar Visual */}
+              <div className="w-full h-1.5 bg-white/5 rounded-full mt-6 overflow-hidden">
+                <div 
+                  className="h-full bg-linear-to-r from-brand-primary to-fuchsia-500 rounded-full transition-all duration-1000 shadow-[0_0_10px_rgba(6,182,212,0.5)]" 
+                  style={{ width: `${(LAUNCH_TELEMETRY.SPOTS_REMAINING / LAUNCH_TELEMETRY.SPOTS_TOTAL) * 100}%` }}
+                />
+              </div>
+            </div>
 
-           {/* Floating Data Nodes (The I/O Waypoint Silhouette) */}
-           <div className="relative z-10 transform -rotate-12 hover:rotate-0 hover:scale-105 transition-all duration-1000 ease-out flex items-center justify-center">
-             
-             {/* Base Block: The Dotted Lines & Connections */}
-             <Waypoints size={350} strokeWidth={1} className="text-brand-primary/15 drop-shadow-[0_0_40px_rgba(6,182,212,0.3)]" />
-             
-             {/* Inner Core: The Twin Sparks (AI / Duality Concept) */}
-             <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 flex items-center justify-center">
-               <Sparkle size={130} strokeWidth={1} className="text-fuchsia-400/20 drop-shadow-[0_0_30px_rgba(232,121,249,0.3)]" />
-               <Sparkle size={60} strokeWidth={1.5} className="absolute -top-6 -right-6 text-brand-primary/40 drop-shadow-[0_0_20px_rgba(6,182,212,0.5)] animate-pulse" />
-             </div>
-             
-             {/* Orbiting Element: Input / Output */}
-             <ArrowRightLeft size={80} strokeWidth={1.5} className="absolute -bottom-8 -right-8 text-white/10" />
-             
-           </div>
+            {/* 2. THE COUNTDOWN CLOCK */}
+            <div className="relative z-10">
+              <div className="flex items-center gap-2 text-[10px] font-mono text-fuchsia-400 uppercase tracking-[0.2em] mb-6">
+                <Timer size={14} /> {LAUNCH_TELEMETRY.COUNTDOWN_LABEL}
+              </div>
+              <div className="grid grid-cols-4 gap-4">
+                {[
+                  { val: timeLeft.days, label: 'DD' },
+                  { val: timeLeft.hours, label: 'HH' },
+                  { val: timeLeft.minutes, label: 'MM' },
+                  { val: timeLeft.seconds, label: 'SS' }
+                ].map((unit, idx) => (
+                  <div key={idx} className="text-center">
+                    <div className="text-2xl md:text-3xl font-black text-white font-mono tabular-nums leading-none mb-1">
+                      {String(unit.val).padStart(2, '0')}
+                    </div>
+                    <div className="text-[8px] font-mono text-white/30 uppercase tracking-widest">{unit.label}</div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* 3. URGENCY CALLOUT */}
+            <div className="mt-10 pt-6 border-t border-white/5 relative z-10">
+               <p className="text-[10px] font-mono text-brand-primary/60 uppercase leading-relaxed italic">
+                 {LAUNCH_TELEMETRY.CTA_URGENCY}
+               </p>
+            </div>
+
+          </div>
         </div>
 
       </div>

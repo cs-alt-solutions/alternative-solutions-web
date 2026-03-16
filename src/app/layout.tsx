@@ -3,6 +3,7 @@ import type { Metadata } from "next";
 import { Inter, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
 import Navbar from '@/components/Navbar';
+import Footer from '@/components/Footer'; // 1. IMPORT THE FOOTER
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
 const jetbrains = JetBrains_Mono({ subsets: ["latin"], variable: "--font-jetbrains" });
@@ -17,11 +18,12 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html 
       lang="en" 
       className={`${inter.variable} ${jetbrains.variable} scroll-smooth`}
-      data-scroll-behavior="smooth" // This attribute resolves the Next.js console warning
+      data-scroll-behavior="smooth"
     > 
       <body className="antialiased bg-bg-app text-white">
         <Navbar />
         {children}
+        <Footer /> {/* 2. PLUG IN THE FOOTER GLOBALLY */}
       </body>
     </html>
   );
