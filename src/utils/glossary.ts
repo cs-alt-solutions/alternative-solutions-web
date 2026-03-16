@@ -265,7 +265,7 @@ export const WEBSITE_COPY = {
     } 
   },
 
-  SUPPORT_MODULE: { TITLE: "FUEL THE ENGINE", DESC: "I build independent software without VC funding. Your support goes directly into server costs.", STRIPE_LINK: "https://buy.stripe.com/test_placeholder", BTN_TEXT: "CONTRIBUTE" },
+  SUPPORT_MODULE: { TITLE: "FUEL THE ENGINE", DESC: "I build independent software without VC funding. Your support goes directly into server costs.", STRIPE_LINK: "https://support.alternativesolutions.io/b/00wdR981ReCK4AZ2Zn97G00", BTN_TEXT: "CONTRIBUTE" },
   FOUNDING_MEMBER: { 
     TITLE: "BECOME A FOUNDING MEMBER", 
     DESC: "This is an early-access beta. Secure your spot at the legacy rate forever.", 
