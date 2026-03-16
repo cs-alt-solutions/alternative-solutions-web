@@ -17,31 +17,61 @@ export const WEBSITE_COPY = {
     ECOSYSTEM: "The Ecosystem",
     STORY: "The Story",
     WORKSPACE: "Workspace",
-    BETA_CENTER: "BETA CENTER",
+    BETA_CENTER: "THE LAB",
   },
   
-  // ADD THIS BLOCK:
   GLOBAL_FOOTER: {
-    LEGAL_ENTITY: "Alternative Solutions IO LLC. All rights reserved.",
-    TAGLINE: "Built by Humans."
+    LEGAL_ENTITY: "Alternative Solutions I/O LLC. All rights reserved.",
+    TAGLINE: "Built by Humans.",
+    CTA: {
+      TITLE: "CHOOSE YOUR PATH.",
+      DESC: "The foundation is being poured. Enter the lab to claim your founder's seat, become a monthly backer, or fuel the engine.",
+      BTN_TEXT: "ENTER THE LAB",
+      LINK: "/blueprint"
+    }
   },
+
   PUBLIC_SITE: {
     HOME: {
       HERO: {
         TAG: "SYSTEM INITIALIZATION",
         TITLE_1: "BUILDING THE",
         TITLE_2: "FOUNDATION.",
-        SUBHEAD: "I don't do cookie-cutter templates. I architect custom, high-performance ecosystems driven by AI and built for scale."
+        SUBHEAD: "I don't do cookie-cutter templates. I architect custom, high-performance ecosystems driven by AI and built for scale.",
+        CTA_PRIMARY: "Claim Your Seat",
+        CTA_PRIMARY_LINK: "/blueprint",
+        CTA_SECONDARY: "Explore the Ecosystem",
+        CTA_SECONDARY_LINK: "/products"
+      },
+      AUTHORITY_BANNER: {
+        TEXT: "BUILT ON ENTERPRISE-GRADE INFRASTRUCTURE",
+        STACK: [
+          { name: "NEXT.JS", desc: "The engine. Makes the whole ecosystem load lightning fast." },
+          { name: "SUPABASE", desc: "The vault. Where all your data is locked down and secured." },
+          { name: "VERCEL", desc: "The grid. Keeps the system online 24/7 without a hiccup." },
+          { name: "STRIPE", desc: "The bank. Enterprise-grade checkout so you get paid safely." },
+          { name: "GITHUB", desc: "The blueprint room. Where every line of code history is stored." },
+          { name: "VS CODE", desc: "The workbench. Where the actual architecture is written." }
+        ]
       },
       PROBLEM_STATEMENT: {
         TAG: "THE REALITY CHECK",
         TITLE: "You are running a business on duct tape.",
         DESC: "Paying for 8 different apps that don't talk to each other isn't an ecosystem. It's a headache. I build unified engines that actually share the same brain."
       },
+      METHODOLOGY: {
+        TAG: "THE PROCESS",
+        TITLE: "HOW THE ENGINE IS BUILT.",
+        STEPS: [
+          { title: "1. The Audit", desc: "I map out every piece of duct tape holding your current workflow together to find the friction." },
+          { title: "2. The Wiring", desc: "I architect a custom, unified system using enterprise-grade code and AI automation." },
+          { title: "3. The Deployment", desc: "You get the keys to a single, intelligent command center that runs your entire operation." }
+        ]
+      },
       FLAGSHIP: {
-        TAG: "FOR THE SOLO MAKER",
+        TAG: "FOR THE SMALL BUSINESS",
         TITLE: "MEET SHIFT STUDIO",
-        DESC: "You are a one-person powerhouse making products from home, not a corporate warehouse. Stop guessing your profit margins and connect your raw materials, daily builds, and finances into one intelligent command center.",
+        DESC: "You are a small business or a solo powerhouse making things work from home, not a corporate warehouse backed by millions. Stop guessing your profit margins and connect your raw materials, daily builds, and finances into one intelligent command center.",
         CTA: "Explore Shift Studio",
         LINK: "/products/shift-studio"
       },
@@ -53,9 +83,9 @@ export const WEBSITE_COPY = {
       },
       LAUNCH_TELEMETRY: {
         COUNTDOWN_LABEL: "BETA ACCESS INITIALIZING IN",
-        COUNTDOWN_TARGET: "2026-04-01T00:00:00", // Your target date
+        COUNTDOWN_TARGET: "2026-04-01T00:00:00",
         SPOTS_LABEL: "EXCLUSIVE FUNDING SLOTS REMAINING",
-        SPOTS_REMAINING: 19, // Update this as they sell
+        SPOTS_REMAINING: 19, 
         SPOTS_TOTAL: 20,
         CTA_URGENCY: "Secure your legacy rate before the grid closes."
       }
@@ -95,26 +125,70 @@ export const WEBSITE_COPY = {
     },
 
     BLUEPRINT: {
-      HEADER: { TAG: "THE LAB • REWARD PROTOCOL", TITLE_1: "POKE A", TITLE_2: "HOLE.", DESC: "The software you use every day was built to keep you in a bubble of 'good enough.' I am here to pop it." },
-      GLITCHBOT: { TAG: "SYSTEM INTERCEPT • GLITCH_BOT", TITLE: "\"I am the bridge.\"", DESC: "Courtney writes the code. You break the software. I process the friction logs." },
+      HEADER: { 
+        TAG: "THE LAB • ARCHITECT PROTOCOL", 
+        TITLE_1: "ENTER THE", 
+        TITLE_2: "LABORATORY.", 
+        DESC: "Alternative Solutions isn't just a single app—it's an active workshop. I am building an entire ecosystem of different tools and resources designed specifically for small businesses and the 'small humans' starting from nothing. Our first flagship build is Shift Studio. Welcome to the drafting table." 
+      },
+      THE_PLEDGE: {
+        TITLE_1: "100% Independent.",
+        TITLE_2: "100% Yours.",
+        DESC: "I started Alternative Solutions I/O LLC to escape the standard corporate tech trap. I don't have VC investors or millions in the bank. I am literally building this from my rental house, starting from nothing. When you secure a seat, you aren't just buying one piece of software. You are funding my ability to continuously build and release a whole suite of alternative tools for everyday humans fighting to build their own futures."
+      },
       REWARDS: {
-        TITLE: "You build the bricks.\nYou keep the keys.",
-        DESC: "Log the friction, get XP. Earn ranks to unlock permanent rewards.",
+        TITLE: "The Perks",
         RANKS: [
-          { title: "Operative", desc: "You're in the room. You see the build." },
-          { title: "Architect", desc: "You own the software. Permanent access." },
-          { title: "Apex", desc: "You're on the board. We build the future." }
+          { title: "Founding Architect", desc: "Lock in the $5/mo V1.0 legacy rate for life. You were here when it was just a blueprint." },
+          { title: "Lab Partner", desc: "You get a direct line to the drafting table. Vote on features, test early builds, and tell me exactly what's broken." },
+          { title: "Apex Contributor", desc: "Immortalize your support. Your name or alias is permanently hardcoded into the 'Built By' page of the final platform." }
         ]
       },
-      FOOTER: { TITLE: "Ready to see what’s outside the bubble?", CTA: "Initiate Connection" }
+      FUNDING_PATHS: {
+        TITLE: "CHOOSE YOUR PATH",
+        SUBTITLE: "Three ways to help build the foundation.",
+        PATH_1: {
+          TAG: "V1 BETA ACCESS",
+          TITLE: "THE BUILDER",
+          PRICE: "$5.00",
+          PERIOD: "/ month",
+          DESC: "You need the tools. Lock in the legacy rate for our first release (Shift Studio), get beta access as it drops, and secure your spot for everything else I build next.",
+          BTN_TEXT: "SECURE MY SEAT"
+        },
+        PATH_2: {
+          TAG: "MONTHLY SUPPORT",
+          TITLE: "THE BACKER",
+          PRICE: "Custom",
+          PERIOD: "/ month",
+          DESC: "You believe in independent software. Set your own monthly amount to help cover development time. You'll be added to the Foundation Roster, and you can cancel anytime with one click.",
+          BTN_TEXT: "BECOME A BACKER",
+          LINK: "https://support.alternativesolutions.io/b/dRm5kD4PF8em2sRgQd97G03" 
+        },
+        PATH_3: {
+          TAG: "ONE-TIME TIP",
+          TITLE: "THE BOOST",
+          PRICE: "Custom",
+          PERIOD: "one-time",
+          DESC: "You just want to throw some fuel in the tank today. A one-time tip to keep the coffee flowing and the code compiling.",
+          BTN_TEXT: "SEND A BOOST",
+          LINK: "https://support.alternativesolutions.io/b/00wdR981ReCK4AZ2Zn97G00"
+        }
+      },
+      ROSTER: {
+        TAG: "LIVE TELEMETRY",
+        TITLE: "THE FOUNDATION ROSTER",
+        DESC: "To the early adopters keeping the lights on and the code compiling: thank you. You are building this foundation with me. (Contributors can choose to remain anonymous).",
+        EMPTY_STATE: "The grid is waiting. Be the first to initialize the foundation."
+      },
+      FOOTER: { TITLE: "Ready to join the foundation?", CTA: "Secure Your Architect Seat" }
     },
 
     SHIFT_STUDIO_PAGE: {
       PRODUCT_NAME: "SHIFT STUDIO",
       STATUS: "CURRENTLY BUILDING • SECTOR 01",
       HERO: {
-        TITLE: "BUILT FOR THE SOLO MAKER.",
-        SUBHEAD: "You are a one-person powerhouse making products from home, not a corporate warehouse. Stop guessing your profit margins and connect your raw materials, daily builds, and finances into one intelligent command center.",
+        TITLE: "BUILT FOR THE SMALL BUSINESS & SOLO MAKER.",
+        SUBHEAD: "You are a small business or a solo powerhouse making things work from home, not a corporate warehouse backed by millions. Stop guessing your profit margins and connect your raw materials, daily builds, and finances into one intelligent command center.",
       },
       ROI: {
         TITLE: "What are you actually paying for?",
@@ -251,7 +325,7 @@ export const WEBSITE_COPY = {
     PROJECT_BOARD: { NOT_FOUND: "PROJECT MISSING", ADD_TASK: "NEW TASK", COLUMNS: { TODO: "TODO", IN_PROGRESS: "BUILDING", REVIEW: "TESTING", DONE: "SHIPPED" } }, 
     OVERVIEW: { 
       TITLE: "SYSTEM COMMAND", 
-      DIRECTIVE: { TITLE: "THE DAILY DIRECTIVE", SUBTITLE: "HEAVY LIFTING ONLY", EMPTY: "ALL SYSTEMS CLEAR. AWAITING COMMAND.", TYPES: { LEAD: "NEW INQUquiry", TASK: "ACTIVE DEV TASK" }, ACTIONS: { PROCESS: "PROCESS", EXECUTE: "EXECUTE" } }, 
+      DIRECTIVE: { TITLE: "THE DAILY DIRECTIVE", SUBTITLE: "HEAVY LIFTING ONLY", EMPTY: "ALL SYSTEMS CLEAR. AWAITING COMMAND.", TYPES: { LEAD: "NEW INQUIRY", TASK: "ACTIVE DEV TASK" }, ACTIONS: { PROCESS: "PROCESS", EXECUTE: "EXECUTE" } }, 
       LIVE_FEED: { TITLE: "NETWORK PULSE", NEW_BETA: "WAITING_FOR_PULSE..." }, 
       INFRASTRUCTURE: { TITLE: "TECH STACK OVERWATCH", SUBTITLE: "LIVE SERVICE STATUS", PLATFORMS: { GITHUB: "GITHUB (CODE)", VERCEL: "VERCEL (DEPLOY)", SUPABASE: "SUPABASE (DATA)" } }, 
       PANELS: { ACTION_REQD: "PRIORITY ACTION QUEUE", ENGINEERING: "INTERNAL ENGINEERING" }, 

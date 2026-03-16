@@ -70,13 +70,14 @@ export default function PricingCard({
             </div>
           </div>
 
+          {/* FIX: Replaced solid 'btn-brand' with the transparent-to-solid hover class logic */}
           <button 
             onClick={handleOpenModal}
-            className="btn-brand flex items-center justify-center gap-3 py-4 rounded-lg w-full mt-4 hover:shadow-[0_0_20px_rgba(6,182,212,0.4)] transition-all group"
+            className="flex items-center justify-center gap-2 w-full py-4 mt-4 text-xs font-bold font-mono uppercase tracking-widest rounded-xl bg-brand-primary/10 text-brand-primary border border-brand-primary/30 hover:bg-brand-primary hover:text-black hover:shadow-[0_0_20px_rgba(6,182,212,0.4)] transition-all group"
           >
-            <Zap size={16} className="text-brand-primary group-hover:animate-pulse" />
+            <Zap size={16} className="group-hover:text-black transition-colors group-hover:animate-pulse" />
             {btnText} 
-            <ArrowRight size={16} />
+            <ArrowRight size={14} className="group-hover:translate-x-1 transition-transform" />
           </button>
 
         </div>
