@@ -26,13 +26,25 @@ export const WEBSITE_COPY = {
         TAG: "SYSTEM INITIALIZATION",
         TITLE_1: "BUILDING THE",
         TITLE_2: "FOUNDATION.",
-        SUBHEAD: "We build custom systems that actually work, so you can stop wrestling with your software and get back to work."
+        SUBHEAD: "I don't do cookie-cutter templates. I architect custom, high-performance ecosystems driven by AI and built for scale."
+      },
+      PROBLEM_STATEMENT: {
+        TAG: "THE REALITY CHECK",
+        TITLE: "You are running a business on duct tape.",
+        DESC: "Paying for 8 different apps that don't talk to each other isn't an ecosystem. It's a headache. I build unified engines that actually share the same brain."
+      },
+      FLAGSHIP: {
+        TAG: "FOR THE SOLO MAKER",
+        TITLE: "MEET SHIFT STUDIO",
+        DESC: "You are a one-person powerhouse making products from home, not a corporate warehouse. Stop guessing your profit margins and connect your raw materials, daily builds, and finances into one intelligent command center.",
+        CTA: "Explore Shift Studio",
+        LINK: "/products/shift-studio"
       },
       BENTO: {
-        PRODUCT: { TAG: "THE TOOLS", TITLE: "ENTER THE ECOSYSTEM", DESC: "Explore the frameworks we built to help you run your business without the headache.", CTA: "See the Tools", LINK: "/products" },
-        STORY: { TAG: "THE ARCHITECT", TITLE: "BUILT DIFFERENT.", DESC: "No corporate fluff. Just a strong foundation built by someone who thinks a little differently.", CTA: "My Story", LINK: "/founder" },
-        BETA: { TAG: "JOIN THE BUILD", TITLE: "THE CO-OP", DESC: "Help us build better software. Join the environment and start creating.", CTA: "Let's Talk", LINK: "/co-op" },
-        TECH: { TAG: "HOW WE WORK", TITLE: "AI PARTNERSHIP", DESC: "We use AI as a partner to build bulletproof systems fast.", CTA: "" }
+        PRODUCT: { TAG: "THE ECOSYSTEM", TITLE: "ALL SYSTEMS. ONE BRAIN.", DESC: "Explore the full suite of hybrid frameworks built to run your business without the friction.", CTA: "See the Network", LINK: "/products" },
+        STORY: { TAG: "THE ARCHITECT", TITLE: "BUILT DIFFERENT.", DESC: "No corporate boxes. No fragile workarounds. Just a relentlessly strong foundation built by a neurodivergent mind.", CTA: "View Telemetry", LINK: "/founder" },
+        BETA: { TAG: "CO-OP MODE", TITLE: "JOIN THE BUILD", DESC: "I am building the tools I actually want to use. Grab a spot on the waitlist and help me shape the ecosystem.", CTA: "Apply for Access", LINK: "/blueprint" },
+        TECH: { TAG: "INTERNAL WIRING", TITLE: "AI AS A PARTNER", DESC: "I don't sell generic AI wrappers. I use AI internally as a relentless coding partner to architect bulletproof systems faster.", CTA: "" }
       }
     },
     
@@ -70,7 +82,7 @@ export const WEBSITE_COPY = {
     },
 
     BLUEPRINT: {
-      HEADER: { TAG: "THE LAB • REWARD PROTOCOL", TITLE_1: "POKE A", TITLE_2: "HOLE.", DESC: "The software you use every day was built to keep you in a bubble of 'good enough.' We are here to pop it." },
+      HEADER: { TAG: "THE LAB • REWARD PROTOCOL", TITLE_1: "POKE A", TITLE_2: "HOLE.", DESC: "The software you use every day was built to keep you in a bubble of 'good enough.' I am here to pop it." },
       GLITCHBOT: { TAG: "SYSTEM INTERCEPT • GLITCH_BOT", TITLE: "\"I am the bridge.\"", DESC: "Courtney writes the code. You break the software. I process the friction logs." },
       REWARDS: {
         TITLE: "You build the bricks.\nYou keep the keys.",
@@ -88,12 +100,12 @@ export const WEBSITE_COPY = {
       PRODUCT_NAME: "SHIFT STUDIO",
       STATUS: "CURRENTLY BUILDING • SECTOR 01",
       HERO: {
-        TITLE: "ALL YOUR TOOLS. ONE BRAIN.",
-        SUBHEAD: "Stop running your business on a mess of apps. Shift Studio connects your projects, inventory, and finances into one unified engine, so you can stop guessing and start growing.",
+        TITLE: "BUILT FOR THE SOLO MAKER.",
+        SUBHEAD: "You are a one-person powerhouse making products from home, not a corporate warehouse. Stop guessing your profit margins and connect your raw materials, daily builds, and finances into one intelligent command center.",
       },
       ROI: {
         TITLE: "What are you actually paying for?",
-        SUBTITLE: "We've pre-loaded the industry baseline. Select your own tools to see your custom 'Tech Tax' in real-time.",
+        SUBTITLE: "I've pre-loaded the industry baseline. Select your own tools to see your custom 'Tech Tax' in real-time.",
         STEP_1_LABEL: "What's currently in your stack?",
         STEP_2_LABEL: "Hours lost to manual tasks weekly?",
         STEP_3_LABEL: "What is your hourly rate?",
@@ -131,8 +143,8 @@ export const WEBSITE_COPY = {
       },
       MATRIX: {
         TAG: "THE REAL DIFFERENCE",
-        TITLE: "How we stack up.",
-        SUBTITLE: "You didn't start a business to be an accountant. Here is how we fix the headache of using ten different apps.",
+        TITLE: "How it stacks up.",
+        SUBTITLE: "You didn't start a business to be an accountant. Here is how I fix the headache of using ten different apps.",
         HEAD_STANDARD: "Disconnected Systems",
         HEAD_SHIFT: "Shift Studio Native",
         SECTIONS: [
@@ -146,7 +158,7 @@ export const WEBSITE_COPY = {
           ]},
           { TITLE: "YOUR MONEY", ROWS: [
             { feature: "Monthly Bills", duct: "Paying for 5-8 separate apps.", shift: "One spot to access everything.", image: "/images/diff-bills.png" }, 
-            { feature: "Maintenance Overhead", duct: "Spending hours fixing broken links.", shift: "We handle the wiring; you build.", image: "/images/diff-maint.png" }
+            { feature: "Maintenance Overhead", duct: "Spending hours fixing broken links.", shift: "I handle the wiring; you build.", image: "/images/diff-maint.png" }
           ]}
         ]
       },
@@ -206,7 +218,7 @@ export const WEBSITE_COPY = {
 
   PUBLIC_LOGS: { SUBHEAD: "GLOBAL TRANSMISSIONS", TITLE: "PUBLIC AUDIO LOGS", DESC: "Unfiltered transmissions, raw strategy, and architectural updates from the build." },
   
-  ACCESS_HOOK: { FIELDS: { NAME: "What's your name?", EMAIL: "Email Address", PHONE: "Phone Number (Optional)", }, BTN_SUBMIT: "REQUEST CLEARANCE", SUCCESS_MSG: "ACCESS GRANTED. WELCOME TO THE BUILD.", AUTO_SIGNUP: "HEY, YOU WEREN'T ON THE LIST YET—BUT WE SIGNED YOU UP. WELCOME IN." },
+  ACCESS_HOOK: { FIELDS: { NAME: "What's your name?", EMAIL: "Email Address", PHONE: "Phone Number (Optional)", }, BTN_SUBMIT: "REQUEST CLEARANCE", SUCCESS_MSG: "ACCESS GRANTED. WELCOME TO THE BUILD.", AUTO_SIGNUP: "HEY, YOU WEREN'T ON THE LIST YET—BUT I SIGNED YOU UP. WELCOME IN." },
   
   JOIN_PAGE: { 
     SUCCESS_MSG: "YOU'RE ON THE LIST. STAY TUNED.", 
@@ -226,7 +238,7 @@ export const WEBSITE_COPY = {
     PROJECT_BOARD: { NOT_FOUND: "PROJECT MISSING", ADD_TASK: "NEW TASK", COLUMNS: { TODO: "TODO", IN_PROGRESS: "BUILDING", REVIEW: "TESTING", DONE: "SHIPPED" } }, 
     OVERVIEW: { 
       TITLE: "SYSTEM COMMAND", 
-      DIRECTIVE: { TITLE: "THE DAILY DIRECTIVE", SUBTITLE: "HEAVY LIFTING ONLY", EMPTY: "ALL SYSTEMS CLEAR. AWAITING COMMAND.", TYPES: { LEAD: "NEW INQUIRY", TASK: "ACTIVE DEV TASK" }, ACTIONS: { PROCESS: "PROCESS", EXECUTE: "EXECUTE" } }, 
+      DIRECTIVE: { TITLE: "THE DAILY DIRECTIVE", SUBTITLE: "HEAVY LIFTING ONLY", EMPTY: "ALL SYSTEMS CLEAR. AWAITING COMMAND.", TYPES: { LEAD: "NEW INQUquiry", TASK: "ACTIVE DEV TASK" }, ACTIONS: { PROCESS: "PROCESS", EXECUTE: "EXECUTE" } }, 
       LIVE_FEED: { TITLE: "NETWORK PULSE", NEW_BETA: "WAITING_FOR_PULSE..." }, 
       INFRASTRUCTURE: { TITLE: "TECH STACK OVERWATCH", SUBTITLE: "LIVE SERVICE STATUS", PLATFORMS: { GITHUB: "GITHUB (CODE)", VERCEL: "VERCEL (DEPLOY)", SUPABASE: "SUPABASE (DATA)" } }, 
       PANELS: { ACTION_REQD: "PRIORITY ACTION QUEUE", ENGINEERING: "INTERNAL ENGINEERING" }, 
@@ -240,7 +252,7 @@ export const WEBSITE_COPY = {
     } 
   },
 
-  SUPPORT_MODULE: { TITLE: "FUEL THE ENGINE", DESC: "We build independent software without VC funding. Your support goes directly into server costs.", STRIPE_LINK: "https://buy.stripe.com/test_placeholder", BTN_TEXT: "CONTRIBUTE" },
+  SUPPORT_MODULE: { TITLE: "FUEL THE ENGINE", DESC: "I build independent software without VC funding. Your support goes directly into server costs.", STRIPE_LINK: "https://buy.stripe.com/test_placeholder", BTN_TEXT: "CONTRIBUTE" },
   FOUNDING_MEMBER: { TITLE: "BECOME A FOUNDING MEMBER", DESC: "This is an early-access beta. Secure your spot at the legacy rate forever.", FUTURE_PRICE: "$49.00", FUTURE_LABEL: "V1.0 PUBLIC RELEASE", MIN_WARNING: "Minimum contribution is $5.00/month.", STRIPE_LINK: "YOUR_LIVE_STRIPE_LINK_HERE", BTN_TEXT: "SECURE MY SPOT", LOCKED_LABEL: "LOCKED LEGACY RATE", BILLING_CYCLE: "RECURRING MONTHLY", SUCCESS: { TITLE: "ACCESS GRANTED.", DESC: "Welcome to the engine.", BTN_ENTER: "INITIALIZE STUDIO", STUDIO_URL: "https://studio.alternativesolutions.com" } }
 };
 

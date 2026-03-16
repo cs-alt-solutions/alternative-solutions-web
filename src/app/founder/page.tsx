@@ -10,9 +10,9 @@ export default function FounderPage() {
   return (
     <main className="min-h-screen bg-bg-app text-slate-300 relative overflow-x-hidden font-sans pt-32 pb-24">
       {/* Dynamic Background Atmosphere */}
-      <div className="absolute inset-0 bg-[url('/grid.svg')] bg-center [mask-image:linear-gradient(180deg,white,rgba(255,255,255,0))] opacity-10 pointer-events-none" />
-      <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-fuchsia-600/10 rounded-full blur-[150px] pointer-events-none animate-pulse" />
-      <div className="absolute bottom-1/4 left-0 w-[500px] h-[500px] bg-brand-primary/10 rounded-full blur-[150px] pointer-events-none" />
+      <div className="absolute inset-0 bg-[url('/grid.svg')] bg-center mask-[linear-gradient(180deg,white,rgba(255,255,255,0))] opacity-10 pointer-events-none" />
+      <div className="absolute top-0 right-0 w-150 h-150 bg-fuchsia-600/10 rounded-full blur-[150px] pointer-events-none animate-pulse" />
+      <div className="absolute bottom-1/4 left-0 w-125 h-125 bg-brand-primary/10 rounded-full blur-[150px] pointer-events-none" />
 
       <div className="relative max-w-7xl mx-auto px-6">
         
