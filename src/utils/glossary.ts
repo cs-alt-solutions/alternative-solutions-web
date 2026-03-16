@@ -55,7 +55,7 @@ export const WEBSITE_COPY = {
         COUNTDOWN_LABEL: "BETA ACCESS INITIALIZING IN",
         COUNTDOWN_TARGET: "2026-04-01T00:00:00", // Your target date
         SPOTS_LABEL: "EXCLUSIVE FUNDING SLOTS REMAINING",
-        SPOTS_REMAINING: 15, // Update this as they sell
+        SPOTS_REMAINING: 19, // Update this as they sell
         SPOTS_TOTAL: 20,
         CTA_URGENCY: "Secure your legacy rate before the grid closes."
       }
