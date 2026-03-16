@@ -5,7 +5,6 @@ import { WEBSITE_COPY } from '@/utils/glossary';
 import SystemMonitor from '@/components/core/SystemMonitor';
 import { Camera, CheckCircle2 } from 'lucide-react';
 
-// Import the Deep Dive components here!
 import PhilosophySection from '../PhilosophySection';
 import FeatureCards from '../FeatureCards';
 import RoadmapTimeline from '../RoadmapTimeline';
@@ -22,7 +21,6 @@ export default function SystemCapture() {
   return (
     <div className="w-full space-y-32 pb-12 animate-in fade-in duration-1000">
       
-      {/* 1. THE SCREENSHOT GALLERY */}
       {EVIDENCE.MODULES.map((mod: any, idx: number) => {
         const isEven = idx % 2 === 0;
         
@@ -32,10 +30,10 @@ export default function SystemCapture() {
               
               <div className="w-full lg:w-5/12 space-y-8">
                 <div className="space-y-4">
-                  <div className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-full border text-[10px] font-mono uppercase tracking-widest shadow-inner w-fit ${BGs[idx]} ${COLORS[idx]} ${BORDERs[idx]}`}>
+                  <div className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-full border text-[10px] font-mono uppercase tracking-widest shadow-inner w-fit ${BGs[idx % 3]} ${COLORS[idx % 3]} ${BORDERs[idx % 3]}`}>
                     <Camera size={14} className={idx === 0 ? "animate-pulse" : ""} /> {EVIDENCE.TAG}
                   </div>
-                  <h4 className={`text-xs md:text-sm font-mono uppercase tracking-[0.3em] font-bold ${COLORS[idx]}`}>
+                  <h4 className={`text-xs md:text-sm font-mono uppercase tracking-[0.3em] font-bold ${COLORS[idx % 3]}`}>
                     {mod.CAPTION}
                   </h4>
                 </div>
@@ -52,8 +50,8 @@ export default function SystemCapture() {
                 <div className="space-y-4 pt-8 border-t border-white/10">
                   {mod.FACTS.map((fact: string, i: number) => (
                     <div key={i} className="flex items-center gap-4 text-base text-white/90 font-medium">
-                      <div className={`p-1 rounded-full border ${BGs[idx]} ${COLORS[idx]} ${BORDERs[idx]}`}>
-                         <CheckCircle2 size={14} style={{ filter: `drop-shadow(0 0 5px ${SHADOW_COLORS[idx]})` }} /> 
+                      <div className={`p-1 rounded-full border ${BGs[idx % 3]} ${COLORS[idx % 3]} ${BORDERs[idx % 3]}`}>
+                         <CheckCircle2 size={14} style={{ filter: `drop-shadow(0 0 5px ${SHADOW_COLORS[idx % 3]})` }} /> 
                       </div>
                       {fact}
                     </div>
@@ -67,7 +65,7 @@ export default function SystemCapture() {
                     <SystemMonitor src={mod.IMAGES[0]} alt={mod.TITLE} caption={undefined} priority={idx === 0} />
                   </div>
                 ) : (
-                  <div className="relative h-full min-h-[350px] md:min-h-[500px]">
+                  <div className="relative h-full min-h-87.5 md:min-h-125">
                     <div className="absolute top-0 left-0 w-[85%] z-0 transform transition-all duration-700 group-hover:-translate-y-4 group-hover:-translate-x-2 drop-shadow-[0_20px_50px_rgba(0,0,0,0.8)]">
                       <SystemMonitor src={mod.IMAGES[0]} alt={`${mod.TITLE} Primary`} caption={undefined} priority={idx === 0} />
                     </div>
@@ -78,12 +76,11 @@ export default function SystemCapture() {
                 )}
               </div>
             </div>
-            <div className={`absolute top-1/2 ${isEven ? 'right-[5%]' : 'left-[5%]'} w-[600px] h-[600px] ${GLOW_ORBS[idx]} rounded-full blur-[150px] -translate-y-1/2 pointer-events-none transition-opacity duration-700 opacity-40 group-hover:opacity-80`} />
+            <div className={`absolute top-1/2 ${isEven ? 'right-[5%]' : 'left-[5%]'} w-150 h-150 ${GLOW_ORBS[idx % 3]} rounded-full blur-[150px] -translate-y-1/2 pointer-events-none transition-opacity duration-700 opacity-40 group-hover:opacity-80`} />
           </div>
         );
       })}
 
-      {/* 2. THE DEEP DIVE (Now integrated directly into the Product Tour Tab) */}
       <div className="pt-32 mt-32 border-t border-white/10 relative z-20">
          <PhilosophySection />
          <FeatureCards />

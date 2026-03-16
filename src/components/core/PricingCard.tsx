@@ -16,7 +16,6 @@ export default function PricingCard({
   stripeLink,
   btnText,
 }: PricingCardProps) {
-  // Pulling the future price data from the glossary
   const { FOUNDING_MEMBER } = WEBSITE_COPY;
 
   const handleJoin = () => {
@@ -27,7 +26,6 @@ export default function PricingCard({
     <div className="w-full max-w-sm mx-auto animate-in fade-in duration-500">
       <div className="flex flex-col gap-4 text-left">
         
-        {/* THE PRICE ANCHOR (Future Price) */}
         <div className="flex flex-col items-center justify-center pt-2 pb-1 border-b border-white/5">
           <span className="text-[10px] font-mono text-text-muted uppercase tracking-widest mb-1">
             {FOUNDING_MEMBER.FUTURE_LABEL}
@@ -42,9 +40,8 @@ export default function PricingCard({
             YOUR LOCKED LEGACY RATE
           </label>
           
-          {/* THE BETA PRICE */}
           <div className="w-full bg-black/50 border border-brand-primary/40 rounded-lg py-6 text-center shadow-[inset_0_0_20px_rgba(6,182,212,0.05)] relative overflow-hidden">
-            <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-brand-primary to-transparent opacity-50"></div>
+            <div className="absolute top-0 left-0 w-full h-1 bg-linear-to-r from-transparent via-brand-primary to-transparent opacity-50"></div>
             <span className="text-5xl font-black text-white">${minAmount}</span>
             <span className="text-sm font-mono text-brand-primary uppercase tracking-widest ml-2">/ month</span>
           </div>

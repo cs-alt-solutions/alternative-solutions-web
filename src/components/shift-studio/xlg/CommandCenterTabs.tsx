@@ -10,7 +10,6 @@ import SystemCapture from './SystemCapture';
 export default function CommandCenterTabs() {
   const [activeTab, setActiveTab] = useState<'audit' | 'matrix' | 'capture'>('audit');
 
-  // MODIFIED: Changed label to THE SAVINGS ENGINE
   const tabs = [
     { id: 'audit', label: 'THE SAVINGS ENGINE', icon: Calculator },
     { id: 'matrix', label: 'THE DIFFERENCE', icon: LayoutGrid },
@@ -53,7 +52,7 @@ export default function CommandCenterTabs() {
         ))}
       </div>
 
-      <div className="w-full min-h-[800px] relative z-10 max-w-6xl mx-auto">
+      <div className="w-full min-h-200 relative z-10 max-w-6xl mx-auto">
         {activeTab === 'audit' && (
           <div className="animate-in fade-in zoom-in-95 duration-500 h-full">
             <RoiCalculator />

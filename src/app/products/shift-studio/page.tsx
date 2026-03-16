@@ -13,10 +13,10 @@ export default function ShiftStudioPage() {
       <div className="fixed inset-0 bg-stardust pointer-events-none opacity-20" />
       
       {/* Ambient Color Glows to match the brand */}
-      <div className="absolute top-[10%] right-[5%] w-[500px] h-[500px] bg-fuchsia-600/10 rounded-full blur-[150px] pointer-events-none animate-pulse" />
-      <div className="absolute bottom-[20%] left-[5%] w-[600px] h-[600px] bg-brand-primary/10 rounded-full blur-[150px] pointer-events-none" />
+      <div className="absolute top-[10%] right-[5%] w-125 h-125 bg-fuchsia-600/10 rounded-full blur-[150px] pointer-events-none animate-pulse" />
+      <div className="absolute bottom-[20%] left-[5%] w-150 h-150 bg-brand-primary/10 rounded-full blur-[150px] pointer-events-none" />
 
-      <div className="relative z-10 max-w-[1600px] mx-auto px-6 w-full flex flex-col items-center">
+      <div className="relative z-10 max-w-400 mx-auto px-6 w-full flex flex-col items-center">
         
         {/* HERO SECTION */}
         <section className="text-center max-w-5xl mx-auto mb-16 pt-6">
