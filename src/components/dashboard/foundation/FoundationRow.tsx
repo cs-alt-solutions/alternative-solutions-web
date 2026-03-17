@@ -3,13 +3,14 @@
 
 import React, { useState } from 'react';
 import { WEBSITE_COPY } from '@/utils/glossary';
-import { MoreVertical, Mail, UserCheck, ShieldAlert, Zap, Coffee, Flame } from 'lucide-react';
+import { MoreVertical, Mail, UserCheck, ShieldAlert, Zap, Coffee, Flame, ArrowRight } from 'lucide-react';
 
 export interface Supporter {
   id: string;
   name?: string | null;
   email: string;
   tier: 'BUILDER' | 'BACKER' | 'BOOST' | 'OBSERVER';
+  origin_tier?: 'BUILDER' | 'BACKER' | 'BOOST' | 'OBSERVER'; // Added field
   status: 'ACTIVE' | 'PENDING' | 'CANCELLED';
   amount: number;
 }
@@ -28,18 +29,16 @@ export default function FoundationRow({ entry }: { entry: Supporter }) {
   };
 
   const details = getTierDetails(entry.tier);
+  const isPromoted = entry.origin_tier && entry.origin_tier !== entry.tier;
 
   return (
     <tr className="border-b border-white/5 hover:bg-white/5 transition-colors group">
-      
-      {/* Name */}
       <td className="py-4 px-4">
         <span className={`text-sm font-bold ${entry.name ? 'text-white' : 'text-white/30 italic'}`}>
           {entry.name || '—'}
         </span>
       </td>
 
-      {/* Contact */}
       <td className="py-4 px-4">
         <div className="flex items-center gap-3">
           <div className={`w-8 h-8 rounded border flex items-center justify-center shrink-0 ${details.bg} ${details.color}`}>
@@ -49,14 +48,22 @@ export default function FoundationRow({ entry }: { entry: Supporter }) {
         </div>
       </td>
       
-      {/* Tier */}
       <td className="py-4 px-4">
-        <span className={`text-[10px] font-mono uppercase tracking-widest px-2 py-1 rounded bg-black/40 border border-white/5 ${details.color}`}>
-          {details.label}
-        </span>
+        <div className="flex items-center gap-2">
+          {isPromoted && (
+            <>
+              <span className="text-[8px] font-mono uppercase text-white/20 line-through">
+                {entry.origin_tier}
+              </span>
+              <ArrowRight size={10} className="text-white/20" />
+            </>
+          )}
+          <span className={`text-[10px] font-mono uppercase tracking-widest px-2 py-1 rounded bg-black/40 border border-white/5 ${details.color}`}>
+            {details.label}
+          </span>
+        </div>
       </td>
       
-      {/* Status */}
       <td className="py-4 px-4">
         <div className="flex items-center gap-2">
           <div className={`w-1.5 h-1.5 rounded-full ${entry.status === 'PENDING' ? 'bg-orange-500 animate-pulse' : entry.status === 'CANCELLED' ? 'bg-red-500' : 'bg-green-500'}`} />
@@ -66,17 +73,12 @@ export default function FoundationRow({ entry }: { entry: Supporter }) {
         </div>
       </td>
 
-      {/* Amount */}
       <td className="py-4 px-4 text-[10px] font-mono text-white/60 tracking-widest">
         {entry.amount > 0 ? `$${entry.amount.toFixed(2)}` : '—'}
       </td>
 
-      {/* Actions */}
       <td className="py-4 px-4 text-right relative">
-        <button 
-          onClick={() => setShowActions(!showActions)}
-          className="p-2 text-text-muted hover:text-white transition-colors"
-        >
+        <button onClick={() => setShowActions(!showActions)} className="p-2 text-text-muted hover:text-white transition-colors">
           <MoreVertical size={16} />
         </button>
 

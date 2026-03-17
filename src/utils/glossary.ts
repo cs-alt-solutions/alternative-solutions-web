@@ -325,6 +325,15 @@ export const WEBSITE_COPY = {
       TITLE: "Foundation Command", 
       STATS_TITLE: "LIVE REVENUE METRICS",
       ROSTER_TITLE: "THE FOUNDATION ROSTER",
+      // ADDED: New Stat Labels
+      STATS: {
+        MRR: "Monthly Recurring",
+        BUILDERS: "Founding Builders",
+        BACKERS: "Monthly Backers",
+        BOOSTS: "One-Time Boosts",
+        FUEL: "Total Engine Fuel",
+        OBSERVERS: "Observers"
+      },
       COLUMNS: { NAME: "Name", CONTACT: "Contact", TIER: "Support Tier", STATUS: "Status", AMOUNT: "Amount", ACTIONS: "Actions" },
       ROW_ACTIONS: { INVITE: "Grant Beta Access", UPGRADE: "Upgrade Tier", QUARANTINE: "Remove User" } 
     },

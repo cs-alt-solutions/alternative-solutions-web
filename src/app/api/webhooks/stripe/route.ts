@@ -4,15 +4,18 @@ import { NextResponse } from 'next/server';
 import { supabase } from '@/utils/supabase';
 import Stripe from 'stripe';
 
-// Initialize the Stripe server client
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY as string, {
-  apiVersion: '2026-02-25.clover', // Locked to the installed NPM package version
-});
-
 export async function POST(req: Request) {
+  const secretKey = process.env.STRIPE_SECRET_KEY;
+  if (!secretKey) {
+    console.error('CRITICAL: STRIPE_SECRET_KEY is missing.');
+    return new NextResponse('Configuration Error', { status: 500 });
+  }
+
+  const stripe = new Stripe(secretKey, {
+    apiVersion: '2026-02-25.clover',
+  });
+
   const body = await req.text();
-  
-  // FIX: Await the headers Promise before calling .get()
   const headersList = await headers();
   const signature = headersList.get('stripe-signature');
 
@@ -23,7 +26,6 @@ export async function POST(req: Request) {
       throw new Error('Missing Stripe signature or webhook secret.');
     }
     
-    // Verify the event came legitimately from Stripe
     event = stripe.webhooks.constructEvent(
       body,
       signature,
@@ -34,34 +36,40 @@ export async function POST(req: Request) {
     return new NextResponse(`Webhook Error: ${error.message}`, { status: 400 });
   }
 
-  // Handle successful checkout sessions
   if (event.type === 'checkout.session.completed') {
     const session = event.data.object as Stripe.Checkout.Session;
-
-    // Extract the data we need
-    const customerEmail = session.customer_details?.email;
+    const customerEmail = session.customer_details?.email?.toLowerCase().trim();
     const customerName = session.customer_details?.name;
-    const amountTotal = (session.amount_total || 0) / 100; // Convert cents to dollars
-    const mode = session.mode; // 'payment' (one-time) or 'subscription' (recurring)
+    const amountTotal = (session.amount_total || 0) / 100;
+    const mode = session.mode;
 
     if (customerEmail) {
-      // Determine Tier Logic
-      let tier = 'OBSERVER';
+      // 1. Determine the New Tier
+      let newTier = 'OBSERVER';
       if (mode === 'subscription') {
-        tier = amountTotal === 5 ? 'BUILDER' : 'BACKER';
+        newTier = amountTotal === 5 ? 'BUILDER' : 'BACKER';
       } else if (mode === 'payment') {
-        tier = 'BOOST';
+        newTier = 'BOOST';
       }
 
-      // Upsert the data into your Supabase ledger
+      // 2. Fetch existing user to see if they have an origin_tier
+      const { data: existingUser } = await supabase
+        .from('supporters')
+        .select('origin_tier')
+        .eq('email', customerEmail)
+        .single();
+
+      // 3. Upsert with Promotion Logic
       const { error } = await supabase
         .from('supporters')
         .upsert({
           email: customerEmail,
           name: customerName || null,
-          tier: tier,
+          tier: newTier,
           status: 'ACTIVE',
           amount: amountTotal,
+          // Only set origin_tier if they are a brand new user
+          origin_tier: existingUser?.origin_tier || newTier
         }, { onConflict: 'email' });
 
       if (error) {
