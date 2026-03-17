@@ -320,22 +320,32 @@ export const WEBSITE_COPY = {
 
   DASHBOARD: { 
     COMMON: { BRAND_VERSION: "Alt OS v1.0", STATUS_ONLINE: "SYSTEM ONLINE", ACTION_REVIEW: "REVIEW" }, 
-    SIDEBAR: { GROUPS: { COMMAND: "Command", OPERATIONS: "Operations", STUDIO: "Studio", SYSTEM: "System" }, OVERVIEW: "Overview", FOUNDATION: "Foundation Command", TASKS: "Strategic Planner", BROADCAST: "Broadcast Hub", AGENTS: "AI Agents", CONFIG: "Config", EXIT: "← Exit to Public Site" }, 
+    SIDEBAR: { GROUPS: { INFRASTRUCTURE: "Infrastructure", COMMAND: "Command", OPERATIONS: "Operations", STUDIO: "Studio", SYSTEM: "System" }, OVERVIEW: "Overview", FOUNDATION: "Foundation Command", TASKS: "Strategic Planner", BROADCAST: "Broadcast Hub", AGENTS: "AI Agents", CONFIG: "Config", EXIT: "← Exit to Public Site" }, 
     FOUNDATION: { 
       TITLE: "Foundation Command", 
       STATS_TITLE: "LIVE REVENUE METRICS",
       ROSTER_TITLE: "THE FOUNDATION ROSTER",
-      // ADDED: New Stat Labels
+      TABS: { ROSTER: "Roster & Revenue", WIDGETS: "Public Widgets" }, // <-- ADDED TABS
       STATS: {
         MRR: "Monthly Recurring",
         BUILDERS: "Founding Builders",
         BACKERS: "Monthly Backers",
         BOOSTS: "One-Time Boosts",
         FUEL: "Total Engine Fuel",
-        OBSERVERS: "Observers"
+        OBSERVERS: "Observers",
+        CLIENTS: "Project Clients"
       },
       COLUMNS: { NAME: "Name", CONTACT: "Contact", TIER: "Support Tier", STATUS: "Status", AMOUNT: "Amount", ACTIONS: "Actions" },
-      ROW_ACTIONS: { INVITE: "Grant Beta Access", UPGRADE: "Upgrade Tier", QUARANTINE: "Remove User" } 
+      ROW_ACTIONS: { INVITE: "Grant Beta Access", UPGRADE: "Upgrade Tier", QUARANTINE: "Remove User", TOGGLE_ANON: "Toggle Anonymity" } // <-- ADDED ANON ACTION
+    },
+    INFRASTRUCTURE_HUB: {
+      TITLE: "Infrastructure Command",
+      DESC: "Mission control for your core tech stack, vaults, and deployment environments.",
+      CATEGORIES: {
+        CORE: "Core Engine",
+        FINANCE: "Financial & Billing",
+        CODE: "Version Control"
+      }
     },
     PROJECT_BOARD: { NOT_FOUND: "PROJECT MISSING", ADD_TASK: "NEW TASK", COLUMNS: { TODO: "TODO", IN_PROGRESS: "BUILDING", REVIEW: "TESTING", DONE: "SHIPPED" } }, 
     OVERVIEW: { 

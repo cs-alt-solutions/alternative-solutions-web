@@ -130,3 +130,23 @@ export async function getActiveProjects() {
   }
   return data;
 }
+// --- FOUNDATION COMMAND: ANONYMITY TOGGLE ---
+export async function toggleAnonymity(id: string, currentDisplayName: string, originalName: string | null) {
+  // If they are already anonymous, restore their original name (or default to 'Unknown' if no name was provided)
+  const newName = currentDisplayName === 'Anonymous' ? (originalName || 'Anonymous Builder') : 'Anonymous';
+  
+  const { error } = await supabase
+    .from('supporters')
+    .update({ display_name: newName })
+    .eq('id', id);
+
+  if (error) {
+    console.error('Failed to toggle anonymity:', error);
+    return { success: false };
+  }
+
+  // Instantly update the dashboard and the public blueprint page
+  revalidatePath('/dashboard/foundation');
+  revalidatePath('/blueprint');
+  return { success: true };
+}

@@ -38,18 +38,38 @@ export async function POST(req: Request) {
 
   if (event.type === 'checkout.session.completed') {
     const session = event.data.object as Stripe.Checkout.Session;
+    
+    // Extract Custom Fields
+    const projectField = session.custom_fields?.find(f => f.key === 'project_name');
+    const projectName = projectField?.text?.value || 'Organic';
+    
+    // THE FIX: Added '?.' to safely check custom labels without crashing
+    const displayField = session.custom_fields?.find(f => 
+      f.label.custom?.toLowerCase().includes('display') || 
+      f.label.custom?.toLowerCase().includes('anonymous')
+    );
+    const customDisplayName = displayField?.text?.value;
+
     const customerEmail = session.customer_details?.email?.toLowerCase().trim();
     const customerName = session.customer_details?.name;
     const amountTotal = (session.amount_total || 0) / 100;
-    const mode = session.mode;
+    const isSubscription = session.mode === 'subscription';
+
+    // Figure out what to call them publicly
+    let finalDisplayName = 'Anonymous Builder';
+    if (customDisplayName && customDisplayName.toLowerCase() !== 'anonymous') {
+      finalDisplayName = customDisplayName;
+    } else if (customDisplayName?.toLowerCase() === 'anonymous') {
+      finalDisplayName = 'Anonymous';
+    } else if (customerName) {
+      finalDisplayName = customerName;
+    }
 
     if (customerEmail) {
       // 1. Determine the New Tier
-      let newTier = 'OBSERVER';
-      if (mode === 'subscription') {
-        newTier = amountTotal === 5 ? 'BUILDER' : 'BACKER';
-      } else if (mode === 'payment') {
-        newTier = 'BOOST';
+      let tier = isSubscription ? (amountTotal === 5 ? 'BUILDER' : 'BACKER') : 'BOOST';
+      if (!isSubscription && projectField) {
+        tier = 'CLIENT'; 
       }
 
       // 2. Fetch existing user to see if they have an origin_tier
@@ -65,11 +85,12 @@ export async function POST(req: Request) {
         .upsert({
           email: customerEmail,
           name: customerName || null,
-          tier: newTier,
+          display_name: finalDisplayName,
+          tier: tier,
           status: 'ACTIVE',
           amount: amountTotal,
-          // Only set origin_tier if they are a brand new user
-          origin_tier: existingUser?.origin_tier || newTier
+          source: projectName,
+          origin_tier: existingUser?.origin_tier || tier
         }, { onConflict: 'email' });
 
       if (error) {

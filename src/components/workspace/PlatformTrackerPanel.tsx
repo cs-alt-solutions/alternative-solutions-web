@@ -1,43 +1,51 @@
 /* src/components/workspace/PlatformTrackerPanel.tsx */
 import React from 'react';
-import { Github, Triangle, Database, ExternalLink, Activity } from 'lucide-react';
+import { Github, Triangle, Database, ExternalLink, Activity, CreditCard } from 'lucide-react';
 
 export default function PlatformTrackerPanel({ copy }: { copy: any }) {
   const platforms = [
     { 
-      id: 'github', 
-      name: copy.PLATFORMS.GITHUB, 
-      icon: Github, 
-      status: 'Synced', 
-      detail: 'Repo: cs-alt-solutions', 
-      link: 'https://github.com/cs-alt-solutions' 
-    },
-    { 
       id: 'vercel', 
-      name: copy.PLATFORMS.VERCEL, 
+      name: copy.PLATFORMS.VERCEL || 'Vercel', 
       icon: Triangle, 
       status: 'Live', 
       detail: 'Domain: alternativesolutions.io', 
-      link: 'https://vercel.com/geminitwinsolutions' 
+      link: 'https://vercel.com/' 
     },
     { 
       id: 'supabase', 
-      name: copy.PLATFORMS.SUPABASE, 
+      name: copy.PLATFORMS.SUPABASE || 'Supabase', 
       icon: Database, 
       status: 'Pro Plan', 
       detail: 'Status: Operational', 
-      link: 'https://supabase.com' 
+      link: 'https://supabase.com/dashboard' 
+    },
+    { 
+      id: 'stripe', 
+      name: 'Stripe', 
+      icon: CreditCard, 
+      status: 'Active', 
+      detail: 'Webhooks: 200 OK', 
+      link: 'https://dashboard.stripe.com/' 
+    },
+    { 
+      id: 'github', 
+      name: copy.PLATFORMS.GITHUB || 'GitHub', 
+      icon: Github, 
+      status: 'Synced', 
+      detail: 'Repo: alternative-solutions-web', 
+      link: 'https://github.com/cs-alt-solutions' 
     }
   ];
 
   return (
-    <div className="bg-black/40 border border-white/5 rounded-xl overflow-hidden shadow-2xl backdrop-blur-sm flex flex-col h-125">
-      <div className="p-4 border-b border-white/5 bg-white/2 flex items-center justify-between">
+    <div className="bg-black/40 border border-white/5 rounded-xl overflow-hidden shadow-2xl backdrop-blur-sm flex flex-col h-full">
+      <div className="p-4 border-b border-white/5 bg-white/5 flex items-center justify-between">
         <div className="flex items-center gap-3">
           <Activity size={16} className="text-brand-primary" />
           <div>
-            <h3 className="font-bold text-xs uppercase tracking-widest text-white/80">{copy.TITLE}</h3>
-            <p className="text-[9px] font-mono text-white/40 uppercase tracking-widest">{copy.SUBTITLE}</p>
+            <h3 className="font-bold text-xs uppercase tracking-widest text-white/80">{copy.TITLE || 'Tech Stack Overwatch'}</h3>
+            <p className="text-[9px] font-mono text-white/40 uppercase tracking-widest">{copy.SUBTITLE || 'Live Service Status'}</p>
           </div>
         </div>
       </div>

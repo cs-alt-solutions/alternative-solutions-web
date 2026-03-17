@@ -8,7 +8,7 @@ import { WEBSITE_COPY } from '@/utils/glossary';
 import NavItem from '@/components/core/NavItem';
 import { 
   LayoutDashboard, Settings, Search, Bell, 
-  Cpu, ShieldCheck, Ticket, Inbox, FileText, Mic, CalendarDays, Rocket 
+  Cpu, ShieldCheck, Ticket, Inbox, FileText, Mic, CalendarDays, Rocket, Database 
 } from 'lucide-react';
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
@@ -22,6 +22,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     if (pathname === '/dashboard/broadcast') return sidebarCopy.BROADCAST;
     if (pathname === '/dashboard/tasks') return sidebarCopy.TASKS;
     if (pathname === '/dashboard/foundation') return sidebarCopy.FOUNDATION;
+    if (pathname === '/dashboard/infrastructure') return "INFRASTRUCTURE";
     if (pathname === '/dashboard') return overviewCopy.TITLE;
     return "SYSTEM COMMAND";
   };
@@ -62,6 +63,10 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           <div className="text-[10px] font-mono text-white/40 uppercase tracking-widest mb-2 px-3 mt-8">
             {sidebarCopy.GROUPS.SYSTEM}
           </div>
+          
+          <Link href="/dashboard/infrastructure">
+            <NavItem icon={Database} label="Infrastructure" active={pathname === '/dashboard/infrastructure'} />
+          </Link>
           <NavItem icon={Cpu} label={sidebarCopy.AGENTS} />
           <NavItem icon={Settings} label={sidebarCopy.CONFIG} />
         </nav>

@@ -6,7 +6,7 @@ import Link from 'next/link';
 import { WEBSITE_COPY } from '@/utils/glossary';
 import { Activity, Zap, Timer, ArrowRight, Database, Triangle, CreditCard, Github, Code2, Layers } from 'lucide-react';
 
-export default function HomeHero() {
+export default function HomeHero({ liveSpotsRemaining = 20 }: { liveSpotsRemaining?: number }) {
   const { HERO, LAUNCH_TELEMETRY, AUTHORITY_BANNER } = WEBSITE_COPY.PUBLIC_SITE.HOME;
   const [timeLeft, setTimeLeft] = useState({ days: 0, hours: 0, minutes: 0, seconds: 0 });
 
@@ -85,14 +85,14 @@ export default function HomeHero() {
               </div>
               <div className="flex items-baseline gap-4">
                 <span className="text-7xl font-black text-white italic tracking-tighter drop-shadow-[0_0_15px_rgba(255,255,255,0.3)]">
-                  {LAUNCH_TELEMETRY.SPOTS_REMAINING}
+                  {liveSpotsRemaining}
                 </span>
                 <span className="text-xl font-mono text-white/20 uppercase">/ {LAUNCH_TELEMETRY.SPOTS_TOTAL} SLOTS</span>
               </div>
               <div className="w-full h-1.5 bg-white/5 rounded-full mt-6 overflow-hidden">
                 <div 
                   className="h-full bg-linear-to-r from-brand-primary to-fuchsia-500 rounded-full transition-all duration-1000 shadow-[0_0_10px_rgba(6,182,212,0.5)]" 
-                  style={{ width: `${(LAUNCH_TELEMETRY.SPOTS_REMAINING / LAUNCH_TELEMETRY.SPOTS_TOTAL) * 100}%` }}
+                  style={{ width: `${(liveSpotsRemaining / LAUNCH_TELEMETRY.SPOTS_TOTAL) * 100}%` }}
                 />
               </div>
             </div>
@@ -137,7 +137,6 @@ export default function HomeHero() {
          
          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-x-6 gap-y-10 w-full justify-items-center transition-all duration-500">
            
-           {/* Notice the typing update here to { name, desc } */}
            {AUTHORITY_BANNER.STACK.map((tech: { name: string, desc: string }, idx: number) => {
              const getTechStyling = (t: string) => {
                switch(t) {
