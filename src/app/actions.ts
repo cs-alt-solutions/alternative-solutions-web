@@ -4,6 +4,28 @@
 import { supabase } from '@/utils/supabase';
 import { revalidatePath } from 'next/cache';
 import { Directive } from '@/utils/glossary';
+/* ADD TO src/app/actions.ts */
+import { createClient } from '@/utils/supabase/server';
+import { redirect } from 'next/navigation';
+
+// --- AUTH COMMANDS ---
+export async function loginAdmin(formData: FormData) {
+  const email = formData.get('email') as string;
+  const password = formData.get('password') as string;
+  const supabase = await createClient();
+
+  const { error } = await supabase.auth.signInWithPassword({
+    email,
+    password,
+  });
+
+  if (error) {
+    return { success: false, message: 'Invalid credentials. Access denied.' };
+  }
+
+  // If successful, boot them into the command center
+  redirect('/dashboard');
+}
 
 // --- SYSTEM COMMAND: PULSE ---
 export async function logPulse(eventType: string, message: string) {
