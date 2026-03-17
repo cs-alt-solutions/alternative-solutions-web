@@ -320,8 +320,14 @@ export const WEBSITE_COPY = {
 
   DASHBOARD: { 
     COMMON: { BRAND_VERSION: "Alt OS v1.0", STATUS_ONLINE: "SYSTEM ONLINE", ACTION_REVIEW: "REVIEW" }, 
-    SIDEBAR: { GROUPS: { COMMAND: "Command", OPERATIONS: "Operations", STUDIO: "Studio", SYSTEM: "System" }, OVERVIEW: "Overview", WAITLIST: "Beta Command", TASKS: "Strategic Planner", BROADCAST: "Broadcast Hub", AGENTS: "AI Agents", CONFIG: "Config", EXIT: "← Exit to Public Site" }, 
-    WAITLIST: { TITLE: "Beta Command", LEAD_COUNT: "Total Scanned", ROW_ACTIONS: { INVITE: "Send Invite", QUARANTINE: "Quarantine User" } }, 
+    SIDEBAR: { GROUPS: { COMMAND: "Command", OPERATIONS: "Operations", STUDIO: "Studio", SYSTEM: "System" }, OVERVIEW: "Overview", FOUNDATION: "Foundation Command", TASKS: "Strategic Planner", BROADCAST: "Broadcast Hub", AGENTS: "AI Agents", CONFIG: "Config", EXIT: "← Exit to Public Site" }, 
+    FOUNDATION: { 
+      TITLE: "Foundation Command", 
+      STATS_TITLE: "LIVE REVENUE METRICS",
+      ROSTER_TITLE: "THE FOUNDATION ROSTER",
+      COLUMNS: { NAME: "Name", CONTACT: "Contact", TIER: "Support Tier", STATUS: "Status", AMOUNT: "Amount", ACTIONS: "Actions" },
+      ROW_ACTIONS: { INVITE: "Grant Beta Access", UPGRADE: "Upgrade Tier", QUARANTINE: "Remove User" } 
+    },
     PROJECT_BOARD: { NOT_FOUND: "PROJECT MISSING", ADD_TASK: "NEW TASK", COLUMNS: { TODO: "TODO", IN_PROGRESS: "BUILDING", REVIEW: "TESTING", DONE: "SHIPPED" } }, 
     OVERVIEW: { 
       TITLE: "SYSTEM COMMAND", 
@@ -331,7 +337,38 @@ export const WEBSITE_COPY = {
       PANELS: { ACTION_REQD: "PRIORITY ACTION QUEUE", ENGINEERING: "INTERNAL ENGINEERING" }, 
       TELEMETRY: { TITLE: "NETWORK TELEMETRY", CHART_LABEL: "REQUEST VOLUME", METRICS: { TRAFFIC: "LIVE TRAFFIC", CONVERSION: "CONVERSION" } } 
     }, 
-    MEDIA_HUB: { TITLE: "BROADCAST Hub", SUBTITLE: "GLOBAL COMMS", TABS: { AUDIO: "Audio Logs", SOCIAL: "Social", CAMPAIGNS: "Campaigns" }, STUDIO: { TITLE: "STUDIO COMMAND", NO_NOTES: "No transmissions detected.", BTN_PUBLISH: "AUTHORIZE" } }, 
+    MEDIA_HUB: { 
+      TITLE: "BROADCAST Hub", 
+      SUBTITLE: "GLOBAL COMMS", 
+      TABS: { AUDIO: "Audio Logs", SOCIAL: "Social", CAMPAIGNS: "Campaigns" }, 
+      STUDIO: { TITLE: "STUDIO COMMAND", NO_NOTES: "No transmissions detected.", BTN_PUBLISH: "AUTHORIZE" },
+      CAMPAIGNS: {
+        TITLE: "COMPOSE DISPATCH",
+        AUDIENCE_LABEL: "TARGET ROSTER:",
+        AUDIENCES: {
+          ALL: "Entire Roster",
+          FOUNDERS: "Founding Architects",
+          OBSERVERS: "Waitlist / Observers"
+        },
+        EDITOR_TABS: { WRITE: "WRITE (MD)", PREVIEW: "PREVIEW" },
+        AI_ASSIST: "SPARK AI: DRAFT RELEASE NOTES",
+        PLACEHOLDERS: {
+          SUBJECT: "Transmission Subject...",
+          BODY: "Draft your transmission here. Markdown is supported..."
+        },
+        ACTIONS: {
+          SCHEDULE: "SCHEDULE",
+          SEND: "SEND TRANSMISSION"
+        },
+        SIDEBAR: {
+          STATS_TITLE: "ACTIVE ROSTER",
+          STATS_SYNC: "SYSTEM SYNC",
+          STATS_DESC: "Connect Resend or SendGrid API to activate live broadcast capabilities.",
+          RECENT_TITLE: "RECENT DISPATCHES",
+          EMPTY_RECENT: "No recent transmissions."
+        }
+      }
+    }, 
     STRATEGIC_PLANNER: { 
       BTN_ADD: "LOG DIRECTIVE", 
       ACTIONS: { AUDIO: "RECORD AUDIO", AUTHORIZE: "AUTHORIZE BUILD" }, 

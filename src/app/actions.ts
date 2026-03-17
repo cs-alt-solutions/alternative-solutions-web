@@ -11,7 +11,7 @@ export async function logPulse(eventType: string, message: string) {
   revalidatePath('/dashboard');
 }
 
-// --- OPERATIONS: WAITLIST ---
+// --- OPERATIONS: FOUNDATION COMMAND (Formerly Waitlist) ---
 export async function joinWaitlist(formData: FormData) {
   const email = formData.get('email') as string;
   const source = formData.get('source') as string || 'Workshop';
@@ -20,22 +20,36 @@ export async function joinWaitlist(formData: FormData) {
     return { success: false, error: 'Email is required', isNew: false };
   }
 
-  const { error } = await supabase.from('waitlist').insert([{ email, source, status: 'PENDING' }]);
-  
-  if (error) {
-    // If the email already exists, Postgres throws a unique violation (23505)
-    // We catch this to treat them as a successful "returning" user
-    if (error.code === '23505') {
-      return { success: true, isNew: false };
-    }
-    return { success: false, error: error.message, isNew: false };
-  }
+  try {
+    // We route all incoming emails into the central 'supporters' ledger as an OBSERVER
+    const { error } = await supabase
+      .from('supporters')
+      .upsert({ 
+        email: email.toLowerCase().trim(),
+        tier: 'OBSERVER',
+        status: 'ACTIVE',
+        amount: 0,
+        source: source
+      }, { 
+        onConflict: 'email' 
+      });
 
-  await logPulse('BETA_REQUEST', `New request from ${email}`);
-  revalidatePath('/dashboard');
-  
-  // Successful insert means they are a new entry
-  return { success: true, isNew: true };
+    if (error) {
+      console.error('Database connection error:', error);
+      return { success: false, error: error.message, isNew: false };
+    }
+
+    // Keep the pulse logging from your original file!
+    await logPulse('BETA_REQUEST', `New request from ${email}`);
+    revalidatePath('/dashboard');
+    revalidatePath('/dashboard/foundation'); // Revalidate the new foundation page
+    
+    return { success: true, isNew: true };
+    
+  } catch (error) {
+    console.error('Action failed:', error);
+    return { success: false, error: 'Internal Server Error', isNew: false };
+  }
 }
 
 // --- STUDIO: BROADCAST ---
@@ -64,6 +78,7 @@ export async function publishAudioLog(formData: FormData) {
   await logPulse('NEW_LOG', `Broadcast Live: ${title}`);
   revalidatePath('/shift-studio');
   revalidatePath('/dashboard');
+  revalidatePath('/dashboard/broadcast');
   return { success: true };
 }
 

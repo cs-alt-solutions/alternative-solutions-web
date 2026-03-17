@@ -75,7 +75,6 @@ export default function Navbar() {
       {/* MOBILE MENU DROPDOWN */}
       <div 
         className={`md:hidden absolute top-20 left-0 w-full bg-black/95 backdrop-blur-2xl border-b border-white/10 transition-all duration-300 overflow-hidden ${
-          /* THE FIX: Replaced max-h-[400px] with the canonical max-h-100 */
           isMobileMenuOpen ? 'max-h-100 py-6 opacity-100' : 'max-h-0 py-0 opacity-0 pointer-events-none'
         }`}
       >

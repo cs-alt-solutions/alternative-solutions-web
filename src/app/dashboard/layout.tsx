@@ -8,7 +8,7 @@ import { WEBSITE_COPY } from '@/utils/glossary';
 import NavItem from '@/components/core/NavItem';
 import { 
   LayoutDashboard, Settings, Search, Bell, 
-  Cpu, ShieldCheck, Ticket, Inbox, FileText, Mic, CalendarDays 
+  Cpu, ShieldCheck, Ticket, Inbox, FileText, Mic, CalendarDays, Rocket 
 } from 'lucide-react';
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
@@ -21,7 +21,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const getPageTitle = () => {
     if (pathname === '/dashboard/broadcast') return sidebarCopy.BROADCAST;
     if (pathname === '/dashboard/tasks') return sidebarCopy.TASKS;
-    if (pathname === '/dashboard/waitlist') return sidebarCopy.WAITLIST;
+    if (pathname === '/dashboard/foundation') return sidebarCopy.FOUNDATION;
     if (pathname === '/dashboard') return overviewCopy.TITLE;
     return "SYSTEM COMMAND";
   };
@@ -45,8 +45,8 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           <div className="text-[10px] font-mono text-white/40 uppercase tracking-widest mb-2 px-3 mt-8">
             {sidebarCopy.GROUPS.OPERATIONS}
           </div>
-          <Link href="/dashboard/waitlist">
-             <NavItem icon={Ticket} label={sidebarCopy.WAITLIST} active={pathname === '/dashboard/waitlist'} />
+          <Link href="/dashboard/foundation">
+             <NavItem icon={Rocket} label={sidebarCopy.FOUNDATION} active={pathname === '/dashboard/foundation'} />
           </Link>
           
           <div className="text-[10px] font-mono text-white/40 uppercase tracking-widest mb-2 px-3 mt-8">

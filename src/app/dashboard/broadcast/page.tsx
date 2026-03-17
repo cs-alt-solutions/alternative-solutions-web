@@ -1,14 +1,24 @@
 /* src/app/dashboard/broadcast/page.tsx */
 import React from 'react';
+import Link from 'next/link';
 import { supabase } from '@/utils/supabase';
 import { WEBSITE_COPY } from '@/utils/glossary';
 import { Radio, Mic2, Share2, Mail } from 'lucide-react';
-import EpisodeManager from '@/components/dashboard/broadcast/EpisodeManager';
 
-export default async function BroadcastHub() {
-  // Logic: Pulling from the unified MEDIA_HUB block
+// Import our newly extracted atomic components
+import AudioTab from '@/components/dashboard/broadcast/AudioTab';
+import SocialTab from '@/components/dashboard/broadcast/SocialTab';
+import CampaignsTab from '@/components/dashboard/broadcast/CampaignsTab';
+
+export const revalidate = 0;
+
+export default async function BroadcastHub({ searchParams }: { searchParams: Promise<{ tab?: string }> }) {
   const hubCopy = WEBSITE_COPY.DASHBOARD.MEDIA_HUB;
   
+  const resolvedSearchParams = await searchParams;
+  const activeTab = resolvedSearchParams.tab || 'audio';
+  
+  // Data fetching specific to the Audio Tab (we fetch it here so it happens server-side)
   const { data: episodes } = await supabase
     .from('audio_logs')
     .select('*')
@@ -16,9 +26,16 @@ export default async function BroadcastHub() {
 
   const activeCount = episodes?.filter(e => e.status === 'ACTIVE').length || 0;
 
+  // Active Tab Styling Logic
+  const getTabClass = (tabName: string) => {
+    return activeTab === tabName 
+      ? "pb-4 border-b-2 border-brand-primary text-brand-primary font-bold flex items-center gap-2 uppercase tracking-widest text-[10px] font-mono transition-all"
+      : "pb-4 text-text-muted hover:text-white flex items-center gap-2 uppercase tracking-widest text-[10px] font-mono transition-colors";
+  };
+
   return (
-    <div className="p-8 relative">
-      <header className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-12 border-b border-white/5 pb-8">
+    <div className="p-8 relative max-w-6xl mx-auto">
+      <header className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-10 border-b border-white/5 pb-8">
         <div>
           <div className="flex items-center gap-2 mb-2">
             <Radio className="text-brand-primary animate-pulse" size={16} />
@@ -32,32 +49,24 @@ export default async function BroadcastHub() {
         </div>
       </header>
 
+      {/* DYNAMIC NAVIGATION TABS */}
       <nav className="flex gap-8 mb-8 border-b border-white/5">
-        <button className="pb-4 border-b-2 border-brand-primary text-brand-primary font-bold flex items-center gap-2">
+        <Link href="?tab=audio" className={getTabClass('audio')}>
           <Mic2 size={16} /> {hubCopy.TABS.AUDIO}
-        </button>
-        <button className="pb-4 text-text-muted hover:text-white transition-colors flex items-center gap-2">
+        </Link>
+        <Link href="?tab=social" className={getTabClass('social')}>
           <Share2 size={16} /> {hubCopy.TABS.SOCIAL}
-        </button>
-        <button className="pb-4 text-text-muted hover:text-white transition-colors flex items-center gap-2">
+        </Link>
+        <Link href="?tab=campaigns" className={getTabClass('campaigns')}>
           <Mail size={16} /> {hubCopy.TABS.CAMPAIGNS}
-        </button>
+        </Link>
       </nav>
 
-      <section className="bg-bg-surface-200/30 border border-white/5 rounded-2xl p-6">
-        <div className="flex items-center justify-between mb-6">
-          <h2 className="text-sm font-mono text-text-muted uppercase tracking-widest">
-            {/* BUILD FIX: Replaced AUDIO_MODULE with standard label */}
-            ACTIVE FEEDS: <span className="text-white">{activeCount}</span>
-          </h2>
-        </div>
-        
-        {/* We pass an empty object for copy if AUDIO_MODULE is deprecated */}
-        <EpisodeManager 
-          initialEpisodes={episodes || []} 
-          copy={{}} 
-        />
-      </section>
+      {/* TAB CONTENT ROUTING */}
+      {activeTab === 'audio' && <AudioTab activeCount={activeCount} episodes={episodes || []} />}
+      {activeTab === 'social' && <SocialTab />}
+      {activeTab === 'campaigns' && <CampaignsTab />}
+      
     </div>
   );
 }
