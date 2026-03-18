@@ -1,14 +1,15 @@
 /* src/app/dashboard/layout.tsx */
 'use client';
 
-import React from 'react';
+import React, { useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { WEBSITE_COPY } from '@/utils/glossary';
 import NavItem from '@/components/core/NavItem';
 import { 
   LayoutDashboard, Settings, Search, Bell, 
-  Cpu, ShieldCheck, Ticket, Inbox, FileText, Mic, CalendarDays, Rocket, Database 
+  Cpu, ShieldCheck, Ticket, Inbox, FileText, Mic, CalendarDays, Rocket, Database,
+  Menu, X 
 } from 'lucide-react';
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
@@ -16,6 +17,11 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const sidebarCopy = WEBSITE_COPY.DASHBOARD.SIDEBAR;
   const commonCopy = WEBSITE_COPY.DASHBOARD.COMMON;
   const overviewCopy = WEBSITE_COPY.DASHBOARD.OVERVIEW;
+
+  // STATE: Controls the mobile sidebar drawer
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+
+  const closeMobileMenu = () => setIsMobileMenuOpen(false);
 
   // STRICT ROUTING LOGIC: Prevents header mismatches
   const getPageTitle = () => {
@@ -29,13 +35,30 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
   return (
     <div className="min-h-screen bg-bg-app flex font-sans text-text-main overflow-hidden relative">
-      <aside className="w-64 border-r border-white/5 bg-bg-app flex flex-col z-20">
-        <div className="h-16 flex items-center px-6 border-b border-white/5">
-           <div className="w-2 h-2 bg-brand-primary rounded-full shadow-[0_0_10px_rgba(6,182,212,0.8)] mr-3 animate-pulse" />
-           <span className="font-bold tracking-tight uppercase text-xs text-white">{commonCopy.BRAND_VERSION}</span>
+      
+      {/* THE MOBILE OVERLAY (Darkens background when menu is open) */}
+      {isMobileMenuOpen && (
+        <div 
+          className="fixed inset-0 bg-black/80 backdrop-blur-sm z-40 md:hidden animate-in fade-in duration-300"
+          onClick={closeMobileMenu}
+        />
+      )}
+
+      {/* THE SIDEBAR (Static on Desktop, Sliding Drawer on Mobile) */}
+      <aside className={`fixed md:static inset-y-0 left-0 w-64 border-r border-white/5 bg-bg-app flex flex-col z-50 transition-transform duration-300 ease-in-out shadow-2xl md:shadow-none ${isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'}`}>
+        <div className="h-16 flex items-center justify-between px-6 border-b border-white/5 shrink-0">
+           <div className="flex items-center">
+             <div className="w-2 h-2 bg-brand-primary rounded-full shadow-[0_0_10px_rgba(6,182,212,0.8)] mr-3 animate-pulse" />
+             <span className="font-bold tracking-tight uppercase text-xs text-white">{commonCopy.BRAND_VERSION}</span>
+           </div>
+           
+           {/* MOBILE CLOSE BUTTON */}
+           <button onClick={closeMobileMenu} className="md:hidden text-white/40 hover:text-white transition-colors">
+             <X size={20} />
+           </button>
         </div>
         
-        <nav className="flex-1 p-4 space-y-1 overflow-y-auto custom-scrollbar">
+        <nav className="flex-1 p-4 space-y-1 overflow-y-auto custom-scrollbar" onClick={closeMobileMenu}>
           <div className="text-[10px] font-mono text-white/40 uppercase tracking-widest mb-2 px-3 mt-4">
             {sidebarCopy.GROUPS.COMMAND}
           </div>
@@ -71,23 +94,38 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           <NavItem icon={Settings} label={sidebarCopy.CONFIG} />
         </nav>
 
-        <div className="p-4 border-t border-white/5 bg-black/20">
+        <div className="p-4 border-t border-white/5 bg-black/20 shrink-0">
            <Link href="/" className="text-[10px] text-text-muted hover:text-white transition-colors flex items-center gap-2 font-mono uppercase">
              {sidebarCopy.EXIT}
            </Link>
         </div>
       </aside>
 
-      <main className="flex-1 flex flex-col relative z-10">
-        <header className="h-16 border-b border-white/5 bg-bg-app/80 backdrop-blur-md flex items-center justify-between px-8 sticky top-0 z-10">
-           <div className="flex items-center gap-4">
-             <h1 className="text-sm font-bold uppercase tracking-widest text-white/80">{getPageTitle()}</h1>
-             <span className="px-2 py-0.5 rounded text-[10px] bg-brand-primary/10 text-brand-primary border border-brand-primary/20 font-mono">
+      {/* THE MAIN CONTENT AREA */}
+      <main className="flex-1 flex flex-col relative z-10 w-full overflow-hidden">
+        
+        {/* THE TOP HEADER */}
+        <header className="h-16 border-b border-white/5 bg-bg-app/80 backdrop-blur-md flex items-center justify-between px-4 md:px-8 sticky top-0 z-30 shrink-0">
+           <div className="flex items-center gap-3 md:gap-4">
+             {/* THE MOBILE HAMBURGER MENU */}
+             <button 
+               onClick={() => setIsMobileMenuOpen(true)}
+               className="md:hidden text-white/60 hover:text-white transition-colors p-1"
+             >
+               <Menu size={22} />
+             </button>
+             
+             <h1 className="text-xs md:text-sm font-bold uppercase tracking-widest text-white/80 truncate max-w-37.5 sm:max-w-none">
+               {getPageTitle()}
+             </h1>
+             
+             {/* Hide the "System Online" badge on tiny screens to save space */}
+             <span className="hidden sm:flex px-2 py-0.5 rounded text-[10px] bg-brand-primary/10 text-brand-primary border border-brand-primary/20 font-mono">
                {commonCopy.STATUS_ONLINE}
              </span>
            </div>
            
-           <div className="flex items-center gap-6">
+           <div className="flex items-center gap-4 md:gap-6">
              <button className="relative text-white/60 hover:text-white transition-colors">
                <Bell size={18} />
                <span className="absolute top-0 right-0 w-1.5 h-1.5 bg-brand-accent rounded-full border border-black"></span>
@@ -96,10 +134,12 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
            </div>
         </header>
 
+        {/* THE SCROLLING PAGE CONTENT */}
         <div className="flex-1 overflow-y-auto relative z-0">
            {children}
         </div>
       </main>
+      
     </div>
   );
 }

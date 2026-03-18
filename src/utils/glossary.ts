@@ -325,7 +325,44 @@ export const WEBSITE_COPY = {
       TITLE: "Foundation Command", 
       STATS_TITLE: "LIVE REVENUE METRICS",
       ROSTER_TITLE: "THE FOUNDATION ROSTER",
-      TABS: { ROSTER: "Roster & Revenue", WIDGETS: "Public Widgets" }, // <-- ADDED TABS
+      TABS: { ROSTER: "Roster & Revenue", WIDGETS: "Public Widgets" },
+      CAMPAIGNS: {
+        TAB: "Client Campaigns",
+        EMPTY_STATE: "No active client funding campaigns.",
+        CARD: {
+          TARGET: "FUNDING TARGET",
+          RAISED: "CAPITAL SECURED",
+          BACKERS: "COMMUNITY BACKERS",
+          BTN_WIDGET: "COPY WIDGET CODE",
+          BTN_MANAGE: "MANAGE CAMPAIGN"
+        }
+      },
+      // Add to src/utils/glossary.ts inside DASHBOARD.FOUNDATION
+CAMPAIGN_DETAIL: {
+  BACK_BTN: "RETURN TO FOUNDATION",
+  TABS: {
+    OVERVIEW: "Campaign Telemetry",
+    BACKERS: "Backer Ledger",
+    SETTINGS: "Widget & Settings"
+  },
+  STATS: {
+    RAISED: "Total Secured",
+    TARGET: "Funding Target",
+    BACKERS: "Total Backers",
+    AVG_BOOST: "Avg. Boost"
+  },
+  ACTIONS: {
+    COPY_WIDGET: "COPY WIDGET HTML",
+    BROADCAST: "MESSAGE BACKERS",
+    FINALIZE: "AUTHORIZE BUILD (FUNDS SECURED)"
+  },
+  LEDGER_COLS: {
+    DATE: "Date",
+    BACKER: "Backer",
+    AMOUNT: "Amount",
+    TYPE: "Type"
+  }
+},
       STATS: {
         MRR: "Monthly Recurring",
         BUILDERS: "Founding Builders",
@@ -336,7 +373,7 @@ export const WEBSITE_COPY = {
         CLIENTS: "Project Clients"
       },
       COLUMNS: { NAME: "Name", CONTACT: "Contact", TIER: "Support Tier", STATUS: "Status", AMOUNT: "Amount", ACTIONS: "Actions" },
-      ROW_ACTIONS: { INVITE: "Grant Beta Access", UPGRADE: "Upgrade Tier", QUARANTINE: "Remove User", TOGGLE_ANON: "Toggle Anonymity" } // <-- ADDED ANON ACTION
+      ROW_ACTIONS: { INVITE: "Grant Beta Access", UPGRADE: "Upgrade Tier", QUARANTINE: "Remove User", TOGGLE_ANON: "Toggle Anonymity" }
     },
     INFRASTRUCTURE_HUB: {
       TITLE: "Infrastructure Command",

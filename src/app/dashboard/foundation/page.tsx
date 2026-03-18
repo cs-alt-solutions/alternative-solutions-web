@@ -5,7 +5,8 @@ import { supabase } from '@/utils/supabase';
 import { WEBSITE_COPY } from '@/utils/glossary';
 import FoundationStats from '@/components/dashboard/foundation/FoundationStats';
 import FoundationRow, { Supporter } from '@/components/dashboard/foundation/FoundationRow';
-import { LayoutDashboard, SlidersHorizontal, Plus } from 'lucide-react';
+import CampaignCard from '@/components/dashboard/foundation/CampaignCard';
+import { LayoutDashboard, SlidersHorizontal, Plus, Target } from 'lucide-react';
 
 export const revalidate = 0;
 
@@ -32,7 +33,6 @@ export default async function FoundationCommandPage({
 
   const totalLifetimeFuel = roster.reduce((sum, s) => sum + Number(s.amount || 0), 0);
 
-  // ADDED: We are now passing the 'clients' count into the stats object
   const stats = {
     mrr: activeMRR,
     builders: roster.filter(s => s.tier === 'BUILDER').length,
@@ -63,6 +63,12 @@ export default async function FoundationCommandPage({
           className={`flex items-center gap-2 px-4 py-3 text-xs font-mono uppercase tracking-widest border-b-2 transition-all ${currentTab === 'roster' ? 'border-brand-primary text-brand-primary' : 'border-transparent text-white/40 hover:text-white/80 hover:border-white/20'}`}
         >
           <LayoutDashboard size={14} /> {copy.TABS?.ROSTER || "Roster & Revenue"}
+        </Link>
+        <Link 
+          href="/dashboard/foundation?tab=campaigns"
+          className={`flex items-center gap-2 px-4 py-3 text-xs font-mono uppercase tracking-widest border-b-2 transition-all ${currentTab === 'campaigns' ? 'border-brand-primary text-brand-primary' : 'border-transparent text-white/40 hover:text-white/80 hover:border-white/20'}`}
+        >
+          <Target size={14} /> {copy.CAMPAIGNS?.TAB || "Client Campaigns"}
         </Link>
         <Link 
           href="/dashboard/foundation?tab=widgets"
@@ -109,6 +115,47 @@ export default async function FoundationCommandPage({
                 </table>
               </div>
             )}
+          </div>
+        </div>
+      )}
+
+      {currentTab === 'campaigns' && (
+        <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
+          <div className="flex items-center justify-between mb-8 border-b border-white/5 pb-4">
+            <div>
+              <h2 className="text-xl font-black uppercase tracking-widest text-white">Active Funding Bounties</h2>
+              <p className="text-[10px] font-mono text-white/40 uppercase tracking-widest mt-1">Community-Funded Client Builds</p>
+            </div>
+            <button className="flex items-center gap-2 text-xs font-mono uppercase font-bold tracking-widest bg-brand-primary/10 text-brand-primary border border-brand-primary/30 px-5 py-2.5 rounded-lg hover:bg-brand-primary hover:text-black transition-all shadow-[0_0_15px_rgba(6,182,212,0.2)]">
+              <Plus size={14} /> New Campaign
+            </button>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+            <CampaignCard 
+              copy={copy.CAMPAIGNS?.CARD || {}}
+              campaign={{
+                id: '1',
+                clientName: 'Victory Automotive',
+                projectName: 'Digital Inspection System',
+                targetAmount: 5000,
+                raisedAmount: 2150,
+                backerCount: 14,
+                status: 'FUNDING'
+              }} 
+            />
+            <CampaignCard 
+              copy={copy.CAMPAIGNS?.CARD || {}}
+              campaign={{
+                id: '2',
+                clientName: 'Ink & Ledger',
+                projectName: 'Artist Booking Portal',
+                targetAmount: 8500,
+                raisedAmount: 8500,
+                backerCount: 42,
+                status: 'BUILDING'
+              }} 
+            />
           </div>
         </div>
       )}
