@@ -5,9 +5,24 @@ export const SYSTEM_CONFIG = {
     LABOR: 50,
     FOUNDER: 5,     
     PUBLIC: 49      
+  },
+  FEES: {
+    PLATFORM_CUT: 0.15 
+  },
+  // ADD THIS BLOCK: This resolves the TypeScript "Property does not exist" error
+  PAYROLL_MATRIX: {
+    PERSONAL: 0.50,
+    BUSINESS: 0.30,
+    VAULT: 0.20
+  },
+  // NEW: Personal Survival Budget (The 50% breakdown)
+  SURVIVAL_BUDGET: {
+    RENT: 0.60,      // 60% of your Personal Share
+    UTILITIES: 0.20, // 20%
+    GROCERIES: 0.15, // 15% (Supplemented by SNAP)
+    MISC: 0.05       // 5%
   }
 };
-
 export interface AppTool { id: string; name: string; cost: number; category: 'PROJECT' | 'INVENTORY' | 'FINANCE'; }
 export interface HourTier { label: string; value: number; }
 
@@ -193,6 +208,16 @@ export const WEBSITE_COPY = {
       ROI: {
         TITLE: "What are you actually paying for?",
         SUBTITLE: "I've pre-loaded the industry baseline. Select your own tools to see your custom 'Tech Tax' in real-time.",
+        TOGGLES: {
+          BASELINE: "Industry Baseline",
+          CUSTOM: "Custom Audit"
+        },
+        BASELINE_INFO: {
+          TITLE: "The 'Cost of Doing Business'",
+          DESC: "This is the bare minimum you'd spend on the cheapest apps just to keep your business running without doing everything manually on paper. It's what the industry expects you to pay.",
+          PROMPT: "Want to see your real numbers? Switch to a Custom Audit to pick the apps you actually use."
+        },
+        MANUAL_INPUT_LABEL: "Or enter a custom monthly cost:",
         STEP_1_LABEL: "What's currently in your stack?",
         STEP_2_LABEL: "Hours lost to manual tasks weekly?",
         STEP_3_LABEL: "What is your hourly rate?",
@@ -205,17 +230,6 @@ export const WEBSITE_COPY = {
         TIME_LABEL: "VALUE OF RECOVERED TIME",
         COST_LABEL: "SHIFT STUDIO (INVESTMENT)",
         DISCLAIMER: "*App costs are estimates based on standard monthly prices.",
-        // Inside WEBSITE_COPY.PUBLIC_SITE.SHIFT_STUDIO_PAGE.ROI
-TOGGLES: {
-  BASELINE: "Industry Baseline",
-  CUSTOM: "Custom Audit"
-},
-BASELINE_INFO: {
-  TITLE: "The 'Cost of Doing Business'",
-  DESC: "This is the bare minimum you'd spend on the cheapest apps just to keep your business running without doing everything manually on paper. It's what the industry expects you to pay.",
-  PROMPT: "Want to see your real numbers? Switch to a Custom Audit to pick the apps you actually use."
-},
-MANUAL_INPUT_LABEL: "Or enter a custom monthly cost:",
         CATEGORIES: { PROJECT: "Tasks & Planning", INVENTORY: "Sales & Inventory", FINANCE: "Money & Bookkeeping" },
         APPS: [
           { id: "notion", name: "Notion", cost: 10, category: "PROJECT" },
@@ -247,27 +261,25 @@ MANUAL_INPUT_LABEL: "Or enter a custom monthly cost:",
         HEAD_SHIFT: "Shift Studio Native",
         SECTIONS: [
           { TITLE: "YOUR DATA", ROWS: [
-            { feature: "Inventory Sync", duct: "Copying numbers manually.", shift: "Native, instant data flow.", image: "/images/diff-sync.png" }, 
-            { feature: "Real Profit Tracking", duct: "Figuring profit once a month.", shift: "Profit updates with every sale.", image: "/images/diff-profit.png" }
+            { feature: "Inventory Sync", duct: "Copying numbers manually." }, 
+            { feature: "Real Profit Tracking", duct: "Figuring profit once a month." }
           ]},
           { TITLE: "YOUR WORKFLOW", ROWS: [
-            { feature: "AI Partnership", duct: "Basic help with no context.", shift: "AI that knows your goals.", image: "/images/diff-ai.png" }, 
-            { feature: "Daily Tasks", duct: "Constant switching between apps.", shift: "Everything in one unified view.", image: "/images/diff-tasks.png" }
+            { feature: "AI Partnership", duct: "Basic help with no context." }, 
+            { feature: "Daily Tasks", duct: "Constant switching between apps." }
           ]},
           { TITLE: "YOUR MONEY", ROWS: [
-            { feature: "Monthly Bills", duct: "Paying for 5-8 separate apps.", shift: "One spot to access everything.", image: "/images/diff-bills.png" }, 
-            { feature: "Maintenance Overhead", duct: "Spending hours fixing broken links.", shift: "I handle the wiring; you build.", image: "/images/diff-maint.png" }
+            { feature: "Monthly Bills", duct: "Paying for 5-8 separate apps." }, 
+            { feature: "Maintenance Overhead", duct: "Spending hours fixing broken links." }
           ]}
         ]
       },
-      // In src/utils/glossary.ts, replace the existing EVIDENCE object with this:
-
       EVIDENCE: {
         TAG: "LIVE SYSTEM CAPTURE",
         MODULES: [
           { 
             ID: "data",
-            IMAGES: ["/images/shift-inventory.png", "/images/shift-board.png"], // The dual-image setup
+            IMAGES: ["/images/shift-inventory.png", "/images/shift-board.png"],
             CAPTION: "SHIFT STUDIO NATIVE", 
             TITLE: "Live Data. No Manual Entry.", 
             DESC: "Stop copying numbers across spreadsheets and figuring out your profit margins at the end of the month. Shift Studio provides native, instant data flow. Your inventory syncs automatically, and your profit updates with every single sale.", 
@@ -275,7 +287,7 @@ MANUAL_INPUT_LABEL: "Or enter a custom monthly cost:",
           },
           { 
             ID: "workflow",
-            IMAGES: ["/images/shift-spark.png"], // Replaced with Spark AI
+            IMAGES: ["/images/shift-spark.png"],
             CAPTION: "SHIFT STUDIO NATIVE", 
             TITLE: "One Unified Workspace.", 
             DESC: "Constant switching between apps kills momentum. Shift Studio provides everything in one unified view. Spark AI acts as a partner that actually knows your goals, while your daily tasks are natively connected to your inventory.", 
@@ -283,7 +295,7 @@ MANUAL_INPUT_LABEL: "Or enter a custom monthly cost:",
           },
           { 
             ID: "money",
-            IMAGES: ["/images/shift-ledger.png"], // Kept the Profit Tracker
+            IMAGES: ["/images/shift-ledger.png"],
             CAPTION: "SHIFT STUDIO NATIVE", 
             TITLE: "Consolidate Your Costs.", 
             DESC: "Paying for 5-8 separate apps and spending hours fixing broken links is burning your cash. Shift Studio gives you one spot to access everything. I handle the wiring and maintenance; you focus on building your business.", 
@@ -316,195 +328,162 @@ MANUAL_INPUT_LABEL: "Or enter a custom monthly cost:",
   },
 
   DASHBOARD: { 
-    COMMON: { BRAND_VERSION: "Alt OS v1.0", STATUS_ONLINE: "SYSTEM ONLINE", ACTION_REVIEW: "REVIEW" }, 
-    SIDEBAR: { GROUPS: { INFRASTRUCTURE: "Infrastructure", COMMAND: "Command", OPERATIONS: "Operations", STUDIO: "Studio", SYSTEM: "System" }, OVERVIEW: "Overview", FOUNDATION: "Foundation Command", TASKS: "Strategic Planner", BROADCAST: "Broadcast Hub", AGENTS: "AI Agents", CONFIG: "Config", EXIT: "← Exit to Public Site" }, 
+    COMMON: { BRAND_VERSION: "Alternative Solutions Workspace", STATUS_ONLINE: "All Systems Go", ACTION_REVIEW: "Review" }, 
+    SIDEBAR: { 
+      GROUPS: { INFRASTRUCTURE: "Settings & Setup", COMMAND: "My Workspace", OPERATIONS: "Life & Logistics", STUDIO: "Apps", SYSTEM: "System" }, 
+      OVERVIEW: "Home", 
+      FOUNDATION: "The Drafting Table",
+      LEDGER: "The Ledger",
+      ECOSYSTEM_MANAGER: "My Products",
+      BETA_COMMAND: "Members & Access",
+      TASKS: "To-Do List", 
+      BROADCAST: "Emails & Updates", 
+      AGENTS: "AI Assistants", 
+      CONFIG: "Settings", 
+      EXIT: "← Back to Website" 
+    }, 
+    
     FOUNDATION: { 
-      TITLE: "Foundation Command", 
-      STATS_TITLE: "LIVE REVENUE METRICS",
-      ROSTER_TITLE: "THE FOUNDATION ROSTER",
-      TABS: { ROSTER: "Roster & Revenue", WIDGETS: "Public Widgets" },
-      CAMPAIGNS: {
-        TAB: "Client Campaigns",
-        EMPTY_STATE: "No active client funding campaigns.",
+      TITLE: "The Drafting Table", 
+      SUBTITLE: "Where ideas get funded and built.",
+      STATS_TITLE: "Revenue & Support",
+      ROSTER_TITLE: "Recent Supporters",
+      TABS: { ROSTER: "Backers & Funds", WIDGETS: "Share Links" },
+      BUILDS: {
+        TAB: "Projects in Progress",
+        EMPTY_STATE: "Your drafting table is empty. Time to brainstorm.",
+        TYPES: {
+          CLIENT: "Client Work",
+          SAAS: "My Products"
+        },
         CARD: {
-          TARGET: "FUNDING TARGET",
-          RAISED: "CAPITAL SECURED",
-          BACKERS: "COMMUNITY BACKERS",
-          BTN_WIDGET: "COPY WIDGET CODE",
-          BTN_MANAGE: "MANAGE CAMPAIGN"
+          TARGET: "Goal",
+          RAISED: "Raised",
+          BACKERS: "Supporters",
+          BTN_WIDGET: "Get Embed Code",
+          BTN_MANAGE: "Manage Project"
         }
+      },
+      // Add this inside WEBSITE_COPY.DASHBOARD.FOUNDATION
+      NEW_BUILD_MODAL: {
+        TITLE: "Initialize New Project",
+        DESC: "Draft a new idea or client commission to the table.",
+        FIELDS: {
+          TITLE: "Project Name",
+          TYPE: "Project Type",
+          CLIENT_NAME: "Client Name (Optional)",
+          TARGET: "Funding Target ($)"
+        },
+        ACTIONS: {
+          CANCEL: "Abort",
+          SUBMIT: "Deploy to Table",
+          SAVING: "Deploying..."
+        }
+      },
+      EXTERNAL_FUEL: {
+        TITLE: "External Fuel (Side Income)",
+        DESC: "Track off-platform shifts, calculate payroll, and route your funds.",
+        STATS: {
+          TOTAL: "Cleared Income",
+          THIS_MONTH: "This Month"
+        },
+        BUCKETS: {
+          PERSONAL: "Personal Survival",
+          BUSINESS: "Business Fuel",
+          VAULT: "The Vault (Fun/Rainy Day)"
+        },
+        TABLE: {
+          SOURCE: "Shift Details",
+          DATE: "Date",
+          PAYMENT_METHOD: "Method",
+          AMOUNT: "Gross Pay",
+          ROUTING: "Fund Routing"
+        },
+        BTN_ADD: "Log Shift",
+        EMPTY: "No external shifts logged yet."
       },
       CAMPAIGN_DETAIL: {
-        BACK_BTN: "RETURN TO FOUNDATION",
+        BACK_BTN: "Back to Drafting Table",
         TABS: {
-          OVERVIEW: "Campaign Telemetry",
-          BACKERS: "Backer Ledger",
-          SETTINGS: "Widget & Settings"
+          OVERVIEW: "Project Details",
+          BACKERS: "Supporter List",
+          SETTINGS: "Settings & Links"
         },
-        STATS: {
-          RAISED: "Total Secured",
-          TARGET: "Funding Target",
-          BACKERS: "Total Backers",
-          AVG_BOOST: "Avg. Boost"
-        },
-        ACTIONS: {
-          COPY_WIDGET: "COPY WIDGET HTML",
-          BROADCAST: "MESSAGE BACKERS",
-          FINALIZE: "AUTHORIZE BUILD (FUNDS SECURED)"
-        },
-        LEDGER_COLS: {
-          DATE: "Date",
-          BACKER: "Backer",
-          AMOUNT: "Amount",
-          TYPE: "Type"
-        }
+        STATS: { RAISED: "Total Raised", TARGET: "Goal", BACKERS: "Total Supporters", AVG_BOOST: "Avg. Contribution" },
+        ACTIONS: { COPY_WIDGET: "Copy HTML Code", BROADCAST: "Email Supporters", FINALIZE: "Mark as Funded" },
+        LEDGER_COLS: { DATE: "Date", BACKER: "Name", AMOUNT: "Amount", TYPE: "Type" }
       },
-      STATS: {
-        MRR: "Monthly Recurring",
-        BUILDERS: "Founding Builders",
-        BACKERS: "Monthly Backers",
-        BOOSTS: "One-Time Boosts",
-        FUEL: "Total Engine Fuel",
-        OBSERVERS: "Observers",
-        CLIENTS: "Project Clients"
-      },
-      COLUMNS: { NAME: "Name", CONTACT: "Contact", TIER: "Support Tier", STATUS: "Status", AMOUNT: "Amount", ACTIONS: "Actions" },
-      ROW_ACTIONS: { INVITE: "Grant Beta Access", UPGRADE: "Upgrade Tier", QUARANTINE: "Remove User", TOGGLE_ANON: "Toggle Anonymity" }
+      STATS: { MRR: "Monthly Recurring", BUILDERS: "Founders", BACKERS: "Monthly Backers", BOOSTS: "One-Time Tips", FUEL: "Total Raised", OBSERVERS: "Waitlist", CLIENTS: "Active Clients" },
+      COLUMNS: { NAME: "Name", CONTACT: "Contact", TIER: "Support Level", STATUS: "Status", AMOUNT: "Amount", ACTIONS: "Actions" },
+      ROW_ACTIONS: { INVITE: "Give Access", UPGRADE: "Change Level", QUARANTINE: "Remove", TOGGLE_ANON: "Hide Name" }
     },
-    INFRASTRUCTURE_HUB: {
-      TITLE: "Infrastructure Command",
-      DESC: "Mission control for your core tech stack, vaults, and deployment environments.",
-      CATEGORIES: {
-        CORE: "Core Engine",
-        FINANCE: "Financial & Billing",
-        CODE: "Version Control"
+    
+    ECOSYSTEM_MANAGER: {
+      TITLE: "My Products",
+      SUBTITLE: "Manage everything live on your website.",
+      STATUS: "Synced",
+      SEARCH_PLACEHOLDER: "Search your products...",
+      BTN_NEW_MODULE: "Add New Product",
+      COLUMNS: ["Product", "Tagline", "Status", "Active Users", "Actions"],
+      STATUS_OPTIONS: ["LIVE", "BETA", "HIDDEN", "ARCHIVED"],
+      BADGES: { PUBLIC: "On Website", INTERNAL: "Internal Only" },
+      PANEL: {
+        TITLE_NEW: "Add a Product",
+        TITLE_EDIT: "Edit Product",
+        TABS: { CORE: "Basic Info", MARKETING: "Website Text", DEPLOY: "Publishing" },
+        CORE: { FIELD_NAME: "Product Name", FIELD_TAGLINE: "Tagline", FIELD_DESC: "Short Description", FIELD_ICON: "Icon Name" },
+        MARKETING: { FIELD_PUBLIC_TITLE: "Headline", FIELD_PUBLIC_DESC: "Full Description", FIELD_FEATURES: "Features (Comma separated)", FIELD_CTA: "Button Text" },
+        DEPLOY: { FIELD_STATUS: "Status", TOGGLE_PUBLIC: "Show on Public Website", TOGGLE_DESC: "Turn this on to instantly add this to your /products page." },
+        BTN_SAVE: "Save Product",
+        BTN_CANCEL: "Cancel"
       }
     },
-    PROJECT_BOARD: { NOT_FOUND: "PROJECT MISSING", ADD_TASK: "NEW TASK", COLUMNS: { TODO: "TODO", IN_PROGRESS: "BUILDING", REVIEW: "TESTING", DONE: "SHIPPED" } }, 
+
+    BETA_COMMAND: {
+      TITLE: "Members & Access",
+      SUBTITLE: "Who has the keys to your apps.",
+      STATUS: "Live",
+      TABS: { MATRIX: "User List", FEEDBACK: "Feedback", POLLING: "Roadmap Votes" },
+      MATRIX: {
+        SEARCH_PLACEHOLDER: "Search by name or email...",
+        COLUMNS: ["Person", "Email", "Access Level", "Status"],
+        ACCESS_MODULES: ["Shift Studio", "GlitchBot", "API"],
+        DETAILS: { REAL_NAME: "Name", CONTACT: "Email", JOINED: "Joined On", PHONE: "Phone", FOUNDER_BADGE: "Founding 20", COHORTS: "Has Access To", ASSIGN_COHORT: "+ Give Access" }
+      },
+      FEEDBACK: { TITLE: "Feedback & Ideas", FILTER_ALL: "Everything", FILTER_BUGS: "Bugs", FILTER_IDEAS: "Ideas" },
+      POLLING: { TITLE: "Community Votes", VOTES_LBL: "Total Votes", ACTIVE_POLLS: "Active Polls", PIPELINE_TITLE: "Suggested by AI", PIPELINE_DESC: "Spark AI grouped similar feedback into these ideas.", BTN_PROMOTE: "Ask the Community", EVIDENCE: "Based on feedback from" }
+    },
+
+    INFRASTRUCTURE_HUB: { TITLE: "Under the Hood", DESC: "Quick links to your hosting, database, and billing.", CATEGORIES: { CORE: "Core Tech", FINANCE: "Money & Billing", CODE: "Codebase" } },
+    PROJECT_BOARD: { NOT_FOUND: "Project Not Found", ADD_TASK: "Add Task", COLUMNS: { TODO: "To Do", IN_PROGRESS: "Doing", REVIEW: "Review", DONE: "Done" } }, 
     OVERVIEW: { 
-      TITLE: "SYSTEM COMMAND", 
-      DIRECTIVE: { TITLE: "THE DAILY DIRECTIVE", SUBTITLE: "HEAVY LIFTING ONLY", EMPTY: "ALL SYSTEMS CLEAR. AWAITING COMMAND.", TYPES: { LEAD: "NEW INQUIRY", TASK: "ACTIVE DEV TASK" }, ACTIONS: { PROCESS: "PROCESS", EXECUTE: "EXECUTE" } }, 
-      LIVE_FEED: { TITLE: "NETWORK PULSE", NEW_BETA: "WAITING_FOR_PULSE..." }, 
-      INFRASTRUCTURE: { TITLE: "TECH STACK OVERWATCH", SUBTITLE: "LIVE SERVICE STATUS", PLATFORMS: { GITHUB: "GITHUB (CODE)", VERCEL: "VERCEL (DEPLOY)", SUPABASE: "SUPABASE (DATA)" } }, 
-      PANELS: { ACTION_REQD: "PRIORITY ACTION QUEUE", ENGINEERING: "INTERNAL ENGINEERING" }, 
-      TELEMETRY: { TITLE: "NETWORK TELEMETRY", CHART_LABEL: "REQUEST VOLUME", METRICS: { TRAFFIC: "LIVE TRAFFIC", CONVERSION: "CONVERSION" } } 
+      TITLE: "Home", 
+      DIRECTIVE: { TITLE: "Up Next", SUBTITLE: "Your priority tasks", EMPTY: "You're all caught up.", TYPES: { LEAD: "New Message", TASK: "Task" }, ACTIONS: { PROCESS: "View", EXECUTE: "Do It" } }, 
+      LIVE_FEED: { TITLE: "Recent Activity", NEW_BETA: "Checking..." }, 
+      INFRASTRUCTURE: { TITLE: "Tech Status", SUBTITLE: "Are we online?", PLATFORMS: { GITHUB: "GitHub", VERCEL: "Vercel", SUPABASE: "Supabase" } }, 
+      PANELS: { ACTION_REQD: "Needs Attention", ENGINEERING: "Development" }, 
+      TELEMETRY: { TITLE: "Traffic & Stats", CHART_LABEL: "Page Views", METRICS: { TRAFFIC: "Current Visitors", CONVERSION: "Signups" } } 
     }, 
     MEDIA_HUB: { 
-      TITLE: "BROADCAST Hub", 
-      SUBTITLE: "GLOBAL COMMS", 
-      TABS: { AUDIO: "Audio Logs", SOCIAL: "Social", CAMPAIGNS: "Campaigns" }, 
-      STUDIO: { TITLE: "STUDIO COMMAND", NO_NOTES: "No transmissions detected.", BTN_PUBLISH: "AUTHORIZE" },
+      TITLE: "Emails & Updates", 
+      SUBTITLE: "Talk to your people.", 
+      TABS: { AUDIO: "Voice Notes", SOCIAL: "Social", CAMPAIGNS: "Emails" }, 
+      STUDIO: { TITLE: "Record a Note", NO_NOTES: "No notes yet.", BTN_PUBLISH: "Publish" },
       CAMPAIGNS: {
-        TITLE: "COMPOSE DISPATCH",
-        AUDIENCE_LABEL: "TARGET ROSTER:",
-        AUDIENCES: {
-          ALL: "Entire Roster",
-          FOUNDERS: "Founding Architects",
-          OBSERVERS: "Waitlist / Observers"
-        },
-        EDITOR_TABS: { WRITE: "WRITE (MD)", PREVIEW: "PREVIEW" },
-        AI_ASSIST: "SPARK AI: DRAFT RELEASE NOTES",
-        PLACEHOLDERS: {
-          SUBJECT: "Transmission Subject...",
-          BODY: "Draft your transmission here. Markdown is supported..."
-        },
-        ACTIONS: {
-          SCHEDULE: "SCHEDULE",
-          SEND: "SEND TRANSMISSION"
-        },
-        SIDEBAR: {
-          STATS_TITLE: "ACTIVE ROSTER",
-          STATS_SYNC: "SYSTEM SYNC",
-          STATS_DESC: "Connect Resend or SendGrid API to activate live broadcast capabilities.",
-          RECENT_TITLE: "RECENT DISPATCHES",
-          EMPTY_RECENT: "No recent transmissions."
-        }
-      }
-    },
-    BETA_COMMAND: {
-      TITLE: "Beta Command",
-      SUBTITLE: "Co-Op Hub",
-      STATUS: "LIVE TELEMETRY",
-      TABS: {
-        MATRIX: "Access Matrix",
-        FEEDBACK: "Telemetry Feed",
-        POLLING: "Roadmap Polling"
-      },
-      MATRIX: {
-        SEARCH_PLACEHOLDER: "Search by designation, name, or node...",
-        COLUMNS: ["Node", "Designation", "Tier / Lock", "Status"],
-        ACCESS_MODULES: ["Shift Studio", "GlitchBot", "API"],
-        DETAILS: {
-          REAL_NAME: "Legal Identity",
-          CONTACT: "Comms Link",
-          JOINED: "Initial Pulse",
-          PHONE: "SMS Relay",
-          FOUNDER_BADGE: "FOUNDING 20",
-          COHORTS: "Active Beta Cohorts",
-          ASSIGN_COHORT: "+ Assign Product"
-        }
-      },
-      FEEDBACK: {
-        TITLE: "Incoming Transmissions",
-        FILTER_ALL: "ALL DATA",
-        FILTER_BUGS: "ANOMALIES",
-        FILTER_IDEAS: "DIRECTIVES"
-      },
-      POLLING: {
-        TITLE: "Consensus Network",
-        VOTES_LBL: "Network Votes",
-        ACTIVE_POLLS: "Live Consensus",
-        PIPELINE_TITLE: "The Foundry (AI Drafts)",
-        PIPELINE_DESC: "Spark AI has clustered similar feedback into potential directives.",
-        BTN_PROMOTE: "PUSH TO PUBLIC POLL",
-        EVIDENCE: "Linked Feedback Nodes"
-      }
-    },
-    ECOSYSTEM_MANAGER: {
-      TITLE: "Ecosystem Command",
-      SUBTITLE: "The Forge",
-      STATUS: "DATABASE SYNCED",
-      SEARCH_PLACEHOLDER: "Search ecosystem modules...",
-      BTN_NEW_MODULE: "DEPLOY NEW MODULE",
-      COLUMNS: ["Module", "Designation", "Deployment Status", "Active Betas", "Actions"],
-      STATUS_OPTIONS: ["ACTIVE", "BETA", "CLASSIFIED", "DEPRECATED"],
-      BADGES: {
-        PUBLIC: "LIVE ON SITE",
-        INTERNAL: "INTERNAL LAB"
-      },
-      PANEL: {
-        TITLE_NEW: "INITIALIZE NEW MODULE",
-        TITLE_EDIT: "CONFIGURE MODULE",
-        TABS: {
-          CORE: "CORE CONFIG",
-          MARKETING: "PUBLIC MARKETING",
-          DEPLOY: "DEPLOYMENT"
-        },
-        CORE: {
-          FIELD_NAME: "Module Designation",
-          FIELD_TAGLINE: "System Tagline",
-          FIELD_DESC: "Technical Description",
-          FIELD_ICON: "Icon Matrix (Lucide)"
-        },
-        MARKETING: {
-          FIELD_PUBLIC_TITLE: "Public Title",
-          FIELD_PUBLIC_DESC: "Marketing Description",
-          FIELD_FEATURES: "Feature Bullets (Comma separated)",
-          FIELD_CTA: "Call to Action Text"
-        },
-        DEPLOY: {
-          FIELD_STATUS: "System Status",
-          TOGGLE_PUBLIC: "PUBLISH TO PUBLIC DIRECTORY",
-          TOGGLE_DESC: "When active, this module will instantly appear on the public /products page."
-        },
-        BTN_SAVE: "AUTHORIZE DEPLOYMENT",
-        BTN_CANCEL: "ABORT"
+        TITLE: "Write an Email",
+        AUDIENCE_LABEL: "Send to:",
+        AUDIENCES: { ALL: "Everyone", FOUNDERS: "Founders Only", OBSERVERS: "Waitlist Only" },
+        EDITOR_TABS: { WRITE: "Write", PREVIEW: "Preview" },
+        AI_ASSIST: "Spark AI: Help me write this",
+        PLACEHOLDERS: { SUBJECT: "Subject line...", BODY: "Type your message here..." },
+        ACTIONS: { SCHEDULE: "Schedule", SEND: "Send Now" },
+        SIDEBAR: { STATS_TITLE: "Mailing List", STATS_SYNC: "API Check", STATS_DESC: "Connect your email provider to send live emails.", RECENT_TITLE: "Past Emails", EMPTY_RECENT: "You haven't sent any emails yet." }
       }
     },
     STRATEGIC_PLANNER: { 
-      BTN_ADD: "LOG DIRECTIVE", 
-      ACTIONS: { AUDIO: "RECORD AUDIO", AUTHORIZE: "AUTHORIZE BUILD" }, 
-      MODAL: { TARGET_LABEL: "Deployment Target", TARGET_LEDGER: "IDEAS LEDGER", TARGET_FLOW: "ACTIVE FLOW", DATE_LABEL: "Execution Date", TITLE_LABEL: "Directive Title", TITLE_PLACEHOLDER: "ENTER DIRECTIVE...", CLASS_LABEL: "Classification", INTENSITY_LABEL: "Intensity", PHASES_LABEL: "Strategic Phases", PHASE_ADD: "ADD PHASE", PHASE_PLACEHOLDER: "PHASE 01...", STATUS_SUBMITTING: "AUTHORIZING...", TYPES: { FEATURE: "FEATURE", INFRA: "INFRASTRUCTURE", BUG: "SYSTEM FIX" }, PRIORITIES: { LOW: "LOW", MEDIUM: "MEDIUM", HIGH: "HIGH", CRITICAL: "CRITICAL" } } 
+      BTN_ADD: "Add Task", 
+      ACTIONS: { AUDIO: "Record Voice Memo", AUTHORIZE: "Save Task" }, 
+      MODAL: { TARGET_LABEL: "Where does this go?", TARGET_LEDGER: "Idea List", TARGET_FLOW: "Active Sprint", DATE_LABEL: "Due Date", TITLE_LABEL: "What needs to happen?", TITLE_PLACEHOLDER: "Type it out...", CLASS_LABEL: "Category", INTENSITY_LABEL: "Effort", PHASES_LABEL: "Steps", PHASE_ADD: "Add Step", PHASE_PLACEHOLDER: "First step...", STATUS_SUBMITTING: "Saving...", TYPES: { FEATURE: "New Feature", INFRA: "Under the Hood", BUG: "Fix a Bug" }, PRIORITIES: { LOW: "Low", MEDIUM: "Medium", HIGH: "High", CRITICAL: "Drop Everything" } } 
     } 
   },
 

@@ -1,90 +1,112 @@
 /* src/components/dashboard/foundation/CampaignCard.tsx */
 import React from 'react';
+import { WEBSITE_COPY, SYSTEM_CONFIG } from '@/utils/glossary';
+import { Target, Users, Code, Building2, Wallet } from 'lucide-react';
 import Link from 'next/link';
-import { Target, Users, Code, ArrowRight } from 'lucide-react';
 
-interface CampaignProps {
-  campaign: {
-    id: string;
-    clientName: string;
-    projectName: string;
-    targetAmount: number;
-    raisedAmount: number;
-    backerCount: number;
-    status: 'FUNDING' | 'BUILDING' | 'DEPLOYED';
-  };
-  copy: any;
+interface BuildCardProps {
+  id: string;
+  title: string;
+  client?: string;
+  targetAmount?: number; 
+  raisedAmount?: number; 
+  backerCount?: number;  
+  status: 'ACTIVE' | 'FUNDED' | 'BUILDING' | 'SHIPPED' | 'ARCHIVED';
+  buildType?: 'CLIENT' | 'SAAS';
+  platformFeePercentage?: number; // NEW: Pulled straight from Supabase!
 }
 
-export default function CampaignCard({ campaign, copy }: CampaignProps) {
-  // Calculate progress percentage securely
-  const progress = Math.min((campaign.raisedAmount / campaign.targetAmount) * 100, 100);
+export default function CampaignCard({ 
+  id, 
+  title, 
+  client, 
+  targetAmount = 0, 
+  raisedAmount = 0, 
+  backerCount = 0,  
+  status, 
+  buildType = 'CLIENT',
+  platformFeePercentage
+}: BuildCardProps) {
+  const copy = WEBSITE_COPY.DASHBOARD.FOUNDATION.BUILDS.CARD;
+  const types = WEBSITE_COPY.DASHBOARD.FOUNDATION.BUILDS.TYPES;
   
-  // Status-based styling
-  const isFunded = progress >= 100;
-  const themeColor = isFunded ? 'text-emerald-400' : 'text-brand-primary';
-  const themeBg = isFunded ? 'bg-emerald-500/10' : 'bg-brand-primary/10';
-  const themeBorder = isFunded ? 'border-emerald-500/30' : 'border-brand-primary/30';
+  const safeTarget = targetAmount > 0 ? targetAmount : 1;
+  const progress = Math.min(Math.round((raisedAmount / safeTarget) * 100), 100);
+
+  // FINANCIAL ENGINE: Use the DB's custom fee, or fallback to the global default
+  const activeFee = platformFeePercentage !== undefined ? platformFeePercentage : SYSTEM_CONFIG.FEES.PLATFORM_CUT;
+  const architectCut = raisedAmount * activeFee;
+  const buildFunds = raisedAmount - architectCut;
 
   return (
-    <div className={`bg-bg-surface-200/50 border ${themeBorder} rounded-2xl p-6 relative overflow-hidden group hover:bg-black/40 transition-all shadow-lg hover:shadow-[0_0_20px_rgba(6,182,212,0.1)]`}>
-      {/* Background Glow */}
-      <div className={`absolute -right-10 -top-10 w-32 h-32 ${themeBg} rounded-full blur-[50px] pointer-events-none transition-opacity opacity-50 group-hover:opacity-100`} />
-
-      <div className="relative z-10 flex justify-between items-start mb-6">
+    <div className="bg-bg-surface-200/50 border border-white/5 rounded-2xl p-6 hover:bg-white/5 transition-colors group flex flex-col h-full">
+      
+      <div className="flex justify-between items-start mb-6">
         <div>
-          <h4 className="text-[10px] font-mono text-white/40 uppercase tracking-widest mb-1">
-            {campaign.clientName}
-          </h4>
-          <h3 className="text-xl font-black text-white uppercase tracking-tight">
-            {campaign.projectName}
-          </h3>
-        </div>
-        <div className={`px-2 py-1 rounded text-[9px] font-mono uppercase tracking-widest border ${themeBorder} ${themeColor} ${themeBg}`}>
-          {campaign.status}
+          <div className="flex items-center gap-2 mb-3">
+            {buildType === 'SAAS' ? (
+              <span className="flex items-center gap-1.5 px-2 py-1 rounded-md text-[9px] font-mono tracking-widest uppercase bg-brand-primary/10 text-brand-primary border border-brand-primary/30">
+                <Code size={10} /> {types.SAAS}
+              </span>
+            ) : (
+              <span className="flex items-center gap-1.5 px-2 py-1 rounded-md text-[9px] font-mono tracking-widest uppercase bg-fuchsia-500/10 text-fuchsia-400 border border-fuchsia-500/30">
+                <Building2 size={10} /> {types.CLIENT}
+              </span>
+            )}
+            
+            <span className={`px-2 py-1 rounded-md text-[9px] font-mono tracking-widest uppercase border ${
+              status === 'ACTIVE' ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30' :
+              status === 'FUNDED' ? 'bg-cyan-500/10 text-cyan-400 border-cyan-500/30' :
+              status === 'BUILDING' ? 'bg-amber-500/10 text-amber-400 border-amber-500/30' :
+              'bg-white/10 text-white/40 border-white/20'
+            }`}>
+              {status}
+            </span>
+          </div>
+
+          <h3 className="text-xl font-bold text-white mb-1 group-hover:text-brand-primary transition-colors">{title}</h3>
+          {client && <p className="text-sm text-slate-400 font-mono">{client}</p>}
         </div>
       </div>
 
-      {/* Progress Telemetry */}
-      <div className="space-y-4 mb-8 relative z-10">
-        <div className="flex justify-between items-end">
-          <div>
-            <div className="text-[10px] font-mono text-white/40 uppercase tracking-widest mb-1">{copy.RAISED || "CAPITAL SECURED"}</div>
-            <div className="text-2xl font-black text-white tracking-tighter">
-              ${campaign.raisedAmount.toLocaleString()}
-            </div>
-          </div>
-          <div className="text-right">
-            <div className="text-[10px] font-mono text-white/40 uppercase tracking-widest mb-1">{copy.TARGET || "FUNDING TARGET"}</div>
-            <div className="text-sm font-mono text-white/60">
-              ${campaign.targetAmount.toLocaleString()}
-            </div>
-          </div>
+      <div className="space-y-4 mb-6 flex-1">
+        <div className="flex justify-between text-sm font-mono">
+          <span className="text-slate-400">{copy.RAISED}</span>
+          <span className="text-white font-bold">${raisedAmount.toLocaleString()} <span className="text-slate-500 font-normal">/ ${targetAmount.toLocaleString()}</span></span>
         </div>
-
-        {/* The Progress Bar */}
-        <div className="w-full h-2 bg-black/60 rounded-full border border-white/5 overflow-hidden">
+        
+        <div className="w-full h-2 bg-black rounded-full overflow-hidden border border-white/5">
           <div 
-            className={`h-full rounded-full transition-all duration-1000 ${isFunded ? 'bg-emerald-400 shadow-[0_0_10px_rgba(52,211,153,0.8)]' : 'bg-linear-to-r from-brand-primary to-brand-accent shadow-[0_0_10px_rgba(6,182,212,0.5)]'}`}
-            style={{ width: `${progress}%` }} 
+            className={`h-full rounded-full transition-all duration-1000 ${buildType === 'SAAS' ? 'bg-brand-primary' : 'bg-fuchsia-500'}`}
+            style={{ width: `${progress}%` }}
           />
         </div>
 
-        <div className="flex items-center gap-2 text-[10px] font-mono text-white/40 uppercase tracking-widest">
-          <Users size={12} className={themeColor} /> {campaign.backerCount} {copy.BACKERS || "COMMUNITY BACKERS"}
+        {/* The Split Breakdown */}
+        <div className="grid grid-cols-2 gap-4 mt-4 p-3 rounded-xl bg-black/40 border border-white/5">
+           <div>
+             <span className="text-[9px] font-mono text-slate-500 uppercase tracking-widest block mb-1">Build Budget</span>
+             <span className="text-sm font-mono text-white/80">${buildFunds.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</span>
+           </div>
+           <div className="border-l border-white/10 pl-4">
+             <span className="text-[9px] font-mono text-emerald-500 uppercase tracking-widest flex items-center gap-1 mb-1">
+               <Wallet size={10} /> Architect Cut ({(activeFee * 100).toFixed(0)}%)
+             </span>
+             <span className="text-sm font-mono font-bold text-emerald-400">${architectCut.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</span>
+           </div>
         </div>
       </div>
 
-      {/* Action Buttons */}
-      <div className="flex items-center gap-3 pt-6 border-t border-white/5 relative z-10">
-        <button className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg bg-white/5 border border-white/10 hover:bg-white/10 hover:text-white text-xs font-mono text-white/60 uppercase tracking-widest transition-all">
-          <Code size={14} /> Widget
-        </button>
+      <div className="flex items-center justify-between pt-6 border-t border-white/5 mt-auto">
+        <div className="flex items-center gap-2 text-sm text-slate-400 font-mono">
+          <Users size={16} className={buildType === 'SAAS' ? 'text-brand-primary' : 'text-fuchsia-400'} />
+          <span className="text-white font-bold">{backerCount}</span> {copy.BACKERS}
+        </div>
         <Link 
-          href={`/dashboard/foundation/campaign/${campaign.id}`}
-          className={`flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg border text-xs font-mono uppercase tracking-widest font-bold transition-all group/btn ${isFunded ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30 hover:bg-emerald-500 hover:text-black' : 'bg-brand-primary/10 text-brand-primary border-brand-primary/30 hover:bg-brand-primary hover:text-black'}`}
+          href={`/dashboard/foundation/campaign/${id}`}
+          className="px-4 py-2 bg-white/5 hover:bg-white/10 text-white text-xs font-mono font-bold tracking-widest uppercase rounded-lg transition-colors border border-white/10"
         >
-          {copy.BTN_MANAGE || "MANAGE"} <ArrowRight size={14} className="group-hover/btn:translate-x-1 transition-transform" />
+          {copy.BTN_MANAGE}
         </Link>
       </div>
     </div>
