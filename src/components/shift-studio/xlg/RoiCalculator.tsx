@@ -186,7 +186,7 @@ export default function RoiCalculator() {
                   <h4 className="text-lg font-medium text-white tracking-tight">{ROI.STEP_3_LABEL}</h4>
                 </div>
                 <div className="pl-4 border-l border-white/5 ml-3">
-                  <div className="relative max-w-[200px]">
+                  <div className="relative max-w-50">
                     <DollarSign size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-brand-primary" />
                     <input 
                       type="number" 
@@ -203,7 +203,7 @@ export default function RoiCalculator() {
 
         {/* THE GLASS RECEIPT (RIGHT) */}
         <div className="lg:col-span-6">
-          <div className="sticky top-32 bg-linear-to-b from-white/5 to-transparent border border-white/10 rounded-[2rem] p-8 md:p-12 backdrop-blur-2xl shadow-[0_20px_50px_rgba(0,0,0,0.5)] overflow-hidden">
+          <div className="sticky top-32 bg-linear-to-b from-white/5 to-transparent border border-white/10 rounded-4xl p-8 md:p-12 backdrop-blur-2xl shadow-[0_20px_50px_rgba(0,0,0,0.5)] overflow-hidden">
             {/* Aesthetic Glow */}
             <div className="absolute top-0 right-0 w-96 h-96 bg-brand-primary/10 rounded-full blur-[100px] pointer-events-none -translate-y-1/2 translate-x-1/2" />
             
@@ -264,7 +264,7 @@ export default function RoiCalculator() {
                       <span className="text-sm font-mono text-white/40 ml-2 uppercase tracking-widest">/mo</span>
                    </div>
                    
-                   {/* The Yearly Hook */}
+                   {/* Yearly */}
                    <div className="pb-1 md:pb-2">
                       <span className="text-3xl md:text-5xl font-black text-brand-primary tracking-tighter drop-shadow-[0_0_20px_rgba(6,182,212,0.4)]">
                         ${auditData.yearly.net.toLocaleString(undefined, {maximumFractionDigits: 0})}

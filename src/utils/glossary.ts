@@ -260,48 +260,34 @@ MANUAL_INPUT_LABEL: "Or enter a custom monthly cost:",
           ]}
         ]
       },
+      // In src/utils/glossary.ts, replace the existing EVIDENCE object with this:
+
       EVIDENCE: {
         TAG: "LIVE SYSTEM CAPTURE",
         MODULES: [
           { 
-            ID: "main", 
-            IMAGES: ["/images/shift-main.png"], 
-            CAPTION: "SHIFT STUDIO • MAIN COMMAND", 
-            TITLE: "The Central Nervous System.", 
-            DESC: "Your entire operation at a glance. Stop digging through tabs to figure out what's moving and what needs your attention.", 
-            FACTS: ["Real-time pulse monitoring", "Automated lead routing", "Unified operational overview"] 
+            ID: "data",
+            IMAGES: ["/images/shift-inventory.png", "/images/shift-board.png"], // The dual-image setup
+            CAPTION: "SHIFT STUDIO NATIVE", 
+            TITLE: "Live Data. No Manual Entry.", 
+            DESC: "Stop copying numbers across spreadsheets and figuring out your profit margins at the end of the month. Shift Studio provides native, instant data flow. Your inventory syncs automatically, and your profit updates with every single sale.", 
+            FACTS: ["Instant inventory synchronization", "Real-time profit margin updates", "Zero manual data entry required"] 
           },
           { 
-            ID: "workshop", 
-            IMAGES: ["/images/shift-board.png", "/images/shift-inventory.png"], 
-            CAPTION: "ACTIVE PROJECT FLOW & INVENTORY", 
-            TITLE: "The Workshop Core.", 
-            DESC: "Build products from raw materials to final pricing. The true power of Shift Studio is the native connection between your daily tasks and your stock. As you move projects across your Kanban board, the system automatically allocates the required components from your connected inventory. No more jumping between different apps just to update stock or check material availability.", 
-            FACTS: ["Visual Kanban project tracking", "Live component & material allocation", "Low-stock automated alerts", "Multi-stage build syncing"] 
+            ID: "workflow",
+            IMAGES: ["/images/shift-spark.png"], // Replaced with Spark AI
+            CAPTION: "SHIFT STUDIO NATIVE", 
+            TITLE: "One Unified Workspace.", 
+            DESC: "Constant switching between apps kills momentum. Shift Studio provides everything in one unified view. Spark AI acts as a partner that actually knows your goals, while your daily tasks are natively connected to your inventory.", 
+            FACTS: ["AI partnership with business context", "Tasks connected to active inventory", "No context-switching between tools"] 
           },
           { 
-            ID: "ledger", 
-            IMAGES: ["/images/shift-ledger.png"], 
-            CAPTION: "FINANCIAL TELEMETRY", 
-            TITLE: "The Live Ledger.", 
-            DESC: "Bespoke financial analysis built for makers. See exactly what each build costs you in materials and time, and watch your true profit margins update live.", 
-            FACTS: ["Per-item profit margin analysis", "Automated expense tracking", "No spreadsheet formulas required"] 
-          },
-          { 
-            ID: "spark", 
-            IMAGES: ["/images/shift-spark.png"], 
-            CAPTION: "INTELLIGENT ASSISTANCE", 
-            TITLE: "Meet Spark AI.", 
-            DESC: "Not just another generic chatbot. Spark is wired directly into your ecosystem. It knows your inventory levels, your past projects, and your financial goals, acting as a relentless partner that helps you process data instantly.", 
-            FACTS: ["Context-aware assistance", "Automated task generation", "Instant ecosystem data retrieval"] 
-          },
-          { 
-            ID: "wizard", 
-            IMAGES: ["/images/shift-wizard.png"], 
-            CAPTION: "SYSTEM ONBOARDING", 
-            TITLE: "The Setup Wizard.", 
-            DESC: "No more blank canvas anxiety. When you enter the ecosystem, the interactive wizard guides you through wiring your exact business model into the platform, ensuring your foundation is rock solid from day one.", 
-            FACTS: ["Guided step-by-step setup", "Custom framework generation", "Zero blank-page syndrome"] 
+            ID: "money",
+            IMAGES: ["/images/shift-ledger.png"], // Kept the Profit Tracker
+            CAPTION: "SHIFT STUDIO NATIVE", 
+            TITLE: "Consolidate Your Costs.", 
+            DESC: "Paying for 5-8 separate apps and spending hours fixing broken links is burning your cash. Shift Studio gives you one spot to access everything. I handle the wiring and maintenance; you focus on building your business.", 
+            FACTS: ["Replace 5+ subscriptions with one", "Zero maintenance or API wiring", "Bespoke financial ledger included"] 
           }
         ]
       },
