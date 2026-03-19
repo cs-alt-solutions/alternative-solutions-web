@@ -3,22 +3,60 @@
 
 import React, { useState } from 'react';
 import { WEBSITE_COPY } from '@/utils/glossary';
-import { Mail, Send, Users, Sparkles, Eye, Edit3, Clock, LayoutList } from 'lucide-react';
+import { Mail, Send, Users, Sparkles, Eye, Edit3, Clock, LayoutList, Loader2, CheckCircle2, AlertTriangle } from 'lucide-react';
+import { sendCampaignBlast } from '@/app/actions';
 
 export default function CampaignsTab() {
   const copy = WEBSITE_COPY.DASHBOARD.MEDIA_HUB.CAMPAIGNS;
   
   const [audience, setAudience] = useState<'ALL' | 'FOUNDERS' | 'OBSERVERS'>('ALL');
   const [viewMode, setViewMode] = useState<'WRITE' | 'PREVIEW'>('WRITE');
+  const [subject, setSubject] = useState('');
   const [content, setContent] = useState('');
+  
+  const [status, setStatus] = useState<'idle' | 'sending' | 'success' | 'error'>('idle');
+  const [feedbackMsg, setFeedbackMsg] = useState('');
+
+  const handleSend = async () => {
+    if (!subject || !content) {
+      setStatus('error');
+      setFeedbackMsg('Subject and content are required.');
+      return;
+    }
+
+    setStatus('sending');
+    const response = await sendCampaignBlast(audience, subject, content);
+
+    if (response.success) {
+      setStatus('success');
+      setFeedbackMsg(`Transmission delivered to ${response.count} nodes.`);
+      setSubject('');
+      setContent('');
+      setTimeout(() => {
+        setStatus('idle');
+        setFeedbackMsg('');
+      }, 5000);
+    } else {
+      setStatus('error');
+      setFeedbackMsg(response.error || 'System failure during transmission.');
+    }
+  };
 
   return (
     <section className="grid grid-cols-1 lg:grid-cols-3 gap-6 animate-in fade-in duration-500">
       
       {/* LEFT COLUMN: The Composer */}
-      <div className="lg:col-span-2 bg-bg-surface-200/30 border border-white/5 rounded-2xl flex flex-col overflow-hidden">
+      <div className="lg:col-span-2 bg-bg-surface-200/30 border border-white/5 rounded-2xl flex flex-col overflow-hidden relative">
          
-         {/* HEADER: Audience & AI Action */}
+         {/* System Feedback Overlay */}
+         {status === 'success' && (
+            <div className="absolute inset-0 z-50 bg-emerald-950/90 backdrop-blur-md flex flex-col items-center justify-center text-emerald-400 animate-in fade-in">
+              <CheckCircle2 size={48} className="mb-4" />
+              <h3 className="text-xl font-black uppercase tracking-widest">{feedbackMsg}</h3>
+            </div>
+         )}
+
+         {/* HEADER */}
          <div className="p-6 pb-4 border-b border-white/5 bg-white/2 flex flex-col md:flex-row md:items-center justify-between gap-4">
            <div className="flex items-center gap-3">
              <Mail className="text-brand-primary" size={18} />
@@ -31,7 +69,7 @@ export default function CampaignsTab() {
            </button>
          </div>
 
-         {/* TOOLBAR: Audience Selector */}
+         {/* TOOLBAR */}
          <div className="px-6 py-4 border-b border-white/5 flex flex-col sm:flex-row sm:items-center gap-4">
             <span className="text-[10px] font-mono text-white/40 uppercase tracking-widest">
               {copy.AUDIENCE_LABEL}
@@ -55,14 +93,22 @@ export default function CampaignsTab() {
          
          {/* EDITOR AREA */}
          <div className="flex-1 flex flex-col p-6 space-y-4">
+           {status === 'error' && (
+             <div className="bg-red-500/10 border border-red-500/30 p-3 rounded-lg flex items-center gap-3 text-red-400">
+               <AlertTriangle size={16} />
+               <span className="text-xs font-mono uppercase tracking-widest">{feedbackMsg}</span>
+             </div>
+           )}
+
            <input 
              type="text" 
+             value={subject}
+             onChange={(e) => setSubject(e.target.value)}
              placeholder={copy.PLACEHOLDERS.SUBJECT} 
              className="w-full bg-black/40 border border-white/10 rounded-lg px-4 py-3 text-sm text-white font-bold tracking-wide focus:outline-none focus:border-brand-primary/50 transition-colors"
            />
            
            <div className="flex-1 flex flex-col border border-white/10 rounded-lg overflow-hidden bg-black/20">
-             {/* Editor Tabs (Write vs Preview) */}
              <div className="flex items-center border-b border-white/10 bg-white/5">
                 <button 
                   onClick={() => setViewMode('WRITE')}
@@ -82,7 +128,6 @@ export default function CampaignsTab() {
                 </button>
              </div>
 
-             {/* Dynamic Content Area */}
              {viewMode === 'WRITE' ? (
                <textarea 
                  value={content}
@@ -94,7 +139,6 @@ export default function CampaignsTab() {
                <div className="w-full h-64 p-6 overflow-y-auto custom-scrollbar bg-black/80">
                  {content ? (
                    <div className="prose prose-invert prose-sm max-w-none font-sans text-slate-300">
-                     {/* For now, just render text. Later we parse the markdown into HTML here */}
                      <p className="whitespace-pre-wrap">{content}</p>
                    </div>
                  ) : (
@@ -112,8 +156,12 @@ export default function CampaignsTab() {
            <button className="flex items-center gap-2 text-white/40 hover:text-white px-4 py-3 rounded-lg text-[10px] font-mono uppercase tracking-widest transition-all hover:bg-white/5 border border-transparent hover:border-white/10">
              <Clock size={14} /> {copy.ACTIONS.SCHEDULE}
            </button>
-           <button className="flex items-center gap-2 bg-brand-primary hover:bg-brand-primary/90 text-black px-6 py-3 rounded-lg font-mono text-[10px] uppercase font-bold tracking-widest transition-all shadow-[0_0_15px_rgba(6,182,212,0.3)] hover:shadow-[0_0_25px_rgba(6,182,212,0.5)]">
-             {copy.ACTIONS.SEND} <Send size={14} />
+           <button 
+             onClick={handleSend}
+             disabled={status === 'sending'}
+             className="flex items-center gap-2 bg-brand-primary hover:bg-brand-primary/90 text-black px-6 py-3 rounded-lg font-mono text-[10px] uppercase font-bold tracking-widest transition-all shadow-[0_0_15px_rgba(6,182,212,0.3)] hover:shadow-[0_0_25px_rgba(6,182,212,0.5)] disabled:opacity-50"
+           >
+             {status === 'sending' ? <Loader2 size={14} className="animate-spin" /> : <>{copy.ACTIONS.SEND} <Send size={14} /></>}
            </button>
          </div>
       </div>
@@ -121,7 +169,6 @@ export default function CampaignsTab() {
       {/* RIGHT COLUMN: Telemetry Sidebar */}
       <div className="lg:col-span-1 space-y-6">
          
-         {/* Live Roster Status */}
          <div className="bg-brand-primary/5 border border-brand-primary/20 rounded-2xl p-6 shadow-[inset_0_0_20px_rgba(6,182,212,0.05)]">
             <div className="flex items-center gap-2 mb-4">
               <Users size={14} className="text-brand-primary" />
@@ -129,15 +176,15 @@ export default function CampaignsTab() {
                 {copy.SIDEBAR.STATS_TITLE}
               </span>
             </div>
-            <div className="text-4xl font-black text-white tracking-tighter">
-              {copy.SIDEBAR.STATS_SYNC}
+            <div className="flex items-center gap-3">
+               <div className="w-3 h-3 bg-brand-primary rounded-full animate-pulse shadow-[0_0_10px_rgba(6,182,212,0.8)]" />
+               <div className="text-3xl font-black text-white tracking-tighter uppercase">API Live</div>
             </div>
-            <p className="text-[10px] text-white/50 font-mono mt-2 uppercase leading-relaxed">
-              {copy.SIDEBAR.STATS_DESC}
+            <p className="text-[10px] text-white/50 font-mono mt-4 uppercase leading-relaxed">
+              Resend integration active. System ready for dispatch.
             </p>
          </div>
 
-         {/* Recent Dispatches */}
          <div className="bg-bg-surface-200/50 border border-white/5 rounded-2xl p-6">
             <div className="flex items-center gap-2 mb-6 pb-4 border-b border-white/5">
               <LayoutList size={14} className="text-white/40" />

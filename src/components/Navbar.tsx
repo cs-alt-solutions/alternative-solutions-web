@@ -3,11 +3,18 @@
 
 import React, { useState } from 'react';
 import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 import { WEBSITE_COPY } from '@/utils/glossary';
 import { Menu, X } from 'lucide-react';
 
 export default function Navbar() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const pathname = usePathname();
+
+  // ARCHITECTURE RULE: Hide public navigation in command environments
+  if (pathname.startsWith('/dashboard') || pathname.startsWith('/login')) {
+    return null;
+  }
 
   const toggleMenu = () => setIsMobileMenuOpen(!isMobileMenuOpen);
   const closeMenu = () => setIsMobileMenuOpen(false);
@@ -42,7 +49,7 @@ export default function Navbar() {
             </Link>
           </div>
 
-          {/* THE BETA FUNNEL: The glowing CTA */}
+          {/* THE BETA FUNNEL */}
           <Link 
             href="/blueprint" 
             className="text-xs font-bold text-emerald-400 border border-emerald-500/50 hover:bg-emerald-400 hover:text-black px-5 py-2.5 rounded-lg transition-all shadow-[0_0_20px_rgba(52,211,153,0.15)] hover:shadow-[0_0_30px_rgba(52,211,153,0.4)] uppercase tracking-widest"

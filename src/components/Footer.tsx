@@ -13,9 +13,12 @@ export default function Footer() {
   const formRef = useRef<HTMLFormElement>(null);
   const [status, setStatus] = useState<'idle' | 'loading' | 'success'>('idle');
   
-  const { LEGAL_ENTITY, TAGLINE, CTA } = WEBSITE_COPY.GLOBAL_FOOTER;
+  // ARCHITECTURE RULE: Hide public footer in command environments
+  if (pathname.startsWith('/dashboard') || pathname.startsWith('/login')) {
+    return null;
+  }
 
-  // Hide the CTA block if we are already on the Lab page.
+  const { LEGAL_ENTITY, TAGLINE, CTA } = WEBSITE_COPY.GLOBAL_FOOTER;
   const showCTA = pathname !== '/blueprint';
 
   async function handleObserverSignup(formData: FormData) {
@@ -24,7 +27,6 @@ export default function Footer() {
     if (res?.success) {
       setStatus('success');
       formRef.current?.reset();
-      // Reset back to idle after a few seconds so they see the success message
       setTimeout(() => setStatus('idle'), 4000);
     } else {
       setStatus('idle');
@@ -60,7 +62,6 @@ export default function Footer() {
 
             <div className="w-full sm:w-auto text-white/20 font-mono text-[10px] uppercase">OR</div>
 
-            {/* THE OBSERVER CAPTURE FORM */}
             <form ref={formRef} action={handleObserverSignup} className="w-full relative">
               <input type="hidden" name="source" value="Footer_Observer" />
               <input 
@@ -85,7 +86,6 @@ export default function Footer() {
         </div>
       )}
 
-      {/* The Legal Tagline */}
       <p className="text-[10px] text-white/40 font-mono uppercase tracking-widest mt-auto">
         © {new Date().getFullYear()} {LEGAL_ENTITY} {TAGLINE}
       </p>

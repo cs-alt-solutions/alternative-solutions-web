@@ -9,7 +9,7 @@ import NavItem from '@/components/core/NavItem';
 import { 
   LayoutDashboard, Settings, Search, Bell, 
   Cpu, ShieldCheck, Ticket, Inbox, FileText, Mic, CalendarDays, Rocket, Database,
-  Menu, X 
+  Menu, X, ShieldAlert, Package 
 } from 'lucide-react';
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
@@ -17,6 +17,8 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const sidebarCopy = WEBSITE_COPY.DASHBOARD.SIDEBAR;
   const commonCopy = WEBSITE_COPY.DASHBOARD.COMMON;
   const overviewCopy = WEBSITE_COPY.DASHBOARD.OVERVIEW;
+  const betaCopy = WEBSITE_COPY.DASHBOARD.BETA_COMMAND;
+  const ecosystemCopy = WEBSITE_COPY.DASHBOARD.ECOSYSTEM_MANAGER;
 
   // STATE: Controls the mobile sidebar drawer
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -29,6 +31,8 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     if (pathname === '/dashboard/tasks') return sidebarCopy.TASKS;
     if (pathname === '/dashboard/foundation') return sidebarCopy.FOUNDATION;
     if (pathname === '/dashboard/infrastructure') return "INFRASTRUCTURE";
+    if (pathname === '/dashboard/beta-command') return betaCopy.TITLE;
+    if (pathname === '/dashboard/ecosystem') return ecosystemCopy.TITLE;
     if (pathname === '/dashboard') return overviewCopy.TITLE;
     return "SYSTEM COMMAND";
   };
@@ -71,6 +75,16 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           </div>
           <Link href="/dashboard/foundation">
              <NavItem icon={Rocket} label={sidebarCopy.FOUNDATION} active={pathname === '/dashboard/foundation'} />
+          </Link>
+          
+          {/* THE FORGE / ECOSYSTEM MANAGER */}
+          <Link href="/dashboard/ecosystem">
+             <NavItem icon={Package} label="Ecosystem" active={pathname === '/dashboard/ecosystem'} />
+          </Link>
+
+          {/* BETA COMMAND */}
+          <Link href="/dashboard/beta-command">
+             <NavItem icon={ShieldAlert} label={betaCopy.TITLE} active={pathname === '/dashboard/beta-command'} />
           </Link>
           
           <div className="text-[10px] font-mono text-white/40 uppercase tracking-widest mb-2 px-3 mt-8">

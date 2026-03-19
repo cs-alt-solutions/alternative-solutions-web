@@ -205,6 +205,17 @@ export const WEBSITE_COPY = {
         TIME_LABEL: "VALUE OF RECOVERED TIME",
         COST_LABEL: "SHIFT STUDIO (INVESTMENT)",
         DISCLAIMER: "*App costs are estimates based on standard monthly prices.",
+        // Inside WEBSITE_COPY.PUBLIC_SITE.SHIFT_STUDIO_PAGE.ROI
+TOGGLES: {
+  BASELINE: "Industry Baseline",
+  CUSTOM: "Custom Audit"
+},
+BASELINE_INFO: {
+  TITLE: "The 'Cost of Doing Business'",
+  DESC: "This is the bare minimum you'd spend on the cheapest apps just to keep your business running without doing everything manually on paper. It's what the industry expects you to pay.",
+  PROMPT: "Want to see your real numbers? Switch to a Custom Audit to pick the apps you actually use."
+},
+MANUAL_INPUT_LABEL: "Or enter a custom monthly cost:",
         CATEGORIES: { PROJECT: "Tasks & Planning", INVENTORY: "Sales & Inventory", FINANCE: "Money & Bookkeeping" },
         APPS: [
           { id: "notion", name: "Notion", cost: 10, category: "PROJECT" },
@@ -337,32 +348,31 @@ export const WEBSITE_COPY = {
           BTN_MANAGE: "MANAGE CAMPAIGN"
         }
       },
-      // Add to src/utils/glossary.ts inside DASHBOARD.FOUNDATION
-CAMPAIGN_DETAIL: {
-  BACK_BTN: "RETURN TO FOUNDATION",
-  TABS: {
-    OVERVIEW: "Campaign Telemetry",
-    BACKERS: "Backer Ledger",
-    SETTINGS: "Widget & Settings"
-  },
-  STATS: {
-    RAISED: "Total Secured",
-    TARGET: "Funding Target",
-    BACKERS: "Total Backers",
-    AVG_BOOST: "Avg. Boost"
-  },
-  ACTIONS: {
-    COPY_WIDGET: "COPY WIDGET HTML",
-    BROADCAST: "MESSAGE BACKERS",
-    FINALIZE: "AUTHORIZE BUILD (FUNDS SECURED)"
-  },
-  LEDGER_COLS: {
-    DATE: "Date",
-    BACKER: "Backer",
-    AMOUNT: "Amount",
-    TYPE: "Type"
-  }
-},
+      CAMPAIGN_DETAIL: {
+        BACK_BTN: "RETURN TO FOUNDATION",
+        TABS: {
+          OVERVIEW: "Campaign Telemetry",
+          BACKERS: "Backer Ledger",
+          SETTINGS: "Widget & Settings"
+        },
+        STATS: {
+          RAISED: "Total Secured",
+          TARGET: "Funding Target",
+          BACKERS: "Total Backers",
+          AVG_BOOST: "Avg. Boost"
+        },
+        ACTIONS: {
+          COPY_WIDGET: "COPY WIDGET HTML",
+          BROADCAST: "MESSAGE BACKERS",
+          FINALIZE: "AUTHORIZE BUILD (FUNDS SECURED)"
+        },
+        LEDGER_COLS: {
+          DATE: "Date",
+          BACKER: "Backer",
+          AMOUNT: "Amount",
+          TYPE: "Type"
+        }
+      },
       STATS: {
         MRR: "Monthly Recurring",
         BUILDERS: "Founding Builders",
@@ -424,7 +434,87 @@ CAMPAIGN_DETAIL: {
           EMPTY_RECENT: "No recent transmissions."
         }
       }
-    }, 
+    },
+    BETA_COMMAND: {
+      TITLE: "Beta Command",
+      SUBTITLE: "Co-Op Hub",
+      STATUS: "LIVE TELEMETRY",
+      TABS: {
+        MATRIX: "Access Matrix",
+        FEEDBACK: "Telemetry Feed",
+        POLLING: "Roadmap Polling"
+      },
+      MATRIX: {
+        SEARCH_PLACEHOLDER: "Search by designation, name, or node...",
+        COLUMNS: ["Node", "Designation", "Tier / Lock", "Status"],
+        ACCESS_MODULES: ["Shift Studio", "GlitchBot", "API"],
+        DETAILS: {
+          REAL_NAME: "Legal Identity",
+          CONTACT: "Comms Link",
+          JOINED: "Initial Pulse",
+          PHONE: "SMS Relay",
+          FOUNDER_BADGE: "FOUNDING 20",
+          COHORTS: "Active Beta Cohorts",
+          ASSIGN_COHORT: "+ Assign Product"
+        }
+      },
+      FEEDBACK: {
+        TITLE: "Incoming Transmissions",
+        FILTER_ALL: "ALL DATA",
+        FILTER_BUGS: "ANOMALIES",
+        FILTER_IDEAS: "DIRECTIVES"
+      },
+      POLLING: {
+        TITLE: "Consensus Network",
+        VOTES_LBL: "Network Votes",
+        ACTIVE_POLLS: "Live Consensus",
+        PIPELINE_TITLE: "The Foundry (AI Drafts)",
+        PIPELINE_DESC: "Spark AI has clustered similar feedback into potential directives.",
+        BTN_PROMOTE: "PUSH TO PUBLIC POLL",
+        EVIDENCE: "Linked Feedback Nodes"
+      }
+    },
+    ECOSYSTEM_MANAGER: {
+      TITLE: "Ecosystem Command",
+      SUBTITLE: "The Forge",
+      STATUS: "DATABASE SYNCED",
+      SEARCH_PLACEHOLDER: "Search ecosystem modules...",
+      BTN_NEW_MODULE: "DEPLOY NEW MODULE",
+      COLUMNS: ["Module", "Designation", "Deployment Status", "Active Betas", "Actions"],
+      STATUS_OPTIONS: ["ACTIVE", "BETA", "CLASSIFIED", "DEPRECATED"],
+      BADGES: {
+        PUBLIC: "LIVE ON SITE",
+        INTERNAL: "INTERNAL LAB"
+      },
+      PANEL: {
+        TITLE_NEW: "INITIALIZE NEW MODULE",
+        TITLE_EDIT: "CONFIGURE MODULE",
+        TABS: {
+          CORE: "CORE CONFIG",
+          MARKETING: "PUBLIC MARKETING",
+          DEPLOY: "DEPLOYMENT"
+        },
+        CORE: {
+          FIELD_NAME: "Module Designation",
+          FIELD_TAGLINE: "System Tagline",
+          FIELD_DESC: "Technical Description",
+          FIELD_ICON: "Icon Matrix (Lucide)"
+        },
+        MARKETING: {
+          FIELD_PUBLIC_TITLE: "Public Title",
+          FIELD_PUBLIC_DESC: "Marketing Description",
+          FIELD_FEATURES: "Feature Bullets (Comma separated)",
+          FIELD_CTA: "Call to Action Text"
+        },
+        DEPLOY: {
+          FIELD_STATUS: "System Status",
+          TOGGLE_PUBLIC: "PUBLISH TO PUBLIC DIRECTORY",
+          TOGGLE_DESC: "When active, this module will instantly appear on the public /products page."
+        },
+        BTN_SAVE: "AUTHORIZE DEPLOYMENT",
+        BTN_CANCEL: "ABORT"
+      }
+    },
     STRATEGIC_PLANNER: { 
       BTN_ADD: "LOG DIRECTIVE", 
       ACTIONS: { AUDIO: "RECORD AUDIO", AUTHORIZE: "AUTHORIZE BUILD" }, 

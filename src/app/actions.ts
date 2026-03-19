@@ -4,9 +4,13 @@
 import { supabase } from '@/utils/supabase';
 import { revalidatePath } from 'next/cache';
 import { Directive } from '@/utils/glossary';
-/* ADD TO src/app/actions.ts */
 import { createClient } from '@/utils/supabase/server';
 import { redirect } from 'next/navigation';
+import { Resend } from 'resend';
+
+// Initialize Resend
+const resend = new Resend(process.env.RESEND_API_KEY);
+const fromEmail = process.env.NEXT_PUBLIC_COMPANY_EMAIL || 'hello@alternativesolutions.io';
 
 // --- AUTH COMMANDS ---
 export async function loginAdmin(formData: FormData) {
@@ -22,8 +26,6 @@ export async function loginAdmin(formData: FormData) {
   if (error) {
     return { success: false, message: 'Invalid credentials. Access denied.' };
   }
-
-  // If successful, boot them into the command center
   redirect('/dashboard');
 }
 
@@ -33,7 +35,7 @@ export async function logPulse(eventType: string, message: string) {
   revalidatePath('/dashboard');
 }
 
-// --- OPERATIONS: FOUNDATION COMMAND (Formerly Waitlist) ---
+// --- OPERATIONS: FOUNDATION COMMAND ---
 export async function joinWaitlist(formData: FormData) {
   const email = formData.get('email') as string;
   const source = formData.get('source') as string || 'Workshop';
@@ -43,7 +45,6 @@ export async function joinWaitlist(formData: FormData) {
   }
 
   try {
-    // We route all incoming emails into the central 'supporters' ledger as an OBSERVER
     const { error } = await supabase
       .from('supporters')
       .upsert({ 
@@ -61,10 +62,9 @@ export async function joinWaitlist(formData: FormData) {
       return { success: false, error: error.message, isNew: false };
     }
 
-    // Keep the pulse logging from your original file!
     await logPulse('BETA_REQUEST', `New request from ${email}`);
     revalidatePath('/dashboard');
-    revalidatePath('/dashboard/foundation'); // Revalidate the new foundation page
+    revalidatePath('/dashboard/foundation');
     
     return { success: true, isNew: true };
     
@@ -74,7 +74,51 @@ export async function joinWaitlist(formData: FormData) {
   }
 }
 
-// --- STUDIO: BROADCAST ---
+// --- STUDIO: BROADCAST (EMAIL COMMS) ---
+export async function sendCampaignBlast(audience: string, subject: string, content: string) {
+  if (!process.env.RESEND_API_KEY) {
+    return { success: false, error: 'RESEND_API_KEY is missing from environment variables.' };
+  }
+
+  try {
+    let query = supabase.from('supporters').select('email, display_name').eq('status', 'ACTIVE');
+    
+    if (audience === 'FOUNDERS') {
+      query = query.eq('tier', 'BUILDER');
+    } else if (audience === 'OBSERVERS') {
+      query = query.eq('tier', 'OBSERVER');
+    }
+
+    const { data: recipients, error } = await query;
+
+    if (error) throw error;
+    if (!recipients || recipients.length === 0) return { success: false, error: 'No recipients found for this audience.' };
+
+    const emailList = recipients.map(r => r.email);
+
+    // Send the email batch via Resend
+    const { data, error: resendError } = await resend.emails.send({
+      from: `Alternative Solutions <${fromEmail}>`,
+      to: emailList,
+      subject: subject,
+      html: `<div style="font-family: sans-serif; color: #1a1a1e; line-height: 1.6;">
+               <p style="white-space: pre-wrap;">${content}</p>
+             </div>`, 
+    });
+
+    if (resendError) throw resendError;
+
+    await logPulse('EMAIL_BLAST', `Sent "${subject}" to ${emailList.length} ${audience}`);
+    revalidatePath('/dashboard/broadcast');
+    
+    return { success: true, count: emailList.length };
+  } catch (err: any) {
+    console.error('Failed to send campaign:', err);
+    return { success: false, error: err.message || 'Transmission failed.' };
+  }
+}
+
+// --- STUDIO: BROADCAST (AUDIO) ---
 export async function publishAudioLog(formData: FormData) {
   const file = formData.get('audioFile') as File;
   const title = formData.get('title') as string;
@@ -122,20 +166,14 @@ export async function logDirective(directive: Omit<Directive, 'id' | 'status'>) 
   return { success: !error };
 }
 
-// --- NEW DATA FETCHERS FOR THE DASHBOARD ---
-
 export async function getActiveDirectives() {
   const { data, error } = await supabase
     .from('ideas_ledger')
     .select('*')
-    // We only want to see things that are actively being worked on
     .eq('status', 'IN_PROGRESS') 
     .order('created_at', { ascending: false });
     
-  if (error) {
-    console.error('Fetch Error (Directives):', error);
-    return [];
-  }
+  if (error) return [];
   return data;
 }
 
@@ -146,28 +184,14 @@ export async function getActiveProjects() {
     .eq('status', 'ACTIVE')
     .order('created_at', { ascending: false });
     
-  if (error) {
-    console.error('Fetch Error (Projects):', error);
-    return [];
-  }
+  if (error) return [];
   return data;
 }
-// --- FOUNDATION COMMAND: ANONYMITY TOGGLE ---
+
 export async function toggleAnonymity(id: string, currentDisplayName: string, originalName: string | null) {
-  // If they are already anonymous, restore their original name (or default to 'Unknown' if no name was provided)
   const newName = currentDisplayName === 'Anonymous' ? (originalName || 'Anonymous Builder') : 'Anonymous';
-  
-  const { error } = await supabase
-    .from('supporters')
-    .update({ display_name: newName })
-    .eq('id', id);
-
-  if (error) {
-    console.error('Failed to toggle anonymity:', error);
-    return { success: false };
-  }
-
-  // Instantly update the dashboard and the public blueprint page
+  const { error } = await supabase.from('supporters').update({ display_name: newName }).eq('id', id);
+  if (error) return { success: false };
   revalidatePath('/dashboard/foundation');
   revalidatePath('/blueprint');
   return { success: true };
