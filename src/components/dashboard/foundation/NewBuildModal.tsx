@@ -3,7 +3,7 @@
 
 import React, { useState } from 'react';
 import { supabase } from '@/utils/supabase';
-import { X, Rocket, Briefcase, Beaker, Calculator, DollarSign, Cpu, Loader2, Handshake, Percent, Tag, Wrench, Scale, Coffee, MoreHorizontal, CalendarClock } from 'lucide-react';
+import { X, Rocket, Briefcase, Beaker, Calculator, DollarSign, Cpu, Loader2, Handshake, Percent, Tag, Wrench, Scale, MoreHorizontal, CalendarClock, Users } from 'lucide-react';
 import { WEBSITE_COPY, SYSTEM_CONFIG } from '@/utils/glossary';
 
 interface NewBuildModalProps {
@@ -20,9 +20,9 @@ export default function NewBuildModal({ onClose, onSuccess }: NewBuildModalProps
     title: '',
     type: 'PROTOTYPE',
     client_name: '',
-    compensation_types: ['FIXED'], // Now an array for Hybrid stacking
+    compensation_types: ['FIXED'], 
     
-    // Fixed Capital
+    // Fixed Capital / Internal Funding
     fixed_amount: '', 
     fixed_schedule: 'UPFRONT', 
     
@@ -48,12 +48,11 @@ export default function NewBuildModal({ onClose, onSuccess }: NewBuildModalProps
     setFormData({ ...formData, type });
   };
 
-  // Toggles the compensation models on/off
   const toggleCompType = (compType: string) => {
     setFormData(prev => {
       const types = prev.compensation_types;
       if (types.includes(compType)) {
-        if (types.length === 1) return prev; // Prevent deselecting everything
+        if (types.length === 1) return prev; 
         return { ...prev, compensation_types: types.filter(t => t !== compType) };
       } else {
         return { ...prev, compensation_types: [...types, compType] };
@@ -69,7 +68,7 @@ export default function NewBuildModal({ onClose, onSuccess }: NewBuildModalProps
     e.preventDefault();
     setIsSubmitting(true);
 
-    const compensationDetails = {
+    const compensationDetails = formData.type === 'INTERNAL' ? {} : {
       fixed_schedule: formData.fixed_schedule,
       rev_amount: formData.rev_amount,
       rev_type: formData.rev_type,
@@ -78,13 +77,13 @@ export default function NewBuildModal({ onClose, onSuccess }: NewBuildModalProps
     };
 
     const { error } = await supabase.from('projects').insert({
-      name: formData.title, // FIX: Explicitly mapping to the required "name" column
-      title: formData.title, // Keeping title populated as well
+      name: formData.title, 
+      title: formData.title, 
       type: formData.type,
       client_name: formData.client_name,
-      compensation_types: formData.compensation_types,
+      compensation_types: formData.type === 'INTERNAL' ? [] : formData.compensation_types,
       target_amount: fixedNum, 
-      barter_terms: formData.barter_terms,
+      barter_terms: formData.type === 'INTERNAL' ? null : formData.barter_terms,
       compensation_details: compensationDetails,
       status: 'DRAFTING',
       progress: 0
@@ -99,6 +98,16 @@ export default function NewBuildModal({ onClose, onSuccess }: NewBuildModalProps
       setIsSubmitting(false);
     }
   };
+
+  // Smart UI Helpers
+  const getClientContext = () => {
+    if (formData.type === 'INTERNAL') return { label: 'Target Audience', placeholder: 'e.g., Solo Makers, Freelancers...', icon: Users };
+    if (formData.type === 'PROTOTYPE') return { label: 'Target Client', placeholder: 'Who are we pitching to?', icon: Briefcase };
+    return { label: 'Assigned Client', placeholder: 'Name of the active client...', icon: Briefcase };
+  };
+
+  const clientContext = getClientContext();
+  const ClientIcon = clientContext.icon;
 
   return (
     <div className="fixed inset-0 z-70 flex items-center justify-center bg-black/80 backdrop-blur-sm animate-in fade-in zoom-in-95 duration-200 p-4">
@@ -119,12 +128,16 @@ export default function NewBuildModal({ onClose, onSuccess }: NewBuildModalProps
             
             <div className="grid md:grid-cols-2 gap-6">
               <div>
-                <label className="text-[10px] font-mono text-slate-400 uppercase tracking-widest mb-2 flex">Project Codename *</label>
+                <label className="text-[10px] font-mono text-slate-400 uppercase tracking-widest mb-2 flex items-center gap-2">
+                  <Rocket size={12} /> Project Codename *
+                </label>
                 <input type="text" required name="title" value={formData.title} onChange={handleChange} placeholder="e.g., Logistic Ops Interface" className="w-full bg-black border border-slate-800 rounded-xl px-4 py-4 text-white focus:border-brand-primary outline-none transition-colors" />
               </div>
               <div>
-                <label className="text-[10px] font-mono text-slate-400 uppercase tracking-widest mb-2 flex">Target Client</label>
-                <input type="text" name="client_name" value={formData.client_name} onChange={handleChange} placeholder="Who is this for?" className="w-full bg-black border border-slate-800 rounded-xl px-4 py-4 text-white focus:border-brand-primary outline-none transition-colors" />
+                <label className="text-[10px] font-mono text-slate-400 uppercase tracking-widest mb-2 flex items-center gap-2">
+                  <ClientIcon size={12} /> {clientContext.label}
+                </label>
+                <input type="text" name="client_name" value={formData.client_name} onChange={handleChange} placeholder={clientContext.placeholder} className="w-full bg-black border border-slate-800 rounded-xl px-4 py-4 text-white focus:border-brand-primary outline-none transition-colors" />
               </div>
             </div>
 
@@ -138,105 +151,124 @@ export default function NewBuildModal({ onClose, onSuccess }: NewBuildModalProps
                   <Beaker size={20} /> <span className="font-bold uppercase tracking-widest text-xs">Spec Prototype</span>
                 </button>
                 <button type="button" onClick={() => handleTypeSelect('CLIENT')} className={`p-4 rounded-xl border text-left transition-all flex flex-col gap-2 ${formData.type === 'CLIENT' ? 'bg-emerald-500/10 border-emerald-500/50 shadow-[0_0_20px_rgba(16,185,129,0.1)] text-emerald-400' : 'bg-black border-slate-800 text-slate-500 hover:border-slate-600'}`}>
-                  <Briefcase size={20} /> <span className="font-bold uppercase tracking-widest text-xs">Signed Contract</span>
+                  <Briefcase size={20} /> <span className="font-bold uppercase tracking-widest text-xs">Client Portal</span>
                 </button>
               </div>
             </div>
 
-            {/* HYBRID VALUE EXCHANGE CONFIGURATOR */}
-            <div className="pt-6 border-t border-slate-800">
-              <label className="text-[10px] font-mono text-amber-400 uppercase tracking-widest mb-3 flex items-center gap-2">
-                <Handshake size={14} /> Hybrid Contract Builder (Select Multiple)
-              </label>
-              
-              <div className="flex gap-2 mb-6 bg-black p-1.5 rounded-xl border border-slate-800">
-                <button type="button" onClick={() => toggleCompType('FIXED')} className={`flex-1 py-2 rounded-lg text-[10px] font-mono uppercase tracking-widest font-bold transition-all border ${formData.compensation_types.includes('FIXED') ? 'bg-amber-500/20 border-amber-500/30 text-amber-400 shadow-[0_0_15px_rgba(245,158,11,0.2)]' : 'border-transparent text-slate-500 hover:text-white'}`}>Fixed Capital</button>
-                <button type="button" onClick={() => toggleCompType('REV_SHARE')} className={`flex-1 py-2 rounded-lg text-[10px] font-mono uppercase tracking-widest font-bold transition-all border ${formData.compensation_types.includes('REV_SHARE') ? 'bg-amber-500/20 border-amber-500/30 text-amber-400 shadow-[0_0_15px_rgba(245,158,11,0.2)]' : 'border-transparent text-slate-500 hover:text-white'}`}>Rev Share</button>
-                <button type="button" onClick={() => toggleCompType('BARTER')} className={`flex-1 py-2 rounded-lg text-[10px] font-mono uppercase tracking-widest font-bold transition-all border ${formData.compensation_types.includes('BARTER') ? 'bg-amber-500/20 border-amber-500/30 text-amber-400 shadow-[0_0_15px_rgba(245,158,11,0.2)]' : 'border-transparent text-slate-500 hover:text-white'}`}>Value Trade</button>
+            {/* CONDITIONAL RENDER: Hide complex contracts if it's an internal tool */}
+            {formData.type === 'INTERNAL' ? (
+              <div className="pt-6 border-t border-slate-800 animate-in fade-in zoom-in-95">
+                <label className="text-[10px] font-mono text-cyan-400 uppercase tracking-widest mb-3 flex items-center gap-2">
+                  <Cpu size={14} /> Internal Funding Scope
+                </label>
+                <div>
+                  <label className="text-[10px] font-mono text-slate-400 uppercase tracking-widest mb-2 flex">Development Target ($)</label>
+                  <div className="relative max-w-sm">
+                    <DollarSign size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500" />
+                    <input type="number" name="fixed_amount" value={formData.fixed_amount} onChange={handleChange} placeholder="0.00" className="w-full bg-black border border-slate-800 rounded-xl pl-10 pr-4 py-4 text-sm text-white focus:border-cyan-400 outline-none transition-colors" />
+                  </div>
+                  <p className="text-[9px] text-slate-500 mt-3 font-mono uppercase tracking-widest leading-relaxed max-w-sm">
+                    Set a target to crowdfund this internal build directly on the public Ecosystem page.
+                  </p>
+                </div>
               </div>
+            ) : (
+              /* HYBRID VALUE EXCHANGE CONFIGURATOR (For Prototypes & Client Portals) */
+              <div className="pt-6 border-t border-slate-800 animate-in fade-in zoom-in-95">
+                <label className="text-[10px] font-mono text-amber-400 uppercase tracking-widest mb-3 flex items-center gap-2">
+                  <Handshake size={14} /> Hybrid Contract Builder (Select Multiple)
+                </label>
+                
+                <div className="flex gap-2 mb-6 bg-black p-1.5 rounded-xl border border-slate-800">
+                  <button type="button" onClick={() => toggleCompType('FIXED')} className={`flex-1 py-2 rounded-lg text-[10px] font-mono uppercase tracking-widest font-bold transition-all border ${formData.compensation_types.includes('FIXED') ? 'bg-amber-500/20 border-amber-500/30 text-amber-400 shadow-[0_0_15px_rgba(245,158,11,0.2)]' : 'border-transparent text-slate-500 hover:text-white'}`}>Fixed Capital</button>
+                  <button type="button" onClick={() => toggleCompType('REV_SHARE')} className={`flex-1 py-2 rounded-lg text-[10px] font-mono uppercase tracking-widest font-bold transition-all border ${formData.compensation_types.includes('REV_SHARE') ? 'bg-amber-500/20 border-amber-500/30 text-amber-400 shadow-[0_0_15px_rgba(245,158,11,0.2)]' : 'border-transparent text-slate-500 hover:text-white'}`}>Rev Share</button>
+                  <button type="button" onClick={() => toggleCompType('BARTER')} className={`flex-1 py-2 rounded-lg text-[10px] font-mono uppercase tracking-widest font-bold transition-all border ${formData.compensation_types.includes('BARTER') ? 'bg-amber-500/20 border-amber-500/30 text-amber-400 shadow-[0_0_15px_rgba(245,158,11,0.2)]' : 'border-transparent text-slate-500 hover:text-white'}`}>Value Trade</button>
+                </div>
 
-              <div className="space-y-4">
-                {/* 1. FIXED BLOCK */}
-                {formData.compensation_types.includes('FIXED') && (
-                  <div className="bg-slate-900/30 p-6 rounded-2xl border border-slate-800/50 animate-in fade-in zoom-in-95">
-                    <div className="grid md:grid-cols-2 gap-6">
-                      <div>
-                        <label className="text-[10px] font-mono text-slate-400 uppercase tracking-widest mb-2 flex">Total Fixed Funding ($)</label>
-                        <div className="relative">
-                          <DollarSign size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500" />
-                          <input type="number" required name="fixed_amount" value={formData.fixed_amount} onChange={handleChange} placeholder="0.00" className="w-full bg-black border border-slate-800 rounded-xl pl-10 pr-4 py-3 text-sm text-white focus:border-amber-400 outline-none transition-colors" />
+                <div className="space-y-4">
+                  {/* 1. FIXED BLOCK */}
+                  {formData.compensation_types.includes('FIXED') && (
+                    <div className="bg-slate-900/30 p-6 rounded-2xl border border-slate-800/50 animate-in fade-in zoom-in-95">
+                      <div className="grid md:grid-cols-2 gap-6">
+                        <div>
+                          <label className="text-[10px] font-mono text-slate-400 uppercase tracking-widest mb-2 flex">Total Fixed Funding ($)</label>
+                          <div className="relative">
+                            <DollarSign size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500" />
+                            <input type="number" required name="fixed_amount" value={formData.fixed_amount} onChange={handleChange} placeholder="0.00" className="w-full bg-black border border-slate-800 rounded-xl pl-10 pr-4 py-3 text-sm text-white focus:border-amber-400 outline-none transition-colors" />
+                          </div>
+                        </div>
+                        <div>
+                          <label className="text-[10px] font-mono text-slate-400 uppercase tracking-widest mb-2 flex">Payment Schedule</label>
+                          <div className="flex gap-2 h-11">
+                            <button type="button" onClick={() => setFormData({...formData, fixed_schedule: 'UPFRONT'})} className={`flex-1 rounded-lg text-[10px] font-mono uppercase tracking-widest font-bold transition-all border ${formData.fixed_schedule === 'UPFRONT' ? 'bg-amber-500/10 border-amber-500/30 text-amber-400' : 'bg-black border-slate-800 text-slate-500 hover:text-white'}`}>Upfront</button>
+                            <button type="button" onClick={() => setFormData({...formData, fixed_schedule: 'MILESTONES'})} className={`flex-1 rounded-lg text-[10px] font-mono uppercase tracking-widest font-bold transition-all border flex items-center justify-center gap-1 ${formData.fixed_schedule === 'MILESTONES' ? 'bg-amber-500/10 border-amber-500/30 text-amber-400' : 'bg-black border-slate-800 text-slate-500 hover:text-white'}`}><CalendarClock size={12}/> Tiers</button>
+                          </div>
                         </div>
                       </div>
-                      <div>
-                        <label className="text-[10px] font-mono text-slate-400 uppercase tracking-widest mb-2 flex">Payment Schedule</label>
-                        <div className="flex gap-2 h-11">
-                          <button type="button" onClick={() => setFormData({...formData, fixed_schedule: 'UPFRONT'})} className={`flex-1 rounded-lg text-[10px] font-mono uppercase tracking-widest font-bold transition-all border ${formData.fixed_schedule === 'UPFRONT' ? 'bg-amber-500/10 border-amber-500/30 text-amber-400' : 'bg-black border-slate-800 text-slate-500 hover:text-white'}`}>Upfront</button>
-                          <button type="button" onClick={() => setFormData({...formData, fixed_schedule: 'MILESTONES'})} className={`flex-1 rounded-lg text-[10px] font-mono uppercase tracking-widest font-bold transition-all border flex items-center justify-center gap-1 ${formData.fixed_schedule === 'MILESTONES' ? 'bg-amber-500/10 border-amber-500/30 text-amber-400' : 'bg-black border-slate-800 text-slate-500 hover:text-white'}`}><CalendarClock size={12}/> Tiers</button>
+                    </div>
+                  )}
+
+                  {/* 2. REV SHARE BLOCK */}
+                  {formData.compensation_types.includes('REV_SHARE') && (
+                    <div className="bg-slate-900/30 p-6 rounded-2xl border border-slate-800/50 animate-in fade-in zoom-in-95">
+                      <div className="grid md:grid-cols-3 gap-4">
+                        <div>
+                          <label className="text-[10px] font-mono text-slate-400 uppercase tracking-widest mb-2 flex">Fee Structure</label>
+                          <select name="rev_type" value={formData.rev_type} onChange={handleChange} className="w-full bg-black border border-slate-800 rounded-xl px-4 py-3 text-xs text-white focus:border-amber-400 outline-none transition-colors cursor-pointer">
+                            <option value="PERCENTAGE">Percentage (%)</option>
+                            <option value="FLAT_FEE">Flat Fee ($)</option>
+                          </select>
+                        </div>
+                        <div>
+                          <label className="text-[10px] font-mono text-slate-400 uppercase tracking-widest mb-2 flex">Rate / Amount</label>
+                          <div className="relative">
+                            {formData.rev_type === 'PERCENTAGE' ? <Percent size={14} className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500" /> : <DollarSign size={14} className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500" />}
+                            <input type="number" step="0.01" required name="rev_amount" value={formData.rev_amount} onChange={handleChange} placeholder={formData.rev_type === 'PERCENTAGE' ? "10" : "0.20"} className="w-full bg-black border border-slate-800 rounded-xl pl-10 pr-4 py-3 text-sm text-white focus:border-amber-400 outline-none transition-colors" />
+                          </div>
+                        </div>
+                        <div>
+                          <label className="text-[10px] font-mono text-slate-400 uppercase tracking-widest mb-2 flex">Trigger Metric</label>
+                          <select name="rev_trigger" value={formData.rev_trigger} onChange={handleChange} className="w-full bg-black border border-slate-800 rounded-xl px-4 py-3 text-xs text-white focus:border-amber-400 outline-none transition-colors cursor-pointer">
+                            <option value="PER_TRANSACTION">Per Order/Transaction</option>
+                            <option value="GROSS_SALES">Total Gross Volume</option>
+                          </select>
                         </div>
                       </div>
                     </div>
-                  </div>
-                )}
+                  )}
 
-                {/* 2. REV SHARE BLOCK */}
-                {formData.compensation_types.includes('REV_SHARE') && (
-                  <div className="bg-slate-900/30 p-6 rounded-2xl border border-slate-800/50 animate-in fade-in zoom-in-95">
-                    <div className="grid md:grid-cols-3 gap-4">
-                      <div>
-                        <label className="text-[10px] font-mono text-slate-400 uppercase tracking-widest mb-2 flex">Fee Structure</label>
-                        <select name="rev_type" value={formData.rev_type} onChange={handleChange} className="w-full bg-black border border-slate-800 rounded-xl px-4 py-3 text-xs text-white focus:border-amber-400 outline-none transition-colors cursor-pointer">
-                          <option value="PERCENTAGE">Percentage (%)</option>
-                          <option value="FLAT_FEE">Flat Fee ($)</option>
-                        </select>
+                  {/* 3. BARTER BLOCK */}
+                  {formData.compensation_types.includes('BARTER') && (
+                    <div className="bg-slate-900/30 p-6 rounded-2xl border border-slate-800/50 animate-in fade-in zoom-in-95">
+                      <label className="text-[10px] font-mono text-slate-400 uppercase tracking-widest mb-3 flex">Trade Category</label>
+                      <div className="flex flex-wrap gap-2 mb-6">
+                        <button type="button" onClick={() => handleBarterCategory('GOODS')} className={`px-4 py-2 rounded-lg text-[10px] font-mono uppercase tracking-widest font-bold transition-all border flex items-center gap-2 ${formData.barter_category === 'GOODS' ? 'bg-amber-500/10 border-amber-500/30 text-amber-400' : 'bg-black border-slate-800 text-slate-500 hover:text-white'}`}><Tag size={12}/> Inventory</button>
+                        <button type="button" onClick={() => handleBarterCategory('SERVICES_AUTO')} className={`px-4 py-2 rounded-lg text-[10px] font-mono uppercase tracking-widest font-bold transition-all border flex items-center gap-2 ${formData.barter_category === 'SERVICES_AUTO' ? 'bg-amber-500/10 border-amber-500/30 text-amber-400' : 'bg-black border-slate-800 text-slate-500 hover:text-white'}`}><Wrench size={12}/> Auto Repair</button>
+                        <button type="button" onClick={() => handleBarterCategory('SERVICES_LEGAL')} className={`px-4 py-2 rounded-lg text-[10px] font-mono uppercase tracking-widest font-bold transition-all border flex items-center gap-2 ${formData.barter_category === 'SERVICES_LEGAL' ? 'bg-amber-500/10 border-amber-500/30 text-amber-400' : 'bg-black border-slate-800 text-slate-500 hover:text-white'}`}><Scale size={12}/> Consult</button>
+                        <button type="button" onClick={() => handleBarterCategory('OTHER')} className={`px-4 py-2 rounded-lg text-[10px] font-mono uppercase tracking-widest font-bold transition-all border flex items-center gap-2 ${formData.barter_category === 'OTHER' ? 'bg-amber-500/10 border-amber-500/30 text-amber-400' : 'bg-black border-slate-800 text-slate-500 hover:text-white'}`}><MoreHorizontal size={12}/> Custom</button>
                       </div>
+                      
                       <div>
-                        <label className="text-[10px] font-mono text-slate-400 uppercase tracking-widest mb-2 flex">Rate / Amount</label>
-                        <div className="relative">
-                          {formData.rev_type === 'PERCENTAGE' ? <Percent size={14} className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500" /> : <DollarSign size={14} className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500" />}
-                          <input type="number" step="0.01" required name="rev_amount" value={formData.rev_amount} onChange={handleChange} placeholder={formData.rev_type === 'PERCENTAGE' ? "10" : "0.20"} className="w-full bg-black border border-slate-800 rounded-xl pl-10 pr-4 py-3 text-sm text-white focus:border-amber-400 outline-none transition-colors" />
-                        </div>
-                      </div>
-                      <div>
-                        <label className="text-[10px] font-mono text-slate-400 uppercase tracking-widest mb-2 flex">Trigger Metric</label>
-                        <select name="rev_trigger" value={formData.rev_trigger} onChange={handleChange} className="w-full bg-black border border-slate-800 rounded-xl px-4 py-3 text-xs text-white focus:border-amber-400 outline-none transition-colors cursor-pointer">
-                          <option value="PER_TRANSACTION">Per Order/Transaction</option>
-                          <option value="GROSS_SALES">Total Gross Volume</option>
-                        </select>
+                        <label className="text-[10px] font-mono text-slate-400 uppercase tracking-widest mb-2 flex">Specific Trade Terms</label>
+                        <textarea 
+                          required name="barter_terms" value={formData.barter_terms} onChange={handleChange} rows={2}
+                          placeholder={formData.barter_category === 'GOODS' ? "e.g., Monthly supply of 5 disposables..." : "e.g., Free maintenance on fleet vehicles..."}
+                          className="w-full bg-black border border-slate-800 rounded-xl px-4 py-3 text-sm text-white focus:border-amber-400 outline-none transition-colors resize-none" 
+                        />
                       </div>
                     </div>
-                  </div>
-                )}
-
-                {/* 3. BARTER BLOCK */}
-                {formData.compensation_types.includes('BARTER') && (
-                  <div className="bg-slate-900/30 p-6 rounded-2xl border border-slate-800/50 animate-in fade-in zoom-in-95">
-                    <label className="text-[10px] font-mono text-slate-400 uppercase tracking-widest mb-3 flex">Trade Category</label>
-                    <div className="flex flex-wrap gap-2 mb-6">
-                      <button type="button" onClick={() => handleBarterCategory('GOODS')} className={`px-4 py-2 rounded-lg text-[10px] font-mono uppercase tracking-widest font-bold transition-all border flex items-center gap-2 ${formData.barter_category === 'GOODS' ? 'bg-amber-500/10 border-amber-500/30 text-amber-400' : 'bg-black border-slate-800 text-slate-500 hover:text-white'}`}><Tag size={12}/> Inventory</button>
-                      <button type="button" onClick={() => handleBarterCategory('SERVICES_AUTO')} className={`px-4 py-2 rounded-lg text-[10px] font-mono uppercase tracking-widest font-bold transition-all border flex items-center gap-2 ${formData.barter_category === 'SERVICES_AUTO' ? 'bg-amber-500/10 border-amber-500/30 text-amber-400' : 'bg-black border-slate-800 text-slate-500 hover:text-white'}`}><Wrench size={12}/> Auto Repair</button>
-                      <button type="button" onClick={() => handleBarterCategory('SERVICES_LEGAL')} className={`px-4 py-2 rounded-lg text-[10px] font-mono uppercase tracking-widest font-bold transition-all border flex items-center gap-2 ${formData.barter_category === 'SERVICES_LEGAL' ? 'bg-amber-500/10 border-amber-500/30 text-amber-400' : 'bg-black border-slate-800 text-slate-500 hover:text-white'}`}><Scale size={12}/> Consult</button>
-                      <button type="button" onClick={() => handleBarterCategory('OTHER')} className={`px-4 py-2 rounded-lg text-[10px] font-mono uppercase tracking-widest font-bold transition-all border flex items-center gap-2 ${formData.barter_category === 'OTHER' ? 'bg-amber-500/10 border-amber-500/30 text-amber-400' : 'bg-black border-slate-800 text-slate-500 hover:text-white'}`}><MoreHorizontal size={12}/> Custom</button>
-                    </div>
-                    
-                    <div>
-                      <label className="text-[10px] font-mono text-slate-400 uppercase tracking-widest mb-2 flex">Specific Trade Terms</label>
-                      <textarea 
-                        required name="barter_terms" value={formData.barter_terms} onChange={handleChange} rows={2}
-                        placeholder={formData.barter_category === 'GOODS' ? "e.g., Monthly supply of 5 disposables..." : "e.g., Free maintenance on fleet vehicles..."}
-                        className="w-full bg-black border border-slate-800 rounded-xl px-4 py-3 text-sm text-white focus:border-amber-400 outline-none transition-colors resize-none" 
-                      />
-                    </div>
-                  </div>
-                )}
+                  )}
+                </div>
               </div>
-            </div>
+            )}
 
-            {/* Real-Time Telemetry (Only active if Fixed Funding is present) */}
-            {formData.compensation_types.includes('FIXED') && fixedNum > 0 && (
+            {/* Real-Time Telemetry (Only active if Fixed Funding is present and > 0) */}
+            {((formData.type === 'INTERNAL' && fixedNum > 0) || (formData.compensation_types.includes('FIXED') && fixedNum > 0)) && (
               <div className="bg-slate-900/50 border border-slate-800 rounded-xl p-6 relative overflow-hidden animate-in fade-in">
                 <div className="absolute top-0 left-0 w-1 h-full bg-emerald-500" />
                 <h3 className="text-[10px] font-mono text-slate-400 uppercase tracking-widest mb-4 flex items-center gap-2">
-                  <Calculator size={12} /> Upfront Telemetry Matrix
+                  <Calculator size={12} /> Funding Telemetry Matrix
                 </h3>
                 <div className="grid grid-cols-3 gap-4">
                   <div>
@@ -261,7 +293,7 @@ export default function NewBuildModal({ onClose, onSuccess }: NewBuildModalProps
             <button type="button" onClick={onClose} className="flex-1 py-4 text-xs font-bold font-mono text-slate-400 uppercase tracking-widest hover:text-white transition-colors">
               Abort
             </button>
-            <button type="submit" disabled={isSubmitting} className="flex-2 py-4 bg-brand-primary/10 border border-brand-primary/30 text-brand-primary hover:bg-brand-primary hover:text-black rounded-xl text-xs font-bold font-mono uppercase tracking-widest transition-all flex justify-center items-center gap-2 disabled:opacity-50">
+            <button type="submit" disabled={isSubmitting} className="flex-2 py-4 bg-brand-primary/10 border border-brand-primary/30 text-brand-primary hover:bg-brand-primary hover:text-black rounded-xl text-xs font-bold font-mono uppercase tracking-widest transition-all flex justify-center items-center gap-2 disabled:opacity-50 shadow-[0_0_15px_rgba(6,182,212,0.2)]">
               {isSubmitting ? <Loader2 className="animate-spin" size={16} /> : <><Rocket size={16} /> Deploy to Drafting Table</>}
             </button>
           </div>

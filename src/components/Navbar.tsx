@@ -5,14 +5,14 @@ import React, { useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { WEBSITE_COPY } from '@/utils/glossary';
-import { Menu, X } from 'lucide-react';
+import { Menu, X, Lock } from 'lucide-react';
 
 export default function Navbar() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const pathname = usePathname();
 
   // ARCHITECTURE RULE: Hide public navigation in command environments
-  if (pathname.startsWith('/dashboard') || pathname.startsWith('/login')) {
+  if (pathname.startsWith('/dashboard') || pathname.startsWith('/login') || pathname.startsWith('/sandbox')) {
     return null;
   }
 
@@ -32,7 +32,7 @@ export default function Navbar() {
         </Link>
 
         {/* DESKTOP NAVIGATION */}
-        <div className="hidden md:flex items-center gap-10">
+        <div className="hidden md:flex items-center gap-8">
           <div className="flex items-center gap-8 font-bold text-xs">
             <Link 
               href="/products" 
@@ -49,23 +49,33 @@ export default function Navbar() {
             </Link>
           </div>
 
-          {/* THE BETA FUNNEL */}
-          <Link 
-            href="/blueprint" 
-            className="text-xs font-bold text-emerald-400 border border-emerald-500/50 hover:bg-emerald-400 hover:text-black px-5 py-2.5 rounded-lg transition-all shadow-[0_0_20px_rgba(52,211,153,0.15)] hover:shadow-[0_0_30px_rgba(52,211,153,0.4)] uppercase tracking-widest"
-          >
-            {WEBSITE_COPY.NAV.BETA_CENTER}
-          </Link>
+          <div className="w-px h-6 bg-white/10" />
+
+          {/* PORTAL & LAB BUTTONS */}
+          <div className="flex items-center gap-4">
+            <Link 
+              href="/login" 
+              className="flex items-center gap-2 text-xs font-bold text-cyan-400 hover:text-cyan-300 transition-all uppercase tracking-widest"
+            >
+              <Lock size={14} /> Portal Login
+            </Link>
+            <Link 
+              href="/blueprint" 
+              className="text-xs font-bold text-emerald-400 border border-emerald-500/50 hover:bg-emerald-400 hover:text-black px-5 py-2.5 rounded-lg transition-all shadow-[0_0_20px_rgba(52,211,153,0.15)] hover:shadow-[0_0_30px_rgba(52,211,153,0.4)] uppercase tracking-widest"
+            >
+              {WEBSITE_COPY.NAV.BETA_CENTER}
+            </Link>
+          </div>
         </div>
 
-        {/* MOBILE MENU BUTTON & LAB CTA */}
+        {/* MOBILE MENU BUTTON & CTA */}
         <div className="flex md:hidden items-center gap-4 relative z-50">
           <Link 
-            href="/blueprint" 
+            href="/login" 
             onClick={closeMenu}
-            className="text-[10px] font-bold text-emerald-400 border border-emerald-500/50 hover:bg-emerald-400 hover:text-black px-3 py-1.5 rounded-lg transition-all shadow-[0_0_15px_rgba(52,211,153,0.15)] uppercase tracking-widest"
+            className="text-[10px] font-bold text-cyan-400 flex items-center gap-1 uppercase tracking-widest"
           >
-            {WEBSITE_COPY.NAV.BETA_CENTER}
+            <Lock size={12} /> Portal
           </Link>
           
           <button 
@@ -94,14 +104,22 @@ export default function Navbar() {
             {WEBSITE_COPY.NAV.ECOSYSTEM}
           </Link>
           
-          <div className="w-8 h-px bg-white/10" />
-
           <Link 
             href="/founder" 
             onClick={closeMenu}
             className="text-lg font-black text-slate-300 hover:text-fuchsia-400 transition-all uppercase tracking-widest w-full text-center"
           >
             {WEBSITE_COPY.NAV.STORY}
+          </Link>
+
+          <div className="w-8 h-px bg-white/10" />
+
+          <Link 
+            href="/blueprint" 
+            onClick={closeMenu}
+            className="text-sm font-bold text-emerald-400 border border-emerald-500/50 px-6 py-3 rounded-lg uppercase tracking-widest w-full text-center"
+          >
+            {WEBSITE_COPY.NAV.BETA_CENTER}
           </Link>
         </div>
       </div>

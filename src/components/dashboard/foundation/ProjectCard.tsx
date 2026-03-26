@@ -3,15 +3,16 @@
 
 import React from 'react';
 import Link from 'next/link';
-import { Rocket, Settings, Beaker, Briefcase, Cpu, FolderKanban } from 'lucide-react';
+import { Rocket, Settings, Beaker, Briefcase, Cpu, FolderKanban, Terminal } from 'lucide-react';
 import { WEBSITE_COPY } from '@/utils/glossary';
 
 interface ProjectCardProps {
   project: any;
   onPromote: (project: any) => void;
+  onManage: (project: any) => void; // NEW: Triggers the master modal
 }
 
-export default function ProjectCard({ project, onPromote }: ProjectCardProps) {
+export default function ProjectCard({ project, onPromote, onManage }: ProjectCardProps) {
   const copy = WEBSITE_COPY.DASHBOARD.FOUNDATION.BUILDS;
   const displayTitle = project.title || project.name || 'Untitled Project';
 
@@ -83,24 +84,35 @@ export default function ProjectCard({ project, onPromote }: ProjectCardProps) {
         </div>
       </div>
 
-      {/* Actions */}
-      <div className="flex gap-3 mt-auto">
-        <Link 
-          href={`/dashboard/project/${project.id}`}
-          className="flex-1 py-3 bg-slate-800/50 border border-slate-700 text-slate-300 hover:bg-slate-800 hover:text-white rounded-2xl font-mono text-[10px] uppercase tracking-widest font-bold transition-all flex justify-center items-center gap-2"
-        >
-          <Settings size={14} /> Manage
-        </Link>
-        
-        {project.status !== 'DEPLOYED' && (
+      {/* Unified Actions Area */}
+      <div className="flex flex-col gap-3 mt-auto pt-4 border-t border-slate-800/50">
+        <div className="flex gap-3">
           <button 
-            onClick={() => onPromote(project)}
-            className="flex-1 py-3 bg-fuchsia-500/10 border border-fuchsia-500/30 text-fuchsia-400 hover:bg-fuchsia-500 hover:text-black hover:shadow-[0_0_20px_rgba(217,70,239,0.3)] rounded-2xl font-mono text-[10px] uppercase tracking-widest font-bold transition-all flex justify-center items-center gap-2"
+            onClick={() => onManage(project)}
+            className="flex-1 py-3 bg-slate-800/50 border border-slate-700 text-slate-300 hover:bg-slate-800 hover:text-white rounded-2xl font-mono text-[10px] uppercase tracking-widest font-bold transition-all flex justify-center items-center gap-2"
           >
-            <Rocket size={14} /> Promote
+            <Settings size={14} /> Configure
           </button>
-        )}
+          
+          {project.status !== 'DEPLOYED' && (
+            <button 
+              onClick={() => onPromote(project)}
+              className="flex-1 py-3 bg-fuchsia-500/10 border border-fuchsia-500/30 text-fuchsia-400 hover:bg-fuchsia-500 hover:text-black hover:shadow-[0_0_20px_rgba(217,70,239,0.3)] rounded-2xl font-mono text-[10px] uppercase tracking-widest font-bold transition-all flex justify-center items-center gap-2"
+            >
+              <Rocket size={14} /> Promote
+            </button>
+          )}
+        </div>
+        
+        <Link 
+          href="/login"
+          target="_blank"
+          className="w-full py-3 bg-cyan-500/10 border border-cyan-500/30 text-cyan-400 hover:bg-cyan-500 hover:text-black hover:shadow-[0_0_20px_rgba(34,211,238,0.3)] rounded-2xl font-mono text-[10px] uppercase tracking-widest font-bold transition-all flex justify-center items-center gap-2"
+        >
+          <Terminal size={14} /> Launch Sandbox
+        </Link>
       </div>
+
     </div>
   );
 }

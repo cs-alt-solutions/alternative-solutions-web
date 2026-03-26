@@ -23,11 +23,13 @@ export default function EcosystemPage() {
           </h1>
         </div>
         
-        <div className="px-4 py-2 border border-cyan-500/30 bg-cyan-500/10 rounded-lg flex items-center gap-3 shadow-[0_0_20px_rgba(34,211,238,0.1)]">
-           <div className="w-2 h-2 bg-cyan-400 rounded-full animate-ping" />
-           <span className="text-[10px] font-mono uppercase tracking-widest text-cyan-400">
-             {copy.STATUS}
-           </span>
+        <div className="flex items-center gap-4">
+          <div className="px-4 py-2 border border-cyan-500/30 bg-cyan-500/10 rounded-lg flex items-center gap-3 shadow-[0_0_20px_rgba(34,211,238,0.1)]">
+             <div className="w-2 h-2 bg-cyan-400 rounded-full animate-ping" />
+             <span className="text-[10px] font-mono uppercase tracking-widest text-cyan-400">
+               {copy.STATUS}
+             </span>
+          </div>
         </div>
       </header>
 
