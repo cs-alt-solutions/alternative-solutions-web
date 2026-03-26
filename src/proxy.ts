@@ -1,8 +1,9 @@
-/* src/middleware.ts */
+/* src/proxy.ts */
 import { NextResponse, type NextRequest } from 'next/server';
 import { createServerClient, type CookieOptions } from '@supabase/ssr';
 
-export async function middleware(request: NextRequest) {
+// CHANGED: We renamed this function from 'middleware' to 'proxy'
+export async function proxy(request: NextRequest) {
   let supabaseResponse = NextResponse.next({
     request: {
       headers: request.headers,
@@ -48,7 +49,7 @@ export async function middleware(request: NextRequest) {
   return supabaseResponse;
 }
 
-// Tell Next.js which paths the middleware should actually run on
+// Tell Next.js which paths the proxy should actually run on
 export const config = {
   matcher: [
     '/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
