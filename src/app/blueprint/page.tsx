@@ -9,7 +9,7 @@ import { ShieldCheck, Wrench, Hammer, Users, MessageSquare, TerminalSquare, Zap,
 export const revalidate = 0; // Ensures the roster is always live
 
 export default async function BlueprintPage() {
-  const copy = WEBSITE_COPY.PUBLIC_SITE.BLUEPRINT;
+  const copy = WEBSITE_COPY.BLUEPRINT;
   const fm = WEBSITE_COPY.FOUNDING_MEMBER;
 
   // 1. Fetch real backers (Amount > 0 excludes free observers from the public wall of fame)
