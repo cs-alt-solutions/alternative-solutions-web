@@ -1,20 +1,17 @@
-/* src/app/dashboard/foundation/page.tsx */
 'use client';
 
 import React, { useState } from 'react';
 import { WEBSITE_COPY } from '@/utils/glossary';
-import { Users, Target, Code } from 'lucide-react';
+import { Target, Code } from 'lucide-react';
 import BuildsTab from '@/components/dashboard/foundation/BuildsTab'; 
-import RosterTab from '@/components/dashboard/foundation/RosterTab';
 import WidgetsTab from '@/components/dashboard/foundation/WidgetsTab';
 
 export default function DraftingTablePage() {
   const copy = WEBSITE_COPY.DASHBOARD.FOUNDATION;
   
-  const [activeTab, setActiveTab] = useState<'roster' | 'builds' | 'widgets'>('builds');
+  const [activeTab, setActiveTab] = useState<'builds' | 'widgets'>('builds');
 
   const tabs = [
-    { id: 'roster', label: copy.TABS.ROSTER, icon: Users },
     { id: 'builds', label: copy.BUILDS.TAB, icon: Target }, 
     { id: 'widgets', label: copy.TABS.WIDGETS, icon: Code }
   ] as const;
@@ -33,10 +30,10 @@ export default function DraftingTablePage() {
         {tabs.map(tab => (
           <button
             key={tab.id}
-            onClick={() => setActiveTab(tab.id as 'roster' | 'builds' | 'widgets')}
+            onClick={() => setActiveTab(tab.id as 'builds' | 'widgets')}
             className={`flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-mono tracking-widest uppercase transition-all ${
               activeTab === tab.id 
-                ? 'bg-brand-primary/10 text-brand-primary border border-brand-primary/30' 
+                ? 'bg-brand-primary/10 text-brand-primary border border-brand-primary/30 shadow-[0_0_15px_rgba(6,182,212,0.1)]' 
                 : 'text-slate-500 hover:text-slate-300 hover:bg-white/5 border border-transparent'
             }`}
           >
@@ -48,7 +45,6 @@ export default function DraftingTablePage() {
 
       {/* Tab Content */}
       <div className="pt-4">
-        {activeTab === 'roster' && <RosterTab />}
         {activeTab === 'builds' && <BuildsTab />}
         {activeTab === 'widgets' && <WidgetsTab />}
       </div>

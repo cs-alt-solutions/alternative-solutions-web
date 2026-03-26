@@ -98,7 +98,9 @@ export default async function BlueprintPage() {
           </div>
         </div>
 
-        {/* SECTION 2: THE 3 FUNDING PATHS (Middle Row) */}
+        
+
+        {/* SECTION 2: THE 2 FUNDING PATHS (Middle Row) */}
         <section className="mb-24 scroll-mt-32" id="funding-options">
           <div className="text-center mb-12">
              <h2 className="text-3xl md:text-5xl font-black uppercase tracking-tight text-white mb-4">
@@ -109,29 +111,50 @@ export default async function BlueprintPage() {
              </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <div className="bg-black/60 border border-brand-primary/30 hover:border-brand-primary/50 rounded-3xl p-8 backdrop-blur-xl shadow-[0_0_50px_rgba(6,182,212,0.1)] text-center transition-all duration-500 relative flex flex-col h-full">
+          {/* Clean 2-Column Grid */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-5xl mx-auto">
+            
+            {/* PATH 1: THE BACKER (Monthly Tiered) */}
+            <div className="bg-black/60 border border-brand-primary/30 hover:border-brand-primary/50 rounded-3xl p-8 backdrop-blur-xl shadow-[0_0_50px_rgba(6,182,212,0.1)] transition-all duration-500 relative flex flex-col h-full group">
               <div className="absolute top-0 left-0 w-full h-1 bg-linear-to-r from-transparent via-brand-primary to-transparent opacity-50" />
-              <div className="inline-block px-3 py-1 bg-brand-primary/10 border border-brand-primary/30 rounded-full text-[9px] font-mono text-brand-primary uppercase tracking-widest mb-6 mx-auto">
+              <div className="inline-block px-3 py-1 bg-brand-primary/10 border border-brand-primary/30 rounded-full text-[9px] font-mono text-brand-primary uppercase tracking-widest mb-6 w-max">
                 {copy.FUNDING_PATHS.PATH_1.TAG}
               </div>
-              <h3 className="text-2xl font-black uppercase tracking-tighter mb-2 text-white">
+              <h3 className="text-3xl font-black uppercase tracking-tighter mb-4 text-white">
                 {copy.FUNDING_PATHS.PATH_1.TITLE}
               </h3>
-              <p className="text-sm text-slate-300 mb-6 font-light flex-1">
+              <p className="text-sm text-slate-300 mb-6 font-light">
                 {copy.FUNDING_PATHS.PATH_1.DESC}
               </p>
+              
+              {/* Internal Tier Breakdown inside the card */}
+              <div className="flex-1 space-y-3 mb-8">
+                {copy.FUNDING_PATHS.PATH_1.TIERS.map((tier: any, idx: number) => (
+                  <div key={idx} className="bg-white/5 border border-white/10 rounded-xl p-4 flex gap-4 items-start">
+                    {/* UPDATED: Changed min-w-[60px] to min-w-15 */}
+                    <div className="text-brand-primary font-black text-lg min-w-15">{tier.price}</div>
+                    <div>
+                      <div className="text-xs font-bold text-white uppercase tracking-wider mb-1">{tier.name}</div>
+                      <div className="text-xs text-slate-400 leading-snug">{tier.perk}</div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
               <div className="mt-auto">
-                <PricingCard minAmount={5} stripeLink={fm.STRIPE_LINK} btnText={copy.FUNDING_PATHS.PATH_1.BTN_TEXT} />
+                <Link href={copy.FUNDING_PATHS.PATH_1.LINK} className="flex items-center justify-center gap-2 w-full py-4 text-xs font-bold font-mono uppercase tracking-widest rounded-xl bg-brand-primary/10 text-brand-primary border border-brand-primary/30 hover:bg-brand-primary hover:text-black hover:shadow-[0_0_20px_rgba(6,182,212,0.4)] transition-all">
+                  {copy.FUNDING_PATHS.PATH_1.BTN_TEXT} <ArrowRight size={14} className="group-hover:translate-x-1 transition-transform" />
+                </Link>
               </div>
             </div>
 
-            <div className="bg-black/60 border border-fuchsia-500/30 hover:border-fuchsia-500/50 rounded-3xl p-8 backdrop-blur-xl shadow-[0_0_30px_rgba(232,121,249,0.05)] text-center transition-all duration-500 relative flex flex-col h-full group">
-              <div className="absolute top-0 left-0 w-full h-1 bg-linear-to-r from-transparent via-fuchsia-500 to-transparent opacity-50" />
-              <div className="inline-block px-3 py-1 bg-fuchsia-500/10 border border-fuchsia-500/30 rounded-full text-[9px] font-mono text-fuchsia-400 uppercase tracking-widest mb-6 mx-auto">
+            {/* PATH 2: THE BOOST (One-Time) */}
+            <div className="bg-black/60 border border-orange-500/30 hover:border-orange-500/50 rounded-3xl p-8 backdrop-blur-xl shadow-[0_0_30px_rgba(249,115,22,0.05)] transition-all duration-500 relative flex flex-col h-full group">
+              <div className="absolute top-0 left-0 w-full h-1 bg-linear-to-r from-transparent via-orange-500 to-transparent opacity-50" />
+              <div className="inline-block px-3 py-1 bg-orange-500/10 border border-orange-500/30 rounded-full text-[9px] font-mono text-orange-400 uppercase tracking-widest mb-6 w-max">
                 {copy.FUNDING_PATHS.PATH_2.TAG}
               </div>
-              <h3 className="text-2xl font-black uppercase tracking-tighter mb-2 text-white">
+              <h3 className="text-3xl font-black uppercase tracking-tighter mb-4 text-white">
                 {copy.FUNDING_PATHS.PATH_2.TITLE}
               </h3>
               <p className="text-sm text-slate-300 mb-8 font-light flex-1">
@@ -139,36 +162,14 @@ export default async function BlueprintPage() {
               </p>
               <div className="mt-auto">
                 <div className="mb-6">
-                  <span className="text-3xl font-black text-white">{copy.FUNDING_PATHS.PATH_2.PRICE}</span>
-                  <span className="text-xs font-mono text-fuchsia-400 uppercase ml-2">{copy.FUNDING_PATHS.PATH_2.PERIOD}</span>
+                  <span className="text-4xl font-black text-white">{copy.FUNDING_PATHS.PATH_2.PRICE}</span>
                 </div>
-                <Link href={copy.FUNDING_PATHS.PATH_2.LINK} className="flex items-center justify-center gap-2 w-full py-4 text-xs font-bold font-mono uppercase tracking-widest rounded-xl bg-fuchsia-500/10 text-fuchsia-400 border border-fuchsia-500/30 hover:bg-fuchsia-500 hover:text-black hover:shadow-[0_0_20px_rgba(232,121,249,0.4)] transition-all">
+                <Link href={copy.FUNDING_PATHS.PATH_2.LINK} className="flex items-center justify-center gap-2 w-full py-4 text-xs font-bold font-mono uppercase tracking-widest rounded-xl bg-orange-500/10 text-orange-400 border border-orange-500/30 hover:bg-orange-500 hover:text-black hover:shadow-[0_0_20px_rgba(249,115,22,0.4)] transition-all">
                   {copy.FUNDING_PATHS.PATH_2.BTN_TEXT} <ArrowRight size={14} className="group-hover:translate-x-1 transition-transform" />
                 </Link>
               </div>
             </div>
 
-            <div className="bg-black/60 border border-orange-500/30 hover:border-orange-500/50 rounded-3xl p-8 backdrop-blur-xl shadow-[0_0_30px_rgba(249,115,22,0.05)] text-center transition-all duration-500 relative flex flex-col h-full group">
-              <div className="absolute top-0 left-0 w-full h-1 bg-linear-to-r from-transparent via-orange-500 to-transparent opacity-50" />
-              <div className="inline-block px-3 py-1 bg-orange-500/10 border border-orange-500/30 rounded-full text-[9px] font-mono text-orange-400 uppercase tracking-widest mb-6 mx-auto">
-                {copy.FUNDING_PATHS.PATH_3.TAG}
-              </div>
-              <h3 className="text-2xl font-black uppercase tracking-tighter mb-2 text-white">
-                {copy.FUNDING_PATHS.PATH_3.TITLE}
-              </h3>
-              <p className="text-sm text-slate-300 mb-8 font-light flex-1">
-                {copy.FUNDING_PATHS.PATH_3.DESC}
-              </p>
-              <div className="mt-auto">
-                <div className="mb-6">
-                  <span className="text-3xl font-black text-white">{copy.FUNDING_PATHS.PATH_3.PRICE}</span>
-                  <span className="text-xs font-mono text-orange-400 uppercase ml-2">{copy.FUNDING_PATHS.PATH_3.PERIOD}</span>
-                </div>
-                <Link href={copy.FUNDING_PATHS.PATH_3.LINK} className="flex items-center justify-center gap-2 w-full py-4 text-xs font-bold font-mono uppercase tracking-widest rounded-xl bg-orange-500/10 text-orange-400 border border-orange-500/30 hover:bg-orange-500 hover:text-black hover:shadow-[0_0_20px_rgba(249,115,22,0.4)] transition-all">
-                  {copy.FUNDING_PATHS.PATH_3.BTN_TEXT} <ArrowRight size={14} className="group-hover:translate-x-1 transition-transform" />
-                </Link>
-              </div>
-            </div>
           </div>
         </section>
 

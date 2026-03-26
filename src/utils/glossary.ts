@@ -9,20 +9,33 @@ export const SYSTEM_CONFIG = {
   FEES: {
     PLATFORM_CUT: 0.15 
   },
-  // ADD THIS BLOCK: This resolves the TypeScript "Property does not exist" error
+  TAX_RESERVE_RATE: 0.25, 
+  
   PAYROLL_MATRIX: {
     PERSONAL: 0.50,
     BUSINESS: 0.30,
     VAULT: 0.20
   },
-  // NEW: Personal Survival Budget (The 50% breakdown)
   SURVIVAL_BUDGET: {
-    RENT: 0.60,      // 60% of your Personal Share
-    UTILITIES: 0.20, // 20%
-    GROCERIES: 0.15, // 15% (Supplemented by SNAP)
-    MISC: 0.05       // 5%
+    RENT: 0.60,      
+    UTILITIES: 0.20, 
+    GROCERIES: 0.15, 
+    MISC: 0.05       
+  },
+  LEDGER_CATEGORIES: {
+    INCOME: [
+      { id: 'W2', label: 'W-2 Wage (Taxes Paid)', color: 'text-emerald-400' },
+      { id: '1099', label: '1099/Contract (Needs Tax)', color: 'text-orange-400' },
+      { id: 'SUPPORT', label: 'External Support (Non-Tax)', color: 'text-fuchsia-400' }
+    ],
+    EXPENSE: [
+      { id: 'SURVIVAL', label: 'Survival (Rent/Utilities)', color: 'text-white' },
+      { id: 'DEPENDENT', label: 'Dependent Care (School/Camp)', color: 'text-purple-400' },
+      { id: 'BUSINESS', label: 'Business Fuel (Tech/Supplies)', color: 'text-brand-primary' }
+    ]
   }
 };
+
 export interface AppTool { id: string; name: string; cost: number; category: 'PROJECT' | 'INVENTORY' | 'FINANCE'; }
 export interface HourTier { label: string; value: number; }
 
@@ -37,10 +50,10 @@ export const WEBSITE_COPY = {
   
   GLOBAL_FOOTER: {
     LEGAL_ENTITY: "Alternative Solutions I/O LLC. All rights reserved.",
-    TAGLINE: "Built by Humans.",
+    TAGLINE: "Built by a Human.",
     CTA: {
       TITLE: "CHOOSE YOUR PATH.",
-      DESC: "The foundation is being poured. Enter the lab to claim your founder's seat, become a monthly backer, or fuel the engine.",
+      DESC: "The foundation is being poured. Grab a seat, become a monthly backer, or just throw some fuel in the tank so I don't have to pick up extra shifts.",
       BTN_TEXT: "ENTER THE LAB",
       LINK: "/blueprint"
     }
@@ -50,9 +63,9 @@ export const WEBSITE_COPY = {
     HOME: {
       HERO: {
         TAG: "SYSTEM INITIALIZATION",
-        TITLE_1: "BUILDING THE",
-        TITLE_2: "FOUNDATION.",
-        SUBHEAD: "I don't do cookie-cutter templates. I architect custom, high-performance ecosystems driven by AI and built for scale.",
+        TITLE_1: "BUILDING A",
+        TITLE_2: "STRONGER FOUNDATION.",
+        SUBHEAD: "Running a business on 15 open browser tabs and sheer panic isn't sustainable. I build custom digital engines that actually share the same brain. It's about using smart automation to process your data instantly, so you can step off the 24/7 grind and actually enjoy the life you're building.",
         CTA_PRIMARY: "Claim Your Seat",
         CTA_PRIMARY_LINK: "/blueprint",
         CTA_SECONDARY: "Explore the Ecosystem",
@@ -71,29 +84,29 @@ export const WEBSITE_COPY = {
       },
       PROBLEM_STATEMENT: {
         TAG: "THE REALITY CHECK",
-        TITLE: "You are running a business on duct tape.",
-        DESC: "Paying for 8 different apps that don't talk to each other isn't an ecosystem. It's a headache. I build unified engines that actually share the same brain."
+        TITLE: "You know your trade. Your internal engine is a mess.",
+        DESC: "Everyone learns how to do their specific job, but nobody teaches you how to run the actual machine—the finances, the operations, the daily data. If you are holding your business together with sheer panic and exhausting manual work, your foundation is fractured. Let's rewire it."
       },
       METHODOLOGY: {
         TAG: "THE PROCESS",
         TITLE: "HOW THE ENGINE IS BUILT.",
         STEPS: [
-          { title: "1. The Audit", desc: "I map out every piece of duct tape holding your current workflow together to find the friction." },
-          { title: "2. The Wiring", desc: "I architect a custom, unified system using enterprise-grade code and AI automation." },
-          { title: "3. The Deployment", desc: "You get the keys to a single, intelligent command center that runs your entire operation." }
+          { title: "1. The Audit", desc: "I map out the fragile web of workarounds you're currently using to survive the week and find exactly what's making you want to pull your hair out." },
+          { title: "2. The Wiring", desc: "I architect a custom, unified system using real code and AI so things actually talk to each other natively." },
+          { title: "3. The Deployment", desc: "You get the keys to a single command center. No more bouncing between disconnected apps." }
         ]
       },
       FLAGSHIP: {
         TAG: "FOR THE SMALL BUSINESS",
         TITLE: "MEET SHIFT STUDIO",
-        DESC: "You are a small business or a solo powerhouse making things work from home, not a corporate warehouse backed by millions. Stop guessing your profit margins and connect your raw materials, daily builds, and finances into one intelligent command center.",
+        DESC: "You are a solo powerhouse making things work from home, not a corporate warehouse backed by millions. Stop guessing your profit margins. Connect your raw materials, daily builds, and finances into one intelligent command center.",
         CTA: "Explore Shift Studio",
         LINK: "/products/shift-studio"
       },
       BENTO: {
         PRODUCT: { TAG: "THE ECOSYSTEM", TITLE: "ALL SYSTEMS. ONE BRAIN.", DESC: "Explore the full suite of hybrid frameworks built to run your business without the friction.", CTA: "See the Network", LINK: "/products" },
-        STORY: { TAG: "THE ARCHITECT", TITLE: "BUILT DIFFERENT.", DESC: "No corporate boxes. No fragile workarounds. Just a relentlessly strong foundation built by a neurodivergent mind.", CTA: "View Telemetry", LINK: "/founder" },
-        BETA: { TAG: "CO-OP MODE", TITLE: "JOIN THE BUILD", DESC: "I am building the tools I actually want to use. Grab a spot on the waitlist and help me shape the ecosystem.", CTA: "Apply for Access", LINK: "/blueprint" },
+        STORY: { TAG: "THE ARCHITECT", TITLE: "THE HARD BOUNDARY.", DESC: "Respect and integrity are the baseline. I don't care how big the check is; if you treat your people poorly, I won't build for you. Period.", CTA: "Read the Story", LINK: "/founder" },
+        BETA: { TAG: "CO-OP MODE", TITLE: "JOIN THE BUILD", DESC: "I am literally building the tools I want to use. Grab a spot on the waitlist and help me decide what to code next.", CTA: "Apply for Access", LINK: "/blueprint" },
         TECH: { TAG: "INTERNAL WIRING", TITLE: "AI AS A PARTNER", DESC: "I don't sell generic AI wrappers. I use AI internally as a relentless coding partner to architect bulletproof systems faster.", CTA: "" }
       },
       LAUNCH_TELEMETRY: {
@@ -113,25 +126,25 @@ export const WEBSITE_COPY = {
       CO_OP: { 
         TITLE_1: "Got a problem?", 
         TITLE_2: "Let's fix it.", 
-        DESC_1: "The whole point is that everything works together. I connect the dots; you bring the experience.", 
-        DESC_2: "Why wait for a big company to build a tool that doesn't fit? Let's team up.",
+        DESC_1: "The whole point is that everything works together. I connect the dots; you tell me what's broken.", 
+        DESC_2: "My only rule: Integrity is required. I don't care if you have a massive budget—if you are toxic to your team or undermine your people, I won't work with you.",
         DESC_3: "Value for value. Let's build something real.",
         CARD_TITLE: "The Co-Op Program",
-        CARD_DESC: "Tell me what’s slowing you down. If it fits the ecosystem, we build it together.",
+        CARD_DESC: "Tell me what’s slowing you down. If it fits the ecosystem, I'll build it.",
         CTA: "Pitch an Idea" 
       }
     },
 
     FOUNDER: {
-      HEADER: { TAG: "THE ORIGIN STORY", TITLE_1: "BUILT DIFFERENT.", TITLE_2: "LITERALLY." },
+      HEADER: { TAG: "THE ORIGIN STORY", TITLE_1: "THE 13TH", TITLE_2: "PATH." },
       CONTENT: {
-        INTRO: "I don't fit into a standard corporate box. My entire life has been wired around finding the alternative way to operate.",
-        THE_HYBRID: "I spent years connecting dots and fixing broken workflows before I realized I didn't need their permission. I took the skills and built my own hybrid framework.",
-        BOX_TAG: "PASSIVE ABILITY • THE REWIRING",
-        BOX_QUOTE: "\"Where others see a tangled mess of disconnected systems, my AuDHD sees exactly how to rewire them into one unified engine.\"",
-        P3: "I'm not here to sell you a gimmick. I use AI internally—as a relentless coding partner—to harness raw processing power.",
-        THE_MINDSET_TITLE: "TECH WIRING MEETS BRAIN WIRING",
-        THE_MINDSET: "Rewiring your business isn't just a tech problem. It's a neuroplasticity problem. Your brain has to actively form new pathways to trust the automation.",
+        INTRO: "I don't fit into a standard corporate box. Where other people see a singular, straightforward path, I see twelve different ways it could be done better. And then I build the thirteenth.",
+        THE_HYBRID: "The traditional paths are traps. You either walk the corporate conveyor belt, or you start a small business and work yourself to the bone 24/7 until you die. Neither option actually lets you enjoy your life. I realized we don't have to work 80 hours a week if the foundation is built correctly.",
+        BOX_TAG: "THE HARD BOUNDARY",
+        BOX_QUOTE: "\"I don't care if you hand me a $55,000 check. If you treat your people like garbage, I will not build for you. I'd rather struggle than empower a bad leader.\"",
+        P3: "I'm bootstrapping this entire ecosystem between part-time shifts and inventory runs. I use AI internally as a relentless partner to process data and do the heavy lifting, proving that you can build massive things without burning yourself out.",
+        THE_MINDSET_TITLE: "FOCUS DICTATES REALITY",
+        THE_MINDSET: "If you focus on the bad, it's going to be bad. Rewiring your business isn't just a tech problem—it's a mindset shift. We have the technology to stop grinding ourselves into the dirt. We just have to choose to build it.",
         NEURO_LINK_TEXT: "Explore Neuroplasticity →",
         NEURO_LINK_URL: "https://my.clevelandclinic.org/health/articles/neuroplasticity",
       },
@@ -144,12 +157,12 @@ export const WEBSITE_COPY = {
         TAG: "THE LAB • ARCHITECT PROTOCOL", 
         TITLE_1: "ENTER THE", 
         TITLE_2: "LABORATORY.", 
-        DESC: "Alternative Solutions isn't just a single app—it's an active workshop. I am building an entire ecosystem of different tools and resources designed specifically for small businesses and the 'small humans' starting from nothing. Our first flagship build is Shift Studio. Welcome to the drafting table." 
+        DESC: "Alternative Solutions isn't just a single app—it's an active workshop. I am building an entire ecosystem of different tools and resources designed specifically for small businesses starting from nothing. Our first flagship build is Shift Studio. Welcome to the drafting table." 
       },
       THE_PLEDGE: {
         TITLE_1: "100% Independent.",
         TITLE_2: "100% Yours.",
-        DESC: "I started Alternative Solutions I/O LLC to escape the standard corporate tech trap. I don't have VC investors or millions in the bank. I am literally building this from my rental house, starting from nothing. When you secure a seat, you aren't just buying one piece of software. You are funding my ability to continuously build and release a whole suite of alternative tools for everyday humans fighting to build their own futures."
+        DESC: "I started Alternative Solutions to escape the standard corporate tech trap. I don't have VC investors or millions in the bank. I'm literally funding this build by working an $18/hour part-time job doing inventory runs. When you secure a seat, you aren't just buying another piece of software. You are directly funding my ability to build a suite of alternative tools for everyday humans fighting to build their own futures."
       },
       REWARDS: {
         TITLE: "The Perks",
@@ -161,32 +174,26 @@ export const WEBSITE_COPY = {
       },
       FUNDING_PATHS: {
         TITLE: "CHOOSE YOUR PATH",
-        SUBTITLE: "Three ways to help build the foundation.",
+        SUBTITLE: "Two ways to help build the foundation.",
         PATH_1: {
-          TAG: "V1 BETA ACCESS",
-          TITLE: "THE BUILDER",
-          PRICE: "$5.00",
-          PERIOD: "/ month",
-          DESC: "You need the tools. Lock in the legacy rate for our first release (Shift Studio), get beta access as it drops, and secure your spot for everything else I build next.",
-          BTN_TEXT: "SECURE MY SEAT"
-        },
-        PATH_2: {
           TAG: "MONTHLY SUPPORT",
           TITLE: "THE BACKER",
-          PRICE: "Custom",
-          PERIOD: "/ month",
-          DESC: "You believe in independent software. Set your own monthly amount to help cover development time. You'll be added to the Foundation Roster, and you can cancel anytime with one click.",
+          DESC: "Fuel the continuous development of the ecosystem. Set your own monthly amount to help cover development time and keep me at the keyboard.",
+          TIERS: [
+            { price: "$1 - $4", name: "Supporter", perk: "Added to the Foundation Roster & early updates." },
+            { price: "$5+", name: "The Builder", perk: "Unlocks legacy rate access for Shift Studio and future apps." }
+          ],
           BTN_TEXT: "BECOME A BACKER",
-          LINK: "https://support.alternativesolutions.io/b/dRm5kD4PF8em2sRgQd97G03" 
+          LINK: "https://support.alternativesolutions.io/b/14AbJ1dmbamu8RfbvT97G04" 
         },
-        PATH_3: {
+        PATH_2: {
           TAG: "ONE-TIME TIP",
           TITLE: "THE BOOST",
           PRICE: "Custom",
           PERIOD: "one-time",
           DESC: "You just want to throw some fuel in the tank today. A one-time tip to keep the coffee flowing and the code compiling.",
           BTN_TEXT: "SEND A BOOST",
-          LINK: "https://support.alternativesolutions.io/b/00wdR981ReCK4AZ2Zn97G00"
+          LINK: "https://support.alternativesolutions.io/b/5kQ3cv2Hx66e9VjdE197G05" 
         }
       },
       ROSTER: {
@@ -203,7 +210,7 @@ export const WEBSITE_COPY = {
       STATUS: "CURRENTLY BUILDING • SECTOR 01",
       HERO: {
         TITLE: "BUILT FOR THE SMALL BUSINESS & SOLO MAKER.",
-        SUBHEAD: "You are a small business or a solo powerhouse making things work from home, not a corporate warehouse backed by millions. Stop guessing your profit margins and connect your raw materials, daily builds, and finances into one intelligent command center.",
+        SUBHEAD: "Stop guessing your profit margins and doing data entry on the weekends. Connect your raw materials, daily builds, and finances into one intelligent command center.",
       },
       ROI: {
         TITLE: "What are you actually paying for?",
@@ -251,26 +258,26 @@ export const WEBSITE_COPY = {
           { label: "10+ hrs", value: 12 }
         ] as HourTier[],
         OUTPUT_LABEL: "NET PROFIT (MONEY BACK IN YOUR POCKET)",
-        OUTPUT_SUBTEXT: "*This is what you save by replacing your apps and getting your time back."
+        OUTPUT_SUBTEXT: "*This is what you save by ditching the fragile workarounds and getting your time back."
       },
       MATRIX: {
         TAG: "THE REAL DIFFERENCE",
         TITLE: "How it stacks up.",
-        SUBTITLE: "You didn't start a business to be an accountant. Here is how I fix the headache of using ten different apps.",
+        SUBTITLE: "You didn't start a business to become a full-time data entry clerk. Here is how I fix the headache.",
         HEAD_STANDARD: "Disconnected Systems",
         HEAD_SHIFT: "Shift Studio Native",
         SECTIONS: [
           { TITLE: "YOUR DATA", ROWS: [
             { feature: "Inventory Sync", duct: "Copying numbers manually." }, 
-            { feature: "Real Profit Tracking", duct: "Figuring profit once a month." }
+            { feature: "Real Profit Tracking", duct: "Figuring profit out once a month and crying." }
           ]},
           { TITLE: "YOUR WORKFLOW", ROWS: [
-            { feature: "AI Partnership", duct: "Basic help with no context." }, 
-            { feature: "Daily Tasks", duct: "Constant switching between apps." }
+            { feature: "AI Partnership", duct: "A generic chatbot that doesn't know you." }, 
+            { feature: "Daily Tasks", duct: "15 browser tabs and a lost sticky note." }
           ]},
           { TITLE: "YOUR MONEY", ROWS: [
-            { feature: "Monthly Bills", duct: "Paying for 5-8 separate apps." }, 
-            { feature: "Maintenance Overhead", duct: "Spending hours fixing broken links." }
+            { feature: "Monthly Bills", duct: "Paying 5 separate companies." }, 
+            { feature: "Maintenance Overhead", duct: "Spending your weekend fixing broken Zaps." }
           ]}
         ]
       },
@@ -290,7 +297,7 @@ export const WEBSITE_COPY = {
             IMAGES: ["/images/shift-spark.png"],
             CAPTION: "SHIFT STUDIO NATIVE", 
             TITLE: "One Unified Workspace.", 
-            DESC: "Constant switching between apps kills momentum. Shift Studio provides everything in one unified view. Spark AI acts as a partner that actually knows your goals, while your daily tasks are natively connected to your inventory.", 
+            DESC: "Context-switching is the enemy of getting things done. Shift Studio puts everything in one view. Spark AI actually knows your goals, while your daily tasks are natively connected to your active inventory.", 
             FACTS: ["AI partnership with business context", "Tasks connected to active inventory", "No context-switching between tools"] 
           },
           { 
@@ -298,7 +305,7 @@ export const WEBSITE_COPY = {
             IMAGES: ["/images/shift-ledger.png"],
             CAPTION: "SHIFT STUDIO NATIVE", 
             TITLE: "Consolidate Your Costs.", 
-            DESC: "Paying for 5-8 separate apps and spending hours fixing broken links is burning your cash. Shift Studio gives you one spot to access everything. I handle the wiring and maintenance; you focus on building your business.", 
+            DESC: "Paying for 5 separate apps and spending hours fixing broken links is burning your cash. Shift Studio gives you one spot for everything. I handle the wiring; you focus on making things.", 
             FACTS: ["Replace 5+ subscriptions with one", "Zero maintenance or API wiring", "Bespoke financial ledger included"] 
           }
         ]
@@ -309,6 +316,15 @@ export const WEBSITE_COPY = {
         FLIGHT_PLAN: "THE PLAN", FAQ: "SYSTEM INQUIRIES"
       },
       ROADMAP: { PHASE_1_TITLE: "Phase 1: The Engine", PHASE_1_DESC: "Deploying core Workshop modules.", PHASE_2_TITLE: "Phase 2: Neural Network", PHASE_2_DESC: "Expanding into AI-driven forecasting." }
+    },
+
+    GLITCHBOT_PAGE: {
+      PRODUCT_NAME: "GLITCHBOT",
+      STATUS: "INTERNAL BETA • SECTOR 02",
+      HERO: {
+        TITLE: "YOUR ON-BOARD DIAGNOSTIC PARTNER.",
+        SUBHEAD: "Forget useless help docs. GlitchBot is injected directly into your command center during the beta to track bugs, log telemetry, and pull documentation. Once stable, it evolves into the AlphaBot production guide.",
+      }
     }
   },
 
@@ -336,7 +352,6 @@ export const WEBSITE_COPY = {
       LEDGER: "The Ledger",
       ECOSYSTEM_MANAGER: "My Products",
       BETA_COMMAND: "Members & Access",
-      TASKS: "To-Do List", 
       BROADCAST: "Emails & Updates", 
       AGENTS: "AI Assistants", 
       CONFIG: "Settings", 
@@ -361,10 +376,10 @@ export const WEBSITE_COPY = {
           RAISED: "Raised",
           BACKERS: "Supporters",
           BTN_WIDGET: "Get Embed Code",
-          BTN_MANAGE: "Manage Project"
+          BTN_MANAGE: "Manage Project",
+          BTN_PROMOTE: "Deploy to Ecosystem" 
         }
       },
-      // Add this inside WEBSITE_COPY.DASHBOARD.FOUNDATION
       NEW_BUILD_MODAL: {
         TITLE: "Initialize New Project",
         DESC: "Draft a new idea or client commission to the table.",
@@ -424,8 +439,8 @@ export const WEBSITE_COPY = {
       STATUS: "Synced",
       SEARCH_PLACEHOLDER: "Search your products...",
       BTN_NEW_MODULE: "Add New Product",
-      COLUMNS: ["Product", "Tagline", "Status", "Active Users", "Actions"],
-      STATUS_OPTIONS: ["LIVE", "BETA", "HIDDEN", "ARCHIVED"],
+      COLUMNS: ["Product", "Tagline", "Frontend Placement", "Active Users", "Actions"],
+      STATUS_OPTIONS: ["USABLE APPS", "PROTOTYPES", "COMING SOON", "ARCHIVED"],
       BADGES: { PUBLIC: "On Website", INTERNAL: "Internal Only" },
       PANEL: {
         TITLE_NEW: "Add a Product",
@@ -433,7 +448,11 @@ export const WEBSITE_COPY = {
         TABS: { CORE: "Basic Info", MARKETING: "Website Text", DEPLOY: "Publishing" },
         CORE: { FIELD_NAME: "Product Name", FIELD_TAGLINE: "Tagline", FIELD_DESC: "Short Description", FIELD_ICON: "Icon Name" },
         MARKETING: { FIELD_PUBLIC_TITLE: "Headline", FIELD_PUBLIC_DESC: "Full Description", FIELD_FEATURES: "Features (Comma separated)", FIELD_CTA: "Button Text" },
-        DEPLOY: { FIELD_STATUS: "Status", TOGGLE_PUBLIC: "Show on Public Website", TOGGLE_DESC: "Turn this on to instantly add this to your /products page." },
+        DEPLOY: { 
+          FIELD_STATUS: "Ecosystem Placement",
+          TOGGLE_PUBLIC: "Show on Public Website", 
+          TOGGLE_DESC: "Turn this on to instantly route this app to the selected tab on your /products page." 
+        },
         BTN_SAVE: "Save Product",
         BTN_CANCEL: "Cancel"
       }
@@ -487,7 +506,7 @@ export const WEBSITE_COPY = {
     } 
   },
 
-  SUPPORT_MODULE: { TITLE: "FUEL THE ENGINE", DESC: "I build independent software without VC funding. Your support goes directly into server costs.", STRIPE_LINK: "https://support.alternativesolutions.io/b/00wdR981ReCK4AZ2Zn97G00", BTN_TEXT: "CONTRIBUTE" },
+  SUPPORT_MODULE: { TITLE: "FUEL THE ENGINE", DESC: "I'm building independent software without a dime of VC funding. Your support goes directly into server costs and keeps me from having to pick up extra inventory shifts.", STRIPE_LINK: "https://support.alternativesolutions.io/b/00wdR981ReCK4AZ2Zn97G00", BTN_TEXT: "CONTRIBUTE" },
   FOUNDING_MEMBER: { 
     TITLE: "BECOME A FOUNDING MEMBER", 
     DESC: "This is an early-access beta. Secure your spot at the legacy rate forever.", 
@@ -509,9 +528,9 @@ export const WEBSITE_COPY = {
       DESC: "Alternative Solutions is a one-person lab. Before you lock in your legacy rate, I need to make sure you know exactly what you're getting into:",
       POINTS: [
         "I acknowledge this is a recurring $5/month subscription (and I'm stoked to lock this rate in forever instead of paying $49 later).",
-        "I understand the app isn't live yet. I am joining as an 'Early Funder' to fund the final stretch of development and unlock exclusive 'First 20' perks before the beta even drops.",
+        "I understand the app isn't live yet. I am joining as an 'Early Funder' to help pay for servers and unlock exclusive 'First 20' perks before the beta even drops.",
         "I understand that when the V1 Beta does launch, it will be clunky. I will definitely encounter bugs, missing features, and friction.",
-        "I know I am here to help Courtney test and shape the final product, not just consume a finished app."
+        "I know I am here to help test and shape the final product, not just consume a finished app."
       ],
       BTN_CANCEL: "NOPE, I'M OUT",
       BTN_CONFIRM: "I'M READY. LET'S BUILD."

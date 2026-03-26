@@ -1,4 +1,3 @@
-/* src/components/dashboard/Sidebar.tsx */
 'use client';
 
 import React from 'react';
@@ -8,10 +7,11 @@ import {
   LayoutDashboard, 
   Construction, 
   Wallet, 
-  CheckSquare, 
   Radio, 
   Settings, 
-  LogOut 
+  LogOut,
+  Users,
+  Box
 } from 'lucide-react';
 import { WEBSITE_COPY } from '@/utils/glossary';
 
@@ -19,23 +19,30 @@ export default function Sidebar() {
   const pathname = usePathname();
   const copy = WEBSITE_COPY.DASHBOARD.SIDEBAR;
 
-  // Organizing your tools into logical groups
+  // ZONE 1: THE DAILY DRIVER (Separated into logical subcategories)
   const navGroups = [
     {
-      label: copy.GROUPS.COMMAND,
+      label: copy.GROUPS.COMMAND, // "My Workspace"
       items: [
         { name: copy.OVERVIEW, href: '/dashboard', icon: LayoutDashboard },
         { name: copy.FOUNDATION, href: '/dashboard/foundation', icon: Construction },
+        { name: copy.ECOSYSTEM_MANAGER, href: '/dashboard/ecosystem', icon: Box },
       ]
     },
     {
-      label: copy.GROUPS.OPERATIONS,
+      label: copy.GROUPS.OPERATIONS, // "Life & Logistics"
       items: [
-        { name: "The Ledger", href: '/dashboard/ledger', icon: Wallet }, // Your Financial Hub
-        { name: copy.TASKS, href: '/dashboard/tasks', icon: CheckSquare },
+        { name: copy.LEDGER, href: '/dashboard/ledger', icon: Wallet },
+        { name: copy.BETA_COMMAND, href: '/dashboard/beta-command', icon: Users }, // Moved to Operations
         { name: copy.BROADCAST, href: '/dashboard/broadcast', icon: Radio },
       ]
     }
+  ];
+
+  // ZONE 2: THE ENGINE ROOM (Strictly System Admin)
+  const adminItems = [
+    { name: copy.CONFIG, href: '/dashboard/settings', icon: Settings },
+    // If we add high-level database or server access later, it goes here.
   ];
 
   return (
@@ -50,7 +57,7 @@ export default function Sidebar() {
         </p>
       </div>
 
-      {/* NAVIGATION */}
+      {/* ZONE 1: ACTIVE WORKSPACE WITH SUBCATEGORIES */}
       <nav className="flex-1 px-4 space-y-8 overflow-y-auto">
         {navGroups.map((group) => (
           <div key={group.label}>
@@ -80,17 +87,37 @@ export default function Sidebar() {
         ))}
       </nav>
 
-      {/* SETTINGS & EXIT */}
-      <div className="p-4 border-t border-white/5 space-y-1">
-        <Link 
-          href="/dashboard/settings" 
-          className="flex items-center gap-3 px-4 py-3 text-xs font-mono text-slate-500 hover:text-white transition-colors"
-        >
-          <Settings size={18} /> Settings
-        </Link>
+      {/* ZONE 2: THE ENGINE ROOM (Pinned to bottom) */}
+      <div className="p-4 border-t border-white/5 space-y-4 bg-bg-surface-200/30">
+        <div>
+           <h3 className="px-4 text-[10px] font-mono font-bold text-purple-400 uppercase tracking-widest mb-3 opacity-80">
+            System Admin
+          </h3>
+          <div className="space-y-1">
+            {adminItems.map((item) => {
+              const isActive = pathname === item.href;
+              return (
+                <Link
+                  key={item.name}
+                  href={item.href}
+                  className={`flex items-center gap-3 px-4 py-3 rounded-xl text-xs font-mono uppercase tracking-widest transition-all group ${
+                    isActive 
+                      ? 'bg-purple-500/10 text-purple-400 border border-purple-500/20 shadow-[0_0_20px_rgba(168,85,247,0.1)]' 
+                      : 'text-slate-500 hover:text-purple-300 hover:bg-purple-500/5 border border-transparent'
+                  }`}
+                >
+                  <item.icon size={18} className={isActive ? 'text-purple-400' : 'group-hover:text-purple-300'} />
+                  {item.name}
+                </Link>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* EXIT COMPONENT (Isolated destructive action - Orange to adhere to our color ledger) */}
         <Link 
           href="/" 
-          className="flex items-center gap-3 px-4 py-3 text-xs font-mono text-red-500/60 hover:text-red-400 transition-colors"
+          className="flex items-center gap-3 px-4 py-3 text-xs font-mono text-orange-500/70 hover:text-orange-400 hover:bg-orange-500/10 rounded-xl transition-colors border border-transparent hover:border-orange-500/20"
         >
           <LogOut size={18} /> {copy.EXIT}
         </Link>
