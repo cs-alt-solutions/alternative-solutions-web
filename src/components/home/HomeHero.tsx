@@ -7,7 +7,7 @@ import { WEBSITE_COPY } from '@/utils/glossary';
 import { Activity, Zap, Timer, ArrowRight, Database, Triangle, CreditCard, Github, Code2, Layers } from 'lucide-react';
 
 export default function HomeHero({ liveSpotsRemaining = 20 }: { liveSpotsRemaining?: number }) {
-  const { HERO, LAUNCH_TELEMETRY, AUTHORITY_BANNER } =  WEBSITE_COPY.HOME;
+  const { HERO, LAUNCH_TELEMETRY, AUTHORITY_BANNER } =  WEBSITE_COPY.PUBLIC_SITE.HOME;
   const [timeLeft, setTimeLeft] = useState({ days: 0, hours: 0, minutes: 0, seconds: 0 });
 
   useEffect(() => {

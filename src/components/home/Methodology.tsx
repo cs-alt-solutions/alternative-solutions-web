@@ -4,7 +4,7 @@ import { WEBSITE_COPY } from '@/utils/glossary';
 import { Search, GitBranch, Rocket } from 'lucide-react';
 
 export default function Methodology() {
-  const { METHODOLOGY } =  WEBSITE_COPY.HOME;
+  const { METHODOLOGY } =  WEBSITE_COPY.PUBLIC_SITE.HOME;
   const icons = [Search, GitBranch, Rocket];
 
   return (

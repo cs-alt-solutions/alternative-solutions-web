@@ -5,7 +5,7 @@ import { WEBSITE_COPY } from '@/utils/glossary';
 import { BrainCircuit, Terminal, Blocks, ArrowRight, Cpu, Users, Sparkles } from 'lucide-react';
 
 export default function BentoGrid() {
-  const { BENTO } =  WEBSITE_COPY.HOME;
+  const { BENTO } =  WEBSITE_COPY.PUBLIC_SITE.HOME;
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-12 gap-6 px-6 animate-in fade-in duration-1000 delay-500">

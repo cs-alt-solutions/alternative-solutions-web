@@ -5,7 +5,7 @@ import { WEBSITE_COPY } from '@/utils/glossary';
 import { ArrowRight, Zap, Database } from 'lucide-react';
 
 export default function FlagshipFeature() {
-  const { FLAGSHIP } =  WEBSITE_COPY.HOME;
+  const { FLAGSHIP } =  WEBSITE_COPY.PUBLIC_SITE.HOME;
 
   return (
     <section className="mb-24 px-6 animate-in fade-in duration-1000 delay-300">

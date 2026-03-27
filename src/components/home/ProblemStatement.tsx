@@ -3,7 +3,7 @@ import React from 'react';
 import { WEBSITE_COPY } from '@/utils/glossary';
 
 export default function ProblemStatement() {
-  const { PROBLEM_STATEMENT } =  WEBSITE_COPY.HOME;
+  const { PROBLEM_STATEMENT } =  WEBSITE_COPY.PUBLIC_SITE.HOME;
 
   return (
     <section className="mb-24 px-6 animate-in fade-in duration-1000 delay-200 text-left">
