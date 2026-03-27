@@ -1,24 +1,34 @@
 /* src/config/sandbox.ts */
 
 export const SANDBOX_CLIENTS = {
-  division: {
+  division: { // Changed from 'wellness' to 'division'
     id: 'division',
     accessCode: 'DIVISION',
     agencyName: "The Division",
-    // CHANGED: Clean brand name for the main header
-    appTitle: "The Division", 
-    // CHANGED: The subtitle pill on the Gatekeeper
-    security: { pin: "2026", lockedMessage: "Sandbox & Demo Portal" }, 
+    appTitle: "The Division",
+    security: { 
+      pin: "2026", // Admin/Staff Master PIN
+      lockedMessage: "Secure Client & Staff Access",
+      // NEW: Time-Expiring Codes for Telegram
+      customerCodes: {
+        morning: "WAKE", // Active 8 AM - 12 PM
+        evening: "BAKE"  // Active 12 PM - 5 PM
+      }
+    },
     primaryContact: "Doobie",
     apps: [
+      { id: 'storefront', name: "Member Market", description: "Daily Menu & Orders", iconName: "ShoppingCart", themeKey: "emerald" },
       { id: 'admin', name: "Admin Command", description: "Global Zone Health & Velocity", iconName: "Activity", themeKey: "emerald" },
       { id: 'logistics', name: "Core Logistics", description: "Procurement & Internal Routing", iconName: "Truck", themeKey: "cyan" },
       { id: 'fulfillment', name: "Order Fulfillment", description: "Live Order Picking & Dispatch", iconName: "PackageSearch", themeKey: "fuchsia" }
     ],
     inventory: [
-      { id: 'itm-1', name: 'Premium Sample', onHand: 50, category: 'Flower' },
-      { id: 'itm-2', name: 'Pre-Roll 2-Pack', onHand: 120, category: 'Pre-Rolls' },
-      { id: 'itm-new', name: 'Web Catalog Item', onHand: 15, category: 'Accessories' }
+      { id: 'itm-1', name: 'Premium Sour Diesel', onHand: 50, category: 'Flower', price: 45.00, unit: '3.5g' },
+      { id: 'itm-2', name: 'Granddaddy Purple', onHand: 30, category: 'Flower', price: 50.00, unit: '3.5g' },
+      { id: 'itm-3', name: 'House Pre-Roll 2-Pack', onHand: 120, category: 'Pre-Rolls', price: 15.00, unit: 'Pack' },
+      { id: 'itm-4', name: 'Infused Pre-Roll', onHand: 45, category: 'Pre-Rolls', price: 25.00, unit: 'Single' },
+      { id: 'itm-5', name: 'Gummy 100mg Tin', onHand: 80, category: 'Edibles', price: 20.00, unit: 'Tin' },
+      { id: 'itm-new', name: 'Division Lighter', onHand: 15, category: 'Accessories', price: 3.00, unit: 'Each' }
     ],
     fulfillment: {
       initialOrders: [
