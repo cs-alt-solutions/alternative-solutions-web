@@ -5,7 +5,7 @@ import { WEBSITE_COPY } from '@/utils/glossary';
 import { Zap, BrainCircuit, Code, Coffee, Cat, Network, Cpu, ShieldAlert } from 'lucide-react';
 
 export default function FounderPage() {
-  const copy = WEBSITE_COPY.PUBLIC_SITE.FOUNDER;
+  const copy = WEBSITE_COPY.FOUNDER;
 
   return (
     <main className="min-h-screen bg-bg-app text-slate-300 relative overflow-x-hidden font-sans pt-32 pb-24">

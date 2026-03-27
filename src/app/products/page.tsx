@@ -13,7 +13,7 @@ export default function ProductsPage() {
   const [activeTab, setActiveTab] = useState<'COMMERCE' | 'LAB' | 'PIPELINE'>('COMMERCE');
   const [liveProducts, setLiveProducts] = useState<any[]>([]);
   
-  const copy = WEBSITE_COPY.PUBLIC_SITE.ECOSYSTEM;
+  const copy = WEBSITE_COPY.ECOSYSTEM;
 
   // FETCH FROM DATABASE
   useEffect(() => {

@@ -6,7 +6,7 @@ import CommandCenterTabs from '@/components/shift-studio/xlg/CommandCenterTabs';
 import BottomCta from '@/components/shift-studio/BottomCta';
 
 export default function ShiftStudioPage() {
-  const { PRODUCT_NAME, HERO, STATUS } = WEBSITE_COPY.PUBLIC_SITE.SHIFT_STUDIO_PAGE;
+  const { PRODUCT_NAME, HERO, STATUS } = WEBSITE_COPY.SHIFT_STUDIO_PAGE;
 
   return (
     <main className="min-h-screen bg-bg-app font-sans text-white relative pt-32 pb-24 overflow-x-hidden">
