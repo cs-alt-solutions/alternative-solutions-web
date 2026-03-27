@@ -4,7 +4,7 @@ import { WEBSITE_COPY } from '@/utils/glossary';
 import { MapPin } from 'lucide-react';
 
 export default function RoadmapTimeline() {
-  const { ROADMAP, SECTORS } = WEBSITE_COPY.PUBLIC_SITE.SHIFT_STUDIO_PAGE;
+  const { ROADMAP, SECTORS } =  WEBSITE_COPY.SHIFT_STUDIO_PAGE;
 
   return (
     <div className="mb-32 max-w-4xl mx-auto">

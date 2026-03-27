@@ -22,7 +22,7 @@ const BORDERS = [
 ];
 
 export default function FeatureCards() {
-  const { SYSTEM_MODULES } = WEBSITE_COPY.PUBLIC_SITE.SHIFT_STUDIO_PAGE.SECTORS;
+  const { SYSTEM_MODULES } =  WEBSITE_COPY.SHIFT_STUDIO_PAGE.SECTORS;
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-32">

@@ -5,7 +5,7 @@ import { CheckCircle2 } from 'lucide-react';
 
 export default function FaqSection() {
   // Correctly pathing through PUBLIC_SITE
-  const { SECTORS } = WEBSITE_COPY.PUBLIC_SITE.SHIFT_STUDIO_PAGE;
+  const { SECTORS } =  WEBSITE_COPY.SHIFT_STUDIO_PAGE;
   const { FAQ } = WEBSITE_COPY.JOIN_PAGE.HYPE;
 
   return (

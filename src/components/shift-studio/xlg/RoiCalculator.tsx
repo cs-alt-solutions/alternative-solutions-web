@@ -5,7 +5,7 @@ import { WEBSITE_COPY, SYSTEM_CONFIG, AppTool, HourTier } from '@/utils/glossary
 import { Calculator, DollarSign, ArrowRight, Sparkles } from 'lucide-react';
 
 export default function RoiCalculator() {
-  const { ROI } = WEBSITE_COPY.PUBLIC_SITE.SHIFT_STUDIO_PAGE;
+  const { ROI } =  WEBSITE_COPY.SHIFT_STUDIO_PAGE;
   
   const [auditMode, setAuditMode] = useState<'BASELINE' | 'CUSTOM'>('BASELINE');
   const [customCosts, setCustomCosts] = useState<Record<string, number>>({});

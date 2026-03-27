@@ -5,7 +5,7 @@ import { WEBSITE_COPY } from '@/utils/glossary';
 import { AlertTriangle, CheckCircle2, X, ArrowDown, ArrowRight, Maximize2 } from 'lucide-react';
 
 export default function UnifiedSystemShowcase() {
-  const { MATRIX, EVIDENCE } = WEBSITE_COPY.PUBLIC_SITE.SHIFT_STUDIO_PAGE;
+  const { MATRIX, EVIDENCE } =  WEBSITE_COPY.SHIFT_STUDIO_PAGE;
   
   // State to track which image is currently blown up
   const [selectedImage, setSelectedImage] = useState<string | null>(null);

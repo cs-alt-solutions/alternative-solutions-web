@@ -3,7 +3,7 @@ import React from 'react';
 import { WEBSITE_COPY } from '@/utils/glossary';
 
 export default function PhilosophySection() {
-  const { PHILOSOPHY } = WEBSITE_COPY.PUBLIC_SITE.SHIFT_STUDIO_PAGE.SECTORS;
+  const { PHILOSOPHY } =  WEBSITE_COPY.SHIFT_STUDIO_PAGE.SECTORS;
 
   return (
     <div className="mb-32 text-center max-w-3xl mx-auto space-y-6">
