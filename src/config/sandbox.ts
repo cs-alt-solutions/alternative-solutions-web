@@ -22,13 +22,72 @@ export const SANDBOX_CLIENTS = {
       { id: 'logistics', name: "Core Logistics", description: "Procurement & Internal Routing", iconName: "Truck", themeKey: "cyan" },
       { id: 'fulfillment', name: "Order Fulfillment", description: "Live Order Picking & Dispatch", iconName: "PackageSearch", themeKey: "fuchsia" }
     ],
+    /* src/config/sandbox.ts */
+// ... inside the division object ...
+
     inventory: [
-      { id: 'itm-1', name: 'Premium Sour Diesel', onHand: 50, category: 'Flower', price: 45.00, unit: '3.5g' },
-      { id: 'itm-2', name: 'Granddaddy Purple', onHand: 30, category: 'Flower', price: 50.00, unit: '3.5g' },
-      { id: 'itm-3', name: 'House Pre-Roll 2-Pack', onHand: 120, category: 'Pre-Rolls', price: 15.00, unit: 'Pack' },
-      { id: 'itm-4', name: 'Infused Pre-Roll', onHand: 45, category: 'Pre-Rolls', price: 25.00, unit: 'Single' },
-      { id: 'itm-5', name: 'Gummy 100mg Tin', onHand: 80, category: 'Edibles', price: 20.00, unit: 'Tin' },
-      { id: 'itm-new', name: 'Division Lighter', onHand: 15, category: 'Accessories', price: 3.00, unit: 'Each' }
+      { 
+        id: 'itm-1', 
+        name: 'Premium Sour Diesel', 
+        onHand: 50, 
+        category: 'Flower', 
+        description: 'A classic sativa-dominant strain known for its energetic and uplifting effects. Earthy, pungent, and fast-acting.',
+        iconName: 'Leaf',
+        variants: [
+          { id: 'v-1-8', label: '3.5g (Eighth)', price: 45.00 },
+          { id: 'v-1-4', label: '7g (Quarter)', price: 80.00 },
+          { id: 'v-1-2', label: '14g (Half)', price: 150.00 },
+          { id: 'v-1-1', label: '28g (Ounce)', price: 280.00 }
+        ]
+      },
+      { 
+        id: 'itm-2', 
+        name: 'Granddaddy Purple', 
+        onHand: 30, 
+        category: 'Flower', 
+        description: 'Famous indica cross with deep purple hues. Delivers a fusion of cerebral euphoria and physical relaxation.',
+        iconName: 'Leaf',
+        variants: [
+          { id: 'v-2-8', label: '3.5g (Eighth)', price: 50.00 },
+          { id: 'v-2-4', label: '7g (Quarter)', price: 90.00 },
+          { id: 'v-2-1', label: '28g (Ounce)', price: 300.00 }
+        ]
+      },
+      { 
+        id: 'itm-3', 
+        name: 'House Pre-Roll', 
+        onHand: 120, 
+        category: 'Pre-Rolls', 
+        description: 'Perfectly packed 1g pre-rolls using our premium house blend. Ready to spark.',
+        iconName: 'Flame',
+        variants: [
+          { id: 'v-3-1', label: 'Single (1g)', price: 12.00 },
+          { id: 'v-3-5', label: '5-Pack', price: 50.00 }
+        ]
+      },
+      { 
+        id: 'itm-5', 
+        name: 'Neon Gummy Tin', 
+        onHand: 80, 
+        category: 'Edibles', 
+        description: 'Watermelon flavored gummies. 10mg per piece, 100mg total per tin. Fast acting.',
+        iconName: 'Box',
+        variants: [
+          { id: 'v-5-1', label: '100mg Tin', price: 20.00 },
+          { id: 'v-5-2', label: '250mg Tin', price: 45.00 }
+        ]
+      },
+      { 
+        id: 'itm-new', 
+        name: 'Division Lighter', 
+        onHand: 15, 
+        category: 'Accessories', 
+        description: 'Custom branded clipper lighter. Refillable and reliable.',
+        iconName: 'Flame',
+        variants: [
+          { id: 'v-l-1', label: 'Standard', price: 3.00 }
+        ]
+      }
     ],
     fulfillment: {
       initialOrders: [
