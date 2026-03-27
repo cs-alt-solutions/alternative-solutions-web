@@ -5,7 +5,7 @@ import { WEBSITE_COPY, SYSTEM_CONFIG, AppTool, HourTier } from '@/utils/glossary
 import { Calculator, DollarSign, ArrowRight, Sparkles } from 'lucide-react';
 
 export default function RoiCalculator() {
-  const { ROI } =  WEBSITE_COPY.SHIFT_STUDIO_PAGE;
+  const { ROI } = WEBSITE_COPY.SHIFT_STUDIO_PAGE;
   
   const [auditMode, setAuditMode] = useState<'BASELINE' | 'CUSTOM'>('BASELINE');
   const [customCosts, setCustomCosts] = useState<Record<string, number>>({});
@@ -28,13 +28,15 @@ export default function RoiCalculator() {
 
     categoryKeys.forEach(catKey => {
       if (auditMode === 'BASELINE') {
-        const appsInCat = ROI.APPS.filter((a: AppTool) => a.category === catKey);
+        // FIXED: Added 'as AppTool[]' so TypeScript stops panicking
+        const appsInCat = (ROI.APPS as AppTool[]).filter((a: AppTool) => a.category === catKey);
         const cheapest = appsInCat.reduce((min: AppTool, p: AppTool) => p.cost < min.cost ? p : min, appsInCat[0]);
         appLineItems.push({ name: `${cheapest.name}`, cost: cheapest.cost, isCustom: false });
         totalMonthlyApps += cheapest.cost;
       } else {
         const manualCost = customCosts[catKey] || 0;
-        const appsInCat = ROI.APPS.filter((a: AppTool) => a.category === catKey);
+        // FIXED: Added 'as AppTool[]'
+        const appsInCat = (ROI.APPS as AppTool[]).filter((a: AppTool) => a.category === catKey);
         const selectedInCat = appsInCat.filter((a: AppTool) => selectedApps.includes(a.id));
 
         if (manualCost > 0) {
@@ -124,7 +126,8 @@ export default function RoiCalculator() {
                       <span className="text-[10px] font-mono text-brand-primary uppercase tracking-[0.2em]">{ROI.CATEGORIES[catKey]}</span>
                       
                       <div className="flex flex-wrap gap-3">
-                        {ROI.APPS.filter((a: AppTool) => a.category === catKey).map((app: AppTool) => (
+                        {/* FIXED: Added 'as AppTool[]' */}
+                        {(ROI.APPS as AppTool[]).filter((a: AppTool) => a.category === catKey).map((app: AppTool) => (
                           <button 
                             key={app.id} 
                             onClick={() => toggleApp(app.id)} 
