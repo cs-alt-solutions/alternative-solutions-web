@@ -1,7 +1,8 @@
 /* src/app/blueprint/page.tsx */
 import React from 'react';
 import Link from 'next/link';
-import { supabase } from '@/utils/supabase';
+// IMPORT FIXED: Using the secure server client
+import { createClient } from '@/utils/supabase/server';
 import { WEBSITE_COPY } from '@/utils/glossary';
 import PricingCard from '@/components/core/PricingCard';
 import { ShieldCheck, Wrench, Hammer, Users, MessageSquare, TerminalSquare, Zap, Coffee, HeartHandshake, ArrowRight, Flame, Briefcase } from 'lucide-react';
@@ -9,8 +10,12 @@ import { ShieldCheck, Wrench, Hammer, Users, MessageSquare, TerminalSquare, Zap,
 export const revalidate = 0; // Ensures the roster is always live
 
 export default async function BlueprintPage() {
+  // PATH FIXED: Removed .PUBLIC_SITE
   const copy = WEBSITE_COPY.BLUEPRINT;
   const fm = WEBSITE_COPY.FOUNDING_MEMBER;
+
+  // AUTH FIXED: Initialize the secure server-side client
+  const supabase = await createClient();
 
   // 1. Fetch real backers (Amount > 0 excludes free observers from the public wall of fame)
   const { data: backersData } = await supabase
@@ -98,8 +103,6 @@ export default async function BlueprintPage() {
           </div>
         </div>
 
-        
-
         {/* SECTION 2: THE 2 FUNDING PATHS (Middle Row) */}
         <section className="mb-24 scroll-mt-32" id="funding-options">
           <div className="text-center mb-12">
@@ -131,7 +134,6 @@ export default async function BlueprintPage() {
               <div className="flex-1 space-y-3 mb-8">
                 {copy.FUNDING_PATHS.PATH_1.TIERS.map((tier: any, idx: number) => (
                   <div key={idx} className="bg-white/5 border border-white/10 rounded-xl p-4 flex gap-4 items-start">
-                    {/* UPDATED: Changed min-w-[60px] to min-w-15 */}
                     <div className="text-brand-primary font-black text-lg min-w-15">{tier.price}</div>
                     <div>
                       <div className="text-xs font-bold text-white uppercase tracking-wider mb-1">{tier.name}</div>
