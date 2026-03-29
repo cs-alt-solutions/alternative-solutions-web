@@ -6,7 +6,7 @@ import {
   Shield, Zap, Bell, LayoutGrid, Search, Activity, 
   PlayCircle, PauseCircle, RefreshCw, Trash2, 
   Inbox, Clock, Globe, CheckCircle, Package, 
-  AlertTriangle, TrendingDown, BarChart3 
+  AlertTriangle, TrendingDown, BarChart3, Flame 
 } from 'lucide-react';
 import { useStickyState } from '@/hooks/useStickyState';
 
@@ -97,6 +97,16 @@ export default function AdminTerminal({ clientConfig, onExit }: AdminTerminalPro
     };
     setOrders((prev: any[]) => [newOrder, ...prev]);
     setNotification(`Order ${newId} Inbound!`);
+  };
+
+  // ==========================================
+  // LOGIC: QUICK MENU EDITS
+  // ==========================================
+  const toggleDailyDeal = (itemId: string) => {
+    setStock((prev: any[]) => prev.map((item: any) => 
+      item.id === itemId ? { ...item, featured: !item.featured } : item
+    ));
+    setNotification("Menu Updated: Daily Deal Toggled");
   };
 
   return (
@@ -210,11 +220,30 @@ export default function AdminTerminal({ clientConfig, onExit }: AdminTerminalPro
                   <div key={item.id} className={`bg-zinc-900 border rounded-3xl p-6 transition-all ${isOver ? 'border-rose-500/50 bg-rose-500/5' : isLow ? 'border-amber-500/50 shadow-[0_0_15px_rgba(245,158,11,0.05)]' : 'border-zinc-800'}`}>
                     <div className="flex justify-between items-start mb-6">
                       <div>
-                        <p className="text-[10px] font-black text-zinc-500 uppercase tracking-widest mb-1">{item.category}</p>
+                        <div className="flex items-center gap-2 mb-1">
+                          <p className="text-[10px] font-black text-zinc-500 uppercase tracking-widest">{item.category}</p>
+                          {item.featured && (
+                            <span className="text-[9px] font-black bg-emerald-500 text-zinc-950 px-2 py-0.5 rounded-full uppercase tracking-widest shadow-[0_0_10px_rgba(52,211,153,0.3)]">
+                              Daily Deal Active
+                            </span>
+                          )}
+                        </div>
                         <h3 className="text-lg font-black text-white uppercase leading-none">{item.name}</h3>
                       </div>
-                      {isOver && <AlertTriangle className="text-rose-500 animate-pulse" size={20} />}
-                      {isLow && !isOver && <Package className="text-amber-500" size={20} />}
+                      
+                      <div className="flex items-center gap-3">
+                        {/* Quick Action: Toggle Daily Deal */}
+                        <button 
+                          onClick={() => toggleDailyDeal(item.id)}
+                          className={`p-2 rounded-xl border transition-all ${item.featured ? 'bg-emerald-500/20 border-emerald-500/50 text-emerald-400 shadow-[0_0_15px_rgba(52,211,153,0.2)]' : 'bg-zinc-900 border-zinc-700 text-zinc-500 hover:text-emerald-400 hover:border-emerald-500/30'}`}
+                          title="Toggle Daily Deal"
+                        >
+                          <Flame size={18} className={item.featured ? "animate-pulse" : ""} />
+                        </button>
+                        
+                        {isOver && <AlertTriangle className="text-rose-500 animate-pulse" size={20} />}
+                        {isLow && !isOver && <Package className="text-amber-500" size={20} />}
+                      </div>
                     </div>
 
                     <div className="grid grid-cols-3 gap-2">

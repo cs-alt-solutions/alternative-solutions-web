@@ -45,7 +45,8 @@ export default function StorefrontTerminal({ clientConfig, onExit }: { clientCon
   // NEW: Anti-Spoofing Unique Order Reference
   const [orderRef, setOrderRef] = useState('');
   
-  const inventory = clientConfig.inventory || [];
+  // BRIDGE ACTIVE: We now read from the exact same sticky state key that the Admin Terminal uses.
+  const [inventory, setInventory] = useStickyState(clientConfig.inventory || [], `inv_stock_${clientConfig.id}`);
   const deliveryZones = clientConfig.deliveryZones || [];
   const storePolicies = clientConfig.storePolicies || [];
 
