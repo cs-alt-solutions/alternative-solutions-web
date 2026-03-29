@@ -18,11 +18,11 @@ interface AdminTerminalProps {
 export default function AdminTerminal({ clientConfig, onExit }: AdminTerminalProps) {
   const cid = clientConfig.id;
   
-  // State 1: Orders
+  // State 1: Orders (Fulfillment Data)
   const initialOrders = clientConfig?.fulfillment?.initialOrders || [];
   const [orders, setOrders] = useStickyState(initialOrders, `ful_orders_${cid}`); 
   
-  // State 2: Inventory (Source of truth)
+  // State 2: Inventory (Stock Data)
   const initialStock = clientConfig?.inventory || [];
   const [stock, setStock] = useStickyState(initialStock, `inv_stock_${cid}`);
 
@@ -42,9 +42,9 @@ export default function AdminTerminal({ clientConfig, onExit }: AdminTerminalPro
   // ==========================================
   const inventoryMatrix = useMemo(() => {
     return stock.map((item: any) => {
-      // Calculate Committed (Sum of qty in all orders that aren't 'ready_delivery' yet)
+      // Calculate Committed: Sum of qty in all orders that aren't 'ready_delivery' (staged) yet
       const committed = orders.reduce((sum: number, order: any) => {
-        if (order.status === 'ready_delivery') return sum; // If it's staged, it's basically "gone" from active picking
+        if (order.status === 'ready_delivery') return sum; 
         const orderItem = order.items.find((i: any) => i.id === item.id || i.name === item.name);
         return sum + (orderItem ? orderItem.qtyRequired : 0);
       }, 0);
@@ -89,14 +89,14 @@ export default function AdminTerminal({ clientConfig, onExit }: AdminTerminalPro
     const newId = `ECOM-${Math.floor(1000 + Math.random() * 9000)}`;
     const newOrder = {
       id: newId,
-      customer: "New Web Customer",
+      customer: "New Web Order",
       zone: "Williamsburg",
       status: 'held',
       timeReceived: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
       items: [{ id: 'itm-1', name: 'Premium Sample', qtyRequired: 2, qtyPicked: 0 }]
     };
     setOrders((prev: any[]) => [newOrder, ...prev]);
-    setNotification(`New Order ${newId} Received!`);
+    setNotification(`Order ${newId} Inbound!`);
   };
 
   return (
@@ -120,7 +120,7 @@ export default function AdminTerminal({ clientConfig, onExit }: AdminTerminalPro
             <h1 className="font-black text-lg tracking-wider uppercase text-transparent bg-clip-text bg-linear-to-r from-emerald-400 to-zinc-100">Admin Command</h1>
           </div>
         </div>
-        <button onClick={simulateNewOrder} className="bg-zinc-800 p-2 rounded-xl text-emerald-400 border border-emerald-900/30 active:scale-95 transition-all hover:bg-emerald-500/10">
+        <button onClick={simulateNewOrder} className="bg-zinc-800 p-2 rounded-xl text-emerald-400 border border-emerald-900/30 active:scale-95 transition-all hover:bg-emerald-500/10 shadow-[0_0_10px_rgba(52,211,153,0.1)]">
           <Zap size={20} />
         </button>
       </header>
@@ -137,7 +137,7 @@ export default function AdminTerminal({ clientConfig, onExit }: AdminTerminalPro
           <button 
             key={tab.id} 
             onClick={() => setAdminTab(tab.id)} 
-            className={`flex-1 min-w-22.5 py-3 rounded-xl font-black text-[10px] uppercase tracking-widest border transition-all ${adminTab === tab.id ? `bg-zinc-900 border-zinc-700 ${tab.color} shadow-xl` : 'bg-transparent border-transparent text-zinc-600 hover:text-zinc-400'}`}
+            className={`flex-1 min-w-[90px] py-3 rounded-xl font-black text-[10px] uppercase tracking-widest border transition-all ${adminTab === tab.id ? `bg-zinc-900 border-zinc-700 ${tab.color} shadow-xl` : 'bg-transparent border-transparent text-zinc-600 hover:text-zinc-400'}`}
           >
             <div className="flex flex-col items-center gap-1">
               {tab.icon && <tab.icon size={12} />}
@@ -171,9 +171,9 @@ export default function AdminTerminal({ clientConfig, onExit }: AdminTerminalPro
                   </div>
 
                   <div className="flex items-center gap-2 ml-4">
-                    {adminTab === 'held' && <button onClick={() => updateStatus(order.id, 'pending')} className="bg-emerald-600 text-white p-2.5 rounded-xl active:scale-90 shadow-lg"><PlayCircle size={20} /></button>}
-                    {adminTab === 'pending' && <button onClick={() => updateStatus(order.id, 'held')} className="bg-zinc-800 text-zinc-500 p-2.5 rounded-xl border border-zinc-700 active:scale-90"><PauseCircle size={20} /></button>}
-                    {(adminTab === 'picking' || adminTab === 'ready') && <button onClick={() => updateStatus(order.id, 'pending')} className="bg-zinc-800 text-zinc-500 p-2.5 rounded-xl border border-zinc-700 active:scale-90"><RefreshCw size={20} /></button>}
+                    {adminTab === 'held' && <button onClick={() => updateStatus(order.id, 'pending')} className="bg-emerald-600 text-white p-2.5 rounded-xl active:scale-90 shadow-lg transition-transform"><PlayCircle size={20} /></button>}
+                    {adminTab === 'pending' && <button onClick={() => updateStatus(order.id, 'held')} className="bg-zinc-800 text-zinc-500 p-2.5 rounded-xl border border-zinc-700 active:scale-90 transition-transform"><PauseCircle size={20} /></button>}
+                    {(adminTab === 'picking' || adminTab === 'ready') && <button onClick={() => updateStatus(order.id, 'pending')} className="bg-zinc-800 text-zinc-500 p-2.5 rounded-xl border border-zinc-700 active:scale-90 transition-transform"><RefreshCw size={20} /></button>}
                     <button onClick={() => setOrders((prev: any[]) => prev.filter(o => o.id !== order.id))} className="text-zinc-800 hover:text-rose-500 p-2 transition-colors"><Trash2 size={18} /></button>
                   </div>
                 </div>
@@ -188,7 +188,7 @@ export default function AdminTerminal({ clientConfig, onExit }: AdminTerminalPro
           </div>
         )}
 
-        {/* VIEW: INVENTORY INTELLIGENCE */}
+        {/* VIEW: STOCK TELEMETRY */}
         {adminTab === 'stock' && (
           <div className="animate-in slide-in-from-bottom-4 duration-300">
             <div className="flex items-center gap-3 mb-8">
@@ -196,8 +196,8 @@ export default function AdminTerminal({ clientConfig, onExit }: AdminTerminalPro
                   <BarChart3 size={24} />
                </div>
                <div>
-                  <h2 className="text-2xl font-black text-white uppercase tracking-tight">Stock Telemetry</h2>
-                  <p className="text-xs font-bold text-zinc-500 uppercase tracking-widest">Real-Time Commitment Mapping</p>
+                  <h2 className="text-2xl font-black text-white uppercase tracking-tight">Inventory Intelligence</h2>
+                  <p className="text-xs font-bold text-zinc-500 uppercase tracking-widest">Real-Time Global Commitment Mapping</p>
                </div>
             </div>
 
@@ -207,13 +207,14 @@ export default function AdminTerminal({ clientConfig, onExit }: AdminTerminalPro
                 const isLow = item.available <= 5 && item.available >= 0;
 
                 return (
-                  <div key={item.id} className={`bg-zinc-900 border rounded-3xl p-6 transition-all ${isOver ? 'border-rose-500/50 bg-rose-500/5' : isLow ? 'border-amber-500/50' : 'border-zinc-800'}`}>
+                  <div key={item.id} className={`bg-zinc-900 border rounded-3xl p-6 transition-all ${isOver ? 'border-rose-500/50 bg-rose-500/5' : isLow ? 'border-amber-500/50 shadow-[0_0_15px_rgba(245,158,11,0.05)]' : 'border-zinc-800'}`}>
                     <div className="flex justify-between items-start mb-6">
                       <div>
                         <p className="text-[10px] font-black text-zinc-500 uppercase tracking-widest mb-1">{item.category}</p>
                         <h3 className="text-lg font-black text-white uppercase leading-none">{item.name}</h3>
                       </div>
                       {isOver && <AlertTriangle className="text-rose-500 animate-pulse" size={20} />}
+                      {isLow && !isOver && <Package className="text-amber-500" size={20} />}
                     </div>
 
                     <div className="grid grid-cols-3 gap-2">
@@ -234,9 +235,9 @@ export default function AdminTerminal({ clientConfig, onExit }: AdminTerminalPro
                     </div>
 
                     {isOver && (
-                      <div className="mt-4 flex items-center gap-2 text-rose-500 bg-rose-500/10 p-2 rounded-xl border border-rose-500/20">
+                      <div className="mt-4 flex items-center gap-2 text-rose-500 bg-rose-500/10 p-2 rounded-xl border border-rose-500/20 animate-pulse">
                         <TrendingDown size={14} />
-                        <p className="text-[10px] font-black uppercase tracking-widest">Inventory Shortage Detected</p>
+                        <p className="text-[10px] font-black uppercase tracking-widest">Inventory Shortage: {Math.abs(item.available)} Units Needed</p>
                       </div>
                     )}
                   </div>

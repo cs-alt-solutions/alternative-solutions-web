@@ -5,7 +5,7 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Gatekeeper from '@/components/sandbox/shared/Gatekeeper';
 import { SANDBOX_CLIENTS } from '@/utils/glossary';
-import { Activity, Truck, PackageSearch, Wrench, X, Globe, UserCircle, Info, ShoppingCart } from 'lucide-react';
+import { Activity, Truck, PackageSearch, Wrench, X, Globe, UserCircle, Info, ShoppingCart, TestTube, AlertTriangle, Cpu, Layers, ArrowRight } from 'lucide-react';
 
 // MICRO-APP ENGINE IMPORTS
 import LogisticsTerminal from '@/components/sandbox/apps/logistics/LogisticsTerminal';
@@ -69,7 +69,6 @@ export default function DynamicSandboxPage() {
     if (activeAppId === 'logistics') return <LogisticsTerminal clientConfig={clientConfig} onExit={() => setActiveAppId(null)} />;
     if (activeAppId === 'admin') return <AdminTerminal clientConfig={clientConfig} onExit={() => setActiveAppId(null)} />;
     if (activeAppId === 'fulfillment') return <FulfillmentTerminal clientConfig={clientConfig} operatorId={clientConfig.primaryContact || "OPERATOR"} onExit={() => setActiveAppId(null)} />;
-    // THE STOREFRONT APP
     if (activeAppId === 'storefront') return <StorefrontTerminal clientConfig={clientConfig} onExit={() => setActiveAppId(null)} />;
 
     return (
@@ -84,45 +83,130 @@ export default function DynamicSandboxPage() {
     );
   }
 
+  // Group Apps for the UI
+  const sharedApps = clientConfig.apps.filter((app: any) => app.id === 'logistics');
+  const clientSpecificApps = clientConfig.apps.filter((app: any) => app.id !== 'logistics');
+
   // ==========================================
-  // THE DYNAMIC CLIENT HUB (LAUNCHPAD)
+  // THE DYNAMIC CLIENT HUB (TESTING LAB)
   // ==========================================
   return (
-    <div className="min-h-screen bg-zinc-950 flex flex-col items-center justify-center p-6 text-zinc-100 relative overflow-hidden selection:bg-white/10">
-      <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PGNpcmNsZSBjeD0iMjAiIGN5PSIyMCIgcj0iMSIgZmlsbD0icmdiYSgyNTUsIDI1NSwgMjU1LCAwLjA1KSIvPjwvc3ZnPg==')] pointer-events-none opacity-20"></div>
+    <div className="min-h-screen bg-zinc-950 flex flex-col items-center p-6 md:p-12 text-zinc-100 relative overflow-x-hidden selection:bg-cyan-500/30">
       
-      <div className="absolute top-6 left-6 flex items-center gap-2 z-20 bg-zinc-900 border border-zinc-800 px-4 py-2 rounded-full shadow-lg">
-        <UserCircle size={16} className="text-cyan-400" />
-        <span className="text-[10px] font-black uppercase tracking-widest text-zinc-400">ID: {clientConfig.primaryContact}</span>
+      {/* Blueprint Grid Background */}
+      <div className="absolute inset-0 bg-[linear-gradient(to_right,#80808012_1px,transparent_1px),linear-gradient(to_bottom,#80808012_1px,transparent_1px)] bg-[size:24px_24px] pointer-events-none"></div>
+
+      {/* Top Header / Nav */}
+      <div className="relative z-20 w-full max-w-5xl flex justify-between items-center mb-8 bg-zinc-900/80 backdrop-blur-md border border-zinc-800 p-4 rounded-2xl shadow-lg">
+         <div className="flex items-center gap-4">
+           <div className="bg-cyan-500/10 p-2.5 rounded-xl border border-cyan-500/30 hidden sm:block">
+             <TestTube size={24} className="text-cyan-400" />
+           </div>
+           <div>
+             <h1 className="font-black tracking-widest uppercase sm:text-xl text-zinc-100">
+               Alternative Solutions <span className="text-cyan-400">Sandbox</span>
+             </h1>
+             <div className="flex items-center gap-2 mt-1">
+               <UserCircle size={12} className="text-zinc-500" />
+               <p className="text-[10px] font-mono text-zinc-500 uppercase tracking-widest">Session ID: {clientConfig.primaryContact}</p>
+             </div>
+           </div>
+         </div>
+         <button onClick={() => router.push('/login')} className="flex items-center gap-2 text-zinc-500 hover:text-rose-400 transition-colors bg-zinc-950 border border-zinc-800 px-4 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest shadow-inner">
+           <X size={14} /> Exit Lab
+         </button>
       </div>
 
-      <button onClick={() => router.push('/login')} className="absolute top-6 right-6 flex items-center justify-center z-20 bg-zinc-900 border border-zinc-800 w-10 h-10 rounded-full shadow-lg text-zinc-500 hover:text-rose-400 transition-colors" title="Exit Hub">
-        <X size={16} />
-      </button>
-
-      {/* Launcher UI */}
-      <div className="z-10 w-full max-w-sm flex flex-col items-center animate-in zoom-in-95 duration-500">
-        <div className="mb-8 text-center mt-8">
-          <h1 className="text-3xl font-black tracking-widest text-transparent bg-clip-text bg-linear-to-r from-zinc-100 via-zinc-400 to-zinc-600 uppercase italic leading-none">{clientConfig.appTitle}</h1>
-          <p className="text-zinc-500 text-[10px] font-black uppercase tracking-[.4em] mt-3 bg-zinc-900/50 px-4 py-2 rounded-full border border-zinc-800/50 shadow-inner inline-block">Active Prototype</p>
+      {/* Warning Banner */}
+      <div className="relative z-20 w-full max-w-5xl bg-amber-500/10 border border-amber-500/30 rounded-2xl p-5 mb-12 flex flex-col sm:flex-row items-start sm:items-center gap-4 shadow-[0_0_30px_rgba(245,158,11,0.05)] backdrop-blur-sm animate-in slide-in-from-top-4">
+        <div className="bg-amber-500/20 p-3 rounded-full border border-amber-500/30 shrink-0">
+          <AlertTriangle size={24} className="text-amber-400" />
         </div>
+        <div>
+          <h2 className="text-amber-400 font-black uppercase tracking-widest text-sm mb-1.5">Active Testing Environment</h2>
+          <p className="text-zinc-300 text-xs font-medium leading-relaxed max-w-3xl">
+            Welcome to the developer sandbox. The modules below are isolated prototypes designed to demonstrate specific backend functionality and UI concepts. <strong>These do not represent the final, interconnected application design.</strong>
+          </p>
+        </div>
+      </div>
 
-        <div className="w-full space-y-4">
-          {clientConfig.apps.map((app: any) => (
-            <button key={app.id} onClick={() => setActiveAppId(app.id)} className={`w-full bg-zinc-900 border border-zinc-800 hover:border-${app.themeKey}-500/50 p-6 rounded-3xl text-left group transition-all shadow-xl relative overflow-hidden active:scale-[0.98]`}>
-              <div className={`absolute inset-0 bg-linear-to-r from-${app.themeKey}-500/0 via-${app.themeKey}-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity`}></div>
-              <div className="flex items-center gap-6 relative z-10">
-                <div className={`bg-zinc-950 border border-zinc-800 p-4 rounded-2xl transition-all shadow-inner group-hover:scale-110 group-hover:border-${app.themeKey}-500/50`}>
-                  <IconMapper name={app.iconName} className={`w-8 h-8 text-${app.themeKey}-400 drop-shadow-[0_0_8px_rgba(currentColor,0.4)]`} />
+      {/* Modules Area */}
+      <div className="relative z-20 w-full max-w-5xl space-y-12">
+        
+        {/* GROUP 1: Client Specific Apps */}
+        <section className="animate-in fade-in duration-500">
+          <div className="flex items-center gap-3 mb-6 border-b border-zinc-800 pb-4">
+            <Cpu size={20} className="text-zinc-500" />
+            <h3 className="font-black text-xl text-zinc-100 uppercase tracking-widest">{clientConfig.agencyName} Suite</h3>
+            <span className="ml-auto text-[9px] font-mono text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-2.5 py-1 rounded hidden sm:block">RETAIL & COMMAND</span>
+          </div>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {clientSpecificApps.map((app: any) => (
+              <div key={app.id} className="group relative bg-zinc-900 border border-zinc-800 hover:border-emerald-500/50 rounded-3xl p-6 transition-all duration-300 hover:-translate-y-1 shadow-xl flex flex-col h-full overflow-hidden">
+                <div className="absolute top-0 right-0 w-32 h-32 bg-linear-to-bl from-emerald-500/5 to-transparent rounded-bl-full opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                
+                <div className="flex items-center gap-4 mb-4 relative z-10">
+                  <div className={`p-3.5 rounded-2xl bg-zinc-950 border border-zinc-800 group-hover:border-emerald-500/50 group-hover:shadow-[0_0_15px_rgba(52,211,153,0.2)] transition-all`}>
+                    <IconMapper name={app.iconName} className="w-6 h-6 text-emerald-400" />
+                  </div>
+                  <div>
+                    <h3 className="font-black text-zinc-100 uppercase tracking-wider text-base">{app.name}</h3>
+                    <p className="text-[10px] font-mono text-zinc-500 uppercase tracking-widest">ID: {app.id}</p>
+                  </div>
                 </div>
-                <div>
-                  <h2 className="font-black text-zinc-100 text-lg uppercase tracking-wider mb-1">{app.name}</h2>
-                  <p className="text-[10px] text-zinc-500 font-bold uppercase tracking-widest group-hover:text-zinc-300 transition-colors">{app.description}</p>
-                </div>
+                
+                <p className="text-xs text-zinc-400 font-medium leading-relaxed mb-8 flex-1 relative z-10">
+                  {app.description}
+                </p>
+                
+                <button onClick={() => setActiveAppId(app.id)} className="w-full flex items-center justify-between bg-zinc-950 hover:bg-emerald-500 text-emerald-400 hover:text-zinc-950 border border-zinc-800 hover:border-emerald-500 py-3.5 px-5 rounded-xl font-black uppercase tracking-widest text-[10px] transition-all relative z-10 group/btn">
+                  <span>Initialize Module</span>
+                  <ArrowRight size={14} className="group-hover/btn:translate-x-1 transition-transform" />
+                </button>
               </div>
-            </button>
-          ))}
-        </div>
+            ))}
+          </div>
+        </section>
+
+        {/* GROUP 2: Shared Infrastructure (Logistics) */}
+        {sharedApps.length > 0 && (
+          <section className="animate-in fade-in duration-700">
+            <div className="flex items-center gap-3 mb-6 border-b border-zinc-800 pb-4">
+              <Layers size={20} className="text-zinc-500" />
+              <h3 className="font-black text-xl text-zinc-100 uppercase tracking-widest">Shared Infrastructure</h3>
+              <span className="ml-auto text-[9px] font-mono text-cyan-400 bg-cyan-500/10 border border-cyan-500/20 px-2.5 py-1 rounded hidden sm:block">CORE ENGINE</span>
+            </div>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {sharedApps.map((app: any) => (
+                <div key={app.id} className="group relative bg-zinc-900 border border-zinc-800 hover:border-cyan-500/50 rounded-3xl p-6 transition-all duration-300 hover:-translate-y-1 shadow-xl flex flex-col h-full overflow-hidden">
+                  <div className="absolute top-0 right-0 w-32 h-32 bg-linear-to-bl from-cyan-500/5 to-transparent rounded-bl-full opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                  
+                  <div className="flex items-center gap-4 mb-4 relative z-10">
+                    <div className={`p-3.5 rounded-2xl bg-zinc-950 border border-zinc-800 group-hover:border-cyan-500/50 group-hover:shadow-[0_0_15px_rgba(34,211,238,0.2)] transition-all`}>
+                      <IconMapper name={app.iconName} className="w-6 h-6 text-cyan-400" />
+                    </div>
+                    <div>
+                      <h3 className="font-black text-zinc-100 uppercase tracking-wider text-base">{app.name}</h3>
+                      <p className="text-[10px] font-mono text-zinc-500 uppercase tracking-widest">ID: {app.id}</p>
+                    </div>
+                  </div>
+                  
+                  <p className="text-xs text-zinc-400 font-medium leading-relaxed mb-8 flex-1 relative z-10">
+                    {app.description}
+                  </p>
+                  
+                  <button onClick={() => setActiveAppId(app.id)} className="w-full flex items-center justify-between bg-zinc-950 hover:bg-cyan-500 text-cyan-400 hover:text-zinc-950 border border-zinc-800 hover:border-cyan-500 py-3.5 px-5 rounded-xl font-black uppercase tracking-widest text-[10px] transition-all relative z-10 group/btn">
+                    <span>Initialize Module</span>
+                    <ArrowRight size={14} className="group-hover/btn:translate-x-1 transition-transform" />
+                  </button>
+                </div>
+              ))}
+            </div>
+          </section>
+        )}
+
       </div>
     </div>
   );
