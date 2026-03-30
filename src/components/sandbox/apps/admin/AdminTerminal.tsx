@@ -1,21 +1,19 @@
-/* src/components/sandbox/apps/admin/AdminTerminal.tsx */
 'use client';
 
 import React, { useState, useMemo, useEffect } from 'react';
 import { Shield, Zap, Bell, LayoutGrid } from 'lucide-react';
 import { useStickyState } from '@/hooks/useStickyState';
 
-// Import our newly extracted modules
 import AdminFulfillmentModule from './AdminFulfillmentModule';
 import AdminInventoryModule from './AdminInventoryModule';
 import AdminStorefrontModule from './AdminStorefrontModule';
 
 export default function AdminTerminal({ clientConfig, onExit }: { clientConfig: any, onExit: () => void }) {
   const cid = clientConfig.id;
-  const [activeModule, setActiveModule] = useState<'fulfillment' | 'inventory' | 'storefront'>('inventory'); // Defaulted to inventory for you!
+  // Set default to storefront
+  const [activeModule, setActiveModule] = useState<'fulfillment' | 'inventory' | 'storefront'>('storefront'); 
   const [notification, setNotification] = useState<string | null>(null);
 
-  // Database State
   const initialOrders = clientConfig?.fulfillment?.initialOrders || [];
   const [orders, setOrders] = useStickyState(initialOrders, `ful_orders_${cid}`); 
   const initialStock = clientConfig?.inventory || [];
@@ -28,7 +26,6 @@ export default function AdminTerminal({ clientConfig, onExit }: { clientConfig: 
     }
   }, [notification]);
 
-  // Master telemetry calculated here and passed down
   const inventoryMatrix = useMemo(() => {
     return stock.map((item: any) => {
       const committed = orders.reduce((sum: number, order: any) => {
@@ -73,14 +70,15 @@ export default function AdminTerminal({ clientConfig, onExit }: { clientConfig: 
         </div>
         
         <div className="flex bg-zinc-950 border border-zinc-800 rounded-xl p-1 gap-1">
+           {/* Storefront moved to the primary slot */}
+           <button onClick={() => setActiveModule('storefront')} className={`px-4 py-2 rounded-lg text-xs font-black uppercase tracking-widest flex items-center gap-2 transition-all ${activeModule === 'storefront' ? 'bg-fuchsia-500/20 text-fuchsia-400' : 'text-zinc-500'}`}>
+             Store
+           </button>
            <button onClick={() => setActiveModule('fulfillment')} className={`px-4 py-2 rounded-lg text-xs font-black uppercase tracking-widest flex items-center gap-2 transition-all ${activeModule === 'fulfillment' ? 'bg-cyan-500/20 text-cyan-400' : 'text-zinc-500'}`}>
              Orders
            </button>
            <button onClick={() => setActiveModule('inventory')} className={`px-4 py-2 rounded-lg text-xs font-black uppercase tracking-widest flex items-center gap-2 transition-all ${activeModule === 'inventory' ? 'bg-amber-500/20 text-amber-400' : 'text-zinc-500'}`}>
              Inventory
-           </button>
-           <button onClick={() => setActiveModule('storefront')} className={`px-4 py-2 rounded-lg text-xs font-black uppercase tracking-widest flex items-center gap-2 transition-all ${activeModule === 'storefront' ? 'bg-fuchsia-500/20 text-fuchsia-400' : 'text-zinc-500'}`}>
-             Store
            </button>
         </div>
 
@@ -91,10 +89,7 @@ export default function AdminTerminal({ clientConfig, onExit }: { clientConfig: 
 
       <main className="flex-1 overflow-y-auto w-full max-w-4xl mx-auto">
         {activeModule === 'fulfillment' && <AdminFulfillmentModule orders={orders} setOrders={setOrders} notification={notification} setNotification={setNotification} />}
-        
-        {/* ADDED clientConfig HERE */}
         {activeModule === 'inventory' && <AdminInventoryModule stock={stock} setStock={setStock} inventoryMatrix={inventoryMatrix} setNotification={setNotification} clientConfig={clientConfig} />}
-        
         {activeModule === 'storefront' && <AdminStorefrontModule stock={stock} setStock={setStock} inventoryMatrix={inventoryMatrix} setNotification={setNotification} clientConfig={clientConfig} />}
       </main>
     </div>

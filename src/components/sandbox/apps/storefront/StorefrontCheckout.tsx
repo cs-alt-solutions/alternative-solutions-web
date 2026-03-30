@@ -109,7 +109,7 @@ export default function StorefrontCheckout({
           disabled={!isCheckoutReady}
           className={`w-full py-5 rounded-2xl font-black uppercase tracking-widest transition-all flex justify-center items-center gap-3 mb-4 disabled:opacity-30 ${isCopied ? 'bg-emerald-500 text-zinc-950 scale-105' : 'bg-zinc-800 text-emerald-400 border border-emerald-500/30 hover:bg-zinc-700'}`}
         >
-          {isCopied ? <><CheckCircle size={20} /> Payload Copied!</> : <><Copy size={20} /> Copy Secure Payload</>}
+          {isCopied ? <><CheckCircle size={20} /> Order Sent & Copied!</> : <><Copy size={20} /> Submit & Copy Payload</>}
         </button>
 
         <button onClick={() => { setCart({}); setIsCheckingOut(false); setPaymentMethod(''); setCity(''); setStreetAddress(''); setZipCode(''); setCustomerName(''); onExit(); }} className="w-full bg-zinc-950 border border-zinc-800 py-4 rounded-xl text-zinc-500 font-bold uppercase tracking-widest hover:text-zinc-300">Clear Cart & Exit</button>

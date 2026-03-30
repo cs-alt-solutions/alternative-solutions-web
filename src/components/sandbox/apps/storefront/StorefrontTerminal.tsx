@@ -1,4 +1,3 @@
-/* src/components/sandbox/apps/storefront/StorefrontTerminal.tsx */
 'use client';
 
 import React, { useState, useMemo, useEffect } from 'react';
@@ -25,6 +24,7 @@ export default function StorefrontTerminal({ clientConfig, onExit }: { clientCon
   const [storeHours] = useStickyState(defaultHours, `store_hours_${clientConfig?.id}`);
   
   const [activeCategory, setActiveCategory] = useState<string>('Featured & Deals');
+  const [activeSubCategory, setActiveSubCategory] = useState<string>('All'); // NEW SUBCAT STATE
   const [showPolicies, setShowPolicies] = useState(false);
   const [showBetaAlert, setShowBetaAlert] = useState(false);
   const [hasSeenBetaAlert, setHasSeenBetaAlert] = useState(false);
@@ -44,6 +44,8 @@ export default function StorefrontTerminal({ clientConfig, onExit }: { clientCon
   const [paymentMethod, setPaymentMethod] = useState<'CASH' | 'CASHAPP' | ''>('');
   
   const [rawInventory] = useStickyState(clientConfig.inventory || [], `inv_stock_${clientConfig.id}`);
+  const [orders, setOrders] = useStickyState(clientConfig?.fulfillment?.initialOrders || [], `ful_orders_${clientConfig.id}`);
+  
   const defaultCats = ['Flower & Plants', 'Vapes & Pens', 'Edibles', 'Concentrates', 'Merch & Extras'];
   const [masterCategories] = useStickyState<string[]>(defaultCats, `inv_cats_${clientConfig?.id || 'dev'}`);
   
@@ -102,6 +104,11 @@ export default function StorefrontTerminal({ clientConfig, onExit }: { clientCon
 
   useEffect(() => { if (isCheckingOut && !orderRef) setOrderRef(Math.random().toString(36).substring(2, 6).toUpperCase()); }, [isCheckingOut, orderRef]);
 
+  // RESET SUBCAT WHEN MAIN CAT CHANGES
+  useEffect(() => {
+    setActiveSubCategory('All');
+  }, [activeCategory]);
+
   useEffect(() => {
     const lowerCity = city.toLowerCase().trim();
     const lowerZip = zipCode.trim();
@@ -142,18 +149,38 @@ export default function StorefrontTerminal({ clientConfig, onExit }: { clientCon
     return ['Featured & Deals', 'All', ...activeCats, ...rogueCats];
   }, [masterCategories, inventory]);
 
+  // EXTRACT AVAILABLE SUBCATEGORIES FOR THE CURRENT MAIN CATEGORY
+  const availableSubCategories = useMemo(() => {
+    if (activeCategory === 'All' || activeCategory === 'Featured & Deals') return [];
+    const subs = inventory
+      .filter((i: any) => i.mainCategory === activeCategory)
+      .map((i: any) => i.subCategory)
+      .filter(Boolean);
+    return Array.from(new Set(subs)).sort();
+  }, [inventory, activeCategory]);
+
   const filteredInventory = useMemo(() => {
+    let items = [];
     if (activeCategory === 'Featured & Deals') {
       const combined = inventory.filter((i: any) => i.featured || i.dailyDeal);
-      return combined.sort((a: any, b: any) => {
+      items = combined.sort((a: any, b: any) => {
         if (a.featured && !b.featured) return -1;
         if (!a.featured && b.featured) return 1;
         return 0;
       });
+    } else if (activeCategory === 'All') {
+      items = inventory;
+    } else {
+      items = inventory.filter((i: any) => i.mainCategory === activeCategory);
     }
-    if (activeCategory === 'All') return inventory;
-    return inventory.filter((i: any) => i.mainCategory === activeCategory);
-  }, [inventory, activeCategory]);
+
+    // APPLY THE SUBCATEGORY FILTER
+    if (activeSubCategory !== 'All') {
+      items = items.filter((i: any) => i.subCategory === activeSubCategory);
+    }
+    
+    return items;
+  }, [inventory, activeCategory, activeSubCategory]);
 
   const updateCart = (itemId: string, size: any, optionsArray: any[], delta: number) => {
     if (Object.keys(cart).length === 0) setCartShift(timeData.shiftCode);
@@ -168,7 +195,6 @@ export default function StorefrontTerminal({ clientConfig, onExit }: { clientCon
     });
   };
 
-  // UPDATED CART MATH: Calculate total using explicit Deal Overrides if active
   const cartTotal = Object.values(cart).reduce((total: number, cartItem: any) => {
     const itemInDB = inventory.find((i: any) => i.id === cartItem.item.id);
     const isDealActive = itemInDB?.dailyDeal;
@@ -186,7 +212,6 @@ export default function StorefrontTerminal({ clientConfig, onExit }: { clientCon
   const amountShort = minRequired - cartTotal;
   const progressPercent = minRequired === 0 ? 100 : Math.min((cartTotal / minRequired) * 100, 100);
 
-  // UPDATED PAYLOAD: Formats labels and prices perfectly with Deal Overrides
   const orderText = useMemo(() => {
     let text = `🔥 SECURE ORDER PAYLOAD 🔥\n`;
     text += `------------------------\n`;
@@ -204,7 +229,6 @@ export default function StorefrontTerminal({ clientConfig, onExit }: { clientCon
       const qty = cartItem?.qty || 0;
       const name = cartItem?.item?.name || 'Unknown Item';
       
-      // Override label and price if deal is active
       const sizeLabel = (isDealActive && cartItem.size.promoLabel) ? cartItem.size.promoLabel : cartItem.size.label;
       const price = (isDealActive && cartItem.size.promoPrice !== undefined && cartItem.size.promoPrice !== '') ? cartItem.size.promoPrice : (cartItem.size.price || 0);
       
@@ -225,14 +249,42 @@ export default function StorefrontTerminal({ clientConfig, onExit }: { clientCon
     return text;
   }, [cart, cartTotal, detectedZone, paymentMethod, convenienceFee, grandTotal, customerName, streetAddress, city, zipCode, instructions, timeData, orderRef, inventory]);
 
+  const isCheckoutReady = detectedZone && isMinMet && paymentMethod && customerName && streetAddress && city && zipCode;
+
   const handleCopyOrder = () => {
-    if (!detectedZone || !isMinMet || !paymentMethod || !customerName || !streetAddress || !city || !zipCode) return;
+    if (!isCheckoutReady) return;
+    
     navigator.clipboard.writeText(orderText);
     setIsCopied(true);
     setTimeout(() => setIsCopied(false), 2000);
-  };
 
-  const isCheckoutReady = detectedZone && isMinMet && paymentMethod && customerName && streetAddress && city && zipCode;
+    const newOrder = {
+      id: `DIV-${orderRef}`,
+      customer: customerName,
+      zone: detectedZone,
+      status: 'held', 
+      timeReceived: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+      items: Object.values(cart).map((cartItem: any) => {
+        const optionsArray = cartItem?.options || (cartItem?.option ? [cartItem.option] : []);
+        const optionLabel = optionsArray.map((o:any)=>o.label).join(' + ') || 'Standard';
+        return {
+          id: cartItem.item.id,
+          name: `${cartItem.item.name} (${cartItem.size.label})`,
+          qtyRequired: cartItem.qty,
+          qtyPicked: 0,
+          options: optionLabel
+        };
+      }),
+      total: grandTotal,
+      deliveryAddress: `${streetAddress}, ${city} ${zipCode}`,
+      notes: instructions
+    };
+
+    setOrders((prev: any[]) => {
+      if (prev.some(o => o.id === newOrder.id)) return prev;
+      return [newOrder, ...prev];
+    });
+  };
 
   if (timeData.phase === 'CLOSED') {
     return (
@@ -321,6 +373,7 @@ export default function StorefrontTerminal({ clientConfig, onExit }: { clientCon
         <StorefrontCatalog 
           onExit={onExit} cartItemCount={cartItemCount} cartTotal={cartTotal} setShowPolicies={setShowPolicies}
           activeCategory={activeCategory} setActiveCategory={setActiveCategory}
+          activeSubCategory={activeSubCategory} setActiveSubCategory={setActiveSubCategory} availableSubCategories={availableSubCategories}
           categories={categories} filteredInventory={filteredInventory} cart={cart} updateCart={updateCart}
           timeData={timeData} setIsCheckingOut={setIsCheckingOut} hasSeenBetaAlert={hasSeenBetaAlert} setShowBetaAlert={setShowBetaAlert}
         />

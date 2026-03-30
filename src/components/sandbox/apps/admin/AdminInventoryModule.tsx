@@ -1,13 +1,8 @@
-/* src/components/sandbox/apps/admin/AdminInventoryModule.tsx */
 import React, { useState, useMemo } from 'react';
-import { Edit3, X, Save, Plus, Trash2, Boxes, Tag, Filter, Flame, Star, Calendar, Package, Award, Gauge } from 'lucide-react';
+import { Edit3, Plus, Boxes, Tag, Star, Package, ChevronDown, Leaf, Flame, Box, Image as ImageIcon, Award, FoldVertical, UnfoldVertical, Download, X, AlertTriangle } from 'lucide-react';
 import { useStickyState } from '@/hooks/useStickyState';
-
-const MAIN_CATEGORIES = ['Flower & Plants', 'Vapes & Pens', 'Edibles', 'Concentrates', 'Merch & Extras'];
-const DAYS_OF_WEEK = [
-  { label: 'Sun', val: 0 }, { label: 'Mon', val: 1 }, { label: 'Tue', val: 2 }, 
-  { label: 'Wed', val: 3 }, { label: 'Thu', val: 4 }, { label: 'Fri', val: 5 }, { label: 'Sat', val: 6 }
-];
+import AdminInventoryCategoryManager, { MAIN_CATEGORIES } from './AdminInventoryCategoryManager';
+import AdminInventoryEditor from './inventory-editor/AdminInventoryEditor';
 
 export default function AdminInventoryModule({ stock, setStock, inventoryMatrix, setNotification, clientConfig }: any) {
   const defaultSubCats = {
@@ -19,78 +14,64 @@ export default function AdminInventoryModule({ stock, setStock, inventoryMatrix,
   };
   const [subCategories, setSubCategories] = useStickyState<Record<string, string[]>>(defaultSubCats, `inv_subcats_v2_${clientConfig?.id || 'dev'}`);
   
-  const [activeFilter, setActiveFilter] = useState('All');
+  const defaultTiers = ['1g', '3.5g (Eighth)', '7g (Quarter)', '14g (Half Oz)', '28g (Full Oz)', '1 Cartridge', '2g Disposable', '100mg Pack', '250mg Pack', '1 Unit', 'Single'];
+  const [standardTiers, setStandardTiers] = useStickyState<string[]>(defaultTiers, `inv_tiers_v2_${clientConfig?.id || 'dev'}`);
+
   const [editingItem, setEditingItem] = useState<any>(null);
   const [isAdding, setIsAdding] = useState(false);
   const [isManagingCats, setIsManagingCats] = useState(false);
-  
-  const [newSubCatName, setNewSubCatName] = useState('');
-  const [selectedMainCatForNewSub, setSelectedMainCatForNewSub] = useState(MAIN_CATEGORIES[0]);
+  const [showBackupModal, setShowBackupModal] = useState(false);
 
-  const filteredMatrix = useMemo(() => {
-    if (activeFilter === 'All') return inventoryMatrix;
-    return inventoryMatrix.filter((item: any) => item.mainCategory === activeFilter);
-  }, [inventoryMatrix, activeFilter]);
+  const [collapsedCats, setCollapsedCats] = useState<Record<string, boolean>>({});
 
-  const handleAddSubCategory = (e: React.FormEvent) => {
-    e.preventDefault();
-    const sub = newSubCatName.trim();
-    if (!sub) return;
-    const currentList = subCategories[selectedMainCatForNewSub] || [];
-    if (currentList.includes(sub)) {
-      setNotification(`Subcategory already exists in ${selectedMainCatForNewSub}!`);
-      return;
-    }
-    setNotification(`Added "${sub}" under ${selectedMainCatForNewSub}`);
-    setSubCategories({ ...subCategories, [selectedMainCatForNewSub]: [...currentList, sub] });
-    setNewSubCatName('');
-  };
-
-  const handleRemoveSubCategory = (mainCat: string, subToRemove: string) => {
-    setSubCategories((prev: any) => ({ ...prev, [mainCat]: prev[mainCat].filter((s: string) => s !== subToRemove) }));
-    setNotification(`Removed Subcategory: ${subToRemove}`);
+  const toggleCategory = (cat: string) => {
+    setCollapsedCats(prev => ({ ...prev, [cat]: !prev[cat] }));
   };
 
   const getBlankItem = () => ({
     id: `itm-${Math.random().toString(36).substr(2, 9)}`,
     name: '', 
-    description: '',
+    lineage: '', strainType: 'N/A', 
+    descBase: '', descFeels: '', descTaste: '', descUses: '', descFact: '',
     mainCategory: MAIN_CATEGORIES[0], 
     subCategory: subCategories[MAIN_CATEGORIES[0]]?.[0] || 'Uncategorized',
-    price: 0, 
-    onHand: 0, 
-    featured: false, 
-    isTopShelf: false,
-    dailyDeal: false,
-    dealType: 'Daily Deal', 
-    dealText: '', 
-    dealDays: [],
-    iconName: 'Leaf', 
-    options: [], 
-    sizes: [] 
+    price: 0, onHand: 0, featured: false, isTopShelf: false, dailyDeal: false,
+    dealType: 'Daily Deal', dealText: '', dealDays: [], iconName: 'Leaf', options: [], 
+    sizes: [
+      { id: `sz-${Date.now()}-1`, label: '3.5g (Eighth)', price: 35.00, bundleQty: 1, promoLabel: '', promoPrice: '' },
+      { id: `sz-${Date.now()}-2`, label: '7g (Quarter)', price: 60.00, bundleQty: 1, promoLabel: '', promoPrice: '' },
+      { id: `sz-${Date.now()}-3`, label: '14g (Half Oz)', price: 100.00, bundleQty: 1, promoLabel: '', promoPrice: '' },
+      { id: `sz-${Date.now()}-4`, label: '28g (Full Oz)', price: 200.00, bundleQty: 1, promoLabel: '', promoPrice: '' }
+    ] 
   });
 
   const openEditor = (item?: any) => {
     if (item) {
-      const defaultSizes = item.sizes && item.sizes.length > 0 
-        ? item.sizes.map((s: any) => ({
-            ...s,
-            promoLabel: s.promoLabel || '',
-            promoPrice: s.promoPrice ?? ''
-          }))
-        : [{ id: `sz-${Date.now()}`, label: 'Standard', price: item.price || 0, bundleQty: 1, promoLabel: '', promoPrice: '' }];
+      const defaultSizes = item.sizes && item.sizes.length > 0 ? item.sizes.map((s: any) => ({ ...s, promoLabel: s.promoLabel || '', promoPrice: s.promoPrice ?? '' })) : [{ id: `sz-${Date.now()}`, label: 'Standard', price: item.price || 0, bundleQty: 1, promoLabel: '', promoPrice: '' }];
       
+      let descBase = ''; let descFeels = ''; let descTaste = ''; let descUses = ''; let descFact = '';
+      if (item.description) {
+         const feelsMatch = item.description.match(/Feels:\s*([^.]*)/i);
+         const tasteMatch = item.description.match(/Taste:\s*([^.]*)/i);
+         const usesMatch = item.description.match(/Uses:\s*([^.]*)/i);
+         const factMatch = item.description.match(/Fun Fact:\s*(.*)/i);
+         
+         descBase = item.description.split(/(Feels:|Taste:|Uses:|Fun Fact:)/i)[0].trim();
+         descFeels = feelsMatch ? feelsMatch[1].trim() : '';
+         descTaste = tasteMatch ? tasteMatch[1].trim() : '';
+         descUses = usesMatch ? usesMatch[1].trim() : '';
+         descFact = factMatch ? factMatch[1].trim() : '';
+      }
+
       setEditingItem({ 
-        ...getBlankItem(),
-        ...item, 
-        sizes: defaultSizes,
-        name: item.name || '',
-        description: item.description || '',
-        mainCategory: item.mainCategory || MAIN_CATEGORIES[0], 
-        subCategory: item.subCategory || item.category || 'Uncategorized',
-        dealType: item.dealType || 'Daily Deal', 
-        dealText: item.dealText || '', 
-        dealDays: item.dealDays || []
+        ...getBlankItem(), ...item, 
+        sizes: defaultSizes, 
+        name: item.name || '', 
+        lineage: item.lineage || '', 
+        strainType: item.strainType || 'N/A',
+        descBase, descFeels, descTaste, descUses, descFact, 
+        mainCategory: item.mainCategory || MAIN_CATEGORIES[0], subCategory: item.subCategory || item.category || 'Uncategorized', 
+        dealType: item.dealType || 'Daily Deal', dealText: item.dealText || '', dealDays: item.dealDays || [] 
       });
       setIsAdding(false);
     } else {
@@ -99,270 +80,260 @@ export default function AdminInventoryModule({ stock, setStock, inventoryMatrix,
     }
   };
 
-  const handleSaveProduct = (e: React.FormEvent) => {
-    e.preventDefault();
-    const hasVariants = editingItem.options && editingItem.options.length > 0;
-    
-    // Gram-Based Calculation for Flower vs Unit-Based for Merch
-    const isFlower = editingItem.mainCategory === 'Flower & Plants';
-    const totalStock = hasVariants 
-        ? editingItem.options.reduce((sum: number, opt: any) => sum + (parseFloat(opt.stock) || 0), 0) 
-        : (parseFloat(editingItem.onHand) || 0);
-
-    const finalOptions = hasVariants ? editingItem.options : [{ id: 'std', label: 'Standard', stock: totalStock }];
-    const finalSizes = editingItem.sizes && editingItem.sizes.length > 0 ? editingItem.sizes : [{ id: 'std', label: 'Standard', price: 0, bundleQty: 1, promoLabel: '', promoPrice: '' }];
-    const basePrice = Math.min(...finalSizes.map((s: any) => s.price));
-
-    const itemToSave = {
-      ...editingItem, 
-      price: basePrice, 
-      onHand: totalStock, 
-      options: finalOptions, 
-      sizes: finalSizes,
-      dealText: editingItem.dailyDeal ? editingItem.dealText : '',
-      dealDays: editingItem.dailyDeal && editingItem.dealType === 'Weekly Special' ? editingItem.dealDays : []
-    };
-
-    setStock((prev: any[]) => isAdding ? [itemToSave, ...prev] : prev.map((item: any) => item.id === itemToSave.id ? itemToSave : item));
-    setNotification(isAdding ? `Added: ${itemToSave.name}` : `Updated: ${itemToSave.name}`);
+  const handleSaveProduct = (itemToSave: any, isNew: boolean) => {
+    setStock((prev: any[]) => isNew ? [itemToSave, ...prev] : prev.map((item: any) => item.id === itemToSave.id ? itemToSave : item));
+    setNotification(isNew ? `Added: ${itemToSave.name}` : `Updated: ${itemToSave.name}`);
     setEditingItem(null);
     setIsAdding(false);
   };
 
-  const addVariantRow = () => { setEditingItem({ ...editingItem, options: [...(editingItem.options || []), { id: `var-${Date.now()}`, label: '', stock: '' }] }); };
-  const updateVariant = (id: string, field: 'label' | 'stock', value: any) => { setEditingItem({ ...editingItem, options: editingItem.options.map((opt: any) => opt.id === id ? { ...opt, [field]: value } : opt) }); };
-  const removeVariantRow = (id: string) => { setEditingItem({ ...editingItem, options: editingItem.options.filter((opt: any) => opt.id !== id) }); };
-  const addSizeRow = () => { setEditingItem({ ...editingItem, sizes: [...(editingItem.sizes || []), { id: `sz-${Date.now()}`, label: '', price: 0, bundleQty: 1, promoLabel: '', promoPrice: '' }] }); };
-  const updateSize = (id: string, field: 'label' | 'price' | 'bundleQty' | 'promoLabel' | 'promoPrice', value: any) => { setEditingItem({ ...editingItem, sizes: editingItem.sizes.map((sz: any) => sz.id === id ? { ...sz, [field]: value } : sz) }); };
-  const removeSizeRow = (id: string) => { setEditingItem({ ...editingItem, sizes: editingItem.sizes.filter((sz: any) => sz.id !== id) }); };
+  const groupedItems = MAIN_CATEGORIES.map(cat => ({ category: cat, items: inventoryMatrix.filter((i: any) => i.mainCategory === cat) })).filter(group => group.items.length > 0);
+  const assignedIds = new Set(groupedItems.flatMap(g => g.items.map((i:any) => i.id)));
+  const unassignedItems = inventoryMatrix.filter((i: any) => !assignedIds.has(i.id));
+  if (unassignedItems.length > 0) groupedItems.push({ category: 'Other / Uncategorized', items: unassignedItems });
+
+  const isAllCollapsed = groupedItems.every(g => collapsedCats[g.category]);
+  const handleGlobalToggle = () => {
+    if (isAllCollapsed) {
+      setCollapsedCats({});
+    } else {
+      const allCollapsed: Record<string, boolean> = {};
+      groupedItems.forEach(g => allCollapsed[g.category] = true);
+      setCollapsedCats(allCollapsed);
+    }
+  };
+
+  // EXPORT ENGINE
+  const handleExportBackup = () => {
+    try {
+      const jsonString = `export const divisionInventory = ${JSON.stringify(stock, null, 2)};\n`;
+      const blob = new Blob([jsonString], { type: "application/typescript" });
+      const href = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = href;
+      link.download = `inventory_backup_${new Date().toISOString().split('T')[0]}.ts`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      setNotification("Inventory Exported! Check your downloads.");
+      setShowBackupModal(false);
+    } catch (err) {
+      console.error("Export failed", err);
+      setNotification("Export Failed.");
+    }
+  };
 
   if (isManagingCats) {
-    return (
-      <div className="p-4 md:p-8 animate-in slide-in-from-right-8">
-        <div className="flex items-center justify-between mb-8">
-          <h2 className="text-xl font-black text-white uppercase tracking-tight flex items-center gap-2"><Tag size={20} className="text-amber-400"/> Map Subcategories</h2>
-          <button onClick={() => setIsManagingCats(false)} className="p-2 bg-zinc-900 border border-zinc-800 rounded-xl text-zinc-500 hover:text-rose-400 transition-colors shadow-lg"><X size={20}/></button>
-        </div>
-
-        <div className="bg-zinc-900 border border-zinc-800 rounded-3xl p-6 shadow-2xl">
-          <form onSubmit={handleAddSubCategory} className="flex flex-col md:flex-row gap-3 mb-8">
-            <select value={selectedMainCatForNewSub} onChange={(e) => setSelectedMainCatForNewSub(e.target.value)} className="bg-zinc-950 border border-zinc-800 rounded-xl p-4 text-white font-bold outline-none appearance-none">
-              {MAIN_CATEGORIES.map(mc => <option key={mc} value={mc}>{mc}</option>)}
-            </select>
-            <input type="text" value={newSubCatName} onChange={(e) => setNewSubCatName(e.target.value)} placeholder="New Subcategory Name..." className="flex-1 bg-zinc-950 border border-zinc-800 rounded-xl p-4 text-white font-bold outline-none" />
-            <button type="submit" disabled={!newSubCatName.trim()} className="bg-amber-500 hover:bg-amber-400 text-zinc-950 font-black uppercase tracking-widest px-6 py-4 md:py-0 rounded-xl disabled:opacity-50 transition-colors shadow-lg flex items-center justify-center gap-2"><Plus size={18} /> Map</button>
-          </form>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {MAIN_CATEGORIES.map(mainCat => {
-              const subs = subCategories[mainCat] || [];
-              return (
-                <div key={mainCat} className="bg-zinc-950 border border-zinc-800 rounded-2xl p-5 shadow-inner">
-                  <h3 className="text-[10px] font-black text-emerald-400 uppercase tracking-widest mb-4 border-b border-zinc-800/50 pb-2 flex justify-between">
-                    {mainCat} <span className="text-zinc-600">{subs.length} Subs</span>
-                  </h3>
-                  <div className="flex flex-wrap gap-2">
-                    {subs.map(sub => (
-                      <div key={sub} className="bg-zinc-900 border border-zinc-700 text-zinc-300 text-[10px] font-bold px-3 py-1.5 rounded-lg flex items-center gap-2 group hover:border-rose-500/50 transition-all">
-                        {sub} <button onClick={() => handleRemoveSubCategory(mainCat, sub)} className="text-zinc-600 hover:text-rose-500"><X size={12}/></button>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        </div>
-      </div>
-    );
+    return <AdminInventoryCategoryManager 
+      subCategories={subCategories} setSubCategories={setSubCategories} 
+      standardTiers={standardTiers} setStandardTiers={setStandardTiers}
+      setNotification={setNotification} onClose={() => setIsManagingCats(false)} 
+    />;
   }
-
+  
   if (editingItem) {
-    const hasVariants = editingItem.options && editingItem.options.length > 0;
-    const currentSubCats = subCategories[editingItem.mainCategory] || [];
-    const isFlower = editingItem.mainCategory === 'Flower & Plants';
-
-    return (
-      <div className="p-4 md:p-8 animate-in slide-in-from-right-8">
-        <div className="flex items-center justify-between mb-8">
-          <h2 className="text-xl font-black text-white uppercase tracking-tight flex items-center gap-2"><Edit3 size={20} className="text-emerald-400"/> {isAdding ? 'Inject New Asset' : 'Refine Database Entry'}</h2>
-          <button onClick={() => { setEditingItem(null); setIsAdding(false); }} className="p-2 bg-zinc-900 border border-zinc-800 rounded-xl text-zinc-500 hover:text-rose-400 transition-colors shadow-lg"><X size={20}/></button>
-        </div>
-        
-        <form onSubmit={handleSaveProduct} className="bg-zinc-900 border border-zinc-800 rounded-[2rem] p-8 space-y-8 shadow-2xl">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div className="space-y-6">
-               <div>
-                <label className="text-[10px] font-black text-zinc-500 uppercase tracking-widest block mb-2">Product Name</label>
-                <input type="text" value={editingItem.name} onChange={(e) => setEditingItem({...editingItem, name: e.target.value})} className="w-full bg-zinc-950 border border-zinc-800 rounded-xl p-4 text-white font-bold outline-none shadow-inner" required />
-              </div>
-              <div>
-                <label className="text-[10px] font-black text-zinc-500 uppercase tracking-widest block mb-2">Internal Description / Sensory Profile</label>
-                <textarea value={editingItem.description} onChange={(e) => setEditingItem({...editingItem, description: e.target.value})} className="w-full bg-zinc-950 border border-zinc-800 rounded-xl p-4 text-white text-sm font-medium outline-none shadow-inner h-32 resize-none" placeholder="Feels: Uplifting, Taste: Earthy..." />
-              </div>
-            </div>
-            <div className="space-y-6">
-              <div className="grid grid-cols-1 gap-6 p-6 bg-zinc-950 border border-zinc-800 rounded-2xl shadow-inner">
-                <div>
-                  <label className="text-[10px] font-black text-zinc-500 uppercase tracking-widest block mb-2">Parent Category</label>
-                  <select value={editingItem.mainCategory} onChange={(e) => setEditingItem({...editingItem, mainCategory: e.target.value, subCategory: subCategories[e.target.value]?.[0] || ''})} className="w-full bg-zinc-900 border border-zinc-800 rounded-xl p-4 text-emerald-400 font-bold outline-none appearance-none">
-                    {MAIN_CATEGORIES.map(cat => <option key={cat} value={cat}>{cat}</option>)}
-                  </select>
-                </div>
-                <div>
-                  <label className="text-[10px] font-black text-zinc-500 uppercase tracking-widest block mb-2 text-right">Subcategory</label>
-                  <select value={editingItem.subCategory} onChange={(e) => setEditingItem({...editingItem, subCategory: e.target.value})} className="w-full bg-zinc-900 border border-zinc-800 rounded-xl p-4 text-white font-bold outline-none appearance-none">
-                    {currentSubCats.map(sub => <option key={sub} value={sub}>{sub}</option>)}
-                  </select>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div className="border-t border-zinc-800 pt-8">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <label className="flex items-center gap-4 bg-zinc-950 border border-zinc-800 p-5 rounded-2xl cursor-pointer hover:border-cyan-500/50 transition-all shadow-inner">
-                <input type="checkbox" checked={editingItem.featured} onChange={(e) => setEditingItem({...editingItem, featured: e.target.checked})} className="w-5 h-5 accent-cyan-500" />
-                <span className="text-sm font-black text-white flex items-center gap-2"><Star size={14} className="text-cyan-400" /> Featured Drop</span>
-              </label>
-              <label className="flex items-center gap-4 bg-zinc-950 border border-zinc-800 p-5 rounded-2xl cursor-pointer hover:border-amber-500/50 transition-all shadow-inner">
-                <input type="checkbox" checked={editingItem.isTopShelf} onChange={(e) => setEditingItem({...editingItem, isTopShelf: e.target.checked})} className="w-5 h-5 accent-amber-500" />
-                <span className="text-sm font-black text-white flex items-center gap-2"><Award size={14} className="text-amber-400" /> Top Shelf</span>
-              </label>
-              <label className="flex items-center gap-4 bg-zinc-950 border border-zinc-800 p-5 rounded-2xl cursor-pointer hover:border-rose-500/50 transition-all shadow-inner">
-                <input type="checkbox" checked={editingItem.dailyDeal} onChange={(e) => setEditingItem({...editingItem, dailyDeal: e.target.checked})} className="w-5 h-5 accent-rose-500" />
-                <span className="text-sm font-black text-white flex items-center gap-2"><Flame size={14} className="text-rose-400" /> Active Promo</span>
-              </label>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 border-t border-zinc-800 pt-8">
-            <div className="space-y-4">
-              <div className="flex items-center justify-between">
-                <label className="text-[10px] font-black text-zinc-500 uppercase tracking-widest block">Pricing Tiers / Weights</label>
-                <button type="button" onClick={addSizeRow} className="text-[10px] font-black text-emerald-400 uppercase tracking-widest flex items-center gap-2 p-2 bg-emerald-500/5 rounded-lg border border-emerald-500/10"><Plus size={14} /> Add Tier</button>
-              </div>
-              <div className="space-y-4 max-h-[400px] overflow-y-auto pr-2 custom-scrollbar">
-                {editingItem.sizes.map((sz: any) => (
-                  <div key={sz.id} className="bg-zinc-950 border border-zinc-800 rounded-2xl p-4 flex flex-col gap-4">
-                    <div className="flex gap-2">
-                      <input type="text" value={sz.label} onChange={(e) => updateSize(sz.id, 'label', e.target.value)} placeholder="e.g. 3.5g (Eighth)" className="flex-1 bg-zinc-900 border border-zinc-700 rounded-xl p-4 text-sm text-white font-bold outline-none" />
-                      <div className="relative w-24">
-                        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[9px] font-black text-zinc-600 uppercase">$</span>
-                        <input type="number" step="0.01" value={sz.price} onChange={(e) => updateSize(sz.id, 'price', parseFloat(e.target.value) || 0)} className="w-full bg-zinc-900 border border-zinc-700 rounded-xl p-4 pl-8 text-sm text-white font-bold outline-none text-center" />
-                      </div>
-                      <button type="button" onClick={() => removeSizeRow(sz.id)} className="p-4 text-zinc-700 hover:text-rose-500"><Trash2 size={18} /></button>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            <div className="space-y-4">
-              <div className="flex items-center justify-between">
-                <label className="text-[10px] font-black text-zinc-500 uppercase tracking-widest block">
-                    {isFlower ? 'Total Raw Grams by Strain' : 'Unit Inventory by Variant'}
-                </label>
-                <button type="button" onClick={addVariantRow} className="text-[10px] font-black text-emerald-400 uppercase tracking-widest flex items-center gap-2 p-2 bg-emerald-500/5 rounded-lg border border-emerald-500/10"><Plus size={14} /> Add Strain</button>
-              </div>
-              <div className="space-y-3 max-h-[400px] overflow-y-auto pr-2 custom-scrollbar">
-                {editingItem.options.map((opt: any) => (
-                  <div key={opt.id} className="flex gap-2 bg-zinc-950 border border-zinc-800 rounded-2xl p-3">
-                    <input type="text" value={opt.label} onChange={(e) => updateVariant(opt.id, 'label', e.target.value)} placeholder="Strain Name..." className="flex-1 bg-zinc-900 border border-zinc-700 rounded-xl p-4 text-sm text-white font-medium outline-none" />
-                    <div className="relative w-32">
-                      <span className="absolute left-4 top-1/2 -translate-y-1/2 text-[10px] font-black text-zinc-600 uppercase">
-                        {isFlower ? 'Grams' : 'Qty'}
-                      </span>
-                      <input type="number" step="0.1" value={opt.stock} onChange={(e) => updateVariant(opt.id, 'stock', e.target.value === '' ? '' : parseFloat(e.target.value))} className="w-full bg-zinc-900 border border-zinc-700 rounded-xl p-4 pl-14 text-sm text-white font-bold outline-none text-center" />
-                    </div>
-                    <button type="button" onClick={() => removeVariantRow(opt.id)} className="p-4 text-zinc-700 hover:text-rose-500"><Trash2 size={18} /></button>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-
-          <div className="border-t border-zinc-800 pt-8 flex items-center justify-between bg-zinc-950 -mx-8 -mb-8 p-8 rounded-b-[2rem] shadow-inner">
-            <div className="flex flex-col">
-              <span className="text-[10px] font-black uppercase text-zinc-600 tracking-widest">Total Master Stock</span>
-              <span className="text-2xl font-black text-emerald-400 flex items-center gap-2">
-                <Gauge size={20} className="text-zinc-700" />
-                {hasVariants ? editingItem.options.reduce((sum: number, opt: any) => sum + (parseFloat(opt.stock) || 0), 0) : (parseFloat(editingItem.onHand) || 0)} 
-                <span className="text-xs text-zinc-500 font-bold ml-1 uppercase">{isFlower ? 'Grams Available' : 'Units Total'}</span>
-              </span>
-            </div>
-            <button type="submit" disabled={editingItem.sizes.length === 0} className="bg-emerald-500 hover:bg-emerald-400 text-zinc-950 font-black uppercase tracking-widest py-5 px-12 rounded-2xl disabled:opacity-50 transition-all shadow-xl active:scale-95 flex items-center gap-3">
-              <Save size={20} /> Commit to Vault
-            </button>
-          </div>
-        </form>
-      </div>
-    );
+    return <AdminInventoryEditor 
+      initialItem={editingItem} isAdding={isAdding} 
+      subCategories={subCategories} standardTiers={standardTiers}
+      onSave={handleSaveProduct} onCancel={() => { setEditingItem(null); setIsAdding(false); }} 
+    />;
   }
 
   return (
     <div className="p-4 md:p-8 animate-in fade-in">
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-8">
+      
+      {/* BACKUP INSTRUCTION MODAL */}
+      {showBackupModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-zinc-950/80 backdrop-blur-md animate-in fade-in">
+          <div className="bg-zinc-900 border border-zinc-800 rounded-4xl p-6 md:p-8 max-w-md w-full shadow-2xl relative animate-in zoom-in-95">
+            <button onClick={() => setShowBackupModal(false)} className="absolute top-6 right-6 text-zinc-500 hover:text-rose-400 transition-colors"><X size={20} /></button>
+            
+            <div className="w-12 h-12 bg-cyan-500/10 border border-cyan-500/20 text-cyan-400 rounded-2xl flex items-center justify-center mb-6">
+              <Download size={24} />
+            </div>
+            
+            <h3 className="text-xl font-black text-zinc-100 uppercase tracking-tight mb-2">Vault Backup Protocol</h3>
+            
+            <div className="space-y-5 mb-8">
+              <p className="text-sm font-medium text-zinc-400 leading-relaxed">
+                This action will securely package your entire active inventory, including all custom pricing, variants, and stock allocations, into a local backup file.
+              </p>
+              
+              <div className="bg-zinc-950 border border-zinc-800 p-5 rounded-2xl shadow-inner">
+                <h4 className="text-[10px] font-black uppercase tracking-widest text-amber-400 mb-2.5 flex items-center gap-1.5"><AlertTriangle size={14} /> SOP Directives</h4>
+                <ul className="text-xs text-zinc-300 font-medium space-y-3">
+                  <li className="flex items-start gap-2">
+                    <span className="text-zinc-600 mt-0.5">•</span> 
+                    <span>Run this backup <strong>daily</strong>, or immediately following any significant catalog adjustments.</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <span className="text-zinc-600 mt-0.5">•</span> 
+                    <span>Once the file downloads, send it directly to your system architect (Alternative Solutions).</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <span className="text-zinc-600 mt-0.5">•</span> 
+                    <span className="text-emerald-400">This ensures your adjustments are permanently synced to the master database.</span>
+                  </li>
+                </ul>
+              </div>
+            </div>
+            
+            <div className="flex items-center gap-3">
+              <button onClick={() => setShowBackupModal(false)} className="flex-1 bg-zinc-950 border border-zinc-800 hover:bg-zinc-800 text-zinc-400 py-4 rounded-2xl font-black uppercase tracking-widest text-[10px] transition-all">
+                Cancel
+              </button>
+              <button onClick={handleExportBackup} className="flex-1 bg-cyan-500 hover:bg-cyan-400 text-zinc-950 py-4 rounded-2xl font-black uppercase tracking-widest text-[10px] transition-all shadow-[0_0_20px_rgba(6,182,212,0.3)] active:scale-95 flex items-center justify-center gap-2">
+                <Download size={14} /> Acknowledge & Export
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-10 border-b border-zinc-800/50 pb-8">
         <div className="flex items-center gap-4">
           <div className="bg-amber-500/10 p-4 rounded-3xl border border-amber-500/30 text-amber-400 shadow-lg"><Boxes size={32} /></div>
           <div>
             <h2 className="text-3xl font-black text-white uppercase tracking-tight">Master Vault</h2>
-            <div className="text-xs font-bold text-zinc-500 uppercase tracking-[0.3em] flex items-center gap-2">
-              Device-Secured Database <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-            </div>
+            <div className="text-xs font-bold text-zinc-500 uppercase tracking-[0.3em] flex items-center gap-2">Device-Secured Database <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" /></div>
           </div>
         </div>
-        <div className="flex items-center gap-3">
-          <button onClick={() => setIsManagingCats(true)} className="bg-zinc-900 hover:bg-zinc-800 text-zinc-400 border border-zinc-800 font-black uppercase tracking-widest py-3.5 px-6 rounded-2xl text-[11px] transition-all flex items-center gap-2 shadow-lg hover:border-amber-500/30">
-            <Tag size={16} /> Map Categories
+        
+        <div className="flex flex-wrap items-center gap-3">
+          <button 
+            onClick={handleGlobalToggle} 
+            className="bg-zinc-950 hover:bg-zinc-900 text-zinc-400 border border-zinc-800 font-black uppercase tracking-widest py-3.5 px-5 rounded-2xl text-[10px] transition-all flex items-center gap-2 shadow-inner active:scale-95"
+          >
+            {isAllCollapsed ? <><UnfoldVertical size={16} /> Expand All</> : <><FoldVertical size={16} /> Collapse All</>}
           </button>
+          
+          <div className="w-px h-8 bg-zinc-800 mx-1 hidden sm:block"></div>
+
+          {/* LAUNCHES THE INSTRUCTIONAL MODAL */}
+          <button onClick={() => setShowBackupModal(true)} className="bg-zinc-900 hover:bg-zinc-800 text-cyan-400 border border-cyan-900/50 font-black uppercase tracking-widest py-3.5 px-5 rounded-2xl text-[10px] transition-all flex items-center gap-2 shadow-lg hover:border-cyan-400/50 active:scale-95">
+            <Download size={16} /> Backup Data
+          </button>
+
+          <button onClick={() => setIsManagingCats(true)} className="bg-zinc-900 hover:bg-zinc-800 text-zinc-400 border border-zinc-800 font-black uppercase tracking-widest py-3.5 px-6 rounded-2xl text-[11px] transition-all flex items-center gap-2 shadow-lg hover:border-amber-500/30">
+            <Tag size={16} /> Map Settings
+          </button>
+          
           <button onClick={() => openEditor()} className="bg-zinc-800 hover:bg-emerald-500 hover:text-zinc-950 text-emerald-400 border border-emerald-900/30 font-black uppercase tracking-widest py-3.5 px-6 rounded-2xl text-[11px] transition-all shadow-xl flex items-center gap-2 hover:scale-105 active:scale-95">
             <Plus size={16} /> Add Product
           </button>
         </div>
       </div>
 
-      <div className="flex items-center gap-2 overflow-x-auto scrollbar-hide pb-6 mb-6 border-b border-zinc-800/50">
-        <Filter size={14} className="text-zinc-600 shrink-0 mr-2" />
-        <button onClick={() => setActiveFilter('All')} className={`shrink-0 px-6 py-3 rounded-xl text-[11px] font-black uppercase tracking-widest transition-all border ${activeFilter === 'All' ? 'bg-amber-500 text-zinc-950 border-amber-500 shadow-lg' : 'bg-zinc-950 border-zinc-800 text-zinc-500 hover:text-zinc-300'}`}>
-          All Items ({inventoryMatrix.length})
-        </button>
-        {MAIN_CATEGORIES.map(cat => {
-          const count = inventoryMatrix.filter((i: any) => i.mainCategory === cat).length;
+      <div className="space-y-6 pb-12">
+        {groupedItems.map((group) => {
+          const isCollapsed = collapsedCats[group.category];
+          
+          const topShelfCount = group.items.filter((i: any) => i.isTopShelf).length;
+          const featuredCount = group.items.filter((i: any) => i.featured).length;
+          const promoCount = group.items.filter((i: any) => i.dailyDeal).length;
+          
           return (
-            <button key={cat} onClick={() => setActiveFilter(cat)} className={`shrink-0 px-6 py-3 rounded-xl text-[11px] font-black uppercase tracking-widest transition-all border ${activeFilter === cat ? 'bg-amber-500 text-zinc-950 border-amber-500 shadow-lg' : 'bg-zinc-950 border-zinc-800 text-zinc-500 hover:text-zinc-300'}`}>
-              {cat} ({count})
-            </button>
+            <div key={group.category} className="animate-in fade-in slide-in-from-bottom-4">
+              
+              <div 
+                onClick={() => toggleCategory(group.category)}
+                className="flex items-center justify-between bg-zinc-900/40 border border-zinc-800/50 p-4 rounded-2xl cursor-pointer hover:bg-zinc-900 transition-colors group/header shadow-inner select-none"
+              >
+                 <div className="flex items-center gap-4 flex-wrap">
+                   <h3 className="text-sm font-black text-zinc-100 uppercase tracking-widest">{group.category}</h3>
+                   
+                   <div className="flex items-center gap-2">
+                     <span className="bg-zinc-950 border border-zinc-800 text-zinc-500 text-[10px] font-bold px-3 py-1 rounded-full shadow-inner">{group.items.length} Items</span>
+                     
+                     {topShelfCount > 0 && (
+                       <span className="bg-amber-500/10 border border-amber-500/20 text-amber-400 text-[9px] font-black uppercase tracking-widest px-2.5 py-1 rounded-full flex items-center gap-1">
+                         <Award size={10} /> {topShelfCount} Top Shelf
+                       </span>
+                     )}
+                     {featuredCount > 0 && (
+                       <span className="bg-cyan-500/10 border border-cyan-500/20 text-cyan-400 text-[9px] font-black uppercase tracking-widest px-2.5 py-1 rounded-full flex items-center gap-1">
+                         <Star size={10} /> {featuredCount} Featured
+                       </span>
+                     )}
+                     {promoCount > 0 && (
+                       <span className="bg-rose-500/10 border border-rose-500/20 text-rose-400 text-[9px] font-black uppercase tracking-widest px-2.5 py-1 rounded-full flex items-center gap-1">
+                         <Flame size={10} /> {promoCount} Active Promo
+                       </span>
+                     )}
+                   </div>
+                 </div>
+                 
+                 <div className={`p-1.5 rounded-full bg-zinc-950 border border-zinc-800 text-zinc-500 transition-transform duration-300 ml-4 shrink-0 ${isCollapsed ? '-rotate-90' : 'rotate-0'}`}>
+                   <ChevronDown size={14} />
+                 </div>
+              </div>
+              
+              <div className={`grid grid-cols-1 gap-3 mt-3 transition-all ${isCollapsed ? 'hidden' : 'block'}`}>
+                {group.items.map((item: any) => {
+                  const ItemIcon = item.iconName === 'Leaf' ? Leaf : item.iconName === 'Flame' ? Flame : item.iconName === 'Box' ? Box : ImageIcon;
+                  
+                  const displayStock = item.onHand || (item.options?.length > 0 ? item.options.reduce((sum: number, opt: any) => sum + (Number(opt.stock) || 0), 0) : 0);
+                  const displayPrice = item.price || (item.sizes?.length > 0 ? Math.min(...item.sizes.map((s: any) => s.price || 0)) : 0);
+                  const isAbundant = displayStock >= 15;
+
+                  return (
+                    <div key={item.id} className="bg-zinc-900 border border-zinc-800 rounded-2xl p-4 flex flex-col md:flex-row md:items-center justify-between gap-4 hover:border-amber-500/50 transition-all group shadow-sm relative overflow-hidden">
+                      
+                      <div className="flex items-center gap-4">
+                         <div className="w-12 h-12 rounded-xl bg-zinc-950 border border-zinc-800 flex items-center justify-center text-zinc-600 shrink-0 shadow-inner group-hover:text-amber-400 group-hover:border-amber-500/30 transition-colors">
+                           <ItemIcon size={20} />
+                         </div>
+                         
+                         <div className="flex flex-col">
+                           <div className="flex items-center gap-2 mb-1">
+                             <h3 className={`font-black text-lg tracking-tight leading-none ${item.isTopShelf ? 'text-amber-400' : 'text-zinc-100'}`}>
+                               {item.name?.replace(/\s*\(\s*Top Shelf\s*\)\s*/i, '').trim()}
+                             </h3>
+                             {item.isTopShelf && <Award size={14} className="text-amber-400" />}
+                             {item.featured && <Star size={14} className="text-cyan-400" />}
+                             {item.dailyDeal && <Flame size={14} className="text-rose-400" />}
+                           </div>
+                           
+                           <div className="flex flex-wrap items-center gap-2">
+                             <span className="text-[9px] font-black uppercase tracking-widest text-zinc-500">{item.subCategory || 'General'}</span>
+                             {item.strainType && item.strainType !== 'N/A' && (
+                               <>
+                                 <span className="w-1 h-1 rounded-full bg-zinc-700" />
+                                 <span className="text-[9px] font-black uppercase tracking-widest text-zinc-400">{item.strainType}</span>
+                               </>
+                             )}
+                           </div>
+                         </div>
+                      </div>
+
+                      <div className="flex items-center gap-6">
+                         <div className="flex flex-col items-end">
+                           <span className="text-[9px] font-black uppercase tracking-widest text-zinc-600 mb-1 flex items-center gap-1"><Package size={10}/> Stock</span>
+                           <span className={`text-xl font-black leading-none ${displayStock <= 0 ? 'text-rose-500' : isAbundant && !item.dailyDeal ? 'text-cyan-400' : 'text-emerald-400'}`}>
+                             {displayStock}{item.mainCategory === 'Flower & Plants' ? 'g' : ''}
+                           </span>
+                         </div>
+                         
+                         <div className="w-px h-8 bg-zinc-800 hidden sm:block"></div>
+                         
+                         <div className="hidden sm:flex flex-col items-end w-16">
+                           <span className="text-[9px] font-black uppercase tracking-widest text-zinc-600 mb-1 flex items-center gap-1"><Tag size={10}/> Base</span>
+                           <span className="text-xl font-black leading-none text-zinc-300 font-mono">${displayPrice.toFixed(0) || '0'}</span>
+                         </div>
+                         
+                         <button onClick={() => openEditor(item)} className="ml-2 p-3 bg-zinc-950 border border-zinc-800 rounded-xl text-zinc-500 hover:text-amber-400 hover:border-amber-400/50 transition-all shadow-inner active:scale-95">
+                           <Edit3 size={18} />
+                         </button>
+                      </div>
+
+                    </div>
+                  );
+                })}
+              </div>
+
+            </div>
           );
         })}
-      </div>
-
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-        {filteredMatrix.map((item: any) => (
-          <div key={item.id} className="bg-zinc-900 border border-zinc-800 rounded-[2rem] p-6 flex flex-col relative group hover:border-amber-500/50 hover:shadow-[0_0_40px_rgba(245,158,11,0.1)] transition-all duration-500 h-full">
-            <button onClick={() => openEditor(item)} className="absolute top-5 right-5 p-2.5 bg-zinc-950 border border-zinc-800 rounded-xl text-zinc-400 hover:text-amber-400 hover:border-amber-400/50 transition-all z-10 shadow-lg">
-              <Edit3 size={18} />
-            </button>
-            <div className="flex flex-wrap items-center gap-2 mb-4 pr-12">
-              <span className="text-[9px] font-black text-amber-500/70 uppercase tracking-widest">{item.mainCategory}</span>
-              <span className="w-1 h-1 rounded-full bg-zinc-700" />
-              <span className="text-zinc-400 text-[9px] font-black uppercase tracking-widest">{item.subCategory || 'General'}</span>
-            </div>
-            <h3 className={`font-black text-lg leading-tight mb-6 ${item.isTopShelf ? 'text-amber-400' : 'text-zinc-100'} group-hover:translate-x-1 transition-transform`}>{item.name}</h3>
-            <div className="grid grid-cols-2 gap-3 mt-auto mb-4">
-              <div className="bg-zinc-950 border border-zinc-800 rounded-2xl p-4 flex flex-col shadow-inner">
-                <span className="text-[9px] font-black uppercase tracking-widest text-zinc-600 mb-1 flex items-center gap-1.5"><Package size={10} /> Stock</span>
-                <span className={`text-xl font-black leading-none ${item.onHand <= 0 ? 'text-rose-500' : 'text-emerald-400'}`}>
-                    {item.onHand}{item.mainCategory === 'Flower & Plants' ? 'g' : ''}
-                </span>
-              </div>
-              <div className="bg-zinc-950 border border-zinc-800 rounded-2xl p-4 flex flex-col shadow-inner">
-                <span className="text-[9px] font-black uppercase tracking-widest text-zinc-600 mb-1 flex items-center gap-1.5"><Tag size={10} /> Base</span>
-                <span className="text-xl font-black leading-none text-zinc-300 font-mono">${item.price?.toFixed(0) || '0'}</span>
-              </div>
-            </div>
-          </div>
-        ))}
       </div>
     </div>
   );
