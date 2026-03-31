@@ -55,7 +55,8 @@ export default function VariantsManager({ editingItem, setEditingItem, isFlower 
         <button type="button" onClick={addVariantRow} className="text-[10px] font-black text-emerald-400 uppercase tracking-widest flex items-center gap-2 p-2 bg-emerald-500/5 rounded-lg border border-emerald-500/10"><Plus size={14} /> Add Variant</button>
       </div>
       
-      <div className="space-y-4 max-h-100 overflow-y-auto pr-2 custom-scrollbar">
+      {/* FIXED REMOVED SCROLLING TO LET IT AUTO-FIT */}
+      <div className="space-y-4">
         {editingItem.options.map((opt: any, vIndex: number) => {
           const strains = opt.strains || [{ name: '', type: 'N/A' }];
           const strainCount = strains.length;
@@ -114,7 +115,7 @@ export default function VariantsManager({ editingItem, setEditingItem, isFlower 
 
               {/* STOCK ROW */}
               <div className="flex justify-end pt-2 border-t border-zinc-800/50 mt-1">
-                 <div className="relative w-40">
+                 <div className="relative w-40 shrink-0">
                    <span className="absolute left-4 top-1/2 -translate-y-1/2 text-[9px] font-black text-zinc-500 uppercase tracking-widest">
                      {isFlower ? 'Grams' : 'Qty'}
                    </span>

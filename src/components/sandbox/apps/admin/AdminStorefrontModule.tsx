@@ -203,7 +203,7 @@ export default function AdminStorefrontModule({ inventoryMatrix, setNotification
         <div className="xl:col-span-8 space-y-6">
            
            {/* CAMPAIGN ENGINE WITH CALENDAR VIEWS */}
-           <div className="bg-zinc-900/80 backdrop-blur-md border border-zinc-800 rounded-4xl p-6 shadow-xl flex flex-col h-[480px]">
+           <div className="bg-zinc-900/80 backdrop-blur-md border border-zinc-800 rounded-4xl p-6 shadow-xl flex flex-col h-120">
              <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6 shrink-0 border-b border-zinc-800/50 pb-4">
                 <div className="flex items-center gap-3">
                   <Megaphone size={20} className="text-rose-400"/> 
@@ -257,7 +257,7 @@ export default function AdminStorefrontModule({ inventoryMatrix, setNotification
                    {DAYS_OF_WEEK.map((day) => {
                      const todaysDeals = activeDeals.filter((d: any) => !d.dealDays || d.dealDays.length === 0 || d.dealDays.includes(day.id) || d.dealType === 'Daily Deal');
                      return (
-                       <div key={day.id} className="bg-zinc-950 border border-zinc-800/50 rounded-2xl p-2 flex flex-col min-w-[100px]">
+                       <div key={day.id} className="bg-zinc-950 border border-zinc-800/50 rounded-2xl p-2 flex flex-col min-w-25">
                          <div className="text-center border-b border-zinc-800/50 pb-2 mb-2">
                            <span className="text-[10px] font-black uppercase tracking-widest text-zinc-500">{day.label.substring(0,3)}</span>
                          </div>

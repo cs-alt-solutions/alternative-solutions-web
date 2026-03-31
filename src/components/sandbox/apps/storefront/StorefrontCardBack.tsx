@@ -11,7 +11,7 @@ export default function StorefrontCardBack({
   const isMultiStrain = options.some((o: any) => o.label && o.label.includes(' x '));
 
   return (
-    <div className={`col-start-1 row-start-1 backface-hidden w-full h-full transform-[rotateY(180deg)] bg-zinc-900/90 backdrop-blur-xl border ${item.isTopShelf ? 'border-amber-900/30' : 'border-zinc-800/80'} rounded-4xl p-5 shadow-2xl flex flex-col transition-all duration-500`}>
+    <div className={`absolute inset-0 backface-hidden w-full h-full transform-[rotateY(180deg)] bg-zinc-900/90 backdrop-blur-xl border ${item.isTopShelf ? 'border-amber-900/30' : 'border-zinc-800/80'} rounded-4xl p-5 shadow-2xl flex flex-col transition-all duration-500`}>
       <div className="flex justify-between items-start mb-5 shrink-0">
          <div>
            <h3 className={`font-black ${item.isTopShelf ? 'text-amber-300' : 'text-zinc-100'} text-xl leading-tight`}>{cleanItemName}</h3>

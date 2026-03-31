@@ -2,49 +2,86 @@ import { divisionInventory } from './inventory';
 
 export const divisionConfig = {
   id: 'division',
-  accessCode: 'DIVISION',
-  agencyName: "The Division",
-  appTitle: "The Division",
-  security: { 
-    pin: "2026", 
-    lockedMessage: "Secure Client & Staff Access",
-    customerCodes: { morning: "WAKE", evening: "BAKE" }
-  },
-  primaryContact: "Doobie",
+  accessCode: 'doobie', // Restored for login routing
+  name: 'Doobie Division',
+  agencyName: 'Doobie Division', // Restored for sandbox header
+  primaryContact: 'ADMIN-01', // Restored for session ID
+  logo: '📦',
+  theme: 'emerald',
+  appTitle: 'Division Market',
   
-  deliveryZones: [
-    { id: 'z-wbg', name: 'Williamsburg Areas', minimum: 50 },
-    { id: 'z-gloy', name: 'Gloucester / Hayes / Yorktown', minimum: 75 },
-    { id: 'z-nn', name: 'Newport News / Hampton', minimum: 75 },
-    { id: 'z-qcc', name: 'Quinton / Charles City Areas', minimum: 75 },
-    { id: 'z-wp', name: 'West Point / Saluda Area', minimum: 75 },
-    { id: 'z-rich', name: 'Richmond & Surrounding Areas', minimum: 100 },
-    { id: 'z-south', name: 'Southside Areas', minimum: 100 },
-    { id: 'z-ash', name: 'Ashland & Surrounding Areas', minimum: 150 },
-    { id: 'z-suf', name: 'Suffolk', minimum: 150 },
-    { id: 'z-other', name: 'Other (Contact Us)', minimum: 0 }
+  // Restored for Gatekeeper Auth
+  security: {
+    pin: '1234', 
+    lockedMessage: 'Authorized Personnel Only'
+  },
+  
+  // Gatekeeper live tracking
+  lastActive: '2026-03-30',
+  systemStatus: 'ACTIVE_DEVELOPMENT',
+
+  inventory: divisionInventory,
+
+  apps: [
+    {
+      id: 'storefront',
+      name: 'Consumer Storefront',
+      description: 'The front-facing e-commerce interface for customer orders.',
+      icon: 'Store',
+      path: '/sandbox/division?app=storefront',
+      status: 'beta',
+      lastUpdated: 'Today',
+      updateLog: 'Added Dynamic Grid & Pill Filters'
+    },
+    {
+      id: 'admin',
+      name: 'Admin Terminal',
+      description: 'Secure vault for inventory management and operations.',
+      icon: 'Lock',
+      path: '/sandbox/division?app=admin',
+      status: 'alpha',
+      lastUpdated: 'Just Now',
+      updateLog: 'Overhauled Campaign Engine & Operations'
+    },
+    {
+      id: 'fulfillment',
+      name: 'Fulfillment Center',
+      description: 'Order processing and routing interface.',
+      icon: 'Package',
+      path: '/sandbox/division?app=fulfillment',
+      status: 'concept',
+      lastUpdated: 'Mar 25',
+      updateLog: 'Initial UI Layout'
+    },
+    {
+      id: 'logistics',
+      name: 'Logistics Fleet',
+      description: 'Driver routing and delivery confirmation.',
+      icon: 'Truck',
+      path: '/sandbox/division?app=logistics',
+      status: 'concept',
+      lastUpdated: 'Mar 20',
+      updateLog: 'Map routing conceptualized'
+    }
   ],
 
   storePolicies: [
-    "Orders go out at 5:30pm DAILY! Get your order in before 5pm for SAME DAY delivery.",
-    "Friday & Saturday early run: Get orders in BEFORE 12PM (Drivers Leave at 12:30pm).",
-    "Drivers are allowed a 10 MINUTE GRACE PERIOD upon arrival. If wait exceeds 10min, they must move on.",
-    "If you cancel AFTER the order leaves the shop, future orders will be CashApp Pre-Pay only.",
-    "ALL CashApp transactions require a $10 Convenience Fee."
+    "You MUST be 21+ to order.",
+    "NO Medical Card Required.",
+    "NO meetups. Delivery to residential addresses ONLY.",
+    "Drivers DO NOT carry change. Exact cash or CashApp only.",
+    "Minimum order requirements apply based on your delivery zone."
   ],
 
-  apps: [
-    { id: 'storefront', name: "Division Market", description: "Customer Order Portal", iconName: "ShoppingCart", themeKey: "emerald" },
-    { id: 'admin', name: "Admin Command", description: "Global Zone Health & Velocity", iconName: "Activity", themeKey: "emerald" },
-    { id: 'logistics', name: "Core Logistics", description: "Procurement & Internal Routing", iconName: "Truck", themeKey: "cyan" },
-    { id: 'fulfillment', name: "Order Fulfillment", description: "Live Order Picking & Dispatch", iconName: "PackageSearch", themeKey: "fuchsia" }
-  ],
-
-  // Automatically load the isolated inventory array
-  inventory: divisionInventory,
-
-  fulfillment: {
-    initialOrders: []
-  },
-  logistics: { vendors: [], locations: {}, catalog: [] }
+  deliveryZones: [
+    { name: 'Williamsburg Areas', minimum: 40 },
+    { name: 'Gloucester / Hayes / Yorktown', minimum: 100 },
+    { name: 'Newport News / Hampton', minimum: 100 },
+    { name: 'Quinton / Charles City Areas', minimum: 100 },
+    { name: 'West Point / Saluda Area', minimum: 150 },
+    { name: 'Richmond & Surrounding Areas', minimum: 200 },
+    { name: 'Southside Areas', minimum: 200 },
+    { name: 'Ashland & Surrounding Areas', minimum: 250 },
+    { name: 'Suffolk', minimum: 250 }
+  ]
 };

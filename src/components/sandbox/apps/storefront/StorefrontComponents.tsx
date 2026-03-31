@@ -1,3 +1,4 @@
+/* src/components/sandbox/apps/storefront/StorefrontComponents.tsx */
 'use client';
 
 import React, { useState, useEffect } from 'react';
@@ -44,7 +45,8 @@ export const StorefrontCard = ({ item, cart, updateCart }: { item: any, cart: an
   const cleanItemName = item.name?.replace(/\s*\(\s*Top Shelf\s*\)\s*/i, '').trim();
 
   return (
-    <div className="group h-150 relative w-full perspective-[1000px]">
+    /* FIXED: Flipped state z-index dropped to 40 so it stays behind the checkout bar */
+    <div className={`group h-150 relative w-full perspective-[1000px] ${isFlipped ? 'z-40' : 'z-10 hover:z-30'}`}>
       <div className={`relative w-full h-full transition-all duration-700 transform-3d ${isFlipped ? 'transform-[rotateY(180deg)]' : ''}`}>
         <StorefrontCardFront 
           item={item} cleanItemName={cleanItemName}

@@ -1,5 +1,5 @@
 import React from 'react';
-import { Info, Flame, Sparkles } from 'lucide-react';
+import { Info, Flame, Sparkles, ShoppingCart } from 'lucide-react';
 import { StorefrontCard } from './StorefrontComponents';
 import StorefrontHeader from './StorefrontHeader';
 
@@ -90,8 +90,9 @@ export default function StorefrontCatalog({
          </div>
       </main>
 
+      {/* FIXED z-[60] to z-60 and included the new "Review Cart" button wording */}
       {cartItemCount > 0 && (
-        <div className="fixed bottom-6 left-0 right-0 px-6 z-40 flex justify-center animate-in slide-in-from-bottom-10">
+        <div className="fixed bottom-6 left-0 right-0 px-6 z-60 flex justify-center animate-in slide-in-from-bottom-10">
           <button 
             onClick={() => {
               if (!hasSeenBetaAlert) setShowBetaAlert(true);
@@ -99,7 +100,7 @@ export default function StorefrontCatalog({
             }} 
             className="w-full max-w-md bg-emerald-500 hover:bg-emerald-400 text-zinc-950 shadow-[0_10px_40px_rgba(52,211,153,0.4)] py-4 px-6 rounded-2xl font-black uppercase tracking-widest text-lg flex items-center justify-between transition-all hover:scale-105 border border-emerald-400"
           >
-            <span>Review & Checkout</span>
+            <span className="flex items-center gap-2"><ShoppingCart size={20}/> Review Cart</span>
             <span className="bg-zinc-950 text-emerald-400 px-4 py-1.5 rounded-xl font-mono">${cartTotal.toFixed(2)}</span>
           </button>
         </div>

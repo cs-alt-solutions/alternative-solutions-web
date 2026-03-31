@@ -60,8 +60,8 @@ export default function StorefrontCardFront({ item, cleanItemName, lowestPrice, 
         </div>
       )}
 
-      {/* DYNAMIC SCROLL CONTAINER: Centers content if short, scrolls if tall */}
-      <div className="flex-1 w-full min-h-0 overflow-y-auto custom-scrollbar flex flex-col mb-3">
+      {/* FIXED: DYNAMIC SCROLL CONTAINER now uses scrollbar-hide */}
+      <div className="flex-1 w-full min-h-0 overflow-y-auto scrollbar-hide flex flex-col mb-3">
         <div className="my-auto w-full flex flex-col gap-3 pb-2 pt-1 px-1">
           
           <div className="text-center shrink-0">

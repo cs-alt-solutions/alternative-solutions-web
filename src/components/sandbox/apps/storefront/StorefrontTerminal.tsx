@@ -24,8 +24,10 @@ export default function StorefrontTerminal({ clientConfig, onExit }: { clientCon
   const [storeHours] = useStickyState(defaultHours, `store_hours_${clientConfig?.id}`);
   
   const [activeCategory, setActiveCategory] = useState<string>('Featured & Deals');
-  const [activeSubCategory, setActiveSubCategory] = useState<string>('All'); // NEW SUBCAT STATE
-  const [showPolicies, setShowPolicies] = useState(false);
+  const [activeSubCategory, setActiveSubCategory] = useState<string>('All'); 
+  
+  const [showPolicies, setShowPolicies] = useState(true); 
+  
   const [showBetaAlert, setShowBetaAlert] = useState(false);
   const [hasSeenBetaAlert, setHasSeenBetaAlert] = useState(false);
   const [nukeWarning, setNukeWarning] = useState<string | null>(null);
@@ -104,7 +106,6 @@ export default function StorefrontTerminal({ clientConfig, onExit }: { clientCon
 
   useEffect(() => { if (isCheckingOut && !orderRef) setOrderRef(Math.random().toString(36).substring(2, 6).toUpperCase()); }, [isCheckingOut, orderRef]);
 
-  // RESET SUBCAT WHEN MAIN CAT CHANGES
   useEffect(() => {
     setActiveSubCategory('All');
   }, [activeCategory]);
@@ -149,7 +150,6 @@ export default function StorefrontTerminal({ clientConfig, onExit }: { clientCon
     return ['Featured & Deals', 'All', ...activeCats, ...rogueCats];
   }, [masterCategories, inventory]);
 
-  // EXTRACT AVAILABLE SUBCATEGORIES FOR THE CURRENT MAIN CATEGORY
   const availableSubCategories = useMemo(() => {
     if (activeCategory === 'All' || activeCategory === 'Featured & Deals') return [];
     const subs = inventory
@@ -174,7 +174,6 @@ export default function StorefrontTerminal({ clientConfig, onExit }: { clientCon
       items = inventory.filter((i: any) => i.mainCategory === activeCategory);
     }
 
-    // APPLY THE SUBCATEGORY FILTER
     if (activeSubCategory !== 'All') {
       items = items.filter((i: any) => i.subCategory === activeSubCategory);
     }
@@ -212,11 +211,12 @@ export default function StorefrontTerminal({ clientConfig, onExit }: { clientCon
   const amountShort = minRequired - cartTotal;
   const progressPercent = minRequired === 0 ? 100 : Math.min((cartTotal / minRequired) * 100, 100);
 
+  // HUMANIZED ORDER TEXT GENERATION
   const orderText = useMemo(() => {
-    let text = `🔥 SECURE ORDER PAYLOAD 🔥\n`;
+    let text = `📝 NEW ORDER SUMMARY 📝\n`;
     text += `------------------------\n`;
-    if (customerName) text += `👤 Alias: ${customerName}\n`;
-    if (streetAddress && city && zipCode) text += `📍 Drop: ${streetAddress}, ${city} ${zipCode}\n`;
+    if (customerName) text += `👤 Name: ${customerName}\n`;
+    if (streetAddress && city && zipCode) text += `📍 Address: ${streetAddress}, ${city} ${zipCode}\n`;
     if (detectedZone) text += `🚚 Zone: ${detectedZone}\n`;
     if (paymentMethod) text += `💵 Payment: ${paymentMethod === 'CASHAPP' ? 'CashApp' : 'Cash'}\n`;
     if (timeData.phase === 'GRACE') text += `⏰ SCHEDULED FOR: TOMORROW\n`;
@@ -245,7 +245,7 @@ export default function StorefrontTerminal({ clientConfig, onExit }: { clientCon
     }
     text += `Total: $${grandTotal.toFixed(2)}`;
     if (instructions) text += `\n\n📝 Notes: ${instructions}`;
-    text += `\n\nAuth: ${timeData.activeCode}-${orderRef}`;
+    text += `\n\nOrder ID: ${timeData.activeCode}-${orderRef}`;
     return text;
   }, [cart, cartTotal, detectedZone, paymentMethod, convenienceFee, grandTotal, customerName, streetAddress, city, zipCode, instructions, timeData, orderRef, inventory]);
 
@@ -356,6 +356,7 @@ export default function StorefrontTerminal({ clientConfig, onExit }: { clientCon
       )}
 
       {showBetaAlert && <BetaAlertModal onClose={() => setShowBetaAlert(false)} onAcknowledge={() => { setShowBetaAlert(false); setHasSeenBetaAlert(true); if (!isCheckingOut) setIsCheckingOut(true); }} isCheckingOut={isCheckingOut} />}
+      
       {showPolicies && <PoliciesModal storePolicies={storePolicies} deliveryZones={deliveryZones} onClose={() => setShowPolicies(false)} />}
 
       {isCheckingOut ? (
@@ -368,6 +369,7 @@ export default function StorefrontTerminal({ clientConfig, onExit }: { clientCon
           isCheckoutReady={isCheckoutReady} orderText={orderText} handleCopyOrder={handleCopyOrder}
           isCopied={isCopied} setIsCheckingOut={setIsCheckingOut} setCart={setCart} onExit={onExit}
           timeData={timeData} setShowBetaAlert={setShowBetaAlert}
+          cart={cart} updateCart={updateCart}
         />
       ) : (
         <StorefrontCatalog 

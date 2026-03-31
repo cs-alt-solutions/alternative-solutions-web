@@ -21,9 +21,9 @@ export default function GatewayPage() {
     setErrorMsg('');
     const code = clientCode.trim().toLowerCase();
 
-    // Find the client by ID or Access Code
+    // FIXED: Added optional chaining (?) to prevent crashes if accessCode is missing
     const foundClient = Object.values(SANDBOX_CLIENTS).find(
-      (client: any) => client.accessCode.toLowerCase() === code || client.id.toLowerCase() === code
+      (client: any) => client.accessCode?.toLowerCase() === code || client.id?.toLowerCase() === code
     );
 
     if (foundClient) {
