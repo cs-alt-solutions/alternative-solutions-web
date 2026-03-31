@@ -15,7 +15,7 @@ const DAYS_OF_WEEK = [
 export default function AdminStorefrontModule({ inventoryMatrix, setNotification, clientConfig }: any) {
   
   // Weekly Schedule State
-  const defaultWeeklySchedule = {
+  const defaultWeeklySchedule = clientConfig.weeklySchedule || {
     0: { open: '08:00', close: '17:00', isClosed: true },
     1: { open: '08:00', close: '17:00', isClosed: true },
     2: { open: '08:00', close: '17:00', isClosed: false },
@@ -27,7 +27,7 @@ export default function AdminStorefrontModule({ inventoryMatrix, setNotification
   const [weeklySchedule, setWeeklySchedule] = useStickyState<any>(defaultWeeklySchedule, `store_weekly_hours_${clientConfig?.id}`);
   
   // Operational Settings
-  const [shiftChange, setShiftChange] = useStickyState('12:00', `store_shift_change_${clientConfig?.id}`);
+  const [shiftChange, setShiftChange] = useStickyState(clientConfig.shiftChange || '12:00', `store_shift_change_${clientConfig?.id}`);
   const [storeOverride, setStoreOverride] = useStickyState('AUTO', `store_override_${clientConfig?.id}`); 
   
   // UI State
@@ -216,7 +216,8 @@ export default function AdminStorefrontModule({ inventoryMatrix, setNotification
       <div className="grid grid-cols-1 xl:grid-cols-12 gap-8">
         
         {/* LEFT COLUMN: CAMPAIGN ENGINE (DOMINANT VIEW) */}
-        <div className="xl:col-span-8 flex flex-col min-h-[500px] h-full">
+        {/* FIXED: min-h-[500px] replaced with clean min-h-125 */}
+        <div className="xl:col-span-8 flex flex-col min-h-125 h-full">
            <div className="bg-zinc-900/80 backdrop-blur-md border border-zinc-800 rounded-4xl p-6 shadow-xl flex flex-col h-full flex-1">
              <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6 shrink-0 border-b border-zinc-800/50 pb-4">
                 <div className="flex items-center gap-3">

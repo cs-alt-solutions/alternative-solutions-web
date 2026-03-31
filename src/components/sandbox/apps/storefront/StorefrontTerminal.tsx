@@ -20,7 +20,7 @@ export default function StorefrontTerminal({ clientConfig, onExit }: { clientCon
   const [error, setError] = useState("");
   const [currentTime, setCurrentTime] = useState(new Date());
 
-  const defaultHours = { open: '08:00', shiftChange: '12:00', close: '17:00' };
+  const defaultHours = clientConfig.storeHours || { open: '08:00', shiftChange: '12:00', close: '17:00' };
   const [storeHours] = useStickyState(defaultHours, `store_hours_${clientConfig?.id}`);
   
   const [activeCategory, setActiveCategory] = useState<string>('Featured & Deals');
@@ -46,7 +46,7 @@ export default function StorefrontTerminal({ clientConfig, onExit }: { clientCon
   const [rawInventory] = useStickyState(clientConfig.inventory || [], `inv_stock_v2_${clientConfig.id}`);
   const [orders, setOrders] = useStickyState(clientConfig?.fulfillment?.initialOrders || [], `ful_orders_${clientConfig.id}`);
   
-  const defaultCats = ['Flower & Plants', 'Vapes & Pens', 'Edibles', 'Concentrates', 'Merch & Extras'];
+  const defaultCats = clientConfig.categories || ['Flower & Plants', 'Vapes & Pens', 'Edibles', 'Concentrates', 'Merch & Extras'];
   const [masterCategories] = useStickyState<string[]>(defaultCats, `inv_cats_${clientConfig?.id || 'dev'}`);
   
   const deliveryZones = clientConfig.deliveryZones || [];
@@ -132,10 +132,8 @@ export default function StorefrontTerminal({ clientConfig, onExit }: { clientCon
     else { setError("Invalid or Expired Code"); setTimeout(() => setCodeInput(""), 1500); }
   };
 
-  // FIXED STOCK FILTER LOGIC
   const inventory = useMemo(() => {
     return rawInventory.filter((i: any) => {
-      // Safely calculate total stock by checking flat onHand OR summing variant stock
       const optStock = i.options?.reduce((sum: number, opt: any) => sum + (Number(opt.stock) || 0), 0) || 0;
       const totalStock = (Number(i.onHand) || 0) + optStock;
       return totalStock > 0;
@@ -248,7 +246,7 @@ export default function StorefrontTerminal({ clientConfig, onExit }: { clientCon
     }
     text += `Total: $${grandTotal.toFixed(2)}`;
     if (instructions) text += `\n\n📝 Notes: ${instructions}`;
-    text += `\n\nOrder ID: ${timeData.activeCode}-${orderRef}`;
+    text += `\n\nAuth ID: ${timeData.activeCode}-${orderRef}`;
     return text;
   }, [cart, cartTotal, detectedZone, paymentMethod, convenienceFee, grandTotal, customerName, streetAddress, city, zipCode, instructions, timeData, orderRef, inventory]);
 
@@ -261,11 +259,13 @@ export default function StorefrontTerminal({ clientConfig, onExit }: { clientCon
     setIsCopied(true);
     setTimeout(() => setIsCopied(false), 2000);
 
+    const authId = `${timeData.activeCode}-${orderRef}`;
+
     const newOrder = {
-      id: `DIV-${orderRef}`,
+      id: authId,
       customer: customerName,
       zone: detectedZone,
-      status: 'held', 
+      status: 'pending_verification', 
       timeReceived: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
       items: Object.values(cart).map((cartItem: any) => {
         const optionsArray = cartItem?.options || (cartItem?.option ? [cartItem.option] : []);
@@ -284,7 +284,11 @@ export default function StorefrontTerminal({ clientConfig, onExit }: { clientCon
     };
 
     setOrders((prev: any[]) => {
-      if (prev.some(o => o.id === newOrder.id)) return prev;
+      // FIXED: If the order ID already exists, they went back and changed something. 
+      // We overwrite it with the fresh data and reset the status so the Admin knows it was altered!
+      if (prev.some(o => o.id === newOrder.id)) {
+        return prev.map(o => o.id === newOrder.id ? newOrder : o);
+      }
       return [newOrder, ...prev];
     });
   };

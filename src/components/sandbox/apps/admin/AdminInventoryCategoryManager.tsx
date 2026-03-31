@@ -1,19 +1,15 @@
 import React, { useState } from 'react';
 import { Tag, X, Plus, Scale } from 'lucide-react';
 
-export const MAIN_CATEGORIES = ['Flower & Plants', 'Vapes & Pens', 'Edibles', 'Concentrates', 'Merch & Extras'];
-
 export default function AdminInventoryCategoryManager({ 
+  mainCategories, 
   subCategories, setSubCategories, 
   standardTiers, setStandardTiers, 
   setNotification, onClose 
 }: any) {
   
-  // States for Subcategories
   const [newSubCatName, setNewSubCatName] = useState('');
-  const [selectedMainCatForNewSub, setSelectedMainCatForNewSub] = useState(MAIN_CATEGORIES[0]);
-
-  // States for Tiers
+  const [selectedMainCatForNewSub, setSelectedMainCatForNewSub] = useState(mainCategories[0]);
   const [newTierName, setNewTierName] = useState('');
 
   const handleAddSubCategory = (e: React.FormEvent) => {
@@ -70,14 +66,14 @@ export default function AdminInventoryCategoryManager({
         </h3>
         <form onSubmit={handleAddSubCategory} className="flex flex-col md:flex-row gap-3 mb-8">
           <select value={selectedMainCatForNewSub} onChange={(e) => setSelectedMainCatForNewSub(e.target.value)} className="bg-zinc-950 border border-zinc-800 rounded-xl p-4 text-white font-bold outline-none appearance-none">
-            {MAIN_CATEGORIES.map(mc => <option key={mc} value={mc}>{mc}</option>)}
+            {mainCategories.map((mc: string) => <option key={mc} value={mc}>{mc}</option>)}
           </select>
           <input type="text" value={newSubCatName} onChange={(e) => setNewSubCatName(e.target.value)} placeholder="New Subcategory Name..." className="flex-1 bg-zinc-950 border border-zinc-800 rounded-xl p-4 text-white font-bold outline-none" />
           <button type="submit" disabled={!newSubCatName.trim()} className="bg-emerald-500 hover:bg-emerald-400 text-zinc-950 font-black uppercase tracking-widest px-6 py-4 md:py-0 rounded-xl disabled:opacity-50 transition-colors shadow-lg flex items-center justify-center gap-2"><Plus size={18} /> Map</button>
         </form>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {MAIN_CATEGORIES.map(mainCat => {
+          {mainCategories.map((mainCat: string) => {
             const subs = subCategories[mainCat] || [];
             return (
               <div key={mainCat} className="bg-zinc-950 border border-zinc-800 rounded-2xl p-5 shadow-inner">

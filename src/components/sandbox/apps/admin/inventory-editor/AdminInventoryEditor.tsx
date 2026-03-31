@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import { Edit3, X, Save, Plus, Trash2, Flame, Star, Award, Gauge, Sparkles, Wind, Dna, Activity, Target, Lightbulb } from 'lucide-react';
-import { MAIN_CATEGORIES } from '../AdminInventoryCategoryManager';
 import VariantsManager from './VariantsManager';
 
 const DAYS_OF_WEEK = [
@@ -8,7 +7,12 @@ const DAYS_OF_WEEK = [
   { label: 'Wed', val: 3 }, { label: 'Thu', val: 4 }, { label: 'Fri', val: 5 }, { label: 'Sat', val: 6 }
 ];
 
-export default function AdminInventoryEditor({ initialItem, isAdding, subCategories, standardTiers, onSave, onCancel }: any) {
+// FIXED: Added mainCategories to the props
+export default function AdminInventoryEditor({ initialItem, isAdding, subCategories, standardTiers, onSave, onCancel, mainCategories }: any) {
+  
+  // Safety fallback just in case the config hasn't loaded yet
+  const safeMainCats = mainCategories || ['Flower & Plants', 'Vapes & Pens', 'Edibles', 'Concentrates', 'Merch & Extras'];
+
   const [editingItem, setEditingItem] = useState<any>(() => {
     const item = { ...initialItem };
     item.options = (item.options || []).map((opt: any) => {
@@ -191,7 +195,8 @@ export default function AdminInventoryEditor({ initialItem, isAdding, subCategor
                   }} 
                   className="w-full bg-zinc-900 border border-zinc-800 rounded-xl p-4 text-emerald-400 font-bold outline-none appearance-none"
                 >
-                  {MAIN_CATEGORIES.map(cat => <option key={cat} value={cat}>{cat}</option>)}
+                  {/* FIXED: Using safeMainCats prop instead of hardcoded import */}
+                  {safeMainCats.map((cat: string) => <option key={cat} value={cat}>{cat}</option>)}
                 </select>
 
               </div>
@@ -264,7 +269,6 @@ export default function AdminInventoryEditor({ initialItem, isAdding, subCategor
                    <div key={sz.id} className="flex items-center gap-3 bg-zinc-900 p-3 rounded-xl border border-zinc-800 shadow-inner">
                      <span className="text-xs font-bold text-zinc-400 w-24 truncate px-2" title={sz.label}>{sz.label}</span>
                      <input type="text" placeholder="Promo Label (e.g. 5+1)" value={sz.promoLabel || ''} onChange={(e) => updateSize(sz.id, 'promoLabel', e.target.value)} className="flex-1 min-w-0 bg-zinc-950 border border-zinc-800 text-sm font-medium text-zinc-100 p-2.5 rounded-lg outline-none focus:border-rose-500/50" />
-                     {/* FIXED WIDER INPUT & RIGHT ALIGN */}
                      <div className="relative w-32 shrink-0">
                        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs font-black text-rose-500/50 uppercase">$</span>
                        <input type="number" step="0.01" placeholder="Price" value={sz.promoPrice !== undefined ? sz.promoPrice : ''} onChange={(e) => updateSize(sz.id, 'promoPrice', e.target.value === '' ? '' : parseFloat(e.target.value))} className="w-full bg-zinc-950 border border-zinc-800 text-sm font-black text-rose-400 p-2.5 pl-7 pr-3 text-right rounded-lg outline-none font-mono focus:border-rose-500/50" />
@@ -283,7 +287,6 @@ export default function AdminInventoryEditor({ initialItem, isAdding, subCategor
               <button type="button" onClick={addSizeRow} className="text-[10px] font-black text-emerald-400 uppercase tracking-widest flex items-center gap-2 p-2 bg-emerald-500/5 rounded-lg border border-emerald-500/10"><Plus size={14} /> Add Tier</button>
             </div>
             
-            {/* FIXED REMOVED SCROLLING TO LET IT AUTO-FIT */}
             <div className="space-y-4">
               {editingItem.sizes.map((sz: any) => (
                 <div key={sz.id} className="bg-zinc-950 border border-zinc-800 rounded-2xl p-4 flex flex-col gap-4">
@@ -297,7 +300,6 @@ export default function AdminInventoryEditor({ initialItem, isAdding, subCategor
                       className="flex-1 bg-zinc-900 border border-zinc-700 rounded-xl p-4 text-sm text-white font-bold outline-none cursor-pointer focus:border-emerald-500/50 transition-colors" 
                     />
                     
-                    {/* FIXED WIDER INPUT & RIGHT ALIGN */}
                     <div className="relative w-32 shrink-0">
                       <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[9px] font-black text-zinc-600 uppercase">$</span>
                       <input type="number" step="0.01" value={sz.price} onChange={(e) => updateSize(sz.id, 'price', parseFloat(e.target.value) || 0)} className="w-full bg-zinc-900 border border-zinc-700 rounded-xl p-4 pl-8 pr-4 text-sm text-white font-bold outline-none text-right" />

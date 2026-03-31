@@ -1,20 +1,16 @@
 import React, { useState, useMemo } from 'react';
 import { Edit3, Plus, Boxes, Tag, Star, Package, ChevronDown, Leaf, Flame, Box, Image as ImageIcon, Award, FoldVertical, UnfoldVertical, Download, X, AlertTriangle } from 'lucide-react';
 import { useStickyState } from '@/hooks/useStickyState';
-import AdminInventoryCategoryManager, { MAIN_CATEGORIES } from './AdminInventoryCategoryManager';
+import AdminInventoryCategoryManager from './AdminInventoryCategoryManager';
 import AdminInventoryEditor from './inventory-editor/AdminInventoryEditor';
 
 export default function AdminInventoryModule({ stock, setStock, inventoryMatrix, setNotification, clientConfig }: any) {
-  const defaultSubCats = {
-    'Flower & Plants': ['Premium Flower', 'Pre-Rolls & Blunts', 'Trees & Plants', 'Featured Brands'],
-    'Vapes & Pens': ['Disposables', '510 Cartridges'],
-    'Edibles': ['Gummies & Candies', 'Baked Goods & Snacks', 'Infused Beverages', "Mrs. Doob's Fun Food", "Mrs. Doob's Drinks"],
-    'Concentrates': ['Wax & Dabs', 'Rosin & Resin'],
-    'Merch & Extras': ['Apparel & Gear', 'Healthcare & Topicals', 'Accessories']
-  };
-  const [subCategories, setSubCategories] = useStickyState<Record<string, string[]>>(defaultSubCats, `inv_subcats_v2_${clientConfig?.id || 'dev'}`);
   
-  const defaultTiers = ['1g', '3.5g (Eighth)', '7g (Quarter)', '14g (Half Oz)', '28g (Full Oz)', '1 Cartridge', '2g Disposable', '100mg Pack', '250mg Pack', '1 Unit', 'Single'];
+  const mainCategories = clientConfig.categories || ['Flower & Plants', 'Vapes & Pens', 'Edibles', 'Concentrates', 'Merch & Extras'];
+  const defaultSubCats = clientConfig.subCategories || {};
+  const defaultTiers = clientConfig.pricingTiers || [];
+
+  const [subCategories, setSubCategories] = useStickyState<Record<string, string[]>>(defaultSubCats, `inv_subcats_v2_${clientConfig?.id || 'dev'}`);
   const [standardTiers, setStandardTiers] = useStickyState<string[]>(defaultTiers, `inv_tiers_v2_${clientConfig?.id || 'dev'}`);
 
   const [editingItem, setEditingItem] = useState<any>(null);
@@ -33,15 +29,13 @@ export default function AdminInventoryModule({ stock, setStock, inventoryMatrix,
     name: '', 
     lineage: '', strainType: 'N/A', 
     descBase: '', descFeels: '', descTaste: '', descUses: '', descFact: '',
-    mainCategory: MAIN_CATEGORIES[0], 
-    subCategory: subCategories[MAIN_CATEGORIES[0]]?.[0] || 'Uncategorized',
+    mainCategory: mainCategories[0], 
+    subCategory: subCategories[mainCategories[0]]?.[0] || 'Uncategorized',
     price: 0, onHand: 0, featured: false, isTopShelf: false, dailyDeal: false,
     dealType: 'Daily Deal', dealText: '', dealDays: [], iconName: 'Leaf', options: [], 
     sizes: [
       { id: `sz-${Date.now()}-1`, label: '3.5g (Eighth)', price: 35.00, bundleQty: 1, promoLabel: '', promoPrice: '' },
-      { id: `sz-${Date.now()}-2`, label: '7g (Quarter)', price: 60.00, bundleQty: 1, promoLabel: '', promoPrice: '' },
-      { id: `sz-${Date.now()}-3`, label: '14g (Half Oz)', price: 100.00, bundleQty: 1, promoLabel: '', promoPrice: '' },
-      { id: `sz-${Date.now()}-4`, label: '28g (Full Oz)', price: 200.00, bundleQty: 1, promoLabel: '', promoPrice: '' }
+      { id: `sz-${Date.now()}-2`, label: '7g (Quarter)', price: 60.00, bundleQty: 1, promoLabel: '', promoPrice: '' }
     ] 
   });
 
@@ -70,7 +64,7 @@ export default function AdminInventoryModule({ stock, setStock, inventoryMatrix,
         lineage: item.lineage || '', 
         strainType: item.strainType || 'N/A',
         descBase, descFeels, descTaste, descUses, descFact, 
-        mainCategory: item.mainCategory || MAIN_CATEGORIES[0], subCategory: item.subCategory || item.category || 'Uncategorized', 
+        mainCategory: item.mainCategory || mainCategories[0], subCategory: item.subCategory || item.category || 'Uncategorized', 
         dealType: item.dealType || 'Daily Deal', dealText: item.dealText || '', dealDays: item.dealDays || [] 
       });
       setIsAdding(false);
@@ -87,23 +81,22 @@ export default function AdminInventoryModule({ stock, setStock, inventoryMatrix,
     setIsAdding(false);
   };
 
-  const groupedItems = MAIN_CATEGORIES.map(cat => ({ category: cat, items: inventoryMatrix.filter((i: any) => i.mainCategory === cat) })).filter(group => group.items.length > 0);
-  const assignedIds = new Set(groupedItems.flatMap(g => g.items.map((i:any) => i.id)));
+  const groupedItems = mainCategories.map((cat: string) => ({ category: cat, items: inventoryMatrix.filter((i: any) => i.mainCategory === cat) })).filter((group: any) => group.items.length > 0);
+  const assignedIds = new Set(groupedItems.flatMap((g: any) => g.items.map((i:any) => i.id)));
   const unassignedItems = inventoryMatrix.filter((i: any) => !assignedIds.has(i.id));
   if (unassignedItems.length > 0) groupedItems.push({ category: 'Other / Uncategorized', items: unassignedItems });
 
-  const isAllCollapsed = groupedItems.every(g => collapsedCats[g.category]);
+  const isAllCollapsed = groupedItems.every((g: any) => collapsedCats[g.category]);
   const handleGlobalToggle = () => {
     if (isAllCollapsed) {
       setCollapsedCats({});
     } else {
       const allCollapsed: Record<string, boolean> = {};
-      groupedItems.forEach(g => allCollapsed[g.category] = true);
+      groupedItems.forEach((g: any) => allCollapsed[g.category] = true);
       setCollapsedCats(allCollapsed);
     }
   };
 
-  // EXPORT ENGINE
   const handleExportBackup = () => {
     try {
       const jsonString = `export const divisionInventory = ${JSON.stringify(stock, null, 2)};\n`;
@@ -125,6 +118,7 @@ export default function AdminInventoryModule({ stock, setStock, inventoryMatrix,
 
   if (isManagingCats) {
     return <AdminInventoryCategoryManager 
+      mainCategories={mainCategories}
       subCategories={subCategories} setSubCategories={setSubCategories} 
       standardTiers={standardTiers} setStandardTiers={setStandardTiers}
       setNotification={setNotification} onClose={() => setIsManagingCats(false)} 
@@ -134,6 +128,7 @@ export default function AdminInventoryModule({ stock, setStock, inventoryMatrix,
   if (editingItem) {
     return <AdminInventoryEditor 
       initialItem={editingItem} isAdding={isAdding} 
+      mainCategories={mainCategories}
       subCategories={subCategories} standardTiers={standardTiers}
       onSave={handleSaveProduct} onCancel={() => { setEditingItem(null); setIsAdding(false); }} 
     />;
@@ -142,7 +137,6 @@ export default function AdminInventoryModule({ stock, setStock, inventoryMatrix,
   return (
     <div className="p-4 md:p-8 animate-in fade-in">
       
-      {/* BACKUP INSTRUCTION MODAL */}
       {showBackupModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-zinc-950/80 backdrop-blur-md animate-in fade-in">
           <div className="bg-zinc-900 border border-zinc-800 rounded-4xl p-6 md:p-8 max-w-md w-full shadow-2xl relative animate-in zoom-in-95">
@@ -209,7 +203,6 @@ export default function AdminInventoryModule({ stock, setStock, inventoryMatrix,
           
           <div className="w-px h-8 bg-zinc-800 mx-1 hidden sm:block"></div>
 
-          {/* LAUNCHES THE INSTRUCTIONAL MODAL */}
           <button onClick={() => setShowBackupModal(true)} className="bg-zinc-900 hover:bg-zinc-800 text-cyan-400 border border-cyan-900/50 font-black uppercase tracking-widest py-3.5 px-5 rounded-2xl text-[10px] transition-all flex items-center gap-2 shadow-lg hover:border-cyan-400/50 active:scale-95">
             <Download size={16} /> Backup Data
           </button>
@@ -225,7 +218,8 @@ export default function AdminInventoryModule({ stock, setStock, inventoryMatrix,
       </div>
 
       <div className="space-y-6 pb-12">
-        {groupedItems.map((group) => {
+        {/* FIXED: Added 'any' type to group parameter */}
+        {groupedItems.map((group: any) => {
           const isCollapsed = collapsedCats[group.category];
           
           const topShelfCount = group.items.filter((i: any) => i.isTopShelf).length;

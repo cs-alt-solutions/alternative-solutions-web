@@ -20,6 +20,33 @@ export const divisionConfig = {
   lastActive: '2026-03-30',
   systemStatus: 'ACTIVE_DEVELOPMENT',
 
+  // --- NEW: SINGLE SOURCE OF TRUTH SETTINGS ---
+  storeHours: { open: '08:00', shiftChange: '12:00', close: '17:00' },
+  shiftChange: '12:00',
+  weeklySchedule: {
+    0: { open: '08:00', close: '17:00', isClosed: true },
+    1: { open: '08:00', close: '17:00', isClosed: true },
+    2: { open: '08:00', close: '17:00', isClosed: false },
+    3: { open: '08:00', close: '17:00', isClosed: false },
+    4: { open: '08:00', close: '17:00', isClosed: false },
+    5: { open: '08:00', close: '17:00', isClosed: false },
+    6: { open: '08:00', close: '17:00', isClosed: false },
+  },
+  
+  categories: ['Flower & Plants', 'Vapes & Pens', 'Edibles', 'Concentrates', 'Merch & Extras'],
+  
+  subCategories: {
+    'Flower & Plants': ['Premium Flower', 'Pre-Rolls & Blunts', 'Trees & Plants', 'Featured Brands'],
+    'Vapes & Pens': ['Disposables', '510 Cartridges'],
+    'Edibles': ['Gummies & Candies', 'Baked Goods & Snacks', 'Infused Beverages', "Mrs. Doob's Fun Food", "Mrs. Doob's Drinks"],
+    'Concentrates': ['Wax & Dabs', 'Rosin & Resin'],
+    'Merch & Extras': ['Apparel & Gear', 'Healthcare & Topicals', 'Accessories']
+  },
+
+  pricingTiers: ['1g', '3.5g (Eighth)', '7g (Quarter)', '14g (Half Oz)', '28g (Full Oz)', '1 Cartridge', '2g Disposable', '100mg Pack', '250mg Pack', '1 Unit', 'Single'],
+
+  // --- END NEW SETTINGS ---
+
   inventory: divisionInventory,
 
   apps: [
