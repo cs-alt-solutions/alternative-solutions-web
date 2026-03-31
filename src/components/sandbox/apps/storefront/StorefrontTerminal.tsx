@@ -4,7 +4,7 @@ import React, { useState, useMemo, useEffect } from 'react';
 import { X, Lock, Clock, ArrowRight, AlertTriangle } from 'lucide-react';
 import { useStickyState } from '@/hooks/useStickyState';
 
-import { BetaAlertModal, PoliciesModal } from './StorefrontModals';
+import { PoliciesModal } from './StorefrontModals';
 import StorefrontCheckout from './StorefrontCheckout';
 import StorefrontCatalog from './StorefrontCatalog';
 
@@ -28,8 +28,6 @@ export default function StorefrontTerminal({ clientConfig, onExit }: { clientCon
   
   const [showPolicies, setShowPolicies] = useState(true); 
   
-  const [showBetaAlert, setShowBetaAlert] = useState(false);
-  const [hasSeenBetaAlert, setHasSeenBetaAlert] = useState(false);
   const [nukeWarning, setNukeWarning] = useState<string | null>(null);
   
   const [cart, setCart] = useStickyState<Record<string, { item: any, size: any, options: any[], qty: number }>>({}, `market_cart_v2_${clientConfig.id}`);
@@ -134,8 +132,14 @@ export default function StorefrontTerminal({ clientConfig, onExit }: { clientCon
     else { setError("Invalid or Expired Code"); setTimeout(() => setCodeInput(""), 1500); }
   };
 
+  // FIXED STOCK FILTER LOGIC
   const inventory = useMemo(() => {
-    return rawInventory.filter((i: any) => i.onHand > 0).map((item: any) => {
+    return rawInventory.filter((i: any) => {
+      // Safely calculate total stock by checking flat onHand OR summing variant stock
+      const optStock = i.options?.reduce((sum: number, opt: any) => sum + (Number(opt.stock) || 0), 0) || 0;
+      const totalStock = (Number(i.onHand) || 0) + optStock;
+      return totalStock > 0;
+    }).map((item: any) => {
       let isDealActive = item.dailyDeal;
       if (isDealActive && item.dealType === 'Weekly Special') {
         isDealActive = item.dealDays && item.dealDays.includes(timeData.dayOfWeek);
@@ -211,7 +215,6 @@ export default function StorefrontTerminal({ clientConfig, onExit }: { clientCon
   const amountShort = minRequired - cartTotal;
   const progressPercent = minRequired === 0 ? 100 : Math.min((cartTotal / minRequired) * 100, 100);
 
-  // HUMANIZED ORDER TEXT GENERATION
   const orderText = useMemo(() => {
     let text = `📝 NEW ORDER SUMMARY 📝\n`;
     text += `------------------------\n`;
@@ -355,8 +358,6 @@ export default function StorefrontTerminal({ clientConfig, onExit }: { clientCon
         </div>
       )}
 
-      {showBetaAlert && <BetaAlertModal onClose={() => setShowBetaAlert(false)} onAcknowledge={() => { setShowBetaAlert(false); setHasSeenBetaAlert(true); if (!isCheckingOut) setIsCheckingOut(true); }} isCheckingOut={isCheckingOut} />}
-      
       {showPolicies && <PoliciesModal storePolicies={storePolicies} deliveryZones={deliveryZones} onClose={() => setShowPolicies(false)} />}
 
       {isCheckingOut ? (
@@ -368,7 +369,7 @@ export default function StorefrontTerminal({ clientConfig, onExit }: { clientCon
           progressPercent={progressPercent} paymentMethod={paymentMethod} setPaymentMethod={setPaymentMethod}
           isCheckoutReady={isCheckoutReady} orderText={orderText} handleCopyOrder={handleCopyOrder}
           isCopied={isCopied} setIsCheckingOut={setIsCheckingOut} setCart={setCart} onExit={onExit}
-          timeData={timeData} setShowBetaAlert={setShowBetaAlert}
+          timeData={timeData}
           cart={cart} updateCart={updateCart}
         />
       ) : (
@@ -377,7 +378,7 @@ export default function StorefrontTerminal({ clientConfig, onExit }: { clientCon
           activeCategory={activeCategory} setActiveCategory={setActiveCategory}
           activeSubCategory={activeSubCategory} setActiveSubCategory={setActiveSubCategory} availableSubCategories={availableSubCategories}
           categories={categories} filteredInventory={filteredInventory} cart={cart} updateCart={updateCart}
-          timeData={timeData} setIsCheckingOut={setIsCheckingOut} hasSeenBetaAlert={hasSeenBetaAlert} setShowBetaAlert={setShowBetaAlert}
+          timeData={timeData} setIsCheckingOut={setIsCheckingOut}
         />
       )}
     </div>

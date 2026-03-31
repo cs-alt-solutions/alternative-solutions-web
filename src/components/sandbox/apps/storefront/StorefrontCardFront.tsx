@@ -17,15 +17,18 @@ export default function StorefrontCardFront({ item, cleanItemName, lowestPrice, 
   const Icon = item.iconName === 'Leaf' ? Leaf : item.iconName === 'Flame' ? Flame : item.iconName === 'Box' ? Box : ImageIcon;
 
   const desc = item.description || '';
-  const feelsMatch = desc.match(/Feels:\s*([^.]*)/i);
-  const tasteMatch = desc.match(/Taste:\s*([^.]*)/i);
-  const usesMatch = desc.match(/Uses:\s*([^.]*)/i);
-  const factMatch = desc.match(/Fun Fact:\s*(.*)/i);
+  
+  const feelsMatch = desc.match(/Feels:\s*([\s\S]*?)(?=Taste:|Uses:|Fun Fact:|$)/i);
+  const tasteMatch = desc.match(/Taste:\s*([\s\S]*?)(?=Feels:|Uses:|Fun Fact:|$)/i);
+  const usesMatch = desc.match(/Uses:\s*([\s\S]*?)(?=Feels:|Taste:|Fun Fact:|$)/i);
+  const factMatch = desc.match(/Fun Fact:\s*([\s\S]*?)(?=Feels:|Taste:|Uses:|$)/i);
 
-  const feels = feelsMatch ? feelsMatch[1].split(',').map((s: string) => s.trim()).filter(Boolean) : [];
-  const tastes = tasteMatch ? tasteMatch[1].split(',').map((s: string) => s.trim()).filter(Boolean) : [];
-  const uses = usesMatch ? usesMatch[1].split(',').map((s: string) => s.trim()).filter(Boolean) : [];
-  const funFact = factMatch ? factMatch[1].trim() : '';
+  const cleanString = (str: string) => str.trim().replace(/\.$/, '').trim();
+
+  const feels = feelsMatch ? cleanString(feelsMatch[1]).split(',').map((s: string) => s.trim()).filter(Boolean) : [];
+  const tastes = tasteMatch ? cleanString(tasteMatch[1]).split(',').map((s: string) => s.trim()).filter(Boolean) : [];
+  const uses = usesMatch ? cleanString(usesMatch[1]).split(',').map((s: string) => s.trim()).filter(Boolean) : [];
+  const funFact = factMatch ? cleanString(factMatch[1]) : '';
 
   let cleanBaseDesc = desc.split(/(Feels:|Taste:|Uses:|Fun Fact:)/i)[0].trim();
   if (item.lineage && cleanBaseDesc.startsWith(item.lineage + '.')) {
@@ -60,7 +63,7 @@ export default function StorefrontCardFront({ item, cleanItemName, lowestPrice, 
         </div>
       )}
 
-      {/* FIXED: DYNAMIC SCROLL CONTAINER now uses scrollbar-hide */}
+      {/* DYNAMIC SCROLL CONTAINER */}
       <div className="flex-1 w-full min-h-0 overflow-y-auto scrollbar-hide flex flex-col mb-3">
         <div className="my-auto w-full flex flex-col gap-3 pb-2 pt-1 px-1">
           
@@ -89,8 +92,9 @@ export default function StorefrontCardFront({ item, cleanItemName, lowestPrice, 
           </div>
 
           <div className="w-full text-left space-y-3">
+            {/* FIXED: Added line-clamp-2 and hover title */}
             {cleanBaseDesc && (
-              <p className="text-[11px] text-zinc-400/80 leading-relaxed font-medium italic text-center px-2">"{cleanBaseDesc}"</p>
+              <p className="text-[11px] text-zinc-400/80 leading-relaxed font-medium italic text-center px-2 line-clamp-2 cursor-help" title={cleanBaseDesc}>"{cleanBaseDesc}"</p>
             )}
             
             {(feels.length > 0 || tastes.length > 0 || uses.length > 0) && (
@@ -138,10 +142,11 @@ export default function StorefrontCardFront({ item, cleanItemName, lowestPrice, 
               </div>
             )}
 
+            {/* FIXED: Added line-clamp-3 and hover title */}
             {funFact && (
-              <div className="w-full bg-zinc-950/30 border border-zinc-800/40 rounded-xl p-3 text-center mt-2">
+              <div className="w-full bg-zinc-950/30 border border-zinc-800/40 rounded-xl p-3 text-center mt-2 cursor-help" title={funFact}>
                  <p className="text-[8px] font-black uppercase tracking-widest text-zinc-500 flex items-center justify-center gap-1 mb-1.5"><Lightbulb size={10} className="text-amber-500/70"/> Fun Fact</p>
-                 <p className="text-[10px] text-zinc-400 font-medium leading-relaxed">"{funFact}"</p>
+                 <p className="text-[10px] text-zinc-400 font-medium leading-relaxed line-clamp-3">"{funFact}"</p>
               </div>
             )}
           </div>

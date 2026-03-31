@@ -1,174 +1,124 @@
-import React, { useState, useMemo } from 'react';
-import { Edit3, Plus, Boxes, Tag, Filter, Star, Package } from 'lucide-react';
-import { useStickyState } from '@/hooks/useStickyState';
-import AdminInventoryCategoryManager, { MAIN_CATEGORIES } from './AdminInventoryCategoryManager';
-import AdminInventoryEditor from './inventory-editor/AdminInventoryEditor'; // <--- UPDATED PATH
+import React, { useState } from 'react';
+import { Package, Clock, CheckCircle, Search, CalendarDays } from 'lucide-react';
 
-export default function AdminInventoryModule({ stock, setStock, inventoryMatrix, setNotification, clientConfig }: any) {
-  const defaultSubCats = {
-    'Flower & Plants': ['Premium Flower', 'Pre-Rolls & Blunts', 'Trees & Plants', 'Featured Brands'],
-    'Vapes & Pens': ['Disposables', '510 Cartridges'],
-    'Edibles': ['Gummies & Candies', 'Baked Goods & Snacks', 'Infused Beverages', "Mrs. Doob's Fun Food", "Mrs. Doob's Drinks"],
-    'Concentrates': ['Wax & Dabs', 'Rosin & Resin'],
-    'Merch & Extras': ['Apparel & Gear', 'Healthcare & Topicals', 'Accessories']
-  };
-  const [subCategories, setSubCategories] = useStickyState<Record<string, string[]>>(defaultSubCats, `inv_subcats_v2_${clientConfig?.id || 'dev'}`);
+export default function AdminFulfillmentModule({ orders, setOrders, notification, setNotification }: any) {
+  const [activeTab, setActiveTab] = useState<'pending' | 'completed'>('pending');
+  const [searchTerm, setSearchTerm] = useState('');
+
+  const pendingOrders = orders.filter((o: any) => o.status !== 'completed');
+  const completedOrders = orders.filter((o: any) => o.status === 'completed');
   
-  const defaultTiers = ['1g', '3.5g (Eighth)', '7g (Quarter)', '14g (Half Oz)', '28g (Full Oz)', '1 Cartridge', '2g Disposable', '100mg Pack', '250mg Pack', '1 Unit', 'Single'];
-  const [standardTiers, setStandardTiers] = useStickyState<string[]>(defaultTiers, `inv_tiers_v2_${clientConfig?.id || 'dev'}`);
+  const displayOrders = (activeTab === 'pending' ? pendingOrders : completedOrders).filter((o: any) => 
+    o.id.toLowerCase().includes(searchTerm.toLowerCase()) || 
+    o.customer.toLowerCase().includes(searchTerm.toLowerCase())
+  );
 
-  const [activeFilter, setActiveFilter] = useState('All');
-  const [editingItem, setEditingItem] = useState<any>(null);
-  const [isAdding, setIsAdding] = useState(false);
-  const [isManagingCats, setIsManagingCats] = useState(false);
-
-  const filteredMatrix = useMemo(() => {
-    if (activeFilter === 'All') return inventoryMatrix;
-    return inventoryMatrix.filter((item: any) => item.mainCategory === activeFilter);
-  }, [inventoryMatrix, activeFilter]);
-
-  const getBlankItem = () => ({
-    id: `itm-${Math.random().toString(36).substr(2, 9)}`,
-    name: '', 
-    lineage: '', strainType: 'N/A', 
-    descBase: '', descFeels: '', descTaste: '', descUses: '', descFact: '',
-    mainCategory: MAIN_CATEGORIES[0], 
-    subCategory: subCategories[MAIN_CATEGORIES[0]]?.[0] || 'Uncategorized',
-    price: 0, onHand: 0, featured: false, isTopShelf: false, dailyDeal: false,
-    dealType: 'Daily Deal', dealText: '', dealDays: [], iconName: 'Leaf', options: [], 
-    sizes: [
-      { id: `sz-${Date.now()}-1`, label: '3.5g (Eighth)', price: 35.00, bundleQty: 1, promoLabel: '', promoPrice: '' },
-      { id: `sz-${Date.now()}-2`, label: '7g (Quarter)', price: 60.00, bundleQty: 1, promoLabel: '', promoPrice: '' },
-      { id: `sz-${Date.now()}-3`, label: '14g (Half Oz)', price: 100.00, bundleQty: 1, promoLabel: '', promoPrice: '' },
-      { id: `sz-${Date.now()}-4`, label: '28g (Full Oz)', price: 200.00, bundleQty: 1, promoLabel: '', promoPrice: '' }
-    ] 
-  });
-
-  const openEditor = (item?: any) => {
-    if (item) {
-      const defaultSizes = item.sizes && item.sizes.length > 0 ? item.sizes.map((s: any) => ({ ...s, promoLabel: s.promoLabel || '', promoPrice: s.promoPrice ?? '' })) : [{ id: `sz-${Date.now()}`, label: 'Standard', price: item.price || 0, bundleQty: 1, promoLabel: '', promoPrice: '' }];
-      
-      let descBase = ''; let descFeels = ''; let descTaste = ''; let descUses = ''; let descFact = '';
-      if (item.description) {
-         const feelsMatch = item.description.match(/Feels:\s*([^.]*)/i);
-         const tasteMatch = item.description.match(/Taste:\s*([^.]*)/i);
-         const usesMatch = item.description.match(/Uses:\s*([^.]*)/i);
-         const factMatch = item.description.match(/Fun Fact:\s*(.*)/i);
-         
-         descBase = item.description.split(/(Feels:|Taste:|Uses:|Fun Fact:)/i)[0].trim();
-         descFeels = feelsMatch ? feelsMatch[1].trim() : '';
-         descTaste = tasteMatch ? tasteMatch[1].trim() : '';
-         descUses = usesMatch ? usesMatch[1].trim() : '';
-         descFact = factMatch ? factMatch[1].trim() : '';
-      }
-
-      setEditingItem({ 
-        ...getBlankItem(), ...item, 
-        sizes: defaultSizes, 
-        name: item.name || '', 
-        lineage: item.lineage || '', 
-        strainType: item.strainType || 'N/A',
-        descBase, descFeels, descTaste, descUses, descFact, 
-        mainCategory: item.mainCategory || MAIN_CATEGORIES[0], subCategory: item.subCategory || item.category || 'Uncategorized', 
-        dealType: item.dealType || 'Daily Deal', dealText: item.dealText || '', dealDays: item.dealDays || [] 
-      });
-      setIsAdding(false);
-    } else {
-      setEditingItem(getBlankItem());
-      setIsAdding(true);
-    }
+  const markCompleted = (orderId: string) => {
+    setOrders((prev: any[]) => prev.map(o => o.id === orderId ? { ...o, status: 'completed' } : o));
+    setNotification(`Order ${orderId} marked as completed!`);
   };
-
-  const handleSaveProduct = (itemToSave: any, isNew: boolean) => {
-    setStock((prev: any[]) => isNew ? [itemToSave, ...prev] : prev.map((item: any) => item.id === itemToSave.id ? itemToSave : item));
-    setNotification(isNew ? `Added: ${itemToSave.name}` : `Updated: ${itemToSave.name}`);
-    setEditingItem(null);
-    setIsAdding(false);
-  };
-
-  const groupedItems = MAIN_CATEGORIES.map(cat => ({ category: cat, items: filteredMatrix.filter((i: any) => i.mainCategory === cat) })).filter(group => group.items.length > 0);
-  const assignedIds = new Set(groupedItems.flatMap(g => g.items.map((i:any) => i.id)));
-  const unassignedItems = filteredMatrix.filter((i: any) => !assignedIds.has(i.id));
-  if (unassignedItems.length > 0) groupedItems.push({ category: 'Other / Uncategorized', items: unassignedItems });
-
-  if (isManagingCats) {
-    return <AdminInventoryCategoryManager 
-      subCategories={subCategories} setSubCategories={setSubCategories} 
-      standardTiers={standardTiers} setStandardTiers={setStandardTiers}
-      setNotification={setNotification} onClose={() => setIsManagingCats(false)} 
-    />;
-  }
-  
-  if (editingItem) {
-    return <AdminInventoryEditor 
-      initialItem={editingItem} isAdding={isAdding} 
-      subCategories={subCategories} standardTiers={standardTiers}
-      onSave={handleSaveProduct} onCancel={() => { setEditingItem(null); setIsAdding(false); }} 
-    />;
-  }
 
   return (
     <div className="p-4 md:p-8 animate-in fade-in">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-8">
         <div className="flex items-center gap-4">
-          <div className="bg-amber-500/10 p-4 rounded-3xl border border-amber-500/30 text-amber-400 shadow-lg"><Boxes size={32} /></div>
+          <div className="bg-cyan-500/10 p-4 rounded-3xl border border-cyan-500/30 text-cyan-400 shadow-lg">
+            <Package size={32} />
+          </div>
           <div>
-            <h2 className="text-3xl font-black text-white uppercase tracking-tight">Master Vault</h2>
-            <div className="text-xs font-bold text-zinc-500 uppercase tracking-[0.3em] flex items-center gap-2">Device-Secured Database <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" /></div>
+            <h2 className="text-3xl font-black text-white uppercase tracking-tight">Fulfillment Queue</h2>
+            <div className="text-xs font-bold text-zinc-500 uppercase tracking-[0.3em] flex items-center gap-2">Live Logistics Feed <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" /></div>
           </div>
         </div>
-        <div className="flex items-center gap-3">
-          <button onClick={() => setIsManagingCats(true)} className="bg-zinc-900 hover:bg-zinc-800 text-zinc-400 border border-zinc-800 font-black uppercase tracking-widest py-3.5 px-6 rounded-2xl text-[11px] transition-all flex items-center gap-2 shadow-lg hover:border-amber-500/30">
-            <Tag size={16} /> Map Settings
+      </div>
+
+      <div className="flex flex-col md:flex-row items-center justify-between gap-4 mb-6">
+        <div className="flex bg-zinc-950 border border-zinc-800 rounded-xl p-1 w-full md:w-auto">
+          <button 
+            onClick={() => setActiveTab('pending')} 
+            className={`flex-1 md:flex-none px-6 py-2.5 rounded-lg text-xs font-black uppercase tracking-widest transition-all ${activeTab === 'pending' ? 'bg-cyan-500/20 text-cyan-400' : 'text-zinc-500 hover:text-zinc-300'}`}
+          >
+            Pending ({pendingOrders.length})
           </button>
-          <button onClick={() => openEditor()} className="bg-zinc-800 hover:bg-emerald-500 hover:text-zinc-950 text-emerald-400 border border-emerald-900/30 font-black uppercase tracking-widest py-3.5 px-6 rounded-2xl text-[11px] transition-all shadow-xl flex items-center gap-2 hover:scale-105 active:scale-95">
-            <Plus size={16} /> Add Product
+          <button 
+            onClick={() => setActiveTab('completed')} 
+            className={`flex-1 md:flex-none px-6 py-2.5 rounded-lg text-xs font-black uppercase tracking-widest transition-all ${activeTab === 'completed' ? 'bg-emerald-500/20 text-emerald-400' : 'text-zinc-500 hover:text-zinc-300'}`}
+          >
+            Completed ({completedOrders.length})
           </button>
+        </div>
+
+        <div className="relative w-full md:w-64">
+          <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500" />
+          <input 
+            type="text" 
+            placeholder="Search orders..." 
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="w-full bg-zinc-950 border border-zinc-800 rounded-xl py-2.5 pl-9 pr-3 text-sm text-white outline-none focus:border-cyan-500/50"
+          />
         </div>
       </div>
 
-      <div className="flex items-center gap-2 overflow-x-auto scrollbar-hide pb-6 mb-8 border-b border-zinc-800/50">
-        <Filter size={14} className="text-zinc-600 shrink-0 mr-2" />
-        <button onClick={() => setActiveFilter('All')} className={`shrink-0 px-6 py-3 rounded-xl text-[11px] font-black uppercase tracking-widest transition-all border ${activeFilter === 'All' ? 'bg-amber-500 text-zinc-950 border-amber-500 shadow-lg' : 'bg-zinc-950 border-zinc-800 text-zinc-500 hover:text-zinc-300'}`}>All Items ({inventoryMatrix.length})</button>
-        {MAIN_CATEGORIES.map(cat => (
-          <button key={cat} onClick={() => setActiveFilter(cat)} className={`shrink-0 px-6 py-3 rounded-xl text-[11px] font-black uppercase tracking-widest transition-all border ${activeFilter === cat ? 'bg-amber-500 text-zinc-950 border-amber-500 shadow-lg' : 'bg-zinc-950 border-zinc-800 text-zinc-500 hover:text-zinc-300'}`}>
-            {cat} ({inventoryMatrix.filter((i: any) => i.mainCategory === cat).length})
-          </button>
-        ))}
-      </div>
-
-      <div className="space-y-12 pb-12">
-        {groupedItems.map((group) => (
-          <div key={group.category} className="animate-in fade-in slide-in-from-bottom-4">
-            <div className="flex items-center gap-3 mb-6 border-b border-zinc-800/50 pb-3">
-               <h3 className="text-xl font-black text-zinc-100 uppercase tracking-widest">{group.category}</h3>
-               <span className="bg-zinc-900 border border-zinc-800 text-zinc-500 text-[10px] font-bold px-2 py-0.5 rounded-full">{group.items.length} Items</span>
-            </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-              {group.items.map((item: any) => (
-                <div key={item.id} className="bg-zinc-900 border border-zinc-800 rounded-4xl p-6 flex flex-col relative group hover:border-amber-500/50 hover:shadow-[0_0_40px_rgba(245,158,11,0.1)] transition-all duration-500 h-full">
-                  <button onClick={() => openEditor(item)} className="absolute top-5 right-5 p-2.5 bg-zinc-950 border border-zinc-800 rounded-xl text-zinc-400 hover:text-amber-400 hover:border-amber-400/50 transition-all z-10 shadow-lg"><Edit3 size={18} /></button>
-                  <div className="flex flex-wrap items-center gap-2 mb-4 pr-12">
-                    <span className="bg-zinc-950 border border-zinc-800 text-zinc-400 text-[9px] font-black uppercase tracking-widest px-2.5 py-1 rounded-md shadow-inner">{item.subCategory || 'General'}</span>
-                    {item.isTopShelf && <span className="text-amber-400 flex items-center gap-1 text-[9px] font-black uppercase tracking-widest"><Star size={10} className="fill-current"/> Top Shelf</span>}
-                    {item.featured && <span className="text-cyan-400 text-[9px] font-black uppercase tracking-widest flex items-center gap-1"><Star size={10} className="fill-current"/> Featured</span>}
-                  </div>
-                  <h3 className={`font-black text-xl leading-tight mb-8 ${item.isTopShelf ? 'text-amber-400' : 'text-zinc-100'} group-hover:translate-x-1 transition-transform`}>{item.name?.replace(/\s*\(\s*Top Shelf\s*\)\s*/i, '').trim()}</h3>
-                  <div className="grid grid-cols-2 gap-3 mt-auto">
-                    <div className="bg-zinc-950 border border-zinc-800 rounded-2xl p-4 flex flex-col justify-center items-center shadow-inner text-center">
-                      <span className="text-[9px] font-black uppercase tracking-widest text-zinc-600 mb-1 flex items-center gap-1.5"><Package size={10} /> Stock</span>
-                      <span className={`text-2xl font-black leading-none ${item.onHand <= 0 ? 'text-rose-500' : 'text-emerald-400'}`}>{item.onHand}{item.mainCategory === 'Flower & Plants' ? 'g' : ''}</span>
-                    </div>
-                    <div className="bg-zinc-950 border border-zinc-800 rounded-2xl p-4 flex flex-col justify-center items-center shadow-inner text-center">
-                      <span className="text-[9px] font-black uppercase tracking-widest text-zinc-600 mb-1 flex items-center gap-1.5"><Tag size={10} /> Base</span>
-                      <span className="text-2xl font-black leading-none text-zinc-300 font-mono">${item.price?.toFixed(0) || '0'}</span>
-                    </div>
-                  </div>
+      <div className="space-y-4">
+        {displayOrders.length === 0 ? (
+          <div className="bg-zinc-900 border border-zinc-800 border-dashed rounded-3xl p-12 flex flex-col items-center justify-center text-center">
+            <Package size={48} className="text-zinc-700 mb-4" />
+            <h3 className="text-lg font-black text-zinc-400 uppercase tracking-widest mb-2">No Orders Found</h3>
+            <p className="text-sm font-bold text-zinc-600">The queue is currently clear.</p>
+          </div>
+        ) : (
+          displayOrders.map((order: any) => (
+            <div key={order.id} className="bg-zinc-900 border border-zinc-800 rounded-2xl p-5 md:p-6 flex flex-col md:flex-row md:items-center justify-between gap-6 shadow-sm hover:border-cyan-500/30 transition-colors">
+              
+              <div className="flex-1 flex flex-col">
+                <div className="flex items-center gap-3 mb-2">
+                  <h3 className="text-lg font-black text-white uppercase tracking-wider">{order.id}</h3>
+                  <span className={`text-[9px] font-black uppercase tracking-widest px-2 py-0.5 rounded-md ${order.status === 'completed' ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' : 'bg-amber-500/10 text-amber-400 border border-amber-500/20'}`}>
+                    {order.status}
+                  </span>
                 </div>
-              ))}
+                
+                <div className="flex flex-wrap items-center gap-x-6 gap-y-2 text-xs font-bold text-zinc-500 uppercase tracking-widest mb-4">
+                  <span className="flex items-center gap-1.5"><Clock size={12}/> {order.timeReceived}</span>
+                  <span className="flex items-center gap-1.5"><CalendarDays size={12}/> {order.zone}</span>
+                  <span className="text-zinc-300 flex items-center gap-1.5"><span className="w-1.5 h-1.5 rounded-full bg-zinc-600"/> {order.customer}</span>
+                </div>
+
+                <div className="bg-zinc-950 border border-zinc-800 p-4 rounded-xl space-y-2">
+                  {order.items.map((item: any, idx: number) => (
+                    <div key={idx} className="flex justify-between items-center text-sm font-medium">
+                      <span className="text-zinc-300"><span className="text-cyan-400 font-bold">{item.qtyRequired}x</span> {item.name}</span>
+                      <span className="text-zinc-500 text-[10px] font-black uppercase tracking-widest">{item.options || 'Standard'}</span>
+                    </div>
+                  ))}
+                  {order.notes && (
+                    <div className="mt-3 pt-3 border-t border-zinc-800/50">
+                      <p className="text-[10px] font-black text-amber-500 uppercase tracking-widest mb-1">Customer Notes:</p>
+                      <p className="text-xs text-zinc-400 italic">"{order.notes}"</p>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              <div className="flex flex-row md:flex-col items-center justify-between md:justify-center gap-4 shrink-0 border-t md:border-t-0 md:border-l border-zinc-800 pt-4 md:pt-0 md:pl-6">
+                <div className="text-left md:text-center">
+                   <p className="text-[10px] font-black text-zinc-500 uppercase tracking-widest mb-1">Order Total</p>
+                   <p className="text-xl font-mono font-black text-emerald-400">${order.total?.toFixed(2) || '0.00'}</p>
+                </div>
+                {activeTab === 'pending' && (
+                  <button 
+                    onClick={() => markCompleted(order.id)}
+                    className="w-full md:w-auto bg-cyan-500 hover:bg-cyan-400 text-zinc-950 py-3 px-6 rounded-xl font-black uppercase tracking-widest transition-all shadow-[0_0_20px_rgba(6,182,212,0.3)] active:scale-95 flex items-center justify-center gap-2 text-xs"
+                  >
+                    <CheckCircle size={16} /> Mark Done
+                  </button>
+                )}
+              </div>
+
             </div>
-          </div>
-        ))}
+          ))
+        )}
       </div>
     </div>
   );

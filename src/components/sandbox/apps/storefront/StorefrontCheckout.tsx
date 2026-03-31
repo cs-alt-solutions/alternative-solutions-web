@@ -6,7 +6,7 @@ export default function StorefrontCheckout({
   city, setCity, zipCode, setZipCode, instructions, setInstructions,
   detectedZone, minRequired, isMinMet, amountShort, progressPercent,
   paymentMethod, setPaymentMethod, isCheckoutReady, orderText, handleCopyOrder,
-  isCopied, setIsCheckingOut, setCart, onExit, timeData, setShowBetaAlert,
+  isCopied, setIsCheckingOut, setCart, onExit, timeData,
   cart, updateCart
 }: any) {
   const [stage, setStage] = useState<'REVIEW' | 'DETAILS'>('REVIEW');

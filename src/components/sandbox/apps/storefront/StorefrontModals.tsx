@@ -1,29 +1,6 @@
 import React from 'react';
 import { X, Info, AlertTriangle, CheckCircle2 } from 'lucide-react';
 
-export const BetaAlertModal = ({ onClose, onAcknowledge, isCheckingOut }: any) => (
-  <div className="min-h-dvh bg-zinc-950/90 backdrop-blur-sm flex flex-col items-center justify-center p-6 text-zinc-100 z-100 fixed inset-0">
-     <div className="w-full max-w-sm bg-zinc-900 border border-zinc-800 rounded-3xl p-6 md:p-8 shadow-2xl relative animate-in zoom-in-95">
-        <button onClick={onClose} className="absolute top-4 right-4 text-zinc-500 hover:text-rose-400"><X size={20} /></button>
-        <div className="w-12 h-12 bg-emerald-500/10 rounded-full flex items-center justify-center mb-4 border border-emerald-500/20">
-          <Info size={24} className="text-emerald-400" />
-        </div>
-        <h2 className="text-xl font-black uppercase tracking-widest text-emerald-400 mb-3">Secure Payload</h2>
-        <p className="text-sm text-zinc-300 leading-relaxed mb-6 font-medium">
-          We are currently working on a seamless native checkout experience. 
-          <br/><br/>
-          For now, this portal calculates your totals and builds a secure order payload. Just copy the payload at the end and paste it into your secure channel to complete the order!
-        </p>
-        <button 
-          onClick={onAcknowledge} 
-          className="w-full bg-emerald-500 hover:bg-emerald-400 text-zinc-950 py-4 rounded-xl font-black uppercase tracking-widest transition-colors shadow-lg active:scale-95"
-        >
-          Got It
-        </button>
-     </div>
-  </div>
-);
-
 export const PoliciesModal = ({ storePolicies, deliveryZones, onClose }: any) => (
   <div className="min-h-dvh bg-zinc-950/90 backdrop-blur-md flex flex-col items-center justify-center p-4 md:p-6 text-zinc-100 z-100 fixed inset-0">
      <div className="w-full max-w-lg bg-zinc-900 border border-zinc-800 rounded-3xl p-6 md:p-8 shadow-2xl relative animate-in zoom-in-95 flex flex-col max-h-[90vh]">

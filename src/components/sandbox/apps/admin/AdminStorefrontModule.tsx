@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { Store, Clock, CalendarDays, Megaphone, Flame, Award, Star, Package, TrendingDown, Save, ChefHat, LayoutList, Calendar, CalendarRange } from 'lucide-react';
+import { Store, Clock, CalendarDays, Megaphone, Flame, Award, Star, Package, TrendingDown, Save, ChefHat, LayoutList, Calendar, CalendarRange, ChevronDown } from 'lucide-react';
 import { useStickyState } from '@/hooks/useStickyState';
 
 const DAYS_OF_WEEK = [
@@ -30,8 +30,9 @@ export default function AdminStorefrontModule({ inventoryMatrix, setNotification
   const [shiftChange, setShiftChange] = useStickyState('12:00', `store_shift_change_${clientConfig?.id}`);
   const [storeOverride, setStoreOverride] = useStickyState('AUTO', `store_override_${clientConfig?.id}`); 
   
-  // Campaign Engine View State
+  // UI State
   const [campaignView, setCampaignView] = useState<'LIST' | 'WEEK' | 'MONTH'>('WEEK');
+  const [isScheduleOpen, setIsScheduleOpen] = useState(false);
 
   const handleScheduleChange = (dayId: number, field: string, value: any) => {
     setWeeklySchedule((prev: any) => ({ ...prev, [dayId]: { ...prev[dayId], [field]: value } }));
@@ -39,6 +40,7 @@ export default function AdminStorefrontModule({ inventoryMatrix, setNotification
 
   const handleSaveHours = () => {
     setNotification("Store hours & operational settings updated securely.");
+    setIsScheduleOpen(false);
   };
 
   // --- ENGINE INSIGHTS & METRICS ---
@@ -58,7 +60,7 @@ export default function AdminStorefrontModule({ inventoryMatrix, setNotification
         const bStock = b.onHand || (b.options ? b.options.reduce((sum: number, o: any) => sum + (Number(o.stock) || 0), 0) : 0);
         return bStock - aStock;
       })
-      .slice(0, 4); 
+      .slice(0, 5); 
   }, [inventoryMatrix]);
 
   const topShelfFlowerCount = inventoryMatrix.filter((i: any) => i.isTopShelf && i.mainCategory !== 'Edibles').length;
@@ -138,18 +140,29 @@ export default function AdminStorefrontModule({ inventoryMatrix, setNotification
          </div>
       </div>
 
-      <div className="grid grid-cols-1 xl:grid-cols-12 gap-8">
-        
-        {/* LEFT COLUMN: SCHEDULE CONTROLS */}
-        <div className="xl:col-span-4 space-y-6">
-           <div className="bg-zinc-900/80 backdrop-blur-md border border-zinc-800 rounded-4xl p-6 shadow-xl">
-             <div className="flex items-center justify-between mb-6">
-                <h3 className="text-sm font-black uppercase tracking-widest text-zinc-100 flex items-center gap-2">
-                  <CalendarDays size={16} className="text-indigo-400"/> Master Schedule
-                </h3>
-             </div>
-             
-             <div className="space-y-3 mb-6">
+      {/* COMPACT MASTER SCHEDULE ACCORDION */}
+      <div className="bg-zinc-900/80 backdrop-blur-md border border-zinc-800 rounded-4xl shadow-xl mb-8 overflow-hidden transition-all duration-300">
+         <button 
+           onClick={() => setIsScheduleOpen(!isScheduleOpen)} 
+           className="w-full p-5 md:p-6 flex items-center justify-between hover:bg-zinc-800/50 transition-colors"
+         >
+            <div className="flex items-center gap-4">
+               <div className="w-10 h-10 rounded-xl bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center text-indigo-400 shrink-0">
+                 <CalendarDays size={18} />
+               </div>
+               <div className="text-left">
+                 <h3 className="text-sm font-black uppercase tracking-widest text-zinc-100 leading-none mb-1">Master Schedule & Settings</h3>
+                 <p className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">Click to {isScheduleOpen ? 'collapse' : 'configure'} operating hours</p>
+               </div>
+            </div>
+            <div className={`p-2 bg-zinc-950 rounded-full border border-zinc-800 text-zinc-500 transition-transform duration-300 ${isScheduleOpen ? 'rotate-180' : ''}`}>
+               <ChevronDown size={16} />
+            </div>
+         </button>
+         
+         {isScheduleOpen && (
+           <div className="p-6 pt-0 border-t border-zinc-800/50 mt-2 animate-in slide-in-from-top-4">
+             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
                {DAYS_OF_WEEK.map((day) => {
                  const sched = weeklySchedule[day.id];
                  return (
@@ -180,8 +193,8 @@ export default function AdminStorefrontModule({ inventoryMatrix, setNotification
                })}
              </div>
 
-             <div className="pt-6 border-t border-zinc-800/50">
-                <div className="flex items-center justify-between bg-zinc-950 border border-zinc-800 p-4 rounded-2xl shadow-inner">
+             <div className="flex flex-col sm:flex-row items-center gap-4 pt-6 border-t border-zinc-800/50">
+                <div className="flex-1 flex items-center justify-between bg-zinc-950 border border-zinc-800 p-4 rounded-2xl shadow-inner w-full">
                   <div>
                     <h4 className="text-[10px] font-black uppercase tracking-widest text-amber-400 mb-1 flex items-center gap-1.5"><Clock size={12}/> Shift Change Cutoff</h4>
                     <p className="text-[9px] font-bold text-zinc-500">Time when Shift A transitions to Shift B</p>
@@ -191,19 +204,20 @@ export default function AdminStorefrontModule({ inventoryMatrix, setNotification
                     className="bg-zinc-900 border border-amber-500/30 text-sm font-mono text-amber-400 p-2.5 rounded-xl outline-none focus:border-amber-400"
                   />
                 </div>
+                <button onClick={handleSaveHours} className="w-full sm:w-auto bg-indigo-500 hover:bg-indigo-400 text-zinc-950 py-5 px-8 rounded-2xl font-black uppercase tracking-widest transition-all flex items-center justify-center gap-2 shadow-lg active:scale-95 shrink-0">
+                  <Save size={16} /> Commit Settings
+                </button>
              </div>
-
-             <button onClick={handleSaveHours} className="w-full mt-6 bg-indigo-500 hover:bg-indigo-400 text-zinc-950 py-4 rounded-2xl font-black uppercase tracking-widest transition-all flex items-center justify-center gap-2 shadow-lg active:scale-95">
-                <Save size={16} /> Commit Schedule
-             </button>
            </div>
-        </div>
+         )}
+      </div>
 
-        {/* RIGHT COLUMN: PROMOTIONS & INSIGHTS */}
-        <div className="xl:col-span-8 space-y-6">
-           
-           {/* CAMPAIGN ENGINE WITH CALENDAR VIEWS */}
-           <div className="bg-zinc-900/80 backdrop-blur-md border border-zinc-800 rounded-4xl p-6 shadow-xl flex flex-col h-120">
+      {/* MAIN STAGE GRID */}
+      <div className="grid grid-cols-1 xl:grid-cols-12 gap-8">
+        
+        {/* LEFT COLUMN: CAMPAIGN ENGINE (DOMINANT VIEW) */}
+        <div className="xl:col-span-8 flex flex-col min-h-[500px] h-full">
+           <div className="bg-zinc-900/80 backdrop-blur-md border border-zinc-800 rounded-4xl p-6 shadow-xl flex flex-col h-full flex-1">
              <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6 shrink-0 border-b border-zinc-800/50 pb-4">
                 <div className="flex items-center gap-3">
                   <Megaphone size={20} className="text-rose-400"/> 
@@ -226,7 +240,7 @@ export default function AdminStorefrontModule({ inventoryMatrix, setNotification
                
                {/* LIST VIEW */}
                {campaignView === 'LIST' && (
-                 <div className="h-full overflow-y-auto custom-scrollbar pr-2 space-y-3">
+                 <div className="h-full overflow-y-auto scrollbar-hide space-y-3 pb-2">
                    {activeDeals.length > 0 ? activeDeals.map((item: any) => (
                      <div key={item.id} className="bg-zinc-950 border border-rose-500/20 p-4 rounded-2xl flex items-center justify-between shadow-inner">
                        <div className="flex items-center gap-4">
@@ -253,7 +267,7 @@ export default function AdminStorefrontModule({ inventoryMatrix, setNotification
 
                {/* WEEKLY VIEW */}
                {campaignView === 'WEEK' && (
-                 <div className="h-full grid grid-cols-7 gap-2 overflow-x-auto pb-2">
+                 <div className="h-full grid grid-cols-7 gap-2 overflow-x-auto scrollbar-hide pb-2">
                    {DAYS_OF_WEEK.map((day) => {
                      const todaysDeals = activeDeals.filter((d: any) => !d.dealDays || d.dealDays.length === 0 || d.dealDays.includes(day.id) || d.dealType === 'Daily Deal');
                      return (
@@ -261,7 +275,7 @@ export default function AdminStorefrontModule({ inventoryMatrix, setNotification
                          <div className="text-center border-b border-zinc-800/50 pb-2 mb-2">
                            <span className="text-[10px] font-black uppercase tracking-widest text-zinc-500">{day.label.substring(0,3)}</span>
                          </div>
-                         <div className="flex-1 overflow-y-auto custom-scrollbar space-y-1.5 pr-1">
+                         <div className="flex-1 overflow-y-auto scrollbar-hide space-y-1.5 pb-2">
                            {todaysDeals.map((deal: any) => (
                              <div key={deal.id} className="bg-rose-500/10 border border-rose-500/20 rounded-lg p-1.5" title={deal.dealText}>
                                <p className="text-[8px] font-black text-rose-400 uppercase tracking-tight leading-tight truncate">{deal.name}</p>
@@ -304,17 +318,19 @@ export default function AdminStorefrontModule({ inventoryMatrix, setNotification
                )}
              </div>
            </div>
+        </div>
 
-           {/* OVERSTOCK INSIGHTS */}
-           <div className="bg-zinc-900/80 backdrop-blur-md border border-zinc-800 rounded-4xl p-6 shadow-xl">
-             <div className="flex items-center justify-between mb-4">
+        {/* RIGHT COLUMN: OVERSTOCK INSIGHTS (SIDEBAR) */}
+        <div className="xl:col-span-4 flex flex-col">
+           <div className="bg-zinc-900/80 backdrop-blur-md border border-zinc-800 rounded-4xl p-6 shadow-xl flex flex-col h-full">
+             <div className="flex items-center justify-between mb-6 shrink-0">
                 <h3 className="text-sm font-black uppercase tracking-widest text-zinc-100 flex items-center gap-2">
                   <TrendingDown size={16} className="text-cyan-400"/> Promo Candidates
                 </h3>
                 <span className="text-[9px] font-bold text-zinc-500 uppercase tracking-widest">High Stock Alerts</span>
              </div>
 
-             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+             <div className="flex-1 overflow-y-auto scrollbar-hide space-y-3 pb-2">
                {overstockCandidates.length > 0 ? overstockCandidates.map((item: any) => {
                  const totalStock = item.onHand || (item.options ? item.options.reduce((sum: number, o: any) => sum + (Number(o.stock) || 0), 0) : 0);
                  
@@ -330,20 +346,20 @@ export default function AdminStorefrontModule({ inventoryMatrix, setNotification
                          <span className="text-sm font-mono font-black text-zinc-300">{totalStock}</span>
                        </div>
                      </div>
-                     <button className="w-full bg-zinc-900 hover:bg-cyan-500 hover:text-zinc-950 text-cyan-400 border border-cyan-900/50 transition-colors py-2 rounded-xl text-[9px] font-black uppercase tracking-widest active:scale-95">
+                     <button className="w-full bg-zinc-900 hover:bg-cyan-500 hover:text-zinc-950 text-cyan-400 border border-cyan-900/50 transition-colors py-2.5 rounded-xl text-[9px] font-black uppercase tracking-widest active:scale-95">
                        Create Campaign
                      </button>
                    </div>
                  );
                }) : (
-                 <div className="col-span-full text-center text-zinc-500 text-[10px] font-black uppercase tracking-widest py-4">
+                 <div className="h-full flex items-center justify-center text-center text-zinc-500 text-[10px] font-black uppercase tracking-widest p-4">
                    Inventory is highly optimized. No overstock detected.
                  </div>
                )}
              </div>
            </div>
-
         </div>
+
       </div>
     </div>
   );
