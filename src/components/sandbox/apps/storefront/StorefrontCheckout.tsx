@@ -1,15 +1,113 @@
-import React, { useState } from 'react';
-import { Package, Info, MapPin, User, Home, Map, PenLine, Lock, CheckCircle, DollarSign, Copy, Clock, ShoppingCart, Plus, Minus, Trash2 } from 'lucide-react';
+import React, { useState, useMemo } from 'react';
+import { Package, Info, MapPin, User, Home, Map, PenLine, Lock, CheckCircle, DollarSign, Copy, Clock, ShoppingCart, Plus, Minus, Trash2, AlertTriangle } from 'lucide-react';
 
 export default function StorefrontCheckout({
   cartTotal, customerName, setCustomerName, streetAddress, setStreetAddress,
   city, setCity, zipCode, setZipCode, instructions, setInstructions,
   detectedZone, minRequired, isMinMet, amountShort, progressPercent,
-  paymentMethod, setPaymentMethod, isCheckoutReady, orderText, handleCopyOrder,
-  isCopied, setIsCheckingOut, setCart, onExit, timeData,
-  cart, updateCart
+  paymentMethod, setPaymentMethod, handleCopyOrder,
+  isCopied, setIsCopied, setIsCheckingOut, setCart, onExit, timeData,
+  cart, updateCart, hasSubmittedOnce, setHasSubmittedOnce, setOrderRef, orderRef, inventory,
+  submittedCart, setSubmittedCart
 }: any) {
   const [stage, setStage] = useState<'REVIEW' | 'DETAILS'>('REVIEW');
+
+  const convenienceFee = paymentMethod === 'CASHAPP' ? 10 : 0;
+  const grandTotal = cartTotal + convenienceFee;
+  const isCheckoutReady = detectedZone && isMinMet && paymentMethod && customerName && streetAddress && city && zipCode;
+
+  // DYNAMIC ORDER TEXT GENERATOR WITH CART DIFFING
+  const orderText = useMemo(() => {
+    const authId = `${timeData.activeCode}-${orderRef}`;
+    
+    let text = hasSubmittedOnce ? `📝 UPDATED ORDER SUMMARY 📝\n` : `📝 NEW ORDER SUMMARY 📝\n`;
+    text += `------------------------\n`;
+    
+    if (hasSubmittedOnce) {
+      text += `⚠️ UPDATE FOR AUTH ID: ${authId} ⚠️\n`;
+      text += `------------------------\n`;
+    }
+
+    if (customerName) text += `👤 Name: ${customerName}\n`;
+    if (streetAddress && city && zipCode) text += `📍 Address: ${streetAddress}, ${city} ${zipCode}\n`;
+    if (detectedZone) text += `🚚 Zone: ${detectedZone}\n`;
+    if (paymentMethod) text += `💵 Payment: ${paymentMethod === 'CASHAPP' ? 'CashApp' : 'Cash'}\n`;
+    if (timeData.phase === 'GRACE') text += `⏰ SCHEDULED FOR: TOMORROW\n`;
+    text += `------------------------\n`;
+    
+    let cartLines: string[] = [];
+
+    // Log the current items, noting what is New or Changed
+    Object.entries(cart).forEach(([cartKey, cartItem]: any) => {
+      const itemInDB = inventory?.find((i: any) => i.id === cartItem.item.id);
+      const isDealActive = itemInDB?.dailyDeal;
+      
+      const qty = cartItem?.qty || 0;
+      const name = cartItem?.item?.name || 'Unknown Item';
+      
+      const sizeLabel = (isDealActive && cartItem.size.promoLabel) ? cartItem.size.promoLabel : cartItem.size.label;
+      const price = (isDealActive && cartItem.size.promoPrice !== undefined && cartItem.size.promoPrice !== '') ? cartItem.size.promoPrice : (cartItem.size.price || 0);
+      
+      const optionsArray = cartItem?.options || (cartItem?.option ? [cartItem.option] : []);
+      const optionLabel = optionsArray.map((o:any)=>o.label).join(' + ') || 'Standard';
+      
+      let line = `${qty}x ${name} - ${sizeLabel} (${optionLabel}) [$${(price * qty).toFixed(2)}]`;
+
+      // DIFF LOGIC: Compare with the previously submitted cart
+      if (hasSubmittedOnce && submittedCart) {
+        const prevItem = submittedCart[cartKey];
+        if (!prevItem) {
+          line += ` 🟢 [NEW ITEM]`;
+        } else if (prevItem.qty !== qty) {
+          line += ` 🟡 [UPDATED: Was ${prevItem.qty}, Now ${qty}]`;
+        }
+      }
+      cartLines.push(line);
+    });
+
+    // Check for REMOVED items
+    if (hasSubmittedOnce && submittedCart) {
+      let removedCount = 0;
+      Object.entries(submittedCart).forEach(([cartKey, prevItem]: any) => {
+        if (!cart[cartKey]) {
+          if (removedCount === 0) cartLines.push(`\n--- REMOVED ITEMS ---`);
+          const name = prevItem?.item?.name || 'Unknown Item';
+          const optionsArray = prevItem?.options || (prevItem?.option ? [prevItem.option] : []);
+          const optionLabel = optionsArray.map((o:any)=>o.label).join(' + ') || 'Standard';
+          cartLines.push(`🔴 [REMOVED] ${prevItem.qty}x ${name} (${optionLabel})`);
+          removedCount++;
+        }
+      });
+    }
+
+    text += cartLines.join('\n') + '\n';
+    text += `------------------------\n`;
+    
+    if (convenienceFee > 0) {
+      text += `Subtotal: $${cartTotal.toFixed(2)}\n`;
+      text += `Fee: $${convenienceFee.toFixed(2)}\n`;
+    }
+    text += `Total: $${grandTotal.toFixed(2)}`;
+    if (instructions) text += `\n\n📝 Notes: ${instructions}`;
+    text += `\n\nAuth ID: ${authId}`;
+    
+    return text;
+  }, [cart, cartTotal, detectedZone, paymentMethod, convenienceFee, grandTotal, customerName, streetAddress, city, zipCode, instructions, timeData, orderRef, inventory, hasSubmittedOnce, submittedCart]);
+
+  const onCopyAction = () => {
+    if (!isCheckoutReady) return;
+    
+    navigator.clipboard.writeText(orderText);
+    setIsCopied(true);
+    
+    // Snapshot the current cart so next time they edit, it compares to this state!
+    setSubmittedCart({...cart});
+    setHasSubmittedOnce(true); 
+    setTimeout(() => setIsCopied(false), 2000);
+
+    const authId = `${timeData.activeCode}-${orderRef}`;
+    handleCopyOrder(orderText, authId);
+  };
 
   return (
     <div className="min-h-dvh bg-zinc-950 flex flex-col items-center p-4 md:p-6 text-zinc-100 overflow-y-auto w-full">
@@ -186,8 +284,23 @@ export default function StorefrontCheckout({
                </div>
             </div>
 
-            {/* HUMANIZED ORDER PREVIEW */}
-            <div className={`bg-zinc-900 border rounded-2xl p-6 mb-8 relative shadow-inner transition-colors duration-500 ${isCheckoutReady ? 'border-emerald-500/30' : 'border-zinc-800 opacity-50'}`}>
+            {/* HUMANIZED UPDATE WARNING (ONLY APPEARS IF THEY'VE COPIED BEFORE) */}
+            {hasSubmittedOnce && (
+              <div className="bg-amber-500/10 border border-amber-500/30 rounded-2xl p-5 mb-6 shadow-inner flex items-start gap-4 animate-in fade-in">
+                <div className="bg-amber-500/20 p-2 rounded-full shrink-0">
+                  <AlertTriangle size={20} className="text-amber-400" />
+                </div>
+                <div>
+                  <h3 className="text-xs font-black text-amber-400 uppercase tracking-widest mb-1.5">Cart Update Detected</h3>
+                  <p className="text-xs text-amber-500/80 font-bold leading-relaxed">
+                    You've updated your items after already copying your order. When you click Finish & Copy below, <strong>you must paste this new text into Telegram</strong> so the intake team gets your updated items!
+                  </p>
+                </div>
+              </div>
+            )}
+
+            {/* STANDARD TEXT PREVIEW (No solid yellow block, the Emojis do the highlighting) */}
+            <div className={`bg-zinc-900 border rounded-2xl p-6 mb-8 relative shadow-inner transition-colors duration-500 ${isCheckoutReady ? (hasSubmittedOnce ? 'border-amber-500/50' : 'border-emerald-500/30') : 'border-zinc-800 opacity-50'}`}>
               <pre className="text-sm font-mono text-zinc-300 whitespace-pre-wrap leading-relaxed">
                 {isCheckoutReady ? orderText : 'Please fill out your delivery and payment details above to see your final order text...'}
               </pre>
@@ -195,7 +308,7 @@ export default function StorefrontCheckout({
 
             {/* HUMANIZED SUBMIT BUTTON */}
             <button 
-              onClick={handleCopyOrder} 
+              onClick={onCopyAction} 
               disabled={!isCheckoutReady}
               className={`w-full py-5 rounded-2xl font-black uppercase tracking-widest transition-all flex justify-center items-center gap-3 mb-4 disabled:opacity-30 shadow-lg ${isCopied ? 'bg-emerald-500 text-zinc-950 scale-105' : 'bg-zinc-800 text-emerald-400 border border-emerald-500/30 hover:bg-zinc-700'}`}
             >
@@ -207,7 +320,17 @@ export default function StorefrontCheckout({
               <button onClick={() => setStage('REVIEW')} className="flex-1 bg-zinc-900 border border-zinc-800 py-4 rounded-xl text-zinc-400 font-bold uppercase tracking-widest hover:bg-zinc-800 hover:text-zinc-100 transition-colors">
                 ← Back
               </button>
-              <button onClick={() => { setCart({}); setIsCheckingOut(false); setPaymentMethod(''); setCity(''); setStreetAddress(''); setZipCode(''); setCustomerName(''); onExit(); }} className="flex-1 bg-zinc-950 border border-zinc-800 py-4 rounded-xl text-zinc-500 font-bold uppercase tracking-widest hover:text-rose-400 hover:border-rose-500/30 transition-colors">
+              <button 
+                onClick={() => { 
+                  setCart({}); setIsCheckingOut(false); setPaymentMethod(''); 
+                  setCity(''); setStreetAddress(''); setZipCode(''); setCustomerName(''); 
+                  if(setHasSubmittedOnce) setHasSubmittedOnce(false); 
+                  if(setSubmittedCart) setSubmittedCart(null);
+                  if(setOrderRef) setOrderRef(''); 
+                  onExit(); 
+                }} 
+                className="flex-1 bg-zinc-950 border border-zinc-800 py-4 rounded-xl text-zinc-500 font-bold uppercase tracking-widest hover:text-rose-400 hover:border-rose-500/30 transition-colors"
+              >
                 Clear & Exit
               </button>
             </div>

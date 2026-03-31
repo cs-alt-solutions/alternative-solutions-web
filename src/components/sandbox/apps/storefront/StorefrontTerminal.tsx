@@ -35,6 +35,10 @@ export default function StorefrontTerminal({ clientConfig, onExit }: { clientCon
   const [isCheckingOut, setIsCheckingOut] = useState(false);
   const [isCopied, setIsCopied] = useState(false);
   
+  // State to track if they've copied the order at least once and snapshot the cart
+  const [hasSubmittedOnce, setHasSubmittedOnce] = useState(false);
+  const [submittedCart, setSubmittedCart] = useState<any>(null);
+  
   const [customerName, setCustomerName] = useStickyState('', `market_name_${clientConfig.id}`);
   const [streetAddress, setStreetAddress] = useStickyState('', `market_street_${clientConfig.id}`);
   const [city, setCity] = useStickyState('', `market_city_${clientConfig.id}`);
@@ -207,62 +211,16 @@ export default function StorefrontTerminal({ clientConfig, onExit }: { clientCon
   const convenienceFee = paymentMethod === 'CASHAPP' ? 10 : 0;
   const grandTotal = cartTotal + convenienceFee;
 
+  // FIXED: Restored the missing progress variables right here
   const activeZoneObj = deliveryZones.find((z: any) => z.name === detectedZone);
   const minRequired = activeZoneObj ? activeZoneObj.minimum : 0;
   const isMinMet = detectedZone ? cartTotal >= minRequired : false;
   const amountShort = minRequired - cartTotal;
   const progressPercent = minRequired === 0 ? 100 : Math.min((cartTotal / minRequired) * 100, 100);
 
-  const orderText = useMemo(() => {
-    let text = `📝 NEW ORDER SUMMARY 📝\n`;
-    text += `------------------------\n`;
-    if (customerName) text += `👤 Name: ${customerName}\n`;
-    if (streetAddress && city && zipCode) text += `📍 Address: ${streetAddress}, ${city} ${zipCode}\n`;
-    if (detectedZone) text += `🚚 Zone: ${detectedZone}\n`;
-    if (paymentMethod) text += `💵 Payment: ${paymentMethod === 'CASHAPP' ? 'CashApp' : 'Cash'}\n`;
-    if (timeData.phase === 'GRACE') text += `⏰ SCHEDULED FOR: TOMORROW\n`;
-    text += `------------------------\n`;
-    
-    Object.values(cart).forEach((cartItem: any) => {
-      const itemInDB = inventory.find((i: any) => i.id === cartItem.item.id);
-      const isDealActive = itemInDB?.dailyDeal;
-      
-      const qty = cartItem?.qty || 0;
-      const name = cartItem?.item?.name || 'Unknown Item';
-      
-      const sizeLabel = (isDealActive && cartItem.size.promoLabel) ? cartItem.size.promoLabel : cartItem.size.label;
-      const price = (isDealActive && cartItem.size.promoPrice !== undefined && cartItem.size.promoPrice !== '') ? cartItem.size.promoPrice : (cartItem.size.price || 0);
-      
-      const optionsArray = cartItem?.options || (cartItem?.option ? [cartItem.option] : []);
-      const optionLabel = optionsArray.map((o:any)=>o.label).join(' + ') || 'Standard';
-      
-      text += `${qty}x ${name} - ${sizeLabel} (${optionLabel}) [$${(price * qty).toFixed(2)}]\n`;
-    });
-    
-    text += `------------------------\n`;
-    if (convenienceFee > 0) {
-      text += `Subtotal: $${cartTotal.toFixed(2)}\n`;
-      text += `Fee: $${convenienceFee.toFixed(2)}\n`;
-    }
-    text += `Total: $${grandTotal.toFixed(2)}`;
-    if (instructions) text += `\n\n📝 Notes: ${instructions}`;
-    text += `\n\nAuth ID: ${timeData.activeCode}-${orderRef}`;
-    return text;
-  }, [cart, cartTotal, detectedZone, paymentMethod, convenienceFee, grandTotal, customerName, streetAddress, city, zipCode, instructions, timeData, orderRef, inventory]);
-
-  const isCheckoutReady = detectedZone && isMinMet && paymentMethod && customerName && streetAddress && city && zipCode;
-
-  const handleCopyOrder = () => {
-    if (!isCheckoutReady) return;
-    
-    navigator.clipboard.writeText(orderText);
-    setIsCopied(true);
-    setTimeout(() => setIsCopied(false), 2000);
-
-    const authId = `${timeData.activeCode}-${orderRef}`;
-
+  const handleCopyOrder = (orderText: string, activeAuthId: string) => {
     const newOrder = {
-      id: authId,
+      id: activeAuthId,
       customer: customerName,
       zone: detectedZone,
       status: 'pending_verification', 
@@ -284,8 +242,6 @@ export default function StorefrontTerminal({ clientConfig, onExit }: { clientCon
     };
 
     setOrders((prev: any[]) => {
-      // FIXED: If the order ID already exists, they went back and changed something. 
-      // We overwrite it with the fresh data and reset the status so the Admin knows it was altered!
       if (prev.some(o => o.id === newOrder.id)) {
         return prev.map(o => o.id === newOrder.id ? newOrder : o);
       }
@@ -371,10 +327,12 @@ export default function StorefrontTerminal({ clientConfig, onExit }: { clientCon
           zipCode={zipCode} setZipCode={setZipCode} instructions={instructions} setInstructions={setInstructions}
           detectedZone={detectedZone} minRequired={minRequired} isMinMet={isMinMet} amountShort={amountShort}
           progressPercent={progressPercent} paymentMethod={paymentMethod} setPaymentMethod={setPaymentMethod}
-          isCheckoutReady={isCheckoutReady} orderText={orderText} handleCopyOrder={handleCopyOrder}
-          isCopied={isCopied} setIsCheckingOut={setIsCheckingOut} setCart={setCart} onExit={onExit}
-          timeData={timeData}
-          cart={cart} updateCart={updateCart}
+          handleCopyOrder={handleCopyOrder}
+          isCopied={isCopied} setIsCopied={setIsCopied} setIsCheckingOut={setIsCheckingOut} setCart={setCart} onExit={onExit}
+          timeData={timeData} cart={cart} updateCart={updateCart}
+          hasSubmittedOnce={hasSubmittedOnce} setHasSubmittedOnce={setHasSubmittedOnce} 
+          submittedCart={submittedCart} setSubmittedCart={setSubmittedCart}
+          orderRef={orderRef} setOrderRef={setOrderRef} inventory={inventory}
         />
       ) : (
         <StorefrontCatalog 
