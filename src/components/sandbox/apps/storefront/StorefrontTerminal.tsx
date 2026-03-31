@@ -45,7 +45,7 @@ export default function StorefrontTerminal({ clientConfig, onExit }: { clientCon
   const [detectedZone, setDetectedZone] = useState<string>('');
   const [paymentMethod, setPaymentMethod] = useState<'CASH' | 'CASHAPP' | ''>('');
   
-  const [rawInventory] = useStickyState(clientConfig.inventory || [], `inv_stock_${clientConfig.id}`);
+  const [rawInventory] = useStickyState(clientConfig.inventory || [], `inv_stock_v2_${clientConfig.id}`);
   const [orders, setOrders] = useStickyState(clientConfig?.fulfillment?.initialOrders || [], `ful_orders_${clientConfig.id}`);
   
   const defaultCats = ['Flower & Plants', 'Vapes & Pens', 'Edibles', 'Concentrates', 'Merch & Extras'];

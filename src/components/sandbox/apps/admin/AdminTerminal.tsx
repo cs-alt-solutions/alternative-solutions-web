@@ -16,8 +16,11 @@ export default function AdminTerminal({ clientConfig, onExit }: { clientConfig: 
 
   const initialOrders = clientConfig?.fulfillment?.initialOrders || [];
   const [orders, setOrders] = useStickyState(initialOrders, `ful_orders_${cid}`); 
+  
   const initialStock = clientConfig?.inventory || [];
-  const [stock, setStock] = useStickyState(initialStock, `inv_stock_${cid}`);
+  
+  // FIXED: Changed to inv_stock_v2_ to sync with the storefront and pull fresh data!
+  const [stock, setStock] = useStickyState(initialStock, `inv_stock_v2_${cid}`);
 
   useEffect(() => {
     if (notification) {
