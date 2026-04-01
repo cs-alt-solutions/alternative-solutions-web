@@ -97,26 +97,38 @@ export default function StorefrontTerminal({ clientConfig, onExit }: { clientCon
     return { phase, shiftCode, activeCode, isFiveMinWarning, minsToClose, dayOfWeek };
   }, [currentTime, storeHours]);
 
-  // THE TELEGRAM MAGIC LINK LOGIC
+  // THE NEW VIP MAGIC LINK & MEMORY LOGIC
   useEffect(() => {
-    if (!initialCheckDone && urlKey && timeData.activeCode) {
+    if (!initialCheckDone && timeData.activeCode) {
+      
+      // 1. Check if the browser remembers the active code
+      const savedToken = localStorage.getItem(`market_auth_${clientConfig.id}`);
+      if (savedToken === timeData.activeCode) {
+        setIsVerified(true);
+        setInitialCheckDone(true);
+        return; // Verified! Stop checking.
+      }
 
-      // Check if the URL key matches the active daily code
-      if (urlKey.toUpperCase() === timeData.activeCode) {
-        setIsVerified(true); // VIP Pass: Instant unlock!
+      // 2. If no memory, check for the Magic Link
+      if (urlKey) {
+        if (urlKey.toUpperCase() === timeData.activeCode) {
+          setIsVerified(true);
+          // Save the memory token
+          localStorage.setItem(`market_auth_${clientConfig.id}`, timeData.activeCode); 
 
-        // THE MASKING TRICK: Instantly wipe the key from the browser's address bar
-        if (typeof window !== 'undefined') {
-          const cleanUrl = window.location.protocol + "//" + window.location.host + window.location.pathname;
-          window.history.replaceState({ path: cleanUrl }, '', cleanUrl);
+          // WIPE THE URL CLEAN (Masking)
+          if (typeof window !== 'undefined') {
+            const cleanUrl = window.location.protocol + "//" + window.location.host + window.location.pathname;
+            window.history.replaceState({ path: cleanUrl }, '', cleanUrl);
+          }
+        } else {
+          setError("Expired or invalid magic link.");
         }
-      } else {
-        setError("Expired or invalid magic link.");
       }
       
       setInitialCheckDone(true);
     }
-  }, [urlKey, timeData.activeCode, initialCheckDone]);
+  }, [urlKey, timeData.activeCode, initialCheckDone, clientConfig.id]);
 
   useEffect(() => {
     if (Object.keys(cart).length > 0) {
@@ -154,11 +166,17 @@ export default function StorefrontTerminal({ clientConfig, onExit }: { clientCon
     else setDetectedZone('Other (Contact Us)');
   }, [city, zipCode]);
 
+  // MANUAL LOGIN NOW SAVES MEMORY
   const handleAuth = (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
-    if (codeInput.trim().toUpperCase() === timeData.activeCode) setIsVerified(true);
-    else { setError("Invalid or Expired Code"); setTimeout(() => setCodeInput(""), 1500); }
+    if (codeInput.trim().toUpperCase() === timeData.activeCode) {
+      setIsVerified(true);
+      localStorage.setItem(`market_auth_${clientConfig.id}`, timeData.activeCode); 
+    } else { 
+      setError("Invalid or Expired Code"); 
+      setTimeout(() => setCodeInput(""), 1500); 
+    }
   };
 
   const inventory = useMemo(() => {

@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, Suspense } from 'react';
+import React, { useState, useEffect, Suspense } from 'react';
 import AdminTerminal from '@/components/sandbox/apps/admin/AdminTerminal';
 import { divisionConfig } from '@/config/clients/division';
 import { ShieldAlert, ArrowRight } from 'lucide-react';
@@ -11,13 +11,23 @@ export default function DivisionHQPage() {
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
 
+  // THE 24-HOUR HQ MEMORY
+  useEffect(() => {
+    const today = new Date().toDateString(); // e.g., "Wed Apr 01 2026"
+    const savedToken = localStorage.getItem('division_hq_auth');
+    
+    // If they have today's token, bypass the lock screen instantly
+    if (savedToken === today) {
+      setIsVerified(true);
+    }
+  }, []);
+
   const handleAuth = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
     setIsLoading(true);
 
     try {
-      // Pings our isolated API route instead of triggering a full server re-render
       const res = await fetch('/api/division/auth', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -26,6 +36,8 @@ export default function DivisionHQPage() {
 
       if (res.ok) {
         setIsVerified(true);
+        // Stamp the browser with today's date upon successful login
+        localStorage.setItem('division_hq_auth', new Date().toDateString());
       } else {
         setError('UNAUTHORIZED ACCESS LOGGED');
         setPin('');
@@ -78,7 +90,10 @@ export default function DivisionHQPage() {
     <Suspense fallback={<div className="min-h-dvh bg-zinc-950 flex items-center justify-center text-cyan-500 font-black tracking-widest uppercase">Loading Command Center...</div>}>
       <AdminTerminal 
         clientConfig={divisionConfig} 
-        onExit={() => window.location.href = '/'} 
+        onExit={() => {
+          localStorage.removeItem('division_hq_auth'); // Log out entirely on exit
+          window.location.href = '/';
+        }} 
       />
     </Suspense>
   );
