@@ -2,7 +2,7 @@
 
 import React, { useState, useMemo, useEffect } from 'react';
 import { X, Lock, Clock, ArrowRight, AlertTriangle } from 'lucide-react';
-import { useSearchParams } from 'next/navigation'; // NEW: For the magic link
+import { useSearchParams } from 'next/navigation'; 
 import { useStickyState } from '@/hooks/useStickyState';
 
 import { PoliciesModal } from './StorefrontModals';
@@ -16,15 +16,14 @@ const timeToMins = (timeStr: string) => {
 };
 
 export default function StorefrontTerminal({ clientConfig, onExit }: { clientConfig: any, onExit: () => void }) {
-  const searchParams = useSearchParams(); // Reads the URL
-  const urlKey = searchParams.get('key'); // Looks for ?key=XXXX
+  const searchParams = useSearchParams(); 
+  const urlKey = searchParams?.get('key'); 
 
   const [isVerified, setIsVerified] = useState(false);
   const [codeInput, setCodeInput] = useState("");
   const [error, setError] = useState("");
   const [currentTime, setCurrentTime] = useState(new Date());
   
-  // Track if we've already done the auto-check so it doesn't loop
   const [initialCheckDone, setInitialCheckDone] = useState(false);
 
   const defaultHours = clientConfig.storeHours || { open: '08:00', shiftChange: '12:00', close: '17:00' };
@@ -98,20 +97,24 @@ export default function StorefrontTerminal({ clientConfig, onExit }: { clientCon
     return { phase, shiftCode, activeCode, isFiveMinWarning, minsToClose, dayOfWeek };
   }, [currentTime, storeHours]);
 
-  // NEW: THE TELEGRAM MAGIC LINK LOGIC
+  // THE TELEGRAM MAGIC LINK LOGIC
   useEffect(() => {
     if (!initialCheckDone && urlKey && timeData.activeCode) {
-      // Check if the browser user-agent says 'Telegram'
+      // Sniff the browser signature
       const userAgent = navigator.userAgent || navigator.vendor;
       const isTelegram = userAgent.includes('Telegram');
 
+      // Check if the URL key matches the active daily code
       if (urlKey.toUpperCase() === timeData.activeCode) {
         if (isTelegram) {
-          setIsVerified(true); // Instant unlock
+          setIsVerified(true); // VIP Pass: Instant unlock!
         } else {
           setError("Magic link requires Telegram App. Please enter code manually.");
         }
+      } else {
+        setError("Expired or invalid magic link.");
       }
+      
       setInitialCheckDone(true);
     }
   }, [urlKey, timeData.activeCode, initialCheckDone]);
