@@ -1,5 +1,5 @@
 import React from 'react';
-import { X, Box, Sparkles, Plus, Minus } from 'lucide-react';
+import { X, Box, Sparkles, Plus, Minus, Lightbulb } from 'lucide-react';
 
 export default function StorefrontCardBack({
   item, cleanItemName, setIsFlipped, sizes, options,
@@ -9,6 +9,11 @@ export default function StorefrontCardBack({
 }: any) {
 
   const isMultiStrain = options.some((o: any) => o.label && o.label.includes(' x '));
+
+  // EXTRACT FUN FACT FOR THE BACK CARD
+  const desc = item.description || '';
+  const factMatch = desc.match(/Fun Fact:\s*([\s\S]*?)(?=Feels:|Taste:|Uses:|$)/i);
+  const funFact = factMatch ? factMatch[1].trim().replace(/\.$/, '').trim() : '';
 
   return (
     <div className={`absolute inset-0 backface-hidden w-full h-full transform-[rotateY(180deg)] bg-zinc-900/90 backdrop-blur-xl border ${item.isTopShelf ? 'border-amber-900/30' : 'border-zinc-800/80'} rounded-4xl p-5 shadow-2xl flex flex-col transition-all duration-500`}>
@@ -21,6 +26,15 @@ export default function StorefrontCardBack({
       </div>
       
       <div className="flex-1 overflow-y-auto custom-scrollbar space-y-6 pb-4">
+        
+        {/* NEW: FUN FACT ON THE BACK */}
+        {funFact && (
+          <div className="w-full bg-zinc-950/50 border border-zinc-800/50 rounded-xl p-3 text-center shadow-inner">
+             <p className="text-[8px] font-black uppercase tracking-widest text-zinc-500 flex items-center justify-center gap-1 mb-1.5"><Lightbulb size={10} className="text-amber-500/70"/> Fun Fact</p>
+             <p className="text-[10px] text-zinc-400 font-medium leading-relaxed italic">"{funFact}"</p>
+          </div>
+        )}
+
         <div className="flex flex-col min-h-0">
           <label className={`text-[10px] font-black uppercase tracking-widest ${item.isTopShelf ? 'text-amber-400' : 'text-emerald-400'} mb-3 flex items-center gap-2`}>
             <Box size={12} /> Select Quantity

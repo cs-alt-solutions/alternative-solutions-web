@@ -1,5 +1,5 @@
 import React from 'react';
-import { Flame, Star, Award, Target, Wind, Sparkles, Leaf, Box, Image as ImageIcon, Dna, Lightbulb } from 'lucide-react';
+import { Flame, Star, Award, Target, Wind, Sparkles, Leaf, Box, Image as ImageIcon, Dna } from 'lucide-react';
 
 const getTypeColor = (type: string) => {
   switch(type?.toLowerCase()) {
@@ -21,14 +21,12 @@ export default function StorefrontCardFront({ item, cleanItemName, lowestPrice, 
   const feelsMatch = desc.match(/Feels:\s*([\s\S]*?)(?=Taste:|Uses:|Fun Fact:|$)/i);
   const tasteMatch = desc.match(/Taste:\s*([\s\S]*?)(?=Feels:|Uses:|Fun Fact:|$)/i);
   const usesMatch = desc.match(/Uses:\s*([\s\S]*?)(?=Feels:|Taste:|Fun Fact:|$)/i);
-  const factMatch = desc.match(/Fun Fact:\s*([\s\S]*?)(?=Feels:|Taste:|Uses:|$)/i);
 
   const cleanString = (str: string) => str.trim().replace(/\.$/, '').trim();
 
   const feels = feelsMatch ? cleanString(feelsMatch[1]).split(',').map((s: string) => s.trim()).filter(Boolean) : [];
   const tastes = tasteMatch ? cleanString(tasteMatch[1]).split(',').map((s: string) => s.trim()).filter(Boolean) : [];
   const uses = usesMatch ? cleanString(usesMatch[1]).split(',').map((s: string) => s.trim()).filter(Boolean) : [];
-  const funFact = factMatch ? cleanString(factMatch[1]) : '';
 
   let cleanBaseDesc = desc.split(/(Feels:|Taste:|Uses:|Fun Fact:)/i)[0].trim();
   if (item.lineage && cleanBaseDesc.startsWith(item.lineage + '.')) {
@@ -39,11 +37,17 @@ export default function StorefrontCardFront({ item, cleanItemName, lowestPrice, 
     <div className={`col-start-1 row-start-1 backface-hidden w-full h-full bg-zinc-900/90 backdrop-blur-xl border ${item.isTopShelf ? 'border-amber-900/30 group-hover:border-amber-500/60' : 'border-zinc-800/80 group-hover:border-emerald-500/40'} rounded-4xl p-5 shadow-2xl flex flex-col items-center transition-all duration-500`}>
       
       {/* HEADER IMAGE / ICON */}
-      <div className="w-full h-28 shrink-0 bg-zinc-950/50 border border-zinc-800/50 rounded-2xl mb-4 flex items-center justify-center text-zinc-800 shadow-inner overflow-hidden relative group-hover:border-zinc-700/50 transition-all duration-500">
-         <div className={`absolute inset-0 opacity-40 mix-blend-overlay ${item.isTopShelf ? 'bg-linear-to-br from-amber-500/20 via-transparent to-transparent' : 'bg-linear-to-br from-emerald-500/10 via-transparent to-transparent'}`} />
-         <Icon size={56} className="opacity-30 group-hover:scale-110 group-hover:opacity-50 transition-all duration-700" />
-         <span className="absolute bottom-2 left-2 text-[10px] font-black uppercase tracking-[0.2em] text-zinc-100 bg-zinc-950/80 backdrop-blur-md px-3 py-1.5 rounded-lg border border-zinc-800 shadow-lg">${lowestPrice.toFixed(2)}+</span>
-         <div className="absolute top-2 right-2 flex flex-col gap-1.5 items-end">
+      <div className="w-full h-44 shrink-0 bg-zinc-950/80 border border-zinc-800/50 rounded-2xl mb-4 flex items-center justify-center text-zinc-800 shadow-inner overflow-hidden relative group-hover:border-zinc-700/50 transition-all duration-500">
+         <div className={`absolute z-10 inset-0 opacity-40 mix-blend-overlay pointer-events-none ${item.isTopShelf ? 'bg-linear-to-br from-amber-500/20 via-transparent to-transparent' : 'bg-linear-to-br from-emerald-500/10 via-transparent to-transparent'}`} />
+         
+         {item.imageUrl ? (
+           <img src={item.imageUrl} alt={cleanItemName} className="absolute inset-0 w-full h-full object-contain p-3 opacity-90 group-hover:opacity-100 group-hover:scale-105 transition-all duration-700" />
+         ) : (
+           <img src="https://placehold.co/600x400/18181b/52525b?text=Image+Coming+Soon" alt="Coming Soon" className="absolute inset-0 w-full h-full object-cover opacity-50 group-hover:opacity-80 transition-all duration-700" />
+         )}
+
+         <span className="absolute z-20 bottom-2 left-2 text-[10px] font-black uppercase tracking-[0.2em] text-zinc-100 bg-zinc-950/80 backdrop-blur-md px-3 py-1.5 rounded-lg border border-zinc-800 shadow-lg">${lowestPrice.toFixed(2)}+</span>
+         <div className="absolute z-20 top-2 right-2 flex flex-col gap-1.5 items-end">
            {item.isTopShelf && (
              <span className="text-[8px] font-black uppercase tracking-widest text-zinc-950 bg-amber-400 px-2.5 py-1 rounded-md shadow-[0_0_15px_rgba(251,191,36,0.4)] flex items-center gap-1">
                 <Award size={10} /> TOP SHELF
@@ -92,7 +96,6 @@ export default function StorefrontCardFront({ item, cleanItemName, lowestPrice, 
           </div>
 
           <div className="w-full text-left space-y-3">
-            {/* FIXED: Added line-clamp-2 and hover title */}
             {cleanBaseDesc && (
               <p className="text-[11px] text-zinc-400/80 leading-relaxed font-medium italic text-center px-2 line-clamp-2 cursor-help" title={cleanBaseDesc}>"{cleanBaseDesc}"</p>
             )}
@@ -141,16 +144,7 @@ export default function StorefrontCardFront({ item, cleanItemName, lowestPrice, 
 
               </div>
             )}
-
-            {/* FIXED: Added line-clamp-3 and hover title */}
-            {funFact && (
-              <div className="w-full bg-zinc-950/30 border border-zinc-800/40 rounded-xl p-3 text-center mt-2 cursor-help" title={funFact}>
-                 <p className="text-[8px] font-black uppercase tracking-widest text-zinc-500 flex items-center justify-center gap-1 mb-1.5"><Lightbulb size={10} className="text-amber-500/70"/> Fun Fact</p>
-                 <p className="text-[10px] text-zinc-400 font-medium leading-relaxed line-clamp-3">"{funFact}"</p>
-              </div>
-            )}
           </div>
-
         </div>
       </div>
 

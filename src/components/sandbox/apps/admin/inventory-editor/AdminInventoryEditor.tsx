@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Edit3, X, Save, Plus, Trash2, Flame, Star, Award, Gauge, Sparkles, Wind, Dna, Activity, Target, Lightbulb } from 'lucide-react';
+import { Edit3, X, Save, Plus, Trash2, Flame, Star, Award, Gauge, Sparkles, Wind, Dna, Activity, Target, Lightbulb, Image as ImageIcon } from 'lucide-react';
 import VariantsManager from './VariantsManager';
 
 const DAYS_OF_WEEK = [
@@ -7,7 +7,6 @@ const DAYS_OF_WEEK = [
   { label: 'Wed', val: 3 }, { label: 'Thu', val: 4 }, { label: 'Fri', val: 5 }, { label: 'Sat', val: 6 }
 ];
 
-// FIXED: Added mainCategories to the props
 export default function AdminInventoryEditor({ initialItem, isAdding, subCategories, standardTiers, onSave, onCancel, mainCategories }: any) {
   
   // Safety fallback just in case the config hasn't loaded yet
@@ -100,9 +99,15 @@ export default function AdminInventoryEditor({ initialItem, isAdding, subCategor
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div className="space-y-6">
              
-             <div>
-              <label className="text-[10px] font-black text-zinc-500 uppercase tracking-widest block mb-2">Product Name</label>
-              <input type="text" value={editingItem.name} onChange={(e) => setEditingItem({...editingItem, name: e.target.value})} className="w-full bg-zinc-950 border border-zinc-800 rounded-xl p-4 text-white font-bold outline-none shadow-inner focus:border-emerald-500/50" required />
+             <div className="space-y-4">
+               <div>
+                <label className="text-[10px] font-black text-zinc-500 uppercase tracking-widest block mb-2">Product Name</label>
+                <input type="text" value={editingItem.name} onChange={(e) => setEditingItem({...editingItem, name: e.target.value})} className="w-full bg-zinc-950 border border-zinc-800 rounded-xl p-4 text-white font-bold outline-none shadow-inner focus:border-emerald-500/50" required />
+               </div>
+               <div>
+                <label className="text-[10px] font-black text-zinc-500 uppercase tracking-widest flex items-center gap-1.5 mb-2"><ImageIcon size={12}/> Image URL</label>
+                <input type="text" value={editingItem.imageUrl || ''} onChange={(e) => setEditingItem({...editingItem, imageUrl: e.target.value})} className="w-full bg-zinc-950 border border-zinc-800 rounded-xl p-4 text-white text-sm outline-none shadow-inner focus:border-emerald-500/50 placeholder:text-zinc-700" placeholder="Paste image link (or leave blank for placeholder)" />
+               </div>
              </div>
 
              <div className="grid grid-cols-2 gap-4">
@@ -195,7 +200,6 @@ export default function AdminInventoryEditor({ initialItem, isAdding, subCategor
                   }} 
                   className="w-full bg-zinc-900 border border-zinc-800 rounded-xl p-4 text-emerald-400 font-bold outline-none appearance-none"
                 >
-                  {/* FIXED: Using safeMainCats prop instead of hardcoded import */}
                   {safeMainCats.map((cat: string) => <option key={cat} value={cat}>{cat}</option>)}
                 </select>
 
