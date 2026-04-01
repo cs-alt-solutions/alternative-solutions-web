@@ -1,9 +1,7 @@
-/* src/app/layout.tsx */
 import type { Metadata } from "next";
 import { Inter, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
-import Navbar from '@/components/Navbar';
-import Footer from '@/components/Footer';
+import ConditionalUI from '@/components/core/ConditionalUI';
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
 const jetbrains = JetBrains_Mono({ subsets: ["latin"], variable: "--font-jetbrains" });
@@ -18,7 +16,7 @@ export const metadata: Metadata = {
     siteName: 'Alternative Solutions IO',
     images: [
       {
-        url: 'https://alternativesolutions.io/og-image.png', // Fallback/Placeholder
+        url: 'https://alternativesolutions.io/og-image.png',
         width: 1200,
         height: 630,
         alt: 'Alternative Solutions IO - Systems Architecture'
@@ -43,9 +41,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       data-scroll-behavior="smooth"
     > 
       <body className="antialiased bg-bg-app text-white">
-        <Navbar />
-        {children}
-        <Footer />
+        {/* NEW: Wraps the entire app to intelligently hide navigation */}
+        <ConditionalUI>
+          {children}
+        </ConditionalUI>
       </body>
     </html>
   );
