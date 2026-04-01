@@ -5,7 +5,6 @@ export async function POST(req: Request) {
     const body = await req.json();
     const { pin } = body;
 
-    // Securely checks the Vercel server vault
     const correctPin = process.env.DIVISION_ADMIN_PASSCODE;
 
     if (!correctPin || pin !== correctPin) {
