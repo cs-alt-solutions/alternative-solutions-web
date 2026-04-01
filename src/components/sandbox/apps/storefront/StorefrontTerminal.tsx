@@ -100,16 +100,15 @@ export default function StorefrontTerminal({ clientConfig, onExit }: { clientCon
   // THE TELEGRAM MAGIC LINK LOGIC
   useEffect(() => {
     if (!initialCheckDone && urlKey && timeData.activeCode) {
-      // Sniff the browser signature
-      const userAgent = navigator.userAgent || navigator.vendor;
-      const isTelegram = userAgent.includes('Telegram');
 
       // Check if the URL key matches the active daily code
       if (urlKey.toUpperCase() === timeData.activeCode) {
-        if (isTelegram) {
-          setIsVerified(true); // VIP Pass: Instant unlock!
-        } else {
-          setError("Magic link requires Telegram App. Please enter code manually.");
+        setIsVerified(true); // VIP Pass: Instant unlock!
+
+        // THE MASKING TRICK: Instantly wipe the key from the browser's address bar
+        if (typeof window !== 'undefined') {
+          const cleanUrl = window.location.protocol + "//" + window.location.host + window.location.pathname;
+          window.history.replaceState({ path: cleanUrl }, '', cleanUrl);
         }
       } else {
         setError("Expired or invalid magic link.");
