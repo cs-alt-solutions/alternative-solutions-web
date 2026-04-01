@@ -4,7 +4,6 @@ import React, { useState, Suspense } from 'react';
 import AdminTerminal from '@/components/sandbox/apps/admin/AdminTerminal';
 import { divisionConfig } from '@/config/clients/division';
 import { ShieldAlert, ArrowRight } from 'lucide-react';
-import { verifyCommandPin } from './actions';
 
 export default function DivisionHQPage() {
   const [isVerified, setIsVerified] = useState(false);
@@ -17,15 +16,24 @@ export default function DivisionHQPage() {
     setError('');
     setIsLoading(true);
 
-    // This calls the secure server file so the PIN never exposes in the browser
-    const isValid = await verifyCommandPin(pin);
+    try {
+      // Pings our isolated API route instead of triggering a full server re-render
+      const res = await fetch('/api/division/auth', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ pin })
+      });
 
-    if (isValid) {
-      setIsVerified(true);
-    } else {
-      setError('UNAUTHORIZED ACCESS LOGGED');
-      setPin('');
+      if (res.ok) {
+        setIsVerified(true);
+      } else {
+        setError('UNAUTHORIZED ACCESS LOGGED');
+        setPin('');
+      }
+    } catch (err) {
+      setError('CONNECTION ERROR');
     }
+
     setIsLoading(false);
   };
 
