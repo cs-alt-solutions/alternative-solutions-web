@@ -1,6 +1,10 @@
 import type { Metadata } from "next";
 import { Inter, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
+
+// IMPORT THEM HERE ON THE SERVER
+import Navbar from '@/components/Navbar';
+import Footer from '@/components/Footer';
 import ConditionalUI from '@/components/core/ConditionalUI';
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
@@ -41,8 +45,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       data-scroll-behavior="smooth"
     > 
       <body className="antialiased bg-bg-app text-white">
-        {/* NEW: Wraps the entire app to intelligently hide navigation */}
-        <ConditionalUI>
+        {/* WE PASS THE SERVER COMPONENTS THROUGH SLOTS */}
+        <ConditionalUI navbar={<Navbar />} footer={<Footer />}>
           {children}
         </ConditionalUI>
       </body>

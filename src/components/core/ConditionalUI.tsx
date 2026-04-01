@@ -2,10 +2,16 @@
 
 import React from 'react';
 import { usePathname } from 'next/navigation';
-import Navbar from '@/components/Navbar';
-import Footer from '@/components/Footer';
 
-export default function ConditionalUI({ children }: { children: React.ReactNode }) {
+export default function ConditionalUI({ 
+  children,
+  navbar,
+  footer
+}: { 
+  children: React.ReactNode;
+  navbar: React.ReactNode;
+  footer: React.ReactNode;
+}) {
   const pathname = usePathname();
   
   // If the URL starts with /division or /sandbox, hide the marketing navigation
@@ -13,9 +19,9 @@ export default function ConditionalUI({ children }: { children: React.ReactNode 
 
   return (
     <>
-      {!isAppRoute && <Navbar />}
+      {!isAppRoute && navbar}
       {children}
-      {!isAppRoute && <Footer />}
+      {!isAppRoute && footer}
     </>
   );
 }
