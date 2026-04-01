@@ -9,7 +9,6 @@ const DAYS_OF_WEEK = [
 
 export default function AdminInventoryEditor({ initialItem, isAdding, subCategories, standardTiers, onSave, onCancel, mainCategories }: any) {
   
-  // Safety fallback just in case the config hasn't loaded yet
   const safeMainCats = mainCategories || ['Flower & Plants', 'Vapes & Pens', 'Edibles', 'Concentrates', 'Merch & Extras'];
 
   const [editingItem, setEditingItem] = useState<any>(() => {
@@ -23,6 +22,10 @@ export default function AdminInventoryEditor({ initialItem, isAdding, subCategor
         }
         return { ...opt, strains };
     });
+    
+    // NEW: Set the toggle based on whether an image URL already exists
+    item.hasImage = !!item.imageUrl; 
+    
     return item;
   });
 
@@ -63,6 +66,10 @@ export default function AdminInventoryEditor({ initialItem, isAdding, subCategor
         builtDescription = `${lin}. ${builtDescription}`;
     }
 
+    // THE AUTOMATIC URL GENERATOR
+    const cleanNameForUrl = editingItem.name ? editingItem.name.toLowerCase().trim().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '') : '';
+    const finalImageUrl = editingItem.hasImage ? `/division/images/inventory/${cleanNameForUrl}.jpeg` : '';
+
     const itemToSave = {
       ...editingItem, 
       price: basePrice, 
@@ -73,7 +80,8 @@ export default function AdminInventoryEditor({ initialItem, isAdding, subCategor
       lineage: editingItem.lineage,
       strainType: editingItem.strainType,
       dealText: editingItem.dailyDeal ? editingItem.dealText : '',
-      dealDays: editingItem.dailyDeal && editingItem.dealType === 'Weekly Special' ? editingItem.dealDays : []
+      dealDays: editingItem.dailyDeal && editingItem.dealType === 'Weekly Special' ? editingItem.dealDays : [],
+      imageUrl: finalImageUrl // Injecting the auto-generated URL
     };
 
     onSave(itemToSave, isAdding);
@@ -104,9 +112,19 @@ export default function AdminInventoryEditor({ initialItem, isAdding, subCategor
                 <label className="text-[10px] font-black text-zinc-500 uppercase tracking-widest block mb-2">Product Name</label>
                 <input type="text" value={editingItem.name} onChange={(e) => setEditingItem({...editingItem, name: e.target.value})} className="w-full bg-zinc-950 border border-zinc-800 rounded-xl p-4 text-white font-bold outline-none shadow-inner focus:border-emerald-500/50" required />
                </div>
+               
+               {/* THE NEW AUTO-URL TOGGLE */}
                <div>
-                <label className="text-[10px] font-black text-zinc-500 uppercase tracking-widest flex items-center gap-1.5 mb-2"><ImageIcon size={12}/> Image URL</label>
-                <input type="text" value={editingItem.imageUrl || ''} onChange={(e) => setEditingItem({...editingItem, imageUrl: e.target.value})} className="w-full bg-zinc-950 border border-zinc-800 rounded-xl p-4 text-white text-sm outline-none shadow-inner focus:border-emerald-500/50 placeholder:text-zinc-700" placeholder="Paste image link (or leave blank for placeholder)" />
+                <label className="text-[10px] font-black text-zinc-500 uppercase tracking-widest flex items-center gap-1.5 mb-2"><ImageIcon size={12}/> Product Image (.jpeg)</label>
+                <label className="flex items-center gap-4 bg-zinc-950 border border-zinc-800 p-4 rounded-xl cursor-pointer hover:border-emerald-500/50 transition-all shadow-inner">
+                  <input type="checkbox" checked={editingItem.hasImage} onChange={(e) => setEditingItem({...editingItem, hasImage: e.target.checked})} className="w-5 h-5 accent-emerald-500" />
+                  <span className="text-sm font-bold text-white flex flex-col">
+                    Image Available in Vault
+                    {editingItem.hasImage && editingItem.name && (
+                      <span className="text-[9px] font-mono text-emerald-500/70 mt-1 uppercase tracking-wider">Auto-Linked: {editingItem.name.toLowerCase().trim().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '')}.jpeg</span>
+                    )}
+                  </span>
+                </label>
                </div>
              </div>
 
