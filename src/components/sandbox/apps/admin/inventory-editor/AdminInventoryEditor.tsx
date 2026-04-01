@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Edit3, X, Save, Plus, Trash2, Flame, Star, Award, Gauge, Sparkles, Wind, Dna, Activity, Target, Lightbulb, Image as ImageIcon } from 'lucide-react';
 import VariantsManager from './VariantsManager';
 
@@ -23,11 +23,39 @@ export default function AdminInventoryEditor({ initialItem, isAdding, subCategor
         return { ...opt, strains };
     });
     
-    // NEW: Set the toggle based on whether an image URL already exists
     item.hasImage = !!item.imageUrl; 
-    
     return item;
   });
+
+  const cleanNameForUrl = editingItem.name ? editingItem.name.toLowerCase().trim().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '') : '';
+
+  // THE RADAR PING: Automatically checks the local folder for the image
+  useEffect(() => {
+    if (!cleanNameForUrl) {
+      setEditingItem((prev: any) => ({ ...prev, hasImage: false }));
+      return;
+    }
+    
+    const checkUrl = `/division/images/inventory/${cleanNameForUrl}.jpeg`;
+    
+    const checkImageExists = async () => {
+      try {
+        // We use HEAD so we only ask the server "Does this exist?", without downloading the whole image file.
+        const res = await fetch(checkUrl, { method: 'HEAD' });
+        if (res.ok) {
+          setEditingItem((prev: any) => ({ ...prev, hasImage: true }));
+        } else {
+          setEditingItem((prev: any) => ({ ...prev, hasImage: false }));
+        }
+      } catch (err) {
+        setEditingItem((prev: any) => ({ ...prev, hasImage: false }));
+      }
+    };
+
+    // 500ms delay so it doesn't spam the server while you are actively typing
+    const timer = setTimeout(checkImageExists, 500);
+    return () => clearTimeout(timer);
+  }, [cleanNameForUrl]);
 
   const addSizeRow = () => { setEditingItem({ ...editingItem, sizes: [...(editingItem.sizes || []), { id: `sz-${Date.now()}`, label: '', price: 0, bundleQty: 1, promoLabel: '', promoPrice: '' }] }); };
   const updateSize = (id: string, field: 'label' | 'price' | 'bundleQty' | 'promoLabel' | 'promoPrice', value: any) => { setEditingItem({ ...editingItem, sizes: editingItem.sizes.map((sz: any) => sz.id === id ? { ...sz, [field]: value } : sz) }); };
@@ -66,8 +94,6 @@ export default function AdminInventoryEditor({ initialItem, isAdding, subCategor
         builtDescription = `${lin}. ${builtDescription}`;
     }
 
-    // THE AUTOMATIC URL GENERATOR
-    const cleanNameForUrl = editingItem.name ? editingItem.name.toLowerCase().trim().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '') : '';
     const finalImageUrl = editingItem.hasImage ? `/division/images/inventory/${cleanNameForUrl}.jpeg` : '';
 
     const itemToSave = {
@@ -81,7 +107,7 @@ export default function AdminInventoryEditor({ initialItem, isAdding, subCategor
       strainType: editingItem.strainType,
       dealText: editingItem.dailyDeal ? editingItem.dealText : '',
       dealDays: editingItem.dailyDeal && editingItem.dealType === 'Weekly Special' ? editingItem.dealDays : [],
-      imageUrl: finalImageUrl // Injecting the auto-generated URL
+      imageUrl: finalImageUrl
     };
 
     onSave(itemToSave, isAdding);
@@ -113,18 +139,24 @@ export default function AdminInventoryEditor({ initialItem, isAdding, subCategor
                 <input type="text" value={editingItem.name} onChange={(e) => setEditingItem({...editingItem, name: e.target.value})} className="w-full bg-zinc-950 border border-zinc-800 rounded-xl p-4 text-white font-bold outline-none shadow-inner focus:border-emerald-500/50" required />
                </div>
                
-               {/* THE NEW AUTO-URL TOGGLE */}
+               {/* THE NEW SMART INDICATOR */}
                <div>
-                <label className="text-[10px] font-black text-zinc-500 uppercase tracking-widest flex items-center gap-1.5 mb-2"><ImageIcon size={12}/> Product Image (.jpeg)</label>
-                <label className="flex items-center gap-4 bg-zinc-950 border border-zinc-800 p-4 rounded-xl cursor-pointer hover:border-emerald-500/50 transition-all shadow-inner">
-                  <input type="checkbox" checked={editingItem.hasImage} onChange={(e) => setEditingItem({...editingItem, hasImage: e.target.checked})} className="w-5 h-5 accent-emerald-500" />
-                  <span className="text-sm font-bold text-white flex flex-col">
-                    Image Available in Vault
-                    {editingItem.hasImage && editingItem.name && (
-                      <span className="text-[9px] font-mono text-emerald-500/70 mt-1 uppercase tracking-wider">Auto-Linked: {editingItem.name.toLowerCase().trim().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '')}.jpeg</span>
+                <label className="text-[10px] font-black text-zinc-500 uppercase tracking-widest flex items-center gap-1.5 mb-2"><ImageIcon size={12}/> Vault Image Sync</label>
+                <div className={`flex items-center gap-4 p-4 rounded-xl border transition-all shadow-inner ${editingItem.hasImage ? 'bg-emerald-500/10 border-emerald-500/40' : 'bg-zinc-950 border-zinc-800'}`}>
+                  <div className={`w-5 h-5 rounded-md flex items-center justify-center border transition-colors ${editingItem.hasImage ? 'bg-emerald-500 border-emerald-500 text-zinc-950' : 'bg-zinc-900 border-zinc-700 text-transparent'}`}>
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="4" className="w-3 h-3"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                  </div>
+                  <span className="text-sm font-bold flex flex-col">
+                    {editingItem.hasImage ? <span className="text-emerald-400">Image Detected & Linked</span> : <span className="text-zinc-500">Searching Vault...</span>}
+                    {editingItem.name ? (
+                      <span className={`text-[9px] font-mono mt-1 uppercase tracking-wider ${editingItem.hasImage ? 'text-emerald-500/70' : 'text-zinc-600'}`}>
+                        Target: {cleanNameForUrl}.jpeg
+                      </span>
+                    ) : (
+                      <span className="text-[9px] font-mono mt-1 uppercase tracking-wider text-zinc-600">Awaiting Product Name</span>
                     )}
                   </span>
-                </label>
+                </div>
                </div>
              </div>
 

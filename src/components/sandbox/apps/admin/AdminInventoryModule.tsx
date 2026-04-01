@@ -162,7 +162,7 @@ export default function AdminInventoryModule({ stock, setStock, inventoryMatrix,
                   </li>
                   <li className="flex items-start gap-2">
                     <span className="text-zinc-600 mt-0.5">•</span> 
-                    <span>Once the file downloads, send it directly to your system architect (Alternative Solutions).</span>
+                    <span>Once the file downloads, send it directly to Courtney (Mom & Founder of Alternative Solutions).</span>
                   </li>
                   <li className="flex items-start gap-2">
                     <span className="text-zinc-600 mt-0.5">•</span> 
@@ -218,7 +218,6 @@ export default function AdminInventoryModule({ stock, setStock, inventoryMatrix,
       </div>
 
       <div className="space-y-6 pb-12">
-        {/* FIXED: Added 'any' type to group parameter */}
         {groupedItems.map((group: any) => {
           const isCollapsed = collapsedCats[group.category];
           
@@ -274,8 +273,14 @@ export default function AdminInventoryModule({ stock, setStock, inventoryMatrix,
                     <div key={item.id} className="bg-zinc-900 border border-zinc-800 rounded-2xl p-4 flex flex-col md:flex-row md:items-center justify-between gap-4 hover:border-amber-500/50 transition-all group shadow-sm relative overflow-hidden">
                       
                       <div className="flex items-center gap-4">
-                         <div className="w-12 h-12 rounded-xl bg-zinc-950 border border-zinc-800 flex items-center justify-center text-zinc-600 shrink-0 shadow-inner group-hover:text-amber-400 group-hover:border-amber-500/30 transition-colors">
-                           <ItemIcon size={20} />
+                         
+                         {/* THUMBNAIL LOGIC */}
+                         <div className="w-12 h-12 rounded-xl bg-zinc-950 border border-zinc-800 flex items-center justify-center text-zinc-600 shrink-0 shadow-inner overflow-hidden group-hover:border-amber-500/30 transition-colors">
+                           {item.imageUrl ? (
+                             <img src={item.imageUrl} alt={item.name} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
+                           ) : (
+                             <ItemIcon size={20} className="group-hover:text-amber-400 transition-colors" />
+                           )}
                          </div>
                          
                          <div className="flex flex-col">
