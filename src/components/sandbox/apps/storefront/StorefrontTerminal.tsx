@@ -2,6 +2,7 @@
 
 import React, { useState, useMemo, useEffect } from 'react';
 import { X, Lock, Clock, ArrowRight, AlertTriangle } from 'lucide-react';
+import { useSearchParams } from 'next/navigation'; // NEW: For the magic link
 import { useStickyState } from '@/hooks/useStickyState';
 
 import { PoliciesModal } from './StorefrontModals';
@@ -15,10 +16,16 @@ const timeToMins = (timeStr: string) => {
 };
 
 export default function StorefrontTerminal({ clientConfig, onExit }: { clientConfig: any, onExit: () => void }) {
+  const searchParams = useSearchParams(); // Reads the URL
+  const urlKey = searchParams.get('key'); // Looks for ?key=XXXX
+
   const [isVerified, setIsVerified] = useState(false);
   const [codeInput, setCodeInput] = useState("");
   const [error, setError] = useState("");
   const [currentTime, setCurrentTime] = useState(new Date());
+  
+  // Track if we've already done the auto-check so it doesn't loop
+  const [initialCheckDone, setInitialCheckDone] = useState(false);
 
   const defaultHours = clientConfig.storeHours || { open: '08:00', shiftChange: '12:00', close: '17:00' };
   const [storeHours] = useStickyState(defaultHours, `store_hours_${clientConfig?.id}`);
@@ -27,7 +34,6 @@ export default function StorefrontTerminal({ clientConfig, onExit }: { clientCon
   const [activeSubCategory, setActiveSubCategory] = useState<string>('All'); 
   
   const [showPolicies, setShowPolicies] = useState(true); 
-  
   const [nukeWarning, setNukeWarning] = useState<string | null>(null);
   
   const [cart, setCart] = useStickyState<Record<string, { item: any, size: any, options: any[], qty: number }>>({}, `market_cart_v2_${clientConfig.id}`);
@@ -35,7 +41,6 @@ export default function StorefrontTerminal({ clientConfig, onExit }: { clientCon
   const [isCheckingOut, setIsCheckingOut] = useState(false);
   const [isCopied, setIsCopied] = useState(false);
   
-  // State to track if they've copied the order at least once and snapshot the cart
   const [hasSubmittedOnce, setHasSubmittedOnce] = useState(false);
   const [submittedCart, setSubmittedCart] = useState<any>(null);
   
@@ -92,6 +97,24 @@ export default function StorefrontTerminal({ clientConfig, onExit }: { clientCon
 
     return { phase, shiftCode, activeCode, isFiveMinWarning, minsToClose, dayOfWeek };
   }, [currentTime, storeHours]);
+
+  // NEW: THE TELEGRAM MAGIC LINK LOGIC
+  useEffect(() => {
+    if (!initialCheckDone && urlKey && timeData.activeCode) {
+      // Check if the browser user-agent says 'Telegram'
+      const userAgent = navigator.userAgent || navigator.vendor;
+      const isTelegram = userAgent.includes('Telegram');
+
+      if (urlKey.toUpperCase() === timeData.activeCode) {
+        if (isTelegram) {
+          setIsVerified(true); // Instant unlock
+        } else {
+          setError("Magic link requires Telegram App. Please enter code manually.");
+        }
+      }
+      setInitialCheckDone(true);
+    }
+  }, [urlKey, timeData.activeCode, initialCheckDone]);
 
   useEffect(() => {
     if (Object.keys(cart).length > 0) {
@@ -211,7 +234,6 @@ export default function StorefrontTerminal({ clientConfig, onExit }: { clientCon
   const convenienceFee = paymentMethod === 'CASHAPP' ? 10 : 0;
   const grandTotal = cartTotal + convenienceFee;
 
-  // FIXED: Restored the missing progress variables right here
   const activeZoneObj = deliveryZones.find((z: any) => z.name === detectedZone);
   const minRequired = activeZoneObj ? activeZoneObj.minimum : 0;
   const isMinMet = detectedZone ? cartTotal >= minRequired : false;
@@ -277,7 +299,7 @@ export default function StorefrontTerminal({ clientConfig, onExit }: { clientCon
           <form onSubmit={handleAuth} className="w-full">
             <div className="relative mb-4">
               <input type="text" autoFocus value={codeInput} onChange={(e) => { setError(""); setCodeInput(e.target.value.toUpperCase()); }} placeholder="ENTER ACCESS CODE" className={`w-full bg-zinc-900 border-2 rounded-2xl p-5 text-center text-xl tracking-[0.2em] font-black outline-none transition-all shadow-inner placeholder:text-zinc-700 placeholder:text-sm placeholder:font-bold ${error ? 'border-rose-500 text-rose-500 bg-rose-500/5 animate-shake' : 'border-zinc-800 text-emerald-400 focus:border-emerald-500/50'}`} maxLength={6} />
-              {error && <p className="absolute -bottom-6 left-0 right-0 text-center text-rose-500 text-[10px] font-bold uppercase tracking-widest">{error}</p>}
+              {error && <p className="absolute -bottom-6 left-0 right-0 text-center text-rose-500 text-[10px] font-bold uppercase tracking-widest leading-tight mt-2">{error}</p>}
             </div>
             <button type="submit" disabled={!codeInput.trim()} className="w-full bg-emerald-500 hover:bg-emerald-400 text-zinc-950 font-black uppercase tracking-widest py-4 rounded-xl disabled:opacity-50 transition-all flex items-center justify-center gap-2 group mt-6">
               Enter Market <ArrowRight size={18} className="group-hover:translate-x-1 transition-transform" />
