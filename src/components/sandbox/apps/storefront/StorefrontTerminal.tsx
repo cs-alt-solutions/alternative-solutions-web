@@ -305,9 +305,11 @@ export default function StorefrontTerminal({ clientConfig, onExit }: { clientCon
               Enter Market <ArrowRight size={18} className="group-hover:translate-x-1 transition-transform" />
             </button>
           </form>
-          <div className="mt-10 flex flex-col items-center gap-2 bg-zinc-900/80 border border-zinc-800 px-4 py-3 rounded-xl">
-            <span className="text-zinc-600 text-[10px] font-mono uppercase tracking-widest">DEV BYPASS: {timeData.activeCode}</span>
-          </div>
+          {process.env.NEXT_PUBLIC_APP_MODE !== 'PRODUCTION' && (
+            <div className="mt-10 flex flex-col items-center gap-2 bg-zinc-900/80 border border-zinc-800 px-4 py-3 rounded-xl">
+              <span className="text-zinc-600 text-[10px] font-mono uppercase tracking-widest">DEV BYPASS: {timeData.activeCode}</span>
+            </div>
+          )}
         </div>
       </div>
     );
