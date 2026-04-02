@@ -294,7 +294,6 @@ export default function StorefrontTerminal({ clientConfig, onExit }: { clientCon
   if (timeData.phase === 'CLOSED') {
     return (
       <div className="min-h-dvh bg-zinc-950 flex flex-col items-center justify-center p-6 text-zinc-100 relative">
-        <button onClick={onExit} className="absolute top-6 left-6 text-zinc-500 hover:text-rose-500"><X size={20} /></button>
         <div className="z-10 w-full max-w-sm flex flex-col items-center animate-in fade-in zoom-in-95 text-center">
           <div className="bg-zinc-900 p-6 rounded-full mb-6 border border-zinc-800"><Clock size={48} className="text-zinc-500" /></div>
           <h1 className="text-3xl font-black tracking-widest mb-2 uppercase text-zinc-100">Market Closed</h1>
@@ -311,7 +310,6 @@ export default function StorefrontTerminal({ clientConfig, onExit }: { clientCon
   if (!isVerified) {
     return (
       <div className="min-h-dvh bg-zinc-950 flex flex-col items-center justify-center p-6 text-zinc-100 relative">
-        <button onClick={onExit} className="absolute top-6 left-6 text-zinc-500 hover:text-rose-500 flex items-center gap-2 z-50"><X size={16} /> <span className="text-xs font-bold uppercase tracking-widest">Exit App</span></button>
         <div className="z-10 w-full max-w-sm flex flex-col items-center animate-in fade-in zoom-in-95 duration-300">
           <div className="bg-zinc-900 p-5 rounded-3xl mb-6 border border-zinc-800"><Lock size={32} className="text-emerald-400 drop-shadow-[0_0_8px_rgba(52,211,153,0.8)]" /></div>
           <h1 className="text-3xl font-black tracking-widest mb-2 text-center text-zinc-100 uppercase">{clientConfig.appTitle}</h1>

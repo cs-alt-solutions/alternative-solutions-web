@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useMemo, useEffect } from 'react';
-import { Shield, Zap, Bell, LayoutGrid } from 'lucide-react';
+import { Shield, Zap, Bell } from 'lucide-react';
 import { useStickyState } from '@/hooks/useStickyState';
 
 import AdminFulfillmentModule from './AdminFulfillmentModule';
@@ -10,7 +10,6 @@ import AdminStorefrontModule from './AdminStorefrontModule';
 
 export default function AdminTerminal({ clientConfig, onExit }: { clientConfig: any, onExit: () => void }) {
   const cid = clientConfig.id;
-  // Set default to storefront
   const [activeModule, setActiveModule] = useState<'fulfillment' | 'inventory' | 'storefront'>('storefront'); 
   const [notification, setNotification] = useState<string | null>(null);
 
@@ -18,8 +17,6 @@ export default function AdminTerminal({ clientConfig, onExit }: { clientConfig: 
   const [orders, setOrders] = useStickyState(initialOrders, `ful_orders_${cid}`); 
   
   const initialStock = clientConfig?.inventory || [];
-  
-  // FIXED: Changed to inv_stock_v2_ to sync with the storefront and pull fresh data!
   const [stock, setStock] = useStickyState(initialStock, `inv_stock_v2_${cid}`);
 
   useEffect(() => {
@@ -43,11 +40,23 @@ export default function AdminTerminal({ clientConfig, onExit }: { clientConfig: 
 
   const simulateNewOrder = () => {
     const newId = `ECOM-${Math.floor(1000 + Math.random() * 9000)}`;
-    const newOrder = {
-      id: newId, customer: "New Web Order", zone: "Williamsburg", status: 'held',
-      timeReceived: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-      items: [{ id: 'itm-1', name: 'Premium Sample', qtyRequired: 2, qtyPicked: 0 }]
+    
+    // SINGLE SOURCE OF TRUTH: Pulling mock structure from config
+    const mockOrderData = clientConfig?.mockData?.sampleOrder || {
+      customer: "System Test",
+      zone: "Test Zone",
+      items: [{ id: 'test-1', name: 'Test Item', qtyRequired: 1, qtyPicked: 0 }]
     };
+
+    const newOrder = {
+      id: newId, 
+      customer: mockOrderData.customer, 
+      zone: mockOrderData.zone, 
+      status: 'held',
+      timeReceived: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+      items: mockOrderData.items
+    };
+    
     setOrders((prev: any[]) => [newOrder, ...prev]);
     setNotification(`Order ${newId} Inbound!`);
   };
@@ -63,9 +72,6 @@ export default function AdminTerminal({ clientConfig, onExit }: { clientConfig: 
 
       <header className="bg-zinc-900 p-4 md:px-8 flex items-center justify-between border-b border-zinc-800 z-20 shrink-0">
         <div className="flex items-center gap-3">
-          <button onClick={onExit} className="p-2 hover:bg-zinc-800 text-zinc-500 hover:text-white rounded-xl border border-zinc-800">
-            <LayoutGrid size={20} />
-          </button>
           <div className="flex items-center gap-2">
             <Shield size={22} className="text-emerald-400" />
             <h1 className="font-black text-lg tracking-wider uppercase text-transparent bg-clip-text bg-linear-to-r from-emerald-400 to-zinc-100 hidden sm:block">Admin Command</h1>
@@ -73,7 +79,6 @@ export default function AdminTerminal({ clientConfig, onExit }: { clientConfig: 
         </div>
         
         <div className="flex bg-zinc-950 border border-zinc-800 rounded-xl p-1 gap-1">
-           {/* Storefront moved to the primary slot */}
            <button onClick={() => setActiveModule('storefront')} className={`px-4 py-2 rounded-lg text-xs font-black uppercase tracking-widest flex items-center gap-2 transition-all ${activeModule === 'storefront' ? 'bg-fuchsia-500/20 text-fuchsia-400' : 'text-zinc-500'}`}>
              Store
            </button>
@@ -90,7 +95,7 @@ export default function AdminTerminal({ clientConfig, onExit }: { clientConfig: 
         </button>
       </header>
 
-      <main className="flex-1 overflow-y-auto w-full max-w-4xl mx-auto">
+      <main className="flex-1 overflow-y-auto w-full">
         {activeModule === 'fulfillment' && <AdminFulfillmentModule orders={orders} setOrders={setOrders} notification={notification} setNotification={setNotification} />}
         {activeModule === 'inventory' && <AdminInventoryModule stock={stock} setStock={setStock} inventoryMatrix={inventoryMatrix} setNotification={setNotification} clientConfig={clientConfig} />}
         {activeModule === 'storefront' && <AdminStorefrontModule stock={stock} setStock={setStock} inventoryMatrix={inventoryMatrix} setNotification={setNotification} clientConfig={clientConfig} />}

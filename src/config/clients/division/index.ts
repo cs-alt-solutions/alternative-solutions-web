@@ -45,6 +45,23 @@ export const divisionConfig = {
 
   pricingTiers: ['1g', '3.5g (Eighth)', '7g (Quarter)', '14g (Half Oz)', '28g (Full Oz)', '1 Cartridge', '2g Disposable', '100mg Pack', '250mg Pack', '1 Unit', 'Single'],
 
+  // --- MOCK DATA ARCHITECTURE ---
+  mockData: {
+    sampleOrder: {
+      customer: "New Web Order",
+      zone: "Williamsburg Areas",
+      items: [
+        { 
+          id: 'md-doobai-pucks', 
+          name: 'Doobai Chocolate Pucks (1 Puck (150mg))', 
+          qtyRequired: 2, 
+          qtyPicked: 0,
+          options: 'Dubai Chocolate' 
+        }
+      ]
+    }
+  },
+
   // --- END NEW SETTINGS ---
 
   inventory: divisionInventory,
