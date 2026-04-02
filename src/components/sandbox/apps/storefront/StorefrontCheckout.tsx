@@ -16,14 +16,26 @@ export default function StorefrontCheckout({
   const grandTotal = cartTotal + convenienceFee;
   const isCheckoutReady = detectedZone && isMinMet && paymentMethod && customerName && streetAddress && city && zipCode;
 
+  // SMART DIFF: Only flag as an update if the cart ACTUALLY changed since the last copy
+  const isUpdateNeeded = useMemo(() => {
+    if (!hasSubmittedOnce || !submittedCart) return false;
+    const currentKeys = Object.keys(cart);
+    const submittedKeys = Object.keys(submittedCart);
+    if (currentKeys.length !== submittedKeys.length) return true;
+    for (let key of currentKeys) {
+      if (!submittedCart[key] || submittedCart[key].qty !== cart[key].qty) return true;
+    }
+    return false;
+  }, [cart, submittedCart, hasSubmittedOnce]);
+
   // DYNAMIC ORDER TEXT GENERATOR WITH CART DIFFING
   const orderText = useMemo(() => {
     const authId = `${timeData.activeCode}-${orderRef}`;
     
-    let text = hasSubmittedOnce ? `📝 UPDATED ORDER SUMMARY 📝\n` : `📝 NEW ORDER SUMMARY 📝\n`;
+    let text = isUpdateNeeded ? `📝 UPDATED ORDER SUMMARY 📝\n` : `📝 NEW ORDER SUMMARY 📝\n`;
     text += `------------------------\n`;
     
-    if (hasSubmittedOnce) {
+    if (isUpdateNeeded) {
       text += `⚠️ UPDATE FOR AUTH ID: ${authId} ⚠️\n`;
       text += `------------------------\n`;
     }
@@ -54,7 +66,7 @@ export default function StorefrontCheckout({
       let line = `${qty}x ${name} - ${sizeLabel} (${optionLabel}) [$${(price * qty).toFixed(2)}]`;
 
       // DIFF LOGIC: Compare with the previously submitted cart
-      if (hasSubmittedOnce && submittedCart) {
+      if (isUpdateNeeded && submittedCart) {
         const prevItem = submittedCart[cartKey];
         if (!prevItem) {
           line += ` 🟢 [NEW ITEM]`;
@@ -66,7 +78,7 @@ export default function StorefrontCheckout({
     });
 
     // Check for REMOVED items
-    if (hasSubmittedOnce && submittedCart) {
+    if (isUpdateNeeded && submittedCart) {
       let removedCount = 0;
       Object.entries(submittedCart).forEach(([cartKey, prevItem]: any) => {
         if (!cart[cartKey]) {
@@ -92,7 +104,7 @@ export default function StorefrontCheckout({
     text += `\n\nAuth ID: ${authId}`;
     
     return text;
-  }, [cart, cartTotal, detectedZone, paymentMethod, convenienceFee, grandTotal, customerName, streetAddress, city, zipCode, instructions, timeData, orderRef, inventory, hasSubmittedOnce, submittedCart]);
+  }, [cart, cartTotal, detectedZone, paymentMethod, convenienceFee, grandTotal, customerName, streetAddress, city, zipCode, instructions, timeData, orderRef, inventory, isUpdateNeeded, submittedCart]);
 
   const onCopyAction = () => {
     if (!isCheckoutReady) return;
@@ -193,7 +205,6 @@ export default function StorefrontCheckout({
               )}
             </div>
 
-            {/* HUMANIZED DISCLAIMER */}
             {Object.keys(cart).length > 0 && (
               <div className="bg-emerald-500/10 border border-emerald-500/30 rounded-2xl p-4 mb-8 flex items-start gap-3">
                  <Info size={20} className="text-emerald-400 shrink-0 mt-0.5" />
@@ -284,8 +295,8 @@ export default function StorefrontCheckout({
                </div>
             </div>
 
-            {/* HUMANIZED UPDATE WARNING (ONLY APPEARS IF THEY'VE COPIED BEFORE) */}
-            {hasSubmittedOnce && (
+            {/* WARNING SHOWN ONLY IF THEY ALTER THE CART POST-COPY */}
+            {isUpdateNeeded && (
               <div className="bg-amber-500/10 border border-amber-500/30 rounded-2xl p-5 mb-6 shadow-inner flex items-start gap-4 animate-in fade-in">
                 <div className="bg-amber-500/20 p-2 rounded-full shrink-0">
                   <AlertTriangle size={20} className="text-amber-400" />
@@ -299,14 +310,12 @@ export default function StorefrontCheckout({
               </div>
             )}
 
-            {/* STANDARD TEXT PREVIEW (No solid yellow block, the Emojis do the highlighting) */}
-            <div className={`bg-zinc-900 border rounded-2xl p-6 mb-8 relative shadow-inner transition-colors duration-500 ${isCheckoutReady ? (hasSubmittedOnce ? 'border-amber-500/50' : 'border-emerald-500/30') : 'border-zinc-800 opacity-50'}`}>
+            <div className={`bg-zinc-900 border rounded-2xl p-6 mb-8 relative shadow-inner transition-colors duration-500 ${isCheckoutReady ? (isUpdateNeeded ? 'border-amber-500/50' : 'border-emerald-500/30') : 'border-zinc-800 opacity-50'}`}>
               <pre className="text-sm font-mono text-zinc-300 whitespace-pre-wrap leading-relaxed">
                 {isCheckoutReady ? orderText : 'Please fill out your delivery and payment details above to see your final order text...'}
               </pre>
             </div>
 
-            {/* HUMANIZED SUBMIT BUTTON */}
             <button 
               onClick={onCopyAction} 
               disabled={!isCheckoutReady}
@@ -315,23 +324,10 @@ export default function StorefrontCheckout({
               {isCopied ? <><CheckCircle size={20} /> Copied! Now Paste in Telegram</> : <><Copy size={20} /> Finish & Copy Order Text</>}
             </button>
 
-            {/* SECONDARY ACTIONS */}
+            {/* ESCAPE HATCH REMOVED - FULL WIDTH BACK BUTTON */}
             <div className="flex gap-3 mb-12">
-              <button onClick={() => setStage('REVIEW')} className="flex-1 bg-zinc-900 border border-zinc-800 py-4 rounded-xl text-zinc-400 font-bold uppercase tracking-widest hover:bg-zinc-800 hover:text-zinc-100 transition-colors">
-                ← Back
-              </button>
-              <button 
-                onClick={() => { 
-                  setCart({}); setIsCheckingOut(false); setPaymentMethod(''); 
-                  setCity(''); setStreetAddress(''); setZipCode(''); setCustomerName(''); 
-                  if(setHasSubmittedOnce) setHasSubmittedOnce(false); 
-                  if(setSubmittedCart) setSubmittedCart(null);
-                  if(setOrderRef) setOrderRef(''); 
-                  onExit(); 
-                }} 
-                className="flex-1 bg-zinc-950 border border-zinc-800 py-4 rounded-xl text-zinc-500 font-bold uppercase tracking-widest hover:text-rose-400 hover:border-rose-500/30 transition-colors"
-              >
-                Clear & Exit
+              <button onClick={() => setStage('REVIEW')} className="w-full bg-zinc-900 border border-zinc-800 py-4 rounded-xl text-zinc-400 font-bold uppercase tracking-widest hover:bg-zinc-800 hover:text-zinc-100 transition-colors">
+                ← Back to Cart
               </button>
             </div>
           </div>

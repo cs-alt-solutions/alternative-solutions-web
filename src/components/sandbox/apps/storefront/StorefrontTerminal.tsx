@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useMemo, useEffect } from 'react';
-import { X, Lock, Clock, ArrowRight, AlertTriangle } from 'lucide-react';
+import { Lock, Clock, ArrowRight, AlertTriangle, X } from 'lucide-react';
 import { useSearchParams } from 'next/navigation'; 
 import { useStickyState } from '@/hooks/useStickyState';
 
@@ -97,26 +97,20 @@ export default function StorefrontTerminal({ clientConfig, onExit }: { clientCon
     return { phase, shiftCode, activeCode, isFiveMinWarning, minsToClose, dayOfWeek };
   }, [currentTime, storeHours]);
 
-  // THE NEW VIP MAGIC LINK & MEMORY LOGIC
   useEffect(() => {
     if (!initialCheckDone && timeData.activeCode) {
-      
-      // 1. Check if the browser remembers the active code
       const savedToken = localStorage.getItem(`market_auth_${clientConfig.id}`);
       if (savedToken === timeData.activeCode) {
         setIsVerified(true);
         setInitialCheckDone(true);
-        return; // Verified! Stop checking.
+        return; 
       }
 
-      // 2. If no memory, check for the Magic Link
       if (urlKey) {
         if (urlKey.toUpperCase() === timeData.activeCode) {
           setIsVerified(true);
-          // Save the memory token
           localStorage.setItem(`market_auth_${clientConfig.id}`, timeData.activeCode); 
 
-          // WIPE THE URL CLEAN (Masking)
           if (typeof window !== 'undefined') {
             const cleanUrl = window.location.protocol + "//" + window.location.host + window.location.pathname;
             window.history.replaceState({ path: cleanUrl }, '', cleanUrl);
@@ -166,7 +160,6 @@ export default function StorefrontTerminal({ clientConfig, onExit }: { clientCon
     else setDetectedZone('Other (Contact Us)');
   }, [city, zipCode]);
 
-  // MANUAL LOGIN NOW SAVES MEMORY
   const handleAuth = (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
