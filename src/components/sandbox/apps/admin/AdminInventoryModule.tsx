@@ -97,18 +97,50 @@ export default function AdminInventoryModule({ stock, setStock, inventoryMatrix,
     }
   };
 
+  // SUPERCHARGED EXPORT FUNCTION
   const handleExportBackup = () => {
     try {
-      const jsonString = `export const divisionInventory = ${JSON.stringify(stock, null, 2)};\n`;
-      const blob = new Blob([jsonString], { type: "application/typescript" });
+      const cid = clientConfig?.id || 'division';
+      
+      // Helper to fetch live local settings so we don't just grab defaults
+      const getLocal = (key: string, fallback: any) => {
+        if (typeof window === 'undefined') return fallback;
+        const val = localStorage.getItem(key);
+        return val ? JSON.parse(val) : fallback;
+      };
+
+      // Pulling ALL store operational data
+      const liveStoreHours = getLocal(`store_hours_${cid}`, clientConfig.storeHours);
+      const liveShiftChange = getLocal(`store_shift_change_${cid}`, clientConfig.shiftChange);
+      const liveWeeklySchedule = getLocal(`store_weekly_hours_${cid}`, clientConfig.weeklySchedule);
+      const liveCategories = getLocal(`inv_cats_${cid}`, clientConfig.categories);
+      const liveSubCategories = getLocal(`inv_subcats_v2_${cid}`, clientConfig.subCategories);
+      const liveTiers = getLocal(`inv_tiers_v2_${cid}`, clientConfig.pricingTiers);
+
+      // JSON.stringify naturally catches every custom property added to objects (images, descriptions, etc)
+      const fileContent = `// ==========================================\n` +
+        `// MASTER VAULT BACKUP - ${new Date().toLocaleString()}\n` +
+        `// ==========================================\n\n` +
+        `export const divisionSettings = {\n` +
+        `  categories: ${JSON.stringify(liveCategories, null, 2)},\n` +
+        `  subCategories: ${JSON.stringify(liveSubCategories, null, 2)},\n` +
+        `  pricingTiers: ${JSON.stringify(liveTiers, null, 2)},\n` +
+        `  storeHours: ${JSON.stringify(liveStoreHours, null, 2)},\n` +
+        `  shiftChange: ${JSON.stringify(liveShiftChange, null, 2)},\n` +
+        `  weeklySchedule: ${JSON.stringify(liveWeeklySchedule, null, 2)}\n` +
+        `};\n\n` +
+        `export const divisionInventory = ${JSON.stringify(stock, null, 2)};\n`;
+
+      const blob = new Blob([fileContent], { type: "application/typescript" });
       const href = URL.createObjectURL(blob);
       const link = document.createElement("a");
       link.href = href;
-      link.download = `inventory_backup_${new Date().toISOString().split('T')[0]}.ts`;
+      link.download = `doobie_master_backup_${new Date().toISOString().split('T')[0]}.ts`;
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
-      setNotification("Inventory Exported! Check your downloads.");
+      
+      setNotification("Master Vault Exported! Check your downloads.");
       setShowBackupModal(false);
     } catch (err) {
       console.error("Export failed", err);
@@ -274,7 +306,6 @@ export default function AdminInventoryModule({ stock, setStock, inventoryMatrix,
                       
                       <div className="flex items-center gap-4">
                          
-                         {/* THUMBNAIL LOGIC */}
                          <div className="w-12 h-12 rounded-xl bg-zinc-950 border border-zinc-800 flex items-center justify-center text-zinc-600 shrink-0 shadow-inner overflow-hidden group-hover:border-amber-500/30 transition-colors">
                            {item.imageUrl ? (
                              <img src={item.imageUrl} alt={item.name} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
