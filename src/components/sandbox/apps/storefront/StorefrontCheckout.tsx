@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { Package, Info, MapPin, User, Home, Map, PenLine, Lock, CheckCircle, DollarSign, Copy, Clock, ShoppingCart, Plus, Minus, Trash2, AlertTriangle } from 'lucide-react';
+import { Package, Info, MapPin, User, Home, Map, PenLine, Lock, CheckCircle, DollarSign, Copy, Clock, ShoppingCart, Plus, Minus, Trash2, AlertTriangle, Image as ImageIcon, Leaf, Flame, Box, ChevronRight } from 'lucide-react';
 
 export default function StorefrontCheckout({
   cartTotal, customerName, setCustomerName, streetAddress, setStreetAddress,
@@ -27,6 +27,48 @@ export default function StorefrontCheckout({
     return false;
   }, [cart, submittedCart, hasSubmittedOnce]);
 
+  const groupedCart = useMemo(() => {
+    if (!cart) return {};
+    const groups: any = {};
+
+    Object.entries(cart).forEach(([cartKey, cartItem]: any) => {
+      if (cartItem.qty <= 0) return;
+      const { item, size, options, qty } = cartItem;
+      const itemInDB = inventory?.find((i: any) => i.id === item.id);
+      const isDealActive = itemInDB?.dailyDeal;
+      const price = (isDealActive && size.promoPrice !== undefined && size.promoPrice !== '') ? size.promoPrice : (size.price || 0);
+      
+      const hasOption = options && options.length > 0 && options[0].label !== 'Standard';
+      
+      const variantLabel = hasOption ? options[0].label : null;
+
+      const groupKey = `${item.id}_${size.id}`;
+
+      if (!groups[groupKey]) {
+        groups[groupKey] = {
+          item, 
+          size,
+          variants: [],
+          totalQty: 0,
+          totalPrice: 0,
+        };
+      }
+      
+      groups[groupKey].variants.push({
+        cartKey, 
+        variantLabel,
+        isFlavorOption: hasOption,
+        qty,
+        size, 
+        lineTotal: price * qty,
+        options 
+      });
+      groups[groupKey].totalQty += qty;
+      groups[groupKey].totalPrice += (price * qty);
+    });
+    return groups;
+  }, [cart, inventory]);
+
   const orderText = useMemo(() => {
     const authId = `${timeData.activeCode}-${orderRef}`;
     
@@ -47,30 +89,19 @@ export default function StorefrontCheckout({
     
     let cartLines: string[] = [];
 
-    Object.entries(cart).forEach(([cartKey, cartItem]: any) => {
-      const itemInDB = inventory?.find((i: any) => i.id === cartItem.item.id);
-      const isDealActive = itemInDB?.dailyDeal;
-      
-      const qty = cartItem?.qty || 0;
-      const name = cartItem?.item?.name || 'Unknown Item';
-      
-      const sizeLabel = (isDealActive && cartItem.size.promoLabel) ? cartItem.size.promoLabel : cartItem.size.label;
-      const price = (isDealActive && cartItem.size.promoPrice !== undefined && cartItem.size.promoPrice !== '') ? cartItem.size.promoPrice : (cartItem.size.price || 0);
-      
-      const optionsArray = cartItem?.options || (cartItem?.option ? [cartItem.option] : []);
-      const optionLabel = optionsArray.map((o:any)=>o.label).join(' + ') || 'Standard';
-      
-      let line = `${qty}x ${name} - ${sizeLabel} (${optionLabel}) [$${(price * qty).toFixed(2)}]`;
+    Object.entries(groupedCart).forEach(([groupKey, cartGroup]: any) => {
+        const { item, size, variants, totalQty, totalPrice } = cartGroup;
+        const cleanItemName = item.name?.replace(/\s*\(\s*Top Shelf\s*\)\s*/i, '').trim();
+        
+        cartLines.push(`${totalQty}x ${cleanItemName} (${size.label}) [$${totalPrice.toFixed(2)}]`);
 
-      if (isUpdateNeeded && submittedCart) {
-        const prevItem = submittedCart[cartKey];
-        if (!prevItem) {
-          line += ` 🟢 [NEW ITEM]`;
-        } else if (prevItem.qty !== qty) {
-          line += ` 🟡 [UPDATED: Was ${prevItem.qty}, Now ${qty}]`;
+        if (variants[0].isFlavorOption) {
+          variants.forEach((variant: any) => {
+              cartLines.push(` -> Qty ${variant.qty}: ${variant.variantLabel}`);
+          });
         }
-      }
-      cartLines.push(line);
+        
+        cartLines.push(''); 
     });
 
     if (isUpdateNeeded && submittedCart) {
@@ -99,7 +130,7 @@ export default function StorefrontCheckout({
     text += `\n\nAuth ID: ${authId}`;
     
     return text;
-  }, [cart, cartTotal, detectedZone, paymentMethod, convenienceFee, grandTotal, customerName, streetAddress, city, zipCode, instructions, timeData, orderRef, inventory, isUpdateNeeded, submittedCart]);
+  }, [groupedCart, cartTotal, detectedZone, paymentMethod, convenienceFee, grandTotal, customerName, streetAddress, city, zipCode, instructions, timeData, orderRef, isUpdateNeeded, submittedCart]);
 
   const onCopyAction = () => {
     if (!isCheckoutReady) return;
@@ -116,93 +147,111 @@ export default function StorefrontCheckout({
   };
 
   return (
-    <div className="min-h-dvh bg-zinc-950 flex flex-col items-center p-4 md:p-6 text-zinc-100 overflow-y-auto w-full">
-      <div className="w-full max-w-md mt-4 animate-in fade-in slide-in-from-bottom-4">
+    <div className="min-h-dvh bg-zinc-950 flex flex-col items-center p-4 md:p-6 text-zinc-100 overflow-y-auto w-full selection:bg-emerald-500/30">
+      <div className="w-full max-w-md mt-4 animate-in fade-in slide-in-from-bottom-4 pb-20">
         
         <div className="flex items-center justify-between mb-8 pb-4 border-b border-zinc-800">
           <div className="flex items-center gap-3">
             <h2 className="text-xl font-black uppercase tracking-widest text-emerald-400 flex items-center gap-2">
               {stage === 'REVIEW' ? <ShoppingCart size={24} /> : <Package size={24} />}
-              {stage === 'REVIEW' ? 'Cart Review' : 'Finalize'}
+              {stage === 'REVIEW' ? 'Cart Review' : 'Finalize Order'}
             </h2>
           </div>
           <div className="text-right">
-            <span className="text-[10px] font-mono text-zinc-500 block uppercase">Subtotal</span>
-            <span className="text-lg font-black font-mono text-zinc-100">${cartTotal.toFixed(2)}</span>
+            <span className="text-[10px] font-mono text-zinc-500 block uppercase">Cart Total</span>
+            <span className="text-xl font-black font-mono text-emerald-400">${cartTotal.toFixed(2)}</span>
           </div>
         </div>
 
         {timeData.phase === 'GRACE' && (
-           <div className="bg-amber-500/10 border border-amber-500/30 rounded-2xl p-4 mb-6 flex items-start gap-3">
+           <div className="bg-amber-500/10 border border-amber-500/30 rounded-2xl p-4 mb-6 flex items-start gap-3 shadow-inner">
              <Clock size={20} className="text-amber-500 shrink-0 mt-0.5" />
              <div>
                <p className="text-xs font-black text-amber-500 uppercase tracking-widest mb-1">After Hours Scheduling</p>
-               <p className="text-xs text-zinc-300">The market is closed for today. Your order will be accepted but is scheduled for fulfillment **tomorrow**.</p>
+               <p className="text-xs text-zinc-300">The market is technically closed. Your order will be accepted but fulfillment is scheduled for **tomorrow**. You will receive an access code for pickup tomorrow morning.</p>
              </div>
            </div>
         )}
         
         {stage === 'REVIEW' && (
-          <div className="animate-in fade-in zoom-in-95 duration-300">
-            <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-5 mb-6 shadow-lg">
-              {(!cart || Object.keys(cart).length === 0) ? (
-                <div className="text-center py-6 border border-dashed border-zinc-800 rounded-xl">
+          <div className="animate-in fade-in zoom-in-95 duration-300 space-y-5">
+            <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-wider mb-1.5 flex items-center gap-2"><ShoppingCart size={14}/> Verify Selections</label>
+            
+            {(!cart || Object.keys(cart).length === 0) ? (
+              <div className="text-center py-10 bg-zinc-900 border border-dashed border-zinc-800 rounded-3xl">
+                  <ShoppingCart size={32} className="text-zinc-700 mx-auto mb-4" />
                   <p className="text-zinc-500 text-xs font-bold uppercase tracking-widest">Your cart is empty</p>
-                </div>
-              ) : (
-                <div className="space-y-3">
-                  {Object.entries(cart).map(([cartKey, cartItem]: any) => {
-                    if (cartItem.qty <= 0) return null;
-                    const { item, size, options, qty } = cartItem;
-                    const price = (item.dailyDeal && size.promoPrice !== undefined && size.promoPrice !== '') ? size.promoPrice : size.price;
-                    const lineTotal = price * qty;
+                  <p className="text-zinc-600 text-[10px] mt-1">Return to market to add stock.</p>
+              </div>
+            ) : (
+                <div className="space-y-4">
+                  {Object.entries(groupedCart).map(([groupKey, cartGroup]: any) => {
+                    const { item, size, variants, totalQty, totalPrice } = cartGroup;
                     const cleanItemName = item.name?.replace(/\s*\(\s*Top Shelf\s*\)\s*/i, '').trim();
+                    const ItemIcon = item.iconName === 'Leaf' ? Leaf : item.iconName === 'Flame' ? Flame : item.iconName === 'Box' ? Box : ImageIcon;
 
                     return (
-                      <div key={cartKey} className="flex items-center justify-between bg-zinc-950 p-3 rounded-xl border border-zinc-800 transition-all hover:border-zinc-700">
-                        <div className="flex-1 pr-3">
-                          <p className="text-sm font-bold text-zinc-100 leading-tight">{cleanItemName}</p>
-                          <p className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest mt-0.5">{size.label}</p>
-                          
-                          {options && options.length > 0 && options[0].label !== 'Standard' && (
-                            <div className="flex flex-wrap gap-1 mt-1.5">
-                              {options.map((opt: any, idx: number) => (
-                                <span key={idx} className="text-[8px] bg-zinc-900 border border-zinc-800 text-zinc-400 px-1.5 py-0.5 rounded-md uppercase tracking-wider">
-                                  {opt.label}
-                                </span>
-                              ))}
-                            </div>
-                          )}
-                        </div>
-                        
-                        <div className="flex flex-col items-end gap-2 shrink-0">
-                          <span className="text-xs font-mono font-bold text-emerald-400">${lineTotal.toFixed(2)}</span>
-                          <div className="flex items-center bg-zinc-900 border border-zinc-800 rounded-lg overflow-hidden shadow-inner">
-                            <button onClick={() => updateCart(item.id, size, options, -1)} className="p-1.5 hover:bg-zinc-800 text-rose-400 transition-colors active:scale-90">
-                              {qty === 1 ? <Trash2 size={12} /> : <Minus size={12} />}
-                            </button>
-                            <span className="w-6 text-center text-xs font-black text-zinc-300">{qty}</span>
-                            <button onClick={() => updateCart(item.id, size, options, 1)} className="p-1.5 hover:bg-zinc-800 text-emerald-400 transition-colors active:scale-90">
-                              <Plus size={12} />
-                            </button>
+                      <div key={groupKey} className="bg-zinc-900 border border-zinc-800 rounded-2xl p-4 transition-all hover:border-zinc-700 shadow-lg relative group overflow-hidden">
+                        <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-500/5 rounded-full blur-3xl pointer-events-none transition-colors" />
+
+                        <div className="flex items-center justify-between relative z-10 gap-3 pb-3 border-b border-zinc-800">
+                          <div className="flex items-center gap-3">
+                             <div className="w-12 h-12 rounded-xl bg-zinc-950 border border-zinc-800 flex items-center justify-center shrink-0 shadow-inner overflow-hidden">
+                               {item.imageUrl ? <img src={item.imageUrl} alt={item.name} className="w-full h-full object-cover" /> : <ItemIcon size={16} className="text-zinc-700" />}
+                             </div>
+                             <div className="flex flex-col">
+                               <p className="text-sm font-black text-zinc-100 leading-tight flex items-center gap-1.5">
+                                 {cleanItemName} {item.isTopShelf && <Flame size={12} className="text-rose-400"/>}
+                               </p>
+                               <p className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest mt-0.5">
+                                 {size.label}
+                               </p>
+                             </div>
                           </div>
+                          
+                          <div className="flex flex-col items-end shrink-0">
+                            <span className="text-[9px] font-mono text-zinc-600 block uppercase">Subtotal</span>
+                            <span className="text-base font-black font-mono text-zinc-300">${totalPrice.toFixed(2)}</span>
+                          </div>
+                        </div>
+
+                        <div className="mt-4 pl-15 space-y-2 relative z-10 border-t border-zinc-800 pt-3">
+                           {variants.map((variant: any, idx: number) => {
+                               const { variantLabel, isFlavorOption, qty, options, size } = variant;
+                               return (
+                                   <div key={`${groupKey}-var-${idx}`} className="flex items-center justify-between bg-zinc-950/80 p-2 rounded-lg border border-zinc-800 animate-in fade-in">
+                                       <div className="flex items-center gap-2">
+                                           {isFlavorOption && <div className="w-2 h-2 rounded-full bg-amber-400" />}
+                                           <p className="text-[11px] font-bold text-zinc-300 uppercase tracking-widest leading-none">
+                                               {isFlavorOption ? `Flavor: ${variantLabel}` : "Selected Quantity"}
+                                           </p>
+                                       </div>
+                                       
+                                       <div className="flex items-center gap-2 shrink-0 bg-zinc-900 border border-zinc-800 rounded-lg overflow-hidden shadow-inner px-1 py-1">
+                                           <button onClick={() => updateCart(item.id, size, options, -1)} className="p-1 hover:bg-zinc-800 text-rose-400 transition-colors active:scale-90 rounded-md">
+                                             {qty === 1 ? <Trash2 size={12} /> : <Minus size={12} />}
+                                           </button>
+                                           <span className="w-6 text-center text-xs font-black text-zinc-100 font-mono">{qty}</span>
+                                           <button onClick={() => updateCart(item.id, size, options, 1)} className="p-1 hover:bg-zinc-800 text-emerald-400 transition-colors active:scale-90 rounded-md">
+                                             <Plus size={12} />
+                                           </button>
+                                       </div>
+                                   </div>
+                               );
+                           })}
                         </div>
                       </div>
                     );
                   })}
                 </div>
-              )}
-            </div>
+            )}
 
             {Object.keys(cart).length > 0 && (
-              <div className="bg-emerald-500/10 border border-emerald-500/30 rounded-2xl p-4 mb-8 flex items-start gap-3">
+              <div className="bg-emerald-500/10 border border-emerald-500/30 rounded-2xl p-4 flex items-start gap-3 mt-8 shadow-inner">
                  <Info size={20} className="text-emerald-400 shrink-0 mt-0.5" />
                  <div>
                    <p className="text-xs font-black text-emerald-400 uppercase tracking-widest mb-1">How to Complete Your Order</p>
-                   {/* UPDATED TEXT BELOW */}
-                   <p className="text-xs text-zinc-300 leading-relaxed">
-                     This system packages your request. <strong>You will not pay online here.</strong> Once you finish your details, copy the final order text and take it back to Telegram to finish up.
-                   </p>
+                   <p className="text-xs text-zinc-300 leading-relaxed">This system packages your request securely. **You will not pay online here.** Once you finish your details, simply copy the final order text and take it back to Telegram to finalize everything with our team.</p>
                  </div>
               </div>
             )}
@@ -210,11 +259,11 @@ export default function StorefrontCheckout({
             <button 
               onClick={() => setStage('DETAILS')} 
               disabled={!cart || Object.keys(cart).length === 0}
-              className="w-full bg-emerald-500 hover:bg-emerald-400 text-zinc-950 font-black uppercase tracking-widest py-4 rounded-xl disabled:opacity-50 disabled:cursor-not-allowed transition-all flex justify-center items-center shadow-lg"
+              className="w-full mt-6 bg-emerald-500 hover:bg-emerald-400 text-zinc-950 font-black uppercase tracking-widest py-4 rounded-xl disabled:opacity-50 disabled:cursor-not-allowed transition-all flex justify-center items-center gap-2 shadow-lg active:scale-95"
             >
-              Proceed to Delivery
+              Proceed to Delivery <ChevronRight size={18} />
             </button>
-            <button onClick={() => setIsCheckingOut(false)} className="w-full mt-6 mb-12 text-[10px] text-zinc-500 uppercase tracking-widest hover:text-emerald-400">← Return to Market</button>
+            <button onClick={() => setIsCheckingOut(false)} className="w-full mt-6 text-[10px] text-zinc-500 uppercase tracking-widest hover:text-emerald-400">← Return to Market</button>
           </div>
         )}
 
@@ -229,7 +278,7 @@ export default function StorefrontCheckout({
                  </div>
                  <div className="relative">
                    <Home size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500" />
-                   <input type="text" value={streetAddress} onChange={(e) => setStreetAddress(e.target.value)} placeholder="Street / Apt" className="w-full bg-zinc-950 border border-zinc-800 text-zinc-100 text-sm font-medium rounded-xl py-3 pl-9 pr-3 outline-none focus:border-emerald-500/50" />
+                   <input type="text" value={streetAddress} onChange={(e) => setStreetAddress(e.target.value)} placeholder="Street Address / Apt #" className="w-full bg-zinc-950 border border-zinc-800 text-zinc-100 text-sm font-medium rounded-xl py-3 pl-9 pr-3 outline-none focus:border-emerald-500/50" />
                  </div>
                  <div className="grid grid-cols-5 gap-3">
                    <div className="relative col-span-3">
@@ -242,7 +291,7 @@ export default function StorefrontCheckout({
                  </div>
                  <div className="relative">
                    <PenLine size={14} className="absolute left-3 top-3 text-zinc-500" />
-                   <textarea value={instructions} onChange={(e) => setInstructions(e.target.value)} placeholder="Special Instructions" className="w-full bg-zinc-950 border border-zinc-800 text-zinc-100 text-sm font-medium rounded-xl py-3 pl-9 pr-3 outline-none focus:border-emerald-500/50 resize-none h-20" />
+                   <textarea value={instructions} onChange={(e) => setInstructions(e.target.value)} placeholder="Special instructions (Meetups not available)" className="w-full bg-zinc-950 border border-zinc-800 text-zinc-100 text-sm font-medium rounded-xl py-3 pl-9 pr-3 outline-none focus:border-emerald-500/50 resize-none h-20" />
                  </div>
                </div>
                
@@ -258,16 +307,16 @@ export default function StorefrontCheckout({
                        <span className="text-sm font-bold font-mono text-emerald-400">${minRequired}</span>
                      </div>
                    </div>
-                   <div className="h-2 w-full bg-zinc-950 rounded-full overflow-hidden mb-2 border border-zinc-800">
+                   <div className="h-2 w-full bg-zinc-950 rounded-full overflow-hidden mb-2 border border-zinc-800 shadow-inner">
                      <div className={`h-full transition-all duration-500 ${isMinMet ? 'bg-emerald-500' : 'bg-amber-500'}`} style={{ width: `${progressPercent}%` }} />
                    </div>
                    {!isMinMet ? (
-                     <p className="text-[10px] font-bold text-amber-500 flex items-center gap-1.5 uppercase tracking-widest">
+                     <p className="text-[10px] font-bold text-amber-500 flex items-center gap-1.5 uppercase tracking-widest animate-pulse">
                        <Lock size={12} /> Add ${amountShort.toFixed(2)} to unlock delivery
                      </p>
                    ) : (
                      <p className="text-[10px] font-bold text-emerald-400 flex items-center gap-1.5 uppercase tracking-widest">
-                       <CheckCircle size={12} /> Delivery Minimum Unlocked
+                       <CheckCircle size={12} /> Minimum Met - Intake Ready
                      </p>
                    )}
                  </div>
@@ -277,8 +326,8 @@ export default function StorefrontCheckout({
             <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-5 mb-6 shadow-lg">
                <label className="text-[10px] font-black uppercase tracking-widest text-emerald-400 flex items-center gap-2 mb-3"><DollarSign size={14} /> Select Payment Method</label>
                <div className="grid grid-cols-2 gap-3">
-                 <button onClick={() => setPaymentMethod('CASH')} className={`py-3 rounded-xl text-sm font-bold uppercase tracking-widest transition-all border ${paymentMethod === 'CASH' ? 'bg-emerald-500/10 border-emerald-500 text-emerald-400' : 'bg-zinc-950 border-zinc-800 text-zinc-500'}`}>Cash</button>
-                 <button onClick={() => setPaymentMethod('CASHAPP')} className={`py-3 rounded-xl text-sm font-bold uppercase tracking-widest transition-all border ${paymentMethod === 'CASHAPP' ? 'bg-emerald-500/10 border-emerald-500 text-emerald-400' : 'bg-zinc-950 border-zinc-800 text-zinc-500'}`}>CashApp (+Fee)</button>
+                 <button onClick={() => setPaymentMethod('CASH')} className={`py-3 rounded-xl text-sm font-bold uppercase tracking-widest transition-all border ${paymentMethod === 'CASH' ? 'bg-emerald-500/10 border-emerald-500 text-emerald-400' : 'bg-zinc-950 border-zinc-800 text-zinc-500 hover:text-zinc-100'}`}>Cash</button>
+                 <button onClick={() => setPaymentMethod('CASHAPP')} className={`py-3 rounded-xl text-sm font-bold uppercase tracking-widest transition-all border ${paymentMethod === 'CASHAPP' ? 'bg-emerald-500/10 border-emerald-500 text-emerald-400' : 'bg-zinc-950 border-zinc-800 text-zinc-500 hover:text-zinc-100'}`}>CashApp (+Fee)</button>
                </div>
             </div>
 
@@ -289,29 +338,28 @@ export default function StorefrontCheckout({
                 </div>
                 <div>
                   <h3 className="text-xs font-black text-amber-400 uppercase tracking-widest mb-1.5">Cart Update Detected</h3>
-                  <p className="text-xs text-amber-500/80 font-bold leading-relaxed">
-                    You've updated your items after already copying your order. When you click Finish & Copy below, <strong>you must paste this new text into Telegram</strong> so the intake team gets your updated items!
-                  </p>
+                  <p className="text-xs text-amber-500/80 font-bold leading-relaxed">You've updated your items after already copying your order. When you click Finish & Copy below, **you must paste this new text into Telegram** so the intake team gets your updated items!</p>
                 </div>
               </div>
             )}
 
             <div className={`bg-zinc-900 border rounded-2xl p-6 mb-8 relative shadow-inner transition-colors duration-500 ${isCheckoutReady ? (isUpdateNeeded ? 'border-amber-500/50' : 'border-emerald-500/30') : 'border-zinc-800 opacity-50'}`}>
-              <pre className="text-sm font-mono text-zinc-300 whitespace-pre-wrap leading-relaxed">
-                {isCheckoutReady ? orderText : 'Please fill out your delivery and payment details above to see your final order text...'}
+              {/* Removed the scrolling cap and reduced text size to fit naturally */}
+              <pre className="text-xs font-mono text-zinc-300 whitespace-pre-wrap leading-relaxed">
+                {isCheckoutReady ? orderText : 'Fill out your delivery and payment details above to generate your final order text...'}
               </pre>
             </div>
 
             <button 
               onClick={onCopyAction} 
               disabled={!isCheckoutReady}
-              className={`w-full py-5 rounded-2xl font-black uppercase tracking-widest transition-all flex justify-center items-center gap-3 mb-4 disabled:opacity-30 shadow-lg ${isCopied ? 'bg-emerald-500 text-zinc-950 scale-105' : 'bg-zinc-800 text-emerald-400 border border-emerald-500/30 hover:bg-zinc-700'}`}
+              className={`w-full py-5 rounded-2xl font-black uppercase tracking-widest transition-all flex justify-center items-center gap-3 mb-4 disabled:opacity-30 shadow-lg active:scale-95 border ${isCopied ? 'bg-emerald-500 text-zinc-950 scale-105 border-emerald-400' : 'bg-zinc-800 text-emerald-400 border border-emerald-500/30 hover:bg-zinc-700'}`}
             >
-              {isCopied ? <><CheckCircle size={20} /> Copied! Now Paste in Telegram</> : <><Copy size={20} /> Finish & Copy Order Text</>}
+              {isCopied ? <><CheckCircle size={20} /> Copied! Proceed to Telegram</> : <><Copy size={20} /> Finish & Copy Order</>}
             </button>
 
             <div className="flex gap-3 mb-12">
-              <button onClick={() => setStage('REVIEW')} className="w-full bg-zinc-900 border border-zinc-800 py-4 rounded-xl text-zinc-400 font-bold uppercase tracking-widest hover:bg-zinc-800 hover:text-zinc-100 transition-colors">
+              <button onClick={() => setStage('REVIEW')} className="w-full bg-zinc-900 border border-zinc-800 py-4 rounded-xl text-zinc-400 font-bold uppercase tracking-widest hover:bg-zinc-800 hover:text-zinc-100 transition-colors active:scale-95">
                 ← Back to Cart
               </button>
             </div>

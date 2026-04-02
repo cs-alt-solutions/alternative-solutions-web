@@ -7,7 +7,6 @@ export default function StorefrontHeader({
   const safeCategories = categories || [];
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
-  // We abstract the button logic here so we can reuse it perfectly for both Mobile and Desktop
   const renderCategoryButton = (cat: string, isMobile: boolean) => {
     const isActive = activeCategory === cat;
                
@@ -49,7 +48,7 @@ export default function StorefrontHeader({
         key={`btn-${isMobile ? 'mob' : 'desk'}-${cat}`}
         onClick={() => {
           setActiveCategory(cat);
-          if (isMobile) setIsMenuOpen(false); // Auto-close menu on selection
+          if (isMobile) setIsMenuOpen(false);
         }}
         className={`${isMobile ? 'w-full flex items-center justify-between px-5 py-4' : 'shrink-0 flex items-center gap-2 px-4 py-2.5'} rounded-xl text-[10px] font-black uppercase tracking-widest transition-all border ${isActive ? activeBg : inactiveBg}`}
       >
@@ -57,16 +56,14 @@ export default function StorefrontHeader({
           <Icon size={isMobile ? 16 : 14} className={isActive ? "text-zinc-950" : iconColor} /> 
           {cat}
         </div>
-        {/* Adds a little indicator dot on mobile so they know which one is selected */}
         {isMobile && isActive && <div className="w-1.5 h-1.5 rounded-full bg-zinc-950 shadow-sm" />}
       </button>
     );
   };
 
   return (
-    <header className="bg-zinc-950 border-b border-zinc-800 pt-4 sticky top-0 z-50 shadow-md relative">
+    <header className="bg-zinc-950 border-b border-zinc-800 pt-4 sticky top-0 z-50 shadow-md">
       
-      {/* Top Utility Row */}
       <div className="flex justify-between items-center max-w-6xl mx-auto w-full px-4 mb-4 md:mb-4">
         <div className="flex items-center gap-3">
           <div className="flex items-center gap-2">
@@ -87,7 +84,6 @@ export default function StorefrontHeader({
         </div>
       </div>
 
-      {/* MOBILE: The Hamburger Trigger */}
       <div className="md:hidden max-w-6xl mx-auto w-full px-4 pb-4">
         <button 
           onClick={() => setIsMenuOpen(!isMenuOpen)}
@@ -103,14 +99,12 @@ export default function StorefrontHeader({
         </button>
       </div>
 
-      {/* DESKTOP: Horizontal Pill Bar */}
       <div className="hidden md:block max-w-6xl mx-auto w-full px-4 pb-3">
          <div className="flex items-center gap-2 border-b border-zinc-900 pb-2 overflow-x-auto whitespace-nowrap scrollbar-hide">
             {safeCategories.map((cat: string) => renderCategoryButton(cat, false))}
          </div>
       </div>
 
-      {/* MOBILE: Absolute Dropdown Panel */}
       {isMenuOpen && (
         <div className="md:hidden absolute top-full left-0 right-0 bg-zinc-950/95 backdrop-blur-xl border-b border-zinc-800 shadow-[0_20px_40px_rgba(0,0,0,0.5)] z-50 px-4 py-4 flex flex-col gap-2 max-h-[60vh] overflow-y-auto animate-in slide-in-from-top-2">
           {safeCategories.map((cat: string) => renderCategoryButton(cat, true))}

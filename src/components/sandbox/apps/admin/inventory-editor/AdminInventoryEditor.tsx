@@ -122,7 +122,7 @@ export default function AdminInventoryEditor({ initialItem, isAdding, mainCatego
       
       <div className="flex flex-col md:flex-row md:items-start justify-between gap-6 pb-10 border-b border-zinc-800/50">
         <div className="flex items-start gap-4">
-          <div className={`shrink-0 w-20 h-20 rounded-3xl bg-zinc-900 border border-zinc-800 flex items-center justify-center shrink-0 shadow-inner group overflow-hidden relative transition-colors ${statusColor === 'rose' ? 'border-rose-900/50' : 'border-zinc-800'}`}>
+          <div className={`w-20 h-20 rounded-3xl bg-zinc-900 border border-zinc-800 flex items-center justify-center shrink-0 shadow-inner group overflow-hidden relative transition-colors ${statusColor === 'rose' ? 'border-rose-900/50' : 'border-zinc-800'}`}>
              {updatedItem.imageUrl ? <img src={updatedItem.imageUrl} alt={updatedItem.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" /> : <ItemIcon size={32} className={`transition-colors ${statusColor === 'rose' ? 'text-rose-600' : 'text-zinc-700'}`} />}
              {updatedItem.dailyDeal && <Flame size={16} className="absolute top-2 right-2 text-rose-400 drop-shadow-[0_0_5px_rgba(244,63,94,0.5)]" />}
              {updatedItem.isTopShelf && <Award size={16} className="absolute bottom-2 left-2 text-amber-400 drop-shadow-[0_0_5px_rgba(251,191,36,0.5)]" />}
@@ -197,7 +197,7 @@ export default function AdminInventoryEditor({ initialItem, isAdding, mainCatego
                    <div className="lg:col-span-2"><label className="text-[10px] font-bold text-rose-400 uppercase tracking-wider mb-1.5 block">Deal Text / Tagline</label><input type="text" value={updatedItem.dealText} onChange={(e) => setUpdatedItem({ ...updatedItem, dealText: e.target.value })} placeholder="e.g. 100mg Puck BOGO! | Special Price!" className="w-full bg-zinc-900 border border-zinc-800 rounded-xl p-4 text-xs font-bold text-zinc-100 placeholder:text-zinc-700" /></div>
                    {updatedItem.dealType === 'Weekly Special' && (
                      <div className="md:col-span-2 lg:col-span-3 bg-zinc-900 border border-zinc-800 p-4 rounded-xl shadow-inner mt-2 animate-in fade-in">
-                       <label className="text-[10px] font-bold text-rose-500 uppercase tracking-wider mb-3 flex items-center gap-2 block"><CalendarDays size={14} /> Active Days (for Weekly Special)</label>
+                       <label className="text-[10px] font-bold text-rose-500 uppercase tracking-wider mb-3 flex items-center gap-2"><CalendarDays size={14} /> Active Days (for Weekly Special)</label>
                        <div className="flex flex-wrap gap-2.5">
                          {weekdayMap.map((day, index) => {
                            const isActive = updatedItem.dealDays?.includes(index);
@@ -241,7 +241,7 @@ export default function AdminInventoryEditor({ initialItem, isAdding, mainCatego
 
                    <div className="grid grid-cols-2 gap-6 bg-zinc-950 border border-zinc-800 p-6 rounded-2xl shadow-inner">
                       <div><label className="text-[10px] font-bold text-zinc-500 uppercase tracking-wider mb-1.5 block">Global onHand stock (g)</label><input type="number" value={updatedItem.onHand} onChange={(e) => setUpdatedItem({ ...updatedItem, onHand: Number(e.target.value) })} placeholder="0.0" className="w-full bg-zinc-900 border border-zinc-800 rounded-xl p-4 text-xs font-bold text-zinc-100 font-mono" /></div>
-                      <div><label className="text-[10px] font-bold text-emerald-400 uppercase tracking-wider mb-1.5 block flex items-center gap-1.5"><Tag size={12}/> Min Market Price ($)</label><div className="w-full bg-zinc-900 border border-emerald-900/50 rounded-xl p-4 text-xs font-black text-amber-300 font-mono tracking-widest">${(Math.min(...(updatedItem.sizes.map((s:any)=>s.price || 0))) || 0).toFixed(0)}</div></div>
+                      <div><label className="text-[10px] font-bold text-emerald-400 uppercase tracking-wider mb-1.5 flex items-center gap-1.5"><Tag size={12}/> Min Market Price ($)</label><div className="w-full bg-zinc-900 border border-emerald-900/50 rounded-xl p-4 text-xs font-black text-amber-300 font-mono tracking-widest">${(Math.min(...(updatedItem.sizes.map((s:any)=>s.price || 0))) || 0).toFixed(0)}</div></div>
                    </div>
                  </div>
                )}
