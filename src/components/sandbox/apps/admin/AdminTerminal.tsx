@@ -26,7 +26,6 @@ export default function AdminTerminal({ clientConfig, onExit }: { clientConfig: 
   const initialOrders = clientConfig?.fulfillment?.initialOrders || [];
   const [orders, setOrders] = useStickyState(initialOrders, `ful_orders_${cid}`); 
   
-  // --- DATABASE HOOKUP ---
   const [stock, setStock] = useState<any[]>([]);
   const [isSyncing, setIsSyncing] = useState(true);
 
@@ -111,34 +110,41 @@ export default function AdminTerminal({ clientConfig, onExit }: { clientConfig: 
             </div>
           </div>
 
-          <h1 className="text-2xl font-black tracking-widest mb-1 text-center text-zinc-100 uppercase">System Command</h1>
-          <p className="text-zinc-500 text-[10px] font-black tracking-[0.3em] mb-10 uppercase text-center flex items-center gap-2">
-            <Lock size={12} className="text-rose-500" /> Level 4 Clearance Required
+          <h1 className="text-2xl font-black tracking-tight mb-1 text-center text-zinc-100 uppercase">{clientConfig.name} <span className="text-cyan-400">Admin</span></h1>
+          <p className="text-zinc-500 text-[10px] font-black tracking-[0.3em] mb-10 uppercase text-center flex items-center justify-center gap-2">
+            <Lock size={12} className="text-rose-500" /> Client Vault Access
           </p>
 
           <form onSubmit={handleAdminAuth} className="w-full bg-zinc-900/80 backdrop-blur-md border border-zinc-800 p-6 rounded-3xl shadow-2xl">
             <div className="space-y-4 mb-8">
               <div className="relative">
                 <UserCircle2 size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-zinc-500" />
-                <input type="text" value={operatorId} onChange={(e) => { setAuthError(""); setOperatorId(e.target.value.toUpperCase()); }} placeholder="OPERATOR ID" className="w-full bg-zinc-950 border border-zinc-800 rounded-xl py-4 pl-12 pr-4 text-sm font-black tracking-widest text-cyan-400 outline-none focus:border-cyan-500/50 transition-all placeholder:text-zinc-700" />
+                <input type="text" value={operatorId} onChange={(e) => { setAuthError(""); setOperatorId(e.target.value.toUpperCase()); }} placeholder="ADMIN ID" className="w-full bg-zinc-950 border border-zinc-800 rounded-xl py-4 pl-12 pr-4 text-sm font-black tracking-widest text-cyan-400 outline-none focus:border-cyan-500/50 transition-all placeholder:text-zinc-700" />
               </div>
               <div className="relative">
                 <KeyRound size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-zinc-500" />
-                <input type="password" value={passphrase} onChange={(e) => { setAuthError(""); setPassphrase(e.target.value); }} placeholder="MASTER PASSPHRASE" className="w-full bg-zinc-950 border border-zinc-800 rounded-xl py-4 pl-12 pr-4 text-sm font-black tracking-widest text-cyan-400 outline-none focus:border-cyan-500/50 transition-all placeholder:text-zinc-700" />
+                <input type="password" value={passphrase} onChange={(e) => { setAuthError(""); setPassphrase(e.target.value); }} placeholder="VAULT PASSPHRASE" className="w-full bg-zinc-950 border border-zinc-800 rounded-xl py-4 pl-12 pr-4 text-sm font-black tracking-widest text-cyan-400 outline-none focus:border-cyan-500/50 transition-all placeholder:text-zinc-700" />
               </div>
             </div>
 
             {authError && (
-              <div className="mb-6 bg-rose-500/10 border border-rose-500/20 py-3 px-4 rounded-xl flex items-center gap-2 animate-in slide-in-from-top-2">
+              <div className="mb-6 bg-rose-500/10 border border-rose-500/20 py-3 px-4 rounded-xl flex items-center justify-center gap-2 animate-in slide-in-from-top-2">
                 <AlertTriangle size={14} className="text-rose-500 shrink-0" />
                 <span className="text-[10px] font-black tracking-widest uppercase text-rose-500">{authError}</span>
               </div>
             )}
 
             <button type="submit" disabled={!operatorId || !passphrase} className="w-full bg-cyan-500 hover:bg-cyan-400 text-zinc-950 font-black uppercase tracking-widest py-4 rounded-xl disabled:opacity-50 transition-all flex items-center justify-center gap-2 group shadow-[0_0_20px_rgba(6,182,212,0.2)]">
-              Authenticate <ArrowRight size={18} className="group-hover:translate-x-1 transition-transform" />
+              Unlock Vault <ArrowRight size={18} className="group-hover:translate-x-1 transition-transform" />
             </button>
           </form>
+
+          {process.env.NEXT_PUBLIC_APP_MODE !== 'PRODUCTION' && (
+            <div className="mt-8 flex flex-col items-center gap-1">
+               <span className="text-zinc-600 text-[9px] font-mono uppercase tracking-widest">DEV CREDENTIALS</span>
+               <span className="text-zinc-500 text-[10px] font-mono uppercase tracking-widest">ID: {requiredAdminId} | PASS: {requiredPassphrase}</span>
+            </div>
+          )}
         </div>
       </div>
     );
