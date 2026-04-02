@@ -1,9 +1,10 @@
 'use client';
 
 import React, { useState, useMemo, useEffect } from 'react';
-import { Lock, Clock, ArrowRight, AlertTriangle, X } from 'lucide-react';
+import { Lock, Clock, ArrowRight, AlertTriangle, Package, X } from 'lucide-react';
 import { useSearchParams } from 'next/navigation'; 
 import { useStickyState } from '@/hooks/useStickyState';
+import { createClient } from '@supabase/supabase-js';
 
 import { PoliciesModal } from './StorefrontModals';
 import StorefrontCheckout from './StorefrontCheckout';
@@ -50,10 +51,32 @@ export default function StorefrontTerminal({ clientConfig, onExit }: { clientCon
   const [instructions, setInstructions] = useStickyState('', `market_notes_${clientConfig.id}`);
   const [detectedZone, setDetectedZone] = useState<string>('');
   const [paymentMethod, setPaymentMethod] = useState<'CASH' | 'CASHAPP' | ''>('');
-  
-  const [rawInventory] = useStickyState(clientConfig.inventory || [], `inv_stock_v2_${clientConfig.id}`);
   const [orders, setOrders] = useStickyState(clientConfig?.fulfillment?.initialOrders || [], `ful_orders_${clientConfig.id}`);
   
+  // --- DATABASE HOOKUP ---
+  const [rawInventory, setRawInventory] = useState<any[]>([]);
+  const [isLoadingInventory, setIsLoadingInventory] = useState(true);
+
+  useEffect(() => {
+    const fetchLiveInventory = async () => {
+      try {
+        const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!);
+        const { data, error } = await supabase
+          .from('client_inventory')
+          .select('payload')
+          .eq('client_id', clientConfig.id);
+          
+        if (error) throw error;
+        if (data) setRawInventory(data.map(row => row.payload));
+      } catch (err) {
+        console.error("Market Sync Error:", err);
+      } finally {
+        setIsLoadingInventory(false);
+      }
+    };
+    fetchLiveInventory();
+  }, [clientConfig.id]);
+
   const defaultCats = clientConfig.categories || ['Flower & Plants', 'Vapes & Pens', 'Edibles', 'Concentrates', 'Merch & Extras'];
   const [masterCategories] = useStickyState<string[]>(defaultCats, `inv_cats_${clientConfig?.id || 'dev'}`);
   
@@ -110,7 +133,6 @@ export default function StorefrontTerminal({ clientConfig, onExit }: { clientCon
         if (urlKey.toUpperCase() === timeData.activeCode) {
           setIsVerified(true);
           localStorage.setItem(`market_auth_${clientConfig.id}`, timeData.activeCode); 
-
           if (typeof window !== 'undefined') {
             const cleanUrl = window.location.protocol + "//" + window.location.host + window.location.pathname;
             window.history.replaceState({ path: cleanUrl }, '', cleanUrl);
@@ -119,7 +141,6 @@ export default function StorefrontTerminal({ clientConfig, onExit }: { clientCon
           setError("Expired or invalid magic link.");
         }
       }
-      
       setInitialCheckDone(true);
     }
   }, [urlKey, timeData.activeCode, initialCheckDone, clientConfig.id]);
@@ -138,10 +159,7 @@ export default function StorefrontTerminal({ clientConfig, onExit }: { clientCon
   }, [timeData.shiftCode, cart, cartShift, setCart, setCartShift]);
 
   useEffect(() => { if (isCheckingOut && !orderRef) setOrderRef(Math.random().toString(36).substring(2, 6).toUpperCase()); }, [isCheckingOut, orderRef]);
-
-  useEffect(() => {
-    setActiveSubCategory('All');
-  }, [activeCategory]);
+  useEffect(() => { setActiveSubCategory('All'); }, [activeCategory]);
 
   useEffect(() => {
     const lowerCity = city.toLowerCase().trim();
@@ -215,11 +233,9 @@ export default function StorefrontTerminal({ clientConfig, onExit }: { clientCon
     } else {
       items = inventory.filter((i: any) => i.mainCategory === activeCategory);
     }
-
     if (activeSubCategory !== 'All') {
       items = items.filter((i: any) => i.subCategory === activeSubCategory);
     }
-    
     return items;
   }, [inventory, activeCategory, activeSubCategory]);
 
@@ -255,31 +271,17 @@ export default function StorefrontTerminal({ clientConfig, onExit }: { clientCon
 
   const handleCopyOrder = (orderText: string, activeAuthId: string) => {
     const newOrder = {
-      id: activeAuthId,
-      customer: customerName,
-      zone: detectedZone,
-      status: 'pending_verification', 
+      id: activeAuthId, customer: customerName, zone: detectedZone, status: 'pending_verification', 
       timeReceived: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
       items: Object.values(cart).map((cartItem: any) => {
         const optionsArray = cartItem?.options || (cartItem?.option ? [cartItem.option] : []);
         const optionLabel = optionsArray.map((o:any)=>o.label).join(' + ') || 'Standard';
-        return {
-          id: cartItem.item.id,
-          name: `${cartItem.item.name} (${cartItem.size.label})`,
-          qtyRequired: cartItem.qty,
-          qtyPicked: 0,
-          options: optionLabel
-        };
+        return { id: cartItem.item.id, name: `${cartItem.item.name} (${cartItem.size.label})`, qtyRequired: cartItem.qty, qtyPicked: 0, options: optionLabel };
       }),
-      total: grandTotal,
-      deliveryAddress: `${streetAddress}, ${city} ${zipCode}`,
-      notes: instructions
+      total: grandTotal, deliveryAddress: `${streetAddress}, ${city} ${zipCode}`, notes: instructions
     };
-
     setOrders((prev: any[]) => {
-      if (prev.some(o => o.id === newOrder.id)) {
-        return prev.map(o => o.id === newOrder.id ? newOrder : o);
-      }
+      if (prev.some(o => o.id === newOrder.id)) return prev.map(o => o.id === newOrder.id ? newOrder : o);
       return [newOrder, ...prev];
     });
   };
@@ -287,7 +289,6 @@ export default function StorefrontTerminal({ clientConfig, onExit }: { clientCon
   if (timeData.phase === 'CLOSED') {
     return (
       <div className="min-h-dvh bg-zinc-950 flex flex-col items-center justify-center p-6 text-zinc-100 relative">
-        {/* ESCAPE HATCH REMOVED */}
         <div className="z-10 w-full max-w-sm flex flex-col items-center animate-in fade-in zoom-in-95 text-center">
           <div className="bg-zinc-900 p-6 rounded-full mb-6 border border-zinc-800"><Clock size={48} className="text-zinc-500" /></div>
           <h1 className="text-3xl font-black tracking-widest mb-2 uppercase text-zinc-100">Market Closed</h1>
@@ -304,7 +305,6 @@ export default function StorefrontTerminal({ clientConfig, onExit }: { clientCon
   if (!isVerified) {
     return (
       <div className="min-h-dvh bg-zinc-950 flex flex-col items-center justify-center p-6 text-zinc-100 relative">
-        {/* ESCAPE HATCH REMOVED */}
         <div className="z-10 w-full max-w-sm flex flex-col items-center animate-in fade-in zoom-in-95 duration-300">
           <div className="bg-zinc-900 p-5 rounded-3xl mb-6 border border-zinc-800"><Lock size={32} className="text-emerald-400 drop-shadow-[0_0_8px_rgba(52,211,153,0.8)]" /></div>
           <h1 className="text-3xl font-black tracking-widest mb-2 text-center text-zinc-100 uppercase">{clientConfig.appTitle}</h1>
@@ -318,11 +318,17 @@ export default function StorefrontTerminal({ clientConfig, onExit }: { clientCon
               Enter Market <ArrowRight size={18} className="group-hover:translate-x-1 transition-transform" />
             </button>
           </form>
-          {process.env.NEXT_PUBLIC_APP_MODE !== 'PRODUCTION' && (
-            <div className="mt-10 flex flex-col items-center gap-2 bg-zinc-900/80 border border-zinc-800 px-4 py-3 rounded-xl">
-              <span className="text-zinc-600 text-[10px] font-mono uppercase tracking-widest">DEV BYPASS: {timeData.activeCode}</span>
-            </div>
-          )}
+        </div>
+      </div>
+    );
+  }
+
+  if (isLoadingInventory) {
+    return (
+      <div className="min-h-dvh bg-zinc-950 flex flex-col items-center justify-center p-6 text-zinc-100">
+        <div className="animate-pulse flex flex-col items-center">
+           <Package size={40} className="text-emerald-400 mb-4 drop-shadow-[0_0_15px_rgba(52,211,153,0.5)]" />
+           <span className="text-[10px] font-black uppercase tracking-widest text-emerald-400">Loading Market...</span>
         </div>
       </div>
     );

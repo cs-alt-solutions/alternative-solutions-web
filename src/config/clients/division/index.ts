@@ -1,26 +1,26 @@
-import { divisionInventory } from './inventory';
-
 export const divisionConfig = {
   id: 'division',
-  accessCode: 'doobie', // Restored for login routing
+  accessCode: 'doobie',
   name: 'Doobie Division',
-  agencyName: 'Doobie Division', // Restored for sandbox header
-  primaryContact: 'ADMIN-01', // Restored for session ID
+  agencyName: 'Doobie Division',
+  primaryContact: 'ADMIN-01',
   logo: '📦',
   theme: 'emerald',
   appTitle: 'Division Market',
   
-  // Restored for Gatekeeper Auth
+  adminSecurity: {
+    adminId: 'ADMIN-01',
+    passphrase: 'VAULT-ACCESS-99'
+  },
+  
   security: {
     pin: '1234', 
     lockedMessage: 'Authorized Personnel Only'
   },
   
-  // Gatekeeper live tracking
-  lastActive: '2026-03-30',
-  systemStatus: 'ACTIVE_DEVELOPMENT',
+  lastActive: '2026-04-02',
+  systemStatus: 'ACTIVE_PRODUCTION',
 
-  // --- NEW: SINGLE SOURCE OF TRUTH SETTINGS ---
   storeHours: { open: '08:00', shiftChange: '12:00', close: '17:00' },
   shiftChange: '12:00',
   weeklySchedule: {
@@ -45,7 +45,6 @@ export const divisionConfig = {
 
   pricingTiers: ['1g', '3.5g (Eighth)', '7g (Quarter)', '14g (Half Oz)', '28g (Full Oz)', '1 Cartridge', '2g Disposable', '100mg Pack', '250mg Pack', '1 Unit', 'Single'],
 
-  // --- MOCK DATA ARCHITECTURE ---
   mockData: {
     sampleOrder: {
       customer: "New Web Order",
@@ -62,10 +61,6 @@ export const divisionConfig = {
     }
   },
 
-  // --- END NEW SETTINGS ---
-
-  inventory: divisionInventory,
-
   apps: [
     {
       id: 'storefront',
@@ -73,9 +68,9 @@ export const divisionConfig = {
       description: 'The front-facing e-commerce interface for customer orders.',
       icon: 'Store',
       path: '/sandbox/division?app=storefront',
-      status: 'beta',
+      status: 'production',
       lastUpdated: 'Today',
-      updateLog: 'Added Dynamic Grid & Pill Filters'
+      updateLog: 'Connected to Supabase DB'
     },
     {
       id: 'admin',
@@ -83,9 +78,9 @@ export const divisionConfig = {
       description: 'Secure vault for inventory management and operations.',
       icon: 'Lock',
       path: '/sandbox/division?app=admin',
-      status: 'alpha',
-      lastUpdated: 'Just Now',
-      updateLog: 'Overhauled Campaign Engine & Operations'
+      status: 'production',
+      lastUpdated: 'Today',
+      updateLog: 'Database sync active'
     },
     {
       id: 'fulfillment',
@@ -113,8 +108,7 @@ export const divisionConfig = {
     "You MUST be 21+ to order.",
     "NO Medical Card Required.",
     "NO meetups. Delivery to residential addresses ONLY.",
-    "Drivers DO NOT carry change. Exact cash or CashApp only.",
-    "Minimum order requirements apply based on your delivery zone."
+    "Drivers DO NOT carry change. Exact cash or CashApp only."
   ],
 
   deliveryZones: [

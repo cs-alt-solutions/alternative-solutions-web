@@ -1,389 +1,330 @@
-import React, { useState, useEffect } from 'react';
-import { Edit3, X, Save, Plus, Trash2, Flame, Star, Award, Gauge, Sparkles, Wind, Dna, Activity, Target, Lightbulb, Image as ImageIcon } from 'lucide-react';
-import VariantsManager from './VariantsManager';
+'use client';
 
-const DAYS_OF_WEEK = [
-  { label: 'Sun', val: 0 }, { label: 'Mon', val: 1 }, { label: 'Tue', val: 2 }, 
-  { label: 'Wed', val: 3 }, { label: 'Thu', val: 4 }, { label: 'Fri', val: 5 }, { label: 'Sat', val: 6 }
-];
+import React, { useState, useMemo, useRef } from 'react';
+import { X, Trash2, Tag, BookText, Scale, Package, Boxes, Star, Leaf, Flame, Box, Image as ImageIcon, Sparkles, MapPin, Search, ChevronRight, UploadCloud, FileType, FileUp, AlertTriangle, Plus } from 'lucide-react';
+import { createClient } from '@supabase/supabase-js';
 
-export default function AdminInventoryEditor({ initialItem, isAdding, subCategories, standardTiers, onSave, onCancel, mainCategories }: any) {
+const FormCard = ({ title, icon: Icon, children, colorClass }: any) => (
+  <div className="bg-zinc-900/50 border border-zinc-800 rounded-3xl p-6 md:p-8 shadow-inner animate-in fade-in slide-in-from-bottom-2">
+    <div className={`inline-flex items-center gap-2 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest mb-6 border ${colorClass}`}>
+      <Icon size={14} /> {title}
+    </div>
+    {children}
+  </div>
+);
+
+const PriceTierPill = ({ label, onRemove }: any) => (
+  <div className="flex items-center gap-2 bg-zinc-950 border border-zinc-800 text-zinc-400 pl-3 pr-1 py-1 rounded-full text-xs font-bold shadow-md">
+    {label}
+    <button onClick={onRemove} className="p-1 rounded-full text-zinc-600 hover:bg-rose-500/10 hover:text-rose-400 transition-colors">
+      <X size={14} />
+    </button>
+  </div>
+);
+
+const ProductSearchModal = ({ inventoryMatrix, onClose, onSelect }: any) => {
+  const [searchTerm, setSearchTerm] = useState('');
   
-  const safeMainCats = mainCategories || ['Flower & Plants', 'Vapes & Pens', 'Edibles', 'Concentrates', 'Merch & Extras'];
-
-  const [editingItem, setEditingItem] = useState<any>(() => {
-    const item = { ...initialItem };
-    item.options = (item.options || []).map((opt: any) => {
-        let strains = [{ name: opt.label || '', type: opt.strainType || 'N/A' }];
-        if (opt.label && opt.label.includes(' x ')) {
-            const names = opt.label.split(' x ');
-            const types = (opt.strainType || '').split(' / ');
-            strains = names.map((n: string, i: number) => ({ name: n.trim(), type: types[i]?.trim() || 'N/A' }));
-        }
-        return { ...opt, strains };
-    });
-    
-    item.hasImage = !!item.imageUrl; 
-    return item;
-  });
-
-  const cleanNameForUrl = editingItem.name ? editingItem.name.toLowerCase().trim().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '') : '';
-
-  // THE RADAR PING: Automatically checks the local folder for the image
-  useEffect(() => {
-    if (!cleanNameForUrl) {
-      setEditingItem((prev: any) => ({ ...prev, hasImage: false }));
-      return;
-    }
-    
-    const checkUrl = `/division/images/inventory/${cleanNameForUrl}.jpeg`;
-    
-    const checkImageExists = async () => {
-      try {
-        // We use HEAD so we only ask the server "Does this exist?", without downloading the whole image file.
-        const res = await fetch(checkUrl, { method: 'HEAD' });
-        if (res.ok) {
-          setEditingItem((prev: any) => ({ ...prev, hasImage: true }));
-        } else {
-          setEditingItem((prev: any) => ({ ...prev, hasImage: false }));
-        }
-      } catch (err) {
-        setEditingItem((prev: any) => ({ ...prev, hasImage: false }));
-      }
-    };
-
-    // 500ms delay so it doesn't spam the server while you are actively typing
-    const timer = setTimeout(checkImageExists, 500);
-    return () => clearTimeout(timer);
-  }, [cleanNameForUrl]);
-
-  const addSizeRow = () => { setEditingItem({ ...editingItem, sizes: [...(editingItem.sizes || []), { id: `sz-${Date.now()}`, label: '', price: 0, bundleQty: 1, promoLabel: '', promoPrice: '' }] }); };
-  const updateSize = (id: string, field: 'label' | 'price' | 'bundleQty' | 'promoLabel' | 'promoPrice', value: any) => { setEditingItem({ ...editingItem, sizes: editingItem.sizes.map((sz: any) => sz.id === id ? { ...sz, [field]: value } : sz) }); };
-  const removeSizeRow = (id: string) => { setEditingItem({ ...editingItem, sizes: editingItem.sizes.filter((sz: any) => sz.id !== id) }); };
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    const hasVariants = editingItem.options && editingItem.options.length > 0;
-    
-    const totalStock = hasVariants 
-        ? editingItem.options.reduce((sum: number, opt: any) => sum + (parseFloat(opt.stock) || 0), 0) 
-        : (parseFloat(editingItem.onHand) || 0);
-
-    const finalOptions = hasVariants ? editingItem.options.map((opt: any) => {
-        const label = opt.strains?.map((s:any)=>s.name).filter(Boolean).join(' x ') || opt.label;
-        const strainType = opt.strains?.map((s:any)=>s.type).join(' / ') || opt.strainType;
-        return { id: opt.id, stock: parseFloat(opt.stock) || 0, label, strainType };
-    }) : [{ id: 'std', label: 'Standard', stock: totalStock, strainType: 'N/A' }];
-
-    const finalSizes = editingItem.sizes && editingItem.sizes.length > 0 ? editingItem.sizes : [{ id: 'std', label: 'Standard', price: 0, bundleQty: 1, promoLabel: '', promoPrice: '' }];
-    const basePrice = Math.min(...finalSizes.map((s: any) => s.price));
-
-    const cleanStr = (str: string) => str ? str.trim().replace(/\.$/, '') : '';
-    
-    const parts = [];
-    if (editingItem.descBase) parts.push(editingItem.descBase.trim());
-    if (editingItem.descFeels) parts.push(`Feels: ${cleanStr(editingItem.descFeels)}.`);
-    if (editingItem.descTaste) parts.push(`Taste: ${cleanStr(editingItem.descTaste)}.`);
-    if (editingItem.descUses) parts.push(`Uses: ${cleanStr(editingItem.descUses)}.`);
-    if (editingItem.descFact) parts.push(`Fun Fact: ${cleanStr(editingItem.descFact)}.`);
-    
-    let builtDescription = parts.join(' ');
-    
-    if (editingItem.lineage) {
-        const lin = cleanStr(editingItem.lineage);
-        builtDescription = `${lin}. ${builtDescription}`;
-    }
-
-    const finalImageUrl = editingItem.hasImage ? `/division/images/inventory/${cleanNameForUrl}.jpeg` : '';
-
-    const itemToSave = {
-      ...editingItem, 
-      price: basePrice, 
-      onHand: totalStock, 
-      options: finalOptions, 
-      sizes: finalSizes,
-      description: builtDescription.trim(),
-      lineage: editingItem.lineage,
-      strainType: editingItem.strainType,
-      dealText: editingItem.dailyDeal ? editingItem.dealText : '',
-      dealDays: editingItem.dailyDeal && editingItem.dealType === 'Weekly Special' ? editingItem.dealDays : [],
-      imageUrl: finalImageUrl
-    };
-
-    onSave(itemToSave, isAdding);
-  };
-
-  const hasVariants = editingItem.options && editingItem.options.length > 0;
-  const currentSubCats = subCategories[editingItem.mainCategory] || [];
-  const isFlower = editingItem.mainCategory === 'Flower & Plants';
+  const filteredProducts = useMemo(() => {
+    const lowerSearch = searchTerm.toLowerCase();
+    return (inventoryMatrix || []).filter((item: any) => 
+      item.name?.toLowerCase().includes(lowerSearch) || 
+      item.id?.toLowerCase().includes(lowerSearch)
+    ).slice(0, 10);
+  }, [inventoryMatrix, searchTerm]);
 
   return (
-    <div className="p-4 md:p-8 animate-in slide-in-from-right-8">
-      
-      <datalist id="standard-tiers-list">
-         {(standardTiers || []).map((t: string) => <option key={t} value={t} />)}
-      </datalist>
-
-      <div className="flex items-center justify-between mb-8">
-        <h2 className="text-xl font-black text-white uppercase tracking-tight flex items-center gap-2"><Edit3 size={20} className="text-emerald-400"/> {isAdding ? 'Inject New Asset' : 'Refine Database Entry'}</h2>
-        <button onClick={onCancel} className="p-2 bg-zinc-900 border border-zinc-800 rounded-xl text-zinc-500 hover:text-rose-400 transition-colors shadow-lg"><X size={20}/></button>
-      </div>
-      
-      <form onSubmit={handleSubmit} className="bg-zinc-900 border border-zinc-800 rounded-4xl p-8 space-y-8 shadow-2xl">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div className="space-y-6">
-             
-             <div className="space-y-4">
-               <div>
-                <label className="text-[10px] font-black text-zinc-500 uppercase tracking-widest block mb-2">Product Name</label>
-                <input type="text" value={editingItem.name} onChange={(e) => setEditingItem({...editingItem, name: e.target.value})} className="w-full bg-zinc-950 border border-zinc-800 rounded-xl p-4 text-white font-bold outline-none shadow-inner focus:border-emerald-500/50" required />
-               </div>
-               
-               {/* THE NEW SMART INDICATOR */}
-               <div>
-                <label className="text-[10px] font-black text-zinc-500 uppercase tracking-widest flex items-center gap-1.5 mb-2"><ImageIcon size={12}/> Vault Image Sync</label>
-                <div className={`flex items-center gap-4 p-4 rounded-xl border transition-all shadow-inner ${editingItem.hasImage ? 'bg-emerald-500/10 border-emerald-500/40' : 'bg-zinc-950 border-zinc-800'}`}>
-                  <div className={`w-5 h-5 rounded-md flex items-center justify-center border transition-colors ${editingItem.hasImage ? 'bg-emerald-500 border-emerald-500 text-zinc-950' : 'bg-zinc-900 border-zinc-700 text-transparent'}`}>
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="4" className="w-3 h-3"><polyline points="20 6 9 17 4 12"></polyline></svg>
-                  </div>
-                  <span className="text-sm font-bold flex flex-col">
-                    {editingItem.hasImage ? <span className="text-emerald-400">Image Detected & Linked</span> : <span className="text-zinc-500">Searching Vault...</span>}
-                    {editingItem.name ? (
-                      <span className={`text-[9px] font-mono mt-1 uppercase tracking-wider ${editingItem.hasImage ? 'text-emerald-500/70' : 'text-zinc-600'}`}>
-                        Target: {cleanNameForUrl}.jpeg
-                      </span>
-                    ) : (
-                      <span className="text-[9px] font-mono mt-1 uppercase tracking-wider text-zinc-600">Awaiting Product Name</span>
-                    )}
-                  </span>
-                </div>
-               </div>
-             </div>
-
-             <div className="grid grid-cols-2 gap-4">
-               <div>
-                <label className="text-[10px] font-black text-zinc-500 uppercase tracking-widest flex items-center gap-1.5 mb-2"><Dna size={12}/> Lineage / Genetics</label>
-                <input type="text" value={editingItem.lineage} onChange={(e) => setEditingItem({...editingItem, lineage: e.target.value})} className="w-full bg-zinc-950 border border-zinc-800 rounded-xl p-4 text-white font-bold outline-none shadow-inner focus:border-emerald-500/50" placeholder="e.g. Zkittlez x Gelato" />
-               </div>
-               <div>
-                <label className="text-[10px] font-black text-zinc-500 uppercase tracking-widest flex items-center gap-1.5 mb-2"><Activity size={12}/> Dominance / Type</label>
-                <select value={editingItem.strainType} onChange={(e) => setEditingItem({...editingItem, strainType: e.target.value})} className="w-full bg-zinc-950 border border-zinc-800 rounded-xl p-4 text-white font-bold outline-none appearance-none shadow-inner focus:border-emerald-500/50">
-                   <option value="N/A">N/A / None</option>
-                   <option value="Indica">Indica</option>
-                   <option value="Sativa">Sativa</option>
-                   <option value="Hybrid">Hybrid</option>
-                   <option value="Indica-Dom">Indica-Dom</option>
-                   <option value="Sativa-Dom">Sativa-Dom</option>
-                </select>
-               </div>
-             </div>
-
-            <div className="bg-zinc-950 border border-zinc-800 rounded-2xl p-6 shadow-inner space-y-4">
-              <div>
-                <label className="text-[10px] font-black text-amber-500/70 uppercase tracking-widest flex items-center gap-1.5 mb-2"><Lightbulb size={12} className="text-amber-400"/> Fun Fact / Story</label>
-                <textarea value={editingItem.descFact} onChange={(e) => setEditingItem({...editingItem, descFact: e.target.value})} className="w-full bg-zinc-900 border border-zinc-800 rounded-xl p-4 text-white text-sm font-medium outline-none h-20 resize-none focus:border-amber-500/50 transition-colors" placeholder="e.g. High settles in with a mellow onset..." />
-              </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="text-[10px] font-black text-cyan-500/70 uppercase tracking-widest flex items-center gap-1.5 mb-2"><Sparkles size={12} className="text-cyan-400"/> Feels / Effects</label>
-                  <input type="text" value={editingItem.descFeels} onChange={(e) => setEditingItem({...editingItem, descFeels: e.target.value})} className="w-full bg-zinc-900 border border-zinc-800 rounded-xl p-3 text-white text-xs font-bold outline-none focus:border-cyan-500/50 transition-colors" placeholder="e.g. Uplifting, Euphoric..." />
-                </div>
-                <div>
-                  <label className="text-[10px] font-black text-emerald-500/70 uppercase tracking-widest flex items-center gap-1.5 mb-2"><Wind size={12} className="text-emerald-400"/> Taste / Aroma</label>
-                  <input type="text" value={editingItem.descTaste} onChange={(e) => setEditingItem({...editingItem, descTaste: e.target.value})} className="w-full bg-zinc-900 border border-zinc-800 rounded-xl p-3 text-white text-xs font-bold outline-none focus:border-emerald-500/50 transition-colors" placeholder="e.g. Earthy, Pine, Sweet..." />
-                </div>
-              </div>
-              <div className="grid grid-cols-2 gap-4 mt-2">
-                <div>
-                  <label className="text-[10px] font-black text-fuchsia-500/70 uppercase tracking-widest flex items-center gap-1.5 mb-2"><Target size={12} className="text-fuchsia-400"/> Uses / Best For</label>
-                  <input type="text" value={editingItem.descUses} onChange={(e) => setEditingItem({...editingItem, descUses: e.target.value})} className="w-full bg-zinc-900 border border-zinc-800 rounded-xl p-3 text-white text-xs font-bold outline-none focus:border-fuchsia-500/50 transition-colors" placeholder="e.g. Sleep, Recovery, Focus..." />
-                </div>
-                <div>
-                  <label className="text-[10px] font-black text-zinc-500 uppercase tracking-widest flex items-center gap-1.5 mb-2"> Brief Marketing Copy</label>
-                  <input type="text" value={editingItem.descBase} onChange={(e) => setEditingItem({...editingItem, descBase: e.target.value})} className="w-full bg-zinc-900 border border-zinc-800 rounded-xl p-3 text-white text-xs font-bold outline-none focus:border-zinc-500/50 transition-colors" placeholder="e.g. Award winning strain..." />
-                </div>
-              </div>
-            </div>
-
-          </div>
-          <div className="space-y-6">
-            <div className="grid grid-cols-1 gap-6 p-6 bg-zinc-950 border border-zinc-800 rounded-2xl shadow-inner">
-              <div>
-                <label className="text-[10px] font-black text-zinc-500 uppercase tracking-widest block mb-2">Parent Category</label>
-                <select 
-                  value={editingItem.mainCategory} 
-                  onChange={(e) => {
-                    const newCat = e.target.value;
-                    const newSub = subCategories[newCat]?.[0] || '';
-                    let newSizes = editingItem.sizes;
-                    let newOptions = editingItem.options;
-                    
-                    if (newCat === 'Flower & Plants') {
-                        newSizes = [
-                          { id: `sz-${Date.now()}-1`, label: '3.5g (Eighth)', price: 35.00, bundleQty: 1, promoLabel: '', promoPrice: '' },
-                          { id: `sz-${Date.now()}-2`, label: '7g (Quarter)', price: 60.00, bundleQty: 1, promoLabel: '', promoPrice: '' },
-                          { id: `sz-${Date.now()}-3`, label: '14g (Half Oz)', price: 100.00, bundleQty: 1, promoLabel: '', promoPrice: '' },
-                          { id: `sz-${Date.now()}-4`, label: '28g (Full Oz)', price: 200.00, bundleQty: 1, promoLabel: '', promoPrice: '' }
-                        ];
-                    } else if (newCat === 'Vapes & Pens') {
-                        newSizes = [
-                          { id: `sz-${Date.now()}-1`, label: '1 Unit', price: 40.00, bundleQty: 1, promoLabel: '', promoPrice: '' },
-                          { id: `sz-${Date.now()}-2`, label: '2 Unit Deal', price: 70.00, bundleQty: 2, promoLabel: '2 for 70', promoPrice: 70.00 }
-                        ];
-                        newOptions = [
-                          { id: `var-${Date.now()}-1`, strains: [{ name: '', type: 'Indica' }], stock: '' },
-                          { id: `var-${Date.now()}-2`, strains: [{ name: '', type: 'Sativa' }], stock: '' },
-                          { id: `var-${Date.now()}-3`, strains: [{ name: '', type: 'Hybrid' }], stock: '' }
-                        ];
-                    } else if (editingItem.mainCategory === 'Flower & Plants' || editingItem.mainCategory === 'Vapes & Pens') {
-                        newSizes = [{ id: `sz-${Date.now()}`, label: 'Standard', price: 0, bundleQty: 1, promoLabel: '', promoPrice: '' }];
-                        newOptions = [{ id: `var-${Date.now()}`, strains: [{ name: '', type: 'N/A' }], stock: '' }];
-                    }
-
-                    setEditingItem({
-                      ...editingItem, 
-                      mainCategory: newCat, 
-                      subCategory: newSub,
-                      sizes: newSizes,
-                      options: newOptions
-                    });
-                  }} 
-                  className="w-full bg-zinc-900 border border-zinc-800 rounded-xl p-4 text-emerald-400 font-bold outline-none appearance-none"
-                >
-                  {safeMainCats.map((cat: string) => <option key={cat} value={cat}>{cat}</option>)}
-                </select>
-
-              </div>
-              <div>
-                <label className="text-[10px] font-black text-zinc-500 uppercase tracking-widest block mb-2 text-right">Subcategory</label>
-                <select value={editingItem.subCategory} onChange={(e) => setEditingItem({...editingItem, subCategory: e.target.value})} className="w-full bg-zinc-900 border border-zinc-800 rounded-xl p-4 text-white font-bold outline-none appearance-none">
-                  {currentSubCats.map((sub: string) => <option key={sub} value={sub}>{sub}</option>)}
-                </select>
-              </div>
-            </div>
-          </div>
+    <div className="fixed inset-0 z-100 flex items-center justify-center p-4 bg-zinc-950/80 backdrop-blur-md animate-in fade-in">
+      <div className="bg-zinc-900 border border-zinc-800 rounded-3xl p-6 max-w-lg w-full shadow-2xl relative flex flex-col max-h-[90vh]">
+        <button onClick={onClose} className="absolute top-5 right-5 text-zinc-600 hover:text-rose-400"><X size={20} /></button>
+        <h3 className="text-xl font-black text-white uppercase tracking-tighter mb-6">Link to Master Vault Product</h3>
+        <p className="text-xs text-zinc-500 mb-6 font-medium leading-relaxed">Search for an existing product to auto-fill metadata. This establishes a master inventory link.</p>
+        
+        <div className="relative mb-6">
+          <Search size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-zinc-600" />
+          <input type="text" value={searchTerm} autoFocus onChange={(e) => setSearchTerm(e.target.value)} placeholder="Search Product Name or System ID..." className="w-full bg-zinc-950 border border-zinc-800 rounded-xl py-4 pl-12 pr-4 text-xs font-bold text-zinc-100 placeholder:text-zinc-700 focus:border-amber-500/50" />
         </div>
 
-        <div className="border-t border-zinc-800 pt-8">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <label className="flex items-center gap-4 bg-zinc-950 border border-zinc-800 p-5 rounded-2xl cursor-pointer hover:border-cyan-500/50 transition-all shadow-inner">
-              <input type="checkbox" checked={editingItem.featured} onChange={(e) => setEditingItem({...editingItem, featured: e.target.checked})} className="w-5 h-5 accent-cyan-500" />
-              <span className="text-sm font-black text-white flex items-center gap-2"><Star size={14} className="text-cyan-400" /> Featured Drop</span>
-            </label>
-            <label className="flex items-center gap-4 bg-zinc-950 border border-zinc-800 p-5 rounded-2xl cursor-pointer hover:border-amber-500/50 transition-all shadow-inner">
-              <input type="checkbox" checked={editingItem.isTopShelf} onChange={(e) => setEditingItem({...editingItem, isTopShelf: e.target.checked})} className="w-5 h-5 accent-amber-500" />
-              <span className="text-sm font-black text-white flex items-center gap-2"><Award size={14} className="text-amber-400" /> Top Shelf</span>
-            </label>
-            <label className="flex items-center gap-4 bg-zinc-950 border border-zinc-800 p-5 rounded-2xl cursor-pointer hover:border-rose-500/50 transition-all shadow-inner">
-              <input type="checkbox" checked={editingItem.dailyDeal} onChange={(e) => setEditingItem({...editingItem, dailyDeal: e.target.checked})} className="w-5 h-5 accent-rose-500" />
-              <span className="text-sm font-black text-white flex items-center gap-2"><Flame size={14} className="text-rose-400" /> Active Promo</span>
-            </label>
-          </div>
-
-          {editingItem.dailyDeal && (
-            <div className="mt-6 bg-zinc-950/80 border border-rose-500/30 p-6 rounded-2xl animate-in slide-in-from-top-4 shadow-[0_0_20px_rgba(244,63,94,0.05)]">
-              <div className="flex justify-between items-center mb-5">
-                <label className="text-[10px] font-black uppercase tracking-widest text-rose-400 flex items-center gap-2"><Flame size={14}/> Promo Configuration</label>
-                <select value={editingItem.dealType || 'Daily Deal'} onChange={(e) => setEditingItem({...editingItem, dealType: e.target.value})} className="bg-zinc-900 border border-zinc-800 text-zinc-300 text-xs font-bold py-2 px-3 rounded-lg outline-none focus:border-rose-500/50">
-                  <option value="Daily Deal">Standard Daily Deal</option>
-                  <option value="Weekly Special">Weekly Special</option>
-                </select>
-              </div>
-
-              {editingItem.dealType === 'Weekly Special' && (
-                <div className="mb-5">
-                  <label className="text-[10px] font-black uppercase tracking-widest text-zinc-500 mb-2 block">Active Days</label>
-                  <div className="flex gap-2">
-                    {DAYS_OF_WEEK.map((dayStr, idx) => {
-                       const isActive = editingItem.dealDays?.includes(idx);
-                       return (
-                         <button type="button" key={idx} onClick={() => {
-                             const currentDays = editingItem.dealDays || [];
-                             const newDays = isActive ? currentDays.filter((d:number) => d !== idx) : [...currentDays, idx];
-                             setEditingItem({...editingItem, dealDays: newDays});
-                           }}
-                           className={`flex-1 py-2.5 rounded-lg text-[10px] font-black uppercase tracking-wider transition-all ${isActive ? 'bg-rose-500 text-zinc-950 shadow-[0_0_10px_rgba(244,63,94,0.3)]' : 'bg-zinc-900 text-zinc-500 border border-zinc-800 hover:border-rose-500/30'}`}
-                         >
-                           {dayStr.label}
-                         </button>
-                       );
-                    })}
+        <div className="flex-1 space-y-3 overflow-y-auto scrollbar-hide pr-1">
+          {filteredProducts.map((item: any) => {
+            const ItemIcon = item.iconName === 'Leaf' ? Leaf : item.iconName === 'Flame' ? Flame : item.iconName === 'Box' ? Box : ImageIcon;
+            return (
+              <button key={item.id} onClick={() => onSelect(item)} className="w-full flex items-center justify-between p-4 bg-zinc-950 hover:bg-zinc-800/50 border border-zinc-800 rounded-2xl transition-all group/item shadow-inner">
+                <div className="flex items-center gap-4">
+                  <div className="w-10 h-10 bg-zinc-900 rounded-xl border border-zinc-800 flex items-center justify-center text-zinc-700 shrink-0 group-hover/item:border-amber-500/30">
+                    {item.imageUrl ? <img src={item.imageUrl} alt={item.name} className="w-full h-full object-cover group-hover/item:scale-105 transition-transform" /> : <ItemIcon size={18} />}
+                  </div>
+                  <div className="text-left">
+                    <p className="font-bold text-sm text-zinc-100">{item.name}</p>
+                    <p className="text-[10px] font-bold uppercase tracking-wider text-zinc-600 font-mono">{item.id}</p>
                   </div>
                 </div>
-              )}
-
-              <div className="mb-6">
-                <label className="text-[10px] font-black uppercase tracking-widest text-zinc-500 mb-2 block">Banner Message</label>
-                <input type="text" placeholder="e.g. 5g Get 1g FREE!" value={editingItem.dealText || ''} onChange={(e) => setEditingItem({...editingItem, dealText: e.target.value})} className="w-full bg-zinc-900 border border-zinc-800 text-zinc-100 text-sm font-medium p-3.5 rounded-xl outline-none focus:border-rose-500/50 transition-colors shadow-inner" />
-              </div>
-              
-              <div className="pt-5 border-t border-rose-500/10 space-y-3">
-                <label className="text-[10px] font-black uppercase tracking-widest text-zinc-500 block mb-3">Pricing Overrides</label>
-                {editingItem.sizes.map((sz: any, idx: number) => (
-                   <div key={sz.id} className="flex items-center gap-3 bg-zinc-900 p-3 rounded-xl border border-zinc-800 shadow-inner">
-                     <span className="text-xs font-bold text-zinc-400 w-24 truncate px-2" title={sz.label}>{sz.label}</span>
-                     <input type="text" placeholder="Promo Label (e.g. 5+1)" value={sz.promoLabel || ''} onChange={(e) => updateSize(sz.id, 'promoLabel', e.target.value)} className="flex-1 min-w-0 bg-zinc-950 border border-zinc-800 text-sm font-medium text-zinc-100 p-2.5 rounded-lg outline-none focus:border-rose-500/50" />
-                     <div className="relative w-32 shrink-0">
-                       <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs font-black text-rose-500/50 uppercase">$</span>
-                       <input type="number" step="0.01" placeholder="Price" value={sz.promoPrice !== undefined ? sz.promoPrice : ''} onChange={(e) => updateSize(sz.id, 'promoPrice', e.target.value === '' ? '' : parseFloat(e.target.value))} className="w-full bg-zinc-950 border border-zinc-800 text-sm font-black text-rose-400 p-2.5 pl-7 pr-3 text-right rounded-lg outline-none font-mono focus:border-rose-500/50" />
-                     </div>
-                   </div>
-                ))}
-              </div>
+                <ChevronRight size={18} className="text-zinc-600 group-hover/item:text-amber-400 transition-colors" />
+              </button>
+            );
+          })}
+          {filteredProducts.length === 0 && (searchTerm.trim() !== "") && (
+            <div className="text-center py-10">
+               <span className="text-sm font-bold text-zinc-600">No results found for "{searchTerm}"</span>
             </div>
           )}
         </div>
+      </div>
+    </div>
+  );
+};
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 border-t border-zinc-800 pt-8">
+export default function AdminInventoryEditor({ initialItem, isAdding, mainCategories, subCategories, standardTiers, onSave, onCancel, inventoryMatrix, client_id, setNotification }: any) {
+  const cid = client_id;
+  
+  const [updatedItem, setUpdatedItem] = useState({ 
+    ...initialItem, 
+    sizes: initialItem.sizes || [] 
+  });
+  const [showSearchModal, setShowSearchModal] = useState(false);
+  const [newSizeTier, setNewSizeTier] = useState(standardTiers[0] || '');
+
+  const [isUploading, setIsUploading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [dragActive, setDragActive] = useState(false);
+
+  const handleFileUpload = async (file: File) => {
+    if (!file || !cid || !updatedItem.id) return;
+    
+    setIsUploading(true);
+    if (setNotification) setNotification("Preparing asset push...");
+
+    try {
+      const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
+      const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
+      
+      if (!supabaseUrl || !supabaseKey) {
+        throw new Error("Missing Supabase credentials");
+      }
+
+      const supabase = createClient(supabaseUrl, supabaseKey);
+      
+      const fileExt = file.name.split('.').pop();
+      const filename = `${cid}/inventory/${updatedItem.id}-v${Date.now()}.${fileExt}`;
+      
+      const { error: uploadError } = await supabase
+        .storage
+        .from('client-assets')
+        .upload(filename, file, { upsert: true });
+
+      if (uploadError) throw uploadError;
+
+      const { data: { publicUrl } } = supabase
+        .storage
+        .from('client-assets')
+        .getPublicUrl(filename);
+
+      setUpdatedItem((prev: any) => ({ ...prev, imageUrl: publicUrl }));
+      if (setNotification) setNotification(`Image Uploaded! Synced to Vault.`);
+
+    } catch (err) {
+      console.error("Asset Upload Error:", err);
+      if (setNotification) setNotification("Image upload failed. See console.");
+    } finally {
+      setIsUploading(false);
+    }
+  };
+
+  const handleDrag = (e: React.DragEvent) => { e.preventDefault(); e.stopPropagation(); if (e.type === "dragenter" || e.type === "dragover") setDragActive(true); else setDragActive(false); };
+  const handleDrop = (e: React.DragEvent) => { e.preventDefault(); e.stopPropagation(); setDragActive(false); if (e.dataTransfer.files && e.dataTransfer.files[0]) handleFileUpload(e.dataTransfer.files[0]); };
+
+  const addSize = () => {
+    if (newSizeTier && !updatedItem.sizes.some((s: any) => s.label === newSizeTier)) {
+      setUpdatedItem((prev: any) => ({
+        ...prev,
+        sizes: [...prev.sizes, { id: `sz-${Date.now()}`, label: newSizeTier, price: 0, bundleQty: 1, promoLabel: '', promoPrice: '' }]
+      }));
+    }
+  };
+
+  const removeSize = (id: string) => { setUpdatedItem((prev: any) => ({ ...prev, sizes: prev.sizes.filter((s: any) => s.id !== id) })); };
+  const handleSizeChange = (id: string, field: string, value: any) => { setUpdatedItem((prev: any) => ({ ...prev, sizes: prev.sizes.map((s: any) => s.id === id ? { ...s, [field]: field === 'label' ? value : Number(value) || 0 } : s) })); };
+  const handleSave = () => { onSave(updatedItem, isAdding); };
+
+  let HeaderIcon = ImageIcon;
+  let statusText = "Ready for Market";
+  let statusColor = "bg-emerald-500/10 text-emerald-400 border-emerald-500/30";
+  let titleGradient = "from-amber-400 via-zinc-100 to-amber-500";
+
+  if (!updatedItem.name || !updatedItem.imageUrl || (updatedItem.mainCategory === 'Flower & Plants' && updatedItem.sizes.length === 0)) {
+     HeaderIcon = AlertTriangle;
+     statusText = "Needs Critical Data";
+     statusColor = "bg-rose-500/10 text-rose-400 border-rose-500/30";
+     titleGradient = "from-rose-400 via-zinc-100 to-rose-500";
+  } else if (isAdding) {
+     statusText = "Drafting New Product";
+     statusColor = "bg-cyan-500/10 text-cyan-400 border-cyan-500/30";
+     titleGradient = "from-cyan-400 via-zinc-100 to-cyan-500";
+  }
+  const ItemIcon = updatedItem.iconName === 'Leaf' ? Leaf : updatedItem.iconName === 'Flame' ? Flame : updatedItem.iconName === 'Box' ? Box : ImageIcon;
+
+  return (
+    <div className="p-4 md:p-8 space-y-8 selection:bg-amber-500/30 selection:text-white pb-32 animate-in fade-in duration-500">
+      
+      <div className="flex flex-col md:flex-row md:items-start justify-between gap-6 pb-10 border-b border-zinc-800/50">
+        <div className="flex items-start gap-4">
+          <div className="shrink-0 w-20 h-20 rounded-3xl bg-zinc-900 border border-zinc-800 flex items-center justify-center text-zinc-700 shadow-inner group overflow-hidden relative">
+             {updatedItem.imageUrl ? (
+                <img src={updatedItem.imageUrl} alt={updatedItem.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+             ) : (
+                <ItemIcon size={32} />
+             )}
+             {updatedItem.dailyDeal && <Flame size={16} className="absolute top-2 right-2 text-rose-400 drop-shadow-[0_0_5px_rgba(244,63,94,0.5)]" />}
+             {updatedItem.isTopShelf && <Sparkles size={16} className="absolute bottom-2 left-2 text-amber-400 drop-shadow-[0_0_5px_rgba(251,191,36,0.5)]" />}
+          </div>
+          <div className="flex flex-col gap-1.5 pt-1">
+             <div className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[9px] font-black uppercase tracking-widest border ${statusColor}`}>
+               <HeaderIcon size={12} /> {statusText}
+             </div>
+             <h1 className={`text-4xl font-black tracking-tighter uppercase text-transparent bg-clip-text bg-linear-to-r ${titleGradient}`}>
+                {isAdding ? (updatedItem.name || "Drafting Product") : `Editing: ${updatedItem.name}`}
+             </h1>
+             <div className="flex items-center gap-2 font-mono text-zinc-600 text-xs font-bold uppercase tracking-wider">
+               <span>ID: {updatedItem.id}</span>
+               {isAdding && <span className="text-zinc-800">• Generated from Master Vault Template</span>}
+             </div>
+          </div>
+        </div>
+        
+        <div className="flex items-center gap-3 pt-2">
+          {!isAdding && <button onClick={() => setShowSearchModal(true)} className="bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 text-zinc-400 font-black px-6 py-3 rounded-2xl text-[11px] uppercase tracking-widest transition-all flex items-center gap-2 active:scale-95"><Search size={16} /> Link Vault</button>}
+          <button onClick={onCancel} className="bg-zinc-950 border border-zinc-800 hover:border-zinc-700 text-zinc-500 font-black px-6 py-3 rounded-2xl text-[11px] uppercase tracking-widest transition-all">Cancel</button>
+          <button onClick={handleSave} className="bg-amber-500 hover:bg-amber-400 text-zinc-950 font-black px-6 py-3 rounded-2xl text-[11px] uppercase tracking-widest transition-all flex items-center gap-2 active:scale-95 shadow-[0_5px_15px_rgba(251,191,36,0.2)]">Save Changes <ChevronRight size={16} /></button>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 items-start">
+        <FormCard title="Product Metadata" icon={Tag} colorClass="bg-emerald-500/10 text-emerald-400 border-emerald-500/30">
           <div className="space-y-4">
-            <div className="flex items-center justify-between">
-              <label className="text-[10px] font-black text-zinc-500 uppercase tracking-widest block">Pricing Tiers / Weights</label>
-              <button type="button" onClick={addSizeRow} className="text-[10px] font-black text-emerald-400 uppercase tracking-widest flex items-center gap-2 p-2 bg-emerald-500/5 rounded-lg border border-emerald-500/10"><Plus size={14} /> Add Tier</button>
+            <div><label className="text-[10px] font-bold text-zinc-500 uppercase tracking-wider mb-1.5 block">Product Name *</label><input type="text" value={updatedItem.name} onChange={(e) => setUpdatedItem({ ...updatedItem, name: e.target.value })} placeholder="e.g. Doobie Division (Top Shelf)" className="w-full bg-zinc-950 border border-zinc-800 rounded-xl p-4 text-xs font-bold text-zinc-100 placeholder:text-zinc-700" /></div>
+            <div><label className="text-[10px] font-bold text-zinc-500 uppercase tracking-wider mb-1.5 block">Main Category</label><select value={updatedItem.mainCategory} onChange={(e) => setUpdatedItem({ ...updatedItem, mainCategory: e.target.value })} className="w-full bg-zinc-950 border border-zinc-800 rounded-xl p-4 text-xs font-bold text-zinc-100 placeholder:text-zinc-700">{mainCategories.map((c:string)=><option key={c} value={c}>{c}</option>)}</select></div>
+            <div><label className="text-[10px] font-bold text-zinc-500 uppercase tracking-wider mb-1.5 block">Sub Category</label><select value={updatedItem.subCategory} onChange={(e) => setUpdatedItem({ ...updatedItem, subCategory: e.target.value })} className="w-full bg-zinc-950 border border-zinc-800 rounded-xl p-4 text-xs font-bold text-zinc-100 placeholder:text-zinc-700">{subCategories[updatedItem.mainCategory]?.map((s:string)=><option key={s} value={s}>{s}</option>) || <option value="Uncategorized">Uncategorized</option>}</select></div>
+            <div className="grid grid-cols-2 gap-4">
+              <div><label className="text-[10px] font-bold text-zinc-500 uppercase tracking-wider mb-1.5 block">Icon Graphic</label><select value={updatedItem.iconName} onChange={(e) => setUpdatedItem({ ...updatedItem, iconName: e.target.value })} className="w-full bg-zinc-950 border border-zinc-800 rounded-xl p-4 text-xs font-bold text-zinc-100">{['Leaf', 'Flame', 'Box', 'ImageIcon'].map((ic:string)=><option key={ic} value={ic}>{ic}</option>)}</select></div>
+              <div><label className="text-[10px] font-bold text-zinc-500 uppercase tracking-wider mb-1.5 block">Base Price ($)</label><input type="number" value={updatedItem.price} onChange={(e) => setUpdatedItem({ ...updatedItem, price: Number(e.target.value) })} placeholder="0.00" className="w-full bg-zinc-950 border border-zinc-800 rounded-xl p-4 text-xs font-bold text-zinc-100 placeholder:text-zinc-700" /></div>
+            </div>
+            {updatedItem.mainCategory === 'Flower & Plants' && (
+              <div className="grid grid-cols-2 gap-4 p-4 bg-zinc-950/80 rounded-2xl border border-zinc-800 shadow-inner">
+                <div><label className="text-[10px] font-bold text-emerald-400 uppercase tracking-wider mb-1.5 block">Lineage/Strains</label><input type="text" value={updatedItem.lineage} onChange={(e) => setUpdatedItem({ ...updatedItem, lineage: e.target.value })} placeholder="e.g. Wedding Cake x Cherry Pie" className="w-full bg-zinc-900 border border-zinc-800 rounded-xl p-4 text-xs font-bold text-zinc-100" /></div>
+                <div><label className="text-[10px] font-bold text-emerald-400 uppercase tracking-wider mb-1.5 block">Strain Type</label><select value={updatedItem.strainType} onChange={(e) => setUpdatedItem({ ...updatedItem, strainType: e.target.value })} className="w-full bg-zinc-900 border border-zinc-800 rounded-xl p-4 text-xs font-bold text-zinc-100">{['Sativa', 'Indica', 'Hybrid', 'CBD', 'N/A'].map((st:string)=><option key={st} value={st}>{st}</option>)}</select></div>
+              </div>
+            )}
+          </div>
+        </FormCard>
+
+        <FormCard title="Visuals & Marketing" icon={ImageIcon} colorClass="bg-amber-500/10 text-amber-400 border-amber-500/30">
+          <div className="space-y-6">
+            
+            <div className={`bg-zinc-950 border-2 border-dashed rounded-3xl p-6 shadow-inner relative transition-colors duration-300 ${dragActive ? 'border-amber-500/50 bg-amber-500/5' : 'border-zinc-800'}`} onDragEnter={handleDrag} onDragLeave={handleDrag} onDragOver={handleDrag} onDrop={handleDrop}>
+               <div className="flex flex-col items-center justify-center text-center gap-4">
+                  {isUploading ? (
+                     <div className="flex flex-col items-center gap-3 py-6 text-zinc-600 animate-pulse">
+                        <UploadCloud size={40} />
+                        <span className="text-xs font-black tracking-widest uppercase">Beaming to Storage...</span>
+                     </div>
+                  ) : (
+                     <>
+                        <div className="p-4 bg-zinc-900 border border-zinc-800 rounded-2xl text-amber-400 shadow-lg"><FileUp size={28} /></div>
+                        <div>
+                           <h4 className="font-bold text-sm text-zinc-100 mb-1">Direct Upload / Sync</h4>
+                           <p className="text-xs text-zinc-600 leading-relaxed font-medium">Drag & Drop an image here, or use the button below. Supabase handles the canonical naming.</p>
+                        </div>
+                        <button onClick={() => fileInputRef.current?.click()} className="bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 text-zinc-100 font-black px-5 py-3 rounded-xl text-[10px] uppercase tracking-widest active:scale-95 shadow-md flex items-center gap-1.5"><FileType size={14} /> Browse Files</button>
+                     </>
+                  )}
+                  <input type="file" ref={fileInputRef} onChange={(e) => {if (e.target.files && e.target.files[0]) handleFileUpload(e.target.files[0]);}} className="hidden" accept="image/*" />
+               </div>
+            </div>
+
+            <div className="w-px h-6 bg-zinc-800 mx-auto hidden md:block" />
+
+            <div className="flex items-center gap-4 p-4 bg-zinc-950 border border-zinc-800 rounded-2xl shadow-inner group overflow-hidden relative">
+               <div className="w-16 h-16 rounded-xl bg-zinc-900 border border-zinc-800 flex items-center justify-center text-zinc-700 shrink-0 shadow-md group overflow-hidden relative">
+                  {updatedItem.imageUrl ? <img src={updatedItem.imageUrl} alt={updatedItem.name} className="w-full h-full object-cover" /> : <ImageIcon size={24} />}
+               </div>
+               <div>
+                  <h4 className="font-bold text-xs text-zinc-100 mb-0.5">Primary Graphic</h4>
+                  <p className="font-medium text-[9px] text-zinc-600 font-mono tracking-wider break-all leading-tight bg-zinc-900 px-1 py-0.5 rounded-sm inline-block">{(updatedItem.imageUrl || 'No Image Link')}</p>
+               </div>
+               {!isAdding && <button onClick={() => setShowSearchModal(true)} className="absolute top-2 right-2 p-1.5 bg-zinc-900 border border-zinc-800 text-zinc-600 hover:text-amber-400 hover:border-amber-400/50 rounded-lg shadow-inner"><Search size={14}/></button>}
+            </div>
+
+            <div className="bg-zinc-950 border border-zinc-800 rounded-3xl p-6 shadow-inner relative overflow-hidden">
+               <div className="absolute top-0 right-0 w-32 h-32 bg-cyan-500/10 rounded-full blur-3xl pointer-events-none group-hover:bg-cyan-500/20 transition-colors" />
+               <h3 className="text-cyan-400 font-black uppercase tracking-widest text-[11px] mb-5 flex items-center gap-2 relative z-10"><Sparkles size={14} /> Marketing Boosts</h3>
+               <div className="space-y-4 relative z-10">
+                  <div className="flex items-center gap-3"><input type="checkbox" checked={updatedItem.isTopShelf} onChange={(e) => setUpdatedItem({ ...updatedItem, isTopShelf: e.target.checked })} className="w-4 h-4 rounded-sm border-2 border-zinc-800 bg-zinc-950 accent-amber-500 focus:ring-amber-500/50" /><div className="flex items-center gap-1.5 text-amber-400 font-bold text-xs"><Sparkles size={14} /> Top Shelf Product</div></div>
+                  <div className="flex items-center gap-3"><input type="checkbox" checked={updatedItem.featured} onChange={(e) => setUpdatedItem({ ...updatedItem, featured: e.target.checked })} className="w-4 h-4 rounded-sm border-2 border-zinc-800 bg-zinc-950 accent-cyan-500 focus:ring-cyan-500/50" /><div className="flex items-center gap-1.5 text-cyan-400 font-bold text-xs"><Star size={14} /> Featured on Main Catalog</div></div>
+                  <div className="flex items-center gap-3"><input type="checkbox" checked={updatedItem.dailyDeal} onChange={(e) => setUpdatedItem({ ...updatedItem, dailyDeal: e.target.checked })} className="w-4 h-4 rounded-sm border-2 border-zinc-800 bg-zinc-950 accent-rose-500 focus:ring-rose-500/50" /><div className="flex items-center gap-1.5 text-rose-400 font-bold text-xs"><Flame size={14} /> Active Promo / Daily Deal</div></div>
+               </div>
+            </div>
+          </div>
+        </FormCard>
+
+        {updatedItem.mainCategory === 'Flower & Plants' && (
+          <FormCard title="Flower Sizes & Pricing" icon={Scale} colorClass="bg-emerald-500/10 text-emerald-400 border-emerald-500/30 col-span-1 md:col-span-2 lg:col-span-1">
+             <div className="bg-zinc-950 border border-zinc-800 p-5 rounded-2xl shadow-inner mb-6">
+               <h4 className="text-[10px] font-black uppercase tracking-widest text-emerald-400 mb-3 flex items-center gap-2"><Plus size={14} /> Add New Price Tier</h4>
+               <div className="flex items-center gap-3">
+                 <select value={newSizeTier} onChange={(e) => setNewSizeTier(e.target.value)} className="flex-1 bg-zinc-900 border border-zinc-800 rounded-xl p-3 text-xs font-bold text-zinc-100">{standardTiers.map((t:string)=><option key={t} value={t}>{t}</option>)}</select>
+                 <button onClick={addSize} className="shrink-0 bg-emerald-500 hover:bg-emerald-400 text-zinc-950 font-black px-5 py-3 rounded-xl text-[10px] uppercase tracking-widest flex items-center gap-1.5 active:scale-95"><Leaf size={14}/> Add Size</button>
+               </div>
+             </div>
+             
+             <div className="space-y-4">
+               {updatedItem.sizes.map((size: any) => (
+                 <div key={size.id} className="bg-zinc-900/80 border border-zinc-800 rounded-xl p-4 animate-in slide-in-from-top-2 relative group overflow-hidden">
+                    <button onClick={() => removeSize(size.id)} className="absolute top-3.5 right-3.5 p-1 bg-zinc-950 border border-zinc-800 text-zinc-600 hover:text-rose-400 rounded-lg shadow-inner"><Trash2 size={14}/></button>
+                    <div className="grid grid-cols-2 gap-x-4 gap-y-3 pt-1">
+                       <div><label className="text-[10px] font-bold text-zinc-500 uppercase tracking-wider mb-1 block">Tier Label</label><input type="text" value={size.label} onChange={(e) => handleSizeChange(size.id, 'label', e.target.value)} className="w-full bg-zinc-950 border border-zinc-800 rounded-lg p-3 text-[11px] font-bold text-zinc-100" /></div>
+                       <div><label className="text-[10px] font-bold text-zinc-500 uppercase tracking-wider mb-1 block">Price ($) *</label><input type="number" value={size.price} onChange={(e) => handleSizeChange(size.id, 'price', e.target.value)} className="w-full bg-zinc-950 border border-zinc-800 rounded-lg p-3 text-[11px] font-bold text-amber-300 font-mono shadow-inner" /></div>
+                       <div><label className="text-[10px] font-bold text-zinc-500 uppercase tracking-wider mb-1 block">Bundle Qty (g)</label><input type="number" value={size.bundleQty} onChange={(e) => handleSizeChange(size.id, 'bundleQty', e.target.value)} className="w-full bg-zinc-950 border border-zinc-800 rounded-lg p-3 text-[11px] font-bold text-zinc-100 font-mono" /></div>
+                    </div>
+                 </div>
+               ))}
+               {updatedItem.sizes.length === 0 && (
+                 <div className="text-center py-12 bg-zinc-950/20 border border-dashed border-zinc-800 rounded-2xl">
+                   <AlertTriangle size={24} className="text-zinc-600 mb-3 mx-auto" />
+                   <p className="text-sm font-bold text-zinc-600">No price tiers defined.</p>
+                   <p className="text-xs text-zinc-700 mt-1">Add a size from the panel above to begin pricing.</p>
+                 </div>
+               )}
+             </div>
+          </FormCard>
+        )}
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-start mt-6">
+         <FormCard title="Product Description Blocks" icon={BookText} colorClass="bg-emerald-500/10 text-emerald-400 border-emerald-500/30">
+           <div className="space-y-4">
+             <div><label className="text-[10px] font-bold text-zinc-500 uppercase tracking-wider mb-1.5 block">Base Description</label><textarea value={updatedItem.descBase} onChange={(e) => setUpdatedItem({ ...updatedItem, descBase: e.target.value })} placeholder="Core marketing details..." rows={3} className="w-full bg-zinc-950 border border-zinc-800 rounded-xl p-4 text-xs font-bold text-zinc-100 placeholder:text-zinc-700 resize-none" /></div>
+             <div><label className="text-[10px] font-bold text-zinc-500 uppercase tracking-wider mb-1.5 block">Effects (Feels)</label><textarea value={updatedItem.descFeels} onChange={(e) => setUpdatedItem({ ...updatedItem, descFeels: e.target.value })} placeholder="Creative, Relaxed, Uplifted..." rows={2} className="w-full bg-zinc-950 border border-zinc-800 rounded-xl p-4 text-xs font-bold text-zinc-100 placeholder:text-zinc-700 resize-none" /></div>
+             <div><label className="text-[10px] font-bold text-zinc-500 uppercase tracking-wider mb-1.5 block">Taste/Aroma Profile</label><input type="text" value={updatedItem.descTaste} onChange={(e) => setUpdatedItem({ ...updatedItem, descTaste: e.target.value })} placeholder="Sweet, Berry, Earthy..." className="w-full bg-zinc-950 border border-zinc-800 rounded-xl p-4 text-xs font-bold text-zinc-100 placeholder:text-zinc-700" /></div>
+             <div><label className="text-[10px] font-bold text-zinc-500 uppercase tracking-wider mb-1.5 block">Fun Fact/Trivia</label><input type="text" value={updatedItem.descFact} onChange={(e) => setUpdatedItem({ ...updatedItem, descFact: e.target.value })} placeholder="FUN FACT: Originally from Alt Sol Biz..." className="w-full bg-zinc-950 border border-zinc-800 rounded-xl p-4 text-xs font-bold text-zinc-100 placeholder:text-zinc-700" /></div>
+           </div>
+         </FormCard>
+         
+         <FormCard title="Stock & Delivery SOP" icon={Boxes} colorClass="bg-amber-500/10 text-amber-400 border-amber-500/30">
+            <div className="space-y-4 p-5 bg-zinc-950 rounded-2xl border border-zinc-800 mb-6">
+                <div><label className="text-[10px] font-bold text-amber-400 uppercase tracking-wider mb-1.5 block">Global Stock (onHand/g) *</label><input type="number" value={updatedItem.onHand} onChange={(e) => setUpdatedItem({ ...updatedItem, onHand: Number(e.target.value) })} placeholder="0.0" className="w-full bg-zinc-900 border border-zinc-800 rounded-xl p-4 text-xs font-bold text-zinc-100" /></div>
+                <div><label className="text-[10px] font-bold text-amber-400 uppercase tracking-wider mb-1.5 block">Stock committed to pending orders (calculated)</label><div className="bg-zinc-900 border border-zinc-800 rounded-xl p-4 text-xs font-bold text-zinc-600 font-mono tracking-wider">{(updatedItem.committed || 0)}g Committed</div></div>
             </div>
             
-            <div className="space-y-4">
-              {editingItem.sizes.map((sz: any) => (
-                <div key={sz.id} className="bg-zinc-950 border border-zinc-800 rounded-2xl p-4 flex flex-col gap-4">
-                  <div className="flex gap-2">
-                    <input 
-                      type="text" 
-                      list="standard-tiers-list"
-                      value={sz.label} 
-                      onChange={(e) => updateSize(sz.id, 'label', e.target.value)} 
-                      placeholder="Select or Type (e.g. 3.5g)" 
-                      className="flex-1 bg-zinc-900 border border-zinc-700 rounded-xl p-4 text-sm text-white font-bold outline-none cursor-pointer focus:border-emerald-500/50 transition-colors" 
-                    />
-                    
-                    <div className="relative w-32 shrink-0">
-                      <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[9px] font-black text-zinc-600 uppercase">$</span>
-                      <input type="number" step="0.01" value={sz.price} onChange={(e) => updateSize(sz.id, 'price', parseFloat(e.target.value) || 0)} className="w-full bg-zinc-900 border border-zinc-700 rounded-xl p-4 pl-8 pr-4 text-sm text-white font-bold outline-none text-right" />
-                    </div>
-                    
-                    <button type="button" onClick={() => removeSizeRow(sz.id)} className="p-4 text-zinc-700 hover:text-rose-500"><Trash2 size={18} /></button>
-                  </div>
-                </div>
-              ))}
+            <div className="bg-zinc-950/80 border border-rose-800 rounded-2xl p-5 shadow-inner">
+               <h3 className="text-rose-400 font-black uppercase tracking-widest text-[11px] mb-4 flex items-center gap-2 relative z-10"><MapPin size={14} /> The Vault Rules (from Market Policies)</h3>
+               <ul className="text-xs text-rose-300 font-medium space-y-3">
+                  <li className="flex gap-2 items-start"><span className="text-rose-600 mt-1.5">•</span> <span>NO meetups. Delivery to residential addresses ONLY. Minimum order requirements apply based on location. The system will notify you during checkout. Access codes are strictly for verified members. Sharing codes with unverified individuals will result in permanent removal. Minimum order requirements apply based on your location.</span></li>
+               </ul>
             </div>
-          </div>
+         </FormCard>
+      </div>
 
-          <VariantsManager editingItem={editingItem} setEditingItem={setEditingItem} isFlower={isFlower} />
-          
-        </div>
-
-        <div className="border-t border-zinc-800 pt-8 flex items-center justify-between bg-zinc-950 -mx-8 -mb-8 p-8 rounded-b-4xl shadow-inner">
-          <div className="flex flex-col">
-            <span className="text-[10px] font-black uppercase text-zinc-600 tracking-widest">Total Master Stock</span>
-            <span className="text-2xl font-black text-emerald-400 flex items-center gap-2">
-              <Gauge size={20} className="text-zinc-700" />
-              {hasVariants ? editingItem.options.reduce((sum: number, opt: any) => sum + (parseFloat(opt.stock) || 0), 0) : (parseFloat(editingItem.onHand) || 0)} 
-              <span className="text-xs text-zinc-500 font-bold ml-1 uppercase">{isFlower ? 'Grams Available' : 'Units Total'}</span>
-            </span>
-          </div>
-          <button type="submit" disabled={editingItem.sizes.length === 0} className="bg-emerald-500 hover:bg-emerald-400 text-zinc-950 font-black uppercase tracking-widest py-5 px-12 rounded-2xl disabled:opacity-50 transition-all shadow-xl active:scale-95 flex items-center gap-3">
-            <Save size={20} /> Commit to Vault
-          </button>
-        </div>
-      </form>
+      {showSearchModal && <ProductSearchModal inventoryMatrix={inventoryMatrix} onClose={() => setShowSearchModal(false)} onSelect={(item: any) => { setUpdatedItem({ ...item, sizes: item.sizes || [] }); setShowSearchModal(false); if (setNotification) setNotification(`Loaded template for ${item.name}`); }} />}
     </div>
   );
 }

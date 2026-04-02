@@ -1,8 +1,9 @@
 import React, { useState, useMemo } from 'react';
-import { Edit3, Plus, Boxes, Tag, Star, Package, ChevronDown, Leaf, Flame, Box, Image as ImageIcon, Award, FoldVertical, UnfoldVertical, Download, X, AlertTriangle, Printer } from 'lucide-react';
+import { Edit3, Plus, Boxes, Tag, Star, Package, ChevronDown, Leaf, Flame, Box, Image as ImageIcon, Award, FoldVertical, UnfoldVertical, Download, X, AlertTriangle, Printer, HardDriveUpload } from 'lucide-react';
 import { useStickyState } from '@/hooks/useStickyState';
 import AdminInventoryCategoryManager from './AdminInventoryCategoryManager';
 import AdminInventoryEditor from './inventory-editor/AdminInventoryEditor';
+import { createClient } from '@supabase/supabase-js';
 
 export default function AdminInventoryModule({ stock, setStock, inventoryMatrix, setNotification, clientConfig }: any) {
   
@@ -17,6 +18,7 @@ export default function AdminInventoryModule({ stock, setStock, inventoryMatrix,
   const [isAdding, setIsAdding] = useState(false);
   const [isManagingCats, setIsManagingCats] = useState(false);
   const [showBackupModal, setShowBackupModal] = useState(false);
+  const [isMigrating, setIsMigrating] = useState(false);
 
   const [collapsedCats, setCollapsedCats] = useState<Record<string, boolean>>({});
 
@@ -26,11 +28,9 @@ export default function AdminInventoryModule({ stock, setStock, inventoryMatrix,
 
   const getBlankItem = () => ({
     id: `itm-${Math.random().toString(36).substr(2, 9)}`,
-    name: '', 
-    lineage: '', strainType: 'N/A', 
+    name: '', lineage: '', strainType: 'N/A', 
     descBase: '', descFeels: '', descTaste: '', descUses: '', descFact: '',
-    mainCategory: mainCategories[0], 
-    subCategory: subCategories[mainCategories[0]]?.[0] || 'Uncategorized',
+    mainCategory: mainCategories[0], subCategory: subCategories[mainCategories[0]]?.[0] || 'Uncategorized',
     price: 0, onHand: 0, featured: false, isTopShelf: false, dailyDeal: false,
     dealType: 'Daily Deal', dealText: '', dealDays: [], iconName: 'Leaf', options: [], 
     sizes: [
@@ -58,13 +58,8 @@ export default function AdminInventoryModule({ stock, setStock, inventoryMatrix,
       }
 
       setEditingItem({ 
-        ...getBlankItem(), ...item, 
-        sizes: defaultSizes, 
-        name: item.name || '', 
-        lineage: item.lineage || '', 
-        strainType: item.strainType || 'N/A',
-        descBase, descFeels, descTaste, descUses, descFact, 
-        mainCategory: item.mainCategory || mainCategories[0], subCategory: item.subCategory || item.category || 'Uncategorized', 
+        ...getBlankItem(), ...item, sizes: defaultSizes, name: item.name || '', lineage: item.lineage || '', strainType: item.strainType || 'N/A',
+        descBase, descFeels, descTaste, descUses, descFact, mainCategory: item.mainCategory || mainCategories[0], subCategory: item.subCategory || item.category || 'Uncategorized', 
         dealType: item.dealType || 'Daily Deal', dealText: item.dealText || '', dealDays: item.dealDays || [] 
       });
       setIsAdding(false);
@@ -74,11 +69,29 @@ export default function AdminInventoryModule({ stock, setStock, inventoryMatrix,
     }
   };
 
-  const handleSaveProduct = (itemToSave: any, isNew: boolean) => {
+  const handleSaveProduct = async (itemToSave: any, isNew: boolean) => {
     setStock((prev: any[]) => isNew ? [itemToSave, ...prev] : prev.map((item: any) => item.id === itemToSave.id ? itemToSave : item));
-    setNotification(isNew ? `Added: ${itemToSave.name}` : `Updated: ${itemToSave.name}`);
     setEditingItem(null);
     setIsAdding(false);
+
+    try {
+      const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
+      const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
+      if (!supabaseUrl || !supabaseKey) return;
+      
+      const supabase = createClient(supabaseUrl, supabaseKey);
+      const { error } = await supabase
+        .from('client_inventory')
+        .upsert(
+          { client_id: clientConfig.id, item_id: itemToSave.id, payload: itemToSave },
+          { onConflict: 'client_id, item_id' }
+        );
+      if (error) throw error;
+      setNotification(isNew ? `Added: ${itemToSave.name} to DB` : `Updated DB: ${itemToSave.name}`);
+    } catch (err) {
+      console.error("DB Write Error:", err);
+      setNotification(`Failed to save ${itemToSave.name} to master database.`);
+    }
   };
 
   const groupedItems = mainCategories.map((cat: string) => ({ category: cat, items: inventoryMatrix.filter((i: any) => i.mainCategory === cat) })).filter((group: any) => group.items.length > 0);
@@ -88,16 +101,64 @@ export default function AdminInventoryModule({ stock, setStock, inventoryMatrix,
 
   const isAllCollapsed = groupedItems.every((g: any) => collapsedCats[g.category]);
   const handleGlobalToggle = () => {
-    if (isAllCollapsed) {
-      setCollapsedCats({});
-    } else {
+    if (isAllCollapsed) { setCollapsedCats({}); } else {
       const allCollapsed: Record<string, boolean> = {};
       groupedItems.forEach((g: any) => allCollapsed[g.category] = true);
       setCollapsedCats(allCollapsed);
     }
   };
 
-  // 1. MASTER TS EXPORT (For the Dev / Codebase)
+  const handleExecuteMigration = async () => {
+    if (!window.confirm("WARNING: This will push your current local inventory to the live Supabase Database. Ensure your images are already uploaded to the bucket. Proceed?")) return;
+    
+    setIsMigrating(true);
+    setNotification("Initiating Data Beam...");
+
+    try {
+      const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
+      const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
+      
+      if (!supabaseUrl || !supabaseKey) {
+        throw new Error("Missing Supabase credentials in environment variables.");
+      }
+
+      const supabase = createClient(supabaseUrl, supabaseKey);
+      const BUCKET_PATH = `${supabaseUrl}/storage/v1/object/public/client-assets/division/inventory/`;
+
+      let successCount = 0;
+
+      for (const item of stock) {
+        let updatedImageUrl = item.imageUrl;
+        if (item.imageUrl && !item.imageUrl.includes('supabase.co')) {
+           const filename = item.imageUrl.split('/').pop();
+           updatedImageUrl = `${BUCKET_PATH}${filename}`;
+        }
+
+        const payloadToUpload = { ...item, imageUrl: updatedImageUrl };
+
+        const { error } = await supabase
+          .from('client_inventory')
+          .upsert(
+            { client_id: clientConfig.id, item_id: item.id, payload: payloadToUpload },
+            { onConflict: 'client_id, item_id' } 
+          );
+
+        if (error) {
+          console.error(`Failed to migrate ${item.name}:`, error);
+        } else {
+          successCount++;
+        }
+      }
+
+      setNotification(`Migration Complete! Successfully beamed ${successCount} items to the vault.`);
+    } catch (error) {
+      console.error("Migration fatal error:", error);
+      setNotification("Migration Failed. Check console.");
+    } finally {
+      setIsMigrating(false);
+    }
+  };
+
   const handleExportBackup = () => {
     try {
       const cid = clientConfig?.id || 'division';
@@ -114,40 +175,7 @@ export default function AdminInventoryModule({ stock, setStock, inventoryMatrix,
       const liveSubCategories = getLocal(`inv_subcats_v2_${cid}`, clientConfig.subCategories);
       const liveTiers = getLocal(`inv_tiers_v2_${cid}`, clientConfig.pricingTiers);
 
-      const fileContent = `// ==========================================\n` +
-        `// MASTER VAULT BACKUP - ${new Date().toLocaleString()}\n` +
-        `// ==========================================\n` +
-        `// \n` +
-        `// 📋 DEPLOYMENT INSTRUCTIONS:\n` +
-        `// \n` +
-        `// STEP 1: Update Store Settings\n` +
-        `// 1. Open the file: src/config/clients/division/index.ts\n` +
-        `// 2. Replace the following fields in the 'divisionConfig' object with the values below:\n` +
-        `//    - categories\n` +
-        `//    - subCategories\n` +
-        `//    - pricingTiers\n` +
-        `//    - storeHours\n` +
-        `//    - shiftChange\n` +
-        `//    - weeklySchedule\n` +
-        `// 3. Save the file.\n` +
-        `// \n` +
-        `// STEP 2: Update Inventory Matrix\n` +
-        `// 1. Open the file: src/config/clients/division/inventory.ts\n` +
-        `// 2. Delete everything in that file and paste the entire 'divisionInventory' block from below.\n` +
-        `// 3. Save the file.\n` +
-        `// \n` +
-        `// STEP 3: Push to your repository to deploy the new state to production!\n` +
-        `// \n` +
-        `// ==========================================\n\n` +
-        `export const divisionSettings = {\n` +
-        `  categories: ${JSON.stringify(liveCategories, null, 2)},\n` +
-        `  subCategories: ${JSON.stringify(liveSubCategories, null, 2)},\n` +
-        `  pricingTiers: ${JSON.stringify(liveTiers, null, 2)},\n` +
-        `  storeHours: ${JSON.stringify(liveStoreHours, null, 2)},\n` +
-        `  shiftChange: ${JSON.stringify(liveShiftChange, null, 2)},\n` +
-        `  weeklySchedule: ${JSON.stringify(liveWeeklySchedule, null, 2)}\n` +
-        `};\n\n` +
-        `export const divisionInventory = ${JSON.stringify(stock, null, 2)};\n`;
+      const fileContent = `// MASTER VAULT BACKUP - ${new Date().toLocaleString()}\n\nexport const divisionSettings = {\n  categories: ${JSON.stringify(liveCategories, null, 2)},\n  subCategories: ${JSON.stringify(liveSubCategories, null, 2)},\n  pricingTiers: ${JSON.stringify(liveTiers, null, 2)},\n  storeHours: ${JSON.stringify(liveStoreHours, null, 2)},\n  shiftChange: ${JSON.stringify(liveShiftChange, null, 2)},\n  weeklySchedule: ${JSON.stringify(liveWeeklySchedule, null, 2)}\n};\n\nexport const divisionInventory = ${JSON.stringify(stock, null, 2)};\n`;
 
       const blob = new Blob([fileContent], { type: "application/typescript" });
       const href = URL.createObjectURL(blob);
@@ -166,7 +194,6 @@ export default function AdminInventoryModule({ stock, setStock, inventoryMatrix,
     }
   };
 
-  // 2. CLIENT AUDIT PDF EXPORT (Native Browser Print API)
   const handleExportAuditPDF = () => {
     try {
       let printHtml = `
@@ -175,7 +202,6 @@ export default function AdminInventoryModule({ stock, setStock, inventoryMatrix,
         <head>
           <title>Doobie Division - Inventory Audit</title>
           <style>
-            /* Force Landscape layout for the Print to PDF dialog */
             @page { size: landscape; margin: 10mm; }
             body { font-family: system-ui, -apple-system, sans-serif; color: #18181b; }
             h2 { color: #18181b; margin-bottom: 4px; }
@@ -186,8 +212,6 @@ export default function AdminInventoryModule({ stock, setStock, inventoryMatrix,
             .missing { color: #dc2626; font-weight: bold; }
             .good { color: #16a34a; }
             .notes-col { width: 250px; }
-            
-            /* Give rows a tiny bit of breathing room */
             tbody tr { border-bottom: 1px solid #e4e4e7; }
           </style>
         </head>
@@ -237,16 +261,12 @@ export default function AdminInventoryModule({ stock, setStock, inventoryMatrix,
             </tbody>
           </table>
           <script>
-            // Automatically trigger the print dialog once the window loads
-            window.onload = () => {
-              window.print();
-            };
+            window.onload = () => { window.print(); };
           </script>
         </body>
         </html>
       `;
 
-      // Open a new hidden window, write the HTML, and close the stream
       const printWindow = window.open('', '_blank');
       if (printWindow) {
         printWindow.document.write(printHtml);
@@ -255,30 +275,28 @@ export default function AdminInventoryModule({ stock, setStock, inventoryMatrix,
       } else {
         setNotification("Pop-up blocked. Please allow pop-ups to generate PDF.");
       }
-
     } catch (err) {
       console.error("PDF Export failed", err);
       setNotification("PDF Generation Failed.");
     }
   };
 
-  if (isManagingCats) {
-    return <AdminInventoryCategoryManager 
-      mainCategories={mainCategories}
-      subCategories={subCategories} setSubCategories={setSubCategories} 
-      standardTiers={standardTiers} setStandardTiers={setStandardTiers}
-      setNotification={setNotification} onClose={() => setIsManagingCats(false)} 
-    />;
-  }
+  if (isManagingCats) return <AdminInventoryCategoryManager mainCategories={mainCategories} subCategories={subCategories} setSubCategories={setSubCategories} standardTiers={standardTiers} setStandardTiers={setStandardTiers} setNotification={setNotification} onClose={() => setIsManagingCats(false)} />;
   
-  if (editingItem) {
-    return <AdminInventoryEditor 
-      initialItem={editingItem} isAdding={isAdding} 
-      mainCategories={mainCategories}
-      subCategories={subCategories} standardTiers={standardTiers}
-      onSave={handleSaveProduct} onCancel={() => { setEditingItem(null); setIsAdding(false); }} 
-    />;
-  }
+  if (editingItem) return (
+    <AdminInventoryEditor 
+      initialItem={editingItem} 
+      isAdding={isAdding} 
+      mainCategories={mainCategories} 
+      subCategories={subCategories} 
+      standardTiers={standardTiers} 
+      onSave={handleSaveProduct} 
+      onCancel={() => { setEditingItem(null); setIsAdding(false); }} 
+      inventoryMatrix={inventoryMatrix}
+      client_id={clientConfig.id}
+      setNotification={setNotification}
+    />
+  );
 
   return (
     <div className="p-4 md:p-8 animate-in fade-in">
@@ -287,44 +305,19 @@ export default function AdminInventoryModule({ stock, setStock, inventoryMatrix,
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-zinc-950/80 backdrop-blur-md animate-in fade-in">
           <div className="bg-zinc-900 border border-zinc-800 rounded-4xl p-6 md:p-8 max-w-md w-full shadow-2xl relative animate-in zoom-in-95">
             <button onClick={() => setShowBackupModal(false)} className="absolute top-6 right-6 text-zinc-500 hover:text-rose-400 transition-colors"><X size={20} /></button>
-            
-            <div className="w-12 h-12 bg-cyan-500/10 border border-cyan-500/20 text-cyan-400 rounded-2xl flex items-center justify-center mb-6">
-              <Download size={24} />
-            </div>
-            
+            <div className="w-12 h-12 bg-cyan-500/10 border border-cyan-500/20 text-cyan-400 rounded-2xl flex items-center justify-center mb-6"><Download size={24} /></div>
             <h3 className="text-xl font-black text-zinc-100 uppercase tracking-tight mb-2">Vault Backup Protocol</h3>
-            
             <div className="space-y-5 mb-8">
-              <p className="text-sm font-medium text-zinc-400 leading-relaxed">
-                This action will securely package your entire active inventory, including all custom pricing, variants, and stock allocations, into a local backup file.
-              </p>
-              
+              <p className="text-sm font-medium text-zinc-400 leading-relaxed">Local structural snapshot system.</p>
               <div className="bg-zinc-950 border border-zinc-800 p-5 rounded-2xl shadow-inner">
-                <h4 className="text-[10px] font-black uppercase tracking-widest text-amber-400 mb-2.5 flex items-center gap-1.5"><AlertTriangle size={14} /> SOP Directives</h4>
                 <ul className="text-xs text-zinc-300 font-medium space-y-3">
-                  <li className="flex items-start gap-2">
-                    <span className="text-zinc-600 mt-0.5">•</span> 
-                    <span>Run this backup <strong>daily</strong>, or immediately following any significant catalog adjustments.</span>
-                  </li>
-                  <li className="flex items-start gap-2">
-                    <span className="text-zinc-600 mt-0.5">•</span> 
-                    <span>Once the file downloads, send it directly to Courtney (Mom & Founder of Alternative Solutions).</span>
-                  </li>
-                  <li className="flex items-start gap-2">
-                    <span className="text-zinc-600 mt-0.5">•</span> 
-                    <span className="text-emerald-400">This ensures your adjustments are permanently synced to the master database.</span>
-                  </li>
+                  <li className="flex items-start gap-2"><span className="text-emerald-400 mt-0.5">•</span> <span>This creates a hardcopy backup of your Supabase DB state.</span></li>
                 </ul>
               </div>
             </div>
-            
             <div className="flex items-center gap-3">
-              <button onClick={() => setShowBackupModal(false)} className="flex-1 bg-zinc-950 border border-zinc-800 hover:bg-zinc-800 text-zinc-400 py-4 rounded-2xl font-black uppercase tracking-widest text-[10px] transition-all">
-                Cancel
-              </button>
-              <button onClick={handleExportBackup} className="flex-1 bg-cyan-500 hover:bg-cyan-400 text-zinc-950 py-4 rounded-2xl font-black uppercase tracking-widest text-[10px] transition-all shadow-[0_0_20px_rgba(6,182,212,0.3)] active:scale-95 flex items-center justify-center gap-2">
-                <Download size={14} /> Acknowledge & Export
-              </button>
+              <button onClick={() => setShowBackupModal(false)} className="flex-1 bg-zinc-950 border border-zinc-800 hover:bg-zinc-800 text-zinc-400 py-4 rounded-2xl font-black uppercase tracking-widest text-[10px] transition-all">Cancel</button>
+              <button onClick={handleExportBackup} className="flex-1 bg-cyan-500 hover:bg-cyan-400 text-zinc-950 py-4 rounded-2xl font-black uppercase tracking-widest text-[10px] transition-all shadow-[0_0_20px_rgba(6,182,212,0.3)] active:scale-95 flex items-center justify-center gap-2"><Download size={14} /> Export</button>
             </div>
           </div>
         </div>
@@ -335,21 +328,25 @@ export default function AdminInventoryModule({ stock, setStock, inventoryMatrix,
           <div className="bg-amber-500/10 p-4 rounded-3xl border border-amber-500/30 text-amber-400 shadow-lg"><Boxes size={32} /></div>
           <div>
             <h2 className="text-3xl font-black text-white uppercase tracking-tight">Master Vault</h2>
-            <div className="text-xs font-bold text-zinc-500 uppercase tracking-[0.3em] flex items-center gap-2">Device-Secured Database <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" /></div>
+            <div className="text-xs font-bold text-zinc-500 uppercase tracking-[0.3em] flex items-center gap-2">Live Connected <span className="w-1.5 h-1.5 rounded-full bg-cyan-500 animate-pulse" /></div>
           </div>
         </div>
         
         <div className="flex flex-wrap items-center gap-3">
-          <button 
-            onClick={handleGlobalToggle} 
-            className="bg-zinc-950 hover:bg-zinc-900 text-zinc-400 border border-zinc-800 font-black uppercase tracking-widest py-3.5 px-5 rounded-2xl text-[10px] transition-all flex items-center gap-2 shadow-inner active:scale-95"
-          >
+          <button onClick={handleGlobalToggle} className="bg-zinc-950 hover:bg-zinc-900 text-zinc-400 border border-zinc-800 font-black uppercase tracking-widest py-3.5 px-5 rounded-2xl text-[10px] transition-all flex items-center gap-2 shadow-inner active:scale-95">
             {isAllCollapsed ? <><UnfoldVertical size={16} /> Expand All</> : <><FoldVertical size={16} /> Collapse All</>}
           </button>
           
           <div className="w-px h-8 bg-zinc-800 mx-1 hidden sm:block"></div>
 
-          {/* NEW PDF AUDIT BUTTON */}
+          <button 
+            onClick={handleExecuteMigration} 
+            disabled={isMigrating}
+            className={`bg-zinc-900 hover:bg-zinc-800 text-amber-400 border border-amber-900/50 font-black uppercase tracking-widest py-3.5 px-5 rounded-2xl text-[10px] transition-all flex items-center gap-2 shadow-lg hover:border-amber-400/50 active:scale-95 ${isMigrating ? 'opacity-50 cursor-not-allowed animate-pulse' : ''}`}
+          >
+            <HardDriveUpload size={16} /> {isMigrating ? 'Beaming...' : 'Migrate to DB'}
+          </button>
+
           <button onClick={handleExportAuditPDF} className="bg-zinc-900 hover:bg-zinc-800 text-fuchsia-400 border border-fuchsia-900/50 font-black uppercase tracking-widest py-3.5 px-5 rounded-2xl text-[10px] transition-all flex items-center gap-2 shadow-lg hover:border-fuchsia-400/50 active:scale-95">
             <Printer size={16} /> Audit Report
           </button>
@@ -371,86 +368,48 @@ export default function AdminInventoryModule({ stock, setStock, inventoryMatrix,
       <div className="space-y-6 pb-12">
         {groupedItems.map((group: any) => {
           const isCollapsed = collapsedCats[group.category];
-          
           const topShelfCount = group.items.filter((i: any) => i.isTopShelf).length;
           const featuredCount = group.items.filter((i: any) => i.featured).length;
           const promoCount = group.items.filter((i: any) => i.dailyDeal).length;
           
           return (
             <div key={group.category} className="animate-in fade-in slide-in-from-bottom-4">
-              
-              <div 
-                onClick={() => toggleCategory(group.category)}
-                className="flex items-center justify-between bg-zinc-900/40 border border-zinc-800/50 p-4 rounded-2xl cursor-pointer hover:bg-zinc-900 transition-colors group/header shadow-inner select-none"
-              >
+              <div onClick={() => toggleCategory(group.category)} className="flex items-center justify-between bg-zinc-900/40 border border-zinc-800/50 p-4 rounded-2xl cursor-pointer hover:bg-zinc-900 transition-colors group/header shadow-inner select-none">
                  <div className="flex items-center gap-4 flex-wrap">
                    <h3 className="text-sm font-black text-zinc-100 uppercase tracking-widest">{group.category}</h3>
-                   
                    <div className="flex items-center gap-2">
                      <span className="bg-zinc-950 border border-zinc-800 text-zinc-500 text-[10px] font-bold px-3 py-1 rounded-full shadow-inner">{group.items.length} Items</span>
-                     
-                     {topShelfCount > 0 && (
-                       <span className="bg-amber-500/10 border border-amber-500/20 text-amber-400 text-[9px] font-black uppercase tracking-widest px-2.5 py-1 rounded-full flex items-center gap-1">
-                         <Award size={10} /> {topShelfCount} Top Shelf
-                       </span>
-                     )}
-                     {featuredCount > 0 && (
-                       <span className="bg-cyan-500/10 border border-cyan-500/20 text-cyan-400 text-[9px] font-black uppercase tracking-widest px-2.5 py-1 rounded-full flex items-center gap-1">
-                         <Star size={10} /> {featuredCount} Featured
-                       </span>
-                     )}
-                     {promoCount > 0 && (
-                       <span className="bg-rose-500/10 border border-rose-500/20 text-rose-400 text-[9px] font-black uppercase tracking-widest px-2.5 py-1 rounded-full flex items-center gap-1">
-                         <Flame size={10} /> {promoCount} Active Promo
-                       </span>
-                     )}
+                     {topShelfCount > 0 && <span className="bg-amber-500/10 border border-amber-500/20 text-amber-400 text-[9px] font-black uppercase tracking-widest px-2.5 py-1 rounded-full flex items-center gap-1"><Award size={10} /> {topShelfCount} Top Shelf</span>}
+                     {featuredCount > 0 && <span className="bg-cyan-500/10 border border-cyan-500/20 text-cyan-400 text-[9px] font-black uppercase tracking-widest px-2.5 py-1 rounded-full flex items-center gap-1"><Star size={10} /> {featuredCount} Featured</span>}
+                     {promoCount > 0 && <span className="bg-rose-500/10 border border-rose-500/20 text-rose-400 text-[9px] font-black uppercase tracking-widest px-2.5 py-1 rounded-full flex items-center gap-1"><Flame size={10} /> {promoCount} Active Promo</span>}
                    </div>
                  </div>
-                 
-                 <div className={`p-1.5 rounded-full bg-zinc-950 border border-zinc-800 text-zinc-500 transition-transform duration-300 ml-4 shrink-0 ${isCollapsed ? '-rotate-90' : 'rotate-0'}`}>
-                   <ChevronDown size={14} />
-                 </div>
+                 <div className={`p-1.5 rounded-full bg-zinc-950 border border-zinc-800 text-zinc-500 transition-transform duration-300 ml-4 shrink-0 ${isCollapsed ? '-rotate-90' : 'rotate-0'}`}><ChevronDown size={14} /></div>
               </div>
               
               <div className={`grid grid-cols-1 gap-3 mt-3 transition-all ${isCollapsed ? 'hidden' : 'block'}`}>
                 {group.items.map((item: any) => {
                   const ItemIcon = item.iconName === 'Leaf' ? Leaf : item.iconName === 'Flame' ? Flame : item.iconName === 'Box' ? Box : ImageIcon;
-                  
                   const displayStock = item.onHand || (item.options?.length > 0 ? item.options.reduce((sum: number, opt: any) => sum + (Number(opt.stock) || 0), 0) : 0);
                   const displayPrice = item.price || (item.sizes?.length > 0 ? Math.min(...item.sizes.map((s: any) => s.price || 0)) : 0);
                   const isAbundant = displayStock >= 15;
 
                   return (
                     <div key={item.id} className="bg-zinc-900 border border-zinc-800 rounded-2xl p-4 flex flex-col md:flex-row md:items-center justify-between gap-4 hover:border-amber-500/50 transition-all group shadow-sm relative overflow-hidden">
-                      
                       <div className="flex items-center gap-4">
-                         
                          <div className="w-12 h-12 rounded-xl bg-zinc-950 border border-zinc-800 flex items-center justify-center text-zinc-600 shrink-0 shadow-inner overflow-hidden group-hover:border-amber-500/30 transition-colors">
-                           {item.imageUrl ? (
-                             <img src={item.imageUrl} alt={item.name} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
-                           ) : (
-                             <ItemIcon size={20} className="group-hover:text-amber-400 transition-colors" />
-                           )}
+                           {item.imageUrl ? <img src={item.imageUrl} alt={item.name} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" /> : <ItemIcon size={20} className="group-hover:text-amber-400 transition-colors" />}
                          </div>
-                         
                          <div className="flex flex-col">
                            <div className="flex items-center gap-2 mb-1">
-                             <h3 className={`font-black text-lg tracking-tight leading-none ${item.isTopShelf ? 'text-amber-400' : 'text-zinc-100'}`}>
-                               {item.name?.replace(/\s*\(\s*Top Shelf\s*\)\s*/i, '').trim()}
-                             </h3>
+                             <h3 className={`font-black text-lg tracking-tight leading-none ${item.isTopShelf ? 'text-amber-400' : 'text-zinc-100'}`}>{item.name?.replace(/\s*\(\s*Top Shelf\s*\)\s*/i, '').trim()}</h3>
                              {item.isTopShelf && <Award size={14} className="text-amber-400" />}
                              {item.featured && <Star size={14} className="text-cyan-400" />}
                              {item.dailyDeal && <Flame size={14} className="text-rose-400" />}
                            </div>
-                           
                            <div className="flex flex-wrap items-center gap-2">
                              <span className="text-[9px] font-black uppercase tracking-widest text-zinc-500">{item.subCategory || 'General'}</span>
-                             {item.strainType && item.strainType !== 'N/A' && (
-                               <>
-                                 <span className="w-1 h-1 rounded-full bg-zinc-700" />
-                                 <span className="text-[9px] font-black uppercase tracking-widest text-zinc-400">{item.strainType}</span>
-                               </>
-                             )}
+                             {item.strainType && item.strainType !== 'N/A' && <><span className="w-1 h-1 rounded-full bg-zinc-700" /><span className="text-[9px] font-black uppercase tracking-widest text-zinc-400">{item.strainType}</span></>}
                            </div>
                          </div>
                       </div>
@@ -458,28 +417,21 @@ export default function AdminInventoryModule({ stock, setStock, inventoryMatrix,
                       <div className="flex items-center gap-6">
                          <div className="flex flex-col items-end">
                            <span className="text-[9px] font-black uppercase tracking-widest text-zinc-600 mb-1 flex items-center gap-1"><Package size={10}/> Stock</span>
-                           <span className={`text-xl font-black leading-none ${displayStock <= 0 ? 'text-rose-500' : isAbundant && !item.dailyDeal ? 'text-cyan-400' : 'text-emerald-400'}`}>
-                             {displayStock}{item.mainCategory === 'Flower & Plants' ? 'g' : ''}
-                           </span>
+                           <span className={`text-xl font-black leading-none ${displayStock <= 0 ? 'text-rose-500' : isAbundant && !item.dailyDeal ? 'text-cyan-400' : 'text-emerald-400'}`}>{displayStock}{item.mainCategory === 'Flower & Plants' ? 'g' : ''}</span>
                          </div>
-                         
                          <div className="w-px h-8 bg-zinc-800 hidden sm:block"></div>
-                         
                          <div className="hidden sm:flex flex-col items-end w-16">
                            <span className="text-[9px] font-black uppercase tracking-widest text-zinc-600 mb-1 flex items-center gap-1"><Tag size={10}/> Base</span>
                            <span className="text-xl font-black leading-none text-zinc-300 font-mono">${displayPrice.toFixed(0) || '0'}</span>
                          </div>
-                         
                          <button onClick={() => openEditor(item)} className="ml-2 p-3 bg-zinc-950 border border-zinc-800 rounded-xl text-zinc-500 hover:text-amber-400 hover:border-amber-400/50 transition-all shadow-inner active:scale-95">
                            <Edit3 size={18} />
                          </button>
                       </div>
-
                     </div>
                   );
                 })}
               </div>
-
             </div>
           );
         })}
