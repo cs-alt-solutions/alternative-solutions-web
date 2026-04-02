@@ -8,8 +8,9 @@ export const PoliciesModal = ({ storePolicies, onClose }: any) => {
           <button onClick={onClose} className="absolute top-5 right-5 text-zinc-500 hover:text-rose-400 z-10 bg-zinc-950 p-2 rounded-full border border-zinc-800 transition-colors"><X size={20} /></button>
           
           <div className="mb-6 mt-2 space-y-4">
-            <h2 className="text-2xl font-black uppercase tracking-widest text-white flex items-center gap-3">
-              <Info size={28} className="text-cyan-400" /> Welcome
+            <h2 className="text-xl md:text-2xl font-black uppercase tracking-widest text-white flex items-start gap-3">
+              <Info size={28} className="text-cyan-400 shrink-0 mt-0.5" /> 
+              <span>Welcome to the Doobie Division Member Market</span>
             </h2>
             
             <div className="bg-amber-500/10 border border-amber-500/30 p-4 rounded-2xl shadow-inner relative overflow-hidden">
@@ -43,9 +44,9 @@ export const PoliciesModal = ({ storePolicies, onClose }: any) => {
                         <p className="leading-relaxed font-medium">{policy}</p>
                       </li>
                     ))}
-                    {/* UPDATED: Dynamic instruction about minimums */}
+                    {/* Fixed UI Inconsistency: Changed to match the red/rose theme */}
                     <li className="flex gap-3 text-xs text-zinc-300 items-start">
-                        <div className="mt-1 shrink-0"><div className="w-1.5 h-1.5 rounded-full bg-cyan-400 shadow-[0_0_8px_rgba(34,211,238,0.8)]" /></div>
+                        <div className="mt-1 shrink-0"><div className="w-1.5 h-1.5 rounded-full bg-rose-400 shadow-[0_0_8px_rgba(244,63,94,0.8)]" /></div>
                         <p className="leading-relaxed font-medium">Minimum order requirements apply based on your location. The system will notify you during checkout if your requirements haven't been met.</p>
                     </li>
                   </ul>
