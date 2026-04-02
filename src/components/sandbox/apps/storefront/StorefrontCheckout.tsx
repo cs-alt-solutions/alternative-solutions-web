@@ -16,7 +16,6 @@ export default function StorefrontCheckout({
   const grandTotal = cartTotal + convenienceFee;
   const isCheckoutReady = detectedZone && isMinMet && paymentMethod && customerName && streetAddress && city && zipCode;
 
-  // SMART DIFF: Only flag as an update if the cart ACTUALLY changed since the last copy
   const isUpdateNeeded = useMemo(() => {
     if (!hasSubmittedOnce || !submittedCart) return false;
     const currentKeys = Object.keys(cart);
@@ -28,7 +27,6 @@ export default function StorefrontCheckout({
     return false;
   }, [cart, submittedCart, hasSubmittedOnce]);
 
-  // DYNAMIC ORDER TEXT GENERATOR WITH CART DIFFING
   const orderText = useMemo(() => {
     const authId = `${timeData.activeCode}-${orderRef}`;
     
@@ -49,7 +47,6 @@ export default function StorefrontCheckout({
     
     let cartLines: string[] = [];
 
-    // Log the current items, noting what is New or Changed
     Object.entries(cart).forEach(([cartKey, cartItem]: any) => {
       const itemInDB = inventory?.find((i: any) => i.id === cartItem.item.id);
       const isDealActive = itemInDB?.dailyDeal;
@@ -65,7 +62,6 @@ export default function StorefrontCheckout({
       
       let line = `${qty}x ${name} - ${sizeLabel} (${optionLabel}) [$${(price * qty).toFixed(2)}]`;
 
-      // DIFF LOGIC: Compare with the previously submitted cart
       if (isUpdateNeeded && submittedCart) {
         const prevItem = submittedCart[cartKey];
         if (!prevItem) {
@@ -77,7 +73,6 @@ export default function StorefrontCheckout({
       cartLines.push(line);
     });
 
-    // Check for REMOVED items
     if (isUpdateNeeded && submittedCart) {
       let removedCount = 0;
       Object.entries(submittedCart).forEach(([cartKey, prevItem]: any) => {
@@ -112,7 +107,6 @@ export default function StorefrontCheckout({
     navigator.clipboard.writeText(orderText);
     setIsCopied(true);
     
-    // Snapshot the current cart so next time they edit, it compares to this state!
     setSubmittedCart({...cart});
     setHasSubmittedOnce(true); 
     setTimeout(() => setIsCopied(false), 2000);
@@ -125,7 +119,6 @@ export default function StorefrontCheckout({
     <div className="min-h-dvh bg-zinc-950 flex flex-col items-center p-4 md:p-6 text-zinc-100 overflow-y-auto w-full">
       <div className="w-full max-w-md mt-4 animate-in fade-in slide-in-from-bottom-4">
         
-        {/* HEADER */}
         <div className="flex items-center justify-between mb-8 pb-4 border-b border-zinc-800">
           <div className="flex items-center gap-3">
             <h2 className="text-xl font-black uppercase tracking-widest text-emerald-400 flex items-center gap-2">
@@ -139,7 +132,6 @@ export default function StorefrontCheckout({
           </div>
         </div>
 
-        {/* AFTER HOURS ALERT */}
         {timeData.phase === 'GRACE' && (
            <div className="bg-amber-500/10 border border-amber-500/30 rounded-2xl p-4 mb-6 flex items-start gap-3">
              <Clock size={20} className="text-amber-500 shrink-0 mt-0.5" />
@@ -150,9 +142,6 @@ export default function StorefrontCheckout({
            </div>
         )}
         
-        {/* ========================================================= */}
-        {/* STAGE 1: CART REVIEW */}
-        {/* ========================================================= */}
         {stage === 'REVIEW' && (
           <div className="animate-in fade-in zoom-in-95 duration-300">
             <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-5 mb-6 shadow-lg">
@@ -210,7 +199,10 @@ export default function StorefrontCheckout({
                  <Info size={20} className="text-emerald-400 shrink-0 mt-0.5" />
                  <div>
                    <p className="text-xs font-black text-emerald-400 uppercase tracking-widest mb-1">How to Complete Your Order</p>
-                   <p className="text-xs text-zinc-300 leading-relaxed">This system puts your order together for you. <strong>You will not pay online today.</strong> Just fill out your delivery details on the next screen, copy your final order text, and send it to us on Telegram to finish up.</p>
+                   {/* UPDATED TEXT BELOW */}
+                   <p className="text-xs text-zinc-300 leading-relaxed">
+                     This system packages your request. <strong>You will not pay online here.</strong> Once you finish your details, copy the final order text and take it back to Telegram to finish up.
+                   </p>
                  </div>
               </div>
             )}
@@ -226,12 +218,8 @@ export default function StorefrontCheckout({
           </div>
         )}
 
-        {/* ========================================================= */}
-        {/* STAGE 2: DELIVERY & PAYLOAD GENERATION */}
-        {/* ========================================================= */}
         {stage === 'DETAILS' && (
           <div className="animate-in fade-in slide-in-from-right-4 duration-300">
-            {/* DELIVERY DETAILS */}
             <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-5 mb-4 shadow-lg">
                <label className="text-[10px] font-black uppercase tracking-widest text-emerald-400 flex items-center gap-2 mb-4"><MapPin size={14} /> Delivery Details</label>
                <div className="space-y-4">
@@ -286,7 +274,6 @@ export default function StorefrontCheckout({
                )}
             </div>
 
-            {/* PAYMENT SELECTION */}
             <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-5 mb-6 shadow-lg">
                <label className="text-[10px] font-black uppercase tracking-widest text-emerald-400 flex items-center gap-2 mb-3"><DollarSign size={14} /> Select Payment Method</label>
                <div className="grid grid-cols-2 gap-3">
@@ -295,7 +282,6 @@ export default function StorefrontCheckout({
                </div>
             </div>
 
-            {/* WARNING SHOWN ONLY IF THEY ALTER THE CART POST-COPY */}
             {isUpdateNeeded && (
               <div className="bg-amber-500/10 border border-amber-500/30 rounded-2xl p-5 mb-6 shadow-inner flex items-start gap-4 animate-in fade-in">
                 <div className="bg-amber-500/20 p-2 rounded-full shrink-0">
@@ -324,7 +310,6 @@ export default function StorefrontCheckout({
               {isCopied ? <><CheckCircle size={20} /> Copied! Now Paste in Telegram</> : <><Copy size={20} /> Finish & Copy Order Text</>}
             </button>
 
-            {/* ESCAPE HATCH REMOVED - FULL WIDTH BACK BUTTON */}
             <div className="flex gap-3 mb-12">
               <button onClick={() => setStage('REVIEW')} className="w-full bg-zinc-900 border border-zinc-800 py-4 rounded-xl text-zinc-400 font-bold uppercase tracking-widest hover:bg-zinc-800 hover:text-zinc-100 transition-colors">
                 ← Back to Cart

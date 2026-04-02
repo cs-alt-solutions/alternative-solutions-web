@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Info, Flame, ShoppingCart, Leaf, Wind, Cookie, Droplet, Shirt, LayoutGrid, Tag } from 'lucide-react';
 import { StorefrontCard } from './StorefrontComponents';
 import StorefrontHeader from './StorefrontHeader';
@@ -11,6 +11,11 @@ export default function StorefrontCatalog({
   setIsCheckingOut
 }: any) {
   const safeInventory = filteredInventory || [];
+
+  // AUTO-SCROLL TO TOP ON CATEGORY SWITCH
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }, [activeCategory]);
 
   // DYNAMIC HEADER STYLING ENGINE
   let HeaderIcon = Tag;
@@ -74,7 +79,6 @@ export default function StorefrontCatalog({
              <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
                <div className="flex items-center gap-3">
                  
-                 {/* DYNAMIC ICON INJECTED HERE */}
                  <div className={`p-2.5 border rounded-2xl ${bgBoxClass}`}>
                    <HeaderIcon size={24} className={iconColorClass} />
                  </div>

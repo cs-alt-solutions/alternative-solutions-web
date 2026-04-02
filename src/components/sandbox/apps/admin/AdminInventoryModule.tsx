@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { Edit3, Plus, Boxes, Tag, Star, Package, ChevronDown, Leaf, Flame, Box, Image as ImageIcon, Award, FoldVertical, UnfoldVertical, Download, X, AlertTriangle, Printer, HardDriveUpload } from 'lucide-react';
+import { Edit3, Plus, Boxes, Tag, Star, Package, ChevronDown, Leaf, Flame, Box, Image as ImageIcon, Award, FoldVertical, UnfoldVertical, Download, X, AlertTriangle, Printer, MapPinned } from 'lucide-react';
 import { useStickyState } from '@/hooks/useStickyState';
 import AdminInventoryCategoryManager from './AdminInventoryCategoryManager';
 import AdminInventoryEditor from './inventory-editor/AdminInventoryEditor';
@@ -18,7 +18,6 @@ export default function AdminInventoryModule({ stock, setStock, inventoryMatrix,
   const [isAdding, setIsAdding] = useState(false);
   const [isManagingCats, setIsManagingCats] = useState(false);
   const [showBackupModal, setShowBackupModal] = useState(false);
-  const [isMigrating, setIsMigrating] = useState(false);
 
   const [collapsedCats, setCollapsedCats] = useState<Record<string, boolean>>({});
 
@@ -28,7 +27,7 @@ export default function AdminInventoryModule({ stock, setStock, inventoryMatrix,
 
   const getBlankItem = () => ({
     id: `itm-${Math.random().toString(36).substr(2, 9)}`,
-    name: '', lineage: '', strainType: 'N/A', 
+    name: '', lineage: '', strainType: 'Hybrid', 
     descBase: '', descFeels: '', descTaste: '', descUses: '', descFact: '',
     mainCategory: mainCategories[0], subCategory: subCategories[mainCategories[0]]?.[0] || 'Uncategorized',
     price: 0, onHand: 0, featured: false, isTopShelf: false, dailyDeal: false,
@@ -58,7 +57,7 @@ export default function AdminInventoryModule({ stock, setStock, inventoryMatrix,
       }
 
       setEditingItem({ 
-        ...getBlankItem(), ...item, sizes: defaultSizes, name: item.name || '', lineage: item.lineage || '', strainType: item.strainType || 'N/A',
+        ...getBlankItem(), ...item, sizes: defaultSizes, name: item.name || '', lineage: item.lineage || '', strainType: item.strainType || 'Hybrid',
         descBase, descFeels, descTaste, descUses, descFact, mainCategory: item.mainCategory || mainCategories[0], subCategory: item.subCategory || item.category || 'Uncategorized', 
         dealType: item.dealType || 'Daily Deal', dealText: item.dealText || '', dealDays: item.dealDays || [] 
       });
@@ -108,57 +107,6 @@ export default function AdminInventoryModule({ stock, setStock, inventoryMatrix,
     }
   };
 
-  const handleExecuteMigration = async () => {
-    if (!window.confirm("WARNING: This will push your current local inventory to the live Supabase Database. Ensure your images are already uploaded to the bucket. Proceed?")) return;
-    
-    setIsMigrating(true);
-    setNotification("Initiating Data Beam...");
-
-    try {
-      const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
-      const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
-      
-      if (!supabaseUrl || !supabaseKey) {
-        throw new Error("Missing Supabase credentials in environment variables.");
-      }
-
-      const supabase = createClient(supabaseUrl, supabaseKey);
-      const BUCKET_PATH = `${supabaseUrl}/storage/v1/object/public/client-assets/division/inventory/`;
-
-      let successCount = 0;
-
-      for (const item of stock) {
-        let updatedImageUrl = item.imageUrl;
-        if (item.imageUrl && !item.imageUrl.includes('supabase.co')) {
-           const filename = item.imageUrl.split('/').pop();
-           updatedImageUrl = `${BUCKET_PATH}${filename}`;
-        }
-
-        const payloadToUpload = { ...item, imageUrl: updatedImageUrl };
-
-        const { error } = await supabase
-          .from('client_inventory')
-          .upsert(
-            { client_id: clientConfig.id, item_id: item.id, payload: payloadToUpload },
-            { onConflict: 'client_id, item_id' } 
-          );
-
-        if (error) {
-          console.error(`Failed to migrate ${item.name}:`, error);
-        } else {
-          successCount++;
-        }
-      }
-
-      setNotification(`Migration Complete! Successfully beamed ${successCount} items to the vault.`);
-    } catch (error) {
-      console.error("Migration fatal error:", error);
-      setNotification("Migration Failed. Check console.");
-    } finally {
-      setIsMigrating(false);
-    }
-  };
-
   const handleExportBackup = () => {
     try {
       const cid = clientConfig?.id || 'division';
@@ -196,89 +144,18 @@ export default function AdminInventoryModule({ stock, setStock, inventoryMatrix,
 
   const handleExportAuditPDF = () => {
     try {
-      let printHtml = `
-        <!DOCTYPE html>
-        <html>
-        <head>
-          <title>Doobie Division - Inventory Audit</title>
-          <style>
-            @page { size: landscape; margin: 10mm; }
-            body { font-family: system-ui, -apple-system, sans-serif; color: #18181b; }
-            h2 { color: #18181b; margin-bottom: 4px; }
-            p { color: #52525b; font-size: 12px; margin-top: 0; margin-bottom: 20px; }
-            table { border-collapse: collapse; width: 100%; font-size: 11px; }
-            th, td { border: 1px solid #e4e4e7; text-align: left; padding: 10px; }
-            th { background-color: #f4f4f5; font-weight: 700; color: #18181b; }
-            .missing { color: #dc2626; font-weight: bold; }
-            .good { color: #16a34a; }
-            .notes-col { width: 250px; }
-            tbody tr { border-bottom: 1px solid #e4e4e7; }
-          </style>
-        </head>
-        <body>
-          <h2>Doobie Division - Inventory Audit Report</h2>
-          <p>Generated: ${new Date().toLocaleString()}</p>
-          <table>
-            <thead>
-              <tr>
-                <th>System ID</th>
-                <th>Product Name</th>
-                <th>Main Category</th>
-                <th>Sub Category</th>
-                <th>Base Price</th>
-                <th>Current Stock</th>
-                <th>Image Status</th>
-                <th>Description Status</th>
-                <th class="notes-col">Client Notes / New Info</th>
-              </tr>
-            </thead>
-            <tbody>
-      `;
-
+      let printHtml = `<!DOCTYPE html><html><head><title>Inventory Audit</title><style>@page{size:landscape;margin:10mm;}body{font-family:system-ui,-apple-system,sans-serif;color:#18181b;}table{border-collapse:collapse;width:100%;font-size:11px;}th,td{border:1px solid #e4e4e7;text-align:left;padding:10px;}th{background-color:#f4f4f5;font-weight:700;color:#18181b;}.missing{color:#dc2626;font-weight:bold;}.good{color:#16a34a;}</style></head><body><h2>${clientConfig.name} - Inventory Audit Report</h2><p>Generated: ${new Date().toLocaleString()}</p><table><thead><tr><th>System ID</th><th>Product Name</th><th>Main Category</th><th>Sub Category</th><th>Base Price</th><th>Stock</th><th>Image</th><th>Description</th></tr></thead><tbody>`;
       stock.forEach((item: any) => {
-        const hasImage = item.imageUrl ? '<span class="good">YES</span>' : '<span class="missing">NO - PLEASE PROVIDE</span>';
-        const hasDesc = (item.description || item.descBase) ? '<span class="good">YES</span>' : '<span class="missing">NO - PLEASE PROVIDE</span>';
-        
+        const hasImage = item.imageUrl ? '<span class="good">YES</span>' : '<span class="missing">NO</span>';
+        const hasDesc = (item.description || item.descBase) ? '<span class="good">YES</span>' : '<span class="missing">NO</span>';
         const totalStock = item.onHand || (item.options ? item.options.reduce((sum: number, o: any) => sum + (Number(o.stock) || 0), 0) : 0);
         const basePrice = item.price || (item.sizes?.length > 0 ? Math.min(...item.sizes.map((s: any) => s.price || 0)) : 0);
-
-        printHtml += `
-          <tr>
-            <td style="font-family: monospace; color: #71717a;">${item.id}</td>
-            <td><strong>${item.name || 'Unnamed'}</strong></td>
-            <td>${item.mainCategory || ''}</td>
-            <td>${item.subCategory || ''}</td>
-            <td>$${basePrice}</td>
-            <td>${totalStock}</td>
-            <td>${hasImage}</td>
-            <td>${hasDesc}</td>
-            <td></td>
-          </tr>
-        `;
+        printHtml += `<tr><td style="font-family:monospace;color:#71717a;">${item.id}</td><td><strong>${item.name || 'Unnamed'}</strong></td><td>${item.mainCategory || ''}</td><td>${item.subCategory || ''}</td><td>$${basePrice}</td><td>${totalStock}</td><td>${hasImage}</td><td>${hasDesc}</td></tr>`;
       });
-
-      printHtml += `
-            </tbody>
-          </table>
-          <script>
-            window.onload = () => { window.print(); };
-          </script>
-        </body>
-        </html>
-      `;
-
+      printHtml += `</tbody></table><script>window.onload=()=>{window.print();};</script></body></html>`;
       const printWindow = window.open('', '_blank');
-      if (printWindow) {
-        printWindow.document.write(printHtml);
-        printWindow.document.close();
-        setNotification("Preparing PDF... Select 'Save as PDF' in the print dialog.");
-      } else {
-        setNotification("Pop-up blocked. Please allow pop-ups to generate PDF.");
-      }
-    } catch (err) {
-      console.error("PDF Export failed", err);
-      setNotification("PDF Generation Failed.");
-    }
+      if (printWindow) { printWindow.document.write(printHtml); printWindow.document.close(); setNotification("Preparing PDF..."); } else { setNotification("Pop-up blocked."); }
+    } catch (err) { setNotification("PDF Generation Failed."); }
   };
 
   if (isManagingCats) return <AdminInventoryCategoryManager mainCategories={mainCategories} subCategories={subCategories} setSubCategories={setSubCategories} standardTiers={standardTiers} setStandardTiers={setStandardTiers} setNotification={setNotification} onClose={() => setIsManagingCats(false)} />;
@@ -308,10 +185,10 @@ export default function AdminInventoryModule({ stock, setStock, inventoryMatrix,
             <div className="w-12 h-12 bg-cyan-500/10 border border-cyan-500/20 text-cyan-400 rounded-2xl flex items-center justify-center mb-6"><Download size={24} /></div>
             <h3 className="text-xl font-black text-zinc-100 uppercase tracking-tight mb-2">Vault Backup Protocol</h3>
             <div className="space-y-5 mb-8">
-              <p className="text-sm font-medium text-zinc-400 leading-relaxed">Local structural snapshot system.</p>
+              <p className="text-sm font-medium text-zinc-400 leading-relaxed">This creates a local structural snapshot of your current Supabase DB state.</p>
               <div className="bg-zinc-950 border border-zinc-800 p-5 rounded-2xl shadow-inner">
                 <ul className="text-xs text-zinc-300 font-medium space-y-3">
-                  <li className="flex items-start gap-2"><span className="text-emerald-400 mt-0.5">•</span> <span>This creates a hardcopy backup of your Supabase DB state.</span></li>
+                  <li className="flex items-start gap-2"><span className="text-emerald-400 mt-0.5">•</span> <span>This creates a hardcopy backup for emergency synchronization. Send this to Courtney daily.</span></li>
                 </ul>
               </div>
             </div>
@@ -328,7 +205,7 @@ export default function AdminInventoryModule({ stock, setStock, inventoryMatrix,
           <div className="bg-amber-500/10 p-4 rounded-3xl border border-amber-500/30 text-amber-400 shadow-lg"><Boxes size={32} /></div>
           <div>
             <h2 className="text-3xl font-black text-white uppercase tracking-tight">Master Vault</h2>
-            <div className="text-xs font-bold text-zinc-500 uppercase tracking-[0.3em] flex items-center gap-2">Live Connected <span className="w-1.5 h-1.5 rounded-full bg-cyan-500 animate-pulse" /></div>
+            <div className="text-xs font-bold text-zinc-500 uppercase tracking-[0.3em] flex items-center gap-2">Live Database <span className="w-1.5 h-1.5 rounded-full bg-cyan-500 animate-pulse" /></div>
           </div>
         </div>
         
@@ -339,14 +216,6 @@ export default function AdminInventoryModule({ stock, setStock, inventoryMatrix,
           
           <div className="w-px h-8 bg-zinc-800 mx-1 hidden sm:block"></div>
 
-          <button 
-            onClick={handleExecuteMigration} 
-            disabled={isMigrating}
-            className={`bg-zinc-900 hover:bg-zinc-800 text-amber-400 border border-amber-900/50 font-black uppercase tracking-widest py-3.5 px-5 rounded-2xl text-[10px] transition-all flex items-center gap-2 shadow-lg hover:border-amber-400/50 active:scale-95 ${isMigrating ? 'opacity-50 cursor-not-allowed animate-pulse' : ''}`}
-          >
-            <HardDriveUpload size={16} /> {isMigrating ? 'Beaming...' : 'Migrate to DB'}
-          </button>
-
           <button onClick={handleExportAuditPDF} className="bg-zinc-900 hover:bg-zinc-800 text-fuchsia-400 border border-fuchsia-900/50 font-black uppercase tracking-widest py-3.5 px-5 rounded-2xl text-[10px] transition-all flex items-center gap-2 shadow-lg hover:border-fuchsia-400/50 active:scale-95">
             <Printer size={16} /> Audit Report
           </button>
@@ -355,8 +224,8 @@ export default function AdminInventoryModule({ stock, setStock, inventoryMatrix,
             <Download size={16} /> Backup System
           </button>
 
-          <button onClick={() => setIsManagingCats(true)} className="bg-zinc-900 hover:bg-zinc-800 text-zinc-400 border border-zinc-800 font-black uppercase tracking-widest py-3.5 px-6 rounded-2xl text-[11px] transition-all flex items-center gap-2 shadow-lg hover:border-amber-500/30">
-            <Tag size={16} /> Map Settings
+          <button onClick={() => setIsManagingCats(true)} className="bg-zinc-900 hover:bg-zinc-800 text-zinc-400 border border-zinc-800 font-black uppercase tracking-widest py-3.5 px-6 rounded-2xl text-[11px] transition-all flex items-center gap-2 shadow-lg hover:border-amber-500/30 hover:scale-105 active:scale-95">
+            <MapPinned size={16} /> Map Settings
           </button>
           
           <button onClick={() => openEditor()} className="bg-zinc-800 hover:bg-emerald-500 hover:text-zinc-950 text-emerald-400 border border-emerald-900/30 font-black uppercase tracking-widest py-3.5 px-6 rounded-2xl text-[11px] transition-all shadow-xl flex items-center gap-2 hover:scale-105 active:scale-95">
@@ -374,7 +243,7 @@ export default function AdminInventoryModule({ stock, setStock, inventoryMatrix,
           
           return (
             <div key={group.category} className="animate-in fade-in slide-in-from-bottom-4">
-              <div onClick={() => toggleCategory(group.category)} className="flex items-center justify-between bg-zinc-900/40 border border-zinc-800/50 p-4 rounded-2xl cursor-pointer hover:bg-zinc-900 transition-colors group/header shadow-inner select-none">
+              <div onClick={() => toggleCategory(group.category)} className="flex items-center justify-between bg-zinc-900/40 border border-zinc-800/50 p-4 rounded-2xl cursor-pointer hover:bg-zinc-900 transition-colors group/header shadow-inner select-none overflow-hidden">
                  <div className="flex items-center gap-4 flex-wrap">
                    <h3 className="text-sm font-black text-zinc-100 uppercase tracking-widest">{group.category}</h3>
                    <div className="flex items-center gap-2">
@@ -397,7 +266,7 @@ export default function AdminInventoryModule({ stock, setStock, inventoryMatrix,
                   return (
                     <div key={item.id} className="bg-zinc-900 border border-zinc-800 rounded-2xl p-4 flex flex-col md:flex-row md:items-center justify-between gap-4 hover:border-amber-500/50 transition-all group shadow-sm relative overflow-hidden">
                       <div className="flex items-center gap-4">
-                         <div className="w-12 h-12 rounded-xl bg-zinc-950 border border-zinc-800 flex items-center justify-center text-zinc-600 shrink-0 shadow-inner overflow-hidden group-hover:border-amber-500/30 transition-colors">
+                         <div className="w-12 h-12 rounded-xl bg-zinc-950 border border-zinc-800 flex items-center justify-center text-zinc-700 shrink-0 shadow-inner overflow-hidden group-hover:border-amber-500/30 transition-colors">
                            {item.imageUrl ? <img src={item.imageUrl} alt={item.name} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" /> : <ItemIcon size={20} className="group-hover:text-amber-400 transition-colors" />}
                          </div>
                          <div className="flex flex-col">
