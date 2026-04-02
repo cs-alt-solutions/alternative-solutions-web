@@ -20,7 +20,7 @@ export default function StorefrontCardBack({
       <div className="flex justify-between items-start mb-5 shrink-0">
          <div>
            <h3 className={`font-black ${item.isTopShelf ? 'text-amber-300' : 'text-zinc-100'} text-xl leading-tight`}>{cleanItemName}</h3>
-           <p className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest mt-1">Configuration</p>
+          
          </div>
          <button onClick={() => setIsFlipped(false)} className="text-zinc-500 hover:text-rose-400 transition-colors bg-zinc-950 p-2 rounded-xl border border-zinc-800"><X size={18} /></button>
       </div>

@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { Edit3, Plus, Boxes, Tag, Star, Package, ChevronDown, Leaf, Flame, Box, Image as ImageIcon, Award, FoldVertical, UnfoldVertical, Download, X, AlertTriangle } from 'lucide-react';
+import { Edit3, Plus, Boxes, Tag, Star, Package, ChevronDown, Leaf, Flame, Box, Image as ImageIcon, Award, FoldVertical, UnfoldVertical, Download, X, AlertTriangle, Printer } from 'lucide-react';
 import { useStickyState } from '@/hooks/useStickyState';
 import AdminInventoryCategoryManager from './AdminInventoryCategoryManager';
 import AdminInventoryEditor from './inventory-editor/AdminInventoryEditor';
@@ -97,19 +97,16 @@ export default function AdminInventoryModule({ stock, setStock, inventoryMatrix,
     }
   };
 
-  // SUPERCHARGED EXPORT FUNCTION
+  // 1. MASTER TS EXPORT (For the Dev / Codebase)
   const handleExportBackup = () => {
     try {
       const cid = clientConfig?.id || 'division';
-      
-      // Helper to fetch live local settings so we don't just grab defaults
       const getLocal = (key: string, fallback: any) => {
         if (typeof window === 'undefined') return fallback;
         const val = localStorage.getItem(key);
         return val ? JSON.parse(val) : fallback;
       };
 
-      // Pulling ALL store operational data
       const liveStoreHours = getLocal(`store_hours_${cid}`, clientConfig.storeHours);
       const liveShiftChange = getLocal(`store_shift_change_${cid}`, clientConfig.shiftChange);
       const liveWeeklySchedule = getLocal(`store_weekly_hours_${cid}`, clientConfig.weeklySchedule);
@@ -117,9 +114,30 @@ export default function AdminInventoryModule({ stock, setStock, inventoryMatrix,
       const liveSubCategories = getLocal(`inv_subcats_v2_${cid}`, clientConfig.subCategories);
       const liveTiers = getLocal(`inv_tiers_v2_${cid}`, clientConfig.pricingTiers);
 
-      // JSON.stringify naturally catches every custom property added to objects (images, descriptions, etc)
       const fileContent = `// ==========================================\n` +
         `// MASTER VAULT BACKUP - ${new Date().toLocaleString()}\n` +
+        `// ==========================================\n` +
+        `// \n` +
+        `// 📋 DEPLOYMENT INSTRUCTIONS:\n` +
+        `// \n` +
+        `// STEP 1: Update Store Settings\n` +
+        `// 1. Open the file: src/config/clients/division/index.ts\n` +
+        `// 2. Replace the following fields in the 'divisionConfig' object with the values below:\n` +
+        `//    - categories\n` +
+        `//    - subCategories\n` +
+        `//    - pricingTiers\n` +
+        `//    - storeHours\n` +
+        `//    - shiftChange\n` +
+        `//    - weeklySchedule\n` +
+        `// 3. Save the file.\n` +
+        `// \n` +
+        `// STEP 2: Update Inventory Matrix\n` +
+        `// 1. Open the file: src/config/clients/division/inventory.ts\n` +
+        `// 2. Delete everything in that file and paste the entire 'divisionInventory' block from below.\n` +
+        `// 3. Save the file.\n` +
+        `// \n` +
+        `// STEP 3: Push to your repository to deploy the new state to production!\n` +
+        `// \n` +
         `// ==========================================\n\n` +
         `export const divisionSettings = {\n` +
         `  categories: ${JSON.stringify(liveCategories, null, 2)},\n` +
@@ -145,6 +163,102 @@ export default function AdminInventoryModule({ stock, setStock, inventoryMatrix,
     } catch (err) {
       console.error("Export failed", err);
       setNotification("Export Failed.");
+    }
+  };
+
+  // 2. CLIENT AUDIT PDF EXPORT (Native Browser Print API)
+  const handleExportAuditPDF = () => {
+    try {
+      let printHtml = `
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <title>Doobie Division - Inventory Audit</title>
+          <style>
+            /* Force Landscape layout for the Print to PDF dialog */
+            @page { size: landscape; margin: 10mm; }
+            body { font-family: system-ui, -apple-system, sans-serif; color: #18181b; }
+            h2 { color: #18181b; margin-bottom: 4px; }
+            p { color: #52525b; font-size: 12px; margin-top: 0; margin-bottom: 20px; }
+            table { border-collapse: collapse; width: 100%; font-size: 11px; }
+            th, td { border: 1px solid #e4e4e7; text-align: left; padding: 10px; }
+            th { background-color: #f4f4f5; font-weight: 700; color: #18181b; }
+            .missing { color: #dc2626; font-weight: bold; }
+            .good { color: #16a34a; }
+            .notes-col { width: 250px; }
+            
+            /* Give rows a tiny bit of breathing room */
+            tbody tr { border-bottom: 1px solid #e4e4e7; }
+          </style>
+        </head>
+        <body>
+          <h2>Doobie Division - Inventory Audit Report</h2>
+          <p>Generated: ${new Date().toLocaleString()}</p>
+          <table>
+            <thead>
+              <tr>
+                <th>System ID</th>
+                <th>Product Name</th>
+                <th>Main Category</th>
+                <th>Sub Category</th>
+                <th>Base Price</th>
+                <th>Current Stock</th>
+                <th>Image Status</th>
+                <th>Description Status</th>
+                <th class="notes-col">Client Notes / New Info</th>
+              </tr>
+            </thead>
+            <tbody>
+      `;
+
+      stock.forEach((item: any) => {
+        const hasImage = item.imageUrl ? '<span class="good">YES</span>' : '<span class="missing">NO - PLEASE PROVIDE</span>';
+        const hasDesc = (item.description || item.descBase) ? '<span class="good">YES</span>' : '<span class="missing">NO - PLEASE PROVIDE</span>';
+        
+        const totalStock = item.onHand || (item.options ? item.options.reduce((sum: number, o: any) => sum + (Number(o.stock) || 0), 0) : 0);
+        const basePrice = item.price || (item.sizes?.length > 0 ? Math.min(...item.sizes.map((s: any) => s.price || 0)) : 0);
+
+        printHtml += `
+          <tr>
+            <td style="font-family: monospace; color: #71717a;">${item.id}</td>
+            <td><strong>${item.name || 'Unnamed'}</strong></td>
+            <td>${item.mainCategory || ''}</td>
+            <td>${item.subCategory || ''}</td>
+            <td>$${basePrice}</td>
+            <td>${totalStock}</td>
+            <td>${hasImage}</td>
+            <td>${hasDesc}</td>
+            <td></td>
+          </tr>
+        `;
+      });
+
+      printHtml += `
+            </tbody>
+          </table>
+          <script>
+            // Automatically trigger the print dialog once the window loads
+            window.onload = () => {
+              window.print();
+            };
+          </script>
+        </body>
+        </html>
+      `;
+
+      // Open a new hidden window, write the HTML, and close the stream
+      const printWindow = window.open('', '_blank');
+      if (printWindow) {
+        printWindow.document.write(printHtml);
+        printWindow.document.close();
+        setNotification("Preparing PDF... Select 'Save as PDF' in the print dialog.");
+      } else {
+        setNotification("Pop-up blocked. Please allow pop-ups to generate PDF.");
+      }
+
+    } catch (err) {
+      console.error("PDF Export failed", err);
+      setNotification("PDF Generation Failed.");
     }
   };
 
@@ -235,8 +349,13 @@ export default function AdminInventoryModule({ stock, setStock, inventoryMatrix,
           
           <div className="w-px h-8 bg-zinc-800 mx-1 hidden sm:block"></div>
 
+          {/* NEW PDF AUDIT BUTTON */}
+          <button onClick={handleExportAuditPDF} className="bg-zinc-900 hover:bg-zinc-800 text-fuchsia-400 border border-fuchsia-900/50 font-black uppercase tracking-widest py-3.5 px-5 rounded-2xl text-[10px] transition-all flex items-center gap-2 shadow-lg hover:border-fuchsia-400/50 active:scale-95">
+            <Printer size={16} /> Audit Report
+          </button>
+
           <button onClick={() => setShowBackupModal(true)} className="bg-zinc-900 hover:bg-zinc-800 text-cyan-400 border border-cyan-900/50 font-black uppercase tracking-widest py-3.5 px-5 rounded-2xl text-[10px] transition-all flex items-center gap-2 shadow-lg hover:border-cyan-400/50 active:scale-95">
-            <Download size={16} /> Backup Data
+            <Download size={16} /> Backup System
           </button>
 
           <button onClick={() => setIsManagingCats(true)} className="bg-zinc-900 hover:bg-zinc-800 text-zinc-400 border border-zinc-800 font-black uppercase tracking-widest py-3.5 px-6 rounded-2xl text-[11px] transition-all flex items-center gap-2 shadow-lg hover:border-amber-500/30">
