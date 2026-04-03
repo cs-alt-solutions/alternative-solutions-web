@@ -12,13 +12,13 @@ export default function StorefrontHeader({
                
     let Icon = Tag;
     let iconColor = "text-zinc-500";
-    let activeBg = 'bg-emerald-500 text-zinc-950 shadow-[0_0_15px_rgba(52,211,153,0.3)] border-emerald-400';
+    let activeBg = 'bg-linear-to-r from-emerald-400 to-emerald-600 text-zinc-950 shadow-[0_0_15px_rgba(52,211,153,0.4)] border-transparent';
     let inactiveBg = 'bg-zinc-900 border-zinc-800 text-zinc-400 hover:bg-zinc-800 hover:text-zinc-100';
 
     if (cat === 'Featured & Deals') {
       Icon = Flame;
-      iconColor = "text-rose-500";
-      if (isActive) activeBg = 'bg-rose-500 text-zinc-950 shadow-[0_0_15px_rgba(244,63,94,0.3)] border-rose-400';
+      iconColor = "text-pink-500";
+      if (isActive) activeBg = 'bg-linear-to-r from-pink-400 to-rose-500 text-zinc-950 shadow-[0_0_15px_rgba(236,72,153,0.5)] border-transparent';
     } else if (cat === 'All') {
       Icon = LayoutGrid;
       iconColor = "text-emerald-500";
@@ -28,19 +28,19 @@ export default function StorefrontHeader({
     } else if (cat === 'Vapes & Pens') {
       Icon = Wind;
       iconColor = "text-cyan-400";
-      if (isActive) activeBg = 'bg-cyan-500 text-zinc-950 shadow-[0_0_15px_rgba(6,182,212,0.3)] border-cyan-400';
+      if (isActive) activeBg = 'bg-linear-to-r from-cyan-400 to-blue-500 text-zinc-950 shadow-[0_0_15px_rgba(6,182,212,0.4)] border-transparent';
     } else if (cat === 'Edibles') {
       Icon = Cookie;
       iconColor = "text-amber-400";
-      if (isActive) activeBg = 'bg-amber-400 text-zinc-950 shadow-[0_0_15px_rgba(251,191,36,0.3)] border-amber-300';
+      if (isActive) activeBg = 'bg-linear-to-r from-amber-400 to-orange-500 text-zinc-950 shadow-[0_0_15px_rgba(251,191,36,0.4)] border-transparent';
     } else if (cat === 'Concentrates') {
       Icon = Droplet;
       iconColor = "text-orange-500";
-      if (isActive) activeBg = 'bg-orange-500 text-zinc-950 shadow-[0_0_15px_rgba(249,115,22,0.3)] border-orange-400';
+      if (isActive) activeBg = 'bg-linear-to-r from-orange-400 to-rose-500 text-zinc-950 shadow-[0_0_15px_rgba(249,115,22,0.4)] border-transparent';
     } else if (cat === 'Merch & Extras') {
       Icon = Shirt;
       iconColor = "text-fuchsia-400";
-      if (isActive) activeBg = 'bg-fuchsia-500 text-zinc-950 shadow-[0_0_15px_rgba(217,70,239,0.3)] border-fuchsia-400';
+      if (isActive) activeBg = 'bg-linear-to-r from-fuchsia-400 to-purple-600 text-zinc-950 shadow-[0_0_15px_rgba(217,70,239,0.4)] border-transparent';
     }
 
     return (

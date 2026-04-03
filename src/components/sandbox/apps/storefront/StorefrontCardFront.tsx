@@ -1,157 +1,106 @@
 import React from 'react';
-import { Flame, Star, Award, Target, Wind, Sparkles, Leaf, Box, Image as ImageIcon, Dna } from 'lucide-react';
+import { Award, Flame, Star, Leaf, Box, Image as ImageIcon, ArrowRight } from 'lucide-react';
 
-const getTypeColor = (type: string) => {
-  switch(type?.toLowerCase()) {
-    case 'indica': return 'bg-indigo-500';
-    case 'sativa': return 'bg-orange-500';
-    case 'hybrid': return 'bg-emerald-500';
-    case 'indica-dom': return 'bg-indigo-400';
-    case 'sativa-dom': return 'bg-orange-400';
-    case 'high-cbd': return 'bg-sky-500';
-    default: return 'bg-zinc-500';
-  }
-};
-
-export default function StorefrontCardFront({ item, cleanItemName, lowestPrice, setIsFlipped }: any) {
-  const Icon = item.iconName === 'Leaf' ? Leaf : item.iconName === 'Flame' ? Flame : item.iconName === 'Box' ? Box : ImageIcon;
-
-  const desc = item.description || '';
+export default function StorefrontCardFront({ item, cleanItemName, lowestPrice, lowestDiscounted, setIsFlipped }: any) {
+  const ItemIcon = item.iconName === 'Leaf' ? Leaf : item.iconName === 'Flame' ? Flame : item.iconName === 'Box' ? Box : ImageIcon;
   
-  const feelsMatch = desc.match(/Feels:\s*([\s\S]*?)(?=Taste:|Uses:|Fun Fact:|$)/i);
-  const tasteMatch = desc.match(/Taste:\s*([\s\S]*?)(?=Feels:|Uses:|Fun Fact:|$)/i);
-  const usesMatch = desc.match(/Uses:\s*([\s\S]*?)(?=Feels:|Taste:|Fun Fact:|$)/i);
-
-  const cleanString = (str: string) => str.trim().replace(/\.$/, '').trim();
-
-  const feels = feelsMatch ? cleanString(feelsMatch[1]).split(',').map((s: string) => s.trim()).filter(Boolean) : [];
-  const tastes = tasteMatch ? cleanString(tasteMatch[1]).split(',').map((s: string) => s.trim()).filter(Boolean) : [];
-  const uses = usesMatch ? cleanString(usesMatch[1]).split(',').map((s: string) => s.trim()).filter(Boolean) : [];
-
-  let cleanBaseDesc = desc.split(/(Feels:|Taste:|Uses:|Fun Fact:)/i)[0].trim();
-  if (item.lineage && cleanBaseDesc.startsWith(item.lineage + '.')) {
-      cleanBaseDesc = cleanBaseDesc.substring(item.lineage.length + 1).trim();
-  }
+  const formatPromo = (logic: string) => ({ 'PCT_15': '15% OFF', 'PENNY_150': '$0.01 UNLOCK', 'BOGO': 'BOGO', 'B2G1': 'B2G1', 'B5G1': 'B5G1' }[logic] || logic || 'PROMO');
 
   return (
-    <div className={`col-start-1 row-start-1 backface-hidden w-full h-full bg-zinc-900/90 backdrop-blur-xl border ${item.isTopShelf ? 'border-amber-900/30 group-hover:border-amber-500/60' : 'border-zinc-800/80 group-hover:border-emerald-500/40'} rounded-4xl p-5 shadow-2xl flex flex-col items-center transition-all duration-500`}>
+    <div className="absolute inset-0 w-full h-full backface-hidden bg-zinc-900/90 backdrop-blur-xl border border-zinc-800 rounded-[2.5rem] flex flex-col shadow-xl overflow-hidden">
       
-      {/* HEADER IMAGE / ICON */}
-      <div className="w-full h-44 shrink-0 bg-zinc-950/80 border border-zinc-800/50 rounded-2xl mb-4 flex items-center justify-center text-zinc-800 shadow-inner overflow-hidden relative group-hover:border-zinc-700/50 transition-all duration-500">
-         <div className={`absolute z-10 inset-0 opacity-40 mix-blend-overlay pointer-events-none ${item.isTopShelf ? 'bg-linear-to-br from-amber-500/20 via-transparent to-transparent' : 'bg-linear-to-br from-emerald-500/10 via-transparent to-transparent'}`} />
-         
-         {item.imageUrl ? (
-           <img src={item.imageUrl} alt={cleanItemName} className="absolute inset-0 w-full h-full object-contain p-3 opacity-90 group-hover:opacity-100 group-hover:scale-105 transition-all duration-700" />
-         ) : (
-           <img src="https://placehold.co/600x400/18181b/52525b?text=Image+Coming+Soon" alt="Coming Soon" className="absolute inset-0 w-full h-full object-cover opacity-50 group-hover:opacity-80 transition-all duration-700" />
-         )}
+      {/* Top 45% - Full Bleed Image Header */}
+      <div className="relative w-full h-[45%] shrink-0 bg-zinc-950 border-b border-zinc-800 overflow-hidden">
+        {item.imageUrl ? (
+          <img src={item.imageUrl} alt={item.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" />
+        ) : (
+          <div className="w-full h-full flex items-center justify-center text-zinc-800">
+            <ItemIcon size={48} />
+          </div>
+        )}
 
-         <span className="absolute z-20 bottom-2 left-2 text-[10px] font-black uppercase tracking-[0.2em] text-zinc-100 bg-zinc-950/80 backdrop-blur-md px-3 py-1.5 rounded-lg border border-zinc-800 shadow-lg">${lowestPrice.toFixed(2)}+</span>
-         <div className="absolute z-20 top-2 right-2 flex flex-col gap-1.5 items-end">
+        {/* Floating Custom Tags */}
+        <div className="absolute top-4 left-4 flex flex-col gap-2 items-start z-10">
            {item.isTopShelf && (
-             <span className="text-[8px] font-black uppercase tracking-widest text-zinc-950 bg-amber-400 px-2.5 py-1 rounded-md shadow-[0_0_15px_rgba(251,191,36,0.4)] flex items-center gap-1">
-                <Award size={10} /> TOP SHELF
-             </span>
+             <div className="flex items-center gap-1.5 px-3 py-1 rounded-full border bg-zinc-950/80 backdrop-blur-md border-amber-500/50 shadow-lg">
+               <Award size={10} className="text-amber-400" />
+               <span className="text-amber-400 text-[9px] font-black uppercase tracking-widest text-shadow-sm">Reserve</span>
+             </div>
            )}
+
+           {item.featured && (
+             <div className="flex items-center gap-1.5 px-3 py-1 rounded-full border bg-zinc-950/80 backdrop-blur-md border-cyan-500/50 shadow-lg">
+               <Star size={10} className="text-cyan-400 animate-pulse" />
+               <span className="text-cyan-400 text-[9px] font-black uppercase tracking-widest">Featured</span>
+             </div>
+           )}
+
            {item.dailyDeal && (
-             <span className="text-[8px] font-black uppercase tracking-widest text-zinc-100 bg-rose-600 px-2.5 py-1 rounded-md shadow-[0_0_15px_rgba(225,29,72,0.4)] flex items-center gap-1 animate-pulse">
-               <Flame size={10} /> {item.dealType || 'Promo'}
-             </span>
+             <div className="flex items-center gap-1.5 px-3 py-1 rounded-full border bg-pink-500 shadow-[0_0_15px_rgba(236,72,153,0.5)] border-pink-400">
+               <Flame size={10} className="text-zinc-950" />
+               <span className="text-zinc-950 text-[9px] font-black uppercase tracking-widest">
+                 {item.dealLogic && item.dealLogic !== 'STANDARD' ? formatPromo(item.dealLogic) : 'Promo'}
+               </span>
+             </div>
            )}
-         </div>
-      </div>
-      
-      {item.dailyDeal && item.dealText && (
-        <div className="w-full shrink-0 bg-rose-500/5 border border-rose-500/20 text-rose-400 text-[10px] font-black uppercase tracking-widest p-2 rounded-xl mb-3 text-center flex items-center justify-center gap-2">
-           <Target size={12} /> {item.dealText}
         </div>
-      )}
+      </div>
 
-      {/* DYNAMIC SCROLL CONTAINER */}
-      <div className="flex-1 w-full min-h-0 overflow-y-auto scrollbar-hide flex flex-col mb-3">
-        <div className="my-auto w-full flex flex-col gap-3 pb-2 pt-1 px-1">
+      {/* Bottom 55% - Centered Content Body */}
+      <div className="flex flex-col flex-1 p-5 items-center text-center">
           
-          <div className="text-center shrink-0">
-            <h3 className={`font-black ${item.isTopShelf ? 'text-amber-300' : 'text-zinc-100'} text-xl tracking-tight leading-none mb-2`}>{cleanItemName}</h3>
-            
-            <div className="flex items-center justify-center gap-2 mb-2.5">
-               <span className="text-[9px] font-black text-zinc-500 uppercase tracking-[0.2em]">{item.subCategory || item.category}</span>
-               {item.strainType && item.strainType !== 'N/A' && (
-                  <>
-                    <span className="w-1 h-1 rounded-full bg-zinc-800" />
-                    <span className="flex items-center gap-1.5 text-[9px] font-black uppercase tracking-widest text-zinc-400">
-                      <span className={`w-1.5 h-1.5 rounded-full ${getTypeColor(item.strainType)} shadow-sm`} /> {item.strainType}
-                    </span>
-                  </>
-               )}
+          {/* Classification Pills - Separated Admin Style */}
+          <div className="flex items-center justify-center flex-wrap gap-1.5 w-full mb-3">
+             <span className="px-2 py-0.5 bg-zinc-950 border border-zinc-800 rounded text-[8px] font-bold text-zinc-400 uppercase tracking-widest shadow-inner">
+               {item.mainCategory}
+             </span>
+             {item.subCategory && (
+               <span className="px-2 py-0.5 bg-zinc-900 border border-zinc-700/50 rounded text-[8px] font-bold text-zinc-300 uppercase tracking-widest shadow-inner">
+                 {item.subCategory}
+               </span>
+             )}
+             {item.strainType && item.strainType !== 'N/A' && (
+               <span className="px-2 py-0.5 bg-emerald-500/10 border border-emerald-500/20 rounded text-[8px] font-bold text-emerald-400 uppercase tracking-widest shadow-inner">
+                 {item.strainType}
+               </span>
+             )}
+          </div>
+
+          {/* Title */}
+          <div className="mb-3 w-full">
+             <h3 className={`text-xl md:text-2xl font-black leading-tight tracking-tighter line-clamp-2 ${item.isTopShelf ? 'text-transparent bg-clip-text bg-linear-to-r from-amber-200 via-amber-400 to-amber-200' : 'text-zinc-100'}`}>
+               {cleanItemName || 'Unnamed Item'}
+             </h3>
+          </div>
+
+          {/* Marketing Description */}
+          <div className="flex-1 w-full overflow-hidden mb-3">
+             {item.descBase ? (
+                <p className="text-[11px] text-zinc-400 leading-relaxed font-medium line-clamp-3">
+                  {item.descBase}
+                </p>
+             ) : (
+                <p className="text-[10px] text-zinc-600 font-bold uppercase tracking-widest italic">No marketing copy provided.</p>
+             )}
+          </div>
+
+          {/* Footer Actions */}
+          <div className="mt-auto pt-4 border-t border-zinc-800/50 flex items-center justify-between shrink-0 w-full">
+            <div className="flex flex-col items-start">
+              <span className="text-[8px] font-black uppercase tracking-widest text-zinc-500">Starting At</span>
+              <div className="flex items-end gap-1.5">
+                 {lowestDiscounted < lowestPrice && <span className="text-[11px] font-black font-mono text-zinc-600 line-through leading-none mb-0.5">${lowestPrice.toFixed(0)}</span>}
+                 <span className={`text-xl font-black font-mono leading-none ${item.dailyDeal ? 'text-pink-400' : 'text-emerald-400'}`}>${lowestDiscounted.toFixed(0)}</span>
+              </div>
             </div>
-            
-            {item.lineage && (
-              <div className="flex justify-center mb-2">
-                <span className="text-[9px] font-bold text-zinc-400 bg-zinc-950/80 border border-zinc-800/50 px-3 py-1 rounded-lg flex items-center gap-1.5">
-                  <Dna size={10} className="text-emerald-500/70"/> {item.lineage}
-                </span>
-              </div>
-            )}
+            <button 
+              onClick={() => setIsFlipped(true)}
+              className="bg-zinc-100 hover:bg-white text-zinc-950 px-5 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all active:scale-95 shadow-md flex items-center gap-1"
+            >
+              Options <ArrowRight size={14} className="ml-1" />
+            </button>
           </div>
-
-          <div className="w-full text-left space-y-3">
-            {cleanBaseDesc && (
-              <p className="text-[11px] text-zinc-400/80 leading-relaxed font-medium italic text-center px-2 line-clamp-2 cursor-help" title={cleanBaseDesc}>"{cleanBaseDesc}"</p>
-            )}
-            
-            {(feels.length > 0 || tastes.length > 0 || uses.length > 0) && (
-              <div className="space-y-2.5 w-full bg-zinc-950/40 rounded-xl p-3 border border-zinc-800/30">
-                
-                {feels.length > 0 && (
-                  <div className="flex items-start gap-2">
-                    <p className="text-[8px] font-black uppercase tracking-widest text-cyan-500/70 w-14 shrink-0 flex items-center gap-1 mt-0.5"><Sparkles size={10} className="shrink-0"/> Feels</p>
-                    <div className="flex flex-wrap gap-1.5 flex-1">
-                      {feels.map((f: string, i: number) => (
-                        <span key={`f-${i}`} className="text-[8px] font-bold uppercase tracking-wider bg-zinc-950 text-cyan-400 border border-cyan-500/30 px-2 py-0.5 rounded-md whitespace-nowrap">
-                          {f}
-                        </span>
-                      ))}
-                    </div>
-                  </div>
-                )}
-
-                {tastes.length > 0 && (
-                  <div className="flex items-start gap-2">
-                    <p className="text-[8px] font-black uppercase tracking-widest text-emerald-500/70 w-14 shrink-0 flex items-center gap-1 mt-0.5"><Wind size={10} className="shrink-0"/> Taste</p>
-                    <div className="flex flex-wrap gap-1.5 flex-1">
-                      {tastes.map((t: string, i: number) => (
-                        <span key={`t-${i}`} className="text-[8px] font-bold uppercase tracking-wider bg-zinc-950 text-emerald-400 border border-emerald-500/30 px-2 py-0.5 rounded-md whitespace-nowrap">
-                          {t}
-                        </span>
-                      ))}
-                    </div>
-                  </div>
-                )}
-
-                {uses.length > 0 && (
-                  <div className="flex items-start gap-2">
-                    <p className="text-[8px] font-black uppercase tracking-widest text-fuchsia-500/70 w-14 shrink-0 flex items-center gap-1 mt-0.5"><Target size={10} className="shrink-0"/> Uses</p>
-                    <div className="flex flex-wrap gap-1.5 flex-1">
-                      {uses.map((u: string, i: number) => (
-                        <span key={`u-${i}`} className="text-[8px] font-bold uppercase tracking-wider bg-zinc-950 text-fuchsia-400 border border-fuchsia-500/30 px-2 py-0.5 rounded-md whitespace-nowrap">
-                          {u}
-                        </span>
-                      ))}
-                    </div>
-                  </div>
-                )}
-
-              </div>
-            )}
-          </div>
-        </div>
       </div>
-
-      {/* FOOTER BUTTON */}
-      <button onClick={() => setIsFlipped(true)} className={`shrink-0 w-full mt-auto bg-zinc-950 ${item.isTopShelf ? 'hover:bg-amber-500' : 'hover:bg-emerald-500'} hover:text-zinc-950 ${item.isTopShelf ? 'text-amber-400' : 'text-emerald-400'} border ${item.isTopShelf ? 'border-amber-500/30 hover:border-amber-400' : 'border-emerald-500/30 hover:border-emerald-400'} py-3.5 rounded-xl font-black uppercase tracking-widest transition-all duration-300 shadow-lg active:scale-95 flex justify-center items-center gap-2`}>
-        Select & Order
-      </button>
     </div>
   );
 }

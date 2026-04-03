@@ -53,7 +53,6 @@ export default function StorefrontTerminal({ clientConfig, onExit }: { clientCon
   const [paymentMethod, setPaymentMethod] = useState<'CASH' | 'CASHAPP' | ''>('');
   const [orders, setOrders] = useStickyState(clientConfig?.fulfillment?.initialOrders || [], `ful_orders_${clientConfig.id}`);
   
-  // --- DATABASE HOOKUP ---
   const [rawInventory, setRawInventory] = useState<any[]>([]);
   const [isLoadingInventory, setIsLoadingInventory] = useState(true);
 
@@ -190,6 +189,7 @@ export default function StorefrontTerminal({ clientConfig, onExit }: { clientCon
     }
   };
 
+  // 🧠 MODIFIED: We now expose `isConfiguredDeal` to pass the original admin intent
   const inventory = useMemo(() => {
     return rawInventory.filter((i: any) => {
       const optStock = i.options?.reduce((sum: number, opt: any) => sum + (Number(opt.stock) || 0), 0) || 0;
@@ -200,7 +200,9 @@ export default function StorefrontTerminal({ clientConfig, onExit }: { clientCon
       if (isDealActive && item.dealType === 'Weekly Special') {
         isDealActive = item.dealDays && item.dealDays.includes(timeData.dayOfWeek);
       }
-      return { ...item, dailyDeal: isDealActive };
+      // `dailyDeal` = Is it active right now?
+      // `isConfiguredDeal` = Is it scheduled as a deal in the admin panel at all?
+      return { ...item, dailyDeal: isDealActive, isConfiguredDeal: item.dailyDeal };
     });
   }, [rawInventory, timeData.dayOfWeek]);
   
@@ -222,7 +224,8 @@ export default function StorefrontTerminal({ clientConfig, onExit }: { clientCon
   const filteredInventory = useMemo(() => {
     let items = [];
     if (activeCategory === 'Featured & Deals') {
-      const combined = inventory.filter((i: any) => i.featured || i.dailyDeal);
+      // MODIFIED: We pull in everything that is featured OR configured as a deal (even if scheduled for tomorrow)
+      const combined = inventory.filter((i: any) => i.featured || i.isConfiguredDeal);
       items = combined.sort((a: any, b: any) => {
         if (a.featured && !b.featured) return -1;
         if (!a.featured && b.featured) return 1;
@@ -239,25 +242,82 @@ export default function StorefrontTerminal({ clientConfig, onExit }: { clientCon
     return items;
   }, [inventory, activeCategory, activeSubCategory]);
 
+
   const updateCart = (itemId: string, size: any, optionsArray: any[], delta: number) => {
     if (Object.keys(cart).length === 0) setCartShift(timeData.shiftCode);
+    
     setCart((prev: any) => {
       const optionsKey = optionsArray.map((o:any) => o.id).sort().join('+');
       const cartKey = `${itemId}_${size?.id || 'std'}_${optionsKey}`;
       const item = inventory.find((i: any) => i.id === itemId);
       const current = prev[cartKey]?.qty || 0;
-      const next = Math.max(0, current + delta);
+      
+      let next = Math.max(0, current + delta);
+
+      if (item?.dailyDeal) {
+         if (item.dealLogic === 'B2G1') {
+            if (delta > 0 && next % 3 === 2) next += 1; 
+            if (delta < 0 && current % 3 === 0) next -= 1; 
+         } else if (item.dealLogic === 'BOGO') {
+            if (delta > 0 && next % 2 === 1) next += 1; 
+            if (delta < 0 && current % 2 === 0) next -= 1; 
+         } else if (item.dealLogic === 'B5G1') {
+            if (delta > 0 && next % 6 === 5) next += 1; 
+            if (delta < 0 && current % 6 === 0) next -= 1; 
+         }
+      }
+
       if (next === 0) { const newCart = { ...prev }; delete newCart[cartKey]; return newCart; }
       return { ...prev, [cartKey]: { item, size, options: optionsArray, qty: next } };
     });
   };
 
-  const cartTotal = Object.values(cart).reduce((total: number, cartItem: any) => {
-    const itemInDB = inventory.find((i: any) => i.id === cartItem.item.id);
-    const isDealActive = itemInDB?.dailyDeal;
-    const activePrice = (isDealActive && cartItem.size.promoPrice !== undefined && cartItem.size.promoPrice !== '') ? cartItem.size.promoPrice : (cartItem.size.price || 0);
-    return total + (activePrice * (cartItem?.qty || 0));
-  }, 0);
+  const cartTotal = useMemo(() => {
+    let baseSubtotal = 0;
+    
+    Object.values(cart).forEach((cartItem: any) => {
+      const itemInDB = inventory.find((i: any) => i.id === cartItem.item.id);
+      if (itemInDB?.dealLogic === 'PENNY_150' && itemInDB?.dailyDeal) return; 
+      
+      const isDealActive = itemInDB?.dailyDeal;
+      const activePrice = (isDealActive && cartItem.size.promoPrice !== undefined && cartItem.size.promoPrice !== '') ? cartItem.size.promoPrice : (cartItem.size.price || 0);
+      
+      let chargeableQty = cartItem.qty;
+      let finalPrice = activePrice;
+
+      if (isDealActive) {
+         if (itemInDB.dealLogic === 'B2G1') {
+            chargeableQty = cartItem.qty - Math.floor(cartItem.qty / 3);
+         } else if (itemInDB.dealLogic === 'BOGO') {
+            chargeableQty = cartItem.qty - Math.floor(cartItem.qty / 2);
+         } else if (itemInDB.dealLogic === 'B5G1') {
+            chargeableQty = cartItem.qty - Math.floor(cartItem.qty / 6);
+         } else if (itemInDB.dealLogic === 'PCT_15') {
+            finalPrice = activePrice * 0.85; 
+         }
+      }
+      baseSubtotal += (finalPrice * chargeableQty);
+    });
+
+    let total = baseSubtotal;
+    Object.values(cart).forEach((cartItem: any) => {
+      const itemInDB = inventory.find((i: any) => i.id === cartItem.item.id);
+      if (!(itemInDB?.dealLogic === 'PENNY_150' && itemInDB?.dailyDeal)) return;
+      
+      const activePrice = (cartItem.size.price || 0);
+      
+      if (baseSubtotal >= 150) {
+          total += 0.01; 
+          if (cartItem.qty > 1) {
+             total += (activePrice * (cartItem.qty - 1)); 
+          }
+      } else {
+          total += (activePrice * cartItem.qty); 
+      }
+    });
+
+    return total;
+  }, [cart, inventory]);
   
   const cartItemCount = Object.values(cart).reduce((total: number, cartItem: any) => total + (cartItem?.qty || 0), 0);
   const convenienceFee = paymentMethod === 'CASHAPP' ? 10 : 0;

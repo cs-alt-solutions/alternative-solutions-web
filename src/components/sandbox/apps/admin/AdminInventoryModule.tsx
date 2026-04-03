@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { Edit3, Plus, Boxes, Tag, Star, Package, ChevronDown, Leaf, Flame, Box, Image as ImageIcon, Award, FoldVertical, UnfoldVertical, Download, X, AlertTriangle, Printer, MapPinned } from 'lucide-react';
+import { Edit3, Plus, Boxes, Tag, Star, Package, ChevronDown, Leaf, Flame, Box, Image as ImageIcon, Award, Download, X, AlertTriangle, Printer, MapPinned, Search, Filter, ArrowUpDown } from 'lucide-react';
 import { useStickyState } from '@/hooks/useStickyState';
 import AdminInventoryCategoryManager from './AdminInventoryCategoryManager';
 import AdminInventoryEditor from './inventory-editor/AdminInventoryEditor';
@@ -19,11 +19,11 @@ export default function AdminInventoryModule({ stock, setStock, inventoryMatrix,
   const [isManagingCats, setIsManagingCats] = useState(false);
   const [showBackupModal, setShowBackupModal] = useState(false);
 
-  const [collapsedCats, setCollapsedCats] = useState<Record<string, boolean>>({});
-
-  const toggleCategory = (cat: string) => {
-    setCollapsedCats(prev => ({ ...prev, [cat]: !prev[cat] }));
-  };
+  // --- DATA GRID STATE ---
+  const [searchTerm, setSearchTerm] = useState('');
+  const [categoryFilter, setCategoryFilter] = useState('All');
+  const [statusFilter, setStatusFilter] = useState('All');
+  const [sortConfig, setSortConfig] = useState({ key: 'name', direction: 'asc' });
 
   const getBlankItem = () => ({
     id: `itm-${Math.random().toString(36).substr(2, 9)}`,
@@ -93,20 +93,6 @@ export default function AdminInventoryModule({ stock, setStock, inventoryMatrix,
     }
   };
 
-  const groupedItems = mainCategories.map((cat: string) => ({ category: cat, items: inventoryMatrix.filter((i: any) => i.mainCategory === cat) })).filter((group: any) => group.items.length > 0);
-  const assignedIds = new Set(groupedItems.flatMap((g: any) => g.items.map((i:any) => i.id)));
-  const unassignedItems = inventoryMatrix.filter((i: any) => !assignedIds.has(i.id));
-  if (unassignedItems.length > 0) groupedItems.push({ category: 'Other / Uncategorized', items: unassignedItems });
-
-  const isAllCollapsed = groupedItems.every((g: any) => collapsedCats[g.category]);
-  const handleGlobalToggle = () => {
-    if (isAllCollapsed) { setCollapsedCats({}); } else {
-      const allCollapsed: Record<string, boolean> = {};
-      groupedItems.forEach((g: any) => allCollapsed[g.category] = true);
-      setCollapsedCats(allCollapsed);
-    }
-  };
-
   const handleExportBackup = () => {
     try {
       const cid = clientConfig?.id || 'division';
@@ -158,6 +144,66 @@ export default function AdminInventoryModule({ stock, setStock, inventoryMatrix,
     } catch (err) { setNotification("PDF Generation Failed."); }
   };
 
+  // --- DATA GRID LOGIC ---
+  const handleSort = (key: string) => {
+    setSortConfig(prev => ({
+      key,
+      direction: prev.key === key && prev.direction === 'asc' ? 'desc' : 'asc'
+    }));
+  };
+
+  const processedInventory = useMemo(() => {
+    let result = [...inventoryMatrix];
+
+    // 1. Filtering
+    if (searchTerm) {
+      const lowerTerm = searchTerm.toLowerCase();
+      result = result.filter(i => i.name?.toLowerCase().includes(lowerTerm) || i.id?.toLowerCase().includes(lowerTerm));
+    }
+    if (categoryFilter !== 'All') {
+      result = result.filter(i => i.mainCategory === categoryFilter);
+    }
+    if (statusFilter !== 'All') {
+      if (statusFilter === 'Active Promo') result = result.filter(i => i.dailyDeal);
+      if (statusFilter === 'Top Shelf') result = result.filter(i => i.isTopShelf);
+      if (statusFilter === 'Featured') result = result.filter(i => i.featured);
+      if (statusFilter === 'Low Stock') result = result.filter(i => {
+        const stock = i.onHand || (i.options?.length > 0 ? i.options.reduce((sum: number, opt: any) => sum + (Number(opt.stock) || 0), 0) : 0);
+        return stock > 0 && stock <= 15;
+      });
+      if (statusFilter === 'Out of Stock') result = result.filter(i => {
+        const stock = i.onHand || (i.options?.length > 0 ? i.options.reduce((sum: number, opt: any) => sum + (Number(opt.stock) || 0), 0) : 0);
+        return stock <= 0;
+      });
+    }
+
+    // 2. Sorting
+    result.sort((a, b) => {
+      let aVal: any = 0; let bVal: any = 0;
+      
+      if (sortConfig.key === 'name') {
+        aVal = a.name?.toLowerCase() || ''; bVal = b.name?.toLowerCase() || '';
+      } else if (sortConfig.key === 'category') {
+        aVal = a.mainCategory || ''; bVal = b.mainCategory || '';
+      } else if (sortConfig.key === 'subCategory') {
+        aVal = a.subCategory || ''; bVal = b.subCategory || '';
+      } else if (sortConfig.key === 'stock') {
+        aVal = a.onHand || (a.options?.length > 0 ? a.options.reduce((sum: number, opt: any) => sum + (Number(opt.stock) || 0), 0) : 0);
+        bVal = b.onHand || (b.options?.length > 0 ? b.options.reduce((sum: number, opt: any) => sum + (Number(opt.stock) || 0), 0) : 0);
+      } else if (sortConfig.key === 'price') {
+        aVal = a.price || (a.sizes?.length > 0 ? Math.min(...a.sizes.map((s: any) => s.price || 0)) : 0);
+        bVal = b.price || (b.sizes?.length > 0 ? Math.min(...b.sizes.map((s: any) => s.price || 0)) : 0);
+      }
+
+      if (aVal < bVal) return sortConfig.direction === 'asc' ? -1 : 1;
+      if (aVal > bVal) return sortConfig.direction === 'asc' ? 1 : -1;
+      return 0;
+    });
+
+    return result;
+  }, [inventoryMatrix, searchTerm, categoryFilter, statusFilter, sortConfig]);
+
+
   if (isManagingCats) return <AdminInventoryCategoryManager mainCategories={mainCategories} subCategories={subCategories} setSubCategories={setSubCategories} standardTiers={standardTiers} setStandardTiers={setStandardTiers} setNotification={setNotification} onClose={() => setIsManagingCats(false)} />;
   
   if (editingItem) return (
@@ -200,7 +246,8 @@ export default function AdminInventoryModule({ stock, setStock, inventoryMatrix,
         </div>
       )}
 
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-10 border-b border-zinc-800/50 pb-8">
+      {/* HEADER SECTION */}
+      <div className="flex flex-col xl:flex-row xl:items-end justify-between gap-6 mb-8 border-b border-zinc-800/50 pb-8">
         <div className="flex items-center gap-4">
           <div className="bg-amber-500/10 p-4 rounded-3xl border border-amber-500/30 text-amber-400 shadow-lg"><Boxes size={32} /></div>
           <div>
@@ -210,101 +257,196 @@ export default function AdminInventoryModule({ stock, setStock, inventoryMatrix,
         </div>
         
         <div className="flex flex-wrap items-center gap-3">
-          <button onClick={handleGlobalToggle} className="bg-zinc-950 hover:bg-zinc-900 text-zinc-400 border border-zinc-800 font-black uppercase tracking-widest py-3.5 px-5 rounded-2xl text-[10px] transition-all flex items-center gap-2 shadow-inner active:scale-95">
-            {isAllCollapsed ? <><UnfoldVertical size={16} /> Expand All</> : <><FoldVertical size={16} /> Collapse All</>}
-          </button>
-          
-          <div className="w-px h-8 bg-zinc-800 mx-1 hidden sm:block"></div>
-
-          <button onClick={handleExportAuditPDF} className="bg-zinc-900 hover:bg-zinc-800 text-fuchsia-400 border border-fuchsia-900/50 font-black uppercase tracking-widest py-3.5 px-5 rounded-2xl text-[10px] transition-all flex items-center gap-2 shadow-lg hover:border-fuchsia-400/50 active:scale-95">
+          <button onClick={handleExportAuditPDF} className="bg-zinc-900 hover:bg-zinc-800 text-fuchsia-400 border border-fuchsia-900/50 font-black uppercase tracking-widest py-3 px-5 rounded-2xl text-[10px] transition-all flex items-center gap-2 shadow-lg hover:border-fuchsia-400/50 active:scale-95">
             <Printer size={16} /> Audit Report
           </button>
-
-          <button onClick={() => setShowBackupModal(true)} className="bg-zinc-900 hover:bg-zinc-800 text-cyan-400 border border-cyan-900/50 font-black uppercase tracking-widest py-3.5 px-5 rounded-2xl text-[10px] transition-all flex items-center gap-2 shadow-lg hover:border-cyan-400/50 active:scale-95">
+          <button onClick={() => setShowBackupModal(true)} className="bg-zinc-900 hover:bg-zinc-800 text-cyan-400 border border-cyan-900/50 font-black uppercase tracking-widest py-3 px-5 rounded-2xl text-[10px] transition-all flex items-center gap-2 shadow-lg hover:border-cyan-400/50 active:scale-95">
             <Download size={16} /> Backup System
           </button>
-
-          <button onClick={() => setIsManagingCats(true)} className="bg-zinc-900 hover:bg-zinc-800 text-zinc-400 border border-zinc-800 font-black uppercase tracking-widest py-3.5 px-6 rounded-2xl text-[11px] transition-all flex items-center gap-2 shadow-lg hover:border-amber-500/30 hover:scale-105 active:scale-95">
+          <button onClick={() => setIsManagingCats(true)} className="bg-zinc-900 hover:bg-zinc-800 text-zinc-400 border border-zinc-800 font-black uppercase tracking-widest py-3 px-5 rounded-2xl text-[10px] transition-all flex items-center gap-2 shadow-lg hover:border-amber-500/30 hover:text-amber-400 active:scale-95">
             <MapPinned size={16} /> Map Settings
           </button>
-          
-          <button onClick={() => openEditor()} className="bg-zinc-800 hover:bg-emerald-500 hover:text-zinc-950 text-emerald-400 border border-emerald-900/30 font-black uppercase tracking-widest py-3.5 px-6 rounded-2xl text-[11px] transition-all shadow-xl flex items-center gap-2 hover:scale-105 active:scale-95">
+          <button onClick={() => openEditor()} className="bg-zinc-800 hover:bg-emerald-500 hover:text-zinc-950 text-emerald-400 border border-emerald-900/30 font-black uppercase tracking-widest py-3 px-6 rounded-2xl text-[11px] transition-all shadow-xl flex items-center gap-2 hover:scale-105 active:scale-95">
             <Plus size={16} /> Add Product
           </button>
         </div>
       </div>
 
-      <div className="space-y-6 pb-12">
-        {groupedItems.map((group: any) => {
-          const isCollapsed = collapsedCats[group.category];
-          const topShelfCount = group.items.filter((i: any) => i.isTopShelf).length;
-          const featuredCount = group.items.filter((i: any) => i.featured).length;
-          const promoCount = group.items.filter((i: any) => i.dailyDeal).length;
-          
-          return (
-            <div key={group.category} className="animate-in fade-in slide-in-from-bottom-4">
-              <div onClick={() => toggleCategory(group.category)} className="flex items-center justify-between bg-zinc-900/40 border border-zinc-800/50 p-4 rounded-2xl cursor-pointer hover:bg-zinc-900 transition-colors group/header shadow-inner select-none overflow-hidden">
-                 <div className="flex items-center gap-4 flex-wrap">
-                   <h3 className="text-sm font-black text-zinc-100 uppercase tracking-widest">{group.category}</h3>
-                   <div className="flex items-center gap-2">
-                     <span className="bg-zinc-950 border border-zinc-800 text-zinc-500 text-[10px] font-bold px-3 py-1 rounded-full shadow-inner">{group.items.length} Items</span>
-                     {topShelfCount > 0 && <span className="bg-amber-500/10 border border-amber-500/20 text-amber-400 text-[9px] font-black uppercase tracking-widest px-2.5 py-1 rounded-full flex items-center gap-1"><Award size={10} /> {topShelfCount} Top Shelf</span>}
-                     {featuredCount > 0 && <span className="bg-cyan-500/10 border border-cyan-500/20 text-cyan-400 text-[9px] font-black uppercase tracking-widest px-2.5 py-1 rounded-full flex items-center gap-1"><Star size={10} /> {featuredCount} Featured</span>}
-                     {promoCount > 0 && <span className="bg-rose-500/10 border border-rose-500/20 text-rose-400 text-[9px] font-black uppercase tracking-widest px-2.5 py-1 rounded-full flex items-center gap-1"><Flame size={10} /> {promoCount} Active Promo</span>}
-                   </div>
-                 </div>
-                 <div className={`p-1.5 rounded-full bg-zinc-950 border border-zinc-800 text-zinc-500 transition-transform duration-300 ml-4 shrink-0 ${isCollapsed ? '-rotate-90' : 'rotate-0'}`}><ChevronDown size={14} /></div>
-              </div>
-              
-              <div className={`grid grid-cols-1 gap-3 mt-3 transition-all ${isCollapsed ? 'hidden' : 'block'}`}>
-                {group.items.map((item: any) => {
-                  const ItemIcon = item.iconName === 'Leaf' ? Leaf : item.iconName === 'Flame' ? Flame : item.iconName === 'Box' ? Box : ImageIcon;
-                  const displayStock = item.onHand || (item.options?.length > 0 ? item.options.reduce((sum: number, opt: any) => sum + (Number(opt.stock) || 0), 0) : 0);
-                  const displayPrice = item.price || (item.sizes?.length > 0 ? Math.min(...item.sizes.map((s: any) => s.price || 0)) : 0);
-                  const isAbundant = displayStock >= 15;
+      {/* COMMAND CENTER TOOLBAR */}
+      <div className="bg-zinc-900/60 border border-zinc-800 rounded-3xl p-4 mb-6 flex flex-col md:flex-row items-center gap-4 shadow-sm">
+        
+        {/* Search */}
+        <div className="relative w-full md:w-auto md:flex-1">
+          <Search size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-zinc-500" />
+          <input 
+            type="text" 
+            placeholder="Search by product name or ID..." 
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="w-full bg-zinc-950 border border-zinc-800 rounded-xl py-3 pl-11 pr-4 text-xs font-bold text-zinc-100 focus:border-cyan-500/50 outline-none transition-colors"
+          />
+        </div>
 
-                  return (
-                    <div key={item.id} className="bg-zinc-900 border border-zinc-800 rounded-2xl p-4 flex flex-col md:flex-row md:items-center justify-between gap-4 hover:border-amber-500/50 transition-all group shadow-sm relative overflow-hidden">
-                      <div className="flex items-center gap-4">
-                         <div className="w-12 h-12 rounded-xl bg-zinc-950 border border-zinc-800 flex items-center justify-center text-zinc-700 shrink-0 shadow-inner overflow-hidden group-hover:border-amber-500/30 transition-colors">
-                           {item.imageUrl ? <img src={item.imageUrl} alt={item.name} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" /> : <ItemIcon size={20} className="group-hover:text-amber-400 transition-colors" />}
-                         </div>
-                         <div className="flex flex-col">
-                           <div className="flex items-center gap-2 mb-1">
-                             <h3 className={`font-black text-lg tracking-tight leading-none ${item.isTopShelf ? 'text-amber-400' : 'text-zinc-100'}`}>{item.name?.replace(/\s*\(\s*Top Shelf\s*\)\s*/i, '').trim()}</h3>
-                             {item.isTopShelf && <Award size={14} className="text-amber-400" />}
-                             {item.featured && <Star size={14} className="text-cyan-400" />}
-                             {item.dailyDeal && <Flame size={14} className="text-rose-400" />}
-                           </div>
-                           <div className="flex flex-wrap items-center gap-2">
-                             <span className="text-[9px] font-black uppercase tracking-widest text-zinc-500">{item.subCategory || 'General'}</span>
-                             {item.strainType && item.strainType !== 'N/A' && <><span className="w-1 h-1 rounded-full bg-zinc-700" /><span className="text-[9px] font-black uppercase tracking-widest text-zinc-400">{item.strainType}</span></>}
-                           </div>
-                         </div>
-                      </div>
+        {/* Filters */}
+        <div className="flex w-full md:w-auto gap-3">
+          <div className="relative flex-1 md:w-48">
+            <Filter size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500" />
+            <select 
+              value={categoryFilter} 
+              onChange={(e) => setCategoryFilter(e.target.value)}
+              className="w-full bg-zinc-950 border border-zinc-800 rounded-xl py-3 pl-9 pr-4 text-xs font-bold text-zinc-300 outline-none appearance-none cursor-pointer"
+            >
+              <option value="All">All Categories</option>
+              {mainCategories.map((c: string) => <option key={c} value={c}>{c}</option>)}
+            </select>
+            <ChevronDown size={14} className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-600 pointer-events-none" />
+          </div>
 
-                      <div className="flex items-center gap-6">
-                         <div className="flex flex-col items-end">
-                           <span className="text-[9px] font-black uppercase tracking-widest text-zinc-600 mb-1 flex items-center gap-1"><Package size={10}/> Stock</span>
-                           <span className={`text-xl font-black leading-none ${displayStock <= 0 ? 'text-rose-500' : isAbundant && !item.dailyDeal ? 'text-cyan-400' : 'text-emerald-400'}`}>{displayStock}{item.mainCategory === 'Flower & Plants' ? 'g' : ''}</span>
-                         </div>
-                         <div className="w-px h-8 bg-zinc-800 hidden sm:block"></div>
-                         <div className="hidden sm:flex flex-col items-end w-16">
-                           <span className="text-[9px] font-black uppercase tracking-widest text-zinc-600 mb-1 flex items-center gap-1"><Tag size={10}/> Base</span>
-                           <span className="text-xl font-black leading-none text-zinc-300 font-mono">${displayPrice.toFixed(0) || '0'}</span>
-                         </div>
-                         <button onClick={() => openEditor(item)} className="ml-2 p-3 bg-zinc-950 border border-zinc-800 rounded-xl text-zinc-500 hover:text-amber-400 hover:border-amber-400/50 transition-all shadow-inner active:scale-95">
-                           <Edit3 size={18} />
-                         </button>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-          );
-        })}
+          <div className="relative flex-1 md:w-48">
+             <select 
+              value={statusFilter} 
+              onChange={(e) => setStatusFilter(e.target.value)}
+              className="w-full bg-zinc-950 border border-zinc-800 rounded-xl py-3 px-4 text-xs font-bold text-zinc-300 outline-none appearance-none cursor-pointer"
+            >
+              <option value="All">All Statuses</option>
+              <option value="Active Promo">🔥 Active Promo</option>
+              <option value="Top Shelf">🏆 Top Shelf</option>
+              <option value="Featured">⭐ Featured</option>
+              <option value="Low Stock">⚠️ Low Stock</option>
+              <option value="Out of Stock">🚫 Out of Stock</option>
+            </select>
+            <ChevronDown size={14} className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-600 pointer-events-none" />
+          </div>
+        </div>
       </div>
+
+      {/* DATA GRID */}
+      <div className="bg-zinc-900/30 border border-zinc-800 rounded-3xl overflow-hidden shadow-inner">
+        <div className="overflow-x-auto scrollbar-hide">
+          <table className="w-full text-left border-collapse">
+            <thead>
+              <tr className="bg-zinc-900/80 border-b border-zinc-800">
+                <th onClick={() => handleSort('name')} className="py-4 px-6 text-[10px] font-black uppercase tracking-widest text-zinc-500 cursor-pointer hover:text-zinc-300 transition-colors group whitespace-nowrap">
+                  <div className="flex items-center gap-2">Identity <ArrowUpDown size={12} className="opacity-50 group-hover:opacity-100" /></div>
+                </th>
+                <th onClick={() => handleSort('category')} className="py-4 px-6 text-[10px] font-black uppercase tracking-widest text-zinc-500 cursor-pointer hover:text-zinc-300 transition-colors group whitespace-nowrap">
+                  <div className="flex items-center gap-2">Category <ArrowUpDown size={12} className="opacity-50 group-hover:opacity-100" /></div>
+                </th>
+                <th onClick={() => handleSort('subCategory')} className="py-4 px-6 text-[10px] font-black uppercase tracking-widest text-zinc-500 cursor-pointer hover:text-zinc-300 transition-colors group whitespace-nowrap">
+                  <div className="flex items-center gap-2">Sub-Class <ArrowUpDown size={12} className="opacity-50 group-hover:opacity-100" /></div>
+                </th>
+                <th className="py-4 px-6 text-[10px] font-black uppercase tracking-widest text-zinc-500 whitespace-nowrap">
+                  Tags
+                </th>
+                <th className="py-4 px-6 text-[10px] font-black uppercase tracking-widest text-zinc-500 whitespace-nowrap">
+                  Promo Status
+                </th>
+                <th onClick={() => handleSort('price')} className="py-4 px-6 text-[10px] font-black uppercase tracking-widest text-zinc-500 cursor-pointer hover:text-zinc-300 transition-colors group text-right whitespace-nowrap">
+                  <div className="flex items-center justify-end gap-2">Base Price <ArrowUpDown size={12} className="opacity-50 group-hover:opacity-100" /></div>
+                </th>
+                <th onClick={() => handleSort('stock')} className="py-4 px-6 text-[10px] font-black uppercase tracking-widest text-zinc-500 cursor-pointer hover:text-zinc-300 transition-colors group text-right whitespace-nowrap">
+                  <div className="flex items-center justify-end gap-2">Vault Stock <ArrowUpDown size={12} className="opacity-50 group-hover:opacity-100" /></div>
+                </th>
+                <th className="py-4 px-6 text-right text-[10px] font-black uppercase tracking-widest text-zinc-500 whitespace-nowrap">Actions</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-zinc-800/50">
+              {processedInventory.length === 0 ? (
+                <tr>
+                  <td colSpan={8} className="py-16 text-center">
+                    <Boxes size={32} className="mx-auto text-zinc-700 mb-3" />
+                    <p className="text-zinc-500 text-xs font-bold uppercase tracking-widest">No products match your filters</p>
+                  </td>
+                </tr>
+              ) : processedInventory.map((item: any) => {
+                const ItemIcon = item.iconName === 'Leaf' ? Leaf : item.iconName === 'Flame' ? Flame : item.iconName === 'Box' ? Box : ImageIcon;
+                const displayStock = item.onHand || (item.options?.length > 0 ? item.options.reduce((sum: number, opt: any) => sum + (Number(opt.stock) || 0), 0) : 0);
+                const displayPrice = item.price || (item.sizes?.length > 0 ? Math.min(...item.sizes.map((s: any) => s.price || 0)) : 0);
+                const isAbundant = displayStock >= 15;
+
+                return (
+                  <tr key={item.id} className="hover:bg-zinc-900/50 transition-colors group">
+                    {/* Identity */}
+                    <td className="py-4 px-6">
+                      <div className="flex items-center gap-4 w-48 lg:w-auto">
+                        <div className="w-10 h-10 rounded-lg bg-zinc-950 border border-zinc-800 flex items-center justify-center shrink-0 overflow-hidden text-zinc-600">
+                          {item.imageUrl ? <img src={item.imageUrl} alt={item.name} className="w-full h-full object-cover" /> : <ItemIcon size={16} />}
+                        </div>
+                        <div className="flex flex-col max-w-45">
+                          <span className={`font-black text-sm truncate ${item.isTopShelf ? 'text-zinc-100' : 'text-zinc-300'}`}>{item.name?.replace(/\s*\(\s*Top Shelf\s*\)\s*/i, '').trim() || 'Unnamed Item'}</span>
+                          <span className="text-[8px] font-mono text-zinc-600 mt-1 truncate">{item.id}</span>
+                        </div>
+                      </div>
+                    </td>
+
+                    {/* Category */}
+                    <td className="py-4 px-6">
+                      <span className="text-[10px] font-bold text-zinc-300 uppercase tracking-widest whitespace-nowrap">{item.mainCategory}</span>
+                    </td>
+
+                    {/* Sub-Class */}
+                    <td className="py-4 px-6">
+                      <div className="flex flex-wrap items-center gap-1.5 w-32 lg:w-auto">
+                        <span className="px-1.5 py-0.5 bg-zinc-950 border border-zinc-800 rounded text-[8px] font-bold text-zinc-500 uppercase whitespace-nowrap">{item.subCategory || 'Gen'}</span>
+                        {item.strainType && item.strainType !== 'N/A' && <span className="px-1.5 py-0.5 bg-emerald-500/5 border border-emerald-500/20 rounded text-[8px] font-bold text-emerald-400/80 uppercase whitespace-nowrap">{item.strainType}</span>}
+                      </div>
+                    </td>
+
+                    {/* Tags */}
+                    <td className="py-4 px-6">
+                      <div className="flex flex-wrap items-center gap-1.5 w-24 lg:w-auto">
+                        {item.isTopShelf && <span className="px-1.5 py-0.5 bg-amber-500/10 border border-amber-500/20 text-amber-500 text-[8px] font-black uppercase tracking-widest rounded flex items-center gap-0.5 whitespace-nowrap"><Award size={8}/> Top Shelf</span>}
+                        {item.featured && <span className="px-1.5 py-0.5 bg-cyan-500/10 border border-cyan-500/20 text-cyan-500 text-[8px] font-black uppercase tracking-widest rounded flex items-center gap-0.5 whitespace-nowrap"><Star size={8}/> Featured</span>}
+                        {!item.isTopShelf && !item.featured && <span className="text-[8px] font-bold text-zinc-600 uppercase tracking-widest">—</span>}
+                      </div>
+                    </td>
+
+                    {/* Promo Status */}
+                    <td className="py-4 px-6">
+                      {item.dailyDeal ? (
+                        <div className="flex flex-col items-start gap-1 w-32 lg:w-auto">
+                          <span className="inline-flex items-center gap-1 text-[9px] font-black uppercase tracking-widest text-rose-400 bg-rose-500/10 border border-rose-500/20 px-2 py-1 rounded-md whitespace-nowrap">
+                            <Flame size={10} /> {item.dealLogic && item.dealLogic !== 'STANDARD' ? item.dealLogic : 'Active'}
+                          </span>
+                          <span className="text-[8px] font-bold text-zinc-500 truncate max-w-30">{item.dealText || item.dealType}</span>
+                        </div>
+                      ) : (
+                        <span className="text-[9px] font-bold text-zinc-600 uppercase tracking-widest">—</span>
+                      )}
+                    </td>
+
+                    {/* Base Price */}
+                    <td className="py-4 px-6 text-right">
+                      <span className="text-sm font-black text-zinc-300 font-mono">${displayPrice.toFixed(0) || '0'}</span>
+                    </td>
+
+                    {/* Vault Stock */}
+                    <td className="py-4 px-6 text-right">
+                      <span className={`text-sm font-black font-mono ${displayStock <= 0 ? 'text-rose-500' : isAbundant && !item.dailyDeal ? 'text-cyan-400' : 'text-emerald-400'}`}>
+                        {displayStock}
+                      </span>
+                    </td>
+
+                    {/* Actions */}
+                    <td className="py-4 px-6 text-right">
+                      <button onClick={() => openEditor(item)} className="p-2 bg-zinc-950 border border-zinc-800 rounded-lg text-zinc-500 hover:text-amber-400 hover:border-amber-400/50 transition-all shadow-inner active:scale-95 inline-flex">
+                        <Edit3 size={14} />
+                      </button>
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+        
+        {/* Footer Metrics */}
+        <div className="bg-zinc-950/80 border-t border-zinc-800 px-6 py-3 flex items-center justify-between">
+          <span className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">Displaying {processedInventory.length} items</span>
+          <span className="text-[10px] font-mono text-zinc-600">DB_SYNC_ACTIVE</span>
+        </div>
+      </div>
+
     </div>
   );
 }

@@ -1,136 +1,237 @@
 import React from 'react';
-import { X, Box, Sparkles, Plus, Minus, Lightbulb } from 'lucide-react';
+import { ArrowLeft, CheckCircle, Minus, Plus, ShoppingCart, FlaskConical, X, Trash2, Wind, Droplet, Cookie, Sparkles, Flame } from 'lucide-react';
 
-export default function StorefrontCardBack({
-  item, cleanItemName, setIsFlipped, sizes, options,
-  selectedSize, setSelectedSize, bundleQty, selectedOptions,
-  handleSelectOption, removeSelectedOption, hasMultipleOptions,
+export default function StorefrontCardBack({ 
+  item, cleanItemName, setIsFlipped,
+  sizes, options, selectedSize, setSelectedSize,
+  bundleQty, selectedOptions, handleSelectOption,
+  removeSelectedOption, hasMultipleOptions,
   qty, updateCart, isBundleComplete, isMaxReached
 }: any) {
+  
+  const hasDNA = item.descFeels || item.descTaste || item.descUses || item.descFact;
+  const formatPromo = (logic: string) => ({ 'PCT_15': '15% OFF', 'PENNY_150': '$0.01 UNLOCK', 'BOGO': 'BOGO', 'B2G1': 'B2G1', 'B5G1': 'B5G1' }[logic] || logic || 'PROMO');
 
-  const isMultiStrain = options.some((o: any) => o.label && o.label.includes(' x '));
+  // --- LIVE PROMO MATH ENGINE ---
+  const basePrice = item.dailyDeal && selectedSize.promoPrice ? selectedSize.promoPrice : selectedSize.price;
+  let chargeableQty = qty;
+  let finalPrice = basePrice;
 
-  // EXTRACT FUN FACT FOR THE BACK CARD
-  const desc = item.description || '';
-  const factMatch = desc.match(/Fun Fact:\s*([\s\S]*?)(?=Feels:|Taste:|Uses:|$)/i);
-  const funFact = factMatch ? factMatch[1].trim().replace(/\.$/, '').trim() : '';
+  if (item.dailyDeal) {
+     if (item.dealLogic === 'B2G1') chargeableQty = qty - Math.floor(qty / 3);
+     else if (item.dealLogic === 'BOGO') chargeableQty = qty - Math.floor(qty / 2);
+     else if (item.dealLogic === 'B5G1') chargeableQty = qty - Math.floor(qty / 6);
+     else if (item.dealLogic === 'PCT_15') finalPrice = basePrice * 0.85;
+  }
+
+  const currentSubtotal = finalPrice * chargeableQty;
+  const originalSubtotal = basePrice * qty;
+  const savings = originalSubtotal - currentSubtotal;
+
+  let savingsText = "";
+  if (item.dailyDeal) {
+      if (item.dealLogic === 'B2G1' || item.dealLogic === 'BOGO' || item.dealLogic === 'B5G1') {
+         const freeItems = qty - chargeableQty;
+         if (freeItems > 0) {
+           savingsText = `${freeItems} Free Unit${freeItems > 1 ? 's' : ''} Added! (Saved $${savings.toFixed(2)})`;
+         } else if (qty > 0) {
+           if (item.dealLogic === 'B2G1') savingsText = `Add 1 more to get a 3rd Free!`;
+           if (item.dealLogic === 'B5G1') savingsText = `Add ${5 - qty} more to get a 6th Free!`;
+         }
+      } else if (item.dealLogic === 'PCT_15' && savings > 0) {
+         savingsText = `15% Off Applied! (Saved $${savings.toFixed(2)})`;
+      } else if (item.dealLogic === 'PENNY_150' && qty > 0) {
+         savingsText = `Unlock for $0.01 at $150 Cart Total`;
+      }
+  }
 
   return (
-    <div className={`absolute inset-0 backface-hidden w-full h-full transform-[rotateY(180deg)] bg-zinc-900/90 backdrop-blur-xl border ${item.isTopShelf ? 'border-amber-900/30' : 'border-zinc-800/80'} rounded-4xl p-5 shadow-2xl flex flex-col transition-all duration-500`}>
-      <div className="flex justify-between items-start mb-5 shrink-0">
-         <div>
-           <h3 className={`font-black ${item.isTopShelf ? 'text-amber-300' : 'text-zinc-100'} text-xl leading-tight`}>{cleanItemName}</h3>
-          
-         </div>
-         <button onClick={() => setIsFlipped(false)} className="text-zinc-500 hover:text-rose-400 transition-colors bg-zinc-950 p-2 rounded-xl border border-zinc-800"><X size={18} /></button>
-      </div>
+    <div className="absolute inset-0 w-full h-full backface-hidden transform-[rotateY(180deg)] bg-zinc-950 border border-zinc-800 rounded-[2.5rem] p-5 flex flex-col shadow-2xl overflow-hidden">
       
-      <div className="flex-1 overflow-y-auto custom-scrollbar space-y-6 pb-4">
-        
-        {/* NEW: FUN FACT ON THE BACK */}
-        {funFact && (
-          <div className="w-full bg-zinc-950/50 border border-zinc-800/50 rounded-xl p-3 text-center shadow-inner">
-             <p className="text-[8px] font-black uppercase tracking-widest text-zinc-500 flex items-center justify-center gap-1 mb-1.5"><Lightbulb size={10} className="text-amber-500/70"/> Fun Fact</p>
-             <p className="text-[10px] text-zinc-400 font-medium leading-relaxed italic">"{funFact}"</p>
+      {/* 1. FIXED HEADER */}
+      <div className="flex items-center justify-between mb-3 border-b border-zinc-800/50 pb-3 shrink-0">
+        <button onClick={() => setIsFlipped(false)} className="p-1.5 bg-zinc-900 border border-zinc-800 hover:bg-zinc-800 text-zinc-400 rounded-lg transition-colors active:scale-95">
+          <ArrowLeft size={14} />
+        </button>
+        <h3 className="text-xs font-black text-zinc-100 truncate flex-1 text-right ml-4 uppercase tracking-wider">{cleanItemName}</h3>
+      </div>
+
+      {/* 2. SCROLLABLE DNA AREA */}
+      <div className="flex-1 overflow-y-auto scrollbar-hide min-h-20 pr-1">
+        {hasDNA ? (
+          <div className="bg-zinc-900/50 border border-zinc-800/50 rounded-xl p-3 flex flex-col gap-3">
+             <div className="grid grid-cols-3 gap-2">
+               {item.descFeels && (
+                 <div className="flex items-start gap-1.5 border-r border-zinc-800/50 pr-1.5">
+                   <Wind size={12} className="text-cyan-400 mt-0.5 shrink-0" />
+                   <div>
+                     <span className="text-[7px] font-black uppercase tracking-widest text-zinc-500 block mb-0.5">Feels</span>
+                     <span className="text-[10px] font-bold text-zinc-200 leading-tight">{item.descFeels}</span>
+                   </div>
+                 </div>
+               )}
+               {item.descTaste && (
+                 <div className="flex items-start gap-1.5 border-r border-zinc-800/50 px-1.5">
+                   <Cookie size={12} className="text-amber-400 mt-0.5 shrink-0" />
+                   <div>
+                     <span className="text-[7px] font-black uppercase tracking-widest text-zinc-500 block mb-0.5">Taste</span>
+                     <span className="text-[10px] font-bold text-zinc-200 leading-tight">{item.descTaste}</span>
+                   </div>
+                 </div>
+               )}
+               {item.descUses && (
+                 <div className="flex items-start gap-1.5 pl-1.5">
+                   <Droplet size={12} className="text-emerald-400 mt-0.5 shrink-0" />
+                   <div>
+                     <span className="text-[7px] font-black uppercase tracking-widest text-zinc-500 block mb-0.5">Uses</span>
+                     <span className="text-[10px] font-bold text-zinc-200 leading-tight">{item.descUses}</span>
+                   </div>
+                 </div>
+               )}
+             </div>
+             
+             {item.descFact && (
+               <div className="flex items-start gap-1.5 border-t border-zinc-800/50 pt-2.5">
+                 <Sparkles size={12} className="text-amber-400 mt-0.5 shrink-0" />
+                 <div>
+                   <span className="text-[7px] font-black uppercase tracking-widest text-zinc-500 block mb-0.5">Insider Fact</span>
+                   <span className="text-[9px] font-bold text-zinc-200 leading-snug">{item.descFact}</span>
+                 </div>
+               </div>
+             )}
+          </div>
+        ) : (
+          <div className="h-full flex items-center justify-center">
+            <span className="text-[10px] font-black uppercase tracking-widest text-zinc-700">No Product DNA Available</span>
           </div>
         )}
+      </div>
 
-        <div className="flex flex-col min-h-0">
-          <label className={`text-[10px] font-black uppercase tracking-widest ${item.isTopShelf ? 'text-amber-400' : 'text-emerald-400'} mb-3 flex items-center gap-2`}>
-            <Box size={12} /> Select Quantity
-          </label>
-          <div className="grid grid-cols-2 gap-3">
-            {sizes.map((s: any) => {
-              const showPromo = item.dailyDeal && (s.promoLabel || s.promoPrice !== undefined && s.promoPrice !== '');
-              const displayLabel = showPromo && s.promoLabel ? s.promoLabel : s.label;
-              const displayPrice = showPromo && s.promoPrice !== undefined && s.promoPrice !== '' ? s.promoPrice : s.price;
-              
-              return (
-                <button key={s.id} onClick={() => setSelectedSize(s)} className={`px-3 py-3 rounded-2xl text-xs font-bold transition-all border flex flex-col items-center justify-center gap-1 ${selectedSize.id === s.id ? `${item.isTopShelf ? 'bg-amber-500/10 border-amber-500 text-amber-400 shadow-[0_0_15px_rgba(251,191,36,0.2)]' : 'bg-emerald-500/10 border-emerald-500 text-emerald-400 shadow-[0_0_15px_rgba(16,185,129,0.2)]'}` : 'bg-zinc-950 border-zinc-800 text-zinc-500 hover:border-emerald-500/30'}`}>
-                  {showPromo && s.promoLabel ? (
-                     <div className="flex flex-col items-center">
-                       <s className="text-[8px] font-medium text-zinc-600 uppercase">{s.label}</s>
-                       <span className="truncate w-full text-center text-rose-400 uppercase tracking-tighter">{s.promoLabel}</span>
-                     </div>
-                  ) : <span className="truncate w-full text-center uppercase tracking-tighter">{s.label}</span>}
-                  <span className={`font-mono text-[10px] ${showPromo ? 'text-rose-400' : 'opacity-70'}`}>${displayPrice.toFixed(2)}</span>
-                </button>
-              );
-            })}
-          </div>
-        </div>
+      {/* 3. FIXED ACTION ANCHOR */}
+      <div className="shrink-0 flex flex-col gap-3 pt-3 mt-3 border-t border-zinc-800/50">
+        
+        {/* Pricing Tiers */}
+        {sizes.length > 1 && (
+          <div>
+            <div className="flex flex-wrap items-center bg-zinc-900 border border-zinc-800/50 rounded-xl p-1 gap-1">
+              {sizes.map((s: any) => {
+                const isSelected = selectedSize.id === s.id;
+                const activePrice = item.dailyDeal && s.promoPrice ? s.promoPrice : s.price;
+                let tierFinalPrice = activePrice;
+                if (item.dailyDeal && item.dealLogic === 'PCT_15') tierFinalPrice = activePrice * 0.85;
 
-        {hasMultipleOptions && (
-          <div className="flex flex-col min-h-0">
-            <div className="flex items-center justify-between mb-3">
-              <label className={`text-[10px] font-black uppercase tracking-widest ${item.isTopShelf ? 'text-amber-400' : 'text-emerald-400'} flex items-center gap-2`}><Sparkles size={12} /> Variant</label>
-              {bundleQty > 1 && <span className="text-[9px] font-black text-amber-500 uppercase bg-amber-500/10 px-2.5 py-1 rounded-lg border border-amber-500/20">Mix {bundleQty}</span>}
-            </div>
-            
-            {bundleQty > 1 && (
-               <div className="mb-4 flex flex-wrap gap-2 bg-zinc-950 p-3 rounded-2xl border border-zinc-800 shadow-inner">
-                 {selectedOptions.map((sel: any, idx: number) => (
-                   <div key={idx} className="bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 text-[10px] font-black uppercase tracking-widest px-3 py-1.5 rounded-xl flex items-center gap-2">
-                     {sel.label} <button onClick={(e) => { e.stopPropagation(); removeSelectedOption(idx); }} className="hover:text-rose-400 transition-colors"><X size={12}/></button>
-                   </div>
-                 ))}
-                 {Array.from({ length: bundleQty - selectedOptions.length }).map((_, idx) => (
-                   <div key={`empty-${idx}`} className="bg-zinc-900 border border-dashed border-zinc-800 text-zinc-600 text-[10px] font-black uppercase tracking-widest px-3 py-1.5 rounded-xl">Slot {selectedOptions.length + idx + 1}</div>
-                 ))}
-               </div>
-            )}
-
-            <div className={`grid ${isMultiStrain ? 'grid-cols-1' : 'grid-cols-2'} gap-3`}>
-              {options.map((o: any) => {
-                const optStock = o.stock !== undefined ? o.stock : item.onHand;
-                const inSelectionCount = selectedOptions.filter((sel: any) => sel.id === o.id).length;
-                const isSoldOut = optStock <= 0 || inSelectionCount >= optStock;
-                const isSelected = selectedOptions.some((sel: any) => sel.id === o.id);
-                
                 return (
                   <button 
-                    key={o.id} onClick={() => !isSoldOut && handleSelectOption(o)} disabled={isSoldOut}
-                    className={`px-3 py-3 rounded-2xl text-[11px] font-black uppercase tracking-tighter transition-all border flex flex-col items-center justify-center 
-                      ${isSoldOut ? 'opacity-30 cursor-not-allowed bg-zinc-950 border-zinc-800' : 
-                        isSelected ? 'bg-emerald-500/10 border-emerald-500 text-emerald-400 shadow-lg' : 'bg-zinc-950 border-zinc-800 text-zinc-500 hover:border-emerald-500/30'}`}
+                    key={s.id} 
+                    onClick={() => setSelectedSize(s)}
+                    className={`flex-1 min-w-17.5 px-2 py-1.5 rounded-lg text-center transition-all ${isSelected ? 'bg-zinc-100 text-zinc-950 shadow-md' : 'text-zinc-500 hover:text-zinc-300'}`}
                   >
-                    <span className={`${isMultiStrain ? 'text-center' : 'truncate block w-full text-center'}`}>{o.label}</span>
-                    
-                    {o.strainType && o.strainType !== 'N/A' && (
-                      <span className={`text-[8px] uppercase tracking-widest mt-0.5 ${isSelected ? 'text-emerald-300' : 'text-zinc-600'}`}>
-                        {o.strainType}
-                      </span>
-                    )}
-
-                    {isSoldOut ? <span className="text-[8px] text-rose-500 mt-0.5">Gone</span> : optStock <= 5 ? <span className="text-[8px] text-amber-500 mt-0.5">{optStock} Left</span> : null}
+                    <span className="block text-[8px] font-black uppercase tracking-widest leading-none mb-0.5">{s.label}</span>
+                    <span className={`flex text-[10px] font-mono font-bold leading-none justify-center items-center gap-1 ${isSelected ? 'text-emerald-700' : item.dailyDeal ? 'text-pink-400' : 'text-emerald-400'}`}>
+                      {tierFinalPrice < activePrice && <span className="line-through text-zinc-500/50 text-[9px]">${activePrice.toFixed(0)}</span>}
+                      ${tierFinalPrice.toFixed(0)}
+                    </span>
                   </button>
                 );
               })}
             </div>
           </div>
         )}
-      </div>
 
-      <div className="mt-auto pt-5 border-t border-zinc-800/50 shrink-0">
-        {qty === 0 ? (
-          <button 
-            onClick={() => isBundleComplete && !isMaxReached && updateCart(item.id, selectedSize, selectedOptions, 1)} 
-            disabled={!isBundleComplete || isMaxReached}
-            className={`w-full py-4 rounded-xl font-black uppercase tracking-[0.2em] transition-all flex justify-center items-center gap-3 shadow-xl ${!isBundleComplete || isMaxReached ? 'bg-zinc-800 text-zinc-600 cursor-not-allowed opacity-50' : `${item.isTopShelf ? 'bg-amber-400 hover:bg-amber-300 shadow-[0_0_30px_rgba(251,191,36,0.4)]' : 'bg-emerald-500 hover:bg-emerald-400'} text-zinc-950 active:scale-95`}`}
-          >
-            {!isBundleComplete ? `Add ${bundleQty - selectedOptions.length} More` : isMaxReached ? 'Sold Out' : <><Plus size={20} /> Add to Cart</>}
-          </button>
-        ) : (
-          <div className={`w-full flex items-center justify-between bg-zinc-950 border ${item.isTopShelf ? 'border-amber-500/30 shadow-[0_0_20px_rgba(251,191,36,0.15)]' : 'border-emerald-500/30 shadow-2xl'} rounded-xl p-1.5`}>
-            <button onClick={() => updateCart(item.id, selectedSize, selectedOptions, -1)} className="p-3 hover:bg-zinc-900 rounded-lg text-rose-400 transition-all active:scale-90"><Minus size={18}/></button>
-            <div className="flex flex-col items-center">
-              <span className={`font-black text-xl ${item.isTopShelf ? 'text-amber-400' : 'text-emerald-400'} leading-none`}>{qty}</span>
-              <span className={`text-[9px] font-black ${item.isTopShelf ? 'text-amber-400/40' : 'text-emerald-400/40'} uppercase tracking-widest mt-1`}>In Cart</span>
+        {/* Flavor / Options */}
+        {hasMultipleOptions && (
+          <div>
+            <div className="flex justify-between items-center mb-1.5 px-1">
+              <label className="text-[8px] font-black text-zinc-600 uppercase tracking-widest">Select Options</label>
+              {bundleQty > 1 && (
+                <span className={`text-[8px] font-black uppercase tracking-widest px-2 py-0.5 rounded ${isBundleComplete ? 'bg-emerald-500/20 text-emerald-400' : 'bg-zinc-800 text-zinc-400'}`}>
+                  {selectedOptions.length} / {bundleQty} Picked
+                </span>
+              )}
             </div>
-            <button onClick={() => !isMaxReached && updateCart(item.id, selectedSize, selectedOptions, 1)} disabled={isMaxReached} className={`p-3 rounded-lg transition-all active:scale-90 ${isMaxReached ? 'text-zinc-800 cursor-not-allowed' : `hover:bg-zinc-900 ${item.isTopShelf ? 'text-amber-400' : 'text-emerald-400'}`}`}><Plus size={18}/></button>
+            
+            <div className="flex flex-wrap gap-1.5 bg-zinc-900 border border-zinc-800/50 rounded-xl p-2">
+              {options.map((opt: any) => {
+                const stockVal = opt.stock !== undefined ? opt.stock : item.onHand;
+                const isOutOfStock = stockVal <= 0;
+                
+                const instancesInBundle = selectedOptions.filter((so:any) => so.id === opt.id).length;
+                const isSelected = bundleQty === 1 ? selectedOptions[0]?.id === opt.id : instancesInBundle > 0;
+
+                return (
+                  <button 
+                    key={opt.id}
+                    disabled={isOutOfStock || (bundleQty > 1 && isBundleComplete)}
+                    onClick={() => handleSelectOption(opt)}
+                    className={`relative flex-1 min-w-20 p-2 rounded-lg text-center border transition-all active:scale-95 ${isOutOfStock ? 'bg-zinc-950 border-zinc-800 text-zinc-700 cursor-not-allowed line-through' : isSelected ? 'bg-zinc-100 text-zinc-950 border-zinc-100 shadow-md' : 'bg-zinc-900 border-zinc-800 text-zinc-400 hover:border-zinc-700 hover:text-zinc-100'}`}
+                  >
+                    <span className="block text-[8px] font-black uppercase tracking-widest">{opt.label}</span>
+                    {instancesInBundle > 1 && (
+                        <span className="absolute -top-1.5 -right-1.5 flex items-center justify-center w-4 h-4 bg-emerald-500 text-zinc-950 text-[9px] font-black rounded-full shadow-lg border border-zinc-950">{instancesInBundle}x</span>
+                    )}
+                  </button>
+                );
+              })}
+            </div>
           </div>
         )}
+
+        {/* Add To Cart Area & Live Math Engine */}
+        <div className="shrink-0 mt-1">
+          {!isBundleComplete && bundleQty > 1 ? (
+            <div className="w-full py-3 rounded-xl bg-zinc-900 border border-dashed border-zinc-700 text-zinc-600 text-center text-[9px] font-black uppercase tracking-widest">
+              Select {bundleQty - selectedOptions.length} More Options
+            </div>
+          ) : qty === 0 ? (
+            <button 
+              onClick={() => updateCart(item.id, selectedSize, selectedOptions, 1)}
+              disabled={isMaxReached}
+              className="w-full bg-emerald-500 hover:bg-emerald-400 text-zinc-950 font-black uppercase tracking-widest py-3.5 rounded-xl transition-all shadow-[0_5px_20px_rgba(52,211,153,0.3)] active:scale-95 flex items-center justify-center gap-2 text-[11px]"
+            >
+              <ShoppingCart size={16} /> Add to Cart
+            </button>
+          ) : (
+            <div className="flex flex-col gap-1.5">
+              <div className="flex items-center justify-between bg-zinc-900 border border-emerald-500/30 p-1.5 rounded-xl">
+                <button 
+                  onClick={() => updateCart(item.id, selectedSize, selectedOptions, -1)}
+                  className="w-10 h-9 flex items-center justify-center bg-zinc-950 hover:bg-zinc-800 rounded-lg text-rose-400 transition-colors active:scale-90 border border-zinc-800"
+                >
+                  {qty === 1 ? <Trash2 size={12} /> : <Minus size={12} />}
+                </button>
+                <div className="flex flex-col items-center justify-center px-4">
+                  <span className="text-lg font-black font-mono text-zinc-100 leading-none">{qty}</span>
+                  <span className="text-[7px] font-black uppercase tracking-widest text-emerald-500 flex items-center gap-1 mt-1"><CheckCircle size={8}/> In Cart</span>
+                </div>
+                <button 
+                  onClick={() => updateCart(item.id, selectedSize, selectedOptions, 1)}
+                  disabled={isMaxReached}
+                  className="w-10 h-9 flex items-center justify-center bg-zinc-950 hover:bg-zinc-800 rounded-lg text-emerald-400 transition-colors active:scale-90 border border-zinc-800 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  <Plus size={12} />
+                </button>
+              </div>
+
+              {/* LIVE SUBTOTAL */}
+              <div className="flex items-center justify-between px-1.5 py-0.5">
+                 <span className="text-[8px] font-black uppercase tracking-widest text-zinc-500">Live Subtotal</span>
+                 <div className="flex items-end gap-1.5">
+                    {savings > 0 && <span className="text-[10px] font-mono font-bold text-rose-500/50 line-through leading-none">${originalSubtotal.toFixed(2)}</span>}
+                    <span className="text-sm font-mono font-black text-emerald-400 leading-none">${currentSubtotal.toFixed(2)}</span>
+                 </div>
+              </div>
+              
+              {/* SAVINGS CALLOUT */}
+              {savingsText && (
+                 <div className="text-center bg-pink-500/10 border border-pink-500/20 py-1.5 rounded-lg animate-in zoom-in-95 mt-0.5">
+                    <span className="text-[8px] font-black uppercase tracking-widest text-pink-400 flex items-center justify-center gap-1"><Flame size={10}/> {savingsText}</span>
+                 </div>
+              )}
+            </div>
+          )}
+        </div>
       </div>
+
     </div>
   );
 }
