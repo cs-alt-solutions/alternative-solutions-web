@@ -16,7 +16,6 @@ const DAYS_OF_WEEK = [
 
 export default function AdminStorefrontModule({ stock, setStock, inventoryMatrix, setNotification, clientConfig }: any) {
   
-  // Weekly Schedule State
   const defaultWeeklySchedule = clientConfig.weeklySchedule || {
     0: { open: '08:00', close: '17:00', isClosed: true },
     1: { open: '08:00', close: '17:00', isClosed: true },
@@ -28,27 +27,24 @@ export default function AdminStorefrontModule({ stock, setStock, inventoryMatrix
   };
   const [weeklySchedule, setWeeklySchedule] = useStickyState<any>(defaultWeeklySchedule, `store_weekly_hours_${clientConfig?.id}`);
   
-  // Operational Settings
   const [shiftChange, setShiftChange] = useStickyState(clientConfig.shiftChange || '12:00', `store_shift_change_${clientConfig?.id}`);
   const [storeOverride, setStoreOverride] = useStickyState('AUTO', `store_override_${clientConfig?.id}`); 
   
-  // UI State
   const [campaignView, setCampaignView] = useState<'LIST' | 'WEEK'>('LIST');
   const [isScheduleOpen, setIsScheduleOpen] = useState(false);
   const [activeDetailView, setActiveDetailView] = useState<'PROMOS' | 'TOPSHELF' | 'CHEF' | 'FEATURED' | null>(null);
 
-  // --- INVENTORY EDITING ENGINE ---
   const [editingItem, setEditingItem] = useState<any>(null);
 
   const formatPromo = (logic: string) => ({ 'PCT_15': '15% OFF', 'PENNY_150': '$0.01 UNLOCK', 'BOGO': 'BOGO', 'B2G1': 'B2G1', 'B5G1': 'B5G1' }[logic] || logic || 'PROMO');
 
   const mainCategories = clientConfig.categories || ['Flower & Plants', 'Vapes & Pens', 'Edibles', 'Concentrates', 'Merch & Extras'];
-  const [subCategories] = useStickyState<Record<string, string[]>>(clientConfig.subCategories || {}, `inv_subcats_v2_${clientConfig?.id || 'dev'}`);
-  const [standardTiers] = useStickyState<string[]>(clientConfig.pricingTiers || [], `inv_tiers_v2_${clientConfig?.id || 'dev'}`);
+  const [subCategories] = useStickyState<Record<string, string[]>>(clientConfig.subCategories || {}, `inv_subcats_v2_${clientConfig?.id || 'division'}`);
+  const [standardTiers] = useStickyState<string[]>(clientConfig.pricingTiers || [], `inv_tiers_v2_${clientConfig?.id || 'division'}`);
 
   const getBlankItem = () => ({
     id: `itm-${Math.random().toString(36).substr(2, 9)}`,
-    name: '', lineage: '', strainType: 'Hybrid', 
+    name: '', brand: '', lineage: '', strainType: 'Hybrid', 
     descBase: '', descFeels: '', descTaste: '', descUses: '', descFact: '',
     mainCategory: mainCategories[0], subCategory: subCategories[mainCategories[0]]?.[0] || 'Uncategorized',
     price: 0, onHand: 0, featured: false, isTopShelf: false, dailyDeal: false,
@@ -74,7 +70,7 @@ export default function AdminStorefrontModule({ stock, setStock, inventoryMatrix
     }
 
     setEditingItem({ 
-      ...getBlankItem(), ...item, sizes: defaultSizes, name: item.name || '', lineage: item.lineage || '', strainType: item.strainType || 'Hybrid',
+      ...getBlankItem(), ...item, sizes: defaultSizes, name: item.name || '', brand: item.brand || '', lineage: item.lineage || '', strainType: item.strainType || 'Hybrid',
       descBase, descFeels, descTaste, descUses, descFact, mainCategory: item.mainCategory || mainCategories[0], subCategory: item.subCategory || item.category || 'Uncategorized', 
       dealType: item.dealType || 'Daily Deal', dealText: item.dealText || '', dealDays: item.dealDays || [] 
     });
@@ -93,7 +89,7 @@ export default function AdminStorefrontModule({ stock, setStock, inventoryMatrix
       const { error } = await supabase
         .from('client_inventory')
         .upsert(
-          { client_id: clientConfig.id, item_id: itemToSave.id, payload: itemToSave },
+          { client_id: clientConfig.id || 'division', item_id: itemToSave.id, payload: itemToSave },
           { onConflict: 'client_id, item_id' }
         );
       if (error) throw error;
@@ -101,6 +97,29 @@ export default function AdminStorefrontModule({ stock, setStock, inventoryMatrix
     } catch (err) {
       console.error("DB Write Error:", err);
       setNotification(`Failed to save ${itemToSave.name} to master database.`);
+    }
+  };
+
+  const handleDeleteProduct = async (itemId: string) => {
+    setStock((prev: any[]) => prev.filter((item: any) => item.id !== itemId));
+    setEditingItem(null);
+
+    try {
+      const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
+      const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
+      if (!supabaseUrl || !supabaseKey) return;
+      
+      const supabase = createClient(supabaseUrl, supabaseKey);
+      const { error } = await supabase
+        .from('client_inventory')
+        .delete()
+        .match({ client_id: clientConfig.id || 'division', item_id: itemId });
+        
+      if (error) throw error;
+      setNotification(`Product Nuked from Database.`);
+    } catch (err) {
+      console.error("DB Delete Error:", err);
+      setNotification(`Failed to delete product from master database.`);
     }
   };
 
@@ -121,7 +140,7 @@ export default function AdminStorefrontModule({ stock, setStock, inventoryMatrix
       if (!supabaseUrl || !supabaseKey) return;
       const supabase = createClient(supabaseUrl, supabaseKey);
       await supabase.from('client_inventory').upsert(
-        { client_id: clientConfig.id, item_id: updated.id, payload: updated },
+        { client_id: clientConfig.id || 'division', item_id: updated.id, payload: updated },
         { onConflict: 'client_id, item_id' }
       );
     } catch (err) { console.error("DB Write Error:", err); }
@@ -209,9 +228,10 @@ export default function AdminStorefrontModule({ stock, setStock, inventoryMatrix
         subCategories={subCategories} 
         standardTiers={standardTiers} 
         onSave={handleSaveProduct} 
+        onDelete={handleDeleteProduct}
         onCancel={() => setEditingItem(null)} 
         inventoryMatrix={inventoryMatrix}
-        client_id={clientConfig.id}
+        client_id={clientConfig.id || 'division'}
         setNotification={setNotification}
       />
     );
@@ -219,8 +239,7 @@ export default function AdminStorefrontModule({ stock, setStock, inventoryMatrix
 
   return (
     <div className="p-4 md:p-8 animate-in fade-in">
-      
-      {/* HEADER */}
+      {/* ... [Rest of AdminStorefrontModule remains identical] ... */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-8 border-b border-zinc-800/50 pb-8">
         <div className="flex items-center gap-4">
           <div className="bg-indigo-500/10 p-4 rounded-3xl border border-indigo-500/30 text-indigo-400 shadow-lg">
@@ -256,7 +275,6 @@ export default function AdminStorefrontModule({ stock, setStock, inventoryMatrix
         </div>
       </div>
 
-      {/* METRICS ROW */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
          <button 
            onClick={() => setActiveDetailView(activeDetailView === 'PROMOS' ? null : 'PROMOS')}
@@ -295,7 +313,6 @@ export default function AdminStorefrontModule({ stock, setStock, inventoryMatrix
          </button>
       </div>
 
-      {/* DYNAMIC METRIC DETAIL PANEL */}
       {activeDetailView && (
         <div className="bg-zinc-900/80 backdrop-blur-md border border-zinc-800 rounded-3xl p-6 mb-8 shadow-xl animate-in slide-in-from-top-4 relative">
           <button onClick={() => setActiveDetailView(null)} className="absolute top-4 right-4 text-zinc-500 hover:text-rose-400 transition-colors p-2 bg-zinc-950 rounded-full border border-zinc-800"><X size={14}/></button>
@@ -327,7 +344,6 @@ export default function AdminStorefrontModule({ stock, setStock, inventoryMatrix
         </div>
       )}
 
-      {/* COMPACT MASTER SCHEDULE ACCORDION */}
       <div className="bg-zinc-900/80 backdrop-blur-md border border-zinc-800 rounded-4xl shadow-xl mb-8 overflow-hidden transition-all duration-300">
          <button 
            onClick={() => setIsScheduleOpen(!isScheduleOpen)} 
@@ -399,10 +415,8 @@ export default function AdminStorefrontModule({ stock, setStock, inventoryMatrix
          )}
       </div>
 
-      {/* MAIN STAGE GRID */}
       <div className="grid grid-cols-1 xl:grid-cols-12 gap-8">
         
-        {/* LEFT COLUMN: CAMPAIGN ENGINE */}
         <div className="xl:col-span-8 flex flex-col min-h-125 h-full">
            <div className="bg-zinc-900/80 backdrop-blur-md border border-zinc-800 rounded-4xl p-6 shadow-xl flex flex-col h-full flex-1">
              <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6 shrink-0 border-b border-zinc-800/50 pb-4">
@@ -414,17 +428,14 @@ export default function AdminStorefrontModule({ stock, setStock, inventoryMatrix
                   </div>
                 </div>
                 
-                {/* VIEW TOGGLES */}
                 <div className="flex items-center bg-zinc-950 border border-zinc-800 p-1.5 rounded-xl shadow-inner">
                   <button onClick={() => setCampaignView('LIST')} className={`px-4 py-2 rounded-lg text-[9px] font-black uppercase tracking-widest flex items-center gap-1.5 transition-colors ${campaignView === 'LIST' ? 'bg-zinc-800 text-pink-400' : 'text-zinc-500 hover:text-zinc-300'}`}><LayoutList size={12}/> List</button>
                   <button onClick={() => setCampaignView('WEEK')} className={`px-4 py-2 rounded-lg text-[9px] font-black uppercase tracking-widest flex items-center gap-1.5 transition-colors ${campaignView === 'WEEK' ? 'bg-zinc-800 text-pink-400' : 'text-zinc-500 hover:text-zinc-300'}`}><CalendarRange size={12}/> Week</button>
                 </div>
              </div>
              
-             {/* DYNAMIC VIEW RENDERER */}
              <div className="flex-1 overflow-hidden min-h-0 relative">
                
-               {/* DATA TABLE LIST VIEW */}
                {campaignView === 'LIST' && (
                  <div className="h-full overflow-y-auto scrollbar-hide border border-zinc-800/50 rounded-2xl bg-zinc-950/30">
                    <table className="w-full text-left border-collapse">
@@ -491,7 +502,6 @@ export default function AdminStorefrontModule({ stock, setStock, inventoryMatrix
                  </div>
                )}
 
-               {/* KANBAN WEEK VIEW */}
                {campaignView === 'WEEK' && (
                  <div className="h-full flex gap-3 overflow-x-auto scrollbar-hide pb-2">
                    {DAYS_OF_WEEK.map((day) => {
@@ -538,7 +548,6 @@ export default function AdminStorefrontModule({ stock, setStock, inventoryMatrix
            </div>
         </div>
 
-        {/* RIGHT COLUMN: OVERSTOCK INSIGHTS (SIDEBAR) */}
         <div className="xl:col-span-4 flex flex-col">
            <div className="bg-zinc-900/80 backdrop-blur-md border border-zinc-800 rounded-4xl p-6 shadow-xl flex flex-col h-full">
              <div className="flex items-center justify-between mb-6 shrink-0">

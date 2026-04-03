@@ -1,29 +1,20 @@
 'use client';
 
-import React, { useState, useMemo, useRef } from 'react';
-import { X, Trash2, Tag, BookText, Scale, Package, Boxes, Star, Leaf, Flame, Box, Image as ImageIcon, Sparkles, MapPin, ChevronRight, UploadCloud, FileType, FileUp, AlertTriangle, Plus, TicketPercent, Award, CalendarDays, BarChart3, Binary, ShoppingBag, Fingerprint, DollarSign, Save } from 'lucide-react';
+import React, { useState, useRef } from 'react';
+import { X, Trash2, BookText, Fingerprint, DollarSign, Save, Image as ImageIcon, UploadCloud, Leaf, Flame, Box, Boxes, TicketPercent, Award, Star, CalendarDays, Plus } from 'lucide-react';
 import { createClient } from '@supabase/supabase-js';
 
-const PriceTierPill = ({ label, onRemove }: any) => (
-  <div className="flex items-center gap-2 bg-zinc-950 border border-zinc-800 text-zinc-400 pl-3 pr-1 py-1 rounded-full text-xs font-bold shadow-md animate-in zoom-in-95">
-    {label}
-    <button onClick={onRemove} className="p-1 rounded-full text-zinc-600 hover:bg-rose-500/10 hover:text-rose-400 transition-colors">
-      <X size={14} />
-    </button>
-  </div>
-);
-
-export default function AdminInventoryEditor({ initialItem, isAdding, mainCategories, subCategories, standardTiers, onSave, onCancel, inventoryMatrix, client_id, setNotification }: any) {
+export default function AdminInventoryEditor({ initialItem, isAdding, mainCategories, subCategories, standardTiers, onSave, onDelete, onCancel, client_id, setNotification }: any) {
   const cid = client_id;
   
   const [updatedItem, setUpdatedItem] = useState({ 
     ...initialItem, 
-    sizes: initialItem.sizes || [] 
+    sizes: initialItem.sizes || [],
+    options: initialItem.options || []
   });
   
-  const [newSizeTier, setNewSizeTier] = useState(standardTiers[0] || '');
-
   const [isUploading, setIsUploading] = useState(false);
+  const [isConfirmingDelete, setIsConfirmingDelete] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [dragActive, setDragActive] = useState(false);
 
@@ -47,12 +38,51 @@ export default function AdminInventoryEditor({ initialItem, isAdding, mainCatego
   const handleDrag = (e: React.DragEvent) => { e.preventDefault(); e.stopPropagation(); setDragActive(e.type === "dragenter" || e.type === "dragover"); };
   const handleDrop = (e: React.DragEvent) => { e.preventDefault(); e.stopPropagation(); setDragActive(false); if (e.dataTransfer.files && e.dataTransfer.files[0]) handleFileUpload(e.dataTransfer.files[0]); };
 
-  const handleSizeChange = (id: string, field: string, value: any) => { setUpdatedItem((prev: any) => ({ ...prev, sizes: prev.sizes.map((s: any) => s.id === id ? { ...s, [field]: (field === 'price' || field === 'bundleQty') ? Number(value) || 0 : value } : s) })); };
+  const handleSizeChange = (id: string, field: string, value: any) => { 
+    setUpdatedItem((prev: any) => ({ 
+      ...prev, 
+      sizes: prev.sizes.map((s: any) => s.id === id ? { ...s, [field]: (field === 'price' || field === 'bundleQty' || field === 'promoPrice') ? Number(value) || '' : value } : s) 
+    })); 
+  };
+  
+  const handleAddSize = () => {
+    setUpdatedItem((prev: any) => ({
+      ...prev,
+      sizes: [...prev.sizes, { id: `sz-${Date.now()}`, label: 'New Size', price: 0, bundleQty: 1, promoPrice: '' }]
+    }));
+  };
+
+  const handleRemoveSize = (id: string) => {
+    setUpdatedItem((prev: any) => ({ ...prev, sizes: prev.sizes.filter((s: any) => s.id !== id) }));
+  };
+
+  const handleOptionChange = (id: string, field: string, value: any) => {
+    setUpdatedItem((prev: any) => ({
+      ...prev,
+      options: prev.options.map((o: any) => o.id === id ? { ...o, [field]: field === 'stock' ? Number(value) || 0 : value } : o)
+    }));
+  };
+
+  const handleAddOption = () => {
+    setUpdatedItem((prev: any) => ({
+      ...prev,
+      options: [...prev.options, { id: `opt-${Date.now()}`, label: 'New Variant', stock: 0 }]
+    }));
+  };
+
+  const handleRemoveOption = (id: string) => {
+    setUpdatedItem((prev: any) => ({ ...prev, options: prev.options.filter((o: any) => o.id !== id) }));
+  };
+
   const handleSave = () => { onSave(updatedItem, isAdding); };
 
   const activeMainCat = updatedItem.mainCategory;
+  
+  // CATEGORY LOGIC: Flower and Merch don't use flavors/variants
   const isFlower = activeMainCat === 'Flower & Plants';
-  const isVape = activeMainCat === 'Vapes & Pens';
+  const isMerch = activeMainCat === 'Merch & Extras';
+  const showVariants = !isFlower && !isMerch;
+
   const weekdayMap = ['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'];
 
   const ItemIcon = updatedItem.iconName === 'Leaf' ? Leaf : updatedItem.iconName === 'Flame' ? Flame : updatedItem.iconName === 'Box' ? Box : ImageIcon;
@@ -67,10 +97,23 @@ export default function AdminInventoryEditor({ initialItem, isAdding, mainCatego
              {updatedItem.imageUrl ? <img src={updatedItem.imageUrl} alt="preview" className="w-full h-full object-cover" /> : <ItemIcon size={20} className="text-zinc-600" />}
           </div>
           <div>
-            <h1 className="text-xl font-black uppercase tracking-tighter text-zinc-100 leading-tight">
+            <h1 className="text-xl font-black uppercase tracking-tighter text-zinc-100 leading-tight flex items-center gap-3">
                {isAdding ? "New Vault Entry" : updatedItem.name || "Unnamed Product"}
+               
+               {/* THE NUKE PROTOCOL */}
+               {!isAdding && (
+                 isConfirmingDelete ? (
+                   <div className="flex items-center gap-2 bg-rose-500/10 border border-rose-500/30 p-1 rounded-xl animate-in zoom-in-95">
+                      <span className="text-[10px] font-bold text-rose-400 uppercase px-2 tracking-widest">Are you sure?</span>
+                      <button onClick={() => setIsConfirmingDelete(false)} className="px-3 py-1.5 bg-zinc-900 rounded-lg text-zinc-400 text-[10px] uppercase font-black hover:text-zinc-100">Cancel</button>
+                      <button onClick={() => onDelete(updatedItem.id)} className="px-3 py-1.5 bg-rose-500 rounded-lg text-zinc-950 text-[10px] uppercase font-black hover:bg-rose-400 flex items-center gap-1 shadow-[0_0_15px_rgba(244,63,94,0.4)]"><Trash2 size={12}/> Confirm Nuke</button>
+                   </div>
+                 ) : (
+                   <button onClick={() => setIsConfirmingDelete(true)} className="bg-zinc-950 border border-rose-500/30 hover:bg-rose-500/10 text-rose-400 font-black px-3 py-1.5 rounded-lg text-[9px] uppercase tracking-widest transition-all flex items-center gap-1.5 opacity-50 hover:opacity-100"><Trash2 size={12} /> Nuke</button>
+                 )
+               )}
             </h1>
-            <p className="text-[10px] font-mono text-zinc-500 uppercase tracking-widest">
+            <p className="text-[10px] font-mono text-zinc-500 uppercase tracking-widest mt-0.5">
                ID: {updatedItem.id}
             </p>
           </div>
@@ -109,9 +152,15 @@ export default function AdminInventoryEditor({ initialItem, isAdding, mainCatego
 
               {/* Core Text Fields */}
               <div className="flex-1 space-y-5">
-                 <div>
-                   <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-wider mb-2 block">Product Name *</label>
-                   <input type="text" value={updatedItem.name} onChange={(e) => setUpdatedItem({ ...updatedItem, name: e.target.value })} placeholder="e.g. Gorilla Butter (Top Shelf)" className="w-full bg-zinc-950 border border-zinc-800 rounded-xl p-3.5 text-sm font-bold text-zinc-100 focus:border-cyan-500/50 outline-none transition-colors" />
+                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                   <div>
+                     <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-wider mb-2 block">Product Name *</label>
+                     <input type="text" value={updatedItem.name} onChange={(e) => setUpdatedItem({ ...updatedItem, name: e.target.value })} placeholder="e.g. Gorilla Butter (Top Shelf)" className="w-full bg-zinc-950 border border-zinc-800 rounded-xl p-3.5 text-sm font-bold text-zinc-100 focus:border-cyan-500/50 outline-none transition-colors" />
+                   </div>
+                   <div>
+                     <label className="text-[10px] font-bold text-emerald-500 uppercase tracking-wider mb-2 block">Brand / Maker</label>
+                     <input type="text" value={updatedItem.brand || ''} onChange={(e) => setUpdatedItem({ ...updatedItem, brand: e.target.value })} placeholder="e.g. Bored Extracts CO" className="w-full bg-zinc-950 border border-emerald-500/30 rounded-xl p-3.5 text-sm font-bold text-emerald-400 focus:border-emerald-500 outline-none transition-colors" />
+                   </div>
                  </div>
                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
                    <div>
@@ -131,7 +180,7 @@ export default function AdminInventoryEditor({ initialItem, isAdding, mainCatego
            </div>
         </section>
 
-        {/* SECTION 2: PRODUCT DNA (Descriptions & Traits) */}
+        {/* SECTION 2: PRODUCT DNA (RESTORED GRANULAR FIELDS) */}
         <section className="bg-zinc-900/30 border border-zinc-800/80 rounded-3xl p-6 md:p-8 shadow-sm">
            <h2 className="text-sm font-black uppercase tracking-widest text-zinc-100 flex items-center gap-2 mb-6 pb-4 border-b border-zinc-800/50">
              <BookText size={16} className="text-emerald-400" /> Product DNA
@@ -139,18 +188,22 @@ export default function AdminInventoryEditor({ initialItem, isAdding, mainCatego
            
            <div className="space-y-5">
               <div>
-                <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-wider mb-2 block">Marketing Description</label>
+                <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-wider mb-2 block">Main Description (Storefront display)</label>
                 <textarea value={updatedItem.descBase} onChange={(e) => setUpdatedItem({ ...updatedItem, descBase: e.target.value })} placeholder="Enter the main marketing copy here..." rows={4} className="w-full bg-zinc-950 border border-zinc-800 rounded-xl p-3.5 text-sm font-medium text-zinc-300 focus:border-emerald-500/50 outline-none transition-colors resize-none" />
               </div>
               
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
                  <div>
                    <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-wider mb-2 block">Feels / Effects</label>
-                   <input type="text" value={updatedItem.descFeels} onChange={(e) => setUpdatedItem({ ...updatedItem, descFeels: e.target.value })} placeholder="e.g. Creative, Relaxed, Euphoric" className="w-full bg-zinc-950 border border-zinc-800 rounded-xl p-3.5 text-sm font-medium text-zinc-100 focus:border-emerald-500/50 outline-none transition-colors" />
+                   <input type="text" value={updatedItem.descFeels} onChange={(e) => setUpdatedItem({ ...updatedItem, descFeels: e.target.value })} placeholder="Creative, Relaxed..." className="w-full bg-zinc-950 border border-zinc-800 rounded-xl p-3.5 text-sm font-medium text-zinc-100 focus:border-emerald-500/50 outline-none transition-colors" />
                  </div>
                  <div>
                    <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-wider mb-2 block">Taste / Aroma</label>
-                   <input type="text" value={updatedItem.descTaste} onChange={(e) => setUpdatedItem({ ...updatedItem, descTaste: e.target.value })} placeholder="e.g. Sweet, Berry, Earthy" className="w-full bg-zinc-950 border border-zinc-800 rounded-xl p-3.5 text-sm font-medium text-zinc-100 focus:border-emerald-500/50 outline-none transition-colors" />
+                   <input type="text" value={updatedItem.descTaste} onChange={(e) => setUpdatedItem({ ...updatedItem, descTaste: e.target.value })} placeholder="Sweet, Berry..." className="w-full bg-zinc-950 border border-zinc-800 rounded-xl p-3.5 text-sm font-medium text-zinc-100 focus:border-emerald-500/50 outline-none transition-colors" />
+                 </div>
+                 <div>
+                   <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-wider mb-2 block">Uses / Pairing</label>
+                   <input type="text" value={updatedItem.descUses} onChange={(e) => setUpdatedItem({ ...updatedItem, descUses: e.target.value })} placeholder="Nighttime, Social..." className="w-full bg-zinc-950 border border-zinc-800 rounded-xl p-3.5 text-sm font-medium text-zinc-100 focus:border-emerald-500/50 outline-none transition-colors" />
                  </div>
               </div>
 
@@ -158,12 +211,12 @@ export default function AdminInventoryEditor({ initialItem, isAdding, mainCatego
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 p-5 bg-zinc-950/50 border border-zinc-800/80 rounded-2xl mt-2">
                    <div>
                      <label className="text-[10px] font-bold text-emerald-500 uppercase tracking-wider mb-2 block">Strain Lineage</label>
-                     <input type="text" value={updatedItem.lineage} onChange={(e) => setUpdatedItem({ ...updatedItem, lineage: e.target.value })} placeholder="e.g. Wedding Cake x Cherry Pie" className="w-full bg-zinc-900 border border-zinc-800 rounded-xl p-3 text-sm font-medium text-zinc-100 focus:border-emerald-500/50 outline-none transition-colors" />
+                     <input type="text" value={updatedItem.lineage} onChange={(e) => setUpdatedItem({ ...updatedItem, lineage: e.target.value })} placeholder="Wedding Cake x Cherry Pie" className="w-full bg-zinc-900 border border-zinc-800 rounded-xl p-3 text-sm font-medium text-zinc-100 focus:border-emerald-500/50 outline-none transition-colors" />
                    </div>
                    <div>
                      <label className="text-[10px] font-bold text-emerald-500 uppercase tracking-wider mb-2 block">Strain Classification</label>
                      <select value={updatedItem.strainType} onChange={(e) => setUpdatedItem({ ...updatedItem, strainType: e.target.value })} className="w-full bg-zinc-900 border border-zinc-800 rounded-xl p-3 text-sm font-medium text-zinc-100 focus:border-emerald-500/50 outline-none transition-colors">
-                       {['Sativa', 'Indica', 'Hybrid', 'CBD', 'N/A'].map((st:string)=><option key={st} value={st}>{st}</option>)}
+                       {['Sativa', 'Indica', 'Hybrid', 'Sativa Dom Hybrid', 'Indica Dom Hybrid', 'CBD', 'N/A'].map((st:string)=><option key={st} value={st}>{st}</option>)}
                      </select>
                    </div>
                 </div>
@@ -173,52 +226,86 @@ export default function AdminInventoryEditor({ initialItem, isAdding, mainCatego
 
         {/* SECTION 3: PRICING & STOCK */}
         <section className="bg-zinc-900/30 border border-zinc-800/80 rounded-3xl p-6 md:p-8 shadow-sm">
-           <h2 className="text-sm font-black uppercase tracking-widest text-zinc-100 flex items-center gap-2 mb-6 pb-4 border-b border-zinc-800/50">
-             <DollarSign size={16} className="text-amber-400" /> Pricing & Logistics
+           <h2 className="text-sm font-black uppercase tracking-widest text-zinc-100 flex items-center justify-between mb-6 pb-4 border-b border-zinc-800/50">
+             <span className="flex items-center gap-2"><DollarSign size={16} className="text-amber-400" /> Pricing & Sizes</span>
+             <button onClick={handleAddSize} className="px-3 py-1.5 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 rounded-lg text-[9px] uppercase tracking-widest flex items-center gap-1 transition-colors"><Plus size={12}/> Add Tier</button>
            </h2>
            
-           {!isFlower && !isVape ? (
-             <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-               <div>
-                 <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-wider mb-2 block">Base Retail Price ($)</label>
-                 <input type="number" value={updatedItem.price} onChange={(e) => setUpdatedItem({ ...updatedItem, price: Number(e.target.value) })} placeholder="0.00" className="w-full bg-zinc-950 border border-zinc-800 rounded-xl p-4 text-lg font-mono font-black text-amber-400 focus:border-amber-500/50 outline-none transition-colors" />
-               </div>
-               <div>
-                 <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-wider mb-2 block">Standard onHand Stock (Qty)</label>
-                 <input type="number" value={updatedItem.onHand} onChange={(e) => setUpdatedItem({ ...updatedItem, onHand: Number(e.target.value) })} placeholder="0" className="w-full bg-zinc-950 border border-zinc-800 rounded-xl p-4 text-lg font-mono font-black text-zinc-100 focus:border-amber-500/50 outline-none transition-colors" />
-               </div>
-             </div>
-           ) : (
-             <div className="space-y-6">
-               <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                  <div>
-                    <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-wider mb-2 block">Global onHand Stock (g)</label>
-                    <input type="number" value={updatedItem.onHand} onChange={(e) => setUpdatedItem({ ...updatedItem, onHand: Number(e.target.value) })} placeholder="0" className="w-full bg-zinc-950 border border-zinc-800 rounded-xl p-4 text-lg font-mono font-black text-zinc-100 focus:border-amber-500/50 outline-none transition-colors" />
-                  </div>
-               </div>
-               
-               <div>
-                 <label className="text-[10px] font-bold text-amber-500 uppercase tracking-wider mb-3 block">Configured Pricing Tiers</label>
-                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                   {updatedItem.sizes.map((size: any) => (
-                     <div key={size.id} className="bg-zinc-950 border border-zinc-800 rounded-xl p-4 flex flex-col gap-2">
-                       <div className="flex items-center justify-between">
-                         <span className="text-xs font-black uppercase tracking-widest text-zinc-300">{size.label}</span>
-                         <span className="text-[9px] font-bold uppercase tracking-wider text-zinc-500">{size.bundleQty}g</span>
+           <div className="space-y-6">
+               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                 {updatedItem.sizes.map((size: any) => (
+                   <div key={size.id} className="bg-zinc-950 border border-zinc-800 rounded-xl p-4 flex flex-col gap-3 relative group">
+                     <button onClick={() => handleRemoveSize(size.id)} className="absolute top-2 right-2 p-1.5 bg-zinc-900 rounded-md text-zinc-600 hover:text-rose-400 hover:bg-rose-500/10 opacity-0 group-hover:opacity-100 transition-all"><X size={12}/></button>
+                     
+                     <div>
+                       <label className="text-[9px] font-bold text-zinc-500 uppercase tracking-widest mb-1 block">Tier Label</label>
+                       <input type="text" value={size.label} onChange={(e) => handleSizeChange(size.id, 'label', e.target.value)} className="w-full bg-zinc-900 border border-zinc-800 rounded-lg py-2 px-3 text-xs font-bold text-zinc-300 outline-none" />
+                     </div>
+
+                     <div className="grid grid-cols-2 gap-2">
+                       <div>
+                         <label className="text-[9px] font-bold text-amber-500 uppercase tracking-widest mb-1 block">Base Price</label>
+                         <div className="relative">
+                           <DollarSign size={12} className="absolute left-2 top-1/2 -translate-y-1/2 text-amber-500/50" />
+                           <input type="number" value={size.price} onChange={(e) => handleSizeChange(size.id, 'price', e.target.value)} placeholder="0" className="w-full bg-zinc-900 border border-zinc-800 rounded-lg py-2 pl-6 pr-2 text-xs font-mono font-bold text-amber-400 outline-none" />
+                         </div>
                        </div>
-                       <div className="relative">
-                         <DollarSign size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-amber-500/50" />
-                         <input type="number" value={size.price} onChange={(e) => handleSizeChange(size.id, 'price', e.target.value)} placeholder="0.00" className="w-full bg-zinc-900 border border-zinc-800 rounded-lg py-2.5 pl-8 pr-3 text-sm font-mono font-bold text-amber-400 focus:border-amber-500/50 outline-none transition-colors" />
+                       <div>
+                         <label className="text-[9px] font-bold text-pink-400 uppercase tracking-widest mb-1 block">Promo Price</label>
+                         <div className="relative">
+                           <DollarSign size={12} className="absolute left-2 top-1/2 -translate-y-1/2 text-pink-500/50" />
+                           <input type="number" value={size.promoPrice} onChange={(e) => handleSizeChange(size.id, 'promoPrice', e.target.value)} placeholder="0" className="w-full bg-zinc-900 border border-pink-500/30 rounded-lg py-2 pl-6 pr-2 text-xs font-mono font-bold text-pink-400 outline-none focus:border-pink-500" />
+                         </div>
                        </div>
                      </div>
-                   ))}
-                 </div>
+                   </div>
+                 ))}
                </div>
-             </div>
-           )}
+           </div>
         </section>
 
-        {/* SECTION 4: MERCHANDISING & PROMO ENGINE */}
+        {/* SECTION 4: VARIANTS & OPTIONS (CATEGORIES-AWARE HIDING) */}
+        {showVariants && (
+          <section className="bg-zinc-900/30 border border-zinc-800/80 rounded-3xl p-6 md:p-8 shadow-sm">
+             <h2 className="text-sm font-black uppercase tracking-widest text-zinc-100 flex items-center justify-between mb-6 pb-4 border-b border-zinc-800/50">
+               <span className="flex items-center gap-2"><Boxes size={16} className="text-indigo-400" /> Variants & Flavors</span>
+               <button onClick={handleAddOption} className="px-3 py-1.5 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 rounded-lg text-[9px] uppercase tracking-widest flex items-center gap-1 transition-colors"><Plus size={12}/> Add Variant</button>
+             </h2>
+
+             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+               {updatedItem.options.map((opt: any) => (
+                 <div key={opt.id} className="bg-zinc-950 border border-zinc-800 rounded-xl p-4 flex flex-col gap-3 relative group">
+                   <button onClick={() => handleRemoveOption(opt.id)} className="absolute top-2 right-2 p-1.5 bg-zinc-900 rounded-md text-zinc-600 hover:text-rose-400 hover:bg-rose-500/10 opacity-0 group-hover:opacity-100 transition-all"><X size={12}/></button>
+                   
+                   <div>
+                     <label className="text-[9px] font-bold text-zinc-500 uppercase tracking-widest mb-1 block">Variant / Flavor Name</label>
+                     <input type="text" value={opt.label} onChange={(e) => handleOptionChange(opt.id, 'label', e.target.value)} className="w-full bg-zinc-900 border border-zinc-800 rounded-lg py-2 px-3 text-xs font-bold text-zinc-300 outline-none" />
+                   </div>
+                   
+                   <div>
+                     <label className="text-[9px] font-bold text-indigo-400 uppercase tracking-widest mb-1 block">Stock (Units)</label>
+                     <input type="number" value={opt.stock} onChange={(e) => handleOptionChange(opt.id, 'stock', e.target.value)} placeholder="0" className="w-full bg-zinc-900 border border-zinc-800 rounded-lg py-2 px-3 text-xs font-mono font-bold text-indigo-400 outline-none" />
+                   </div>
+                 </div>
+               ))}
+             </div>
+          </section>
+        )}
+        
+        {/* FALLBACK: Global Stock if Variants hidden (Merch/Flower) */}
+        {!showVariants && (
+           <section className="bg-zinc-900/30 border border-zinc-800/80 rounded-3xl p-6 md:p-8 shadow-sm">
+             <h2 className="text-sm font-black uppercase tracking-widest text-zinc-100 flex items-center gap-2 mb-6 pb-4 border-b border-zinc-800/50">
+               <Boxes size={16} className="text-indigo-400" /> Global Vault Stock
+             </h2>
+             <div>
+               <label className="text-[10px] font-bold text-indigo-400 uppercase tracking-wider mb-2 block">Total Stock (Units)</label>
+               <input type="number" value={updatedItem.onHand} onChange={(e) => setUpdatedItem({ ...updatedItem, onHand: Number(e.target.value) || 0 })} placeholder="0" className="w-full bg-zinc-950 border border-indigo-500/30 rounded-xl p-3.5 text-sm font-mono font-bold text-indigo-400 focus:border-indigo-500 outline-none transition-colors" />
+             </div>
+           </section>
+        )}
+
+        {/* SECTION 5: MERCHANDISING & PROMO ENGINE */}
         <section className="bg-zinc-900/30 border border-zinc-800/80 rounded-3xl p-6 md:p-8 shadow-sm">
            <h2 className="text-sm font-black uppercase tracking-widest text-zinc-100 flex items-center gap-2 mb-6 pb-4 border-b border-zinc-800/50">
              <TicketPercent size={16} className="text-rose-400" /> Merchandising & Promo Engine

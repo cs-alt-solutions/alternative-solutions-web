@@ -68,7 +68,10 @@ export default function StorefrontHeader({
         <div className="flex items-center gap-3">
           <div className="flex items-center gap-2">
             <Package size={20} className="text-emerald-400" />
-            <h1 className="font-black text-lg tracking-widest uppercase text-zinc-100 hidden sm:block">Division Market</h1>
+            <div className="hidden sm:flex flex-col">
+              <h1 className="font-black text-lg tracking-widest uppercase text-zinc-100 leading-none">Division Market</h1>
+              <span className="text-[8px] font-black uppercase tracking-widest text-emerald-500 mt-1">Powered by Alternative Solutions</span>
+            </div>
           </div>
         </div>
         

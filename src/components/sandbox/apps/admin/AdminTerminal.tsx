@@ -163,7 +163,10 @@ export default function AdminTerminal({ clientConfig, onExit }: { clientConfig: 
         <div className="flex items-center gap-3">
           <div className="flex items-center gap-2">
             <Shield size={22} className="text-emerald-400" />
-            <h1 className="font-black text-lg tracking-wider uppercase text-transparent bg-clip-text bg-linear-to-r from-emerald-400 to-zinc-100 hidden sm:block">Admin Command</h1>
+            <div className="hidden sm:flex flex-col">
+              <h1 className="font-black text-lg tracking-wider uppercase text-transparent bg-clip-text bg-linear-to-r from-emerald-400 to-zinc-100 leading-none">Admin Command</h1>
+              <span className="text-[8px] font-black uppercase tracking-widest text-cyan-500 mt-1">Powered by Alternative Solutions</span>
+            </div>
           </div>
         </div>
         

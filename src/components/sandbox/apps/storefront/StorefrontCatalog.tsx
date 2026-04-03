@@ -1,5 +1,5 @@
-import React, { useEffect } from 'react';
-import { Info, Flame, ShoppingCart, Leaf, Wind, Cookie, Droplet, Shirt, LayoutGrid, Tag, Award, Sparkles, CalendarDays } from 'lucide-react';
+import React, { useEffect, useMemo } from 'react';
+import { Info, Flame, ShoppingCart, Leaf, Wind, Cookie, Droplet, Shirt, LayoutGrid, Tag, Award, Sparkles, Activity } from 'lucide-react';
 import { StorefrontCard } from './StorefrontComponents';
 import StorefrontHeader from './StorefrontHeader';
 
@@ -21,6 +21,8 @@ export default function StorefrontCatalog({
   setIsCheckingOut
 }: any) {
   
+  const formatPromo = (logic: string) => ({ 'PCT_15': '15% OFF', 'PENNY_150': '$0.01 UNLOCK', 'BOGO': 'BOGO', 'B2G1': 'B2G1', 'B5G1': 'B5G1' }[logic] || logic || 'PROMO');
+
   // PREMIUM SORTING ENGINE
   const safeInventory = [...(filteredInventory || [])].sort((a: any, b: any) => {
     const aScore = (a.isTopShelf || a.featured ? 3 : 0) + (a.dailyDeal ? 1 : 0);
@@ -72,6 +74,21 @@ export default function StorefrontCatalog({
   const todaysDeals = safeInventory.filter((i: any) => i.dailyDeal);
   const premiumBucket = safeInventory.filter((i: any) => (i.featured || i.isTopShelf) && !i.isConfiguredDeal);
 
+  // TICKER GENERATOR: Look ahead 7 days for scheduled drops
+  const tickerItems = useMemo(() => {
+    const items: any[] = [];
+    for (let i = 1; i <= 7; i++) {
+       const targetDayIndex = (timeData.dayOfWeek + i) % 7;
+       const targetDay = DAYS_OF_WEEK[targetDayIndex];
+       const dayDeals = allDeals.filter((d: any) => d.dealType === 'Weekly Special' && d.dealDays?.includes(targetDayIndex));
+       
+       dayDeals.forEach((d: any) => {
+         items.push({ day: targetDay.short, name: d.name, promo: formatPromo(d.dealLogic) });
+       });
+    }
+    return items;
+  }, [allDeals, timeData.dayOfWeek]);
+
   return (
     <>
       <StorefrontHeader 
@@ -101,72 +118,54 @@ export default function StorefrontCatalog({
                <button onClick={() => setShowPolicies(true)} className="bg-zinc-900/50 hover:bg-zinc-800 border border-zinc-800/50 text-zinc-400 transition-colors px-4 py-2 rounded-xl flex items-center gap-2 text-[10px] font-black uppercase tracking-widest"><Info size={14}/> Read Policies</button>
              </div>
 
-             {/* THE WEEKLY CIRCULAR: Responsive Grid Calendar */}
+             {/* THE HYPE TICKER (Stock Market Style) */}
              {allDeals.length > 0 && (
-               <div className="bg-zinc-900/40 backdrop-blur-xl border border-zinc-800 rounded-4xl p-5 md:p-8 relative overflow-hidden shadow-2xl before:absolute before:top-0 before:left-0 before:right-0 before:h-1 before:bg-linear-to-r before:from-transparent before:via-emerald-500 before:to-transparent">
-                 <div className="absolute top-0 right-0 w-64 h-64 bg-emerald-500/5 rounded-full blur-3xl pointer-events-none" />
-                 
-                 <div className="flex items-center gap-4 mb-6 relative z-10">
-                    <div className="p-3 bg-zinc-950 rounded-2xl border border-zinc-800 shadow-inner">
-                      <CalendarDays size={24} className="text-zinc-100" />
-                    </div>
-                    <div>
-                      <h3 className="text-2xl font-black uppercase tracking-tighter text-zinc-100">The Weekly Circular</h3>
-                      <p className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest mt-0.5">Plan your stash. Deals unlock automatically.</p>
-                    </div>
-                 </div>
-
-                 {/* CALENDAR GRID */}
-                 <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-7 gap-3 relative z-10">
-                    {DAYS_OF_WEEK.map(day => {
-                       const isToday = day.id === timeData.dayOfWeek;
-                       const dayDeals = allDeals.filter((d: any) => d.dealType === 'Daily Deal' || (d.dealDays && d.dealDays.includes(day.id)));
-
-                       return (
-                         <div key={day.id} className={`rounded-2xl p-3 border transition-all flex flex-col ${isToday ? 'bg-pink-500/10 border-pink-500/50 shadow-[0_0_20px_rgba(236,72,153,0.15)] ring-1 ring-pink-500/30 lg:-translate-y-2' : 'bg-zinc-950/50 border-zinc-800 opacity-70 hover:opacity-100'}`}>
-                            <div className="flex items-center justify-between mb-3 pb-2 border-b border-zinc-800/50">
-                              <h4 className={`text-xs font-black uppercase tracking-widest ${isToday ? 'text-pink-400' : 'text-zinc-500'}`}>
-                                {isToday ? '🔥 Today' : day.short}
-                              </h4>
-                              {!isToday && <span className="text-[7px] font-bold text-zinc-600 uppercase tracking-widest bg-zinc-900 px-1.5 py-0.5 rounded-md">Preview</span>}
-                            </div>
-                            <div className="space-y-2 flex-1">
-                               {dayDeals.length > 0 ? dayDeals.map((d: any) => (
-                                  <div key={d.id} className="flex flex-col">
-                                     <span className="text-[10px] font-black text-zinc-200 leading-tight mb-0.5">{d.name?.replace(/\s*\(\s*Top Shelf\s*\)\s*/i, '').trim()}</span>
-                                     <span className={`text-[8px] font-bold uppercase tracking-widest ${isToday ? 'text-pink-400' : 'text-emerald-500/70'}`}>{d.dealText}</span>
-                                  </div>
-                               )) : (
-                                  <span className="text-[9px] font-bold text-zinc-600 uppercase tracking-widest">No drops</span>
-                               )}
-                            </div>
-                         </div>
-                       )
-                    })}
-                 </div>
-
-                 {/* LIVE TODAY BUCKET */}
-                 {todaysDeals.length > 0 && (
-                    <div className="mt-8 pt-8 border-t border-zinc-800/50 relative z-10 animate-in fade-in">
-                       <div className="flex items-center gap-3 mb-6">
-                         <div className="p-2 bg-pink-500/20 rounded-xl border border-pink-500/30">
-                           <Flame size={16} className="text-pink-400 animate-pulse" />
-                         </div>
-                         <h3 className="text-lg font-black uppercase tracking-tighter text-pink-400">Live Right Now</h3>
-                       </div>
-                       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                         {todaysDeals.map((item: any, idx: number) => (
-                           <StorefrontCard key={item.id} item={item} cart={cart} updateCart={updateCart} isHero={idx === 0} />
-                         ))}
-                       </div>
-                    </div>
-                 )}
+               <div className="w-full bg-zinc-950 border border-zinc-800 rounded-xl flex items-stretch overflow-hidden shadow-inner mt-2">
+                  <div className="bg-pink-500 text-zinc-950 font-black uppercase tracking-widest text-[10px] px-4 py-3 flex items-center gap-2 shrink-0 shadow-[5px_0_15px_rgba(236,72,153,0.4)] z-10">
+                    <Activity size={14} className="animate-pulse" /> Deal Radar
+                  </div>
+                  <div className="flex-1 flex items-center overflow-x-auto scrollbar-hide px-4 gap-6 relative">
+                     <div className="absolute left-0 top-0 bottom-0 w-8 bg-linear-to-r from-zinc-950 to-transparent pointer-events-none" />
+                     
+                     {tickerItems.length > 0 ? tickerItems.map((t, idx) => (
+                        <div key={idx} className="flex items-center gap-2.5 shrink-0 py-1">
+                           <span className="text-[9px] font-black text-zinc-400 bg-zinc-900 border border-zinc-800 px-1.5 py-0.5 rounded">{t.day}</span>
+                           <span className="text-[10px] font-black text-zinc-200 uppercase tracking-wider">{t.name?.replace(/\s*\(\s*Top Shelf\s*\)\s*/i, '').trim()}</span>
+                           <span className="text-[9px] font-black text-pink-400 uppercase tracking-widest">{t.promo}</span>
+                           {idx < tickerItems.length - 1 && <span className="text-zinc-800 ml-3">•</span>}
+                        </div>
+                     )) : (
+                        <span className="text-[10px] font-bold text-zinc-600 uppercase tracking-widest italic py-1">No upcoming scheduled drops. Keep an eye out for Always Active deals below.</span>
+                     )}
+                     
+                     <div className="absolute right-0 top-0 bottom-0 w-8 bg-linear-to-l from-zinc-950 to-transparent pointer-events-none" />
+                  </div>
                </div>
+             )}
+
+             {/* LIVE TODAY BUCKET */}
+             {todaysDeals.length > 0 && (
+                <div className="pt-2 relative z-10 animate-in fade-in">
+                   <div className="flex items-center gap-3 mb-6">
+                     <div className="p-2 bg-pink-500/20 rounded-xl border border-pink-500/30 shadow-[0_0_15px_rgba(236,72,153,0.3)]">
+                       <Flame size={16} className="text-pink-400 animate-pulse" />
+                     </div>
+                     <div>
+                       <h3 className="text-xl md:text-2xl font-black uppercase tracking-tighter text-transparent bg-clip-text bg-linear-to-r from-pink-400 to-rose-500">Live Right Now</h3>
+                       <p className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest mt-0.5">These deals are currently active and ready to cart.</p>
+                     </div>
+                   </div>
+                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                     {todaysDeals.map((item: any, idx: number) => (
+                       <StorefrontCard key={item.id} item={item} cart={cart} updateCart={updateCart} isHero={idx === 0} />
+                     ))}
+                   </div>
+                </div>
              )}
 
              {/* PREMIUM VAULT BUCKET */}
              {premiumBucket.length > 0 && (
-               <div className="bg-zinc-900/40 backdrop-blur-xl border border-zinc-800 rounded-4xl p-5 md:p-8 relative overflow-hidden shadow-2xl before:absolute before:top-0 before:left-0 before:right-0 before:h-1 before:bg-linear-to-r before:from-transparent before:via-amber-500 before:to-transparent">
+               <div className="bg-zinc-900/40 backdrop-blur-xl border border-zinc-800 rounded-4xl p-5 md:p-8 relative overflow-hidden shadow-2xl before:absolute before:top-0 before:left-0 before:right-0 before:h-1 before:bg-linear-to-r before:from-transparent before:via-amber-500 before:to-transparent mt-12">
                  <div className="absolute top-0 right-0 w-64 h-64 bg-amber-500/5 rounded-full blur-3xl pointer-events-none" />
                  
                  <div className="flex items-center gap-4 mb-8 relative z-10">

@@ -29,18 +29,18 @@ export default function StorefrontCheckout({
     return false;
   }, [cart, submittedCart, hasSubmittedOnce]);
 
-  // SMART ENGINE 2-PASS MATH: Syncs visual line items with the Terminal math & tracks total savings
+  // SMART ENGINE 2-PASS MATH (SAFEGUARDED)
   const { baseSubtotal, groupedCart, totalSavings } = useMemo(() => {
     if (!cart) return { baseSubtotal: 0, groupedCart: {}, totalSavings: 0 };
     
     let sub = 0;
-    // Pass 1: Base Subtotal for minimums and Penny thresholds
+    // Pass 1: Base Subtotal for minimums
     Object.values(cart).forEach((cartItem: any) => {
-      const itemInDB = inventory?.find((i: any) => i.id === cartItem.item.id);
+      const itemInDB = inventory?.find((i: any) => i.id === cartItem?.item?.id);
       if (itemInDB?.dealLogic === 'PENNY_150' && itemInDB?.dailyDeal) return;
       
-      const price = (itemInDB?.dailyDeal && cartItem.size.promoPrice) ? cartItem.size.promoPrice : (cartItem.size.price || 0);
-      let chargeableQty = cartItem.qty;
+      const price = (itemInDB?.dailyDeal && cartItem?.size?.promoPrice !== undefined && cartItem?.size?.promoPrice !== '') ? Number(cartItem.size.promoPrice) : Number(cartItem?.size?.price || 0);
+      let chargeableQty = cartItem?.qty || 0;
       let finalPrice = price;
 
       if (itemInDB?.dailyDeal) {
@@ -57,11 +57,13 @@ export default function StorefrontCheckout({
     let overallSavings = 0;
 
     Object.entries(cart).forEach(([cartKey, cartItem]: any) => {
-      if (cartItem.qty <= 0) return;
+      if (!cartItem || cartItem.qty <= 0) return;
       const { item, size, options, qty } = cartItem;
+      if (!item || !size) return;
+
       const itemInDB = inventory?.find((i: any) => i.id === item.id);
       const isDealActive = itemInDB?.dailyDeal;
-      const basePrice = (isDealActive && size.promoPrice) ? size.promoPrice : (size.price || 0);
+      const basePrice = (isDealActive && size?.promoPrice !== undefined && size?.promoPrice !== '') ? Number(size.promoPrice) : Number(size?.price || 0);
       
       let chargeableQty = qty;
       let finalPrice = basePrice;
@@ -87,7 +89,7 @@ export default function StorefrontCheckout({
          lineTotal = basePrice * qty;
       }
 
-      const hasOption = options && options.length > 0 && options[0].label !== 'Standard';
+      const hasOption = options && options.length > 0 && options[0]?.label !== 'Standard';
       const variantLabel = hasOption ? options[0].label : null;
       const groupKey = `${item.id}_${size.id}`;
 
@@ -138,15 +140,15 @@ export default function StorefrontCheckout({
 
     Object.entries(groupedCart).forEach(([groupKey, cartGroup]: any) => {
         const { item, size, variants, totalQty, totalPrice, originalTotalPrice, dealLogic } = cartGroup;
-        const cleanItemName = item.name?.replace(/\s*\(\s*Top Shelf\s*\)\s*/i, '').trim();
+        const cleanItemName = item?.name?.replace(/\s*\(\s*Top Shelf\s*\)\s*/i, '').trim();
         
-        let lineStr = `${totalQty}x ${cleanItemName} (${size.label}) [$${totalPrice.toFixed(2)}]`;
+        let lineStr = `${totalQty}x ${cleanItemName} (${size?.label}) [$${totalPrice.toFixed(2)}]`;
         if (originalTotalPrice > totalPrice) {
             lineStr += ` 💸 (-$${(originalTotalPrice - totalPrice).toFixed(2)} ${formatPromo(dealLogic)} Promo)`;
         }
         cartLines.push(lineStr);
 
-        if (variants[0].isFlavorOption) {
+        if (variants[0]?.isFlavorOption) {
           variants.forEach((variant: any) => {
               cartLines.push(` -> Qty ${variant.qty}: ${variant.variantLabel}`);
           });
@@ -162,8 +164,8 @@ export default function StorefrontCheckout({
           if (removedCount === 0) cartLines.push(`\n--- REMOVED ITEMS ---`);
           const name = prevItem?.item?.name || 'Unknown Item';
           const optionsArray = prevItem?.options || (prevItem?.option ? [prevItem.option] : []);
-          const optionLabel = optionsArray.map((o:any)=>o.label).join(' + ') || 'Standard';
-          cartLines.push(`🔴 [REMOVED] ${prevItem.qty}x ${name} (${optionLabel})`);
+          const optionLabel = optionsArray.map((o:any)=>o?.label).join(' + ') || 'Standard';
+          cartLines.push(`🔴 [REMOVED] ${prevItem?.qty}x ${name} (${optionLabel})`);
           removedCount++;
         }
       });
@@ -249,8 +251,8 @@ export default function StorefrontCheckout({
                 <div className="space-y-4">
                   {Object.entries(groupedCart).map(([groupKey, cartGroup]: any) => {
                     const { item, size, variants, totalQty, totalPrice, originalTotalPrice, dealLogic } = cartGroup;
-                    const cleanItemName = item.name?.replace(/\s*\(\s*Top Shelf\s*\)\s*/i, '').trim();
-                    const ItemIcon = item.iconName === 'Leaf' ? Leaf : item.iconName === 'Flame' ? Flame : item.iconName === 'Box' ? Box : ImageIcon;
+                    const cleanItemName = item?.name?.replace(/\s*\(\s*Top Shelf\s*\)\s*/i, '').trim();
+                    const ItemIcon = item?.iconName === 'Leaf' ? Leaf : item?.iconName === 'Flame' ? Flame : item?.iconName === 'Box' ? Box : ImageIcon;
 
                     return (
                       <div key={groupKey} className="bg-zinc-900 border border-zinc-800 rounded-2xl p-4 transition-all hover:border-zinc-700 shadow-lg relative group overflow-hidden">
@@ -259,14 +261,14 @@ export default function StorefrontCheckout({
                         <div className="flex items-center justify-between relative z-10 gap-3 pb-3 border-b border-zinc-800">
                           <div className="flex items-center gap-3 w-2/3">
                              <div className="w-12 h-12 rounded-xl bg-zinc-950 border border-zinc-800 flex items-center justify-center shrink-0 shadow-inner overflow-hidden">
-                               {item.imageUrl ? <img src={item.imageUrl} alt={item.name} className="w-full h-full object-cover" /> : <ItemIcon size={16} className="text-zinc-700" />}
+                               {item?.imageUrl ? <img src={item.imageUrl} alt={item.name} className="w-full h-full object-cover" /> : <ItemIcon size={16} className="text-zinc-700" />}
                              </div>
                              <div className="flex flex-col items-start overflow-hidden">
                                <p className="text-sm font-black text-zinc-100 leading-tight flex items-center gap-1.5 truncate w-full">
-                                 {cleanItemName} {item.isTopShelf && <Flame size={12} className="text-pink-400 shrink-0"/>}
+                                 {cleanItemName} {item?.isTopShelf && <Flame size={12} className="text-pink-400 shrink-0"/>}
                                </p>
                                <p className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest mt-0.5">
-                                 {size.label}
+                                 {size?.label}
                                </p>
                                {dealLogic && originalTotalPrice > totalPrice && (
                                  <div className="mt-1.5">

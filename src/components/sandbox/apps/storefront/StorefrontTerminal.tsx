@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useMemo, useEffect } from 'react';
-import { Lock, Clock, ArrowRight, AlertTriangle, Package, X } from 'lucide-react';
+import { Lock, Clock, ArrowRight, AlertTriangle, Package, X, Unlock } from 'lucide-react';
 import { useSearchParams } from 'next/navigation'; 
 import { useStickyState } from '@/hooks/useStickyState';
 import { createClient } from '@supabase/supabase-js';
@@ -35,6 +35,11 @@ export default function StorefrontTerminal({ clientConfig, onExit }: { clientCon
   
   const [showPolicies, setShowPolicies] = useState(true); 
   const [nukeWarning, setNukeWarning] = useState<string | null>(null);
+  
+  // --- BACKDOOR PROTOCOL STATE ---
+  const [showBypass, setShowBypass] = useState(false);
+  const [bypassCode, setBypassCode] = useState("");
+  const [isBypassed, setIsBypassed] = useState(false);
   
   const [cart, setCart] = useStickyState<Record<string, { item: any, size: any, options: any[], qty: number }>>({}, `market_cart_v2_${clientConfig.id}`);
   const [cartShift, setCartShift] = useStickyState<string>('', `market_cart_shift_${clientConfig.id}`);
@@ -122,8 +127,9 @@ export default function StorefrontTerminal({ clientConfig, onExit }: { clientCon
   useEffect(() => {
     if (!initialCheckDone && timeData.activeCode) {
       const savedToken = localStorage.getItem(`market_auth_${clientConfig.id}`);
-      if (savedToken === timeData.activeCode) {
+      if (savedToken === timeData.activeCode || savedToken === 'OVERRIDE') {
         setIsVerified(true);
+        setIsBypassed(savedToken === 'OVERRIDE');
         setInitialCheckDone(true);
         return; 
       }
@@ -145,7 +151,8 @@ export default function StorefrontTerminal({ clientConfig, onExit }: { clientCon
   }, [urlKey, timeData.activeCode, initialCheckDone, clientConfig.id]);
 
   useEffect(() => {
-    if (Object.keys(cart).length > 0) {
+    // If the cart exists, and the shift changed, AND we aren't bypassing the system, clear it out
+    if (Object.keys(cart).length > 0 && !isBypassed) {
       if (cartShift && cartShift !== timeData.shiftCode) {
         setCart({});
         setCartShift(timeData.shiftCode);
@@ -155,7 +162,7 @@ export default function StorefrontTerminal({ clientConfig, onExit }: { clientCon
         setCartShift(timeData.shiftCode);
       }
     }
-  }, [timeData.shiftCode, cart, cartShift, setCart, setCartShift]);
+  }, [timeData.shiftCode, cart, cartShift, setCart, setCartShift, isBypassed]);
 
   useEffect(() => { if (isCheckingOut && !orderRef) setOrderRef(Math.random().toString(36).substring(2, 6).toUpperCase()); }, [isCheckingOut, orderRef]);
   useEffect(() => { setActiveSubCategory('All'); }, [activeCategory]);
@@ -177,19 +184,40 @@ export default function StorefrontTerminal({ clientConfig, onExit }: { clientCon
     else setDetectedZone('Other (Contact Us)');
   }, [city, zipCode]);
 
+  // --- UPGRADED AUTH PROTOCOL ---
   const handleAuth = (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
-    if (codeInput.trim().toUpperCase() === timeData.activeCode) {
+    const inputUpper = codeInput.trim().toUpperCase();
+    const adminPass = clientConfig?.adminSecurity?.passphrase || 'VAULT-ACCESS-99';
+
+    if (inputUpper === timeData.activeCode || inputUpper === 'OVERRIDE' || codeInput.trim() === adminPass) {
       setIsVerified(true);
-      localStorage.setItem(`market_auth_${clientConfig.id}`, timeData.activeCode); 
+      if (inputUpper === 'OVERRIDE' || codeInput.trim() === adminPass) {
+        setIsBypassed(true);
+        localStorage.setItem(`market_auth_${clientConfig.id}`, 'OVERRIDE');
+      } else {
+        localStorage.setItem(`market_auth_${clientConfig.id}`, timeData.activeCode); 
+      }
     } else { 
       setError("Invalid or Expired Code"); 
       setTimeout(() => setCodeInput(""), 1500); 
     }
   };
 
-  // 🧠 MODIFIED: We now expose `isConfiguredDeal` to pass the original admin intent
+  // --- UPGRADED CLOSED SCREEN BYPASS ---
+  const handleBypass = () => {
+    const adminPass = clientConfig?.adminSecurity?.passphrase || 'VAULT-ACCESS-99';
+    if (bypassCode.toUpperCase() === 'OVERRIDE' || bypassCode === adminPass) {
+       setIsBypassed(true);
+       setIsVerified(true); // Grant full access past the code screen too
+       setShowBypass(false);
+       localStorage.setItem(`market_auth_${clientConfig.id}`, 'OVERRIDE');
+    } else {
+       setBypassCode("");
+    }
+  };
+
   const inventory = useMemo(() => {
     return rawInventory.filter((i: any) => {
       const optStock = i.options?.reduce((sum: number, opt: any) => sum + (Number(opt.stock) || 0), 0) || 0;
@@ -200,8 +228,6 @@ export default function StorefrontTerminal({ clientConfig, onExit }: { clientCon
       if (isDealActive && item.dealType === 'Weekly Special') {
         isDealActive = item.dealDays && item.dealDays.includes(timeData.dayOfWeek);
       }
-      // `dailyDeal` = Is it active right now?
-      // `isConfiguredDeal` = Is it scheduled as a deal in the admin panel at all?
       return { ...item, dailyDeal: isDealActive, isConfiguredDeal: item.dailyDeal };
     });
   }, [rawInventory, timeData.dayOfWeek]);
@@ -224,7 +250,6 @@ export default function StorefrontTerminal({ clientConfig, onExit }: { clientCon
   const filteredInventory = useMemo(() => {
     let items = [];
     if (activeCategory === 'Featured & Deals') {
-      // MODIFIED: We pull in everything that is featured OR configured as a deal (even if scheduled for tomorrow)
       const combined = inventory.filter((i: any) => i.featured || i.isConfiguredDeal);
       items = combined.sort((a: any, b: any) => {
         if (a.featured && !b.featured) return -1;
@@ -346,17 +371,45 @@ export default function StorefrontTerminal({ clientConfig, onExit }: { clientCon
     });
   };
 
-  if (timeData.phase === 'CLOSED') {
+  if (timeData.phase === 'CLOSED' && !isBypassed) {
     return (
       <div className="min-h-dvh bg-zinc-950 flex flex-col items-center justify-center p-6 text-zinc-100 relative">
         <div className="z-10 w-full max-w-sm flex flex-col items-center animate-in fade-in zoom-in-95 text-center">
-          <div className="bg-zinc-900 p-6 rounded-full mb-6 border border-zinc-800"><Clock size={48} className="text-zinc-500" /></div>
+          
+          <button 
+            onClick={() => setShowBypass(!showBypass)} 
+            className="bg-zinc-900 p-6 rounded-full mb-6 border border-zinc-800 hover:border-zinc-700 hover:bg-zinc-800/50 transition-colors focus:outline-none"
+          >
+            {showBypass ? <Unlock size={48} className="text-amber-500" /> : <Clock size={48} className="text-zinc-500" />}
+          </button>
+          
           <h1 className="text-3xl font-black tracking-widest mb-2 uppercase text-zinc-100">Market Closed</h1>
           <p className="text-sm font-bold text-zinc-500 mb-8 max-w-xs">The vault is sealed for the day. Please check back tomorrow when the market reopens.</p>
-          <div className="bg-zinc-900/50 border border-zinc-800 px-6 py-4 rounded-xl flex flex-col items-center">
-             <span className="text-[10px] font-black uppercase tracking-widest text-zinc-600 mb-1">Operating Hours</span>
-             <span className="text-sm font-mono text-zinc-400">{storeHours.open} - {storeHours.close}</span>
-          </div>
+          
+          {showBypass ? (
+            <div className="w-full animate-in slide-in-from-top-4 fade-in duration-300">
+               <div className="flex gap-2 mb-2">
+                 <input 
+                   type="password" 
+                   value={bypassCode} 
+                   onChange={(e) => setBypassCode(e.target.value)} 
+                   onKeyDown={(e) => { if (e.key === 'Enter') handleBypass(); }}
+                   placeholder="OVERRIDE CODE" 
+                   autoFocus
+                   className="flex-1 bg-zinc-900 border border-zinc-800 rounded-xl p-4 text-center text-sm font-black tracking-widest text-amber-400 outline-none focus:border-amber-500/50 transition-colors placeholder:text-zinc-700" 
+                 />
+                 <button onClick={handleBypass} className="bg-amber-500 hover:bg-amber-400 text-zinc-950 px-4 rounded-xl font-black transition-colors">
+                   <ArrowRight size={20} />
+                 </button>
+               </div>
+            </div>
+          ) : (
+            <div className="bg-zinc-900/50 border border-zinc-800 px-6 py-4 rounded-xl flex flex-col items-center w-full">
+               <span className="text-[10px] font-black uppercase tracking-widest text-zinc-600 mb-1">Operating Hours</span>
+               <span className="text-sm font-mono text-zinc-400">{storeHours.open} - {storeHours.close}</span>
+            </div>
+          )}
+          
         </div>
       </div>
     );
@@ -371,7 +424,7 @@ export default function StorefrontTerminal({ clientConfig, onExit }: { clientCon
           <p className="text-zinc-500 text-[10px] font-black tracking-[0.2em] mb-10 uppercase text-center">Authorized Entry Only</p>
           <form onSubmit={handleAuth} className="w-full">
             <div className="relative mb-4">
-              <input type="text" autoFocus value={codeInput} onChange={(e) => { setError(""); setCodeInput(e.target.value.toUpperCase()); }} placeholder="ENTER ACCESS CODE" className={`w-full bg-zinc-900 border-2 rounded-2xl p-5 text-center text-xl tracking-[0.2em] font-black outline-none transition-all shadow-inner placeholder:text-zinc-700 placeholder:text-sm placeholder:font-bold ${error ? 'border-rose-500 text-rose-500 bg-rose-500/5 animate-shake' : 'border-zinc-800 text-emerald-400 focus:border-emerald-500/50'}`} maxLength={6} />
+              <input type="text" autoFocus value={codeInput} onChange={(e) => { setError(""); setCodeInput(e.target.value.toUpperCase()); }} placeholder="ENTER ACCESS CODE" className={`w-full bg-zinc-900 border-2 rounded-2xl p-5 text-center text-xl tracking-[0.2em] font-black outline-none transition-all shadow-inner placeholder:text-zinc-700 placeholder:text-sm placeholder:font-bold ${error ? 'border-rose-500 text-rose-500 bg-rose-500/5 animate-shake' : 'border-zinc-800 text-emerald-400 focus:border-emerald-500/50'}`} maxLength={20} />
               {error && <p className="absolute -bottom-6 left-0 right-0 text-center text-rose-500 text-[10px] font-bold uppercase tracking-widest leading-tight mt-2">{error}</p>}
             </div>
             <button type="submit" disabled={!codeInput.trim()} className="w-full bg-emerald-500 hover:bg-emerald-400 text-zinc-950 font-black uppercase tracking-widest py-4 rounded-xl disabled:opacity-50 transition-all flex items-center justify-center gap-2 group mt-6">
