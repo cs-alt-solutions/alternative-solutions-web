@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Package, ShoppingCart, Flame, LayoutGrid, Tag, Leaf, Wind, Cookie, Droplet, Shirt, Menu, ChevronDown } from 'lucide-react';
 
 export default function StorefrontHeader({
-  cartItemCount, cartTotal, activeCategory, setActiveCategory, categories, timeData
+  cartItemCount, cartTotal, activeCategory, setActiveCategory, categories, timeData, setIsCheckingOut
 }: any) {
   const safeCategories = categories || [];
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -63,7 +63,6 @@ export default function StorefrontHeader({
 
   return (
     <header className="bg-zinc-950 border-b border-zinc-800 pt-4 sticky top-0 z-50 shadow-md">
-      
       <div className="flex justify-between items-center max-w-6xl mx-auto w-full px-4 mb-4 md:mb-4">
         <div className="flex items-center gap-3">
           <div className="flex items-center gap-2">
@@ -79,11 +78,12 @@ export default function StorefrontHeader({
            <div className="text-[10px] font-black text-zinc-500 uppercase tracking-widest font-mono hidden md:block">
               SHIFT {timeData?.shiftCode || 'A'}
            </div>
-           <div className="bg-zinc-900 border border-zinc-800 px-4 py-2 rounded-xl flex items-center gap-3 shadow-inner">
+           
+           <button onClick={() => setIsCheckingOut && setIsCheckingOut(true)} className="bg-zinc-900 border border-zinc-800 px-4 py-2 rounded-xl flex items-center gap-3 shadow-inner hover:bg-zinc-800 transition-colors">
              <ShoppingCart size={18} className="text-emerald-400" />
-             <span className="font-black text-zinc-100">{cartItemCount} Items</span>
-             <span className="text-emerald-400 font-mono font-bold border-l border-zinc-800 pl-3 ml-1">${cartTotal.toFixed(2)}</span>
-           </div>
+             <span className="font-black text-zinc-100">{cartItemCount || 0} Items</span>
+             <span className="text-emerald-400 font-mono font-bold border-l border-zinc-800 pl-3 ml-1">${(cartTotal || 0).toFixed(2)}</span>
+           </button>
         </div>
       </div>
 
@@ -113,7 +113,6 @@ export default function StorefrontHeader({
           {safeCategories.map((cat: string) => renderCategoryButton(cat, true))}
         </div>
       )}
-
     </header>
   );
 }

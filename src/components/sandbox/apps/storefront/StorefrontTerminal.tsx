@@ -4,7 +4,7 @@ import React, { useState, useMemo, useEffect } from 'react';
 import { Clock, AlertTriangle, Package, X } from 'lucide-react';
 import { useSearchParams } from 'next/navigation'; 
 import { useStickyState } from '@/hooks/useStickyState';
-import { supabase } from '@/utils/supabase';
+import { supabase } from '@/utils/supabase'; 
 
 import { PoliciesModal } from './StorefrontModals';
 import StorefrontCheckout from './StorefrontCheckout';
@@ -18,7 +18,7 @@ const timeToMins = (timeStr: string) => {
   return (h * 60) + m;
 };
 
-export default function StorefrontTerminal({ clientConfig, onExit }: { clientConfig: any, onExit: () => void }) {
+export default function StorefrontTerminal({ clientConfig, onExit }: any) {
   const searchParams = useSearchParams(); 
   const urlKey = searchParams?.get('key'); 
 
@@ -434,7 +434,7 @@ export default function StorefrontTerminal({ clientConfig, onExit }: { clientCon
           activeCategory={activeCategory} setActiveCategory={setActiveCategory}
           activeSubCategory={activeSubCategory} setActiveSubCategory={setActiveSubCategory} availableSubCategories={availableSubCategories}
           categories={categories} filteredInventory={filteredInventory} cart={cart} updateCart={updateCart}
-          timeData={timeData} setIsCheckingOut={setIsCheckingOut}
+          timeData={timeData} setIsCheckingOut={setIsCheckingOut} clientConfig={clientConfig}
         />
       )}
     </div>

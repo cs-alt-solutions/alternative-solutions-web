@@ -7,10 +7,9 @@ export default function StorefrontCardBack({
   sizes, options, selectedSize, setSelectedSize,
   bundleQty, selectedOptions, handleSelectOption,
   hasMultipleOptions, qty, updateCart, isBundleComplete, isMaxReached,
-  clientConfig // Now accepting clientConfig to pull dictionary
+  clientConfig 
 }: any) {
   
-  // Client-specific dictionary from config
   const UI = clientConfig?.dictionary?.storefront || {
     selectOptions: 'Select Options',
     liveSubtotal: 'Live Subtotal',
@@ -37,7 +36,7 @@ export default function StorefrontCardBack({
   }
 
   const currentSubtotal = finalPrice * chargeableQty;
-  const originalSubtotal = basePrice * qty;
+  const originalSubtotal = Number(selectedSize?.price || 0) * qty;
   const savings = originalSubtotal - currentSubtotal;
 
   let savingsText = "";
@@ -131,11 +130,17 @@ export default function StorefrontCardBack({
           <div className="grid grid-cols-2 sm:grid-cols-4 bg-zinc-900 border border-zinc-800/50 rounded-xl p-1.5 gap-1.5">
             {sizes.map((s: any) => {
               const isSelected = selectedSize?.id === s.id;
-              const activePrice = item?.dailyDeal && s.promoPrice !== undefined && s.promoPrice !== '' ? Number(s.promoPrice) : Number(s.price || 0);
-              let tierFinalPrice = activePrice;
-              if (item?.dailyDeal && item.dealLogic === 'PCT_15') tierFinalPrice = activePrice * 0.85;
+              
+              const rawBasePrice = Number(s.price || 0);
+              let tierFinalPrice = rawBasePrice;
 
-              // --- WEIGHT-BASED LOCKOUT ---
+              if (item?.dailyDeal) {
+                  if (s.promoPrice !== undefined && s.promoPrice !== '') {
+                      tierFinalPrice = Number(s.promoPrice);
+                  }
+                  if (item.dealLogic === 'PCT_15') tierFinalPrice *= 0.85;
+              }
+
               const reqGrams = isFlower ? getRequiredGrams(s.label) : 1;
               const available = item?.onHand || 0;
               const isTooHeavy = isFlower && available < reqGrams;
@@ -148,7 +153,8 @@ export default function StorefrontCardBack({
                   className={`px-2 py-2 rounded-lg text-center transition-all ${isTooHeavy ? 'bg-zinc-950 border-zinc-800 text-zinc-700 cursor-not-allowed opacity-50' : isSelected ? 'bg-zinc-100 text-zinc-950 shadow-md' : 'text-zinc-500 hover:text-zinc-300 hover:bg-zinc-800/50'}`}
                 >
                   <span className={`block text-[10px] font-black uppercase tracking-widest leading-none mb-1 ${isTooHeavy ? 'line-through text-rose-900' : ''}`}>{s.label}</span>
-                  <span className={`flex text-xs font-mono font-bold leading-none justify-center items-center gap-1 ${isTooHeavy ? 'text-zinc-700' : isSelected ? 'text-emerald-700' : 'text-emerald-400'}`}>
+                  <span className={`flex text-xs md:text-sm font-mono font-bold leading-none justify-center items-center gap-1 ${isTooHeavy ? 'text-zinc-700' : isSelected ? 'text-emerald-700' : item?.dailyDeal ? 'text-pink-400' : 'text-emerald-400'}`}>
+                    {tierFinalPrice < rawBasePrice && !isTooHeavy && <span className="line-through text-zinc-500/50 text-[10px]">${rawBasePrice.toFixed(0)}</span>}
                     ${tierFinalPrice.toFixed(0)}
                   </span>
                 </button>
@@ -174,9 +180,9 @@ export default function StorefrontCardBack({
                     key={opt.id}
                     disabled={isOutOfStock || (bundleQty > 1 && isBundleComplete)}
                     onClick={() => handleSelectOption(opt)}
-                    className={`relative flex-1 min-w-24 p-2.5 rounded-lg text-center border transition-all active:scale-95 ${isOutOfStock ? 'bg-zinc-950 border-zinc-800 text-zinc-700 cursor-not-allowed line-through' : isSelected ? 'bg-zinc-100 text-zinc-950 border-zinc-100 shadow-md' : 'bg-zinc-900 border-zinc-800 text-zinc-300 hover:border-zinc-700'}`}
+                    className={`relative flex-1 min-w-24 p-2.5 rounded-lg text-center border transition-all active:scale-95 ${isOutOfStock ? 'bg-zinc-950 border-zinc-800 text-zinc-700 cursor-not-allowed line-through' : isSelected ? 'bg-zinc-100 text-zinc-950 border-zinc-100 shadow-md' : 'bg-zinc-900 border-zinc-800 text-zinc-300 hover:border-zinc-700 hover:text-zinc-100'}`}
                   >
-                    <span className="block text-[10px] font-black uppercase tracking-wider leading-tight">{opt.label}</span>
+                    <span className="block text-[10px] md:text-xs font-black uppercase tracking-wider leading-tight">{opt.label}</span>
                     {instancesInBundle > 1 && (
                         <span className="absolute -top-1.5 -right-1.5 flex items-center justify-center w-5 h-5 bg-emerald-500 text-zinc-950 text-[10px] font-black rounded-full shadow-lg border border-zinc-950">{instancesInBundle}x</span>
                     )}
@@ -188,7 +194,11 @@ export default function StorefrontCardBack({
         )}
 
         <div className="shrink-0 mt-2">
-          {qty === 0 ? (
+          {!isBundleComplete && bundleQty > 1 ? (
+            <div className="w-full py-4 rounded-xl bg-zinc-900 border border-dashed border-zinc-700 text-zinc-500 text-center text-[10px] font-black uppercase tracking-widest">
+              Pick {bundleQty - selectedOptions.length} More
+            </div>
+          ) : qty === 0 ? (
             <button 
               onClick={() => updateCart(item.id, selectedSize, selectedOptions, 1)}
               disabled={isMaxReached || (isFlower && (item?.onHand || 0) < getRequiredGrams(selectedSize.label))}
@@ -201,7 +211,7 @@ export default function StorefrontCardBack({
               <div className="flex items-center justify-between bg-zinc-900 border border-emerald-500/30 p-2 rounded-xl">
                 <button 
                   onClick={() => updateCart(item.id, selectedSize, selectedOptions, -1)}
-                  className="w-12 h-10 flex items-center justify-center bg-zinc-950 rounded-lg text-rose-400 transition-colors active:scale-90 border border-zinc-800"
+                  className="w-12 h-10 flex items-center justify-center bg-zinc-950 hover:bg-zinc-800 rounded-lg text-rose-400 transition-colors active:scale-90 border border-zinc-800"
                 >
                   {qty === 1 ? <Trash2 size={16} /> : <Minus size={16} />}
                 </button>
@@ -212,7 +222,7 @@ export default function StorefrontCardBack({
                 <button 
                   onClick={() => updateCart(item.id, selectedSize, selectedOptions, 1)}
                   disabled={isMaxReached}
-                  className="w-12 h-10 flex items-center justify-center bg-zinc-950 rounded-lg text-emerald-400 transition-colors active:scale-90 border border-zinc-800 disabled:opacity-50"
+                  className="w-12 h-10 flex items-center justify-center bg-zinc-950 hover:bg-zinc-800 rounded-lg text-emerald-400 transition-colors active:scale-90 border border-zinc-800 disabled:opacity-50"
                 >
                   <Plus size={16} />
                 </button>
@@ -225,6 +235,12 @@ export default function StorefrontCardBack({
                     <span className="text-lg font-mono font-black text-emerald-400 leading-none">${currentSubtotal.toFixed(2)}</span>
                  </div>
               </div>
+              
+              {savingsText && (
+                 <div className="text-center bg-pink-500/10 border border-pink-500/20 py-2 rounded-lg mt-1 animate-in zoom-in-95">
+                    <span className="text-[10px] font-black uppercase tracking-widest text-pink-400 flex items-center justify-center gap-1.5"><Flame size={12}/> {savingsText}</span>
+                 </div>
+              )}
             </div>
           )}
         </div>
