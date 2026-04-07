@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo } from 'react';
 import { Info, Flame, ShoppingCart, Leaf, Wind, Cookie, Droplet, Shirt, LayoutGrid, Tag, Award, Sparkles, Activity, Star } from 'lucide-react';
-import { StorefrontCard } from './StorefrontComponents';
+import { StorefrontCard, getRequiredGrams } from './StorefrontComponents';
 import StorefrontHeader from './StorefrontHeader';
 
 const DAYS_OF_WEEK = [
@@ -23,12 +23,23 @@ export default function StorefrontCatalog({
   
   const formatPromo = (logic: string) => ({ 'PCT_15': '15% OFF', 'PENNY_150': '$0.01 UNLOCK', 'BOGO': 'BOGO', 'B2G1': 'B2G1', 'B5G1': 'B5G1' }[logic] || logic || 'PROMO');
 
-  const safeInventory = [...(filteredInventory || [])].sort((a: any, b: any) => {
-    const aStock = a.onHand || (a.options?.length > 0 ? a.options.reduce((sum: number, opt: any) => sum + (Number(opt.stock) || 0), 0) : 0);
-    const bStock = b.onHand || (b.options?.length > 0 ? b.options.reduce((sum: number, opt: any) => sum + (Number(opt.stock) || 0), 0) : 0);
-    const aOOS = aStock <= 0 ? 1 : 0;
-    const bOOS = bStock <= 0 ? 1 : 0;
+  // --- WEIGHT-AWARE OOS CHECKER ---
+  const isItemOOS = (item: any) => {
+     if (item.mainCategory === 'Flower & Plants') {
+         const minGrams = item.sizes?.length > 0 ? Math.min(...item.sizes.map((s:any) => getRequiredGrams(s.label))) : 1;
+         return (item.onHand || 0) < minGrams;
+     } else {
+         const displayStock = item.onHand || (item.options?.length > 0 ? item.options.reduce((sum: number, opt: any) => sum + (Number(opt.stock) || 0), 0) : 0);
+         return displayStock <= 0;
+     }
+  };
 
+  // PREMIUM SORTING ENGINE: Pushes out of stock to the bottom seamlessly!
+  const safeInventory = [...(filteredInventory || [])].sort((a: any, b: any) => {
+    const aOOS = isItemOOS(a) ? 1 : 0;
+    const bOOS = isItemOOS(b) ? 1 : 0;
+
+    // Out of Stock items get sent to the bottom automatically
     if (aOOS !== bOOS) return aOOS - bOOS;
 
     const aScore = (a.isTopShelf || a.featured ? 3 : 0) + (a.dailyDeal ? 1 : 0);
@@ -261,7 +272,7 @@ export default function StorefrontCatalog({
          )}
       </main>
 
-      {/* --- THE RESTORED FLOATING CART BUTTON --- */}
+      {/* FIXED FLOATING CART BUTTON */}
       {cartItemCount > 0 && (
         <div className="fixed bottom-6 left-0 right-0 px-6 z-60 flex justify-center animate-in slide-in-from-bottom-10">
           <button 
