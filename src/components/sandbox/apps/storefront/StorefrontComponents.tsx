@@ -67,10 +67,23 @@ export const StorefrontCard = ({ item, cart, updateCart, clientConfig, isHero = 
   }
   const isMaxReached = qty > 0 && qty >= maxStockForDisplay; 
 
-  const lowestPrice = Math.min(...sizes.map((s:any) => (item?.dailyDeal && s?.promoPrice !== undefined && s?.promoPrice !== '') ? Number(s.promoPrice) : Number(s?.price || 0)));
+  // --- THE PRICING MATH FIX ---
+  // 1. Calculate the absolute lowest base price (No discounts)
+  const baseLowestPrice = Math.min(...sizes.map((s:any) => Number(s?.price || 0)));
   
-  let lowestDiscounted = lowestPrice;
-  if (item?.dailyDeal && item?.dealLogic === 'PCT_15') lowestDiscounted = lowestPrice * 0.85;
+  // 2. Calculate the active lowest price (Including promo overrides and 15% off logic)
+  const activeLowestPrice = Math.min(...sizes.map((s:any) => {
+    let price = Number(s?.price || 0);
+    if (item?.dailyDeal) {
+       if (s?.promoPrice !== undefined && s?.promoPrice !== '') {
+         price = Number(s.promoPrice);
+       }
+       if (item?.dealLogic === 'PCT_15') {
+         price = price * 0.85;
+       }
+    }
+    return price;
+  }));
 
   const cleanItemName = item?.name?.replace(/\s*\(\s*Top Shelf\s*\)\s*/i, '').trim();
 
@@ -82,14 +95,14 @@ export const StorefrontCard = ({ item, cart, updateCart, clientConfig, isHero = 
   }
 
   return (
-    <div className={`group h-[26rem] relative w-full perspective-[1000px] ${isFlipped ? 'z-40' : 'z-10 hover:z-30'}`}>
+    <div className={`group h-104 relative w-full perspective-[1000px] ${isFlipped ? 'z-40' : 'z-10 hover:z-30'}`}>
       <div className={`absolute inset-0 rounded-[2.5rem] transition-all duration-500 ${glowClass} group-hover:opacity-100 ${isFlipped ? 'opacity-0' : 'opacity-70'}`} />
 
       <div className={`relative w-full h-full transition-all duration-700 transform-3d ${isFlipped ? 'transform-[rotateY(180deg)]' : ''}`}>
         <StorefrontCardFront 
           item={item} cleanItemName={cleanItemName} sizes={sizes} isFlower={isFlower}
-          lowestPrice={lowestPrice} lowestDiscounted={lowestDiscounted} setIsFlipped={setIsFlipped}
-          clientConfig={clientConfig}
+          baseLowestPrice={baseLowestPrice} activeLowestPrice={activeLowestPrice} 
+          setIsFlipped={setIsFlipped} clientConfig={clientConfig}
         />
         <StorefrontCardBack 
           item={item} cleanItemName={cleanItemName} setIsFlipped={setIsFlipped} isFlower={isFlower}
