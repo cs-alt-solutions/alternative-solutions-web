@@ -3,7 +3,7 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { Shield, Zap, Bell, Lock, KeyRound, UserCircle2, ArrowRight, AlertTriangle, Database } from 'lucide-react';
 import { useStickyState } from '@/hooks/useStickyState';
-import { createClient } from '@supabase/supabase-js';
+import { supabase } from '@/utils/supabase';
 
 import AdminFulfillmentModule from './AdminFulfillmentModule';
 import AdminInventoryModule from './AdminInventoryModule';
@@ -34,7 +34,6 @@ export default function AdminTerminal({ clientConfig, onExit }: { clientConfig: 
     
     const fetchInventory = async () => {
       try {
-        const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!);
         const { data, error } = await supabase
           .from('client_inventory')
           .select('payload')

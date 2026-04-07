@@ -180,5 +180,16 @@ export const DASHBOARD_COPY = {
     BTN_ADD: "Add Task", 
     ACTIONS: { AUDIO: "Record Voice Memo", AUTHORIZE: "Save Task" }, 
     MODAL: { TARGET_LABEL: "Where does this go?", TARGET_LEDGER: "Idea List", TARGET_FLOW: "Active Sprint", DATE_LABEL: "Due Date", TITLE_LABEL: "What needs to happen?", TITLE_PLACEHOLDER: "Type it out...", CLASS_LABEL: "Category", INTENSITY_LABEL: "Effort", PHASES_LABEL: "Steps", PHASE_ADD: "Add Step", PHASE_PLACEHOLDER: "First step...", STATUS_SUBMITTING: "Saving...", TYPES: { FEATURE: "New Feature", INFRA: "Under the Hood", BUG: "Fix a Bug" }, PRIORITIES: { LOW: "Low", MEDIUM: "Medium", HIGH: "High", CRITICAL: "Drop Everything" } } 
-  } 
+  },
+
+  // --- NEW STOREFRONT UI DICTIONARY ---
+  STOREFRONT: {
+    topShelf: "Top Shelf",
+    featured: "Featured",
+    promo: "Promo",
+    by: "By",
+    startingAt: "Starting At",
+    options: "Options",
+    unnamed: "Unnamed Item"
+  }
 };

@@ -9,12 +9,22 @@ export default function AdminInventoryTable({ processedInventory, handleSort, op
   const startQuickEdit = (item: any) => {
     setQuickEditId(item.id);
     const displayPrice = item.price || (item.sizes?.length > 0 ? Math.min(...item.sizes.map((s: any) => s.price || 0)) : 0);
-    const displayStock = item.onHand || 0;
+    
+    // STRICT VARIANT DETECTION
+    const hasVariants = item.options && item.options.length > 0 && item.options[0].label !== 'Standard';
+    let displayStock = 0;
+    
+    if (hasVariants) {
+       displayStock = item.options.reduce((sum: number, opt: any) => sum + (Number(opt.stock) || 0), 0);
+    } else {
+       displayStock = item.onHand !== undefined ? Number(item.onHand) : 0;
+    }
     
     setQuickEditForm({
       ...item,
       quickPrice: displayPrice,
-      quickStock: displayStock
+      quickStock: displayStock,
+      hasVariants: hasVariants
     });
   };
 
@@ -22,12 +32,21 @@ export default function AdminInventoryTable({ processedInventory, handleSort, op
     const updated = {
       ...quickEditForm,
       price: Number(quickEditForm.quickPrice) || 0,
-      onHand: Number(quickEditForm.quickStock) || 0,
     };
+    
+    // Only update top-level onHand if this isn't a variant-driven item
+    if (!quickEditForm.hasVariants) {
+       updated.onHand = quickEditForm.quickStock === '' ? 0 : Number(quickEditForm.quickStock);
+    }
     
     if (updated.sizes && updated.sizes.length > 0) {
        updated.sizes[0].price = Number(quickEditForm.quickPrice) || 0;
     }
+
+    // Clean up our temporary quick edit keys so they don't bloat the database payload
+    delete updated.quickPrice;
+    delete updated.quickStock;
+    delete updated.hasVariants;
 
     onQuickSave(updated, false);
     setQuickEditId(null);
@@ -104,9 +123,19 @@ export default function AdminInventoryTable({ processedInventory, handleSort, op
                        <td className="py-3 px-3 sm:px-4 text-right">
                          <input type="number" value={quickEditForm.quickPrice} onChange={e => setQuickEditForm({...quickEditForm, quickPrice: e.target.value})} className="w-16 bg-zinc-950 border border-amber-500/30 rounded-lg p-2 text-xs font-mono font-bold text-amber-400 outline-none text-right focus:border-amber-500" />
                        </td>
+                       
+                       {/* DYNAMIC STOCK EDIT COLUMN */}
                        <td className="py-3 px-3 sm:px-4 text-right">
-                         <input type="number" value={quickEditForm.quickStock} onChange={e => setQuickEditForm({...quickEditForm, quickStock: e.target.value})} className="w-16 bg-zinc-950 border border-zinc-700 rounded-lg p-2 text-xs font-mono font-bold text-zinc-100 outline-none text-right focus:border-cyan-500/50" />
+                         {quickEditForm.hasVariants ? (
+                           <div className="flex flex-col items-end gap-1">
+                             <span className="text-xs font-mono font-black text-zinc-500">{quickEditForm.quickStock}</span>
+                             <span className="text-[8px] font-black text-amber-500 uppercase tracking-widest border border-amber-500/30 bg-amber-500/10 px-1.5 py-0.5 rounded">Use Full Editor</span>
+                           </div>
+                         ) : (
+                           <input type="number" value={quickEditForm.quickStock} onChange={e => setQuickEditForm({...quickEditForm, quickStock: e.target.value})} className="w-16 bg-zinc-950 border border-zinc-700 rounded-lg p-2 text-xs font-mono font-bold text-zinc-100 outline-none text-right focus:border-cyan-500/50" />
+                         )}
                        </td>
+
                        <td className="py-3 px-3 sm:px-4 text-right">
                          <div className="flex justify-end gap-1.5">
                            <button onClick={saveQuickEdit} className="p-2 bg-emerald-500 hover:bg-emerald-400 border border-emerald-400 rounded-lg text-zinc-950 shadow-md transition-colors"><Check size={14}/></button>
@@ -118,7 +147,16 @@ export default function AdminInventoryTable({ processedInventory, handleSort, op
               }
 
               const ItemIcon = item.iconName === 'Leaf' ? Leaf : item.iconName === 'Flame' ? Flame : item.iconName === 'Box' ? Box : ImageIcon;
-              const displayStock = item.onHand || (item.options?.length > 0 ? item.options.reduce((sum: number, opt: any) => sum + (Number(opt.stock) || 0), 0) : 0);
+              
+              // STRICT VARIANT DETECTION FOR STANDARD DISPLAY
+              const hasVariants = item.options && item.options.length > 0 && item.options[0].label !== 'Standard';
+              let displayStock = 0;
+              if (hasVariants) {
+                 displayStock = item.options.reduce((sum: number, opt: any) => sum + (Number(opt.stock) || 0), 0);
+              } else {
+                 displayStock = item.onHand !== undefined ? Number(item.onHand) : 0;
+              }
+
               const displayPrice = item.price || (item.sizes?.length > 0 ? Math.min(...item.sizes.map((s: any) => s.price || 0)) : 0);
               const isAbundant = displayStock >= 15;
 
@@ -137,7 +175,7 @@ export default function AdminInventoryTable({ processedInventory, handleSort, op
                     </div>
                   </td>
                   <td className="hidden sm:table-cell py-3 px-3 sm:px-4">
-                    <span className="text-[9px] sm:text-[10px] font-bold text-zinc-300 uppercase tracking-widest break-words">{item.mainCategory}</span>
+                    <span className="text-[9px] sm:text-[10px] font-bold text-zinc-300 uppercase tracking-widest wrap-break-word">{item.mainCategory}</span>
                   </td>
                   <td className="py-3 px-3 sm:px-4">
                     <div className="flex flex-wrap items-center gap-1.5">
@@ -167,11 +205,19 @@ export default function AdminInventoryTable({ processedInventory, handleSort, op
                   <td className="py-3 px-3 sm:px-4 text-right">
                     <span className="text-xs sm:text-sm font-black text-zinc-300 font-mono">${displayPrice.toFixed(0) || '0'}</span>
                   </td>
+                  
+                  {/* VAULT STOCK DISPLAY */}
                   <td className="py-3 px-3 sm:px-4 text-right">
-                    <span className={`text-xs sm:text-sm font-black font-mono ${displayStock <= 0 ? 'text-rose-500' : isAbundant && !item.dailyDeal ? 'text-cyan-400' : 'text-emerald-400'}`}>
-                      {displayStock}
-                    </span>
+                    <div className="flex flex-col items-end">
+                      <span className={`text-xs sm:text-sm font-black font-mono ${displayStock <= 0 ? 'text-rose-500' : isAbundant && !item.dailyDeal ? 'text-cyan-400' : 'text-emerald-400'}`}>
+                        {displayStock}
+                      </span>
+                      {hasVariants && (
+                        <span className="text-[8px] font-bold text-cyan-500/80 uppercase tracking-widest mt-0.5">{item.options.length} Variants</span>
+                      )}
+                    </div>
                   </td>
+
                   <td className="py-3 px-3 sm:px-4 text-right">
                     <div className="flex justify-end gap-1.5">
                        <button onClick={() => startQuickEdit(item)} className="p-2 bg-zinc-950 border border-zinc-800 rounded-lg text-zinc-500 hover:text-cyan-400 hover:border-cyan-400/50 transition-all shadow-inner active:scale-95 inline-flex" title="Quick Edit">
