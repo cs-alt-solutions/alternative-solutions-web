@@ -2,7 +2,7 @@
 
 import React, { useState, useRef, useEffect } from 'react';
 import { X, Trash2, BookText, Fingerprint, DollarSign, Save, Image as ImageIcon, UploadCloud, Leaf, Flame, Box, Boxes, TicketPercent, Award, Star, CalendarDays, Plus, Wind, Cookie, Droplet, Sparkles } from 'lucide-react';
-import { supabase } from '@/utils/supabase'; // Using the centralized client to fix memory leak warnings
+import { supabase } from '@/utils/supabase'; 
 
 export default function AdminInventoryEditor({ initialItem, isAdding, mainCategories, subCategories, onSave, onDelete, onCancel, client_id, setNotification }: any) {
   const cid = client_id;
@@ -13,12 +13,14 @@ export default function AdminInventoryEditor({ initialItem, isAdding, mainCatego
     options: initialItem.options || []
   });
   
-  const [isUploading, setIsUploading] = useState(false);
+  const [isUploadingMain, setIsUploadingMain] = useState(false);
+  const [isUploadingIcon, setIsUploadingIcon] = useState(false);
   const [isConfirmingDelete, setIsConfirmingDelete] = useState(false);
+  
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const iconInputRef = useRef<HTMLInputElement>(null);
   const [dragActive, setDragActive] = useState(false);
 
-  // BUG FIX: Ensure all DNA and description fields are correctly mapped when opening an existing product
   useEffect(() => {
     if (initialItem && !isAdding) {
       setUpdatedItem({
@@ -32,6 +34,7 @@ export default function AdminInventoryEditor({ initialItem, isAdding, mainCatego
         price: initialItem.price || 0,
         onHand: initialItem.onHand || 0,
         imageUrl: initialItem.imageUrl || '',
+        iconUrl: initialItem.iconUrl || '', // NEW: Stamp URL
         descBase: initialItem.descBase || '',
         descFeels: initialItem.descFeels || '',
         descTaste: initialItem.descTaste || '',
@@ -48,24 +51,40 @@ export default function AdminInventoryEditor({ initialItem, isAdding, mainCatego
     }
   }, [initialItem, isAdding, mainCategories]);
 
-  const handleFileUpload = async (file: File) => {
+  // NEW: Dual-upload handler for Main Graphic vs Brand Stamp
+  const handleFileUpload = async (file: File, type: 'main' | 'icon') => {
     if (!file || !cid || !updatedItem.id) return;
-    setIsUploading(true);
-    if (setNotification) setNotification("Preparing asset push...");
+    
+    if (type === 'main') setIsUploadingMain(true);
+    else setIsUploadingIcon(true);
+
+    if (setNotification) setNotification(`Preparing ${type === 'main' ? 'asset' : 'stamp'} push...`);
+    
     try {
       const fileExt = file.name.split('.').pop();
-      const filename = `${cid}/inventory/${updatedItem.id}-v${Date.now()}.${fileExt}`;
+      const filename = `${cid}/inventory/${updatedItem.id}-${type}-v${Date.now()}.${fileExt}`;
       const { error: uploadError } = await supabase.storage.from('client-assets').upload(filename, file, { upsert: true });
       if (uploadError) throw uploadError;
       const { data: { publicUrl } } = supabase.storage.from('client-assets').getPublicUrl(filename);
-      setUpdatedItem((prev: any) => ({ ...prev, imageUrl: publicUrl }));
-      if (setNotification) setNotification(`Image Uploaded! Synced to Vault.`);
-    } catch (err) { console.error("Asset Upload Error:", err); if (setNotification) setNotification("Image upload failed."); }
-    finally { setIsUploading(false); }
+      
+      setUpdatedItem((prev: any) => ({ ...prev, [type === 'main' ? 'imageUrl' : 'iconUrl']: publicUrl }));
+      if (setNotification) setNotification(`${type === 'main' ? 'Image' : 'Stamp'} Synced to Vault.`);
+    } catch (err) { 
+      console.error("Asset Upload Error:", err); 
+      if (setNotification) setNotification("Upload failed."); 
+    } finally { 
+      if (type === 'main') setIsUploadingMain(false);
+      else setIsUploadingIcon(false);
+    }
   };
 
   const handleDrag = (e: React.DragEvent) => { e.preventDefault(); e.stopPropagation(); setDragActive(e.type === "dragenter" || e.type === "dragover"); };
-  const handleDrop = (e: React.DragEvent) => { e.preventDefault(); e.stopPropagation(); setDragActive(false); if (e.dataTransfer.files && e.dataTransfer.files[0]) handleFileUpload(e.dataTransfer.files[0]); };
+  const handleDrop = (e: React.DragEvent) => { 
+    e.preventDefault(); 
+    e.stopPropagation(); 
+    setDragActive(false); 
+    if (e.dataTransfer.files && e.dataTransfer.files[0]) handleFileUpload(e.dataTransfer.files[0], 'main'); 
+  };
 
   const handleSizeChange = (id: string, field: string, value: any) => { 
     setUpdatedItem((prev: any) => ({ 
@@ -119,8 +138,8 @@ export default function AdminInventoryEditor({ initialItem, isAdding, mainCatego
       {/* STICKY TOP HEADER */}
       <div className="sticky top-0 z-50 bg-zinc-950/80 backdrop-blur-xl border-b border-zinc-800/50 px-6 py-4 flex items-center justify-between shadow-md">
         <div className="flex items-center gap-4">
-          <div className="w-12 h-12 rounded-xl bg-zinc-900 border border-zinc-800 flex items-center justify-center shrink-0 overflow-hidden">
-             {updatedItem.imageUrl ? <img src={updatedItem.imageUrl} alt="preview" className="w-full h-full object-cover" /> : <ItemIcon size={20} className="text-zinc-600" />}
+          <div className="w-12 h-12 rounded-xl bg-zinc-900 border border-zinc-800 flex items-center justify-center shrink-0 overflow-hidden text-zinc-500">
+             {updatedItem.iconUrl ? <img src={updatedItem.iconUrl} alt="icon" className="w-full h-full object-cover" /> : updatedItem.imageUrl ? <img src={updatedItem.imageUrl} alt="preview" className="w-full h-full object-cover" /> : <ItemIcon size={20} />}
           </div>
           <div>
             <h1 className="text-xl font-black uppercase tracking-tighter text-zinc-100 leading-tight flex items-center gap-3">
@@ -154,19 +173,42 @@ export default function AdminInventoryEditor({ initialItem, isAdding, mainCatego
              <Fingerprint size={16} className="text-cyan-400" /> Core Identity
            </h2>
            <div className="flex flex-col md:flex-row gap-8">
-              <div className="w-full md:w-64 shrink-0 flex flex-col gap-3">
-                 <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-wider">Product Graphic</label>
-                 <div 
-                   className={`w-full aspect-square bg-zinc-950 border-2 border-dashed rounded-2xl flex flex-col items-center justify-center text-center p-4 transition-colors cursor-pointer relative overflow-hidden group ${dragActive ? 'border-cyan-500/50 bg-cyan-500/5' : 'border-zinc-800 hover:border-zinc-700'}`}
-                   onDragEnter={handleDrag} onDragLeave={handleDrag} onDragOver={handleDrag} onDrop={handleDrop}
-                   onClick={() => fileInputRef.current?.click()}
-                 >
-                    {updatedItem.imageUrl && <img src={updatedItem.imageUrl} alt="preview" className="absolute inset-0 w-full h-full object-cover opacity-50 group-hover:opacity-20 transition-opacity" />}
-                    <div className="relative z-10 flex flex-col items-center gap-2">
-                       {isUploading ? <UploadCloud size={24} className="text-cyan-400 animate-bounce" /> : <ImageIcon size={24} className={updatedItem.imageUrl ? "text-zinc-100" : "text-zinc-600"} />}
-                       <span className="text-[10px] font-black uppercase tracking-widest text-zinc-400">{isUploading ? 'Uploading...' : 'Tap or Drop'}</span>
-                    </div>
-                    <input type="file" ref={fileInputRef} onChange={(e) => {if (e.target.files && e.target.files[0]) handleFileUpload(e.target.files[0]);}} className="hidden" accept="image/*" />
+              
+              {/* IMAGE & STAMP UPLOADS */}
+              <div className="w-full md:w-64 shrink-0 flex flex-col gap-6">
+                 {/* Main Graphic */}
+                 <div>
+                   <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-wider mb-2 block">Product Graphic</label>
+                   <div 
+                     className={`w-full aspect-square bg-zinc-950 border-2 border-dashed rounded-2xl flex flex-col items-center justify-center text-center p-4 transition-colors cursor-pointer relative overflow-hidden group ${dragActive ? 'border-cyan-500/50 bg-cyan-500/5' : 'border-zinc-800 hover:border-zinc-700'}`}
+                     onDragEnter={handleDrag} onDragLeave={handleDrag} onDragOver={handleDrag} onDrop={handleDrop}
+                     onClick={() => fileInputRef.current?.click()}
+                   >
+                      {updatedItem.imageUrl && <img src={updatedItem.imageUrl} alt="preview" className="absolute inset-0 w-full h-full object-cover opacity-50 group-hover:opacity-20 transition-opacity" />}
+                      <div className="relative z-10 flex flex-col items-center gap-2">
+                         {isUploadingMain ? <UploadCloud size={24} className="text-cyan-400 animate-bounce" /> : <ImageIcon size={24} className={updatedItem.imageUrl ? "text-zinc-100" : "text-zinc-600"} />}
+                         <span className="text-[10px] font-black uppercase tracking-widest text-zinc-400">{isUploadingMain ? 'Uploading...' : 'Tap or Drop'}</span>
+                      </div>
+                      <input type="file" ref={fileInputRef} onChange={(e) => {if (e.target.files && e.target.files[0]) handleFileUpload(e.target.files[0], 'main');}} className="hidden" accept="image/*" />
+                   </div>
+                 </div>
+
+                 {/* Custom Brand Stamp */}
+                 <div className="pt-4 border-t border-zinc-800/50">
+                   <label className="text-[10px] font-bold text-emerald-500 uppercase tracking-wider mb-2 block">Brand Stamp / Icon</label>
+                   <div className="flex items-center gap-4">
+                     <div 
+                       className="w-16 h-16 bg-zinc-950 border-2 border-dashed border-emerald-500/50 hover:border-emerald-400 rounded-full flex flex-col items-center justify-center text-center transition-colors cursor-pointer relative overflow-hidden group shrink-0"
+                       onClick={() => iconInputRef.current?.click()}
+                     >
+                        {updatedItem.iconUrl && <img src={updatedItem.iconUrl} alt="stamp" className="absolute inset-0 w-full h-full object-cover" />}
+                        <div className="relative z-10 flex flex-col items-center gap-1">
+                           {isUploadingIcon ? <UploadCloud size={16} className="text-emerald-400 animate-bounce" /> : (!updatedItem.iconUrl && <ImageIcon size={16} className="text-zinc-600" />)}
+                        </div>
+                        <input type="file" ref={iconInputRef} onChange={(e) => {if (e.target.files && e.target.files[0]) handleFileUpload(e.target.files[0], 'icon');}} className="hidden" accept="image/*" />
+                     </div>
+                     <p className="text-[9px] font-bold text-zinc-500 uppercase leading-tight">Upload a square image to render as a floating badge.</p>
+                   </div>
                  </div>
               </div>
 
@@ -199,7 +241,7 @@ export default function AdminInventoryEditor({ initialItem, isAdding, mainCatego
            </div>
         </section>
 
-        {/* SECTION 2: PRODUCT DNA (GRANULAR PERSISTENCE FIX) */}
+        {/* SECTION 2: PRODUCT DNA */}
         <section className="bg-zinc-900/30 border border-zinc-800/80 rounded-3xl p-6 md:p-8 shadow-sm">
            <h2 className="text-sm font-black uppercase tracking-widest text-zinc-100 flex items-center gap-2 mb-6 pb-4 border-b border-zinc-800/50">
              <BookText size={16} className="text-emerald-400" /> Product DNA

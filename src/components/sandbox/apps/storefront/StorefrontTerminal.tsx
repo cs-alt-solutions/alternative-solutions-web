@@ -62,6 +62,10 @@ export default function StorefrontTerminal({ clientConfig, onExit }: any) {
   const [rawInventory, setRawInventory] = useState<any[]>([]);
   const [isLoadingInventory, setIsLoadingInventory] = useState(true);
 
+  // STRICT ALIGNMENT: We pull the exact same category arrays that the Admin Hub uses.
+  const [masterCategories] = useStickyState<string[]>(clientConfig.categories || ['Flower & Plants', 'Vapes & Pens', 'Edibles', 'Concentrates', 'Merch & Extras'], `inv_cats_${clientConfig?.id || 'division'}`);
+  const [masterSubCategories] = useStickyState<Record<string, string[]>>(clientConfig.subCategories || {}, `inv_subcats_v2_${clientConfig?.id || 'division'}`);
+
   useEffect(() => {
     const fetchLiveInventory = async () => {
       try {
@@ -81,9 +85,6 @@ export default function StorefrontTerminal({ clientConfig, onExit }: any) {
     fetchLiveInventory();
   }, [clientConfig.id]);
 
-  const defaultCats = clientConfig.categories || ['Flower & Plants', 'Vapes & Pens', 'Edibles', 'Concentrates', 'Merch & Extras'];
-  const [masterCategories] = useStickyState<string[]>(defaultCats, `inv_cats_${clientConfig?.id || 'dev'}`);
-  
   const deliveryZones = clientConfig.deliveryZones || [];
   const storePolicies = clientConfig.storePolicies || [];
   const [orderRef, setOrderRef] = useState('');
@@ -227,25 +228,31 @@ export default function StorefrontTerminal({ clientConfig, onExit }: any) {
     });
   }, [rawInventory, timeData.dayOfWeek]);
   
+  // FIX 1: STRICT MAIN CATEGORIES. We completely remove rogue typo categories.
+  // The Storefront will ONLY show the core categories defined in your Admin panel.
   const categories = useMemo(() => {
-    const activeCats = masterCategories.filter((cat: string) => inventory.some((i: any) => i.mainCategory && i.mainCategory.trim().toLowerCase() === cat.trim().toLowerCase()));
-    const rogueCats = Array.from(new Set(inventory.map((i: any) => i.mainCategory?.trim()))).filter(Boolean).filter((c: any) => !masterCategories.some((mc: string) => mc.trim().toLowerCase() === c.toLowerCase()));
-    return ['Featured & Deals', 'All', ...activeCats, ...rogueCats];
+    const activeCats = masterCategories.filter((cat: string) => 
+       inventory.some((i: any) => i.mainCategory && i.mainCategory.trim().toLowerCase() === cat.trim().toLowerCase())
+    );
+    return ['Featured & Deals', 'All', ...activeCats];
   }, [masterCategories, inventory]);
 
+  // FIX 2: STRICT SUB-CATEGORIES. We explicitly use the sub-category settings from the Admin.
+  // If an old product has a typo in its subCategory, it won't show up as a random button here anymore.
   const availableSubCategories = useMemo(() => {
     if (activeCategory === 'All' || activeCategory === 'Featured & Deals') return [];
-    const subs = inventory
-      .filter((i: any) => i.mainCategory === activeCategory)
-      .map((i: any) => i.subCategory)
-      .filter(Boolean);
-    return Array.from(new Set(subs)).sort();
-  }, [inventory, activeCategory]);
+    
+    const allowedSubs = masterSubCategories[activeCategory] || [];
+    const activeSubs = allowedSubs.filter((sub: string) => 
+       inventory.some((i: any) => i.mainCategory === activeCategory && i.subCategory === sub)
+    );
+    return activeSubs;
+  }, [inventory, activeCategory, masterSubCategories]);
 
   const filteredInventory = useMemo(() => {
     let items = [];
     if (activeCategory === 'Featured & Deals') {
-      const combined = inventory.filter((i: any) => i.featured || i.isConfiguredDeal || i.isTopShelf);
+      const combined = inventory.filter((i: any) => i.featured || i.isConfiguredDeal || i.isTopShelf || i.subCategory?.toLowerCase().includes('steals'));
       items = combined.sort((a: any, b: any) => {
         if (a.featured && !b.featured) return -1;
         if (!a.featured && b.featured) return 1;
@@ -365,7 +372,6 @@ export default function StorefrontTerminal({ clientConfig, onExit }: any) {
     });
   };
 
-  // --- COMPONENT ROUTING ---
   if (timeData.phase === 'CLOSED' && !isBypassed) {
     return <StorefrontClosed showBypass={showBypass} setShowBypass={setShowBypass} bypassCode={bypassCode} setBypassCode={setBypassCode} handleBypass={handleBypass} storeHours={storeHours} />;
   }

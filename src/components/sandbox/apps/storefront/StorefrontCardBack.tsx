@@ -1,3 +1,6 @@
+/* sandbox/apps/storefront/StorefrontCardBack.tsx */
+'use client';
+
 import React from 'react';
 import { ArrowLeft, CheckCircle, Minus, Plus, ShoppingCart, X, Trash2, Wind, Droplet, Cookie, Sparkles, Flame } from 'lucide-react';
 import { getRequiredGrams } from './StorefrontComponents';
@@ -63,9 +66,18 @@ export default function StorefrontCardBack({
         <button onClick={() => setIsFlipped(false)} className="p-2 bg-zinc-900 border border-zinc-800 hover:bg-zinc-800 text-zinc-400 rounded-xl transition-colors active:scale-95 shrink-0">
           <ArrowLeft size={16} />
         </button>
-        <div className="flex flex-col items-end overflow-hidden ml-4">
-          <h3 className="text-sm font-black text-zinc-100 truncate uppercase tracking-wider">{cleanItemName}</h3>
-          {item?.brand && <span className="text-[8px] font-black text-emerald-500 uppercase tracking-widest truncate mt-0.5">BY {item.brand}</span>}
+        
+        {/* --- FIXED: Increased Stamp Size and Legibility --- */}
+        <div className="flex items-center gap-3 overflow-hidden ml-auto">
+          {item?.iconUrl && (
+            <div className="w-12 h-12 rounded-full border-2 border-zinc-800 bg-white/95 overflow-hidden shrink-0 shadow-lg animate-in zoom-in">
+              <img src={item.iconUrl} alt="Brand Stamp" className="w-full h-full object-contain" />
+            </div>
+          )}
+          <div className="flex flex-col items-end overflow-hidden">
+            <h3 className="text-sm font-black text-zinc-100 truncate uppercase tracking-wider">{cleanItemName}</h3>
+            {item?.brand && <span className="text-[8px] font-black text-emerald-500 uppercase tracking-widest truncate mt-0.5">BY {item.brand}</span>}
+          </div>
         </div>
       </div>
 

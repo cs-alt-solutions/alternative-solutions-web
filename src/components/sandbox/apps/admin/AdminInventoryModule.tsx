@@ -106,7 +106,6 @@ export default function AdminInventoryModule({ stock, setStock, inventoryMatrix,
     }
   };
 
-  // RESTORED: Backup Function
   const handleExportBackup = () => {
     try {
       const cid = clientConfig?.id || 'division';
@@ -126,7 +125,6 @@ export default function AdminInventoryModule({ stock, setStock, inventoryMatrix,
     }
   };
 
-  // RESTORED: Audit Function
   const handleExportAuditPDF = () => {
     try {
       let printHtml = `<!DOCTYPE html><html><head><title>Inventory Audit</title><style>body{font-family:sans-serif;padding:20px;}table{width:100%;border-collapse:collapse;}th,td{border:1px solid #ddd;padding:8px;text-align:left;}th{background:#f4f4f5;}</style></head><body><h2>${clientConfig.name} Audit</h2><table><thead><tr><th>Name</th><th>Category</th><th>Stock</th></tr></thead><tbody>`;
@@ -150,18 +148,55 @@ export default function AdminInventoryModule({ stock, setStock, inventoryMatrix,
     }));
   };
 
+  // --- THE INVENTORY FILTER/SORT ENGINE FIX (Variant-Aware) ---
   const processedInventory = useMemo(() => {
     let result = [...inventoryMatrix];
+
     if (searchTerm) {
       const lowerTerm = searchTerm.toLowerCase();
-      result = result.filter(i => i.name?.toLowerCase().includes(lowerTerm) || i.id?.toLowerCase().includes(lowerTerm));
+      result = result.filter(i => i.name?.toLowerCase().includes(lowerTerm) || i.id?.toLowerCase().includes(lowerTerm) || i.brand?.toLowerCase().includes(lowerTerm));
     }
-    if (categoryFilter !== 'All') result = result.filter(i => i.mainCategory === categoryFilter);
-    
+    if (categoryFilter !== 'All') {
+      result = result.filter(i => i.mainCategory === categoryFilter);
+    }
+    if (statusFilter !== 'All') {
+      if (statusFilter === 'Active Promo') result = result.filter(i => i.dailyDeal);
+      if (statusFilter === 'Top Shelf') result = result.filter(i => i.isTopShelf);
+      if (statusFilter === 'Featured') result = result.filter(i => i.featured);
+      
+      // ACTION: Define Steals filter on Admin side
+      if (statusFilter === 'Smoky Steals') result = result.filter(i => i.subCategory?.toLowerCase().includes('steals'));
+
+      if (statusFilter === 'Low Stock') result = result.filter(i => {
+        // FIX: Sum up variants properly
+        const hasVariants = i.options && i.options.length > 0 && i.options[0].label !== 'Standard';
+        const stockNum = hasVariants ? i.options.reduce((s:number, o:any) => s + (Number(o.stock)||0), 0) : (i.onHand || 0);
+        return stockNum > 0 && stockNum <= 15;
+      });
+      if (statusFilter === 'Out of Stock') result = result.filter(i => {
+        // FIX: Sum up variants properly
+        const hasVariants = i.options && i.options.length > 0 && i.options[0].label !== 'Standard';
+        const stockNum = hasVariants ? i.options.reduce((s:number, o:any) => s + (Number(o.stock)||0), 0) : (i.onHand || 0);
+        return stockNum <= 0;
+      });
+    }
+
     result.sort((a, b) => {
-      let aVal = a[sortConfig.key];
-      let bVal = b[sortConfig.key];
-      if (sortConfig.key === 'name') { aVal = a.name?.toLowerCase(); bVal = b.name?.toLowerCase(); }
+      let aVal: any = 0; let bVal: any = 0;
+      if (sortConfig.key === 'name') { aVal = a.name?.toLowerCase() || ''; bVal = b.name?.toLowerCase() || ''; }
+      else if (sortConfig.key === 'category') { aVal = a.mainCategory || ''; bVal = b.mainCategory || ''; }
+      else if (sortConfig.key === 'subCategory') { aVal = a.subCategory || ''; bVal = b.subCategory || ''; }
+      else if (sortConfig.key === 'stock') { 
+         // FIX: Sum variants for accurate sorting
+         const aHasVar = a.options && a.options.length > 0 && a.options[0].label !== 'Standard';
+         const bHasVar = b.options && b.options.length > 0 && b.options[0].label !== 'Standard';
+         aVal = aHasVar ? a.options.reduce((s:number, o:any) => s + (Number(o.stock)||0), 0) : (a.onHand || 0); 
+         bVal = bHasVar ? b.options.reduce((s:number, o:any) => s + (Number(o.stock)||0), 0) : (b.onHand || 0); 
+      }
+      else if (sortConfig.key === 'price') {
+        aVal = a.price || (a.sizes?.length > 0 ? Math.min(...a.sizes.map((s: any) => s.price || 0)) : 0);
+        bVal = b.price || (b.sizes?.length > 0 ? Math.min(...b.sizes.map((s: any) => s.price || 0)) : 0);
+      }
       if (aVal < bVal) return sortConfig.direction === 'asc' ? -1 : 1;
       if (aVal > bVal) return sortConfig.direction === 'asc' ? 1 : -1;
       return 0;
@@ -182,7 +217,7 @@ export default function AdminInventoryModule({ stock, setStock, inventoryMatrix,
   );
 
   return (
-    <div className="p-4 md:p-8 animate-in fade-in">
+    <div className="p-4 md:p-8 animate-in fade-in pb-20">
       {showBackupModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-zinc-950/80 backdrop-blur-md">
           <div className="bg-zinc-900 border border-zinc-800 rounded-4xl p-8 max-w-md w-full shadow-2xl relative">
