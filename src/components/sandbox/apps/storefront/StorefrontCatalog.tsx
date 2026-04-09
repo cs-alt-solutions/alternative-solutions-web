@@ -21,8 +21,6 @@ export default function StorefrontCatalog({
   setIsCheckingOut, clientConfig 
 }: any) {
   
-  const formatPromo = (logic: string) => ({ 'PCT_15': '15% OFF', 'PENNY_150': '$0.01 UNLOCK', 'BOGO': 'BOGO', 'B2G1': 'B2G1', 'B5G1': 'B5G1' }[logic] || logic || 'PROMO');
-
   const isItemOOS = (item: any) => {
      if (item.mainCategory === 'Flower & Plants') {
          const minGrams = item.sizes?.length > 0 ? Math.min(...item.sizes.map((s:any) => getRequiredGrams(s.label))) : 1;
@@ -63,22 +61,35 @@ export default function StorefrontCatalog({
   else if (activeCategory === 'Concentrates') { HeaderIcon = Droplet; iconColorClass = "text-orange-500"; bgBoxClass = "bg-orange-500/10 border-orange-500/20"; textGradientClass = "from-orange-500 via-red-400 to-rose-600"; }
   else if (activeCategory === 'Merch & Extras') { HeaderIcon = Shirt; iconColorClass = "text-fuchsia-400"; bgBoxClass = "bg-fuchsia-500/10 border-fuchsia-500/20"; textGradientClass = "from-fuchsia-400 via-pink-400 to-rose-500"; }
 
-  const isFeaturedTab = activeCategory === 'Featured & Deals';
+  const isFeaturedTab = activeCategory === 'Daily Deals';
   
   const allDeals = safeInventory.filter((i: any) => i.isConfiguredDeal);
   const todaysDeals = safeInventory.filter((i: any) => i.dailyDeal);
   const newDropsBucket = safeInventory.filter((i: any) => i.featured && !i.isConfiguredDeal && !i.subCategory?.toLowerCase().includes('steals'));
   const premiumVaultBucket = safeInventory.filter((i: any) => i.isTopShelf && !i.featured && !i.isConfiguredDeal && !i.subCategory?.toLowerCase().includes('steals'));
-  
   const smokyStealsBucket = safeInventory.filter((i: any) => i.subCategory?.toLowerCase().includes('steals') && !i.dailyDeal && !i.featured);
+
+  const renderDealMath = (config: any) => {
+    if (!config) return 'PROMO';
+    if (config.type === 'BUNDLE') return `${config.buyQty} for $${config.bundlePrice}`;
+    if (config.type === 'DISCOUNT') {
+      if (config.discountType === 'PERCENT') return `${config.discountValue}% OFF`;
+      if (config.discountType === 'DOLLAR') return `$${config.discountValue} OFF`;
+      if (config.discountType === 'FIXED') return `$${config.discountValue}`;
+      if (config.discountType === 'TIERED') return `TIERED PRICING`;
+    }
+    return `B${config.buyQty || 1} G${config.getQty || 1}`;
+  };
 
   const tickerItems = useMemo(() => {
     const items: any[] = [];
     for (let i = 1; i <= 7; i++) {
        const targetDayIndex = (timeData.dayOfWeek + i) % 7;
        const targetDay = DAYS_OF_WEEK[targetDayIndex];
-       const dayDeals = allDeals.filter((d: any) => d.dealType === 'Weekly Special' && d.dealDays?.includes(targetDayIndex));
-       dayDeals.forEach((d: any) => { items.push({ day: targetDay.short, name: d.name, promo: formatPromo(d.dealLogic) }); });
+       
+       // FIXED: Now reads ALL deals mapped for future days, not just Sprints.
+       const dayDeals = allDeals.filter((d: any) => d.dealDays?.includes(targetDayIndex));
+       dayDeals.forEach((d: any) => { items.push({ day: targetDay.short, name: d.name, promo: renderDealMath(d.dealConfig) }); });
     }
     return items;
   }, [allDeals, timeData.dayOfWeek]);
@@ -86,7 +97,7 @@ export default function StorefrontCatalog({
   return (
     <>
       <StorefrontHeader 
-        onExit={onExit} cartItemCount={cartItemCount} cartTotal={cartTotal}
+        onExit={onExit} cartItemCount={cartItemCount} cartTotal={cartTotal} setShowPolicies={setShowPolicies}
         activeCategory={activeCategory} setActiveCategory={setActiveCategory}
         categories={categories} timeData={timeData} setIsCheckingOut={setIsCheckingOut}
       />
@@ -98,9 +109,9 @@ export default function StorefrontCatalog({
                <div className="flex items-center gap-4">
                  <div className="p-3 bg-zinc-900 border border-zinc-800 rounded-2xl shadow-inner"><Sparkles size={28} className="text-zinc-100" /></div>
                  <div>
-                   <h2 className="text-3xl md:text-4xl font-black uppercase tracking-tighter text-zinc-100">The Drop Zone</h2>
+                   <h2 className="text-3xl md:text-4xl font-black uppercase tracking-tighter text-zinc-100">Daily Deals</h2>
                    <div className="text-[10px] font-black uppercase tracking-[0.2em] text-emerald-400 mt-1 flex items-center gap-2">
-                     <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-ping" /> Live Promos & Premium Vault
+                     <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-ping" /> Live Deals & Premium Vault
                    </div>
                  </div>
                </div>
@@ -172,7 +183,7 @@ export default function StorefrontCatalog({
                        <Star size={16} className="text-cyan-400 animate-pulse" />
                      </div>
                      <div>
-                       <h3 className="text-xl md:text-2xl font-black uppercase tracking-tighter text-cyan-400">Fresh Drops & Features</h3>
+                       <h3 className="text-xl md:text-2xl font-black uppercase tracking-tighter text-cyan-400">Fresh Features</h3>
                        <p className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest mt-0.5">New additions and highlighted selections.</p>
                      </div>
                    </div>
@@ -198,8 +209,8 @@ export default function StorefrontCatalog({
              {allDeals.length === 0 && newDropsBucket.length === 0 && premiumVaultBucket.length === 0 && smokyStealsBucket.length === 0 && (
                <div className="flex flex-col items-center justify-center py-24 bg-zinc-900/20 rounded-3xl border border-dashed border-zinc-800/50">
                   <div className="w-16 h-16 bg-zinc-950 rounded-full border border-zinc-800 flex items-center justify-center mb-4"> <Info size={24} className="text-zinc-600" /> </div>
-                  <p className="text-zinc-400 font-bold text-sm uppercase tracking-widest">No Active Drops</p>
-                  <p className="text-zinc-600 text-xs mt-2">The drop zone is currently empty. Check back soon.</p>
+                  <p className="text-zinc-400 font-bold text-sm uppercase tracking-widest">No Active Deals</p>
+                  <p className="text-zinc-600 text-xs mt-2">Check back soon for new promotions.</p>
                </div>
              )}
            </div>

@@ -22,36 +22,39 @@ export default function StorefrontCheckout({
 
       const itemInDB = inventory?.find((i: any) => i.id === item.id);
       const isDealActive = itemInDB?.dailyDeal;
+      const config = itemInDB?.dealConfig;
       
-      const rawBasePrice = Number(size?.price || 0);
-      let activeBasePrice = rawBasePrice;
+      const rawPrice = Number(size?.price || 0);
+      let lineTotal = rawPrice * qty;
+      let originalLineTotal = rawPrice * qty;
 
-      if (isDealActive && size?.promoPrice !== undefined && size?.promoPrice !== '') {
-          activeBasePrice = Number(size.promoPrice);
-      }
-      
-      let chargeableQty = qty;
-      let finalPrice = activeBasePrice;
-      let lineTotal = 0;
-      let originalLineTotal = rawBasePrice * qty;
-
-      if (isDealActive) {
-         if (itemInDB.dealLogic === 'B2G1') chargeableQty = qty - Math.floor(qty / 3);
-         else if (itemInDB.dealLogic === 'BOGO') chargeableQty = qty - Math.floor(qty / 2);
-         else if (itemInDB.dealLogic === 'B5G1') chargeableQty = qty - Math.floor(qty / 6);
-         else if (itemInDB.dealLogic === 'PCT_15') finalPrice = activeBasePrice * 0.85;
-         
-         if (itemInDB.dealLogic === 'PENNY_150') {
-            if (sub >= 150) {
-               lineTotal = 0.01 + (activeBasePrice * (qty - 1));
-            } else {
-               lineTotal = activeBasePrice * qty;
-            }
-         } else {
-            lineTotal = finalPrice * chargeableQty;
-         }
-      } else {
-         lineTotal = activeBasePrice * qty;
+      if (isDealActive && config) {
+        if (config.type === 'DISCOUNT') {
+          let activeBasePrice = rawPrice;
+          if (config.discountType === 'TIERED' && size?.promoPrice) activeBasePrice = Number(size.promoPrice);
+          else if (config.discountType === 'PERCENT') activeBasePrice = rawPrice * (1 - config.discountValue / 100);
+          else if (config.discountType === 'DOLLAR') activeBasePrice = Math.max(0, rawPrice - config.discountValue);
+          else if (config.discountType === 'FIXED') activeBasePrice = config.discountValue;
+          
+          lineTotal = activeBasePrice * qty;
+        } else if (config.type === 'BUNDLE') {
+          const bundles = Math.floor(qty / config.buyQty);
+          const remainder = qty % config.buyQty;
+          lineTotal = (bundles * config.bundlePrice) + (remainder * rawPrice);
+        } else if (config.type === 'BOGO') {
+          const cycleQty = config.buyQty + config.getQty;
+          const cycles = Math.floor(qty / cycleQty);
+          const remainder = qty % cycleQty;
+          
+          const fullPriceItems = (cycles * config.buyQty) + Math.min(remainder, config.buyQty);
+          const discountedItems = (cycles * config.getQty) + Math.max(0, remainder - config.buyQty);
+          
+          let getPrice = 0;
+          if (config.discount === 'PCT_50') getPrice = rawPrice * 0.5;
+          else if (config.discount === 'PENNY') getPrice = 0.01;
+          
+          lineTotal = (fullPriceItems * rawPrice) + (discountedItems * getPrice);
+        }
       }
 
       sub += lineTotal;

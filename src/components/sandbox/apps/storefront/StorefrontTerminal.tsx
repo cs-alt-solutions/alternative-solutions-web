@@ -32,7 +32,7 @@ export default function StorefrontTerminal({ clientConfig, onExit }: any) {
   const defaultHours = clientConfig.storeHours || { open: '08:00', shiftChange: '12:00', close: '17:00' };
   const [storeHours] = useStickyState(defaultHours, `store_hours_${clientConfig?.id}`);
   
-  const [activeCategory, setActiveCategory] = useState<string>('Featured & Deals');
+  const [activeCategory, setActiveCategory] = useState<string>('Daily Deals');
   const [activeSubCategory, setActiveSubCategory] = useState<string>('All'); 
   
   const [showPolicies, setShowPolicies] = useState(true); 
@@ -62,25 +62,17 @@ export default function StorefrontTerminal({ clientConfig, onExit }: any) {
   const [rawInventory, setRawInventory] = useState<any[]>([]);
   const [isLoadingInventory, setIsLoadingInventory] = useState(true);
 
-  // STRICT ALIGNMENT: We pull the exact same category arrays that the Admin Hub uses.
   const [masterCategories] = useStickyState<string[]>(clientConfig.categories || ['Flower & Plants', 'Vapes & Pens', 'Edibles', 'Concentrates', 'Merch & Extras'], `inv_cats_${clientConfig?.id || 'division'}`);
   const [masterSubCategories] = useStickyState<Record<string, string[]>>(clientConfig.subCategories || {}, `inv_subcats_v2_${clientConfig?.id || 'division'}`);
 
   useEffect(() => {
     const fetchLiveInventory = async () => {
       try {
-        const { data, error } = await supabase
-          .from('client_inventory')
-          .select('payload')
-          .eq('client_id', clientConfig.id);
-          
+        const { data, error } = await supabase.from('client_inventory').select('payload').eq('client_id', clientConfig.id);
         if (error) throw error;
         if (data) setRawInventory(data.map(row => row.payload));
-      } catch (err) {
-        console.error("Market Sync Error:", err);
-      } finally {
-        setIsLoadingInventory(false);
-      }
+      } catch (err) { console.error("Market Sync Error:", err); } 
+      finally { setIsLoadingInventory(false); }
     };
     fetchLiveInventory();
   }, [clientConfig.id]);
@@ -104,16 +96,9 @@ export default function StorefrontTerminal({ clientConfig, onExit }: any) {
     let phase = 'CLOSED';
     let shiftCode = 'A';
     
-    if (currentMins >= openMins && currentMins < shiftMins) {
-      phase = 'SHIFT_A';
-      shiftCode = 'A';
-    } else if (currentMins >= shiftMins && currentMins < closeMins) {
-      phase = 'SHIFT_B';
-      shiftCode = 'B';
-    } else if (currentMins >= closeMins && currentMins < graceMins) {
-      phase = 'GRACE';
-      shiftCode = 'B';
-    }
+    if (currentMins >= openMins && currentMins < shiftMins) { phase = 'SHIFT_A'; shiftCode = 'A'; } 
+    else if (currentMins >= shiftMins && currentMins < closeMins) { phase = 'SHIFT_B'; shiftCode = 'B'; } 
+    else if (currentMins >= closeMins && currentMins < graceMins) { phase = 'GRACE'; shiftCode = 'B'; }
 
     const minsToClose = closeMins - currentMins;
     const isFiveMinWarning = minsToClose > 0 && minsToClose <= 5;
@@ -216,42 +201,43 @@ export default function StorefrontTerminal({ clientConfig, onExit }: any) {
     }
   };
 
+  // --- FIXED: Now properly recognizes BOTH One-Shot and Recurring deals ---
   const inventory = useMemo(() => {
-    return rawInventory.filter((i: any) => {
-      return i.status !== 'archived'; 
-    }).map((item: any) => {
-      let isDealActive = item.dailyDeal;
-      if (isDealActive && item.dealType === 'Weekly Special') {
-        isDealActive = item.dealDays && item.dealDays.includes(timeData.dayOfWeek);
+    return rawInventory.filter((i: any) => i.status !== 'archived').map((item: any) => {
+      
+      const isConfiguredDeal = item.dealType === 'One-Shot' || item.dealType === 'Recurring' || item.dailyDeal;
+      
+      let isDealActive = false;
+      if (isConfiguredDeal && item.dealDays && item.dealDays.length > 0) {
+        // Active TODAY if today's index is in the dealDays array
+        isDealActive = item.dealDays.includes(timeData.dayOfWeek);
+      } else if (item.dailyDeal) {
+        // Legacy fallback
+        isDealActive = true;
       }
-      return { ...item, dailyDeal: isDealActive, isConfiguredDeal: item.dailyDeal };
+
+      return { ...item, dailyDeal: isDealActive, isConfiguredDeal };
     });
   }, [rawInventory, timeData.dayOfWeek]);
   
-  // FIX 1: STRICT MAIN CATEGORIES. We completely remove rogue typo categories.
-  // The Storefront will ONLY show the core categories defined in your Admin panel.
   const categories = useMemo(() => {
     const activeCats = masterCategories.filter((cat: string) => 
        inventory.some((i: any) => i.mainCategory && i.mainCategory.trim().toLowerCase() === cat.trim().toLowerCase())
     );
-    return ['Featured & Deals', 'All', ...activeCats];
+    return ['Daily Deals', 'All', ...activeCats];
   }, [masterCategories, inventory]);
 
-  // FIX 2: STRICT SUB-CATEGORIES. We explicitly use the sub-category settings from the Admin.
-  // If an old product has a typo in its subCategory, it won't show up as a random button here anymore.
   const availableSubCategories = useMemo(() => {
-    if (activeCategory === 'All' || activeCategory === 'Featured & Deals') return [];
-    
+    if (activeCategory === 'All' || activeCategory === 'Daily Deals') return [];
     const allowedSubs = masterSubCategories[activeCategory] || [];
-    const activeSubs = allowedSubs.filter((sub: string) => 
+    return allowedSubs.filter((sub: string) => 
        inventory.some((i: any) => i.mainCategory === activeCategory && i.subCategory === sub)
     );
-    return activeSubs;
   }, [inventory, activeCategory, masterSubCategories]);
 
   const filteredInventory = useMemo(() => {
     let items = [];
-    if (activeCategory === 'Featured & Deals') {
+    if (activeCategory === 'Daily Deals') {
       const combined = inventory.filter((i: any) => i.featured || i.isConfiguredDeal || i.isTopShelf || i.subCategory?.toLowerCase().includes('steals'));
       items = combined.sort((a: any, b: any) => {
         if (a.featured && !b.featured) return -1;
@@ -278,68 +264,50 @@ export default function StorefrontTerminal({ clientConfig, onExit }: any) {
       const item = inventory.find((i: any) => i.id === itemId);
       const current = prev[cartKey]?.qty || 0;
       
-      let next = Math.max(0, current + delta);
-
-      if (item?.dailyDeal) {
-         if (item.dealLogic === 'B2G1') {
-            if (delta > 0 && next % 3 === 2) next += 1; 
-            if (delta < 0 && current % 3 === 0) next -= 1; 
-         } else if (item.dealLogic === 'BOGO') {
-            if (delta > 0 && next % 2 === 1) next += 1; 
-            if (delta < 0 && current % 2 === 0) next -= 1; 
-         } else if (item.dealLogic === 'B5G1') {
-            if (delta > 0 && next % 6 === 5) next += 1; 
-            if (delta < 0 && current % 6 === 0) next -= 1; 
-         }
-      }
-
+      const next = Math.max(0, current + delta);
       if (next === 0) { const newCart = { ...prev }; delete newCart[cartKey]; return newCart; }
       return { ...prev, [cartKey]: { item, size, options: optionsArray, qty: next } };
     });
   };
 
   const cartTotal = useMemo(() => {
-    let baseSubtotal = 0;
-    
+    let total = 0;
     Object.values(cart).forEach((cartItem: any) => {
       const itemInDB = inventory.find((i: any) => i.id === cartItem.item.id);
-      if (itemInDB?.dealLogic === 'PENNY_150' && itemInDB?.dailyDeal) return; 
-      
       const isDealActive = itemInDB?.dailyDeal;
-      const activePrice = (isDealActive && cartItem.size.promoPrice !== undefined && cartItem.size.promoPrice !== '') ? cartItem.size.promoPrice : (cartItem.size.price || 0);
-      
-      let chargeableQty = cartItem.qty;
-      let finalPrice = activePrice;
+      const config = itemInDB?.dealConfig;
+      const rawPrice = cartItem.size.price || 0;
+      let lineTotal = rawPrice * cartItem.qty;
 
-      if (isDealActive) {
-         if (itemInDB.dealLogic === 'B2G1') {
-            chargeableQty = cartItem.qty - Math.floor(cartItem.qty / 3);
-         } else if (itemInDB.dealLogic === 'BOGO') {
-            chargeableQty = cartItem.qty - Math.floor(cartItem.qty / 2);
-         } else if (itemInDB.dealLogic === 'B5G1') {
-            chargeableQty = cartItem.qty - Math.floor(cartItem.qty / 6);
-         } else if (itemInDB.dealLogic === 'PCT_15') {
-            finalPrice = activePrice * 0.85; 
-         }
+      if (isDealActive && config) {
+        if (config.type === 'DISCOUNT') {
+          let activeBasePrice = rawPrice;
+          if (config.discountType === 'TIERED' && cartItem.size.promoPrice) activeBasePrice = Number(cartItem.size.promoPrice);
+          else if (config.discountType === 'PERCENT') activeBasePrice = rawPrice * (1 - config.discountValue / 100);
+          else if (config.discountType === 'DOLLAR') activeBasePrice = Math.max(0, rawPrice - config.discountValue);
+          else if (config.discountType === 'FIXED') activeBasePrice = config.discountValue;
+          
+          lineTotal = activeBasePrice * cartItem.qty;
+        } else if (config.type === 'BUNDLE') {
+          const bundles = Math.floor(cartItem.qty / config.buyQty);
+          const remainder = cartItem.qty % config.buyQty;
+          lineTotal = (bundles * config.bundlePrice) + (remainder * rawPrice);
+        } else if (config.type === 'BOGO') {
+          const cycleQty = config.buyQty + config.getQty;
+          const cycles = Math.floor(cartItem.qty / cycleQty);
+          const remainder = cartItem.qty % cycleQty;
+          
+          const fullPriceItems = (cycles * config.buyQty) + Math.min(remainder, config.buyQty);
+          const discountedItems = (cycles * config.getQty) + Math.max(0, remainder - config.buyQty);
+          
+          let getPrice = 0;
+          if (config.discount === 'PCT_50') getPrice = rawPrice * 0.5;
+          else if (config.discount === 'PENNY') getPrice = 0.01;
+          
+          lineTotal = (fullPriceItems * rawPrice) + (discountedItems * getPrice);
+        }
       }
-      baseSubtotal += (finalPrice * chargeableQty);
-    });
-
-    let total = baseSubtotal;
-    Object.values(cart).forEach((cartItem: any) => {
-      const itemInDB = inventory.find((i: any) => i.id === cartItem.item.id);
-      if (!(itemInDB?.dealLogic === 'PENNY_150' && itemInDB?.dailyDeal)) return;
-      
-      const activePrice = (cartItem.size.price || 0);
-      
-      if (baseSubtotal >= 150) {
-          total += 0.01; 
-          if (cartItem.qty > 1) {
-             total += (activePrice * (cartItem.qty - 1)); 
-          }
-      } else {
-          total += (activePrice * cartItem.qty); 
-      }
+      total += lineTotal;
     });
 
     return total;

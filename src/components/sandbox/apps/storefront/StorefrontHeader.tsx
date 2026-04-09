@@ -15,7 +15,7 @@ export default function StorefrontHeader({
     let activeBg = 'bg-linear-to-r from-emerald-400 to-emerald-600 text-zinc-950 shadow-[0_0_15px_rgba(52,211,153,0.4)] border-transparent';
     let inactiveBg = 'bg-zinc-900 border-zinc-800 text-zinc-400 hover:bg-zinc-800 hover:text-zinc-100';
 
-    if (cat === 'Featured & Deals') {
+    if (cat === 'Daily Deals') {
       Icon = Flame;
       iconColor = "text-pink-500";
       if (isActive) activeBg = 'bg-linear-to-r from-pink-400 to-rose-500 text-zinc-950 shadow-[0_0_15px_rgba(236,72,153,0.5)] border-transparent';

@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import StorefrontCardFront from './StorefrontCardFront';
 import StorefrontCardBack from './StorefrontCardBack';
 
-// Helper to convert labels into gram requirements
 export const getRequiredGrams = (label: string) => {
   if (!label) return 0;
   const l = label.toLowerCase();
@@ -12,7 +11,7 @@ export const getRequiredGrams = (label: string) => {
   if (l.includes('8th') || l.includes('eighth') || l.includes('1/8')) return 3.5;
   const match = l.match(/(\d+(?:\.\d+)?)\s*g/);
   if (match) return Number(match[1]);
-  return 1; // Default fallback for units
+  return 1;
 };
 
 export const StorefrontCard = ({ item, cart, updateCart, clientConfig, isHero = false }: any) => {
@@ -67,19 +66,25 @@ export const StorefrontCard = ({ item, cart, updateCart, clientConfig, isHero = 
   }
   const isMaxReached = qty > 0 && qty >= maxStockForDisplay; 
 
-  // --- THE PRICING MATH FIX ---
-  // 1. Calculate the absolute lowest base price (No discounts)
   const baseLowestPrice = Math.min(...sizes.map((s:any) => Number(s?.price || 0)));
   
-  // 2. Calculate the active lowest price (Including promo overrides and 15% off logic)
+  // UPDATED: Now reads the dynamic dealConfig math correctly
   const activeLowestPrice = Math.min(...sizes.map((s:any) => {
     let price = Number(s?.price || 0);
-    if (item?.dailyDeal) {
-       if (s?.promoPrice !== undefined && s?.promoPrice !== '') {
-         price = Number(s.promoPrice);
-       }
-       if (item?.dealLogic === 'PCT_15') {
-         price = price * 0.85;
+    if (item?.dailyDeal && item?.dealConfig) {
+       const config = item.dealConfig;
+       if (config.type === 'DISCOUNT') {
+          if (config.discountType === 'TIERED' && s.promoPrice) price = Number(s.promoPrice);
+          else if (config.discountType === 'PERCENT') price = price * (1 - config.discountValue / 100);
+          else if (config.discountType === 'DOLLAR') price = Math.max(0, price - config.discountValue);
+          else if (config.discountType === 'FIXED') price = config.discountValue;
+       } else if (config.type === 'BUNDLE') {
+          price = config.bundlePrice / config.buyQty;
+       } else if (config.type === 'BOGO') {
+          let getP = 0;
+          if (config.discount === 'PCT_50') getP = price * 0.5;
+          else if (config.discount === 'PENNY') getP = 0.01;
+          price = ((config.buyQty * price) + (config.getQty * getP)) / (config.buyQty + config.getQty);
        }
     }
     return price;

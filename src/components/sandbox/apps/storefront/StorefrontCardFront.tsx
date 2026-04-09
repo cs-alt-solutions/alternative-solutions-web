@@ -16,7 +16,18 @@ export default function StorefrontCardFront({ item, cleanItemName, baseLowestPri
     viewInfo: 'View Info'
   };
 
-  const formatPromo = (logic: string) => ({ 'PCT_15': '15% OFF', 'PENNY_150': '$0.01 UNLOCK', 'BOGO': 'BOGO', 'B2G1': 'B2G1', 'B5G1': 'B5G1' }[logic] || logic || UI.promo);
+  // UPDATED: Now parses the dynamic dealConfig object
+  const renderDealMath = (config: any) => {
+    if (!config) return UI.promo;
+    if (config.type === 'BUNDLE') return `${config.buyQty} for $${config.bundlePrice}`;
+    if (config.type === 'DISCOUNT') {
+      if (config.discountType === 'PERCENT') return `${config.discountValue}% OFF`;
+      if (config.discountType === 'DOLLAR') return `$${config.discountValue} OFF`;
+      if (config.discountType === 'FIXED') return `NOW $${config.discountValue}`;
+      if (config.discountType === 'TIERED') return `TIERED PRICING`;
+    }
+    return `B${config.buyQty || 1} G${config.getQty || 1}`;
+  };
 
   let isOutOfStock = false;
   if (isFlower) {
@@ -52,7 +63,6 @@ export default function StorefrontCardFront({ item, cleanItemName, baseLowestPri
           </div>
         )}
 
-        {/* THE ZOOM CROP */}
         {item?.imageUrl ? (
           <img src={item.imageUrl} alt={item.name} className="w-full h-full object-cover scale-150 group-hover:scale-[1.60] transition-transform duration-700" />
         ) : (
@@ -61,7 +71,6 @@ export default function StorefrontCardFront({ item, cleanItemName, baseLowestPri
           </div>
         )}
 
-        {/* Anchored Top-Right: Top Shelf Badge */}
         {item?.isTopShelf && !isOutOfStock && (
           <div className="absolute top-3 right-3 z-10 rotate-12 drop-shadow-xl opacity-95 hover:opacity-100 transition-opacity">
             <div className="flex flex-col items-center justify-center w-14 h-14 rounded-full border-2 border-amber-400/80 bg-zinc-950/60 backdrop-blur-md shadow-[0_0_15px_rgba(251,191,36,0.3)]">
@@ -73,13 +82,13 @@ export default function StorefrontCardFront({ item, cleanItemName, baseLowestPri
           </div>
         )}
 
-        {/* Promos & Features (Anchored Top-Left) */}
         <div className="absolute top-3 left-3 flex flex-col gap-2 items-start z-10">
            {item?.dailyDeal && !isOutOfStock && (
              <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-pink-500 shadow-[0_0_15px_rgba(236,72,153,0.5)] border border-pink-400">
                <Flame size={10} className="text-zinc-950" />
                <span className="text-zinc-950 text-[8px] font-black uppercase tracking-widest">
-                 {item.dealLogic && item.dealLogic !== 'STANDARD' ? formatPromo(item.dealLogic) : UI.promo}
+                 {/* Calling the new math function */}
+                 {renderDealMath(item.dealConfig)}
                </span>
              </div>
            )}
@@ -91,7 +100,6 @@ export default function StorefrontCardFront({ item, cleanItemName, baseLowestPri
            )}
         </div>
 
-        {/* Sleek Strain Indicator (Bottom Right) */}
         {item?.strainType && item.strainType !== 'N/A' && (
            <div className="absolute bottom-3 right-3 z-10 flex items-center gap-1.5 bg-zinc-950/80 backdrop-blur-md px-2.5 py-1 rounded-lg border border-zinc-800/80 shadow-lg animate-in fade-in">
              <div className={`w-1.5 h-1.5 rounded-full ${strainColorClass.replace('text-', 'bg-')}`} />
@@ -102,16 +110,12 @@ export default function StorefrontCardFront({ item, cleanItemName, baseLowestPri
         )}
       </div>
 
-      {/* --- THE STRADDLING STAMP BADGE (Shifted Left) --- */}
-      {/* Positioned on the left side of the card, straddling the image/content line */}
       {item?.iconUrl && (
          <div className="absolute top-[45%] left-6 -translate-y-1/2 w-16 h-16 rounded-full border-4 border-zinc-900 bg-white/95 overflow-hidden shadow-[0_10px_20px_rgba(0,0,0,0.5)] z-20 animate-in fade-in">
            <img src={item.iconUrl} alt="Brand Stamp" className="w-full h-full object-cover" />
          </div>
       )}
 
-      {/* BODY CONTENT SECTION (Now Left-Aligned) */}
-      {/* Changed to text-left and items-start to match the left-aligned avatar */}
       <div className="flex flex-col flex-1 p-6 pt-10 text-left">
           
           <div className="mt-auto mb-1 flex items-center justify-start gap-2 text-[9px] font-black uppercase tracking-widest">
@@ -141,7 +145,6 @@ export default function StorefrontCardFront({ item, cleanItemName, baseLowestPri
              )}
           </div>
 
-          {/* ACTION FOOTER */}
           <div className="mt-auto pt-4 border-t border-zinc-800/50 flex items-center justify-between shrink-0 w-full">
             <div className="flex flex-col items-start">
               <span className="text-[8px] font-black uppercase tracking-widest text-zinc-500">{UI.startingAt}</span>
