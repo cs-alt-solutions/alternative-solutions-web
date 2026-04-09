@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { CalendarDays, ChevronDown, Clock, Save } from 'lucide-react';
+import { X, Clock, Save, Settings } from 'lucide-react';
 
 export const DAYS_OF_WEEK = [
   { id: 0, label: 'Sunday' },
@@ -14,37 +14,39 @@ export const DAYS_OF_WEEK = [
 ];
 
 export default function StorefrontSettings({ 
-  isScheduleOpen, 
-  setIsScheduleOpen, 
+  isOpen, 
+  onClose, 
   weeklySchedule, 
   handleScheduleChange, 
   shiftChange, 
   setShiftChange, 
   handleSaveHours 
 }: any) {
+  
+  if (!isOpen) return null;
+
   return (
-    /* FIXED: Changed rounded-[2.5rem] to rounded-4xl */
-    <div className="bg-zinc-900/80 backdrop-blur-md border border-zinc-800 rounded-4xl shadow-xl mb-8 overflow-hidden transition-all duration-300">
-      <button 
-        onClick={() => setIsScheduleOpen(!isScheduleOpen)} 
-        className="w-full p-5 md:p-6 flex items-center justify-between hover:bg-zinc-800/50 transition-colors"
-      >
-        <div className="flex items-center gap-4">
-          <div className="w-10 h-10 rounded-xl bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center text-indigo-400 shrink-0">
-            <CalendarDays size={18} />
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-zinc-950/80 backdrop-blur-sm animate-in fade-in duration-200">
+      <div className="bg-zinc-950 border border-zinc-800 rounded-4xl shadow-2xl w-full max-w-2xl overflow-hidden flex flex-col max-h-[90vh]">
+        
+        {/* Header */}
+        <div className="flex items-center justify-between p-6 border-b border-zinc-800/50 bg-zinc-900/50">
+          <div className="flex items-center gap-4">
+             <div className="w-10 h-10 rounded-xl bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center text-indigo-400 shrink-0">
+               <Settings size={18} />
+             </div>
+             <div>
+               <h2 className="text-lg font-black text-zinc-100 uppercase tracking-widest">Master Schedule</h2>
+               <p className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest mt-1">Operating Hours & Shift Cutoffs</p>
+             </div>
           </div>
-          <div className="text-left">
-            <h3 className="text-sm font-black uppercase tracking-widest text-zinc-100 leading-none mb-1">Master Schedule & Settings</h3>
-            <p className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">Click to {isScheduleOpen ? 'collapse' : 'configure'} operating hours</p>
-          </div>
+          <button onClick={onClose} className="p-2 bg-zinc-900 hover:bg-zinc-800 rounded-full text-zinc-500 transition-colors border border-zinc-800">
+            <X size={16} />
+          </button>
         </div>
-        <div className={`p-2 bg-zinc-950 rounded-full border border-zinc-800 text-zinc-500 transition-transform duration-300 ${isScheduleOpen ? 'rotate-180' : ''}`}>
-          <ChevronDown size={16} />
-        </div>
-      </button>
-      
-      {isScheduleOpen && (
-        <div className="p-6 pt-0 border-t border-zinc-800/50 mt-2 animate-in slide-in-from-top-4">
+
+        {/* Scrollable Content */}
+        <div className="flex-1 overflow-y-auto p-6 scrollbar-hide">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
             {DAYS_OF_WEEK.map((day) => {
               const sched = weeklySchedule[day.id] || { open: '08:00', close: '17:00', isClosed: true };
@@ -62,12 +64,12 @@ export default function StorefrontSettings({
                   
                   <div className="flex items-center gap-2 flex-1 justify-end">
                     <input 
-                      type="time" value={sched.open} onChange={(e) => handleScheduleChange(day.id, 'open', e.target.value)} disabled={sched.isClosed}
+                      type="time" value={sched.open || ''} onChange={(e) => handleScheduleChange(day.id, 'open', e.target.value)} disabled={sched.isClosed}
                       className="bg-zinc-900 border border-zinc-700 text-xs font-mono text-zinc-300 p-2 rounded-lg outline-none disabled:opacity-50"
                     />
                     <span className="text-zinc-600 text-[10px]">TO</span>
                     <input 
-                      type="time" value={sched.close} onChange={(e) => handleScheduleChange(day.id, 'close', e.target.value)} disabled={sched.isClosed}
+                      type="time" value={sched.close || ''} onChange={(e) => handleScheduleChange(day.id, 'close', e.target.value)} disabled={sched.isClosed}
                       className="bg-zinc-900 border border-zinc-700 text-xs font-mono text-zinc-300 p-2 rounded-lg outline-none disabled:opacity-50"
                     />
                   </div>
@@ -83,16 +85,21 @@ export default function StorefrontSettings({
                  <p className="text-[9px] font-bold text-zinc-500">Time when Shift A transitions to Shift B</p>
                </div>
                <input 
-                 type="time" value={shiftChange} onChange={(e) => setShiftChange(e.target.value)}
+                 type="time" value={shiftChange || ''} onChange={(e) => setShiftChange(e.target.value)}
                  className="bg-zinc-900 border border-amber-500/30 text-sm font-mono text-amber-400 p-2.5 rounded-xl outline-none focus:border-amber-400"
                />
              </div>
-             <button onClick={handleSaveHours} className="w-full sm:w-auto bg-indigo-500 hover:bg-indigo-400 text-zinc-950 py-5 px-8 rounded-2xl font-black uppercase tracking-widest transition-all flex items-center justify-center gap-2 shadow-lg active:scale-95 shrink-0">
-               <Save size={16} /> Commit Settings
-             </button>
           </div>
         </div>
-      )}
+
+        {/* Footer */}
+        <div className="p-4 border-t border-zinc-800/50 bg-zinc-900/50">
+           <button onClick={handleSaveHours} className="w-full py-4 bg-indigo-500 hover:bg-indigo-400 text-zinc-950 rounded-2xl font-black uppercase tracking-widest transition-all active:scale-95 shadow-lg flex items-center justify-center gap-2">
+             <Save size={16} /> Commit Settings
+           </button>
+        </div>
+
+      </div>
     </div>
   );
 }

@@ -36,11 +36,9 @@ export default function AdminInventoryModule({ stock, setStock, inventoryMatrix,
     descBase: '', descFeels: '', descTaste: '', descUses: '', descFact: '',
     mainCategory: mainCategories[0], subCategory: subCategories[mainCategories[0]]?.[0] || 'Uncategorized',
     price: 0, onHand: 0, featured: false, isTopShelf: false, dailyDeal: false,
-    dealType: 'Daily Deal', dealText: '', dealDays: [], iconName: 'Leaf', options: [], 
-    sizes: [
-      { id: `sz-${Date.now()}-1`, label: '3.5g (Eighth)', price: 35.00, bundleQty: 1, promoLabel: '', promoPrice: '' },
-      { id: `sz-${Date.now()}-2`, label: '7g (Quarter)', price: 60.00, bundleQty: 1, promoLabel: '', promoPrice: '' }
-    ] 
+    dealType: 'One-Shot', dealText: '', dealDays: [], iconName: 'Leaf', options: [], 
+    dealConfig: { type: 'DISCOUNT', discountType: 'PERCENT', discountValue: 15, unit: 'UNITS' },
+    sizes: [{ id: `sz-${Date.now()}-1`, label: 'Standard', price: 0, bundleQty: 1, promoLabel: '', promoPrice: '' }] 
   });
 
   const openEditor = (item?: any) => {
@@ -148,7 +146,6 @@ export default function AdminInventoryModule({ stock, setStock, inventoryMatrix,
     }));
   };
 
-  // --- THE INVENTORY FILTER/SORT ENGINE FIX (Variant-Aware) ---
   const processedInventory = useMemo(() => {
     let result = [...inventoryMatrix];
 
@@ -163,18 +160,14 @@ export default function AdminInventoryModule({ stock, setStock, inventoryMatrix,
       if (statusFilter === 'Active Promo') result = result.filter(i => i.dailyDeal);
       if (statusFilter === 'Top Shelf') result = result.filter(i => i.isTopShelf);
       if (statusFilter === 'Featured') result = result.filter(i => i.featured);
-      
-      // ACTION: Define Steals filter on Admin side
       if (statusFilter === 'Smoky Steals') result = result.filter(i => i.subCategory?.toLowerCase().includes('steals'));
 
       if (statusFilter === 'Low Stock') result = result.filter(i => {
-        // FIX: Sum up variants properly
         const hasVariants = i.options && i.options.length > 0 && i.options[0].label !== 'Standard';
         const stockNum = hasVariants ? i.options.reduce((s:number, o:any) => s + (Number(o.stock)||0), 0) : (i.onHand || 0);
         return stockNum > 0 && stockNum <= 15;
       });
       if (statusFilter === 'Out of Stock') result = result.filter(i => {
-        // FIX: Sum up variants properly
         const hasVariants = i.options && i.options.length > 0 && i.options[0].label !== 'Standard';
         const stockNum = hasVariants ? i.options.reduce((s:number, o:any) => s + (Number(o.stock)||0), 0) : (i.onHand || 0);
         return stockNum <= 0;
@@ -187,7 +180,6 @@ export default function AdminInventoryModule({ stock, setStock, inventoryMatrix,
       else if (sortConfig.key === 'category') { aVal = a.mainCategory || ''; bVal = b.mainCategory || ''; }
       else if (sortConfig.key === 'subCategory') { aVal = a.subCategory || ''; bVal = b.subCategory || ''; }
       else if (sortConfig.key === 'stock') { 
-         // FIX: Sum variants for accurate sorting
          const aHasVar = a.options && a.options.length > 0 && a.options[0].label !== 'Standard';
          const bHasVar = b.options && b.options.length > 0 && b.options[0].label !== 'Standard';
          aVal = aHasVar ? a.options.reduce((s:number, o:any) => s + (Number(o.stock)||0), 0) : (a.onHand || 0); 
@@ -206,13 +198,18 @@ export default function AdminInventoryModule({ stock, setStock, inventoryMatrix,
 
   if (isManagingCats) return <AdminInventoryCategoryManager mainCategories={mainCategories} subCategories={subCategories} setSubCategories={setSubCategories} standardTiers={standardTiers} setStandardTiers={setStandardTiers} setNotification={setNotification} onClose={() => setIsManagingCats(false)} />;
   
+  // FIXED: No openCampaignConfig prop is passed here. The editor will elegantly hide the button.
   if (editingItem) return (
     <AdminInventoryEditor 
-      initialItem={editingItem} isAdding={isAdding} 
-      mainCategories={mainCategories} subCategories={subCategories} 
-      onSave={handleSaveProduct} onDelete={handleDeleteProduct}
+      initialItem={editingItem} 
+      isAdding={isAdding} 
+      mainCategories={mainCategories} 
+      subCategories={subCategories} 
+      onSave={handleSaveProduct} 
+      onDelete={handleDeleteProduct}
       onCancel={() => { setEditingItem(null); setIsAdding(false); }} 
-      client_id={clientConfig.id} setNotification={setNotification}
+      client_id={clientConfig.id} 
+      setNotification={setNotification}
     />
   );
 
