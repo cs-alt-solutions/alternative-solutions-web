@@ -16,7 +16,6 @@ export default function StorefrontCardFront({ item, cleanItemName, baseLowestPri
     viewInfo: 'View Info'
   };
 
-  // UPDATED: Now parses the dynamic dealConfig object
   const renderDealMath = (config: any) => {
     if (!config) return UI.promo;
     if (config.type === 'BUNDLE') return `${config.buyQty} for $${config.bundlePrice}`;
@@ -48,6 +47,9 @@ export default function StorefrontCardFront({ item, cleanItemName, baseLowestPri
     strainColorClass = "text-emerald-400";
   }
 
+  const config = item?.dealConfig;
+  const isBundleOrBogo = item?.dailyDeal && config && (config.type === 'BUNDLE' || config.type === 'BOGO');
+
   return (
     <div className={`absolute inset-0 w-full h-full backface-hidden bg-zinc-900/90 backdrop-blur-xl border border-zinc-800 rounded-[2.5rem] flex flex-col shadow-xl overflow-hidden transition-all duration-500 ${isOutOfStock ? 'opacity-85 grayscale-30' : ''}`}>
       
@@ -64,7 +66,7 @@ export default function StorefrontCardFront({ item, cleanItemName, baseLowestPri
         )}
 
         {item?.imageUrl ? (
-          <img src={item.imageUrl} alt={item.name} className="w-full h-full object-cover scale-150 group-hover:scale-[1.60] transition-transform duration-700" />
+          <img src={item.imageUrl} alt={item.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" />
         ) : (
           <div className="w-full h-full flex items-center justify-center text-zinc-800">
             <ItemIcon size={48} />
@@ -87,7 +89,6 @@ export default function StorefrontCardFront({ item, cleanItemName, baseLowestPri
              <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-pink-500 shadow-[0_0_15px_rgba(236,72,153,0.5)] border border-pink-400">
                <Flame size={10} className="text-zinc-950" />
                <span className="text-zinc-950 text-[8px] font-black uppercase tracking-widest">
-                 {/* Calling the new math function */}
                  {renderDealMath(item.dealConfig)}
                </span>
              </div>
@@ -146,19 +147,37 @@ export default function StorefrontCardFront({ item, cleanItemName, baseLowestPri
           </div>
 
           <div className="mt-auto pt-4 border-t border-zinc-800/50 flex items-center justify-between shrink-0 w-full">
-            <div className="flex flex-col items-start">
-              <span className="text-[8px] font-black uppercase tracking-widest text-zinc-500">{UI.startingAt}</span>
-              <div className="flex items-baseline gap-2">
-                 {activeLowestPrice < baseLowestPrice && !isOutOfStock && (
-                   <span className="text-xs font-black font-mono text-zinc-600 line-through leading-none decoration-rose-500/50">
-                     ${baseLowestPrice.toFixed(0)}
-                   </span>
-                 )}
-                 <span className={`text-2xl font-black font-mono leading-none tracking-tighter ${item?.dailyDeal ? 'text-pink-400' : 'text-emerald-400'}`}>
-                   ${activeLowestPrice.toFixed(0)}
-                 </span>
+            
+            {/* DYNAMIC HERO DEAL TEXT */}
+            {isBundleOrBogo && !isOutOfStock ? (
+              <div className="flex flex-col items-start">
+                <span className="text-[8px] font-black uppercase tracking-widest text-pink-500 mb-0.5 animate-pulse flex items-center gap-1"><Flame size={10}/> Unlocked Deal</span>
+                {config.type === 'BUNDLE' && (
+                  <span className="text-2xl font-black font-mono leading-none tracking-tighter text-pink-400">
+                    {config.buyQty} FOR ${config.bundlePrice}
+                  </span>
+                )}
+                {config.type === 'BOGO' && (
+                  <span className="text-lg font-black uppercase leading-none tracking-tighter text-pink-400">
+                    BUY {config.buyQty}{config.unit === 'GRAMS' ? 'G' : ''} GET {config.getQty}{config.unit === 'GRAMS' ? 'G' : ''} {config.discount === 'PCT_50' ? '50% OFF' : config.discount === 'PENNY' ? 'FOR 1¢' : 'FREE'}
+                  </span>
+                )}
               </div>
-            </div>
+            ) : (
+              <div className="flex flex-col items-start">
+                <span className="text-[8px] font-black uppercase tracking-widest text-zinc-500">{UI.startingAt}</span>
+                <div className="flex items-baseline gap-2">
+                   {activeLowestPrice < baseLowestPrice && !isOutOfStock && (
+                     <span className="text-xs font-black font-mono text-zinc-600 line-through leading-none decoration-rose-500/50">
+                       ${baseLowestPrice.toFixed(0)}
+                     </span>
+                   )}
+                   <span className={`text-2xl font-black font-mono leading-none tracking-tighter ${item?.dailyDeal ? 'text-pink-400' : 'text-emerald-400'}`}>
+                     ${activeLowestPrice.toFixed(0)}
+                   </span>
+                </div>
+              </div>
+            )}
             
             <button 
               onClick={() => setIsFlipped(true)}

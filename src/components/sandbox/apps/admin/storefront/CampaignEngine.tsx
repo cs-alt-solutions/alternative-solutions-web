@@ -4,10 +4,26 @@ import React from 'react';
 import { Megaphone, Leaf, Box, Image as ImageIcon, Zap, Repeat, X, Plus } from 'lucide-react';
 import { DAYS_OF_WEEK } from './StorefrontSettings';
 
-export default function CampaignEngine({ activeDeals, openCampaignConfig, removeDeal, openInventorySelector }: any) {
+export default function CampaignEngine({ activeDeals, openCampaignConfig, removeDeal, openInventorySelector, weeklySchedule, clearOneShots }: any) {
   
   const oneShotDeals = activeDeals.filter((d: any) => d.dealType === 'One-Shot');
   const recurringDeals = activeDeals.filter((d: any) => d.dealType === 'Recurring' || d.dailyDeal);
+
+  // Filter out any days that are explicitly marked as closed in the schedule
+  const activeDays = DAYS_OF_WEEK.filter(day => {
+    const sched = weeklySchedule?.[day.id];
+    return !sched?.isClosed; // If there's no schedule object, assume it's open
+  });
+  
+  const closedDaysCount = 7 - activeDays.length;
+
+  // Hardcoded map to ensure Tailwind compiles the grid columns correctly
+  const gridColsClass = 
+    activeDays.length === 7 ? 'xl:grid-cols-7' :
+    activeDays.length === 6 ? 'xl:grid-cols-6' :
+    activeDays.length === 5 ? 'xl:grid-cols-5' :
+    activeDays.length === 4 ? 'xl:grid-cols-4' :
+    'xl:grid-cols-3';
 
   const getCardStyle = (tag: string) => {
     switch(tag) {
@@ -19,7 +35,6 @@ export default function CampaignEngine({ activeDeals, openCampaignConfig, remove
     }
   };
 
-  // NEW: Formats the Math specifically based on the dealConfig type
   const renderDealMath = (config: any) => {
     if (!config) return 'PROMO';
     if (config.type === 'BUNDLE') return `${config.buyQty} for $${config.bundlePrice}`;
@@ -27,9 +42,8 @@ export default function CampaignEngine({ activeDeals, openCampaignConfig, remove
       if (config.discountType === 'PERCENT') return `${config.discountValue}% OFF`;
       if (config.discountType === 'DOLLAR') return `$${config.discountValue} OFF`;
       if (config.discountType === 'FIXED') return `NOW $${config.discountValue}`;
-      if (config.discountType === 'TIERED') return `TIERED PRICING`; // NEW: Added this line
+      if (config.discountType === 'TIERED') return `TIERED PRICING`; 
     }
-    // Default to BOGO format
     return `B${config.buyQty || 1} G${config.getQty || 1}`;
   };
 
@@ -71,14 +85,32 @@ export default function CampaignEngine({ activeDeals, openCampaignConfig, remove
              <p className="text-[9px] font-bold text-zinc-500 uppercase tracking-widest mt-0.5">{activeDeals.length} Live Campaigns</p>
            </div>
          </div>
+         {closedDaysCount > 0 && (
+           <div className="bg-zinc-950 border border-zinc-800 rounded-xl px-4 py-2 text-[9px] font-black uppercase tracking-widest text-zinc-500 flex items-center gap-2">
+             <span className="w-1.5 h-1.5 rounded-full bg-rose-500"></span>
+             Missing a day? Check settings—closed days are hidden.
+           </div>
+         )}
       </div>
       
       <div className="flex flex-col gap-8 w-full">
         {/* ONE-SHOT SPRINTS */}
         <div>
-          <h4 className="text-[10px] font-black uppercase tracking-widest text-zinc-400 mb-3 flex items-center gap-2 border-b border-zinc-800/50 pb-2"><Zap size={14} className="text-amber-400"/> One-Shot Sprints (This Week Only)</h4>
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-7 gap-3">
-            {DAYS_OF_WEEK.map((day) => {
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-3 border-b border-zinc-800/50 pb-2 gap-4">
+            <h4 className="text-[10px] font-black uppercase tracking-widest text-zinc-400 flex items-center gap-2">
+              <Zap size={14} className="text-amber-400"/> One-Shot Sprints (Manual Review)
+            </h4>
+            {oneShotDeals.length > 0 && (
+              <button 
+                onClick={clearOneShots}
+                className="text-[9px] font-black uppercase tracking-widest text-rose-400 hover:text-rose-300 bg-rose-500/10 hover:bg-rose-500/20 border border-rose-500/20 px-3 py-1.5 rounded-lg transition-colors flex items-center gap-1.5"
+              >
+                <X size={12} /> Clear Sprints
+              </button>
+            )}
+          </div>
+          <div className={`grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 ${gridColsClass} gap-3`}>
+            {activeDays.map((day) => {
               const todaysDeals = oneShotDeals.filter((d: any) => d.dealDays?.includes(day.id));
               const isToday = new Date().getDay() === day.id;
               return (
@@ -102,8 +134,8 @@ export default function CampaignEngine({ activeDeals, openCampaignConfig, remove
         {/* RECURRING BASELINE */}
         <div>
           <h4 className="text-[10px] font-black uppercase tracking-widest text-zinc-400 mb-3 flex items-center gap-2 border-b border-zinc-800/50 pb-2"><Repeat size={14} className="text-indigo-400"/> Recurring Baseline (Weekly Auto-Run)</h4>
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-7 gap-3">
-            {DAYS_OF_WEEK.map((day) => {
+          <div className={`grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 ${gridColsClass} gap-3`}>
+            {activeDays.map((day) => {
               const todaysDeals = recurringDeals.filter((d: any) => !d.dealDays || d.dealDays.length === 0 || d.dealDays.includes(day.id));
               const isToday = new Date().getDay() === day.id;
               return (

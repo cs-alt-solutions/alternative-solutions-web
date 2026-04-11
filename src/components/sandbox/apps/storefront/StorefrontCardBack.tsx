@@ -32,7 +32,6 @@ export default function StorefrontCardBack({
   let lineTotal = rawPrice * qty;
   let savingsText = "";
 
-  // 1. Calculate the ACTIVE price for the item (in case it has a flat discount)
   if (item?.dailyDeal && config && config.type === 'DISCOUNT') {
     if (config.discountType === 'TIERED' && selectedSize?.promoPrice) activeBasePrice = Number(selectedSize.promoPrice);
     else if (config.discountType === 'PERCENT') activeBasePrice = rawPrice * (1 - config.discountValue / 100);
@@ -40,24 +39,11 @@ export default function StorefrontCardBack({
     else if (config.discountType === 'FIXED') activeBasePrice = config.discountValue;
   }
 
-  // 2. Calculate the projected price for the ADD button (before it's in the cart)
-  let projectedAddPrice = activeBasePrice * bundleQty; // Default to normal math
-  
-  if (item?.dailyDeal && config) {
-    if (config.type === 'BUNDLE') {
-      // If they are building a bundle, the projected price IS the bundle price
-      projectedAddPrice = config.bundlePrice;
-    } else if (config.type === 'BOGO') {
-      // If it's a BOGO, calculate the projected price of the required 'Buy + Get' cycle
-      const cycleQty = config.buyQty + config.getQty;
-      let getPrice = 0;
-      if (config.discount === 'PCT_50') getPrice = rawPrice * 0.5;
-      else if (config.discount === 'PENNY') getPrice = 0.01;
-      projectedAddPrice = (config.buyQty * rawPrice) + (config.getQty * getPrice);
-    }
+  let projectedAddPrice = activeBasePrice * bundleQty; 
+  if (item?.dailyDeal && config && config.type === 'BUNDLE') {
+    projectedAddPrice = config.bundlePrice;
   }
 
-  // 3. Calculate the LIVE CART Total (what is actually sitting in their cart right now)
   if (item?.dailyDeal && config) {
     if (config.type === 'DISCOUNT') {
       lineTotal = activeBasePrice * qty;
@@ -70,49 +56,34 @@ export default function StorefrontCardBack({
       if (bundles > 0) savingsText = `Bundle Saved $${((rawPrice * qty) - lineTotal).toFixed(2)}`;
       else if (config.buyQty - remainder === 1 && qty > 0) savingsText = `Add 1 for $${config.bundlePrice} Bundle!`;
     } else if (config.type === 'BOGO') {
-      const cycleQty = config.buyQty + config.getQty;
-      const cycles = Math.floor(qty / cycleQty);
-      const remainder = qty % cycleQty;
+      lineTotal = rawPrice * qty;
+      const earnedQty = Math.floor(qty / config.buyQty) * config.getQty;
       
-      const fullPriceItems = (cycles * config.buyQty) + Math.min(remainder, config.buyQty);
-      const discountedItems = (cycles * config.getQty) + Math.max(0, remainder - config.buyQty);
-      
-      let getPrice = 0;
-      if (config.discount === 'PCT_50') getPrice = rawPrice * 0.5;
-      else if (config.discount === 'PENNY') getPrice = 0.01;
-      
-      lineTotal = (fullPriceItems * rawPrice) + (discountedItems * getPrice);
-      
-      if (discountedItems > 0) savingsText = `BOGO Saved $${((rawPrice * qty) - lineTotal).toFixed(2)}`;
-      else if (qty > 0 && remainder === config.buyQty) savingsText = `Add ${config.getQty} more for deal!`;
+      if (earnedQty > 0) {
+        const disc = config.discount === 'PCT_50' ? '50% OFF' : config.discount === 'PENNY' ? 'FOR 1¢' : 'FREE';
+        savingsText = `Unlocked ${earnedQty} ${disc}! (Auto-added at checkout)`;
+      } else if (qty > 0) {
+        savingsText = `Add ${config.buyQty - qty} more to get ${config.getQty} ${config.discount === 'FREE' ? 'FREE' : 'Discounted'}!`;
+      }
     }
-  } else {
-    // Standard Math if no deals are active
-    lineTotal = rawPrice * qty;
   }
 
-  // FIXED INTERACTION LOGIC: Fluid flavor selection
+  const currentSubtotal = lineTotal;
+
   const handleSmartSelect = (opt: any) => {
     if (bundleQty === 1) {
-      handleSelectOption([opt]); // Single item logic
+      handleSelectOption([opt]);
     } else {
-      // Multi-item logic (Bundles)
       const isAlreadySelected = selectedOptions.some((so: any) => so.id === opt.id);
-      
       if (isAlreadySelected) {
-        // If they click an already selected item, remove it
         const index = selectedOptions.findIndex((so: any) => so.id === opt.id);
         const newArr = [...selectedOptions];
         newArr.splice(index, 1);
         handleSelectOption(newArr);
       } else {
-        // If they click a new item...
         if (selectedOptions.length < bundleQty) {
-          // ...and the bundle isn't full, add it.
           handleSelectOption([...selectedOptions, opt]);
         } else {
-          // ...and the bundle IS full, boot out the oldest flavor and add the new one.
-          // This prevents the user from being "locked out" and having to manually deselect.
           handleSelectOption([...selectedOptions.slice(1), opt]);
         }
       }
@@ -122,7 +93,7 @@ export default function StorefrontCardBack({
   return (
     <div className="absolute inset-0 w-full h-full backface-hidden transform-[rotateY(180deg)] bg-zinc-950 border border-zinc-800 rounded-[2.5rem] flex flex-col shadow-2xl overflow-hidden">
       
-      {/* HEADER (Sticky Top - Compact) */}
+      {/* HEADER */}
       <div className="flex items-center justify-between p-4 pb-3 border-b border-zinc-800/50 shrink-0 bg-zinc-950 z-10">
         <button onClick={() => setIsFlipped(false)} className="p-1.5 bg-zinc-900 border border-zinc-800 hover:bg-zinc-800 text-zinc-400 rounded-lg transition-colors active:scale-95 shrink-0">
           <ArrowLeft size={16} />
@@ -141,10 +112,9 @@ export default function StorefrontCardBack({
         </div>
       </div>
 
-      {/* SCROLLABLE BODY (DNA, Sizes, Options) */}
+      {/* SCROLLABLE BODY */}
       <div className="flex-1 overflow-y-auto scrollbar-hide p-4 space-y-3 relative">
         
-        {/* Product DNA - Tighter Padding */}
         {(item?.descBase || hasDNA) ? (
           <div className="bg-zinc-900/50 border border-zinc-800/50 rounded-xl p-3 flex flex-col gap-2.5">
              {item?.descBase && (
@@ -190,7 +160,6 @@ export default function StorefrontCardBack({
           </div>
         )}
 
-        {/* Sizes Grid - Compact */}
         {sizes.length > 1 && (
           <div className="grid grid-cols-2 sm:grid-cols-4 bg-zinc-900 border border-zinc-800/50 rounded-lg p-1 gap-1">
             {sizes.map((s: any) => {
@@ -225,7 +194,6 @@ export default function StorefrontCardBack({
           </div>
         )}
 
-        {/* Options Grid - Compact */}
         {hasMultipleOptions && (
           <div>
             <div className="flex justify-between items-center mb-1.5 px-1">
@@ -241,9 +209,9 @@ export default function StorefrontCardBack({
                 return (
                   <button 
                     key={opt.id}
-                    disabled={isOutOfStock} // FIXED: Removed the (bundleQty > 1 && isBundleComplete) lockout
-                    onClick={() => handleSmartSelect(opt)} // FIXED: Using the new fluid selection logic
-                    className={`relative flex-1 min-w-[70px] p-1.5 rounded-md text-center border transition-all active:scale-95 ${isOutOfStock ? 'bg-zinc-950 border-zinc-800 text-zinc-700 cursor-not-allowed line-through' : isSelected ? 'bg-zinc-100 text-zinc-950 border-zinc-100 shadow-sm' : 'bg-zinc-900 border-zinc-800 text-zinc-300 hover:border-zinc-700 hover:text-zinc-100'}`}
+                    disabled={isOutOfStock} 
+                    onClick={() => handleSmartSelect(opt)} 
+                    className={`relative flex-1 min-w-17.5 p-1.5 rounded-md text-center border transition-all active:scale-95 ${isOutOfStock ? 'bg-zinc-950 border-zinc-800 text-zinc-700 cursor-not-allowed line-through' : isSelected ? 'bg-zinc-100 text-zinc-950 border-zinc-100 shadow-sm' : 'bg-zinc-900 border-zinc-800 text-zinc-300 hover:border-zinc-700 hover:text-zinc-100'}`}
                   >
                     <span className="block text-[9px] font-black uppercase tracking-wider leading-tight">{opt.label}</span>
                     {instancesInBundle > 1 && (
@@ -257,17 +225,15 @@ export default function StorefrontCardBack({
         )}
       </div>
 
-      {/* FOOTER (Sticky Bottom - Ultra Compact) */}
+      {/* FOOTER */}
       <div className="shrink-0 p-4 bg-zinc-950 border-t border-zinc-800/50 relative z-20">
          
-         {/* Floating Savings Badge */}
          {savingsText && qty > 0 && (
             <div className="absolute -top-2.5 left-1/2 -translate-x-1/2 bg-pink-500 text-zinc-950 px-3 py-0.5 rounded-full text-[8px] font-black uppercase tracking-widest shadow-md whitespace-nowrap z-30">
                {savingsText}
             </div>
          )}
 
-         {/* Add to Cart / Pick More Logic */}
          {!isBundleComplete && bundleQty > 1 && qty === 0 ? (
             <div className="w-full flex items-center justify-between py-2.5 px-4 rounded-xl bg-zinc-900 border border-dashed border-zinc-700 text-zinc-500">
               <span className="text-[10px] font-black uppercase tracking-widest">
@@ -306,8 +272,8 @@ export default function StorefrontCardBack({
                 </button>
               </div>
               <div className="flex items-center gap-2 pr-3">
-                 <span className="text-[8px] font-black uppercase tracking-widest text-emerald-500 flex items-center gap-1 hidden sm:flex"><CheckCircle size={10}/> {UI.inCart}</span>
-                 <span className="text-lg font-mono font-black text-emerald-400 leading-none">${lineTotal.toFixed(2)}</span>
+                 <span className="hidden sm:flex items-center gap-1 text-[8px] font-black uppercase tracking-widest text-emerald-500"><CheckCircle size={10}/> {UI.inCart}</span>
+                 <span className="text-lg font-mono font-black text-emerald-400 leading-none">${currentSubtotal.toFixed(2)}</span>
               </div>
             </div>
          )}

@@ -27,7 +27,20 @@ export const StorefrontCard = ({ item, cart, updateCart, clientConfig, isHero = 
   
   const initialOption = options.find((o: any) => (o?.stock !== undefined ? o.stock : item?.onHand) > 0) || options[0];
   const [selectedSize, setSelectedSize] = useState(sizes[0]);
-  const bundleQty = selectedSize?.bundleQty || 1;
+  
+  // FIXED: Safer evaluation of the config object to prevent hydration crashes
+  let bundleQty = selectedSize?.bundleQty || 1;
+  const config = item?.dealConfig;
+  
+  if (item?.dailyDeal && config) {
+    if (config.type === 'BUNDLE') {
+      bundleQty = config.buyQty || 1;
+    } else if (config.type === 'BOGO') {
+      // In a strict BOGO flow, the customer has to select all flavors to complete the action
+      bundleQty = (config.buyQty || 1) + (config.getQty || 1); 
+    }
+  }
+  
   const [selectedOptions, setSelectedOptions] = useState<any[]>([]);
 
   const isFlower = item?.mainCategory === 'Flower & Plants';
@@ -41,9 +54,8 @@ export const StorefrontCard = ({ item, cart, updateCart, clientConfig, isHero = 
     else setSelectedOptions([]);
   }, [selectedSize?.id, bundleQty, initialOption?.id]);
 
-  const handleSelectOption = (o: any) => {
-    if (bundleQty === 1) setSelectedOptions([o]);
-    else setSelectedOptions(selectedOptions.length < bundleQty ? [...selectedOptions, o] : [...selectedOptions.slice(1), o]);
+  const handleSelectOption = (opts: any[]) => {
+    setSelectedOptions(opts);
   };
 
   const removeSelectedOption = (index: number) => {
@@ -52,9 +64,12 @@ export const StorefrontCard = ({ item, cart, updateCart, clientConfig, isHero = 
     setSelectedOptions(newOpts);
   };
   
+  // FIXED: Ensure cart object exists before attempting to read keys from it
+  const safeCart = cart || {};
   const optionsKey = selectedOptions.map(o => o?.id).sort().join('+');
   const cartKey = `${item?.id}_${selectedSize?.id}_${optionsKey}`;
-  const qty = cart[cartKey]?.qty || 0;
+  const qty = safeCart[cartKey]?.qty || 0;
+  
   const isBundleComplete = selectedOptions.length === bundleQty;
   
   let maxStockForDisplay = 0;
@@ -68,24 +83,17 @@ export const StorefrontCard = ({ item, cart, updateCart, clientConfig, isHero = 
 
   const baseLowestPrice = Math.min(...sizes.map((s:any) => Number(s?.price || 0)));
   
-  // UPDATED: Now reads the dynamic dealConfig math correctly
   const activeLowestPrice = Math.min(...sizes.map((s:any) => {
     let price = Number(s?.price || 0);
-    if (item?.dailyDeal && item?.dealConfig) {
-       const config = item.dealConfig;
+    if (item?.dailyDeal && config) {
        if (config.type === 'DISCOUNT') {
           if (config.discountType === 'TIERED' && s.promoPrice) price = Number(s.promoPrice);
           else if (config.discountType === 'PERCENT') price = price * (1 - config.discountValue / 100);
           else if (config.discountType === 'DOLLAR') price = Math.max(0, price - config.discountValue);
           else if (config.discountType === 'FIXED') price = config.discountValue;
        } else if (config.type === 'BUNDLE') {
-          price = config.bundlePrice / config.buyQty;
-       } else if (config.type === 'BOGO') {
-          let getP = 0;
-          if (config.discount === 'PCT_50') getP = price * 0.5;
-          else if (config.discount === 'PENNY') getP = 0.01;
-          price = ((config.buyQty * price) + (config.getQty * getP)) / (config.buyQty + config.getQty);
-       }
+          price = (config.bundlePrice || 0) / (config.buyQty || 1);
+       } 
     }
     return price;
   }));

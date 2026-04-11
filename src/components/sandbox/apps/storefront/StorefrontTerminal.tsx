@@ -11,6 +11,7 @@ import StorefrontCheckout from './StorefrontCheckout';
 import StorefrontCatalog from './StorefrontCatalog';
 import StorefrontClosed from './StorefrontClosed';
 import StorefrontGatekeeper from './StorefrontGatekeeper';
+import { getRequiredGrams } from './StorefrontComponents';
 
 const timeToMins = (timeStr: string) => {
   if (!timeStr) return 0;
@@ -293,18 +294,17 @@ export default function StorefrontTerminal({ clientConfig, onExit }: any) {
           const remainder = cartItem.qty % config.buyQty;
           lineTotal = (bundles * config.bundlePrice) + (remainder * rawPrice);
         } else if (config.type === 'BOGO') {
-          const cycleQty = config.buyQty + config.getQty;
-          const cycles = Math.floor(cartItem.qty / cycleQty);
-          const remainder = cartItem.qty % cycleQty;
+          // WEIGHT BASED BOGO: Charge full price for the items selected. 
+          // Free items are added at checkout.
+          const itemUnits = config.unit === 'GRAMS' ? getRequiredGrams(cartItem.size.label) : 1;
+          const totalUnits = cartItem.qty * itemUnits;
+          const earnedQty = Math.floor(totalUnits / config.buyQty) * config.getQty;
           
-          const fullPriceItems = (cycles * config.buyQty) + Math.min(remainder, config.buyQty);
-          const discountedItems = (cycles * config.getQty) + Math.max(0, remainder - config.buyQty);
+          let extraCost = 0;
+          if (config.discount === 'PCT_50') extraCost = earnedQty * ((rawPrice / itemUnits) * 0.5);
+          else if (config.discount === 'PENNY') extraCost = earnedQty * 0.01;
           
-          let getPrice = 0;
-          if (config.discount === 'PCT_50') getPrice = rawPrice * 0.5;
-          else if (config.discount === 'PENNY') getPrice = 0.01;
-          
-          lineTotal = (fullPriceItems * rawPrice) + (discountedItems * getPrice);
+          lineTotal = (cartItem.qty * rawPrice) + extraCost;
         }
       }
       total += lineTotal;

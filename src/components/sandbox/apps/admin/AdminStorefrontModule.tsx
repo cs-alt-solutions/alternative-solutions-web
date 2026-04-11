@@ -11,7 +11,7 @@ import StorefrontSettings from './storefront/StorefrontSettings';
 import CampaignEngine from './storefront/CampaignEngine';
 import PromoInsights from './storefront/PromoInsights';
 import CampaignConfigModal from './storefront/CampaignConfigModal';
-import InventorySelectorModal from './storefront/InventorySelectorModal'; // NEW IMPORT
+import InventorySelectorModal from './storefront/InventorySelectorModal'; 
 
 export default function AdminStorefrontModule({ stock, setStock, inventoryMatrix, setNotification, clientConfig }: any) {
   const [weeklySchedule, setWeeklySchedule] = useStickyState<any>(clientConfig.weeklySchedule || {}, `store_weekly_hours_${clientConfig?.id}`);
@@ -23,8 +23,8 @@ export default function AdminStorefrontModule({ stock, setStock, inventoryMatrix
   // Modals
   const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false);
   const [isConfigModalOpen, setIsConfigModalOpen] = useState(false);
-  const [isSelectorOpen, setIsSelectorOpen] = useState(false); // NEW
-  const [selectorContext, setSelectorContext] = useState<any>(null); // NEW
+  const [isSelectorOpen, setIsSelectorOpen] = useState(false); 
+  const [selectorContext, setSelectorContext] = useState<any>(null); 
   
   const [editingItem, setEditingItem] = useState<any>(null);
   const [campaignItem, setCampaignItem] = useState<any>(null);
@@ -100,6 +100,41 @@ export default function AdminStorefrontModule({ stock, setStock, inventoryMatrix
   const handleSaveHours = () => {
     setNotification("Operational settings committed.");
     setIsSettingsModalOpen(false); 
+  };
+
+  // --- NEW: Manual review clear for One-Shot Sprints ---
+  const handleClearOneShots = async () => {
+    const itemsToUpdate = stock.filter((i: any) => i.dealType === 'One-Shot');
+    if (itemsToUpdate.length === 0) return;
+
+    // Wipe them locally
+    const updatedStock = stock.map((item: any) => {
+      if (item.dealType === 'One-Shot') {
+        return { ...item, dealType: 'None', dailyDeal: false, dealDays: [], campaignTag: '' };
+      }
+      return item;
+    });
+    setStock(updatedStock);
+
+    // Sync the wipe to the master vault
+    try {
+      const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
+      const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
+      if (supabaseUrl && supabaseKey) {
+        const supabase = createClient(supabaseUrl, supabaseKey);
+        
+        const payloads = itemsToUpdate.map((item: any) => ({
+          client_id: clientConfig.id || 'division',
+          item_id: item.id,
+          payload: { ...item, dealType: 'None', dailyDeal: false, dealDays: [], campaignTag: '' }
+        }));
+        
+        await supabase.from('client_inventory').upsert(payloads, { onConflict: 'client_id, item_id' });
+      }
+      setNotification('One-Shot Sprints successfully scrubbed.');
+    } catch (err) {
+      setNotification('Cleared locally, but failed to sync to vault.');
+    }
   };
 
   // --- ENGINE INSIGHTS & METRICS ---
@@ -223,6 +258,8 @@ export default function AdminStorefrontModule({ stock, setStock, inventoryMatrix
           openCampaignConfig={openCampaignConfig} 
           removeDeal={handleQuickRemove}
           openInventorySelector={openInventorySelector}
+          weeklySchedule={weeklySchedule}
+          clearOneShots={handleClearOneShots}
         />
       </div>
     </div>
