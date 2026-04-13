@@ -3,7 +3,10 @@ import { AlertTriangle, CheckCircle2, ShieldAlert, ShieldCheck, Sparkles, MapPin
 
 export const PoliciesModal = ({ storePolicies, onClose }: any) => {
   return (
-    <div className="min-h-dvh bg-zinc-950/90 backdrop-blur-md flex flex-col items-center justify-center p-4 md:p-6 text-zinc-100 z-100 fixed inset-0">
+    <div 
+      className="min-h-dvh bg-zinc-950/90 backdrop-blur-md flex flex-col items-center justify-center p-4 md:p-6 text-zinc-100 fixed inset-0"
+      style={{ zIndex: 999 }} // Ensures this sits on top of the Cart (z-60) and Header
+    >
        <div className="w-full max-w-lg bg-zinc-900 border border-zinc-800 rounded-3xl p-6 md:p-8 shadow-2xl relative animate-in zoom-in-95 flex flex-col max-h-[95vh] overflow-y-auto scrollbar-hide">
           
           {/* Ambient Top Glow */}

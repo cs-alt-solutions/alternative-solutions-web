@@ -13,6 +13,33 @@ import StorefrontClosed from './StorefrontClosed';
 import StorefrontGatekeeper from './StorefrontGatekeeper';
 import { getRequiredGrams } from './StorefrontComponents';
 
+// --- SHARED DEFAULT OPERATIONS DATA ---
+export const DEFAULT_ZONES = [
+  { name: "Williamsburg Areas", minimum: 50 },
+  { name: "Gloucester / Hayes / Yorktown", minimum: 75 },
+  { name: "Newport News / Hampton", minimum: 75 },
+  { name: "Quinton / Charles City Areas", minimum: 75 },
+  { name: "West Point / Saluda Area", minimum: 75 },
+  { name: "Richmond & Surrounding Areas", minimum: 100 },
+  { name: "Southside Areas", minimum: 100 },
+  { name: "Ashland & Surrounding Areas", minimum: 150 },
+  { name: "Suffolk", minimum: 150 }
+];
+
+export const DEFAULT_TEAM = {
+  dispatchers: ["@MisterDoobie", "@RedsRosin", "@JonSpliff", "@MrsDoobieDuo"],
+  drivers: ["@balance0n1", "@Laylo757", "@King_Maso", "@MistrSandman", "@Roman_Empire145", "@true80skid", "@Thouzand420", "@KyleTheNewGuy"]
+};
+
+export const DEFAULT_WARRANTY = `ALL of our electronics/electronic devices come with a "DUD WARRANTY", meaning if it's not working, leaking, or clearly a "dud" reach out with 48 HOURS with said device and we WILL honor you with a replacement.\n\nWe Stand Behind EVERY Item!\nFor questions, concerns, or issues please contact @RedsRosin or @JonSpliff!`;
+
+export const DEFAULT_POLICIES = [
+  "Access codes are strictly for verified members. Sharing codes with unverified individuals will result in permanent removal.",
+  "All sales are final once delivery is completed and verified.",
+  "Drivers do not carry excess inventory. Exact change or digital payment is required."
+];
+// --------------------------------------
+
 const timeToMins = (timeStr: string) => {
   if (!timeStr) return 0;
   const [h, m] = timeStr.split(':').map(Number);
@@ -66,6 +93,12 @@ export default function StorefrontTerminal({ clientConfig, onExit }: any) {
   const [masterCategories] = useStickyState<string[]>(clientConfig.categories || ['Flower & Plants', 'Vapes & Pens', 'Edibles', 'Concentrates', 'Merch & Extras'], `inv_cats_${clientConfig?.id || 'division'}`);
   const [masterSubCategories] = useStickyState<Record<string, string[]>>(clientConfig.subCategories || {}, `inv_subcats_v2_${clientConfig?.id || 'division'}`);
 
+  // Dynamic Sticky State Operations Data
+  const [deliveryZones] = useStickyState<any[]>(DEFAULT_ZONES, `ops_zones_${clientConfig.id}`);
+  const [storePolicies] = useStickyState<string[]>(DEFAULT_POLICIES, `ops_policies_${clientConfig.id}`);
+  const [team] = useStickyState<any>(DEFAULT_TEAM, `ops_team_${clientConfig.id}`);
+  const [warranty] = useStickyState<string>(DEFAULT_WARRANTY, `ops_warranty_${clientConfig.id}`);
+
   useEffect(() => {
     const fetchLiveInventory = async () => {
       try {
@@ -78,8 +111,6 @@ export default function StorefrontTerminal({ clientConfig, onExit }: any) {
     fetchLiveInventory();
   }, [clientConfig.id]);
 
-  const deliveryZones = clientConfig.deliveryZones || [];
-  const storePolicies = clientConfig.storePolicies || [];
   const [orderRef, setOrderRef] = useState('');
 
   useEffect(() => {
@@ -202,7 +233,6 @@ export default function StorefrontTerminal({ clientConfig, onExit }: any) {
     }
   };
 
-  // --- FIXED: Now properly recognizes BOTH One-Shot and Recurring deals ---
   const inventory = useMemo(() => {
     return rawInventory.filter((i: any) => i.status !== 'archived').map((item: any) => {
       
@@ -210,10 +240,8 @@ export default function StorefrontTerminal({ clientConfig, onExit }: any) {
       
       let isDealActive = false;
       if (isConfiguredDeal && item.dealDays && item.dealDays.length > 0) {
-        // Active TODAY if today's index is in the dealDays array
         isDealActive = item.dealDays.includes(timeData.dayOfWeek);
       } else if (item.dailyDeal) {
-        // Legacy fallback
         isDealActive = true;
       }
 
@@ -294,8 +322,6 @@ export default function StorefrontTerminal({ clientConfig, onExit }: any) {
           const remainder = cartItem.qty % config.buyQty;
           lineTotal = (bundles * config.bundlePrice) + (remainder * rawPrice);
         } else if (config.type === 'BOGO') {
-          // WEIGHT BASED BOGO: Charge full price for the items selected. 
-          // Free items are added at checkout.
           const itemUnits = config.unit === 'GRAMS' ? getRequiredGrams(cartItem.size.label) : 1;
           const totalUnits = cartItem.qty * itemUnits;
           const earnedQty = Math.floor(totalUnits / config.buyQty) * config.getQty;
@@ -386,7 +412,7 @@ export default function StorefrontTerminal({ clientConfig, onExit }: any) {
         </div>
       )}
 
-      {showPolicies && <PoliciesModal storePolicies={storePolicies} deliveryZones={deliveryZones} onClose={() => setShowPolicies(false)} />}
+      {showPolicies && <PoliciesModal storePolicies={storePolicies} deliveryZones={deliveryZones} team={team} warranty={warranty} onClose={() => setShowPolicies(false)} />}
 
       {isCheckingOut ? (
         <StorefrontCheckout 

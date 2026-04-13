@@ -87,7 +87,6 @@ export default function StorefrontCatalog({
        const targetDayIndex = (timeData.dayOfWeek + i) % 7;
        const targetDay = DAYS_OF_WEEK[targetDayIndex];
        
-       // FIXED: Now reads ALL deals mapped for future days, not just Sprints.
        const dayDeals = allDeals.filter((d: any) => d.dealDays?.includes(targetDayIndex));
        dayDeals.forEach((d: any) => { items.push({ day: targetDay.short, name: d.name, promo: renderDealMath(d.dealConfig) }); });
     }
@@ -119,20 +118,20 @@ export default function StorefrontCatalog({
              </div>
 
              {allDeals.length > 0 && (
-               <div className="w-full bg-zinc-950 border border-zinc-800 rounded-xl flex items-stretch overflow-hidden shadow-inner mt-2">
-                  <div className="bg-pink-500 text-zinc-950 font-black uppercase tracking-widest text-[10px] px-4 py-3 flex items-center gap-2 shrink-0 shadow-[5px_0_15px_rgba(236,72,153,0.4)] z-10">
-                    <Activity size={14} className="animate-pulse" /> Deal Radar
+               <div className="w-full flex items-center overflow-x-auto scrollbar-hide py-2 border-b border-zinc-800/50 -mt-6 mb-4">
+                  <div className="text-pink-500 font-black uppercase tracking-widest text-[9px] flex items-center gap-1.5 shrink-0 mr-4">
+                    <Activity size={12} className="animate-pulse" /> Radar
                   </div>
-                  <div className="flex-1 flex items-center overflow-x-auto scrollbar-hide px-4 gap-6 relative">
+                  <div className="flex items-center gap-4 relative whitespace-nowrap">
                      {tickerItems.length > 0 ? tickerItems.map((t, idx) => (
-                        <div key={idx} className="flex items-center gap-2.5 shrink-0 py-1">
-                           <span className="text-[9px] font-black text-zinc-400 bg-zinc-900 border border-zinc-800 px-1.5 py-0.5 rounded">{t.day}</span>
-                           <span className="text-[10px] font-black text-zinc-200 uppercase tracking-wider">{t.name?.replace(/\s*\(\s*Top Shelf\s*\)\s*/i, '').trim()}</span>
-                           <span className="text-[9px] font-black text-pink-400 uppercase tracking-widest">{t.promo}</span>
-                           {idx < tickerItems.length - 1 && <span className="text-zinc-800 ml-3">•</span>}
+                        <div key={idx} className="flex items-center gap-2 shrink-0">
+                           <span className="text-[8px] font-black text-zinc-500 bg-zinc-900 border border-zinc-800 px-1.5 py-0.5 rounded">{t.day}</span>
+                           <span className="text-[9px] font-black text-zinc-300 uppercase tracking-wider">{t.name?.replace(/\s*\(\s*Top Shelf\s*\)\s*/i, '').trim()}</span>
+                           <span className="text-[8px] font-black text-pink-400 uppercase tracking-widest">{t.promo}</span>
+                           {idx < tickerItems.length - 1 && <span className="text-zinc-800 ml-2">•</span>}
                         </div>
                      )) : (
-                        <span className="text-[10px] font-bold text-zinc-600 uppercase tracking-widest italic py-1">No upcoming scheduled drops.</span>
+                        <span className="text-[9px] font-bold text-zinc-600 uppercase tracking-widest italic">No upcoming scheduled drops.</span>
                      )}
                   </div>
                </div>
@@ -141,11 +140,11 @@ export default function StorefrontCatalog({
              {todaysDeals.length > 0 && (
                 <div className="pt-2 animate-in fade-in">
                    <div className="flex items-center gap-3 mb-6">
-                     <div className="p-2 bg-pink-500/20 rounded-xl border border-pink-500/30 shadow-[0_0_15px_rgba(236,72,153,0.3)]">
-                       <Flame size={16} className="text-pink-400 animate-pulse" />
+                     <div className="p-2 bg-orange-500/10 rounded-xl border border-orange-500/30 shadow-[0_0_15px_rgba(249,115,22,0.2)]">
+                       <Flame size={16} className="text-orange-400 animate-pulse" />
                      </div>
                      <div>
-                       <h3 className="text-xl md:text-2xl font-black uppercase tracking-tighter text-pink-400">Live Right Now</h3>
+                       <h3 className="text-xl md:text-2xl font-black uppercase tracking-tighter text-transparent bg-clip-text bg-linear-to-r from-pink-500 to-orange-400">Live Right Now</h3>
                        <p className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest mt-0.5">Active daily and weekly promos.</p>
                      </div>
                    </div>
@@ -158,26 +157,24 @@ export default function StorefrontCatalog({
              )}
 
              {smokyStealsBucket.length > 0 && (
-                <div className="bg-zinc-900 border border-zinc-800 rounded-3xl p-6 md:p-8 animate-in fade-in shadow-xl before:absolute before:top-0 before:left-0 before:right-0 before:h-1 before:bg-linear-to-r before:from-transparent before:via-pink-500/50 before:to-transparent mt-12 relative overflow-hidden">
-                 <div className="absolute top-0 right-0 w-64 h-64 bg-pink-500/5 rounded-full blur-3xl pointer-events-none" />
-                 
-                 <div className="flex items-center gap-3 mb-6 relative z-10">
-                     <div className="p-2 bg-zinc-950 rounded-xl border border-dashed border-pink-500/30">
-                       <Tag size={16} className="text-pink-400" />
+                <div className="pt-6 animate-in fade-in mt-6">
+                 <div className="flex items-center gap-3 mb-6">
+                     <div className="p-2 bg-zinc-950 rounded-xl border border-dashed border-lime-500/30">
+                       <Tag size={16} className="text-lime-400" />
                      </div>
                      <div>
-                       <h3 className="text-xl md:text-2xl font-black uppercase tracking-tighter text-transparent bg-clip-text bg-linear-to-r from-pink-400 to-amber-500">Smoky Steals</h3>
-                       <p className="text-[10px] font-bold text-pink-400 uppercase tracking-widest mt-0.5">Premium Selections at Clearance Prices</p>
+                       <h3 className="text-xl md:text-2xl font-black uppercase tracking-tighter text-transparent bg-clip-text bg-linear-to-r from-lime-400 to-yellow-400">Smoky Steals</h3>
+                       <p className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest mt-0.5">Premium Selections at Clearance Prices</p>
                      </div>
                    </div>
-                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 relative z-10">
+                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
                      {smokyStealsBucket.map((item: any) => <StorefrontCard key={item.id} item={item} cart={cart} updateCart={updateCart} clientConfig={clientConfig} />)}
                    </div>
                 </div>
              )}
              
              {newDropsBucket.length > 0 && (
-                <div className="pt-6 animate-in fade-in">
+                <div className="pt-6 animate-in fade-in mt-6">
                    <div className="flex items-center gap-3 mb-6">
                      <div className="p-2 bg-cyan-500/20 rounded-xl border border-cyan-500/30 shadow-[0_0_15px_rgba(6,182,212,0.3)]">
                        <Star size={16} className="text-cyan-400 animate-pulse" />
@@ -194,13 +191,17 @@ export default function StorefrontCatalog({
              )}
 
              {premiumVaultBucket.length > 0 && (
-                <div className="bg-zinc-900/40 backdrop-blur-xl border border-zinc-800 rounded-4xl p-5 md:p-8 relative overflow-hidden shadow-2xl before:absolute before:top-0 before:left-0 before:right-0 before:h-1 before:bg-linear-to-r before:from-transparent before:via-amber-500 before:to-transparent mt-12">
-                 <div className="absolute top-0 right-0 w-64 h-64 bg-amber-500/5 rounded-full blur-3xl pointer-events-none" />
-                 <div className="flex items-center gap-4 mb-8 relative z-10">
-                    <div className="p-3 bg-zinc-950 rounded-2xl border border-zinc-800 shadow-inner"> <Award size={24} className="text-amber-400" /> </div>
-                    <div> <h3 className="text-2xl font-black uppercase tracking-tighter text-zinc-100">The Premium Vault</h3> <p className="text-[10px] font-bold text-amber-400 uppercase tracking-widest mt-0.5">Exclusive Top Shelf Selections</p> </div>
+                <div className="pt-6 animate-in fade-in mt-6">
+                 <div className="flex items-center gap-4 mb-6">
+                    <div className="p-2 bg-amber-500/10 rounded-xl border border-amber-500/30 shadow-[0_0_15px_rgba(245,158,11,0.2)]"> 
+                      <Award size={16} className="text-amber-400" /> 
+                    </div>
+                    <div> 
+                      <h3 className="text-xl md:text-2xl font-black uppercase tracking-tighter text-transparent bg-clip-text bg-linear-to-r from-amber-400 to-amber-200">The Premium Vault</h3> 
+                      <p className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest mt-0.5">Exclusive Top Shelf Selections</p> 
+                    </div>
                  </div>
-                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 relative z-10">
+                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
                    {premiumVaultBucket.map((item: any) => <StorefrontCard key={item.id} item={item} cart={cart} updateCart={updateCart} clientConfig={clientConfig} />)}
                  </div>
                </div>

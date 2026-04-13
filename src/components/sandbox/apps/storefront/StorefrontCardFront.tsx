@@ -1,5 +1,5 @@
 import React from 'react';
-import { Award, Flame, Star, Leaf, Box, Image as ImageIcon, ArrowRight, Dna } from 'lucide-react';
+import { Award, Flame, Star, Leaf, Box, Image as ImageIcon, ArrowRight, Dna, BookText } from 'lucide-react';
 import { getRequiredGrams } from './StorefrontComponents';
 
 export default function StorefrontCardFront({ item, cleanItemName, baseLowestPrice, activeLowestPrice, setIsFlipped, sizes, isFlower, clientConfig }: any) {
@@ -119,7 +119,7 @@ export default function StorefrontCardFront({ item, cleanItemName, baseLowestPri
 
       <div className="flex flex-col flex-1 p-6 pt-10 text-left">
           
-          <div className="mt-auto mb-1 flex items-center justify-start gap-2 text-[9px] font-black uppercase tracking-widest">
+          <div className="mt-auto mb-1 flex items-center justify-start gap-2 text-[9px] font-black uppercase tracking-widest h-4">
              {item?.subCategory && (
                <span className={item?.subCategory?.toLowerCase().includes('steals') ? 'text-rose-400' : 'text-zinc-500'}>
                  {item.subCategory}
@@ -138,12 +138,18 @@ export default function StorefrontCardFront({ item, cleanItemName, baseLowestPri
                {cleanItemName || UI.unnamed}
              </h3>
              
-             {item?.lineage && (
-               <div className="mt-2 flex items-center justify-start gap-1.5 w-full text-[10px] font-bold text-zinc-500 uppercase tracking-widest">
-                  <Dna size={12} className="text-zinc-600" />
-                  <span className="truncate">{item.lineage.replace(/x/gi, ' × ')}</span>
+             {/* DYNAMIC: Minimalist Subtitles - NO options or badges on the front */}
+             {item?.lineage ? (
+               <div className="mt-2 flex items-start justify-start gap-1.5 w-full text-[10px] font-bold text-zinc-500 uppercase tracking-widest">
+                  <Dna size={12} className="text-zinc-600 shrink-0 mt-0.5" />
+                  <span className="leading-tight text-left break-words whitespace-normal">{item.lineage.replace(/x/gi, ' × ')}</span>
                </div>
-             )}
+             ) : item?.descBase ? (
+               <div className="mt-2 flex items-start justify-start gap-1.5 w-full text-[10px] font-bold text-zinc-500 uppercase tracking-widest">
+                  <BookText size={12} className="text-zinc-600 shrink-0 mt-0.5" />
+                  <span className="leading-tight text-left break-words whitespace-normal normal-case text-zinc-400 font-medium line-clamp-2">{item.descBase}</span>
+               </div>
+             ) : null}
           </div>
 
           <div className="mt-auto pt-4 border-t border-zinc-800/50 flex items-center justify-between shrink-0 w-full">

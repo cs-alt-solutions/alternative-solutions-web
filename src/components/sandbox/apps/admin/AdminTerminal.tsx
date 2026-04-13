@@ -8,6 +8,7 @@ import { supabase } from '@/utils/supabase';
 import AdminFulfillmentModule from './AdminFulfillmentModule';
 import AdminInventoryModule from './AdminInventoryModule';
 import AdminStorefrontModule from './AdminStorefrontModule';
+import AdminOperationsModule from './AdminOperationsModule';
 
 export default function AdminTerminal({ clientConfig, onExit }: { clientConfig: any, onExit: () => void }) {
   const cid = clientConfig.id;
@@ -20,7 +21,7 @@ export default function AdminTerminal({ clientConfig, onExit }: { clientConfig: 
   const requiredAdminId = clientConfig?.adminSecurity?.adminId || 'ADMIN-01';
   const requiredPassphrase = clientConfig?.adminSecurity?.passphrase || 'VAULT-ACCESS-99';
 
-  const [activeModule, setActiveModule] = useState<'fulfillment' | 'inventory' | 'storefront'>('inventory'); 
+  const [activeModule, setActiveModule] = useState<'fulfillment' | 'inventory' | 'storefront' | 'operations'>('inventory'); 
   const [notification, setNotification] = useState<string | null>(null);
 
   const initialOrders = clientConfig?.fulfillment?.initialOrders || [];
@@ -173,6 +174,7 @@ export default function AdminTerminal({ clientConfig, onExit }: { clientConfig: 
            <button onClick={() => setActiveModule('storefront')} className={`px-4 py-2 rounded-lg text-xs font-black uppercase tracking-widest flex items-center gap-2 transition-all ${activeModule === 'storefront' ? 'bg-fuchsia-500/20 text-fuchsia-400' : 'text-zinc-500 hover:text-zinc-300'}`}>Store</button>
            <button onClick={() => setActiveModule('fulfillment')} className={`px-4 py-2 rounded-lg text-xs font-black uppercase tracking-widest flex items-center gap-2 transition-all ${activeModule === 'fulfillment' ? 'bg-cyan-500/20 text-cyan-400' : 'text-zinc-500 hover:text-zinc-300'}`}>Orders</button>
            <button onClick={() => setActiveModule('inventory')} className={`px-4 py-2 rounded-lg text-xs font-black uppercase tracking-widest flex items-center gap-2 transition-all ${activeModule === 'inventory' ? 'bg-amber-500/20 text-amber-400' : 'text-zinc-500 hover:text-zinc-300'}`}>Inventory</button>
+           <button onClick={() => setActiveModule('operations')} className={`px-4 py-2 rounded-lg text-xs font-black uppercase tracking-widest flex items-center gap-2 transition-all ${activeModule === 'operations' ? 'bg-indigo-500/20 text-indigo-400' : 'text-zinc-500 hover:text-zinc-300'}`}>Ops</button>
         </div>
 
         <button onClick={simulateNewOrder} className="bg-zinc-800 p-2 rounded-xl text-emerald-400 border border-emerald-900/30 active:scale-95 transition-all hover:bg-emerald-500/10 hidden sm:block"><Zap size={20} /></button>
@@ -189,6 +191,7 @@ export default function AdminTerminal({ clientConfig, onExit }: { clientConfig: 
             {activeModule === 'fulfillment' && <AdminFulfillmentModule orders={orders} setOrders={setOrders} notification={notification} setNotification={setNotification} />}
             {activeModule === 'inventory' && <AdminInventoryModule stock={stock} setStock={setStock} inventoryMatrix={inventoryMatrix} setNotification={setNotification} clientConfig={clientConfig} />}
             {activeModule === 'storefront' && <AdminStorefrontModule stock={stock} setStock={setStock} inventoryMatrix={inventoryMatrix} setNotification={setNotification} clientConfig={clientConfig} />}
+            {activeModule === 'operations' && <AdminOperationsModule clientConfig={clientConfig} setNotification={setNotification} />}
           </>
         )}
       </main>

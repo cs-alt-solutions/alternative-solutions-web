@@ -4,14 +4,13 @@ import React, { useState, useRef, useEffect } from 'react';
 import { X, Trash2, BookText, Fingerprint, DollarSign, Save, Image as ImageIcon, UploadCloud, Leaf, Flame, Box, Boxes, TicketPercent, Award, Star, Plus, Wind, Cookie, Droplet, Sparkles } from 'lucide-react';
 import { supabase } from '@/utils/supabase'; 
 
-// NEW: Added openCampaignConfig to props
 export default function AdminInventoryEditor({ initialItem, isAdding, mainCategories, subCategories, onSave, onDelete, onCancel, client_id, setNotification, openCampaignConfig }: any) {
   const cid = client_id;
   
   const [updatedItem, setUpdatedItem] = useState({ 
     ...initialItem, 
-    sizes: initialItem.sizes || [],
-    options: initialItem.options || []
+    sizes: initialItem?.sizes?.length > 0 ? initialItem.sizes : [{ id: `sz-${Date.now()}`, label: 'Standard', price: 0 }],
+    options: initialItem?.options || []
   });
   
   const [isUploadingMain, setIsUploadingMain] = useState(false);
@@ -45,11 +44,36 @@ export default function AdminInventoryEditor({ initialItem, isAdding, mainCatego
         featured: !!initialItem.featured,
         dailyDeal: !!initialItem.dailyDeal,
         status: initialItem.status || 'active',
-        sizes: Array.isArray(initialItem.sizes) ? [...initialItem.sizes] : [],
+        sizes: Array.isArray(initialItem.sizes) && initialItem.sizes.length > 0 ? [...initialItem.sizes] : [{ id: `sz-${Date.now()}`, label: 'Standard', price: initialItem.price || 0 }],
         options: Array.isArray(initialItem.options) ? [...initialItem.options] : []
       });
+    } else if (isAdding) {
+      // Smart Auto-Populate for New Items
+      const defaultMain = initialItem?.mainCategory || mainCategories[0];
+      const defaultSub = initialItem?.subCategory || subCategories[defaultMain]?.[0] || 'Uncategorized';
+      
+      const isFlower = defaultMain === 'Flower & Plants';
+      const isPreRoll = defaultSub === 'Pre-Rolls & Blunts';
+      
+      let initialSizes = [{ id: `sz-${Date.now()}`, label: 'Standard', price: 0 }];
+      
+      if (isFlower && !isPreRoll) {
+          initialSizes = [
+              { id: `sz-${Date.now()}-1`, label: '3.5g (Eighth)', price: 40 },
+              { id: `sz-${Date.now()}-2`, label: '7g (Quarter)', price: 60 },
+              { id: `sz-${Date.now()}-3`, label: '14g (Half)', price: 120 },
+              { id: `sz-${Date.now()}-4`, label: '28g (Ounce)', price: 220 }
+          ];
+      }
+
+      setUpdatedItem((prev: any) => ({
+          ...prev,
+          mainCategory: defaultMain,
+          subCategory: defaultSub,
+          sizes: initialSizes
+      }));
     }
-  }, [initialItem, isAdding, mainCategories]);
+  }, [initialItem, isAdding, mainCategories, subCategories]);
 
   const handleFileUpload = async (file: File, type: 'main' | 'icon') => {
     if (!file || !cid || !updatedItem.id) return;
@@ -83,6 +107,41 @@ export default function AdminInventoryEditor({ initialItem, isAdding, mainCatego
     e.stopPropagation(); 
     setDragActive(false); 
     if (e.dataTransfer.files && e.dataTransfer.files[0]) handleFileUpload(e.dataTransfer.files[0], 'main'); 
+  };
+
+  const handleCategoryChange = (field: 'mainCategory' | 'subCategory', value: string) => {
+    let newMain = field === 'mainCategory' ? value : updatedItem.mainCategory;
+    let newSub = field === 'subCategory' ? value : updatedItem.subCategory;
+
+    if (field === 'mainCategory') {
+        newSub = subCategories[newMain]?.[0] || 'Uncategorized';
+    }
+
+    let newSizes = [...updatedItem.sizes];
+    const isFlower = newMain === 'Flower & Plants';
+    const isPreRoll = newSub === 'Pre-Rolls & Blunts';
+
+    const isStandard = newSizes.length === 1 && newSizes[0].label === 'Standard';
+    const isFlowerTiers = newSizes.length === 4 && newSizes[0].label === '3.5g (Eighth)';
+
+    if (isFlower && !isPreRoll) {
+        // Auto-populate if they currently have just "Standard" or if we are adding a new item and it hasn't generated yet
+        if (isStandard || (isAdding && !isFlowerTiers)) {
+            newSizes = [
+                { id: `sz-${Date.now()}-1`, label: '3.5g (Eighth)', price: 40 },
+                { id: `sz-${Date.now()}-2`, label: '7g (Quarter)', price: 60 },
+                { id: `sz-${Date.now()}-3`, label: '14g (Half)', price: 120 },
+                { id: `sz-${Date.now()}-4`, label: '28g (Ounce)', price: 220 }
+            ];
+        }
+    } else {
+        // Revert to Standard if they were using the auto-populated flower tiers and switch away
+        if (isFlowerTiers) {
+            newSizes = [{ id: `sz-${Date.now()}`, label: 'Standard', price: 0 }];
+        }
+    }
+
+    setUpdatedItem({ ...updatedItem, mainCategory: newMain, subCategory: newSub, sizes: newSizes });
   };
 
   const handleSizeChange = (id: string, field: string, value: any) => { 
@@ -125,8 +184,11 @@ export default function AdminInventoryEditor({ initialItem, isAdding, mainCatego
 
   const activeMainCat = updatedItem.mainCategory;
   const isFlower = activeMainCat === 'Flower & Plants';
+  const isVape = activeMainCat === 'Vapes & Pens';
   const isMerch = activeMainCat === 'Merch & Extras';
+  
   const showVariants = !isFlower && !isMerch;
+  const showDNA = !isVape && !isMerch; 
 
   const ItemIcon = updatedItem.iconName === 'Leaf' ? Leaf : updatedItem.iconName === 'Flame' ? Flame : updatedItem.iconName === 'Box' ? Box : ImageIcon;
 
@@ -221,25 +283,49 @@ export default function AdminInventoryEditor({ initialItem, isAdding, mainCatego
                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
                    <div>
                      <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-wider mb-2 block">Main Category</label>
-                     <select value={updatedItem.mainCategory} onChange={(e) => setUpdatedItem({ ...updatedItem, mainCategory: e.target.value })} className="w-full bg-zinc-950 border border-zinc-800 rounded-xl p-3.5 text-sm font-bold text-zinc-100 focus:border-cyan-500/50 outline-none transition-colors">
+                     <select value={updatedItem.mainCategory} onChange={(e) => handleCategoryChange('mainCategory', e.target.value)} className="w-full bg-zinc-950 border border-zinc-800 rounded-xl p-3.5 text-sm font-bold text-zinc-100 focus:border-cyan-500/50 outline-none transition-colors">
                        {mainCategories.map((c:string)=><option key={c} value={c}>{c}</option>)}
                      </select>
                    </div>
                    <div>
                      <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-wider mb-2 block">Sub Category</label>
-                     <select value={updatedItem.subCategory} onChange={(e) => setUpdatedItem({ ...updatedItem, subCategory: e.target.value })} className="w-full bg-zinc-950 border border-zinc-800 rounded-xl p-3.5 text-sm font-bold text-zinc-100 focus:border-cyan-500/50 outline-none transition-colors">
+                     <select value={updatedItem.subCategory} onChange={(e) => handleCategoryChange('subCategory', e.target.value)} className="w-full bg-zinc-950 border border-zinc-800 rounded-xl p-3.5 text-sm font-bold text-zinc-100 focus:border-cyan-500/50 outline-none transition-colors">
                        {subCategories[updatedItem.mainCategory]?.map((s:string)=><option key={s} value={s}>{s}</option>) || <option value="Uncategorized">Uncategorized</option>}
                      </select>
                    </div>
                  </div>
+
+                 {/* DYNAMIC: Unit Pricing Input (Hidden for Flower which uses Tiers) */}
+                 {!isFlower && (
+                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 pt-4 border-t border-zinc-800/50">
+                     <div>
+                       <label className="text-[10px] font-bold text-amber-500 uppercase tracking-wider mb-2 block">Standard Unit Price</label>
+                       <div className="relative">
+                         <DollarSign size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-amber-500" />
+                         <input 
+                           type="number" 
+                           value={updatedItem.sizes[0]?.price || ''} 
+                           onChange={(e) => {
+                              const newSizes = [...updatedItem.sizes];
+                              if (newSizes.length > 0) newSizes[0].price = Number(e.target.value) || 0;
+                              else newSizes.push({ id: `sz-${Date.now()}`, label: 'Standard', price: Number(e.target.value) || 0 });
+                              setUpdatedItem({...updatedItem, sizes: newSizes});
+                           }}
+                           className="w-full bg-zinc-950 border border-amber-500/30 rounded-xl py-3 pl-8 pr-4 text-sm font-mono font-bold text-amber-400 focus:border-amber-500 outline-none" 
+                         />
+                       </div>
+                       <p className="text-[9px] font-bold text-zinc-500 uppercase tracking-widest mt-2">Flat rate for this product.</p>
+                     </div>
+                   </div>
+                 )}
               </div>
            </div>
         </section>
 
-        {/* SECTION 2: PRODUCT DNA */}
+        {/* SECTION 2: PRODUCT DNA & DESCRIPTION */}
         <section className="bg-zinc-900/30 border border-zinc-800/80 rounded-3xl p-6 md:p-8 shadow-sm">
            <h2 className="text-sm font-black uppercase tracking-widest text-zinc-100 flex items-center gap-2 mb-6 pb-4 border-b border-zinc-800/50">
-             <BookText size={16} className="text-emerald-400" /> Product DNA
+             <BookText size={16} className="text-emerald-400" /> {showDNA ? 'Product DNA & Description' : 'Product Description'}
            </h2>
            
            <div className="space-y-5">
@@ -248,38 +334,44 @@ export default function AdminInventoryEditor({ initialItem, isAdding, mainCatego
                 <textarea value={updatedItem.descBase} onChange={(e) => setUpdatedItem({ ...updatedItem, descBase: e.target.value })} rows={4} className="w-full bg-zinc-950 border border-zinc-800 rounded-xl p-3.5 text-sm font-medium text-zinc-300 focus:border-emerald-500/50 outline-none transition-colors resize-none" />
               </div>
               
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
-                 <div className="relative">
-                   <Wind size={14} className="absolute left-3 top-10 text-cyan-400" />
-                   <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-wider mb-2 block ml-1">Feels</label>
-                   <input type="text" value={updatedItem.descFeels} onChange={(e) => setUpdatedItem({ ...updatedItem, descFeels: e.target.value })} className="w-full bg-zinc-950 border border-zinc-800 rounded-xl py-3 pl-10 pr-4 text-sm font-medium text-zinc-100 focus:border-emerald-500/50 outline-none" />
-                 </div>
-                 <div className="relative">
-                   <Cookie size={14} className="absolute left-3 top-10 text-amber-400" />
-                   <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-wider mb-2 block ml-1">Taste</label>
-                   <input type="text" value={updatedItem.descTaste} onChange={(e) => setUpdatedItem({ ...updatedItem, descTaste: e.target.value })} className="w-full bg-zinc-950 border border-zinc-800 rounded-xl py-3 pl-10 pr-4 text-sm font-medium text-zinc-100 focus:border-emerald-500/50 outline-none" />
-                 </div>
-                 <div className="relative">
-                   <Droplet size={14} className="absolute left-3 top-10 text-emerald-400" />
-                   <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-wider mb-2 block ml-1">Uses</label>
-                   <input type="text" value={updatedItem.descUses} onChange={(e) => setUpdatedItem({ ...updatedItem, descUses: e.target.value })} className="w-full bg-zinc-950 border border-zinc-800 rounded-xl py-3 pl-10 pr-4 text-sm font-medium text-zinc-100 focus:border-emerald-500/50 outline-none" />
-                 </div>
-              </div>
+              {/* DYNAMIC: Hide detailed DNA mapping for Disposables/Merch */}
+              {showDNA && (
+                <>
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
+                    <div className="relative">
+                      <Wind size={14} className="absolute left-3 top-10 text-cyan-400" />
+                      <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-wider mb-2 block ml-1">Feels</label>
+                      <input type="text" value={updatedItem.descFeels} onChange={(e) => setUpdatedItem({ ...updatedItem, descFeels: e.target.value })} className="w-full bg-zinc-950 border border-zinc-800 rounded-xl py-3 pl-10 pr-4 text-sm font-medium text-zinc-100 focus:border-emerald-500/50 outline-none" />
+                    </div>
+                    <div className="relative">
+                      <Cookie size={14} className="absolute left-3 top-10 text-amber-400" />
+                      <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-wider mb-2 block ml-1">Taste</label>
+                      <input type="text" value={updatedItem.descTaste} onChange={(e) => setUpdatedItem({ ...updatedItem, descTaste: e.target.value })} className="w-full bg-zinc-950 border border-zinc-800 rounded-xl py-3 pl-10 pr-4 text-sm font-medium text-zinc-100 focus:border-emerald-500/50 outline-none" />
+                    </div>
+                    <div className="relative">
+                      <Droplet size={14} className="absolute left-3 top-10 text-emerald-400" />
+                      <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-wider mb-2 block ml-1">Uses</label>
+                      <input type="text" value={updatedItem.descUses} onChange={(e) => setUpdatedItem({ ...updatedItem, descUses: e.target.value })} className="w-full bg-zinc-950 border border-zinc-800 rounded-xl py-3 pl-10 pr-4 text-sm font-medium text-zinc-100 focus:border-emerald-500/50 outline-none" />
+                    </div>
+                  </div>
 
-              <div className="relative">
-                <Sparkles size={14} className="absolute left-3 top-10 text-amber-400" />
-                <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-wider mb-2 block ml-1">Insider Fact</label>
-                <input type="text" value={updatedItem.descFact} onChange={(e) => setUpdatedItem({ ...updatedItem, descFact: e.target.value })} className="w-full bg-zinc-950 border border-zinc-800 rounded-xl py-3 pl-10 pr-4 text-sm font-medium text-zinc-100 focus:border-emerald-500/50 outline-none" />
-              </div>
+                  <div className="relative">
+                    <Sparkles size={14} className="absolute left-3 top-10 text-amber-400" />
+                    <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-wider mb-2 block ml-1">Insider Fact</label>
+                    <input type="text" value={updatedItem.descFact} onChange={(e) => setUpdatedItem({ ...updatedItem, descFact: e.target.value })} className="w-full bg-zinc-950 border border-zinc-800 rounded-xl py-3 pl-10 pr-4 text-sm font-medium text-zinc-100 focus:border-emerald-500/50 outline-none" />
+                  </div>
+                </>
+              )}
 
-              {isFlower && (
+              {/* DYNAMIC: Unlocked Lineage for Vapes & Concentrates so they show on Card Front */}
+              {!isMerch && (
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 p-5 bg-zinc-950/50 border border-zinc-800/80 rounded-2xl mt-2">
                    <div>
-                     <label className="text-[10px] font-bold text-emerald-500 uppercase tracking-wider mb-2 block">Lineage</label>
-                     <input type="text" value={updatedItem.lineage} onChange={(e) => setUpdatedItem({ ...updatedItem, lineage: e.target.value })} className="w-full bg-zinc-900 border border-zinc-800 rounded-xl p-3 text-sm font-medium text-zinc-100 focus:border-emerald-500/50 outline-none" />
+                     <label className="text-[10px] font-bold text-emerald-500 uppercase tracking-wider mb-2 block">Lineage / Cross / Strain Detail</label>
+                     <input type="text" value={updatedItem.lineage} onChange={(e) => setUpdatedItem({ ...updatedItem, lineage: e.target.value })} className="w-full bg-zinc-900 border border-zinc-800 rounded-xl p-3 text-sm font-medium text-zinc-100 focus:border-emerald-500/50 outline-none" placeholder="e.g. Gelato × Zkittlez" />
                    </div>
                    <div>
-                     <label className="text-[10px] font-bold text-emerald-500 uppercase tracking-wider mb-2 block">Genetics</label>
+                     <label className="text-[10px] font-bold text-emerald-500 uppercase tracking-wider mb-2 block">Genetics Type</label>
                      <select value={updatedItem.strainType} onChange={(e) => setUpdatedItem({ ...updatedItem, strainType: e.target.value })} className="w-full bg-zinc-900 border border-zinc-800 rounded-xl p-3 text-sm font-medium text-zinc-100 focus:border-emerald-500/50 outline-none">
                        {['Sativa', 'Indica', 'Hybrid', 'Sativa Dom Hybrid', 'Indica Dom Hybrid', 'CBD', 'N/A'].map((st:string)=><option key={st} value={st}>{st}</option>)}
                      </select>
@@ -289,30 +381,32 @@ export default function AdminInventoryEditor({ initialItem, isAdding, mainCatego
            </div>
         </section>
 
-        {/* SECTION 3: PRICING & STOCK */}
-        <section className="bg-zinc-900/30 border border-zinc-800/80 rounded-3xl p-6 md:p-8 shadow-sm">
-           <h2 className="text-sm font-black uppercase tracking-widest text-zinc-100 flex items-center justify-between mb-6 pb-4 border-b border-zinc-800/50">
-             <span className="flex items-center gap-2"><DollarSign size={16} className="text-amber-400" /> Pricing & Sizes</span>
-             <button onClick={handleAddSize} className="px-3 py-1.5 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 rounded-lg text-[9px] uppercase tracking-widest flex items-center gap-1 transition-colors"><Plus size={12}/> Add Tier</button>
-           </h2>
-           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-             {updatedItem.sizes.map((size: any) => (
-               <div key={size.id} className="bg-zinc-950 border border-zinc-800 rounded-xl p-4 flex flex-col gap-3 relative group">
-                 <button onClick={() => handleRemoveSize(size.id)} className="absolute top-2 right-2 p-1.5 bg-zinc-900 rounded-md text-zinc-600 hover:text-rose-400 opacity-0 group-hover:opacity-100 transition-all"><X size={12}/></button>
-                 <div>
-                   <label className="text-[9px] font-bold text-zinc-500 uppercase tracking-widest mb-1 block">Label</label>
-                   <input type="text" value={size.label} onChange={(e) => handleSizeChange(size.id, 'label', e.target.value)} className="w-full bg-zinc-900 border border-zinc-800 rounded-lg py-2 px-3 text-xs font-bold text-zinc-300 outline-none" />
+        {/* SECTION 3: WEIGHT TIERS & PRICING (FLOWER ONLY) */}
+        {isFlower && (
+          <section className="bg-zinc-900/30 border border-zinc-800/80 rounded-3xl p-6 md:p-8 shadow-sm">
+             <h2 className="text-sm font-black uppercase tracking-widest text-zinc-100 flex items-center justify-between mb-6 pb-4 border-b border-zinc-800/50">
+               <span className="flex items-center gap-2"><DollarSign size={16} className="text-amber-400" /> Weight Tiers & Pricing</span>
+               <button onClick={handleAddSize} className="px-3 py-1.5 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 rounded-lg text-[9px] uppercase tracking-widest flex items-center gap-1 transition-colors"><Plus size={12}/> Add Tier</button>
+             </h2>
+             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+               {updatedItem.sizes.map((size: any) => (
+                 <div key={size.id} className="bg-zinc-950 border border-zinc-800 rounded-xl p-4 flex flex-col gap-3 relative group">
+                   <button onClick={() => handleRemoveSize(size.id)} className="absolute top-2 right-2 p-1.5 bg-zinc-900 rounded-md text-zinc-600 hover:text-rose-400 opacity-0 group-hover:opacity-100 transition-all"><X size={12}/></button>
+                   <div>
+                     <label className="text-[9px] font-bold text-zinc-500 uppercase tracking-widest mb-1 block">Label</label>
+                     <input type="text" value={size.label} onChange={(e) => handleSizeChange(size.id, 'label', e.target.value)} className="w-full bg-zinc-900 border border-zinc-800 rounded-lg py-2 px-3 text-xs font-bold text-zinc-300 outline-none" />
+                   </div>
+                   <div>
+                     <label className="text-[9px] font-bold text-amber-500 uppercase tracking-widest mb-1 block">Base Price</label>
+                     <input type="number" value={size.price} onChange={(e) => handleSizeChange(size.id, 'price', e.target.value)} className="w-full bg-zinc-900 border border-zinc-800 rounded-lg py-2 px-2 text-xs font-mono font-bold text-amber-400 outline-none" />
+                   </div>
                  </div>
-                 <div>
-                   <label className="text-[9px] font-bold text-amber-500 uppercase tracking-widest mb-1 block">Base Price</label>
-                   <input type="number" value={size.price} onChange={(e) => handleSizeChange(size.id, 'price', e.target.value)} className="w-full bg-zinc-900 border border-zinc-800 rounded-lg py-2 px-2 text-xs font-mono font-bold text-amber-400 outline-none" />
-                 </div>
-               </div>
-             ))}
-           </div>
-        </section>
+               ))}
+             </div>
+          </section>
+        )}
 
-        {/* SECTION 4: VARIANTS & OPTIONS */}
+        {/* SECTION 4: VARIANTS & OPTIONS OR GLOBAL STOCK */}
         {showVariants && (
           <section className="bg-zinc-900/30 border border-zinc-800/80 rounded-3xl p-6 md:p-8 shadow-sm">
              <h2 className="text-sm font-black uppercase tracking-widest text-zinc-100 flex items-center justify-between mb-6 pb-4 border-b border-zinc-800/50">
@@ -360,7 +454,6 @@ export default function AdminInventoryEditor({ initialItem, isAdding, mainCatego
               <button onClick={()=>setUpdatedItem({...updatedItem, featured: !updatedItem.featured})} className={`px-4 py-3 rounded-xl text-xs font-black uppercase tracking-widest border transition-all flex items-center gap-2 ${updatedItem.featured ? 'bg-cyan-500 text-zinc-950 border-cyan-500 shadow-md' : 'bg-zinc-950 text-zinc-500 border-zinc-800 hover:border-cyan-500/50 hover:text-cyan-400'}`}><Star size={16}/> Featured Drop</button>
            </div>
 
-           {/* THE NEW CAMPAIGN TOGGLE (Replaces old logic) */}
            <div className={`border rounded-2xl p-5 transition-all duration-500 flex flex-col sm:flex-row sm:items-center justify-between gap-4 ${updatedItem.dailyDeal ? 'bg-pink-500/5 border-pink-500/30' : 'bg-zinc-950 border-zinc-800'}`}>
               <div className="flex items-center gap-4">
                 <button 
