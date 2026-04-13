@@ -1,3 +1,4 @@
+// sandbox/apps/storefront/StorefrontCardFront.tsx
 import React from 'react';
 import { Award, Flame, Star, Leaf, Box, Image as ImageIcon, ArrowRight, Dna, BookText } from 'lucide-react';
 import { getRequiredGrams } from './StorefrontComponents';
@@ -49,6 +50,29 @@ export default function StorefrontCardFront({ item, cleanItemName, baseLowestPri
 
   const config = item?.dealConfig;
   const isBundleOrBogo = item?.dailyDeal && config && (config.type === 'BUNDLE' || config.type === 'BOGO');
+
+  // --- NEW: Smart Lineage Parser ---
+  const formatLineageDisplay = (text: string) => {
+    if (!text) return null;
+    // Split by either 'x' or '×', ignoring case, and trim whitespace
+    const parts = text.split(/x|×/i).map(p => p.trim()).filter(Boolean);
+    
+    // If exactly 3 strains, force the 3rd to a new line
+    if (parts.length === 3) {
+      return (
+        <span className="leading-tight text-center">
+          {parts[0]} × {parts[1]}<br />× {parts[2]}
+        </span>
+      );
+    }
+    
+    // Otherwise, join them cleanly on one line (it will wrap naturally if needed)
+    return (
+      <span className="leading-tight text-center wrap-break-word whitespace-normal">
+        {parts.join(' × ')}
+      </span>
+    );
+  };
 
   return (
     <div className={`absolute inset-0 w-full h-full backface-hidden bg-zinc-900/90 backdrop-blur-xl border border-zinc-800 rounded-[2.5rem] flex flex-col shadow-xl overflow-hidden transition-all duration-500 ${isOutOfStock ? 'opacity-85 grayscale-30' : ''}`}>
@@ -117,9 +141,10 @@ export default function StorefrontCardFront({ item, cleanItemName, baseLowestPri
          </div>
       )}
 
-      <div className="flex flex-col flex-1 p-6 pt-10 text-left">
+      {/* TEXT/INFO SECTION */}
+      <div className="flex flex-col flex-1 p-6 pt-10 text-center">
           
-          <div className="mt-auto mb-1 flex items-center justify-start gap-2 text-[9px] font-black uppercase tracking-widest h-4">
+          <div className="mt-auto mb-1 flex items-center justify-center gap-2 text-[9px] font-black uppercase tracking-widest h-4">
              {item?.subCategory && (
                <span className={item?.subCategory?.toLowerCase().includes('steals') ? 'text-rose-400' : 'text-zinc-500'}>
                  {item.subCategory}
@@ -133,26 +158,27 @@ export default function StorefrontCardFront({ item, cleanItemName, baseLowestPri
              )}
           </div>
 
-          <div className="mb-auto w-full flex flex-col items-start overflow-hidden">
-             <h3 className={`text-2xl font-black leading-tight tracking-tighter line-clamp-2 ${item?.isTopShelf ? 'text-transparent bg-clip-text bg-linear-to-r from-amber-200 via-amber-400 to-amber-200' : 'text-zinc-100'}`}>
+          <div className="mb-auto w-full flex flex-col items-center overflow-hidden">
+             <h3 className={`text-2xl font-black leading-tight tracking-tighter text-center line-clamp-2 ${item?.isTopShelf ? 'text-transparent bg-clip-text bg-linear-to-r from-amber-200 via-amber-400 to-amber-200' : 'text-zinc-100'}`}>
                {cleanItemName || UI.unnamed}
              </h3>
              
-             {/* DYNAMIC: Minimalist Subtitles - NO options or badges on the front */}
+             {/* DYNAMIC: Minimalist Subtitles using the smart Lineage parser */}
              {item?.lineage ? (
-               <div className="mt-2 flex items-start justify-start gap-1.5 w-full text-[10px] font-bold text-zinc-500 uppercase tracking-widest">
-                  <Dna size={12} className="text-zinc-600 shrink-0 mt-0.5" />
-                  <span className="leading-tight text-left break-words whitespace-normal">{item.lineage.replace(/x/gi, ' × ')}</span>
+               <div className="mt-2 flex items-center justify-center gap-1.5 w-full text-[10px] font-bold text-zinc-500 uppercase tracking-widest">
+                  <Dna size={12} className="text-zinc-600 shrink-0" />
+                  {formatLineageDisplay(item.lineage)}
                </div>
              ) : item?.descBase ? (
-               <div className="mt-2 flex items-start justify-start gap-1.5 w-full text-[10px] font-bold text-zinc-500 uppercase tracking-widest">
-                  <BookText size={12} className="text-zinc-600 shrink-0 mt-0.5" />
-                  <span className="leading-tight text-left break-words whitespace-normal normal-case text-zinc-400 font-medium line-clamp-2">{item.descBase}</span>
+               <div className="mt-2 flex items-center justify-center gap-1.5 w-full text-[10px] font-bold text-zinc-500 uppercase tracking-widest">
+                  <BookText size={12} className="text-zinc-600 shrink-0" />
+                  <span className="leading-tight text-center wrap-break-word whitespace-normal normal-case text-zinc-400 font-medium line-clamp-2">{item.descBase}</span>
                </div>
              ) : null}
           </div>
 
-          <div className="mt-auto pt-4 border-t border-zinc-800/50 flex items-center justify-between shrink-0 w-full">
+          {/* FOOTER */}
+          <div className="mt-auto pt-4 border-t border-zinc-800/50 flex items-center justify-between shrink-0 w-full text-left">
             
             {/* DYNAMIC HERO DEAL TEXT */}
             {isBundleOrBogo && !isOutOfStock ? (

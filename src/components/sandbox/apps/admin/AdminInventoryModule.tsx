@@ -25,6 +25,9 @@ export default function AdminInventoryModule({ stock, setStock, inventoryMatrix,
   const [isManagingCats, setIsManagingCats] = useState(false);
   const [showBackupModal, setShowBackupModal] = useState(false);
 
+  // NEW: View Mode State for Archives
+  const [viewMode, setViewMode] = useState<'active' | 'archived'>('active');
+
   const [searchTerm, setSearchTerm] = useState('');
   const [categoryFilter, setCategoryFilter] = useState('All');
   const [statusFilter, setStatusFilter] = useState('All');
@@ -38,7 +41,8 @@ export default function AdminInventoryModule({ stock, setStock, inventoryMatrix,
     price: 0, onHand: 0, featured: false, isTopShelf: false, dailyDeal: false,
     dealType: 'One-Shot', dealText: '', dealDays: [], iconName: 'Leaf', options: [], 
     dealConfig: { type: 'DISCOUNT', discountType: 'PERCENT', discountValue: 15, unit: 'UNITS' },
-    sizes: [{ id: `sz-${Date.now()}-1`, label: 'Standard', price: 0, bundleQty: 1, promoLabel: '', promoPrice: '' }] 
+    sizes: [{ id: `sz-${Date.now()}-1`, label: 'Standard', price: 0, bundleQty: 1, promoLabel: '', promoPrice: '' }],
+    status: 'active'
   });
 
   const openEditor = (item?: any) => {
@@ -84,6 +88,33 @@ export default function AdminInventoryModule({ stock, setStock, inventoryMatrix,
     } catch (err) {
       console.error("Vault Write Error:", err);
       setNotification(`Failed to save to master database.`);
+    }
+  };
+
+  // NEW: Handle moving an item safely between Active and Archived
+  const handleToggleArchive = async (item: any) => {
+    const newStatus = item.status === 'archived' ? 'active' : 'archived';
+    const updatedItem = { ...item, status: newStatus };
+    
+    setNotification(newStatus === 'archived' ? `Archiving ${item.name}...` : `Restoring ${item.name}...`);
+    try {
+      const { error } = await supabase
+        .from('client_inventory')
+        .upsert(
+          { 
+            client_id: clientConfig.id || 'division', 
+            item_id: updatedItem.id, 
+            payload: updatedItem,
+            updated_at: new Date().toISOString()
+          },
+          { onConflict: 'client_id, item_id' }
+        );
+      if (error) throw error;
+      setStock((prev: any[]) => prev.map((i: any) => i.id === updatedItem.id ? updatedItem : i));
+      setNotification(newStatus === 'archived' ? `${item.name} moved to Archive.` : `${item.name} Restored to Active.`);
+    } catch (err) {
+      console.error("Vault Write Error:", err);
+      setNotification(`Failed to change archive status.`);
     }
   };
 
@@ -149,6 +180,13 @@ export default function AdminInventoryModule({ stock, setStock, inventoryMatrix,
   const processedInventory = useMemo(() => {
     let result = [...inventoryMatrix];
 
+    // --- NEW: Filter by Archive Mode First ---
+    if (viewMode === 'active') {
+      result = result.filter(i => i.status !== 'archived');
+    } else {
+      result = result.filter(i => i.status === 'archived');
+    }
+
     if (searchTerm) {
       const lowerTerm = searchTerm.toLowerCase();
       result = result.filter(i => i.name?.toLowerCase().includes(lowerTerm) || i.id?.toLowerCase().includes(lowerTerm) || i.brand?.toLowerCase().includes(lowerTerm));
@@ -194,11 +232,10 @@ export default function AdminInventoryModule({ stock, setStock, inventoryMatrix,
       return 0;
     });
     return result;
-  }, [inventoryMatrix, searchTerm, categoryFilter, statusFilter, sortConfig]);
+  }, [inventoryMatrix, searchTerm, categoryFilter, statusFilter, sortConfig, viewMode]);
 
   if (isManagingCats) return <AdminInventoryCategoryManager mainCategories={mainCategories} subCategories={subCategories} setSubCategories={setSubCategories} standardTiers={standardTiers} setStandardTiers={setStandardTiers} setNotification={setNotification} onClose={() => setIsManagingCats(false)} />;
   
-  // FIXED: No openCampaignConfig prop is passed here. The editor will elegantly hide the button.
   if (editingItem) return (
     <AdminInventoryEditor 
       initialItem={editingItem} 
@@ -236,6 +273,24 @@ export default function AdminInventoryModule({ stock, setStock, inventoryMatrix,
         onAddProduct={() => openEditor()}
       />
 
+      {/* NEW: Tab Navigation for Active vs Archived */}
+      <div className="flex items-center gap-6 mb-6 px-2 border-b border-zinc-800/50">
+        <button 
+          onClick={() => setViewMode('active')}
+          className={`pb-4 text-[10px] font-black uppercase tracking-widest transition-all relative ${viewMode === 'active' ? 'text-cyan-400' : 'text-zinc-500 hover:text-zinc-300'}`}
+        >
+          Active Roster
+          {viewMode === 'active' && <div className="absolute bottom-0 left-0 w-full h-0.5 bg-cyan-400 shadow-[0_0_10px_rgba(34,211,238,0.5)]" />}
+        </button>
+        <button 
+          onClick={() => setViewMode('archived')}
+          className={`pb-4 text-[10px] font-black uppercase tracking-widest transition-all relative ${viewMode === 'archived' ? 'text-amber-400' : 'text-zinc-500 hover:text-zinc-300'}`}
+        >
+          The Archive
+          {viewMode === 'archived' && <div className="absolute bottom-0 left-0 w-full h-0.5 bg-amber-400 shadow-[0_0_10px_rgba(251,191,36,0.5)]" />}
+        </button>
+      </div>
+
       <AdminInventoryToolbar 
         searchTerm={searchTerm} setSearchTerm={setSearchTerm}
         categoryFilter={categoryFilter} setCategoryFilter={setCategoryFilter} mainCategories={mainCategories}
@@ -247,6 +302,7 @@ export default function AdminInventoryModule({ stock, setStock, inventoryMatrix,
         handleSort={handleSort} openEditor={openEditor}
         mainCategories={mainCategories} subCategories={subCategories}
         onQuickSave={handleSaveProduct}
+        onToggleArchive={handleToggleArchive} // Passing down the action
       />
     </div>
   );

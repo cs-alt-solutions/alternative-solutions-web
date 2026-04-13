@@ -1,3 +1,4 @@
+// sandbox/apps/admin/inventory-editor/AdminInventoryEditor.tsx
 'use client';
 
 import React, { useState, useRef, useEffect } from 'react';
@@ -17,6 +18,8 @@ export default function AdminInventoryEditor({ initialItem, isAdding, mainCatego
   const [isUploadingIcon, setIsUploadingIcon] = useState(false);
   const [isConfirmingDelete, setIsConfirmingDelete] = useState(false);
   
+  const [descMode, setDescMode] = useState<'desc' | 'fact'>('desc');
+
   const fileInputRef = useRef<HTMLInputElement>(null);
   const iconInputRef = useRef<HTMLInputElement>(null);
   const [dragActive, setDragActive] = useState(false);
@@ -47,17 +50,20 @@ export default function AdminInventoryEditor({ initialItem, isAdding, mainCatego
         sizes: Array.isArray(initialItem.sizes) && initialItem.sizes.length > 0 ? [...initialItem.sizes] : [{ id: `sz-${Date.now()}`, label: 'Standard', price: initialItem.price || 0 }],
         options: Array.isArray(initialItem.options) ? [...initialItem.options] : []
       });
+
+      setDescMode((initialItem.descFact && !initialItem.descBase) ? 'fact' : 'desc');
+
     } else if (isAdding) {
-      // Smart Auto-Populate for New Items
       const defaultMain = initialItem?.mainCategory || mainCategories[0];
       const defaultSub = initialItem?.subCategory || subCategories[defaultMain]?.[0] || 'Uncategorized';
       
-      const isFlower = defaultMain === 'Flower & Plants';
-      const isPreRoll = defaultSub === 'Pre-Rolls & Blunts';
+      const isFlowerCat = defaultMain === 'Flower & Plants';
+      const isPreRollCat = defaultSub === 'Pre-Rolls & Blunts';
+      const isRawFlower = isFlowerCat && !isPreRollCat;
       
       let initialSizes = [{ id: `sz-${Date.now()}`, label: 'Standard', price: 0 }];
       
-      if (isFlower && !isPreRoll) {
+      if (isRawFlower) {
           initialSizes = [
               { id: `sz-${Date.now()}-1`, label: '3.5g (Eighth)', price: 40 },
               { id: `sz-${Date.now()}-2`, label: '7g (Quarter)', price: 60 },
@@ -72,6 +78,8 @@ export default function AdminInventoryEditor({ initialItem, isAdding, mainCatego
           subCategory: defaultSub,
           sizes: initialSizes
       }));
+
+      setDescMode(isRawFlower ? 'fact' : 'desc');
     }
   }, [initialItem, isAdding, mainCategories, subCategories]);
 
@@ -118,14 +126,14 @@ export default function AdminInventoryEditor({ initialItem, isAdding, mainCatego
     }
 
     let newSizes = [...updatedItem.sizes];
-    const isFlower = newMain === 'Flower & Plants';
-    const isPreRoll = newSub === 'Pre-Rolls & Blunts';
+    const isFlowerCat = newMain === 'Flower & Plants';
+    const isPreRollCat = newSub === 'Pre-Rolls & Blunts';
+    const isRawFlowerCat = isFlowerCat && !isPreRollCat;
 
     const isStandard = newSizes.length === 1 && newSizes[0].label === 'Standard';
     const isFlowerTiers = newSizes.length === 4 && newSizes[0].label === '3.5g (Eighth)';
 
-    if (isFlower && !isPreRoll) {
-        // Auto-populate if they currently have just "Standard" or if we are adding a new item and it hasn't generated yet
+    if (isRawFlowerCat) {
         if (isStandard || (isAdding && !isFlowerTiers)) {
             newSizes = [
                 { id: `sz-${Date.now()}-1`, label: '3.5g (Eighth)', price: 40 },
@@ -134,11 +142,12 @@ export default function AdminInventoryEditor({ initialItem, isAdding, mainCatego
                 { id: `sz-${Date.now()}-4`, label: '28g (Ounce)', price: 220 }
             ];
         }
+        setDescMode('fact');
     } else {
-        // Revert to Standard if they were using the auto-populated flower tiers and switch away
         if (isFlowerTiers) {
             newSizes = [{ id: `sz-${Date.now()}`, label: 'Standard', price: 0 }];
         }
+        setDescMode('desc');
     }
 
     setUpdatedItem({ ...updatedItem, mainCategory: newMain, subCategory: newSub, sizes: newSizes });
@@ -182,13 +191,22 @@ export default function AdminInventoryEditor({ initialItem, isAdding, mainCatego
 
   const handleSave = () => { onSave(updatedItem, isAdding); };
 
+  // --- NEW SMART DISPLAY LOGIC ---
   const activeMainCat = updatedItem.mainCategory;
-  const isFlower = activeMainCat === 'Flower & Plants';
+  const activeSubCat = updatedItem.subCategory;
+  
+  const isFlowerCat = activeMainCat === 'Flower & Plants';
+  const isPreRoll = isFlowerCat && activeSubCat === 'Pre-Rolls & Blunts';
+  const isRawFlower = isFlowerCat && !isPreRoll; // Only raw flower uses tiers
+  
   const isVape = activeMainCat === 'Vapes & Pens';
   const isMerch = activeMainCat === 'Merch & Extras';
   
-  const showVariants = !isFlower && !isMerch;
+  // Pre-rolls act like manufactured goods (they have variants/flavors and a flat price)
+  const showVariants = !isRawFlower && !isMerch; 
   const showDNA = !isVape && !isMerch; 
+  const showWeightTiers = isRawFlower;
+  const showUnitPrice = !isRawFlower;
 
   const ItemIcon = updatedItem.iconName === 'Leaf' ? Leaf : updatedItem.iconName === 'Flame' ? Flame : updatedItem.iconName === 'Box' ? Box : ImageIcon;
 
@@ -295,8 +313,8 @@ export default function AdminInventoryEditor({ initialItem, isAdding, mainCatego
                    </div>
                  </div>
 
-                 {/* DYNAMIC: Unit Pricing Input (Hidden for Flower which uses Tiers) */}
-                 {!isFlower && (
+                 {/* DYNAMIC: Unit Pricing Input (Hidden for Raw Bulk Flower) */}
+                 {showUnitPrice && (
                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 pt-4 border-t border-zinc-800/50">
                      <div>
                        <label className="text-[10px] font-bold text-amber-500 uppercase tracking-wider mb-2 block">Standard Unit Price</label>
@@ -329,14 +347,48 @@ export default function AdminInventoryEditor({ initialItem, isAdding, mainCatego
            </h2>
            
            <div className="space-y-5">
-              <div>
-                <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-wider mb-2 block">Main Description</label>
-                <textarea value={updatedItem.descBase} onChange={(e) => setUpdatedItem({ ...updatedItem, descBase: e.target.value })} rows={4} className="w-full bg-zinc-950 border border-zinc-800 rounded-xl p-3.5 text-sm font-medium text-zinc-300 focus:border-emerald-500/50 outline-none transition-colors resize-none" />
+              
+              <div className="bg-zinc-950/50 border border-zinc-800/80 rounded-2xl p-5 mb-5">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-3">
+                  <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-wider flex items-center gap-2">
+                    Storytelling Format
+                  </label>
+                  <div className="flex bg-zinc-950 border border-zinc-800 rounded-lg p-1">
+                    <button 
+                      onClick={(e) => { e.preventDefault(); setDescMode('desc'); }}
+                      className={`px-4 py-1.5 rounded-md text-[9px] font-black uppercase tracking-widest transition-colors ${descMode === 'desc' ? 'bg-zinc-800 text-zinc-100 shadow-sm' : 'text-zinc-500 hover:text-zinc-300'}`}
+                    >
+                      Standard Description
+                    </button>
+                    <button 
+                      onClick={(e) => { e.preventDefault(); setDescMode('fact'); }}
+                      className={`px-4 py-1.5 rounded-md text-[9px] font-black uppercase tracking-widest transition-colors flex items-center gap-1.5 ${descMode === 'fact' ? 'bg-pink-500/20 text-pink-400 border border-pink-500/30 shadow-sm' : 'text-zinc-500 hover:text-pink-400/50'}`}
+                    >
+                      <Sparkles size={10} /> Insider Fact
+                    </button>
+                  </div>
+                </div>
+                
+                {descMode === 'desc' ? (
+                  <textarea 
+                    value={updatedItem.descBase} 
+                    onChange={(e) => setUpdatedItem({ ...updatedItem, descBase: e.target.value })} 
+                    rows={3} 
+                    placeholder="Write a traditional product description..."
+                    className="w-full bg-zinc-900 border border-zinc-800 rounded-xl p-3.5 text-sm font-medium text-zinc-300 focus:border-emerald-500/50 outline-none transition-colors resize-none" 
+                  />
+                ) : (
+                  <textarea 
+                    value={updatedItem.descFact} 
+                    onChange={(e) => setUpdatedItem({ ...updatedItem, descFact: e.target.value })} 
+                    rows={3} 
+                    placeholder="Write a short, punchy insider fact..."
+                    className="w-full bg-zinc-900 border border-pink-500/30 rounded-xl p-3.5 text-sm font-medium text-pink-100 focus:border-pink-500 outline-none transition-colors resize-none" 
+                  />
+                )}
               </div>
               
-              {/* DYNAMIC: Hide detailed DNA mapping for Disposables/Merch */}
               {showDNA && (
-                <>
                   <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
                     <div className="relative">
                       <Wind size={14} className="absolute left-3 top-10 text-cyan-400" />
@@ -354,16 +406,8 @@ export default function AdminInventoryEditor({ initialItem, isAdding, mainCatego
                       <input type="text" value={updatedItem.descUses} onChange={(e) => setUpdatedItem({ ...updatedItem, descUses: e.target.value })} className="w-full bg-zinc-950 border border-zinc-800 rounded-xl py-3 pl-10 pr-4 text-sm font-medium text-zinc-100 focus:border-emerald-500/50 outline-none" />
                     </div>
                   </div>
-
-                  <div className="relative">
-                    <Sparkles size={14} className="absolute left-3 top-10 text-amber-400" />
-                    <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-wider mb-2 block ml-1">Insider Fact</label>
-                    <input type="text" value={updatedItem.descFact} onChange={(e) => setUpdatedItem({ ...updatedItem, descFact: e.target.value })} className="w-full bg-zinc-950 border border-zinc-800 rounded-xl py-3 pl-10 pr-4 text-sm font-medium text-zinc-100 focus:border-emerald-500/50 outline-none" />
-                  </div>
-                </>
               )}
 
-              {/* DYNAMIC: Unlocked Lineage for Vapes & Concentrates so they show on Card Front */}
               {!isMerch && (
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 p-5 bg-zinc-950/50 border border-zinc-800/80 rounded-2xl mt-2">
                    <div>
@@ -381,8 +425,8 @@ export default function AdminInventoryEditor({ initialItem, isAdding, mainCatego
            </div>
         </section>
 
-        {/* SECTION 3: WEIGHT TIERS & PRICING (FLOWER ONLY) */}
-        {isFlower && (
+        {/* SECTION 3: WEIGHT TIERS & PRICING (RAW FLOWER ONLY) */}
+        {showWeightTiers && (
           <section className="bg-zinc-900/30 border border-zinc-800/80 rounded-3xl p-6 md:p-8 shadow-sm">
              <h2 className="text-sm font-black uppercase tracking-widest text-zinc-100 flex items-center justify-between mb-6 pb-4 border-b border-zinc-800/50">
                <span className="flex items-center gap-2"><DollarSign size={16} className="text-amber-400" /> Weight Tiers & Pricing</span>

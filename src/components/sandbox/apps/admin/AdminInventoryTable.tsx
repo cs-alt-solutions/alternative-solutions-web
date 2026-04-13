@@ -1,7 +1,8 @@
+// sandbox/apps/admin/AdminInventoryTable.tsx
 import React, { useState } from 'react';
-import { ArrowUpDown, Boxes, Leaf, Flame, Box, Image as ImageIcon, Award, Star, Edit3, Zap, Check, X } from 'lucide-react';
+import { ArrowUpDown, Boxes, Leaf, Flame, Box, Image as ImageIcon, Award, Star, Edit3, Zap, Check, X, Archive, ArchiveRestore } from 'lucide-react';
 
-export default function AdminInventoryTable({ processedInventory, handleSort, openEditor, mainCategories, subCategories, onQuickSave }: any) {
+export default function AdminInventoryTable({ processedInventory, handleSort, openEditor, mainCategories, subCategories, onQuickSave, onToggleArchive }: any) {
   
   const [quickEditId, setQuickEditId] = useState<string | null>(null);
   const [quickEditForm, setQuickEditForm] = useState<any>({});
@@ -54,8 +55,8 @@ export default function AdminInventoryTable({ processedInventory, handleSort, op
 
   return (
     <div className="bg-zinc-900/30 border border-zinc-800 rounded-3xl overflow-hidden shadow-inner">
-      <div className="w-full">
-        <table className="w-full text-left border-collapse">
+      <div className="w-full overflow-x-auto scrollbar-hide">
+        <table className="w-full text-left border-collapse min-w-3xl lg:min-w-full">
           <thead>
             <tr className="bg-zinc-900/80 border-b border-zinc-800">
               <th onClick={() => handleSort('name')} className="py-3 px-3 sm:px-4 text-[9px] sm:text-[10px] font-black uppercase tracking-widest text-zinc-500 cursor-pointer hover:text-zinc-300 transition-colors group">
@@ -220,6 +221,15 @@ export default function AdminInventoryTable({ processedInventory, handleSort, op
 
                   <td className="py-3 px-3 sm:px-4 text-right">
                     <div className="flex justify-end gap-1.5">
+                       {/* NEW: Archive Toggle Button */}
+                       <button 
+                         onClick={() => onToggleArchive(item)} 
+                         className={`p-2 bg-zinc-950 border border-zinc-800 rounded-lg transition-all shadow-inner active:scale-95 inline-flex ${item.status === 'archived' ? 'text-amber-500 hover:text-emerald-400 hover:border-emerald-400/50' : 'text-zinc-500 hover:text-amber-400 hover:border-amber-400/50'}`} 
+                         title={item.status === 'archived' ? "Restore to Active" : "Move to Archive"}
+                       >
+                         {item.status === 'archived' ? <ArchiveRestore size={14} /> : <Archive size={14} />}
+                       </button>
+
                        <button onClick={() => startQuickEdit(item)} className="p-2 bg-zinc-950 border border-zinc-800 rounded-lg text-zinc-500 hover:text-cyan-400 hover:border-cyan-400/50 transition-all shadow-inner active:scale-95 inline-flex" title="Quick Edit">
                          <Zap size={14} />
                        </button>

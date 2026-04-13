@@ -1,3 +1,4 @@
+// sandbox/apps/storefront/StorefrontCardBack.tsx
 'use client';
 
 import React from 'react';
@@ -33,18 +34,29 @@ export default function StorefrontCardBack({
   const config = item?.dealConfig;
   
   const activeCat = item?.mainCategory?.toLowerCase() || '';
+  const activeSubCat = item?.subCategory?.toLowerCase() || '';
   const isVape = activeCat.includes('vape');
   const isMerch = activeCat.includes('merch');
+  
+  // Smart category detection to unlock variants for pre-rolls
+  const isPreRoll = activeSubCat.includes('pre-roll') || activeSubCat.includes('blunt');
+  const isRawFlower = isFlower && !isPreRoll;
   const expectsDNA = !isVape && !isMerch;
+
+  // Accurately calculate available stock based on item type
+  const hasTrueVariants = safeOptions.length > 0 && safeOptions[0].label !== 'Standard';
+  const displayStock = hasTrueVariants 
+      ? safeOptions.reduce((sum: number, opt: any) => sum + (Number(opt.stock) || 0), 0) 
+      : (item?.onHand || 0);
 
   const rawPrice = Number(selectedSize?.price || 0);
   let activeBasePrice = rawPrice;
   let lineTotal = rawPrice * qty;
   let savingsText = "";
 
-  const isCompletelyOOS = isFlower && safeSizes.length > 0 
-    ? (item?.onHand || 0) < Math.min(...safeSizes.map((s:any) => getRequiredGrams(s.label))) 
-    : (item?.onHand || 0) <= 0;
+  const isCompletelyOOS = isRawFlower && safeSizes.length > 0 
+    ? displayStock < Math.min(...safeSizes.map((s:any) => getRequiredGrams(s.label))) 
+    : displayStock <= 0;
 
   if (item?.dailyDeal && config && config.type === 'DISCOUNT') {
     if (config.discountType === 'TIERED' && selectedSize?.promoPrice) activeBasePrice = Number(selectedSize.promoPrice);
@@ -86,7 +98,6 @@ export default function StorefrontCardBack({
 
   const currentSubtotal = lineTotal;
 
-  // --- NEW: Smart Text Parser for Strain Badges ---
   const formatStrainText = (text: string) => {
     if (!text) return text;
     const parts = text.split(/\(\s*(Indica|Sativa|Hybrid|Indica Dom Hybrid|Sativa Dom Hybrid|CBD)\s*\)/i);
@@ -129,6 +140,7 @@ export default function StorefrontCardBack({
         </div>
       )}
 
+      {/* HEADER */}
       <div className="flex items-center justify-between p-4 pb-3 border-b border-zinc-800/50 shrink-0 bg-zinc-950 z-10">
         <button onClick={() => setIsFlipped(false)} className="p-1.5 bg-zinc-900 border border-zinc-800 hover:bg-zinc-800 text-zinc-400 rounded-lg transition-colors active:scale-95 shrink-0">
           <ArrowLeft size={16} />
@@ -146,8 +158,8 @@ export default function StorefrontCardBack({
         </div>
       </div>
 
+      {/* SCROLLABLE DNA SECTION */}
       <div className="flex-1 overflow-y-auto scrollbar-hide p-4 space-y-3 relative">
-        
         {(item?.descBase || (hasDNA && expectsDNA)) ? (
           <div className="bg-zinc-900/50 border border-zinc-800/50 rounded-xl p-3 flex flex-col gap-2.5">
              {item?.descBase && (
@@ -156,31 +168,43 @@ export default function StorefrontCardBack({
                 </p>
              )}
              {hasDNA && expectsDNA && (
-               <div className="grid grid-cols-3 gap-2">
-                 {item?.descFeels && (
-                   <div className="flex items-start gap-1.5 border-r border-zinc-800/50 pr-1">
-                     <Wind size={12} className="text-cyan-400 mt-0.5 shrink-0" />
-                     <div>
-                       <span className="text-[8px] font-black uppercase tracking-widest text-zinc-500 block mb-0.5">{UI.feels}</span>
-                       <span className="text-[10px] font-bold text-zinc-200 leading-tight">{item.descFeels}</span>
+               <div className="flex flex-col">
+                 <div className="grid grid-cols-3 gap-2">
+                   {item?.descFeels && (
+                     <div className="flex items-start gap-1.5 border-r border-zinc-800/50 pr-1">
+                       <Wind size={12} className="text-cyan-400 mt-0.5 shrink-0" />
+                       <div>
+                         <span className="text-[8px] font-black uppercase tracking-widest text-zinc-500 block mb-0.5">{UI.feels}</span>
+                         <span className="text-[10px] font-bold text-zinc-200 leading-tight">{item.descFeels}</span>
+                       </div>
                      </div>
-                   </div>
-                 )}
-                 {item?.descTaste && (
-                   <div className="flex items-start gap-1.5 border-r border-zinc-800/50 px-1">
-                     <Cookie size={12} className="text-amber-400 mt-0.5 shrink-0" />
-                     <div>
-                       <span className="text-[8px] font-black uppercase tracking-widest text-zinc-500 block mb-0.5">{UI.taste}</span>
-                       <span className="text-[10px] font-bold text-zinc-200 leading-tight">{item.descTaste}</span>
+                   )}
+                   {item?.descTaste && (
+                     <div className="flex items-start gap-1.5 border-r border-zinc-800/50 px-1">
+                       <Cookie size={12} className="text-amber-400 mt-0.5 shrink-0" />
+                       <div>
+                         <span className="text-[8px] font-black uppercase tracking-widest text-zinc-500 block mb-0.5">{UI.taste}</span>
+                         <span className="text-[10px] font-bold text-zinc-200 leading-tight">{item.descTaste}</span>
+                       </div>
                      </div>
-                   </div>
-                 )}
-                 {item?.descUses && (
-                   <div className="flex items-start gap-1.5 pl-1">
-                     <Droplet size={12} className="text-emerald-400 mt-0.5 shrink-0" />
+                   )}
+                   {item?.descUses && (
+                     <div className="flex items-start gap-1.5 pl-1">
+                       <Droplet size={12} className="text-emerald-400 mt-0.5 shrink-0" />
+                       <div>
+                         <span className="text-[8px] font-black uppercase tracking-widest text-zinc-500 block mb-0.5">{UI.uses}</span>
+                         <span className="text-[10px] font-bold text-zinc-200 leading-tight">{item.descUses}</span>
+                       </div>
+                     </div>
+                   )}
+                 </div>
+
+                 {item?.descFact && (
+                   <div className="mt-2.5 pt-2.5 border-t border-zinc-800/50 flex items-start gap-1.5 pl-1">
+                     <Sparkles size={12} className="text-pink-400 mt-0.5 shrink-0" />
                      <div>
-                       <span className="text-[8px] font-black uppercase tracking-widest text-zinc-500 block mb-0.5">{UI.uses}</span>
-                       <span className="text-[10px] font-bold text-zinc-200 leading-tight">{item.descUses}</span>
+                       <span className="text-[8px] font-black uppercase tracking-widest text-zinc-500 block mb-0.5">{UI.insiderFact}</span>
+                       <span className="text-[10px] font-bold text-zinc-200 leading-relaxed">{item.descFact}</span>
                      </div>
                    </div>
                  )}
@@ -192,140 +216,149 @@ export default function StorefrontCardBack({
             <span className="text-[10px] font-black uppercase tracking-widest text-zinc-600">{UI.noDna}</span>
           </div>
         ) : null}
-
-        {safeSizes.length > 1 && !isVape && !isMerch && (
-          <div className="grid grid-cols-2 sm:grid-cols-4 bg-zinc-900 border border-zinc-800/50 rounded-lg p-1 gap-1">
-            {safeSizes.map((s: any) => {
-              const isSelected = selectedSize?.id === s.id;
-              let tierFinalPrice = Number(s.price || 0);
-
-              if (item?.dailyDeal && config && config.type === 'DISCOUNT') {
-                if (config.discountType === 'TIERED' && s.promoPrice) tierFinalPrice = Number(s.promoPrice);
-                else if (config.discountType === 'PERCENT') tierFinalPrice = tierFinalPrice * (1 - config.discountValue / 100);
-                else if (config.discountType === 'DOLLAR') tierFinalPrice = Math.max(0, tierFinalPrice - config.discountValue);
-                else if (config.discountType === 'FIXED') tierFinalPrice = config.discountValue;
-              }
-
-              const reqGrams = isFlower ? getRequiredGrams(s.label) : 1;
-              const available = item?.onHand || 0;
-              const isTooHeavy = isFlower && available < reqGrams;
-
-              return (
-                <button 
-                  key={s.id} 
-                  disabled={isTooHeavy}
-                  onClick={() => setSelectedSize(s)}
-                  className={`px-1 py-1.5 rounded-md text-center transition-all ${isTooHeavy ? 'bg-zinc-950 border-zinc-800 text-zinc-700 cursor-not-allowed opacity-50' : isSelected ? 'bg-zinc-100 text-zinc-950 shadow-sm' : 'text-zinc-500 hover:text-zinc-300 hover:bg-zinc-800/50'}`}
-                >
-                  <span className={`block text-[9px] font-black uppercase tracking-widest leading-none mb-0.5 ${isTooHeavy ? 'line-through text-rose-900' : ''}`}>{s.label}</span>
-                  <span className={`flex text-xs font-mono font-bold leading-none justify-center items-center gap-1 ${isTooHeavy ? 'text-zinc-700' : isSelected ? 'text-emerald-700' : item?.dailyDeal ? 'text-pink-400' : 'text-emerald-400'}`}>
-                    ${tierFinalPrice.toFixed(0)}
-                  </span>
-                </button>
-              );
-            })}
-          </div>
-        )}
-
-        {hasMultipleOptions && safeOptions.length > 0 && (
-          <div>
-            <div className="flex justify-between items-start mb-2 px-1">
-              <label className="text-[9px] font-black text-zinc-500 uppercase tracking-widest leading-tight">
-                 {item?.dealConfig?.type === 'BUNDLE' ? `Mix & Match (Deal: ${item.dealConfig.buyQty} for $${item.dealConfig.bundlePrice})` : UI.selectOptions}
-              </label>
-              <span className={`text-[9px] font-black uppercase tracking-widest shrink-0 ml-4 ${safeSelectedOptions.length >= (item?.dealConfig?.buyQty || 1) ? 'text-emerald-400' : 'text-amber-400'}`}>
-                {safeSelectedOptions.length} Selected
-              </span>
-            </div>
-            
-            <div className="flex flex-col gap-1.5 bg-zinc-900/50 border border-zinc-800/50 rounded-xl p-1.5">
-              {safeOptions.map((opt: any) => {
-                const stockVal = opt.stock !== undefined ? opt.stock : item?.onHand;
-                const instancesInBundle = safeSelectedOptions.filter((so:any) => so?.id === opt.id).length;
-                const isOutOfStock = stockVal <= 0;
-                const isMaxReachedForOpt = instancesInBundle >= stockVal;
-                const isSelected = instancesInBundle > 0;
-
-                return (
-                  <div key={opt.id} className={`flex items-center justify-between p-2 rounded-lg border transition-all ${isOutOfStock ? 'bg-zinc-950 border-zinc-800/50 opacity-50 grayscale' : isSelected ? 'bg-zinc-800 border-zinc-700' : 'bg-zinc-900 border-zinc-800 hover:border-zinc-700'}`}>
-                    {/* DYNAMIC: Smart Subtitle Formatting with Strain Badges */}
-                    <span className={`text-[10px] font-black uppercase tracking-wider flex-1 pr-2 ${isOutOfStock ? 'text-zinc-600 line-through' : 'text-zinc-300'}`}>
-                      {formatStrainText(opt.label)}
-                    </span>
-                    
-                    <div className="flex items-center gap-2 shrink-0">
-                       <button 
-                         disabled={instancesInBundle === 0 || isOutOfStock}
-                         onClick={() => {
-                           const idx = safeSelectedOptions.findIndex((so:any) => so.id === opt.id);
-                           if (idx > -1) {
-                             const newArr = [...safeSelectedOptions];
-                             newArr.splice(idx, 1);
-                             handleSelectOption(newArr);
-                           }
-                         }}
-                         className="w-6 h-6 flex items-center justify-center bg-zinc-950 border border-zinc-700 rounded text-zinc-400 disabled:opacity-30 hover:bg-zinc-800 transition-colors"
-                       ><Minus size={12}/></button>
-                       <span className="w-4 text-center text-xs font-mono font-bold text-zinc-100">{instancesInBundle}</span>
-                       <button 
-                         disabled={isMaxReachedForOpt || isOutOfStock}
-                         onClick={() => handleSelectOption([...safeSelectedOptions, opt])}
-                         className="w-6 h-6 flex items-center justify-center bg-zinc-950 border border-zinc-700 rounded text-zinc-400 disabled:opacity-30 hover:bg-zinc-800 transition-colors"
-                       ><Plus size={12}/></button>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-        )}
       </div>
 
-      {/* FOOTER */}
-      <div className="shrink-0 p-4 bg-zinc-950 border-t border-zinc-800/50 relative z-20">
-         
-         {savingsText && qty > 0 && (
-            <div className="absolute -top-2.5 left-1/2 -translate-x-1/2 bg-pink-500 text-zinc-950 px-3 py-0.5 rounded-full text-[8px] font-black uppercase tracking-widest shadow-md whitespace-nowrap z-30">
-               {savingsText}
-            </div>
-         )}
+      {/* STATIC BOTTOM CONTROL PANEL (Options & Cart) */}
+      <div className="shrink-0 bg-zinc-950 border-t border-zinc-800/50 relative z-20 flex flex-col">
+        
+        {/* STATIC OPTIONS / SIZES (Pre-rolls unlock variants) */}
+        {((safeSizes.length > 1 && !isVape && !isMerch && !isPreRoll) || (hasMultipleOptions && safeOptions.length > 0)) && (
+          <div className="px-4 pt-4 pb-1 space-y-3">
+            
+            {safeSizes.length > 1 && !isVape && !isMerch && !isPreRoll && (
+              <div className="grid grid-cols-2 sm:grid-cols-4 bg-zinc-900 border border-zinc-800/50 rounded-lg p-1 gap-1">
+                {safeSizes.map((s: any) => {
+                  const isSelected = selectedSize?.id === s.id;
+                  let tierFinalPrice = Number(s.price || 0);
 
-         {qty === 0 ? (
-            <button 
-              onClick={() => updateCart(item.id, selectedSize, safeSelectedOptions, cartAddQty)}
-              disabled={!isReadyToAdd || isMaxReached || (isFlower && (item?.onHand || 0) < getRequiredGrams(selectedSize.label))}
-              className="w-full bg-emerald-500 hover:bg-emerald-400 text-zinc-950 rounded-xl transition-all active:scale-95 flex items-center justify-between px-4 py-2.5 shadow-[0_0_15px_rgba(52,211,153,0.15)] disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              <span className="flex items-center gap-1.5 font-black uppercase tracking-widest text-[10px]">
-                <ShoppingCart size={14} /> 
-                {!isReadyToAdd ? UI.selectOptions : `Add ${cartAddQty} To Cart`}
-              </span>
-              <span className="font-mono font-black text-sm">${projectedAddPrice.toFixed(2)}</span>
-            </button>
-         ) : (
-            <div className="flex items-center justify-between bg-zinc-900 border border-emerald-500/30 p-1.5 rounded-xl">
-              <div className="flex items-center gap-1">
-                <button 
-                  onClick={() => updateCart(item.id, selectedSize, safeSelectedOptions, -cartAddQty)}
-                  className="w-10 h-8 flex items-center justify-center bg-zinc-950 hover:bg-zinc-800 rounded-lg text-rose-400 transition-colors active:scale-90 border border-zinc-800"
-                >
-                  {qty <= cartAddQty ? <Trash2 size={14} /> : <Minus size={14} />}
-                </button>
-                <span className="w-8 text-center font-mono font-black text-zinc-100 text-sm">{qty}</span>
-                <button 
-                  onClick={() => updateCart(item.id, selectedSize, safeSelectedOptions, cartAddQty)}
-                  disabled={isMaxReached}
-                  className="w-10 h-8 flex items-center justify-center bg-zinc-950 hover:bg-zinc-800 rounded-lg text-emerald-400 transition-colors active:scale-90 border border-zinc-800 disabled:opacity-50"
-                >
-                  <Plus size={14} />
-                </button>
+                  if (item?.dailyDeal && config && config.type === 'DISCOUNT') {
+                    if (config.discountType === 'TIERED' && s.promoPrice) tierFinalPrice = Number(s.promoPrice);
+                    else if (config.discountType === 'PERCENT') tierFinalPrice = tierFinalPrice * (1 - config.discountValue / 100);
+                    else if (config.discountType === 'DOLLAR') tierFinalPrice = Math.max(0, tierFinalPrice - config.discountValue);
+                    else if (config.discountType === 'FIXED') tierFinalPrice = config.discountValue;
+                  }
+
+                  const reqGrams = isRawFlower ? getRequiredGrams(s.label) : 1;
+                  const available = displayStock;
+                  const isTooHeavy = isRawFlower && available < reqGrams;
+
+                  return (
+                    <button 
+                      key={s.id} 
+                      disabled={isTooHeavy}
+                      onClick={() => setSelectedSize(s)}
+                      className={`px-1 py-1.5 rounded-md text-center transition-all ${isTooHeavy ? 'bg-zinc-950 border-zinc-800 text-zinc-700 cursor-not-allowed opacity-50' : isSelected ? 'bg-zinc-100 text-zinc-950 shadow-sm' : 'text-zinc-500 hover:text-zinc-300 hover:bg-zinc-800/50'}`}
+                    >
+                      <span className={`block text-[9px] font-black uppercase tracking-widest leading-none mb-0.5 ${isTooHeavy ? 'line-through text-rose-900' : ''}`}>{s.label}</span>
+                      <span className={`flex text-xs font-mono font-bold leading-none justify-center items-center gap-1 ${isTooHeavy ? 'text-zinc-700' : isSelected ? 'text-emerald-700' : item?.dailyDeal ? 'text-pink-400' : 'text-emerald-400'}`}>
+                        ${tierFinalPrice.toFixed(0)}
+                      </span>
+                    </button>
+                  );
+                })}
               </div>
-              <div className="flex items-center gap-2 pr-3">
-                 <span className="text-[8px] font-black uppercase tracking-widest text-emerald-500 flex items-center gap-1 hidden sm:flex"><CheckCircle size={10}/> {UI.inCart}</span>
-                 <span className="text-lg font-mono font-black text-emerald-400 leading-none">${currentSubtotal.toFixed(2)}</span>
+            )}
+
+            {hasMultipleOptions && safeOptions.length > 0 && (
+              <div>
+                <div className="flex justify-between items-start mb-2 px-1">
+                  <label className="text-[9px] font-black text-zinc-500 uppercase tracking-widest leading-tight">
+                     {item?.dealConfig?.type === 'BUNDLE' ? `Mix & Match (Deal: ${item.dealConfig.buyQty} for $${item.dealConfig.bundlePrice})` : UI.selectOptions}
+                  </label>
+                  <span className={`text-[9px] font-black uppercase tracking-widest shrink-0 ml-4 ${safeSelectedOptions.length >= (item?.dealConfig?.buyQty || 1) ? 'text-emerald-400' : 'text-amber-400'}`}>
+                    {safeSelectedOptions.length} Selected
+                  </span>
+                </div>
+                
+                {/* Max-height safeguard on options to prevent pushing cart button off-screen */}
+                <div className="flex flex-col gap-1.5 bg-zinc-900/50 border border-zinc-800/50 rounded-xl p-1.5 max-h-[22vh] overflow-y-auto scrollbar-hide">
+                  {safeOptions.map((opt: any) => {
+                    const stockVal = opt.stock !== undefined ? opt.stock : displayStock;
+                    const instancesInBundle = safeSelectedOptions.filter((so:any) => so?.id === opt.id).length;
+                    const isOutOfStock = stockVal <= 0;
+                    const isMaxReachedForOpt = instancesInBundle >= stockVal;
+                    const isSelected = instancesInBundle > 0;
+
+                    return (
+                      <div key={opt.id} className={`flex items-center justify-between p-2 rounded-lg border transition-all ${isOutOfStock ? 'bg-zinc-950 border-zinc-800/50 opacity-50 grayscale' : isSelected ? 'bg-zinc-800 border-zinc-700' : 'bg-zinc-900 border-zinc-800 hover:border-zinc-700'}`}>
+                        <span className={`text-[10px] font-black uppercase tracking-wider flex-1 pr-2 ${isOutOfStock ? 'text-zinc-600 line-through' : 'text-zinc-300'}`}>
+                          {formatStrainText(opt.label)}
+                        </span>
+                        
+                        <div className="flex items-center gap-2 shrink-0">
+                           <button 
+                             disabled={instancesInBundle === 0 || isOutOfStock}
+                             onClick={() => {
+                               const idx = safeSelectedOptions.findIndex((so:any) => so.id === opt.id);
+                               if (idx > -1) {
+                                 const newArr = [...safeSelectedOptions];
+                                 newArr.splice(idx, 1);
+                                 handleSelectOption(newArr);
+                               }
+                             }}
+                             className="w-6 h-6 flex items-center justify-center bg-zinc-950 border border-zinc-700 rounded text-zinc-400 disabled:opacity-30 hover:bg-zinc-800 transition-colors"
+                           ><Minus size={12}/></button>
+                           <span className="w-4 text-center text-xs font-mono font-bold text-zinc-100">{instancesInBundle}</span>
+                           <button 
+                             disabled={isMaxReachedForOpt || isOutOfStock}
+                             onClick={() => handleSelectOption([...safeSelectedOptions, opt])}
+                             className="w-6 h-6 flex items-center justify-center bg-zinc-950 border border-zinc-700 rounded text-zinc-400 disabled:opacity-30 hover:bg-zinc-800 transition-colors"
+                           ><Plus size={12}/></button>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
               </div>
-            </div>
-         )}
+            )}
+          </div>
+        )}
+
+        {/* CART ACTIONS */}
+        <div className={`px-4 pb-4 ${((safeSizes.length > 1 && !isVape && !isMerch && !isPreRoll) || (hasMultipleOptions && safeOptions.length > 0)) ? 'pt-1.5' : 'pt-4'}`}>
+           {savingsText && qty > 0 && (
+              <div className="absolute -top-2.5 left-1/2 -translate-x-1/2 bg-pink-500 text-zinc-950 px-3 py-0.5 rounded-full text-[8px] font-black uppercase tracking-widest shadow-md whitespace-nowrap z-30">
+                 {savingsText}
+              </div>
+           )}
+
+           {qty === 0 ? (
+              <button 
+                onClick={() => updateCart(item.id, selectedSize, safeSelectedOptions, cartAddQty)}
+                disabled={!isReadyToAdd || isMaxReached || (isRawFlower && displayStock < getRequiredGrams(selectedSize.label))}
+                className="w-full bg-emerald-500 hover:bg-emerald-400 text-zinc-950 rounded-xl transition-all active:scale-95 flex items-center justify-between px-4 py-2.5 shadow-[0_0_15px_rgba(52,211,153,0.15)] disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                <span className="flex items-center gap-1.5 font-black uppercase tracking-widest text-[10px]">
+                  <ShoppingCart size={14} /> 
+                  {!isReadyToAdd ? UI.selectOptions : `Add ${cartAddQty} To Cart`}
+                </span>
+                <span className="font-mono font-black text-sm">${projectedAddPrice.toFixed(2)}</span>
+              </button>
+           ) : (
+              <div className="flex items-center justify-between bg-zinc-900 border border-emerald-500/30 p-1.5 rounded-xl">
+                <div className="flex items-center gap-1">
+                  <button 
+                    onClick={() => updateCart(item.id, selectedSize, safeSelectedOptions, -cartAddQty)}
+                    className="w-10 h-8 flex items-center justify-center bg-zinc-950 hover:bg-zinc-800 rounded-lg text-rose-400 transition-colors active:scale-90 border border-zinc-800"
+                  >
+                    {qty <= cartAddQty ? <Trash2 size={14} /> : <Minus size={14} />}
+                  </button>
+                  <span className="w-8 text-center font-mono font-black text-zinc-100 text-sm">{qty}</span>
+                  <button 
+                    onClick={() => updateCart(item.id, selectedSize, safeSelectedOptions, cartAddQty)}
+                    disabled={isMaxReached}
+                    className="w-10 h-8 flex items-center justify-center bg-zinc-950 hover:bg-zinc-800 rounded-lg text-emerald-400 transition-colors active:scale-90 border border-zinc-800 disabled:opacity-50"
+                  >
+                    <Plus size={14} />
+                  </button>
+                </div>
+                <div className="flex items-center gap-2 pr-3">
+                   <span className="text-[8px] font-black uppercase tracking-widest text-emerald-500 hidden sm:flex items-center gap-1"><CheckCircle size={10}/> {UI.inCart}</span>
+                   <span className="text-lg font-mono font-black text-emerald-400 leading-none">${currentSubtotal.toFixed(2)}</span>
+                </div>
+              </div>
+           )}
+        </div>
       </div>
 
     </div>
