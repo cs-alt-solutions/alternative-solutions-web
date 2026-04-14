@@ -2,8 +2,12 @@
 'use client';
 
 import React, { useState, useRef, useEffect } from 'react';
-import { X, Trash2, BookText, Fingerprint, DollarSign, Save, Image as ImageIcon, UploadCloud, Leaf, Flame, Box, Boxes, TicketPercent, Award, Star, Plus, Wind, Cookie, Droplet, Sparkles } from 'lucide-react';
+import { Trash2, Save, Image as ImageIcon, Leaf, Flame, Box } from 'lucide-react';
 import { supabase } from '@/utils/supabase'; 
+
+import EditorIdentity from './components/EditorIdentity';
+import EditorDNA from './components/EditorDNA';
+import EditorCommerce from './components/EditorCommerce';
 
 export default function AdminInventoryEditor({ initialItem, isAdding, mainCategories, subCategories, onSave, onDelete, onCancel, client_id, setNotification, openCampaignConfig }: any) {
   const cid = client_id;
@@ -17,7 +21,6 @@ export default function AdminInventoryEditor({ initialItem, isAdding, mainCatego
   const [isUploadingMain, setIsUploadingMain] = useState(false);
   const [isUploadingIcon, setIsUploadingIcon] = useState(false);
   const [isConfirmingDelete, setIsConfirmingDelete] = useState(false);
-  
   const [descMode, setDescMode] = useState<'desc' | 'fact'>('desc');
 
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -48,7 +51,33 @@ export default function AdminInventoryEditor({ initialItem, isAdding, mainCatego
         dailyDeal: !!initialItem.dailyDeal,
         status: initialItem.status || 'active',
         sizes: Array.isArray(initialItem.sizes) && initialItem.sizes.length > 0 ? [...initialItem.sizes] : [{ id: `sz-${Date.now()}`, label: 'Standard', price: initialItem.price || 0 }],
-        options: Array.isArray(initialItem.options) ? [...initialItem.options] : []
+        
+        // SMART PARSER
+        options: Array.isArray(initialItem.options) ? initialItem.options.map((opt: any) => {
+            const labelParts = (opt.label || '').split(/\s*(?:\/|\+)\s*/);
+            const parsedStrains = labelParts.map((part: string) => {
+                let name = part;
+                let type = 'N/A';
+                const match = part.match(/^(.*?)\s*\(\s*(Indica|Sativa|Hybrid|Indica Dom Hybrid|Sativa Dom Hybrid|CBD)\s*\)$/i);
+                if (match) {
+                    name = match[1].trim();
+                    type = match[2];
+                    if (type.toLowerCase() === 'sativa') type = 'Sativa';
+                    else if (type.toLowerCase() === 'indica') type = 'Indica';
+                    else if (type.toLowerCase() === 'hybrid') type = 'Hybrid';
+                    else if (type.toLowerCase() === 'sativa dom hybrid') type = 'Sativa Dom Hybrid';
+                    else if (type.toLowerCase() === 'indica dom hybrid') type = 'Indica Dom Hybrid';
+                    else if (type.toLowerCase() === 'cbd') type = 'CBD';
+                }
+                return { name, type };
+            });
+            
+            return { 
+              id: opt.id, 
+              stock: opt.stock, 
+              strains: parsedStrains.length > 0 ? parsedStrains : [{ name: '', type: 'N/A' }] 
+            };
+        }) : []
       });
 
       setDescMode((initialItem.descFact && !initialItem.descBase) ? 'fact' : 'desc');
@@ -171,6 +200,46 @@ export default function AdminInventoryEditor({ initialItem, isAdding, mainCatego
     setUpdatedItem((prev: any) => ({ ...prev, sizes: prev.sizes.filter((s: any) => s.id !== id) }));
   };
 
+  const handleStrainChange = (optId: string, sIdx: number, field: string, value: string) => {
+    setUpdatedItem((prev: any) => ({
+       ...prev,
+       options: prev.options.map((o: any) => {
+           if (o.id === optId) {
+               const newStrains = [...o.strains];
+               newStrains[sIdx] = { ...newStrains[sIdx], [field]: value };
+               return { ...o, strains: newStrains };
+           }
+           return o;
+       })
+    }));
+  };
+
+  const handleAddStrain = (optId: string) => {
+    setUpdatedItem((prev: any) => ({
+       ...prev,
+       options: prev.options.map((o: any) => {
+           if (o.id === optId && o.strains.length < 3) {
+               return { ...o, strains: [...o.strains, { name: '', type: 'N/A' }] };
+           }
+           return o;
+       })
+    }));
+  };
+
+  const handleRemoveStrain = (optId: string, sIdx: number) => {
+    setUpdatedItem((prev: any) => ({
+       ...prev,
+       options: prev.options.map((o: any) => {
+           if (o.id === optId) {
+               const newStrains = [...o.strains];
+               newStrains.splice(sIdx, 1);
+               return { ...o, strains: newStrains };
+           }
+           return o;
+       })
+    }));
+  };
+
   const handleOptionChange = (id: string, field: string, value: any) => {
     setUpdatedItem((prev: any) => ({
       ...prev,
@@ -181,7 +250,7 @@ export default function AdminInventoryEditor({ initialItem, isAdding, mainCatego
   const handleAddOption = () => {
     setUpdatedItem((prev: any) => ({
       ...prev,
-      options: [...prev.options, { id: `opt-${Date.now()}`, label: 'New Variant', stock: 0 }]
+      options: [...prev.options, { id: `opt-${Date.now()}`, stock: 0, strains: [{ name: 'New Variant', type: 'N/A' }] }]
     }));
   };
 
@@ -189,22 +258,45 @@ export default function AdminInventoryEditor({ initialItem, isAdding, mainCatego
     setUpdatedItem((prev: any) => ({ ...prev, options: prev.options.filter((o: any) => o.id !== id) }));
   };
 
-  const handleSave = () => { onSave(updatedItem, isAdding); };
+  const handleSave = () => { 
+    // SMART COMPILER
+    const itemToSave = {
+        ...updatedItem,
+        options: updatedItem.options.map((opt: any) => {
+            const labelParts = opt.strains
+                .filter((s: any) => s.name.trim() !== '')
+                .map((s: any) => {
+                    let cleanLabel = s.name.replace(/\s*\(\s*(Indica|Sativa|Hybrid|Indica Dom Hybrid|Sativa Dom Hybrid|CBD)\s*\)$/i, '').trim();
+                    if (s.type && s.type !== 'N/A') {
+                        return `${cleanLabel} (${s.type})`;
+                    }
+                    return cleanLabel;
+                });
+            
+            return { 
+               id: opt.id, 
+               stock: opt.stock, 
+               label: labelParts.join(' / ') || 'Standard' 
+            };
+        })
+    };
+    onSave(itemToSave, isAdding); 
+  };
 
-  // --- NEW SMART DISPLAY LOGIC ---
   const activeMainCat = updatedItem.mainCategory;
   const activeSubCat = updatedItem.subCategory;
   
   const isFlowerCat = activeMainCat === 'Flower & Plants';
   const isPreRoll = isFlowerCat && activeSubCat === 'Pre-Rolls & Blunts';
-  const isRawFlower = isFlowerCat && !isPreRoll; // Only raw flower uses tiers
+  const isRawFlower = isFlowerCat && !isPreRoll;
   
   const isVape = activeMainCat === 'Vapes & Pens';
+  const isDisposable = isVape && activeSubCat === 'Disposables';
   const isMerch = activeMainCat === 'Merch & Extras';
   
-  // Pre-rolls act like manufactured goods (they have variants/flavors and a flat price)
   const showVariants = !isRawFlower && !isMerch; 
   const showDNA = !isVape && !isMerch; 
+  const showLineage = !isMerch && !isDisposable;
   const showWeightTiers = isRawFlower;
   const showUnitPrice = !isRawFlower;
 
@@ -213,7 +305,7 @@ export default function AdminInventoryEditor({ initialItem, isAdding, mainCatego
   return (
     <div className="min-h-screen bg-zinc-950 text-zinc-100 selection:bg-emerald-500/30 selection:text-white pb-32 animate-in fade-in duration-500">
       
-      {/* STICKY TOP HEADER */}
+      {/* HEADER */}
       <div className="sticky top-0 z-50 bg-zinc-950/80 backdrop-blur-xl border-b border-zinc-800/50 px-6 py-4 flex items-center justify-between shadow-md">
         <div className="flex items-center gap-4">
           <div className="w-12 h-12 rounded-xl bg-zinc-900 border border-zinc-800 flex items-center justify-center shrink-0 overflow-hidden text-zinc-500">
@@ -244,288 +336,32 @@ export default function AdminInventoryEditor({ initialItem, isAdding, mainCatego
       </div>
 
       <div className="max-w-4xl mx-auto p-6 md:p-8 space-y-8 mt-4">
-
-        {/* SECTION 1: CORE IDENTITY */}
-        <section className="bg-zinc-900/30 border border-zinc-800/80 rounded-3xl p-6 md:p-8 shadow-sm">
-           <h2 className="text-sm font-black uppercase tracking-widest text-zinc-100 flex items-center gap-2 mb-6 pb-4 border-b border-zinc-800/50">
-             <Fingerprint size={16} className="text-cyan-400" /> Core Identity
-           </h2>
-           <div className="flex flex-col md:flex-row gap-8">
-              
-              <div className="w-full md:w-64 shrink-0 flex flex-col gap-6">
-                 <div>
-                   <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-wider mb-2 block">Product Graphic</label>
-                   <div 
-                     className={`w-full aspect-square bg-zinc-950 border-2 border-dashed rounded-2xl flex flex-col items-center justify-center text-center p-4 transition-colors cursor-pointer relative overflow-hidden group ${dragActive ? 'border-cyan-500/50 bg-cyan-500/5' : 'border-zinc-800 hover:border-zinc-700'}`}
-                     onDragEnter={handleDrag} onDragLeave={handleDrag} onDragOver={handleDrag} onDrop={handleDrop}
-                     onClick={() => fileInputRef.current?.click()}
-                   >
-                      {updatedItem.imageUrl && <img src={updatedItem.imageUrl} alt="preview" className="absolute inset-0 w-full h-full object-cover opacity-50 group-hover:opacity-20 transition-opacity" />}
-                      <div className="relative z-10 flex flex-col items-center gap-2">
-                         {isUploadingMain ? <UploadCloud size={24} className="text-cyan-400 animate-bounce" /> : <ImageIcon size={24} className={updatedItem.imageUrl ? "text-zinc-100" : "text-zinc-600"} />}
-                         <span className="text-[10px] font-black uppercase tracking-widest text-zinc-400">{isUploadingMain ? 'Uploading...' : 'Tap or Drop'}</span>
-                      </div>
-                      <input type="file" ref={fileInputRef} onChange={(e) => {if (e.target.files && e.target.files[0]) handleFileUpload(e.target.files[0], 'main');}} className="hidden" accept="image/*" />
-                   </div>
-                 </div>
-
-                 <div className="pt-4 border-t border-zinc-800/50">
-                   <label className="text-[10px] font-bold text-emerald-500 uppercase tracking-wider mb-2 block">Brand Stamp / Icon</label>
-                   <div className="flex items-center gap-4">
-                     <div 
-                       className="w-16 h-16 bg-zinc-950 border-2 border-dashed border-emerald-500/50 hover:border-emerald-400 rounded-full flex flex-col items-center justify-center text-center transition-colors cursor-pointer relative overflow-hidden group shrink-0"
-                       onClick={() => iconInputRef.current?.click()}
-                     >
-                        {updatedItem.iconUrl && <img src={updatedItem.iconUrl} alt="stamp" className="absolute inset-0 w-full h-full object-cover" />}
-                        <div className="relative z-10 flex flex-col items-center gap-1">
-                           {isUploadingIcon ? <UploadCloud size={16} className="text-emerald-400 animate-bounce" /> : (!updatedItem.iconUrl && <ImageIcon size={16} className="text-zinc-600" />)}
-                        </div>
-                        <input type="file" ref={iconInputRef} onChange={(e) => {if (e.target.files && e.target.files[0]) handleFileUpload(e.target.files[0], 'icon');}} className="hidden" accept="image/*" />
-                     </div>
-                     <p className="text-[9px] font-bold text-zinc-500 uppercase leading-tight">Upload a square image to render as a floating badge.</p>
-                   </div>
-                 </div>
-              </div>
-
-              <div className="flex-1 space-y-5">
-                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-                   <div>
-                     <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-wider mb-2 block">Product Name *</label>
-                     <input type="text" value={updatedItem.name} onChange={(e) => setUpdatedItem({ ...updatedItem, name: e.target.value })} className="w-full bg-zinc-950 border border-zinc-800 rounded-xl p-3.5 text-sm font-bold text-zinc-100 focus:border-cyan-500/50 outline-none transition-colors" />
-                   </div>
-                   <div>
-                     <label className="text-[10px] font-bold text-emerald-500 uppercase tracking-wider mb-2 block">Brand / Maker</label>
-                     <input type="text" value={updatedItem.brand || ''} onChange={(e) => setUpdatedItem({ ...updatedItem, brand: e.target.value })} className="w-full bg-zinc-950 border border-emerald-500/30 rounded-xl p-3.5 text-sm font-bold text-emerald-400 focus:border-emerald-500 outline-none transition-colors" />
-                   </div>
-                 </div>
-                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-                   <div>
-                     <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-wider mb-2 block">Main Category</label>
-                     <select value={updatedItem.mainCategory} onChange={(e) => handleCategoryChange('mainCategory', e.target.value)} className="w-full bg-zinc-950 border border-zinc-800 rounded-xl p-3.5 text-sm font-bold text-zinc-100 focus:border-cyan-500/50 outline-none transition-colors">
-                       {mainCategories.map((c:string)=><option key={c} value={c}>{c}</option>)}
-                     </select>
-                   </div>
-                   <div>
-                     <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-wider mb-2 block">Sub Category</label>
-                     <select value={updatedItem.subCategory} onChange={(e) => handleCategoryChange('subCategory', e.target.value)} className="w-full bg-zinc-950 border border-zinc-800 rounded-xl p-3.5 text-sm font-bold text-zinc-100 focus:border-cyan-500/50 outline-none transition-colors">
-                       {subCategories[updatedItem.mainCategory]?.map((s:string)=><option key={s} value={s}>{s}</option>) || <option value="Uncategorized">Uncategorized</option>}
-                     </select>
-                   </div>
-                 </div>
-
-                 {/* DYNAMIC: Unit Pricing Input (Hidden for Raw Bulk Flower) */}
-                 {showUnitPrice && (
-                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 pt-4 border-t border-zinc-800/50">
-                     <div>
-                       <label className="text-[10px] font-bold text-amber-500 uppercase tracking-wider mb-2 block">Standard Unit Price</label>
-                       <div className="relative">
-                         <DollarSign size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-amber-500" />
-                         <input 
-                           type="number" 
-                           value={updatedItem.sizes[0]?.price || ''} 
-                           onChange={(e) => {
-                              const newSizes = [...updatedItem.sizes];
-                              if (newSizes.length > 0) newSizes[0].price = Number(e.target.value) || 0;
-                              else newSizes.push({ id: `sz-${Date.now()}`, label: 'Standard', price: Number(e.target.value) || 0 });
-                              setUpdatedItem({...updatedItem, sizes: newSizes});
-                           }}
-                           className="w-full bg-zinc-950 border border-amber-500/30 rounded-xl py-3 pl-8 pr-4 text-sm font-mono font-bold text-amber-400 focus:border-amber-500 outline-none" 
-                         />
-                       </div>
-                       <p className="text-[9px] font-bold text-zinc-500 uppercase tracking-widest mt-2">Flat rate for this product.</p>
-                     </div>
-                   </div>
-                 )}
-              </div>
-           </div>
-        </section>
-
-        {/* SECTION 2: PRODUCT DNA & DESCRIPTION */}
-        <section className="bg-zinc-900/30 border border-zinc-800/80 rounded-3xl p-6 md:p-8 shadow-sm">
-           <h2 className="text-sm font-black uppercase tracking-widest text-zinc-100 flex items-center gap-2 mb-6 pb-4 border-b border-zinc-800/50">
-             <BookText size={16} className="text-emerald-400" /> {showDNA ? 'Product DNA & Description' : 'Product Description'}
-           </h2>
-           
-           <div className="space-y-5">
-              
-              <div className="bg-zinc-950/50 border border-zinc-800/80 rounded-2xl p-5 mb-5">
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-3">
-                  <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-wider flex items-center gap-2">
-                    Storytelling Format
-                  </label>
-                  <div className="flex bg-zinc-950 border border-zinc-800 rounded-lg p-1">
-                    <button 
-                      onClick={(e) => { e.preventDefault(); setDescMode('desc'); }}
-                      className={`px-4 py-1.5 rounded-md text-[9px] font-black uppercase tracking-widest transition-colors ${descMode === 'desc' ? 'bg-zinc-800 text-zinc-100 shadow-sm' : 'text-zinc-500 hover:text-zinc-300'}`}
-                    >
-                      Standard Description
-                    </button>
-                    <button 
-                      onClick={(e) => { e.preventDefault(); setDescMode('fact'); }}
-                      className={`px-4 py-1.5 rounded-md text-[9px] font-black uppercase tracking-widest transition-colors flex items-center gap-1.5 ${descMode === 'fact' ? 'bg-pink-500/20 text-pink-400 border border-pink-500/30 shadow-sm' : 'text-zinc-500 hover:text-pink-400/50'}`}
-                    >
-                      <Sparkles size={10} /> Insider Fact
-                    </button>
-                  </div>
-                </div>
-                
-                {descMode === 'desc' ? (
-                  <textarea 
-                    value={updatedItem.descBase} 
-                    onChange={(e) => setUpdatedItem({ ...updatedItem, descBase: e.target.value })} 
-                    rows={3} 
-                    placeholder="Write a traditional product description..."
-                    className="w-full bg-zinc-900 border border-zinc-800 rounded-xl p-3.5 text-sm font-medium text-zinc-300 focus:border-emerald-500/50 outline-none transition-colors resize-none" 
-                  />
-                ) : (
-                  <textarea 
-                    value={updatedItem.descFact} 
-                    onChange={(e) => setUpdatedItem({ ...updatedItem, descFact: e.target.value })} 
-                    rows={3} 
-                    placeholder="Write a short, punchy insider fact..."
-                    className="w-full bg-zinc-900 border border-pink-500/30 rounded-xl p-3.5 text-sm font-medium text-pink-100 focus:border-pink-500 outline-none transition-colors resize-none" 
-                  />
-                )}
-              </div>
-              
-              {showDNA && (
-                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
-                    <div className="relative">
-                      <Wind size={14} className="absolute left-3 top-10 text-cyan-400" />
-                      <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-wider mb-2 block ml-1">Feels</label>
-                      <input type="text" value={updatedItem.descFeels} onChange={(e) => setUpdatedItem({ ...updatedItem, descFeels: e.target.value })} className="w-full bg-zinc-950 border border-zinc-800 rounded-xl py-3 pl-10 pr-4 text-sm font-medium text-zinc-100 focus:border-emerald-500/50 outline-none" />
-                    </div>
-                    <div className="relative">
-                      <Cookie size={14} className="absolute left-3 top-10 text-amber-400" />
-                      <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-wider mb-2 block ml-1">Taste</label>
-                      <input type="text" value={updatedItem.descTaste} onChange={(e) => setUpdatedItem({ ...updatedItem, descTaste: e.target.value })} className="w-full bg-zinc-950 border border-zinc-800 rounded-xl py-3 pl-10 pr-4 text-sm font-medium text-zinc-100 focus:border-emerald-500/50 outline-none" />
-                    </div>
-                    <div className="relative">
-                      <Droplet size={14} className="absolute left-3 top-10 text-emerald-400" />
-                      <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-wider mb-2 block ml-1">Uses</label>
-                      <input type="text" value={updatedItem.descUses} onChange={(e) => setUpdatedItem({ ...updatedItem, descUses: e.target.value })} className="w-full bg-zinc-950 border border-zinc-800 rounded-xl py-3 pl-10 pr-4 text-sm font-medium text-zinc-100 focus:border-emerald-500/50 outline-none" />
-                    </div>
-                  </div>
-              )}
-
-              {!isMerch && (
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 p-5 bg-zinc-950/50 border border-zinc-800/80 rounded-2xl mt-2">
-                   <div>
-                     <label className="text-[10px] font-bold text-emerald-500 uppercase tracking-wider mb-2 block">Lineage / Cross / Strain Detail</label>
-                     <input type="text" value={updatedItem.lineage} onChange={(e) => setUpdatedItem({ ...updatedItem, lineage: e.target.value })} className="w-full bg-zinc-900 border border-zinc-800 rounded-xl p-3 text-sm font-medium text-zinc-100 focus:border-emerald-500/50 outline-none" placeholder="e.g. Gelato × Zkittlez" />
-                   </div>
-                   <div>
-                     <label className="text-[10px] font-bold text-emerald-500 uppercase tracking-wider mb-2 block">Genetics Type</label>
-                     <select value={updatedItem.strainType} onChange={(e) => setUpdatedItem({ ...updatedItem, strainType: e.target.value })} className="w-full bg-zinc-900 border border-zinc-800 rounded-xl p-3 text-sm font-medium text-zinc-100 focus:border-emerald-500/50 outline-none">
-                       {['Sativa', 'Indica', 'Hybrid', 'Sativa Dom Hybrid', 'Indica Dom Hybrid', 'CBD', 'N/A'].map((st:string)=><option key={st} value={st}>{st}</option>)}
-                     </select>
-                   </div>
-                </div>
-              )}
-           </div>
-        </section>
-
-        {/* SECTION 3: WEIGHT TIERS & PRICING (RAW FLOWER ONLY) */}
-        {showWeightTiers && (
-          <section className="bg-zinc-900/30 border border-zinc-800/80 rounded-3xl p-6 md:p-8 shadow-sm">
-             <h2 className="text-sm font-black uppercase tracking-widest text-zinc-100 flex items-center justify-between mb-6 pb-4 border-b border-zinc-800/50">
-               <span className="flex items-center gap-2"><DollarSign size={16} className="text-amber-400" /> Weight Tiers & Pricing</span>
-               <button onClick={handleAddSize} className="px-3 py-1.5 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 rounded-lg text-[9px] uppercase tracking-widest flex items-center gap-1 transition-colors"><Plus size={12}/> Add Tier</button>
-             </h2>
-             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-               {updatedItem.sizes.map((size: any) => (
-                 <div key={size.id} className="bg-zinc-950 border border-zinc-800 rounded-xl p-4 flex flex-col gap-3 relative group">
-                   <button onClick={() => handleRemoveSize(size.id)} className="absolute top-2 right-2 p-1.5 bg-zinc-900 rounded-md text-zinc-600 hover:text-rose-400 opacity-0 group-hover:opacity-100 transition-all"><X size={12}/></button>
-                   <div>
-                     <label className="text-[9px] font-bold text-zinc-500 uppercase tracking-widest mb-1 block">Label</label>
-                     <input type="text" value={size.label} onChange={(e) => handleSizeChange(size.id, 'label', e.target.value)} className="w-full bg-zinc-900 border border-zinc-800 rounded-lg py-2 px-3 text-xs font-bold text-zinc-300 outline-none" />
-                   </div>
-                   <div>
-                     <label className="text-[9px] font-bold text-amber-500 uppercase tracking-widest mb-1 block">Base Price</label>
-                     <input type="number" value={size.price} onChange={(e) => handleSizeChange(size.id, 'price', e.target.value)} className="w-full bg-zinc-900 border border-zinc-800 rounded-lg py-2 px-2 text-xs font-mono font-bold text-amber-400 outline-none" />
-                   </div>
-                 </div>
-               ))}
-             </div>
-          </section>
-        )}
-
-        {/* SECTION 4: VARIANTS & OPTIONS OR GLOBAL STOCK */}
-        {showVariants && (
-          <section className="bg-zinc-900/30 border border-zinc-800/80 rounded-3xl p-6 md:p-8 shadow-sm">
-             <h2 className="text-sm font-black uppercase tracking-widest text-zinc-100 flex items-center justify-between mb-6 pb-4 border-b border-zinc-800/50">
-               <span className="flex items-center gap-2"><Boxes size={16} className="text-indigo-400" /> Variants & Flavors</span>
-               <button onClick={handleAddOption} className="px-3 py-1.5 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 rounded-lg text-[9px] uppercase tracking-widest flex items-center gap-1 transition-colors"><Plus size={12}/> Add Variant</button>
-             </h2>
-             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-               {updatedItem.options.map((opt: any) => (
-                 <div key={opt.id} className="bg-zinc-950 border border-zinc-800 rounded-xl p-4 flex flex-col gap-3 relative group">
-                   <button onClick={() => handleRemoveOption(opt.id)} className="absolute top-2 right-2 p-1.5 bg-zinc-900 rounded-md text-zinc-600 hover:text-rose-400 opacity-0 group-hover:opacity-100 transition-all"><X size={12}/></button>
-                   <div>
-                     <label className="text-[9px] font-bold text-zinc-500 uppercase tracking-widest mb-1 block">Flavor / Name</label>
-                     <input type="text" value={opt.label} onChange={(e) => handleOptionChange(opt.id, 'label', e.target.value)} className="w-full bg-zinc-900 border border-zinc-800 rounded-lg py-2 px-3 text-xs font-bold text-zinc-300 outline-none" />
-                   </div>
-                   <div>
-                     <label className="text-[9px] font-bold text-indigo-400 uppercase tracking-widest mb-1 block">Stock</label>
-                     <input type="number" value={opt.stock} onChange={(e) => handleOptionChange(opt.id, 'stock', e.target.value)} className="w-full bg-zinc-900 border border-zinc-800 rounded-lg py-2 px-3 text-xs font-mono font-bold text-indigo-400 outline-none" />
-                   </div>
-                 </div>
-               ))}
-             </div>
-          </section>
-        )}
         
-        {!showVariants && (
-           <section className="bg-zinc-900/30 border border-zinc-800/80 rounded-3xl p-6 md:p-8 shadow-sm">
-             <h2 className="text-sm font-black uppercase tracking-widest text-zinc-100 flex items-center gap-2 mb-6 pb-4 border-b border-zinc-800/50">
-               <Boxes size={16} className="text-indigo-400" /> Global Vault Stock
-             </h2>
-             <div>
-               <label className="text-[10px] font-bold text-indigo-400 uppercase tracking-wider mb-2 block">Total Stock (Units)</label>
-               <input type="number" value={updatedItem.onHand} onChange={(e) => setUpdatedItem({ ...updatedItem, onHand: Number(e.target.value) || 0 })} className="w-full bg-zinc-950 border border-indigo-500/30 rounded-xl p-3.5 text-sm font-mono font-bold text-indigo-400 focus:border-indigo-500 outline-none transition-colors" />
-             </div>
-           </section>
-        )}
+        {/* MODULAR COMPONENTS */}
+        <EditorIdentity 
+          updatedItem={updatedItem} setUpdatedItem={setUpdatedItem}
+          mainCategories={mainCategories} subCategories={subCategories}
+          handleCategoryChange={handleCategoryChange} handleFileUpload={handleFileUpload}
+          fileInputRef={fileInputRef} iconInputRef={iconInputRef}
+          dragActive={dragActive} handleDrag={handleDrag} handleDrop={handleDrop}
+          isUploadingMain={isUploadingMain} isUploadingIcon={isUploadingIcon}
+          showUnitPrice={showUnitPrice}
+        />
 
-        {/* SECTION 5: MERCHANDISING & CAMPAIGN TOGGLE */}
-        <section className="bg-zinc-900/30 border border-zinc-800/80 rounded-3xl p-6 md:p-8 shadow-sm">
-           <h2 className="text-sm font-black uppercase tracking-widest text-zinc-100 flex items-center gap-2 mb-6 pb-4 border-b border-zinc-800/50">
-             <TicketPercent size={16} className="text-pink-400" /> Merchandising & Campaigns
-           </h2>
-           
-           <div className="flex flex-wrap gap-4 mb-8">
-              <button onClick={()=>setUpdatedItem({...updatedItem, isTopShelf: !updatedItem.isTopShelf})} className={`px-4 py-3 rounded-xl text-xs font-black uppercase tracking-widest border transition-all flex items-center gap-2 ${updatedItem.isTopShelf ? 'bg-amber-500 text-zinc-950 border-amber-500 shadow-md' : 'bg-zinc-950 text-zinc-500 border-zinc-800 hover:border-amber-500/50 hover:text-amber-400'}`}><Award size={16}/> Top Shelf / Reserve</button>
-              <button onClick={()=>setUpdatedItem({...updatedItem, featured: !updatedItem.featured})} className={`px-4 py-3 rounded-xl text-xs font-black uppercase tracking-widest border transition-all flex items-center gap-2 ${updatedItem.featured ? 'bg-cyan-500 text-zinc-950 border-cyan-500 shadow-md' : 'bg-zinc-950 text-zinc-500 border-zinc-800 hover:border-cyan-500/50 hover:text-cyan-400'}`}><Star size={16}/> Featured Drop</button>
-           </div>
+        <EditorDNA 
+          updatedItem={updatedItem} setUpdatedItem={setUpdatedItem}
+          descMode={descMode} setDescMode={setDescMode}
+          showDNA={showDNA} showLineage={showLineage}
+        />
 
-           <div className={`border rounded-2xl p-5 transition-all duration-500 flex flex-col sm:flex-row sm:items-center justify-between gap-4 ${updatedItem.dailyDeal ? 'bg-pink-500/5 border-pink-500/30' : 'bg-zinc-950 border-zinc-800'}`}>
-              <div className="flex items-center gap-4">
-                <button 
-                  onClick={() => setUpdatedItem({ ...updatedItem, dailyDeal: !updatedItem.dailyDeal, dealType: !updatedItem.dailyDeal ? 'One-Shot' : 'None' })} 
-                  className={`w-12 h-6 rounded-full relative transition-colors ${updatedItem.dailyDeal ? 'bg-pink-500' : 'bg-zinc-800'}`}
-                >
-                  <div className={`w-4 h-4 rounded-full bg-white absolute top-1 transition-all ${updatedItem.dailyDeal ? 'left-7' : 'left-1'}`} />
-                </button>
-                <div>
-                  <h4 className={`text-sm font-black uppercase tracking-widest ${updatedItem.dailyDeal ? 'text-pink-400' : 'text-zinc-400'}`}>
-                    Active Campaign
-                  </h4>
-                  <p className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest mt-0.5">
-                    {updatedItem.dailyDeal ? 'Deal is live on the storefront' : 'No active campaigns'}
-                  </p>
-                </div>
-              </div>
-              
-              {updatedItem.dailyDeal && openCampaignConfig && (
-                <button 
-                  onClick={(e) => { e.preventDefault(); openCampaignConfig(updatedItem); }} 
-                  className="bg-zinc-900 hover:bg-pink-500 hover:text-zinc-950 text-pink-400 border border-pink-500/50 px-4 py-3 sm:py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all"
-                >
-                  Configure Strategy
-                </button>
-              )}
-           </div>
-        </section>
+        <EditorCommerce 
+          updatedItem={updatedItem} setUpdatedItem={setUpdatedItem}
+          handleAddSize={handleAddSize} handleRemoveSize={handleRemoveSize} handleSizeChange={handleSizeChange}
+          handleOptionChange={handleOptionChange} handleAddOption={handleAddOption} handleRemoveOption={handleRemoveOption}
+          handleStrainChange={handleStrainChange} handleAddStrain={handleAddStrain} handleRemoveStrain={handleRemoveStrain}
+          showWeightTiers={showWeightTiers} showVariants={showVariants} openCampaignConfig={openCampaignConfig}
+        />
+
       </div>
     </div>
   );

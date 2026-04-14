@@ -38,12 +38,10 @@ export default function StorefrontCardBack({
   const isVape = activeCat.includes('vape');
   const isMerch = activeCat.includes('merch');
   
-  // Smart category detection to unlock variants for pre-rolls
   const isPreRoll = activeSubCat.includes('pre-roll') || activeSubCat.includes('blunt');
   const isRawFlower = isFlower && !isPreRoll;
   const expectsDNA = !isVape && !isMerch;
 
-  // Accurately calculate available stock based on item type
   const hasTrueVariants = safeOptions.length > 0 && safeOptions[0].label !== 'Standard';
   const displayStock = hasTrueVariants 
       ? safeOptions.reduce((sum: number, opt: any) => sum + (Number(opt.stock) || 0), 0) 
@@ -97,6 +95,25 @@ export default function StorefrontCardBack({
   }
 
   const currentSubtotal = lineTotal;
+
+  // --- NEW: Smart Sorting for Sizes and Variants ---
+  // Pushes any out-of-stock size tiers to the bottom of the list
+  const sortedSizes = [...safeSizes].sort((a: any, b: any) => {
+    const aReq = isRawFlower ? getRequiredGrams(a.label) : 1;
+    const bReq = isRawFlower ? getRequiredGrams(b.label) : 1;
+    const aOOS = (isRawFlower && displayStock < aReq) ? 1 : 0;
+    const bOOS = (isRawFlower && displayStock < bReq) ? 1 : 0;
+    return aOOS - bOOS;
+  });
+
+  // Pushes any out-of-stock variants/flavors to the bottom of the scrollable list
+  const sortedOptions = [...safeOptions].sort((a: any, b: any) => {
+    const aStock = a.stock !== undefined ? a.stock : displayStock;
+    const bStock = b.stock !== undefined ? b.stock : displayStock;
+    const aOOS = aStock <= 0 ? 1 : 0;
+    const bOOS = bStock <= 0 ? 1 : 0;
+    return aOOS - bOOS;
+  });
 
   const formatStrainText = (text: string) => {
     if (!text) return text;
@@ -158,76 +175,78 @@ export default function StorefrontCardBack({
         </div>
       </div>
 
-      {/* SCROLLABLE DNA SECTION */}
-      <div className="flex-1 overflow-y-auto scrollbar-hide p-4 space-y-3 relative">
-        {(item?.descBase || (hasDNA && expectsDNA)) ? (
-          <div className="bg-zinc-900/50 border border-zinc-800/50 rounded-xl p-3 flex flex-col gap-2.5">
-             {item?.descBase && (
-                <p className={`text-[10px] text-zinc-300 italic leading-relaxed ${(hasDNA && expectsDNA) ? 'border-b border-zinc-800/50 pb-2' : ''}`}>
-                  {item.descBase}
-                </p>
-             )}
-             {hasDNA && expectsDNA && (
-               <div className="flex flex-col">
-                 <div className="grid grid-cols-3 gap-2">
-                   {item?.descFeels && (
-                     <div className="flex items-start gap-1.5 border-r border-zinc-800/50 pr-1">
-                       <Wind size={12} className="text-cyan-400 mt-0.5 shrink-0" />
-                       <div>
-                         <span className="text-[8px] font-black uppercase tracking-widest text-zinc-500 block mb-0.5">{UI.feels}</span>
-                         <span className="text-[10px] font-bold text-zinc-200 leading-tight">{item.descFeels}</span>
+      {/* SCROLLABLE DNA SECTION (Hidden for Vapes to maximize options space) */}
+      {!isVape && (
+        <div className="flex-1 overflow-y-auto scrollbar-hide p-4 space-y-3 relative">
+          {(item?.descBase || (hasDNA && expectsDNA)) ? (
+            <div className="bg-zinc-900/50 border border-zinc-800/50 rounded-xl p-3 flex flex-col gap-2.5">
+               {item?.descBase && (
+                  <p className={`text-[10px] text-zinc-300 italic leading-relaxed ${(hasDNA && expectsDNA) ? 'border-b border-zinc-800/50 pb-2' : ''}`}>
+                    {item.descBase}
+                  </p>
+               )}
+               {hasDNA && expectsDNA && (
+                 <div className="flex flex-col">
+                   <div className="grid grid-cols-3 gap-2">
+                     {item?.descFeels && (
+                       <div className="flex items-start gap-1.5 border-r border-zinc-800/50 pr-1">
+                         <Wind size={12} className="text-cyan-400 mt-0.5 shrink-0" />
+                         <div>
+                           <span className="text-[8px] font-black uppercase tracking-widest text-zinc-500 block mb-0.5">{UI.feels}</span>
+                           <span className="text-[10px] font-bold text-zinc-200 leading-tight">{item.descFeels}</span>
+                         </div>
                        </div>
-                     </div>
-                   )}
-                   {item?.descTaste && (
-                     <div className="flex items-start gap-1.5 border-r border-zinc-800/50 px-1">
-                       <Cookie size={12} className="text-amber-400 mt-0.5 shrink-0" />
-                       <div>
-                         <span className="text-[8px] font-black uppercase tracking-widest text-zinc-500 block mb-0.5">{UI.taste}</span>
-                         <span className="text-[10px] font-bold text-zinc-200 leading-tight">{item.descTaste}</span>
+                     )}
+                     {item?.descTaste && (
+                       <div className="flex items-start gap-1.5 border-r border-zinc-800/50 px-1">
+                         <Cookie size={12} className="text-amber-400 mt-0.5 shrink-0" />
+                         <div>
+                           <span className="text-[8px] font-black uppercase tracking-widest text-zinc-500 block mb-0.5">{UI.taste}</span>
+                           <span className="text-[10px] font-bold text-zinc-200 leading-tight">{item.descTaste}</span>
+                         </div>
                        </div>
-                     </div>
-                   )}
-                   {item?.descUses && (
-                     <div className="flex items-start gap-1.5 pl-1">
-                       <Droplet size={12} className="text-emerald-400 mt-0.5 shrink-0" />
+                     )}
+                     {item?.descUses && (
+                       <div className="flex items-start gap-1.5 pl-1">
+                         <Droplet size={12} className="text-emerald-400 mt-0.5 shrink-0" />
+                         <div>
+                           <span className="text-[8px] font-black uppercase tracking-widest text-zinc-500 block mb-0.5">{UI.uses}</span>
+                           <span className="text-[10px] font-bold text-zinc-200 leading-tight">{item.descUses}</span>
+                         </div>
+                       </div>
+                     )}
+                   </div>
+
+                   {item?.descFact && (
+                     <div className="mt-2.5 pt-2.5 border-t border-zinc-800/50 flex items-start gap-1.5 pl-1">
+                       <Sparkles size={12} className="text-pink-400 mt-0.5 shrink-0" />
                        <div>
-                         <span className="text-[8px] font-black uppercase tracking-widest text-zinc-500 block mb-0.5">{UI.uses}</span>
-                         <span className="text-[10px] font-bold text-zinc-200 leading-tight">{item.descUses}</span>
+                         <span className="text-[8px] font-black uppercase tracking-widest text-zinc-500 block mb-0.5">{UI.insiderFact}</span>
+                         <span className="text-[10px] font-bold text-zinc-200 leading-relaxed">{item.descFact}</span>
                        </div>
                      </div>
                    )}
                  </div>
-
-                 {item?.descFact && (
-                   <div className="mt-2.5 pt-2.5 border-t border-zinc-800/50 flex items-start gap-1.5 pl-1">
-                     <Sparkles size={12} className="text-pink-400 mt-0.5 shrink-0" />
-                     <div>
-                       <span className="text-[8px] font-black uppercase tracking-widest text-zinc-500 block mb-0.5">{UI.insiderFact}</span>
-                       <span className="text-[10px] font-bold text-zinc-200 leading-relaxed">{item.descFact}</span>
-                     </div>
-                   </div>
-                 )}
-               </div>
-             )}
-          </div>
-        ) : expectsDNA ? (
-          <div className="w-full flex items-center justify-center py-2">
-            <span className="text-[10px] font-black uppercase tracking-widest text-zinc-600">{UI.noDna}</span>
-          </div>
-        ) : null}
-      </div>
+               )}
+            </div>
+          ) : expectsDNA ? (
+            <div className="w-full flex items-center justify-center py-2">
+              <span className="text-[10px] font-black uppercase tracking-widest text-zinc-600">{UI.noDna}</span>
+            </div>
+          ) : null}
+        </div>
+      )}
 
       {/* STATIC BOTTOM CONTROL PANEL (Options & Cart) */}
-      <div className="shrink-0 bg-zinc-950 border-t border-zinc-800/50 relative z-20 flex flex-col">
+      <div className={`${isVape ? 'flex-1 overflow-hidden' : 'shrink-0'} bg-zinc-950 border-t border-zinc-800/50 relative z-20 flex flex-col`}>
         
         {/* STATIC OPTIONS / SIZES (Pre-rolls unlock variants) */}
         {((safeSizes.length > 1 && !isVape && !isMerch && !isPreRoll) || (hasMultipleOptions && safeOptions.length > 0)) && (
-          <div className="px-4 pt-4 pb-1 space-y-3">
+          <div className={`px-4 pt-3 pb-1 space-y-2 ${isVape ? 'flex-1 flex flex-col overflow-hidden' : ''}`}>
             
             {safeSizes.length > 1 && !isVape && !isMerch && !isPreRoll && (
               <div className="grid grid-cols-2 sm:grid-cols-4 bg-zinc-900 border border-zinc-800/50 rounded-lg p-1 gap-1">
-                {safeSizes.map((s: any) => {
+                {sortedSizes.map((s: any) => {
                   const isSelected = selectedSize?.id === s.id;
                   let tierFinalPrice = Number(s.price || 0);
 
@@ -260,8 +279,8 @@ export default function StorefrontCardBack({
             )}
 
             {hasMultipleOptions && safeOptions.length > 0 && (
-              <div>
-                <div className="flex justify-between items-start mb-2 px-1">
+              <div className={isVape ? 'flex-1 flex flex-col overflow-hidden' : ''}>
+                <div className="flex justify-between items-start mb-2 px-1 shrink-0">
                   <label className="text-[9px] font-black text-zinc-500 uppercase tracking-widest leading-tight">
                      {item?.dealConfig?.type === 'BUNDLE' ? `Mix & Match (Deal: ${item.dealConfig.buyQty} for $${item.dealConfig.bundlePrice})` : UI.selectOptions}
                   </label>
@@ -270,9 +289,9 @@ export default function StorefrontCardBack({
                   </span>
                 </div>
                 
-                {/* Max-height safeguard on options to prevent pushing cart button off-screen */}
-                <div className="flex flex-col gap-1.5 bg-zinc-900/50 border border-zinc-800/50 rounded-xl p-1.5 max-h-[22vh] overflow-y-auto scrollbar-hide">
-                  {safeOptions.map((opt: any) => {
+                {/* DYNAMIC HEIGHT: Unlocked for Vapes, safeguarded for Flower/Pre-rolls */}
+                <div className={`flex flex-col gap-1.5 bg-zinc-900/50 border border-zinc-800/50 rounded-xl p-1.5 overflow-y-auto scrollbar-hide ${isVape ? 'flex-1' : 'max-h-28'}`}>
+                  {sortedOptions.map((opt: any) => {
                     const stockVal = opt.stock !== undefined ? opt.stock : displayStock;
                     const instancesInBundle = safeSelectedOptions.filter((so:any) => so?.id === opt.id).length;
                     const isOutOfStock = stockVal <= 0;
@@ -315,7 +334,7 @@ export default function StorefrontCardBack({
         )}
 
         {/* CART ACTIONS */}
-        <div className={`px-4 pb-4 ${((safeSizes.length > 1 && !isVape && !isMerch && !isPreRoll) || (hasMultipleOptions && safeOptions.length > 0)) ? 'pt-1.5' : 'pt-4'}`}>
+        <div className={`px-4 pb-4 shrink-0 ${((safeSizes.length > 1 && !isVape && !isMerch && !isPreRoll) || (hasMultipleOptions && safeOptions.length > 0)) ? 'pt-1' : 'pt-4'}`}>
            {savingsText && qty > 0 && (
               <div className="absolute -top-2.5 left-1/2 -translate-x-1/2 bg-pink-500 text-zinc-950 px-3 py-0.5 rounded-full text-[8px] font-black uppercase tracking-widest shadow-md whitespace-nowrap z-30">
                  {savingsText}

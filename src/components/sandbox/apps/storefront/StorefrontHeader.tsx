@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
-import { Package, ShoppingCart, Flame, LayoutGrid, Tag, Leaf, Wind, Cookie, Droplet, Shirt, Menu, ChevronDown } from 'lucide-react';
+import { Package, ShoppingCart, Flame, LayoutGrid, Tag, Leaf, Wind, Cookie, Droplet, Shirt, Menu, ChevronDown, Info } from 'lucide-react';
 
 export default function StorefrontHeader({
-  cartItemCount, cartTotal, activeCategory, setActiveCategory, categories, timeData, setIsCheckingOut
+  cartItemCount, cartTotal, activeCategory, setActiveCategory, categories, timeData, setIsCheckingOut, setShowPolicies
 }: any) {
   const safeCategories = categories || [];
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -74,8 +74,16 @@ export default function StorefrontHeader({
           </div>
         </div>
         
-        <div className="flex items-center gap-3">
-           <div className="text-[10px] font-black text-zinc-500 uppercase tracking-widest font-mono hidden md:block">
+        <div className="flex items-center gap-4">
+           {/* DESKTOP POLICIES BUTTON */}
+           <button 
+             onClick={() => setShowPolicies && setShowPolicies(true)} 
+             className="hidden md:flex items-center gap-1.5 text-[10px] font-black uppercase tracking-widest text-zinc-500 hover:text-zinc-300 transition-colors"
+           >
+             <Info size={14} /> Policies
+           </button>
+
+           <div className="text-[10px] font-black text-zinc-600 uppercase tracking-widest font-mono hidden md:block border-l border-zinc-800 pl-4">
               SHIFT {timeData?.shiftCode || 'A'}
            </div>
            
@@ -111,6 +119,16 @@ export default function StorefrontHeader({
       {isMenuOpen && (
         <div className="md:hidden absolute top-full left-0 right-0 bg-zinc-950/95 backdrop-blur-xl border-b border-zinc-800 shadow-[0_20px_40px_rgba(0,0,0,0.5)] z-50 px-4 py-4 flex flex-col gap-2 max-h-[60vh] overflow-y-auto animate-in slide-in-from-top-2">
           {safeCategories.map((cat: string) => renderCategoryButton(cat, true))}
+          
+          {/* MOBILE POLICIES BUTTON (At the bottom of the menu) */}
+          <div className="border-t border-zinc-800/80 mt-2 pt-2">
+            <button 
+              onClick={() => { setShowPolicies && setShowPolicies(true); setIsMenuOpen(false); }} 
+              className="w-full flex items-center gap-2 px-5 py-4 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all border bg-zinc-900/50 border-zinc-800/50 text-zinc-400 hover:bg-zinc-800 hover:text-zinc-100"
+            >
+              <Info size={16} className="text-zinc-500" /> Store Policies
+            </button>
+          </div>
         </div>
       )}
     </header>

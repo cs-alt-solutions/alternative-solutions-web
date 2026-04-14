@@ -1,17 +1,7 @@
-import React, { useEffect, useMemo } from 'react';
-import { Info, Flame, ShoppingCart, Leaf, Wind, Cookie, Droplet, Shirt, LayoutGrid, Tag, Award, Sparkles, Activity, Star } from 'lucide-react';
+import React, { useEffect } from 'react';
+import { Info, Flame, ShoppingCart, Leaf, Wind, Cookie, Droplet, Shirt, LayoutGrid, Tag, Award, Sparkles, Star } from 'lucide-react';
 import { StorefrontCard, getRequiredGrams } from './StorefrontComponents';
 import StorefrontHeader from './StorefrontHeader';
-
-const DAYS_OF_WEEK = [
-  { id: 0, label: 'Sunday', short: 'SUN' },
-  { id: 1, label: 'Monday', short: 'MON' },
-  { id: 2, label: 'Tuesday', short: 'TUE' },
-  { id: 3, label: 'Wednesday', short: 'WED' },
-  { id: 4, label: 'Thursday', short: 'THU' },
-  { id: 5, label: 'Friday', short: 'FRI' },
-  { id: 6, label: 'Saturday', short: 'SAT' }
-];
 
 export default function StorefrontCatalog({
   onExit, cartItemCount, cartTotal, setShowPolicies,
@@ -22,11 +12,18 @@ export default function StorefrontCatalog({
 }: any) {
   
   const isItemOOS = (item: any) => {
-     if (item.mainCategory === 'Flower & Plants') {
+     const activeSubCat = item.subCategory?.toLowerCase() || '';
+     const isPreRoll = activeSubCat.includes('pre-roll') || activeSubCat.includes('blunt');
+     const isRawFlower = item.mainCategory === 'Flower & Plants' && !isPreRoll;
+
+     if (isRawFlower) {
          const minGrams = item.sizes?.length > 0 ? Math.min(...item.sizes.map((s:any) => getRequiredGrams(s.label))) : 1;
          return (item.onHand || 0) < minGrams;
      } else {
-         const displayStock = item.onHand || (item.options?.length > 0 ? item.options.reduce((sum: number, opt: any) => sum + (Number(opt.stock) || 0), 0) : 0);
+         const hasTrueVariants = item.options && item.options.length > 0 && item.options[0].label !== 'Standard';
+         const displayStock = hasTrueVariants 
+             ? item.options.reduce((sum: number, opt: any) => sum + (Number(opt.stock) || 0), 0) 
+             : (item.onHand || 0);
          return displayStock <= 0;
      }
   };
@@ -69,30 +66,6 @@ export default function StorefrontCatalog({
   const premiumVaultBucket = safeInventory.filter((i: any) => i.isTopShelf && !i.featured && !i.isConfiguredDeal && !i.subCategory?.toLowerCase().includes('steals'));
   const smokyStealsBucket = safeInventory.filter((i: any) => i.subCategory?.toLowerCase().includes('steals') && !i.dailyDeal && !i.featured);
 
-  const renderDealMath = (config: any) => {
-    if (!config) return 'PROMO';
-    if (config.type === 'BUNDLE') return `${config.buyQty} for $${config.bundlePrice}`;
-    if (config.type === 'DISCOUNT') {
-      if (config.discountType === 'PERCENT') return `${config.discountValue}% OFF`;
-      if (config.discountType === 'DOLLAR') return `$${config.discountValue} OFF`;
-      if (config.discountType === 'FIXED') return `$${config.discountValue}`;
-      if (config.discountType === 'TIERED') return `TIERED PRICING`;
-    }
-    return `B${config.buyQty || 1} G${config.getQty || 1}`;
-  };
-
-  const tickerItems = useMemo(() => {
-    const items: any[] = [];
-    for (let i = 1; i <= 7; i++) {
-       const targetDayIndex = (timeData.dayOfWeek + i) % 7;
-       const targetDay = DAYS_OF_WEEK[targetDayIndex];
-       
-       const dayDeals = allDeals.filter((d: any) => d.dealDays?.includes(targetDayIndex));
-       dayDeals.forEach((d: any) => { items.push({ day: targetDay.short, name: d.name, promo: renderDealMath(d.dealConfig) }); });
-    }
-    return items;
-  }, [allDeals, timeData.dayOfWeek]);
-
   return (
     <>
       <StorefrontHeader 
@@ -114,28 +87,7 @@ export default function StorefrontCatalog({
                    </div>
                  </div>
                </div>
-               <button onClick={() => setShowPolicies(true)} className="bg-zinc-900/50 hover:bg-zinc-800 border border-zinc-800/50 text-zinc-400 transition-colors px-4 py-2 rounded-xl flex items-center gap-2 text-[10px] font-black uppercase tracking-widest"><Info size={14}/> Read Policies</button>
              </div>
-
-             {allDeals.length > 0 && (
-               <div className="w-full flex items-center overflow-x-auto scrollbar-hide py-2 border-b border-zinc-800/50 -mt-6 mb-4">
-                  <div className="text-pink-500 font-black uppercase tracking-widest text-[9px] flex items-center gap-1.5 shrink-0 mr-4">
-                    <Activity size={12} className="animate-pulse" /> Radar
-                  </div>
-                  <div className="flex items-center gap-4 relative whitespace-nowrap">
-                     {tickerItems.length > 0 ? tickerItems.map((t, idx) => (
-                        <div key={idx} className="flex items-center gap-2 shrink-0">
-                           <span className="text-[8px] font-black text-zinc-500 bg-zinc-900 border border-zinc-800 px-1.5 py-0.5 rounded">{t.day}</span>
-                           <span className="text-[9px] font-black text-zinc-300 uppercase tracking-wider">{t.name?.replace(/\s*\(\s*Top Shelf\s*\)\s*/i, '').trim()}</span>
-                           <span className="text-[8px] font-black text-pink-400 uppercase tracking-widest">{t.promo}</span>
-                           {idx < tickerItems.length - 1 && <span className="text-zinc-800 ml-2">•</span>}
-                        </div>
-                     )) : (
-                        <span className="text-[9px] font-bold text-zinc-600 uppercase tracking-widest italic">No upcoming scheduled drops.</span>
-                     )}
-                  </div>
-               </div>
-             )}
 
              {todaysDeals.length > 0 && (
                 <div className="pt-2 animate-in fade-in">
@@ -222,7 +174,6 @@ export default function StorefrontCatalog({
                  <div className={`p-2.5 border rounded-2xl ${bgBoxClass}`}> <HeaderIcon size={24} className={iconColorClass} /> </div>
                  <h2 className={`text-2xl md:text-3xl font-black uppercase tracking-tighter text-transparent bg-clip-text bg-linear-to-r ${textGradientClass}`}> {activeCategory} </h2>
                </div>
-               <button onClick={() => setShowPolicies(true)} className="bg-zinc-900/50 hover:bg-zinc-800 border border-zinc-800/50 text-zinc-400 transition-colors px-4 py-2 rounded-xl flex items-center gap-2 text-[10px] font-black uppercase tracking-widest"><Info size={14}/> Read Policies</button>
              </div>
 
              {activeCategory !== 'All' && availableSubCategories?.length > 0 && (

@@ -29,12 +29,19 @@ export default function StorefrontCardFront({ item, cleanItemName, baseLowestPri
     return `B${config.buyQty || 1} G${config.getQty || 1}`;
   };
 
+  const activeSubCat = item?.subCategory?.toLowerCase() || '';
+  const isPreRoll = activeSubCat.includes('pre-roll') || activeSubCat.includes('blunt');
+  const isRawFlower = isFlower && !isPreRoll;
+
   let isOutOfStock = false;
-  if (isFlower) {
+  if (isRawFlower) {
       const minRequiredGrams = sizes && sizes.length > 0 ? Math.min(...sizes.map((s:any) => getRequiredGrams(s.label))) : 1;
       isOutOfStock = (item?.onHand || 0) < minRequiredGrams;
   } else {
-      const displayStock = item?.onHand || (item?.options?.length > 0 ? item.options.reduce((sum: number, opt: any) => sum + (Number(opt.stock) || 0), 0) : 0);
+      const hasTrueVariants = item?.options && item.options.length > 0 && item.options[0].label !== 'Standard';
+      const displayStock = hasTrueVariants 
+          ? item.options.reduce((sum: number, opt: any) => sum + (Number(opt.stock) || 0), 0) 
+          : (item?.onHand || 0);
       isOutOfStock = displayStock <= 0;
   }
 
@@ -51,13 +58,10 @@ export default function StorefrontCardFront({ item, cleanItemName, baseLowestPri
   const config = item?.dealConfig;
   const isBundleOrBogo = item?.dailyDeal && config && (config.type === 'BUNDLE' || config.type === 'BOGO');
 
-  // --- NEW: Smart Lineage Parser ---
   const formatLineageDisplay = (text: string) => {
     if (!text) return null;
-    // Split by either 'x' or '×', ignoring case, and trim whitespace
     const parts = text.split(/x|×/i).map(p => p.trim()).filter(Boolean);
     
-    // If exactly 3 strains, force the 3rd to a new line
     if (parts.length === 3) {
       return (
         <span className="leading-tight text-center">
@@ -66,7 +70,6 @@ export default function StorefrontCardFront({ item, cleanItemName, baseLowestPri
       );
     }
     
-    // Otherwise, join them cleanly on one line (it will wrap naturally if needed)
     return (
       <span className="leading-tight text-center wrap-break-word whitespace-normal">
         {parts.join(' × ')}
@@ -163,7 +166,6 @@ export default function StorefrontCardFront({ item, cleanItemName, baseLowestPri
                {cleanItemName || UI.unnamed}
              </h3>
              
-             {/* DYNAMIC: Minimalist Subtitles using the smart Lineage parser */}
              {item?.lineage ? (
                <div className="mt-2 flex items-center justify-center gap-1.5 w-full text-[10px] font-bold text-zinc-500 uppercase tracking-widest">
                   <Dna size={12} className="text-zinc-600 shrink-0" />
@@ -180,7 +182,6 @@ export default function StorefrontCardFront({ item, cleanItemName, baseLowestPri
           {/* FOOTER */}
           <div className="mt-auto pt-4 border-t border-zinc-800/50 flex items-center justify-between shrink-0 w-full text-left">
             
-            {/* DYNAMIC HERO DEAL TEXT */}
             {isBundleOrBogo && !isOutOfStock ? (
               <div className="flex flex-col items-start">
                 <span className="text-[8px] font-black uppercase tracking-widest text-pink-500 mb-0.5 animate-pulse flex items-center gap-1"><Flame size={10}/> Unlocked Deal</span>

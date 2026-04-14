@@ -1,3 +1,4 @@
+// sandbox/apps/storefront/StorefrontComponents.tsx
 import React, { useState, useEffect } from 'react';
 import StorefrontCardFront from './StorefrontCardFront';
 import StorefrontCardBack from './StorefrontCardBack';
@@ -28,7 +29,6 @@ export const StorefrontCard = ({ item, cart, updateCart, clientConfig, isHero = 
   const initialOption = options.find((o: any) => (o?.stock !== undefined ? o.stock : item?.onHand) > 0) || options[0];
   const [selectedSize, setSelectedSize] = useState(sizes[0]);
   
-  // FIXED: Safer evaluation of the config object to prevent hydration crashes
   let bundleQty = selectedSize?.bundleQty || 1;
   const config = item?.dealConfig;
   
@@ -36,17 +36,21 @@ export const StorefrontCard = ({ item, cart, updateCart, clientConfig, isHero = 
     if (config.type === 'BUNDLE') {
       bundleQty = config.buyQty || 1;
     } else if (config.type === 'BOGO') {
-      // In a strict BOGO flow, the customer has to select all flavors to complete the action
       bundleQty = (config.buyQty || 1) + (config.getQty || 1); 
     }
   }
   
   const [selectedOptions, setSelectedOptions] = useState<any[]>([]);
 
+  // SMART CATEGORY DETECTION
   const isFlower = item?.mainCategory === 'Flower & Plants';
   const isMerch = item?.mainCategory === 'Merch & Extras';
-  const forceHideVariants = isFlower || isMerch;
+  const activeSubCat = item?.subCategory?.toLowerCase() || '';
+  const isPreRoll = activeSubCat.includes('pre-roll') || activeSubCat.includes('blunt');
+  const isRawFlower = isFlower && !isPreRoll;
 
+  // Only force hide variants for Raw Flower and Merch
+  const forceHideVariants = isRawFlower || isMerch;
   const hasMultipleOptions = !forceHideVariants && (options.length > 1 || (options.length === 1 && options[0]?.label !== 'Standard'));
 
   useEffect(() => {
@@ -64,7 +68,6 @@ export const StorefrontCard = ({ item, cart, updateCart, clientConfig, isHero = 
     setSelectedOptions(newOpts);
   };
   
-  // FIXED: Ensure cart object exists before attempting to read keys from it
   const safeCart = cart || {};
   const optionsKey = selectedOptions.map(o => o?.id).sort().join('+');
   const cartKey = `${item?.id}_${selectedSize?.id}_${optionsKey}`;
@@ -73,7 +76,7 @@ export const StorefrontCard = ({ item, cart, updateCart, clientConfig, isHero = 
   const isBundleComplete = selectedOptions.length === bundleQty;
   
   let maxStockForDisplay = 0;
-  if (isFlower) {
+  if (isRawFlower) {
      const gramsNeeded = getRequiredGrams(selectedSize.label);
      maxStockForDisplay = Math.floor((item?.onHand || 0) / gramsNeeded);
   } else {
