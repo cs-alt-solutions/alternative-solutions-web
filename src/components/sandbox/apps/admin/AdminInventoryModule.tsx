@@ -13,7 +13,7 @@ import AdminInventoryTable from './AdminInventoryTable';
 
 export default function AdminInventoryModule({ stock, setStock, inventoryMatrix, setNotification, clientConfig }: any) {
   
-  const mainCategories = clientConfig.categories || ['Flower & Plants', 'Vapes & Pens', 'Edibles', 'Concentrates', 'Merch & Extras'];
+  const mainCategories = clientConfig.categories || ['Flower & Plants', 'Vapes & Pens', 'Edibles', 'Concentrates', 'Healthcare & Topicals', 'Merch & Extras'];
   const defaultSubCats = clientConfig.subCategories || {};
   const defaultTiers = clientConfig.pricingTiers || [];
 
@@ -25,7 +25,6 @@ export default function AdminInventoryModule({ stock, setStock, inventoryMatrix,
   const [isManagingCats, setIsManagingCats] = useState(false);
   const [showBackupModal, setShowBackupModal] = useState(false);
 
-  // NEW: View Mode State for Archives
   const [viewMode, setViewMode] = useState<'active' | 'archived'>('active');
 
   const [searchTerm, setSearchTerm] = useState('');
@@ -91,7 +90,6 @@ export default function AdminInventoryModule({ stock, setStock, inventoryMatrix,
     }
   };
 
-  // NEW: Handle moving an item safely between Active and Archived
   const handleToggleArchive = async (item: any) => {
     const newStatus = item.status === 'archived' ? 'active' : 'archived';
     const updatedItem = { ...item, status: newStatus };
@@ -180,7 +178,6 @@ export default function AdminInventoryModule({ stock, setStock, inventoryMatrix,
   const processedInventory = useMemo(() => {
     let result = [...inventoryMatrix];
 
-    // --- NEW: Filter by Archive Mode First ---
     if (viewMode === 'active') {
       result = result.filter(i => i.status !== 'archived');
     } else {
@@ -273,7 +270,6 @@ export default function AdminInventoryModule({ stock, setStock, inventoryMatrix,
         onAddProduct={() => openEditor()}
       />
 
-      {/* NEW: Tab Navigation for Active vs Archived */}
       <div className="flex items-center gap-6 mb-6 px-2 border-b border-zinc-800/50">
         <button 
           onClick={() => setViewMode('active')}
@@ -302,7 +298,7 @@ export default function AdminInventoryModule({ stock, setStock, inventoryMatrix,
         handleSort={handleSort} openEditor={openEditor}
         mainCategories={mainCategories} subCategories={subCategories}
         onQuickSave={handleSaveProduct}
-        onToggleArchive={handleToggleArchive} // Passing down the action
+        onToggleArchive={handleToggleArchive}
       />
     </div>
   );

@@ -1,10 +1,10 @@
 // sandbox/apps/storefront/StorefrontCatalog.tsx
 import React, { useEffect } from 'react';
 import { useStickyState } from '@/hooks/useStickyState';
-import { Info, Flame, ShoppingCart, Leaf, Wind, Cookie, Droplet, Shirt, LayoutGrid, Tag, Award, Sparkles, Star, ArrowRight, Home } from 'lucide-react';
+import { Info, Flame, ShoppingCart, Leaf, Wind, Cookie, Droplet, Shirt, LayoutGrid, Tag, Award, Sparkles, Star, ArrowRight, Home, Activity } from 'lucide-react';
 import { StorefrontCard, getRequiredGrams } from './StorefrontComponents';
 import StorefrontHeader from './StorefrontHeader';
-import { IconMap } from '../admin/storefront/StorefrontBuilder';
+import { IconMap, ThemeMap, getThemeColor } from '../admin/storefront/StorefrontBuilder';
 
 const defaultHomeConfig = {
   hero: { title: "30% OFF\nSALE", subtitle: "On Select Brands. Let's Stock Up!", buttonText: "Shop The Sale", colorFrom: "pink-600", colorTo: "rose-600", icon: "Flame" },
@@ -70,6 +70,7 @@ export default function StorefrontCatalog({
   else if (activeCategory === 'Vapes & Pens') { HeaderIcon = Wind; iconColorClass = "text-cyan-400"; bgBoxClass = "bg-cyan-500/10 border-cyan-500/20"; textGradientClass = "from-cyan-400 via-blue-400 to-indigo-500"; }
   else if (activeCategory === 'Edibles') { HeaderIcon = Cookie; iconColorClass = "text-amber-400"; bgBoxClass = "bg-amber-500/10 border-amber-500/20"; textGradientClass = "from-amber-400 via-orange-400 to-rose-500"; }
   else if (activeCategory === 'Concentrates') { HeaderIcon = Droplet; iconColorClass = "text-orange-500"; bgBoxClass = "bg-orange-500/10 border-orange-500/20"; textGradientClass = "from-orange-500 via-red-400 to-rose-600"; }
+  else if (activeCategory === 'Healthcare & Topicals') { HeaderIcon = Activity; iconColorClass = "text-rose-400"; bgBoxClass = "bg-rose-500/10 border-rose-500/20"; textGradientClass = "from-rose-400 via-pink-400 to-fuchsia-500"; }
   else if (activeCategory === 'Merch & Extras') { HeaderIcon = Shirt; iconColorClass = "text-fuchsia-400"; bgBoxClass = "bg-fuchsia-500/10 border-fuchsia-500/20"; textGradientClass = "from-fuchsia-400 via-pink-400 to-rose-500"; }
 
   const isFeaturedTab = activeCategory === 'Home' || activeCategory === 'Daily Deals';
@@ -78,6 +79,9 @@ export default function StorefrontCatalog({
   const newDropsBucket = safeInventory.filter((i: any) => i.featured && !i.isConfiguredDeal && !i.subCategory?.toLowerCase().includes('steals'));
   const premiumVaultBucket = safeInventory.filter((i: any) => i.isTopShelf && !i.featured && !i.isConfiguredDeal && !i.subCategory?.toLowerCase().includes('steals'));
   const smokyStealsBucket = safeInventory.filter((i: any) => i.subCategory?.toLowerCase().includes('steals') && !i.dailyDeal && !i.featured);
+
+  const heroTheme = ThemeMap[getThemeColor((homeConfig.hero as any).color || homeConfig.hero.colorFrom)] || ThemeMap['pink'];
+  const secTheme = ThemeMap[getThemeColor((homeConfig.secondary as any).color || homeConfig.secondary.colorFrom)] || ThemeMap['emerald'];
 
   const HeroIcon = IconMap[homeConfig.hero.icon] || Flame;
   const SecIcon = IconMap[homeConfig.secondary.icon] || Award;
@@ -99,7 +103,7 @@ export default function StorefrontCatalog({
            <div className="animate-in fade-in slide-in-from-bottom-4 space-y-10 pt-2 sm:pt-0">
              
              {/* DYNAMIC: Promo Banner 1 (Primary) */}
-             <div className={`w-full bg-linear-to-r from-${homeConfig.hero.colorFrom} to-${homeConfig.hero.colorTo} rounded-3xl p-8 md:p-12 flex flex-col md:flex-row items-center justify-between shadow-2xl overflow-hidden relative group`}>
+             <div className={`w-full ${heroTheme.heroGrad} rounded-3xl p-8 md:p-12 flex flex-col md:flex-row items-center justify-between shadow-2xl overflow-hidden relative group`}>
                 <div className="relative z-10">
                   <h2 className="text-4xl md:text-6xl font-black text-white uppercase tracking-tighter leading-none mb-2 drop-shadow-md whitespace-pre-line">{homeConfig.hero.title}</h2>
                   <p className="text-xs font-black uppercase tracking-widest text-white/80 mb-6 drop-shadow">{homeConfig.hero.subtitle}</p>
@@ -115,6 +119,7 @@ export default function StorefrontCatalog({
                  {homeConfig.bento.map((c: any, idx: number) => {
                    const BIcon = IconMap[c.icon] || Tag;
                    const sanitizedSpan = c.span.replace(/md:col-start-\d+/g, '').trim();
+                   const theme = ThemeMap[getThemeColor(c.color)] || ThemeMap['emerald'];
 
                    return (
                      <button 
@@ -124,19 +129,19 @@ export default function StorefrontCatalog({
                           if (c.sub) setActiveSubCategory(c.sub);
                           else setActiveSubCategory('All');
                        }}
-                       className={`rounded-3xl p-6 flex flex-col items-start justify-end gap-1 hover:border-${c.color}-500 transition-all group relative overflow-hidden ${sanitizedSpan} bg-zinc-950 border-2 border-zinc-800 shadow-lg`}
+                       className={`rounded-3xl p-6 flex flex-col items-start justify-end gap-1 ${theme.bentoHover} transition-all group relative overflow-hidden ${sanitizedSpan} bg-zinc-950 border-2 border-zinc-800 shadow-lg`}
                      >
                        {c.imgUrl ? (
                           <div className="absolute inset-0 z-0 group-hover:scale-105 transition-transform duration-700">
                              <img src={c.imgUrl} alt={c.name} className="w-full h-full object-cover" />
-                             <div className={`absolute inset-0 bg-linear-to-t via-black/40 to-transparent from-${c.color}-950`} />
+                             <div className={`absolute inset-0 bg-linear-to-t via-black/40 to-transparent ${theme.bentoOverlay}`} />
                           </div>
                        ) : (
-                          <div className={`absolute inset-0 z-0 bg-linear-to-b from-${c.color}-900 via-zinc-900 to-black group-hover:scale-105 transition-transform duration-700`} />
+                          <div className={`absolute inset-0 z-0 ${theme.bentoFallback} group-hover:scale-105 transition-transform duration-700`} />
                        )}
   
                        <div className="relative z-10 w-full flex flex-col items-start">
-                          <div className={`p-3 rounded-xl bg-zinc-950/80 border border-zinc-800/50 mb-4 text-${c.color}-400 group-hover:scale-110 transition-transform`}>
+                          <div className={`p-3 rounded-xl border border-zinc-800/50 mb-4 group-hover:scale-110 transition-transform bg-zinc-950/80 ${theme.bentoIconText}`}>
                              <BIcon size={24} />
                           </div>
                           <span className="text-sm sm:text-lg font-black uppercase tracking-widest text-zinc-100 drop-shadow-md">{c.name}</span>
@@ -151,11 +156,11 @@ export default function StorefrontCatalog({
              </div>
 
              {/* DYNAMIC: Promo Banner 2 (Secondary) */}
-             <div className={`w-full bg-${homeConfig.secondary.colorFrom} rounded-3xl p-8 md:p-12 flex flex-col md:flex-row items-center justify-between shadow-xl border border-zinc-700 overflow-hidden relative group`}>
+             <div className={`w-full ${secTheme.secBg} rounded-3xl p-8 md:p-12 flex flex-col md:flex-row items-center justify-between shadow-xl border border-zinc-700 overflow-hidden relative group`}>
                 <div className="relative z-10">
                   <p className="text-xs font-black uppercase tracking-widest text-zinc-900 mb-2">{homeConfig.secondary.subtitle}</p>
                   <h2 className="text-4xl md:text-5xl font-black text-zinc-950 uppercase tracking-tighter leading-none mb-6 whitespace-pre-line">{homeConfig.secondary.title}</h2>
-                  <button className={`bg-zinc-950 text-${homeConfig.secondary.colorFrom.replace('-500','-400')} px-6 py-3 rounded-xl text-xs font-black uppercase tracking-widest shadow-lg border border-zinc-800`}>{homeConfig.secondary.buttonText}</button>
+                  <button className={`bg-zinc-950 ${secTheme.secBtnText} px-6 py-3 rounded-xl text-xs font-black uppercase tracking-widest shadow-lg border border-zinc-800`}>{homeConfig.secondary.buttonText}</button>
                 </div>
                 <SecIcon size={140} className="text-black/10 absolute right-0 md:-right-4 top-1/2 -translate-y-1/2 group-hover:rotate-12 transition-transform duration-700" />
              </div>

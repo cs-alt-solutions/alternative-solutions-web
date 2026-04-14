@@ -52,7 +52,6 @@ export default function AdminInventoryEditor({ initialItem, isAdding, mainCatego
         status: initialItem.status || 'active',
         sizes: Array.isArray(initialItem.sizes) && initialItem.sizes.length > 0 ? [...initialItem.sizes] : [{ id: `sz-${Date.now()}`, label: 'Standard', price: initialItem.price || 0 }],
         
-        // SMART PARSER
         options: Array.isArray(initialItem.options) ? initialItem.options.map((opt: any) => {
             const labelParts = (opt.label || '').split(/\s*(?:\/|\+)\s*/);
             const parsedStrains = labelParts.map((part: string) => {
@@ -259,7 +258,6 @@ export default function AdminInventoryEditor({ initialItem, isAdding, mainCatego
   };
 
   const handleSave = () => { 
-    // SMART COMPILER
     const itemToSave = {
         ...updatedItem,
         options: updatedItem.options.map((opt: any) => {
@@ -293,10 +291,12 @@ export default function AdminInventoryEditor({ initialItem, isAdding, mainCatego
   const isVape = activeMainCat === 'Vapes & Pens';
   const isDisposable = isVape && activeSubCat === 'Disposables';
   const isMerch = activeMainCat === 'Merch & Extras';
+  const isTopical = activeMainCat === 'Healthcare & Topicals';
   
   const showVariants = !isRawFlower && !isMerch; 
   const showDNA = !isVape && !isMerch; 
-  const showLineage = !isMerch && !isDisposable;
+  // LINEAGE HIDDEN FOR HEALTHCARE & TOPICALS
+  const showLineage = !isMerch && !isDisposable && !isTopical;
   const showWeightTiers = isRawFlower;
   const showUnitPrice = !isRawFlower;
 
@@ -337,7 +337,6 @@ export default function AdminInventoryEditor({ initialItem, isAdding, mainCatego
 
       <div className="max-w-4xl mx-auto p-6 md:p-8 space-y-8 mt-4">
         
-        {/* MODULAR COMPONENTS */}
         <EditorIdentity 
           updatedItem={updatedItem} setUpdatedItem={setUpdatedItem}
           mainCategories={mainCategories} subCategories={subCategories}

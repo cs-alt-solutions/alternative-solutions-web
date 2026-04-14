@@ -1,6 +1,5 @@
-// sandbox/apps/storefront/StorefrontHeader.tsx
 import React, { useState } from 'react';
-import { ShoppingCart, Flame, LayoutGrid, Tag, Leaf, Wind, Cookie, Droplet, Shirt, Menu, Info, Home, X } from 'lucide-react';
+import { ShoppingCart, Flame, LayoutGrid, Tag, Leaf, Wind, Cookie, Droplet, Shirt, Menu, Info, Home, X, Activity } from 'lucide-react';
 
 export default function StorefrontHeader({
   cartItemCount, cartTotal, activeCategory, setActiveCategory, categories, timeData, setIsCheckingOut, setShowPolicies
@@ -43,6 +42,10 @@ export default function StorefrontHeader({
       Icon = Droplet;
       iconColor = "text-orange-500";
       if (isActive) activeBg = 'bg-linear-to-r from-orange-400 to-rose-500 text-zinc-950 shadow-[0_0_15px_rgba(249,115,22,0.4)] border-transparent';
+    } else if (cat === 'Healthcare & Topicals') {
+      Icon = Activity;
+      iconColor = "text-rose-400";
+      if (isActive) activeBg = 'bg-linear-to-r from-rose-400 to-pink-600 text-zinc-950 shadow-[0_0_15px_rgba(244,63,94,0.4)] border-transparent';
     } else if (cat === 'Merch & Extras') {
       Icon = Shirt;
       iconColor = "text-fuchsia-400";
@@ -79,7 +82,7 @@ export default function StorefrontHeader({
           <div className="flex items-center gap-3 sm:gap-4">
             <button 
               onClick={() => setIsMenuOpen(!isMenuOpen)}
-              className={`p-2.5 rounded-xl border transition-all active:scale-95 ${isMenuOpen ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400' : 'bg-zinc-900 border-zinc-800 text-zinc-400 hover:bg-zinc-800 hover:text-zinc-100'}`}
+              className={`p-2.5 rounded-xl border transition-all active:scale-95 ${isMenuOpen ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400' : 'bg-zinc-900 border-zinc-800 text-zinc-400 hover:bg-zinc-800 hover:text-zinc-100 hover:border-zinc-700'}`}
             >
               {isMenuOpen ? <X size={20} /> : <Menu size={20} />}
             </button>

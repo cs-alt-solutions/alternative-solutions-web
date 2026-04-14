@@ -1,4 +1,3 @@
-// sandbox/apps/admin/AdminStorefrontModule.tsx
 'use client';
 
 import React, { useState, useMemo } from 'react';
@@ -6,7 +5,6 @@ import { Store, Flame, Award, ChefHat, Star, X, Edit3, Settings } from 'lucide-r
 import { useStickyState } from '@/hooks/useStickyState';
 import { createClient } from '@supabase/supabase-js';
 
-// Sub-components
 import StorefrontSettings from './storefront/StorefrontSettings';
 import CampaignEngine from './storefront/CampaignEngine';
 import PromoInsights from './storefront/PromoInsights';
@@ -15,28 +13,14 @@ import InventorySelectorModal from './storefront/InventorySelectorModal';
 import StorefrontBuilder from './storefront/StorefrontBuilder';
 
 export const defaultHomeConfig = {
-  hero: {
-    title: "30% OFF\nSALE",
-    subtitle: "On Select Brands. Let's Stock Up!",
-    buttonText: "Shop The Sale",
-    colorFrom: "pink-600",
-    colorTo: "rose-600",
-    icon: "Flame"
-  },
+  hero: { title: "30% OFF\nSALE", subtitle: "On Select Brands. Let's Stock Up!", buttonText: "Shop The Sale", colorFrom: "pink-600", colorTo: "rose-600", icon: "Flame" },
   bento: [
     { name: "Flower", cat: "Flower & Plants", sub: "All", icon: "Leaf", color: "emerald", desc: "Premium flower and reserve tiers.", span: "md:col-span-2 md:row-span-2", imgUrl: "" },
-    { name: "Vapes", cat: "Vapes & Pens", sub: "All", icon: "Wind", color: "cyan", desc: "Disposables & carts.", span: "col-span-1 md:col-start-3 md:col-span-1 md:row-span-2", imgUrl: "" },
-    { name: "Pre Rolls", cat: "Flower & Plants", sub: "Pre-Rolls & Blunts", icon: "Tag", color: "pink", desc: "Ready to enjoy.", span: "col-span-1 md:col-start-4 md:col-span-1 md:row-span-1", imgUrl: "" },
-    { name: "Concentrates", cat: "Concentrates", sub: "All", icon: "Droplet", color: "orange", desc: "Dabs & sauces.", span: "col-span-2 md:col-start-4 md:col-span-1 md:row-span-1", imgUrl: "" }
+    { name: "Vapes", cat: "Vapes & Pens", sub: "All", icon: "Wind", color: "cyan", desc: "Disposables & carts.", span: "col-span-1 md:col-span-1 md:row-span-2", imgUrl: "" },
+    { name: "Pre Rolls", cat: "Flower & Plants", sub: "Pre-Rolls & Blunts", icon: "Tag", color: "pink", desc: "Ready to enjoy.", span: "col-span-1 md:col-span-1 md:row-span-1", imgUrl: "" },
+    { name: "Concentrates", cat: "Concentrates", sub: "All", icon: "Droplet", color: "orange", desc: "Dabs & sauces.", span: "col-span-2 md:col-span-1 md:row-span-1", imgUrl: "" }
   ],
-  secondary: {
-    title: "Don't Miss\nThese Deals",
-    subtitle: "While Supplies Last.",
-    buttonText: "Click To Save",
-    colorFrom: "emerald-500",
-    colorTo: "emerald-500",
-    icon: "Award"
-  }
+  secondary: { title: "Don't Miss\nThese Deals", subtitle: "While Supplies Last.", buttonText: "Click To Save", colorFrom: "emerald-500", colorTo: "emerald-500", icon: "Award" }
 };
 
 export default function AdminStorefrontModule({ stock, setStock, inventoryMatrix, setNotification, clientConfig }: any) {
@@ -46,7 +30,6 @@ export default function AdminStorefrontModule({ stock, setStock, inventoryMatrix
   const [campaignView, setCampaignView] = useState<'WEEK' | 'LIST'>('WEEK'); 
   const [activeDetailView, setActiveDetailView] = useState<'PROMOS' | 'TOPSHELF' | 'CHEF' | 'FEATURED' | null>(null);
   
-  // --- NEW: Toggle State for the Visual Builder ---
   const [adminView, setAdminView] = useState<'OPERATIONS' | 'BUILDER'>('OPERATIONS');
   const [homeConfig, setHomeConfig] = useStickyState(defaultHomeConfig, `division_home_config_v1`);
 
@@ -56,7 +39,8 @@ export default function AdminStorefrontModule({ stock, setStock, inventoryMatrix
   const [selectorContext, setSelectorContext] = useState<any>(null); 
   const [campaignItem, setCampaignItem] = useState<any>(null);
 
-  const mainCategories = clientConfig.categories || ['Flower & Plants', 'Vapes & Pens', 'Edibles', 'Concentrates', 'Merch & Extras'];
+  // INJECTED NEW PRIMARY CATEGORY HERE
+  const mainCategories = clientConfig.categories || ['Flower & Plants', 'Vapes & Pens', 'Edibles', 'Concentrates', 'Healthcare & Topicals', 'Merch & Extras'];
   const [subCategories] = useStickyState<Record<string, string[]>>(clientConfig.subCategories || {}, `inv_subcats_v2_${clientConfig?.id || 'division'}`);
 
   const openInventorySelector = (dayId: number, lane: string) => {
@@ -212,7 +196,6 @@ export default function AdminStorefrontModule({ stock, setStock, inventoryMatrix
         </div>
       </div>
 
-      {/* --- NEW: THE VIEW TOGGLE --- */}
       <div className="flex items-center gap-6 mb-8 px-2 border-b border-zinc-800/50">
         <button onClick={() => setAdminView('OPERATIONS')} className={`pb-4 text-[10px] font-black uppercase tracking-widest transition-all relative ${adminView === 'OPERATIONS' ? 'text-cyan-400' : 'text-zinc-500 hover:text-zinc-300'}`}>
           Grid Ops & Campaigns
@@ -224,7 +207,6 @@ export default function AdminStorefrontModule({ stock, setStock, inventoryMatrix
         </button>
       </div>
 
-      {/* --- THE CONDITIONAL RENDER --- */}
       {adminView === 'BUILDER' ? (
          <StorefrontBuilder homeConfig={homeConfig} setHomeConfig={setHomeConfig} mainCategories={mainCategories} subCategories={subCategories} />
       ) : (

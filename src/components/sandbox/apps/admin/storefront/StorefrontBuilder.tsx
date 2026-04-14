@@ -1,8 +1,7 @@
-// sandbox/apps/admin/storefront/StorefrontBuilder.tsx
 import React, { useState } from 'react';
-import { Edit3, X, Image as ImageIcon, Flame, Award, Leaf, Wind, Tag, Droplet, Sparkles, Star, Save, ArrowLeft, ArrowRight, Trash2, Plus } from 'lucide-react';
+import { Edit3, X, Image as ImageIcon, Flame, Award, Leaf, Wind, Tag, Droplet, Sparkles, Star, Save, ArrowLeft, ArrowRight, Trash2, Plus, Activity } from 'lucide-react';
 
-export const IconMap: any = { Flame, Award, Leaf, Wind, Tag, Droplet, Sparkles, Star };
+export const IconMap: any = { Flame, Award, Leaf, Wind, Tag, Droplet, Sparkles, Star, Activity };
 
 export const ThemeMap: Record<string, any> = {
   emerald: {
@@ -125,8 +124,9 @@ export default function StorefrontBuilder({ homeConfig, setHomeConfig, mainCateg
         setHomeConfig({ ...homeConfig, bento: newBento });
     };
 
-    const heroTheme = ThemeMap[getThemeColor(homeConfig.hero.color || homeConfig.hero.colorFrom)] || ThemeMap['pink'];
-    const secTheme = ThemeMap[getThemeColor(homeConfig.secondary.color || homeConfig.secondary.colorFrom)] || ThemeMap['emerald'];
+    // FIX: Cast as any to avoid legacy prop TS error
+    const heroTheme = ThemeMap[getThemeColor((homeConfig.hero as any).color || homeConfig.hero.colorFrom)] || ThemeMap['pink'];
+    const secTheme = ThemeMap[getThemeColor((homeConfig.secondary as any).color || homeConfig.secondary.colorFrom)] || ThemeMap['emerald'];
 
     const HeroIcon = IconMap[homeConfig.hero.icon] || Flame;
     const SecIcon = IconMap[homeConfig.secondary.icon] || Award;
@@ -204,7 +204,7 @@ export default function StorefrontBuilder({ homeConfig, setHomeConfig, mainCateg
                   })}
 
                   {homeConfig.bento.length < 6 && (
-                      <button onClick={addBento} className="col-span-1 md:col-span-1 md:row-span-1 border-2 border-dashed border-zinc-700 rounded-3xl flex flex-col items-center justify-center text-zinc-500 hover:text-cyan-400 hover:border-cyan-500/50 hover:bg-cyan-500/5 transition-all group min-h-[160px]">
+                      <button onClick={addBento} className="col-span-1 md:col-span-1 md:row-span-1 border-2 border-dashed border-zinc-700 rounded-3xl flex flex-col items-center justify-center text-zinc-500 hover:text-cyan-400 hover:border-cyan-500/50 hover:bg-cyan-500/5 transition-all group min-h-40">
                           <div className="p-3 bg-zinc-900 rounded-full group-hover:bg-cyan-500/20 transition-colors mb-2"><Plus size={24}/></div>
                           <span className="text-[10px] font-black uppercase tracking-widest">Add Category</span>
                       </button>
@@ -228,7 +228,7 @@ export default function StorefrontBuilder({ homeConfig, setHomeConfig, mainCateg
 
            {/* Editor Slide-Over Modal */}
            {editingBlock && (
-               <div className="fixed inset-0 z-100 flex justify-end bg-black/80 backdrop-blur-sm animate-in fade-in">
+               <div className="fixed inset-0 z-[100] flex justify-end bg-black/80 backdrop-blur-sm animate-in fade-in">
                    <div className="w-full max-w-md bg-zinc-950 h-full border-l border-zinc-800 flex flex-col shadow-2xl animate-in slide-in-from-right-8">
                        <div className="p-6 border-b border-zinc-800 flex items-center justify-between bg-zinc-900/50">
                            <h3 className="text-lg font-black uppercase tracking-widest text-white flex items-center gap-2"><Edit3 size={18} className="text-cyan-400"/> {editingBlock.includes('bento') ? 'Edit Category Box' : 'Edit Banner'}</h3>
@@ -253,6 +253,7 @@ export default function StorefrontBuilder({ homeConfig, setHomeConfig, mainCateg
                                  <div className="grid grid-cols-2 gap-4">
                                      <div>
                                          <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest block mb-2">Color Theme</label>
+                                         {/* Updated to cast hero property to any for older config compat */}
                                          <select value={getThemeColor(editForm.color || editForm.colorFrom)} onChange={e => setEditForm({...editForm, color: e.target.value})} className="w-full bg-zinc-900 border border-zinc-800 rounded-xl p-3 text-sm font-bold text-white focus:border-cyan-500 outline-none">
                                              <option value="pink">Pink</option>
                                              <option value="emerald">Emerald</option>
