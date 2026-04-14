@@ -98,19 +98,6 @@ export default function StorefrontCatalog({
          {isFeaturedTab ? (
            <div className="animate-in fade-in slide-in-from-bottom-4 space-y-10 pt-2 sm:pt-0">
              
-             <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 border-b border-zinc-800 pb-6">
-               <div className="flex items-center gap-4">
-                 <div className="p-3 bg-zinc-900 border border-zinc-800 rounded-2xl shadow-inner"><Home size={28} className="text-zinc-100" /></div>
-                 <div>
-                   <h2 className="text-3xl md:text-4xl font-black uppercase tracking-tighter text-zinc-100">Welcome Home</h2>
-                   <p className="text-[10px] sm:text-xs font-bold text-zinc-500 uppercase tracking-widest mt-1">Division Market & Alternative Solutions Featured Selections</p>
-                 </div>
-               </div>
-               <p className="text-[11px] font-medium text-emerald-400 italic bg-zinc-900/50 px-4 py-2 rounded-xl border border-zinc-800/50 leading-relaxed md:max-w-md">
-                 Explore fresh drops, daily steals, and high-potency selections curated just for this shift. Check policies before finalizing.
-               </p>
-             </div>
-
              {/* DYNAMIC: Promo Banner 1 (Primary) */}
              <div className={`w-full bg-linear-to-r from-${homeConfig.hero.colorFrom} to-${homeConfig.hero.colorTo} rounded-3xl p-8 md:p-12 flex flex-col md:flex-row items-center justify-between shadow-2xl overflow-hidden relative group`}>
                 <div className="relative z-10">
@@ -127,7 +114,6 @@ export default function StorefrontCatalog({
                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 grid-flow-row-dense auto-rows-[160px] md:auto-rows-[180px]">
                  {homeConfig.bento.map((c: any, idx: number) => {
                    const BIcon = IconMap[c.icon] || Tag;
-                   // Strip hardcoded column positioning so the grid can seamlessly tetris the blocks
                    const sanitizedSpan = c.span.replace(/md:col-start-\d+/g, '').trim();
 
                    return (

@@ -4,13 +4,86 @@ import { Edit3, X, Image as ImageIcon, Flame, Award, Leaf, Wind, Tag, Droplet, S
 
 export const IconMap: any = { Flame, Award, Leaf, Wind, Tag, Droplet, Sparkles, Star };
 
+export const ThemeMap: Record<string, any> = {
+  emerald: {
+    heroGrad: 'bg-linear-to-r from-emerald-600 to-teal-600',
+    secBg: 'bg-emerald-500',
+    secBtnText: 'text-emerald-400',
+    bentoHover: 'hover:border-emerald-500',
+    bentoOverlay: 'from-emerald-950',
+    bentoFallback: 'bg-linear-to-b from-emerald-900 via-zinc-900 to-black',
+    bentoIconBg: 'bg-emerald-500/10',
+    bentoIconText: 'text-emerald-400',
+  },
+  cyan: {
+    heroGrad: 'bg-linear-to-r from-cyan-600 to-blue-600',
+    secBg: 'bg-cyan-500',
+    secBtnText: 'text-cyan-400',
+    bentoHover: 'hover:border-cyan-500',
+    bentoOverlay: 'from-cyan-950',
+    bentoFallback: 'bg-linear-to-b from-cyan-900 via-zinc-900 to-black',
+    bentoIconBg: 'bg-cyan-500/10',
+    bentoIconText: 'text-cyan-400',
+  },
+  pink: {
+    heroGrad: 'bg-linear-to-r from-pink-600 to-rose-600',
+    secBg: 'bg-pink-500',
+    secBtnText: 'text-pink-400',
+    bentoHover: 'hover:border-pink-500',
+    bentoOverlay: 'from-pink-950',
+    bentoFallback: 'bg-linear-to-b from-pink-900 via-zinc-900 to-black',
+    bentoIconBg: 'bg-pink-500/10',
+    bentoIconText: 'text-pink-400',
+  },
+  orange: {
+    heroGrad: 'bg-linear-to-r from-orange-600 to-red-600',
+    secBg: 'bg-orange-500',
+    secBtnText: 'text-orange-400',
+    bentoHover: 'hover:border-orange-500',
+    bentoOverlay: 'from-orange-950',
+    bentoFallback: 'bg-linear-to-b from-orange-900 via-zinc-900 to-black',
+    bentoIconBg: 'bg-orange-500/10',
+    bentoIconText: 'text-orange-400',
+  },
+  fuchsia: {
+    heroGrad: 'bg-linear-to-r from-fuchsia-600 to-purple-600',
+    secBg: 'bg-fuchsia-500',
+    secBtnText: 'text-fuchsia-400',
+    bentoHover: 'hover:border-fuchsia-500',
+    bentoOverlay: 'from-fuchsia-950',
+    bentoFallback: 'bg-linear-to-b from-fuchsia-900 via-zinc-900 to-black',
+    bentoIconBg: 'bg-fuchsia-500/10',
+    bentoIconText: 'text-fuchsia-400',
+  },
+  amber: {
+    heroGrad: 'bg-linear-to-r from-amber-500 to-orange-500',
+    secBg: 'bg-amber-500',
+    secBtnText: 'text-amber-400',
+    bentoHover: 'hover:border-amber-500',
+    bentoOverlay: 'from-amber-950',
+    bentoFallback: 'bg-linear-to-b from-amber-900 via-zinc-900 to-black',
+    bentoIconBg: 'bg-amber-500/10',
+    bentoIconText: 'text-amber-400',
+  }
+};
+
+export const getThemeColor = (configColor: string) => {
+    if (!configColor) return 'emerald';
+    const str = configColor.toLowerCase();
+    if (str.includes('pink') || str.includes('rose')) return 'pink';
+    if (str.includes('cyan') || str.includes('blue')) return 'cyan';
+    if (str.includes('orange') || str.includes('red')) return 'orange';
+    if (str.includes('fuchsia') || str.includes('purple')) return 'fuchsia';
+    if (str.includes('amber') || str.includes('yellow')) return 'amber';
+    return 'emerald';
+};
+
 export default function StorefrontBuilder({ homeConfig, setHomeConfig, mainCategories, subCategories }: any) {
     const [editingBlock, setEditingBlock] = useState<string | null>(null);
     const [editForm, setEditForm] = useState<any>(null);
 
     const openEdit = (blockId: string, data: any) => {
         setEditingBlock(blockId);
-        // Clean up any legacy hardcoded start positions so the dense grid can auto-pack
         const cleanedData = { ...data };
         if (cleanedData.span) cleanedData.span = cleanedData.span.replace(/md:col-start-\d+/g, '').trim();
         setEditForm(cleanedData);
@@ -28,7 +101,6 @@ export default function StorefrontBuilder({ homeConfig, setHomeConfig, mainCateg
         setEditingBlock(null);
     };
 
-    // --- NEW: Grid Manipulation Controls ---
     const moveBento = (idx: number, direction: number) => {
         const newBento = [...homeConfig.bento];
         const targetIdx = idx + direction;
@@ -53,6 +125,9 @@ export default function StorefrontBuilder({ homeConfig, setHomeConfig, mainCateg
         setHomeConfig({ ...homeConfig, bento: newBento });
     };
 
+    const heroTheme = ThemeMap[getThemeColor(homeConfig.hero.color || homeConfig.hero.colorFrom)] || ThemeMap['pink'];
+    const secTheme = ThemeMap[getThemeColor(homeConfig.secondary.color || homeConfig.secondary.colorFrom)] || ThemeMap['emerald'];
+
     const HeroIcon = IconMap[homeConfig.hero.icon] || Flame;
     const SecIcon = IconMap[homeConfig.secondary.icon] || Award;
 
@@ -65,11 +140,10 @@ export default function StorefrontBuilder({ homeConfig, setHomeConfig, mainCateg
              </div>
            </div>
 
-           {/* Live Preview Canvas */}
            <div className="space-y-10 scale-[0.95] transform origin-top border border-dashed border-zinc-800 p-6 rounded-3xl bg-zinc-950/50 relative">
               
               {/* Hero Banner Editor */}
-              <div onClick={() => openEdit('hero', homeConfig.hero)} className={`cursor-pointer group relative w-full bg-linear-to-r from-${homeConfig.hero.colorFrom} to-${homeConfig.hero.colorTo} rounded-3xl p-8 md:p-12 flex flex-col md:flex-row items-center justify-between shadow-2xl overflow-hidden transition-all hover:ring-4 ring-white/20`}>
+              <div onClick={() => openEdit('hero', homeConfig.hero)} className={`cursor-pointer group relative w-full ${heroTheme.heroGrad} rounded-3xl p-8 md:p-12 flex flex-col md:flex-row items-center justify-between shadow-2xl overflow-hidden transition-all hover:ring-4 ring-white/20`}>
                  <div className="absolute inset-0 bg-black/40 hidden group-hover:flex items-center justify-center z-50 backdrop-blur-sm transition-all">
                      <span className="bg-zinc-900 text-white px-6 py-3 rounded-xl font-black uppercase tracking-widest text-xs flex items-center gap-2"><Edit3 size={16}/> Edit Hero Banner</span>
                  </div>
@@ -88,17 +162,15 @@ export default function StorefrontBuilder({ homeConfig, setHomeConfig, mainCateg
                   <span className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest bg-zinc-900 px-3 py-1 rounded-full">{homeConfig.bento.length} / 6 Active</span>
                 </div>
                 
-                {/* DYNAMIC AUTO-GRID: Uses dense packing to perfectly slot different sized blocks together */}
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4 grid-flow-row-dense auto-rows-[160px] md:auto-rows-[180px]">
                   {homeConfig.bento.map((c: any, idx: number) => {
                      const BIcon = IconMap[c.icon] || Tag;
-                     // Clean legacy state
                      const sanitizedSpan = c.span.replace(/md:col-start-\d+/g, '').trim();
+                     const theme = ThemeMap[getThemeColor(c.color)] || ThemeMap['emerald'];
 
                      return (
-                       <div key={idx} className={`group relative overflow-hidden ${sanitizedSpan} bg-zinc-950 border-2 border-zinc-800 shadow-lg rounded-3xl p-6 flex flex-col items-start justify-end gap-1 hover:border-${c.color}-500 transition-all`}>
+                       <div key={idx} className={`group relative overflow-hidden ${sanitizedSpan} bg-zinc-950 border-2 border-zinc-800 shadow-lg rounded-3xl p-6 flex flex-col items-start justify-end gap-1 ${theme.bentoHover} transition-all`}>
                          
-                         {/* OVERLAY CONTROLS */}
                          <div className="absolute inset-0 bg-black/60 hidden group-hover:flex flex-col items-center justify-center z-50 backdrop-blur-sm transition-all gap-3">
                            <button onClick={(e) => { e.stopPropagation(); openEdit(`bento-${idx}`, c); }} className="bg-zinc-900 hover:bg-zinc-800 text-white px-4 py-2 rounded-xl font-black uppercase tracking-widest text-[10px] flex items-center gap-2 transition-colors"><Edit3 size={14}/> Edit Content</button>
                            <div className="flex items-center gap-2">
@@ -113,13 +185,13 @@ export default function StorefrontBuilder({ homeConfig, setHomeConfig, mainCateg
                          {c.imgUrl ? (
                             <div className="absolute inset-0 z-0">
                                <img src={c.imgUrl} className="w-full h-full object-cover" />
-                               <div className={`absolute inset-0 bg-linear-to-t via-black/40 to-transparent from-${c.color}-950`} />
+                               <div className={`absolute inset-0 bg-linear-to-t via-black/40 to-transparent ${theme.bentoOverlay}`} />
                             </div>
                          ) : (
-                            <div className={`absolute inset-0 z-0 bg-linear-to-b from-${c.color}-900 via-zinc-900 to-black`} />
+                            <div className={`absolute inset-0 z-0 ${theme.bentoFallback}`} />
                          )}
                          <div className="relative z-10 w-full flex flex-col items-start pointer-events-none">
-                            <div className={`p-3 rounded-xl bg-zinc-950/80 border border-zinc-800/50 mb-4 text-${c.color}-400`}>
+                            <div className={`p-3 rounded-xl bg-zinc-950/80 border border-zinc-800/50 mb-4 ${theme.bentoIconBg} ${theme.bentoIconText}`}>
                                <BIcon size={24} />
                             </div>
                             <span className="text-sm sm:text-lg font-black uppercase tracking-widest text-zinc-100 drop-shadow-md">{c.name}</span>
@@ -131,7 +203,6 @@ export default function StorefrontBuilder({ homeConfig, setHomeConfig, mainCateg
                      );
                   })}
 
-                  {/* ADD NEW BOX BUTTON */}
                   {homeConfig.bento.length < 6 && (
                       <button onClick={addBento} className="col-span-1 md:col-span-1 md:row-span-1 border-2 border-dashed border-zinc-700 rounded-3xl flex flex-col items-center justify-center text-zinc-500 hover:text-cyan-400 hover:border-cyan-500/50 hover:bg-cyan-500/5 transition-all group min-h-[160px]">
                           <div className="p-3 bg-zinc-900 rounded-full group-hover:bg-cyan-500/20 transition-colors mb-2"><Plus size={24}/></div>
@@ -142,14 +213,14 @@ export default function StorefrontBuilder({ homeConfig, setHomeConfig, mainCateg
               </div>
 
               {/* Secondary Banner Editor */}
-              <div onClick={() => openEdit('secondary', homeConfig.secondary)} className={`cursor-pointer group relative w-full bg-${homeConfig.secondary.colorFrom} rounded-3xl p-8 md:p-12 flex flex-col md:flex-row items-center justify-between shadow-xl border border-zinc-700 overflow-hidden transition-all hover:ring-4 ring-white/20`}>
+              <div onClick={() => openEdit('secondary', homeConfig.secondary)} className={`cursor-pointer group relative w-full ${secTheme.secBg} rounded-3xl p-8 md:p-12 flex flex-col md:flex-row items-center justify-between shadow-xl border border-zinc-700 overflow-hidden transition-all hover:ring-4 ring-white/20`}>
                  <div className="absolute inset-0 bg-black/40 hidden group-hover:flex items-center justify-center z-50 backdrop-blur-sm transition-all">
                      <span className="bg-zinc-900 text-white px-6 py-3 rounded-xl font-black uppercase tracking-widest text-xs flex items-center gap-2"><Edit3 size={16}/> Edit Banner</span>
                  </div>
                  <div className="relative z-10 pointer-events-none">
                    <p className="text-xs font-black uppercase tracking-widest text-zinc-900 mb-2">{homeConfig.secondary.subtitle}</p>
                    <h2 className="text-4xl md:text-5xl font-black text-zinc-950 uppercase tracking-tighter leading-none mb-6 whitespace-pre-line">{homeConfig.secondary.title}</h2>
-                   <button className={`bg-zinc-950 text-${homeConfig.secondary.colorFrom.replace('-500','-400')} px-6 py-3 rounded-xl text-xs font-black uppercase tracking-widest shadow-lg border border-zinc-800`}>{homeConfig.secondary.buttonText}</button>
+                   <button className={`bg-zinc-950 ${secTheme.secBtnText} px-6 py-3 rounded-xl text-xs font-black uppercase tracking-widest shadow-lg border border-zinc-800`}>{homeConfig.secondary.buttonText}</button>
                  </div>
                  <SecIcon size={140} className="text-black/10 absolute right-0 md:-right-4 top-1/2 -translate-y-1/2" />
               </div>
@@ -165,7 +236,6 @@ export default function StorefrontBuilder({ homeConfig, setHomeConfig, mainCateg
                        </div>
                        
                        <div className="flex-1 overflow-y-auto p-6 space-y-6">
-                           {/* Banner Form */}
                            {!editingBlock.includes('bento') && (
                                <>
                                  <div>
@@ -183,13 +253,13 @@ export default function StorefrontBuilder({ homeConfig, setHomeConfig, mainCateg
                                  <div className="grid grid-cols-2 gap-4">
                                      <div>
                                          <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest block mb-2">Color Theme</label>
-                                         <select value={editForm.colorFrom} onChange={e => setEditForm({...editForm, colorFrom: e.target.value, colorTo: editingBlock === 'hero' ? e.target.value.replace('600','500') : e.target.value})} className="w-full bg-zinc-900 border border-zinc-800 rounded-xl p-3 text-sm font-bold text-white focus:border-cyan-500 outline-none">
-                                             <option value="pink-600">Pink</option>
-                                             <option value="emerald-500">Emerald</option>
-                                             <option value="cyan-600">Cyan</option>
-                                             <option value="orange-500">Orange</option>
-                                             <option value="fuchsia-600">Fuchsia</option>
-                                             <option value="amber-500">Amber</option>
+                                         <select value={getThemeColor(editForm.color || editForm.colorFrom)} onChange={e => setEditForm({...editForm, color: e.target.value})} className="w-full bg-zinc-900 border border-zinc-800 rounded-xl p-3 text-sm font-bold text-white focus:border-cyan-500 outline-none">
+                                             <option value="pink">Pink</option>
+                                             <option value="emerald">Emerald</option>
+                                             <option value="cyan">Cyan</option>
+                                             <option value="orange">Orange</option>
+                                             <option value="fuchsia">Fuchsia</option>
+                                             <option value="amber">Amber</option>
                                          </select>
                                      </div>
                                      <div>
@@ -202,7 +272,6 @@ export default function StorefrontBuilder({ homeConfig, setHomeConfig, mainCateg
                                </>
                            )}
 
-                           {/* Bento Form */}
                            {editingBlock.includes('bento') && (
                                <>
                                  <div>
@@ -214,7 +283,6 @@ export default function StorefrontBuilder({ homeConfig, setHomeConfig, mainCateg
                                      <input type="text" value={editForm.desc} onChange={e => setEditForm({...editForm, desc: e.target.value})} className="w-full bg-zinc-900 border border-zinc-800 rounded-xl p-3 text-sm font-bold text-white focus:border-cyan-500 outline-none" />
                                  </div>
 
-                                 {/* --- NEW: Grid Size/Span Dropdown --- */}
                                  <div className="border-t border-zinc-800/80 pt-4 mt-2">
                                      <label className="text-[10px] font-bold text-amber-500 uppercase tracking-widest block mb-2">Grid Layout Size</label>
                                      <select value={editForm.span} onChange={e => setEditForm({...editForm, span: e.target.value})} className="w-full bg-zinc-900 border border-zinc-800 rounded-xl p-3 text-sm font-bold text-white focus:border-amber-500 outline-none">
@@ -229,13 +297,21 @@ export default function StorefrontBuilder({ homeConfig, setHomeConfig, mainCateg
                                  <div className="grid grid-cols-2 gap-4 border-t border-zinc-800/80 pt-4 mt-2">
                                     <div>
                                         <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest block mb-2">Target Category</label>
-                                        <select value={editForm.cat} onChange={e => setEditForm({...editForm, cat: e.target.value, sub: 'All'})} className="w-full bg-zinc-900 border border-zinc-800 rounded-xl p-3 text-xs font-bold text-white focus:border-cyan-500 outline-none">
+                                        <select 
+                                            value={editForm.cat} 
+                                            onChange={e => setEditForm({...editForm, cat: e.target.value, sub: 'All', name: e.target.value})} 
+                                            className="w-full bg-zinc-900 border border-zinc-800 rounded-xl p-3 text-xs font-bold text-white focus:border-cyan-500 outline-none"
+                                        >
                                             {mainCategories.map((c:string)=><option key={c} value={c}>{c}</option>)}
                                         </select>
                                     </div>
                                     <div>
                                         <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest block mb-2">Target Sub-Category</label>
-                                        <select value={editForm.sub} onChange={e => setEditForm({...editForm, sub: e.target.value})} className="w-full bg-zinc-900 border border-zinc-800 rounded-xl p-3 text-xs font-bold text-white focus:border-cyan-500 outline-none">
+                                        <select 
+                                            value={editForm.sub} 
+                                            onChange={e => setEditForm({...editForm, sub: e.target.value, name: e.target.value === 'All' ? editForm.cat : e.target.value})} 
+                                            className="w-full bg-zinc-900 border border-zinc-800 rounded-xl p-3 text-xs font-bold text-white focus:border-cyan-500 outline-none"
+                                        >
                                             <option value="All">All</option>
                                             {subCategories[editForm.cat]?.map((s:string)=><option key={s} value={s}>{s}</option>)}
                                         </select>
@@ -244,7 +320,7 @@ export default function StorefrontBuilder({ homeConfig, setHomeConfig, mainCateg
                                  <div className="grid grid-cols-2 gap-4">
                                      <div>
                                          <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest block mb-2">Accent Color</label>
-                                         <select value={editForm.color} onChange={e => setEditForm({...editForm, color: e.target.value})} className="w-full bg-zinc-900 border border-zinc-800 rounded-xl p-3 text-sm font-bold text-white focus:border-cyan-500 outline-none">
+                                         <select value={getThemeColor(editForm.color || editForm.colorFrom)} onChange={e => setEditForm({...editForm, color: e.target.value})} className="w-full bg-zinc-900 border border-zinc-800 rounded-xl p-3 text-sm font-bold text-white focus:border-cyan-500 outline-none">
                                              <option value="emerald">Emerald</option>
                                              <option value="cyan">Cyan</option>
                                              <option value="pink">Pink</option>

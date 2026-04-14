@@ -1,5 +1,6 @@
+// sandbox/apps/storefront/StorefrontHeader.tsx
 import React, { useState } from 'react';
-import { Package, ShoppingCart, Flame, LayoutGrid, Tag, Leaf, Wind, Cookie, Droplet, Shirt, Menu, ChevronDown, Info, Home } from 'lucide-react';
+import { ShoppingCart, Flame, LayoutGrid, Tag, Leaf, Wind, Cookie, Droplet, Shirt, Menu, Info, Home, X } from 'lucide-react';
 
 export default function StorefrontHeader({
   cartItemCount, cartTotal, activeCategory, setActiveCategory, categories, timeData, setIsCheckingOut, setShowPolicies
@@ -12,13 +13,13 @@ export default function StorefrontHeader({
 
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
-  const renderCategoryButton = (cat: string, isMobile: boolean) => {
+  const renderCategoryButton = (cat: string) => {
     const isActive = activeCategory === cat;
                
     let Icon = Tag;
     let iconColor = "text-zinc-500";
     let activeBg = 'bg-linear-to-r from-emerald-400 to-emerald-600 text-zinc-950 shadow-[0_0_15px_rgba(52,211,153,0.4)] border-transparent';
-    let inactiveBg = 'bg-zinc-900 border-zinc-800 text-zinc-400 hover:bg-zinc-800 hover:text-zinc-100';
+    let inactiveBg = 'bg-zinc-900/50 border-zinc-800/50 text-zinc-400 hover:bg-zinc-800 hover:text-zinc-100 hover:border-zinc-700';
 
     if (cat === 'Home') {
       Icon = Home; 
@@ -50,92 +51,77 @@ export default function StorefrontHeader({
 
     return (
       <button 
-        key={`btn-${isMobile ? 'mob' : 'desk'}-${cat}`}
+        key={`btn-menu-${cat}`}
         onClick={() => {
           setActiveCategory(cat);
-          if (isMobile) setIsMenuOpen(false);
+          setIsMenuOpen(false);
         }}
-        className={`${isMobile ? 'w-full flex items-center justify-between px-5 py-4' : 'shrink-0 flex items-center gap-2 px-4 py-2.5'} rounded-xl text-[10px] font-black uppercase tracking-widest transition-all border ${isActive ? activeBg : inactiveBg}`}
+        className={`w-full flex items-center justify-between px-4 py-3.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all border ${isActive ? activeBg : inactiveBg}`}
       >
-        <div className="flex items-center gap-2">
-          <Icon size={isMobile ? 16 : 14} className={isActive ? "text-zinc-950" : iconColor} /> 
+        <div className="flex items-center gap-3">
+          <Icon size={16} className={isActive ? "text-zinc-950" : iconColor} /> 
           {cat}
         </div>
-        {isMobile && isActive && <div className="w-1.5 h-1.5 rounded-full bg-zinc-950 shadow-sm" />}
+        {isActive && <div className="w-1.5 h-1.5 rounded-full bg-zinc-950 shadow-sm" />}
       </button>
     );
   };
 
-  const mobileActiveLabel = activeCategory === 'Daily Deals' ? 'Home' : activeCategory;
-
   return (
     <>
-      {/* GLOBAL PROMO BAR - Lint Fix z-[60] to z-60 */}
       <div className="bg-indigo-500 text-zinc-950 flex items-center justify-center py-2 px-4 text-[9px] sm:text-[10px] font-black uppercase tracking-widest z-60 relative shadow-md">
         Spend over $200 get 10% off! Free shipping on orders above $150
       </div>
       
-      <header className="bg-zinc-950 border-b border-zinc-800 pt-4 sticky top-0 z-50 shadow-md">
-        <div className="flex justify-between items-center max-w-6xl mx-auto w-full px-4 mb-4 md:mb-4">
-          <div className="flex items-center gap-3">
-            <div className="flex items-center gap-2">
-              <Package size={20} className="text-emerald-400" />
-              <div className="hidden sm:flex flex-col">
-                <h1 className="font-black text-lg tracking-widest uppercase text-zinc-100 leading-none">Division Market</h1>
-                <span className="text-[8px] font-black uppercase tracking-widest text-emerald-500 mt-1">Powered by Alternative Solutions</span>
+      <header className="bg-zinc-950 border-b border-zinc-800 pt-4 pb-4 sticky top-0 z-50 shadow-md">
+        <div className="flex justify-between items-center max-w-6xl mx-auto w-full px-4">
+          
+          <div className="flex items-center gap-3 sm:gap-4">
+            <button 
+              onClick={() => setIsMenuOpen(!isMenuOpen)}
+              className={`p-2.5 rounded-xl border transition-all active:scale-95 ${isMenuOpen ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400' : 'bg-zinc-900 border-zinc-800 text-zinc-400 hover:bg-zinc-800 hover:text-zinc-100'}`}
+            >
+              {isMenuOpen ? <X size={20} /> : <Menu size={20} />}
+            </button>
+
+            <div className="flex items-center gap-3">
+              <div className="p-2 bg-emerald-500/10 rounded-lg border border-emerald-500/20 hidden sm:block">
+                <Leaf size={18} className="text-emerald-400" />
+              </div>
+              <div className="flex flex-col">
+                <h1 className="font-black text-[15px] sm:text-lg tracking-widest uppercase text-zinc-100 leading-none">The Doobie Division</h1>
+                <span className="text-[7px] sm:text-[8px] font-black uppercase tracking-widest text-emerald-500 mt-1 opacity-80">Powered by Alternative Solutions</span>
               </div>
             </div>
           </div>
           
           <div className="flex items-center gap-4">
-             <button 
-               onClick={() => setShowPolicies && setShowPolicies(true)} 
-               className="hidden md:flex items-center gap-1.5 text-[10px] font-black uppercase tracking-widest text-zinc-500 hover:text-zinc-300 transition-colors"
-             >
-               <Info size={14} /> Policies
-             </button>
-
-             <div className="text-[10px] font-black text-zinc-600 uppercase tracking-widest font-mono hidden md:block border-l border-zinc-800 pl-4">
+             <div className="text-[10px] font-black text-zinc-600 uppercase tracking-widest font-mono hidden md:block border-r border-zinc-800 pr-4">
                 SHIFT {timeData?.shiftCode || 'A'}
              </div>
              
-             <button onClick={() => setIsCheckingOut && setIsCheckingOut(true)} className="bg-zinc-900 border border-zinc-800 px-4 py-2 rounded-xl flex items-center gap-3 shadow-inner hover:bg-zinc-800 transition-colors">
-               <ShoppingCart size={18} className="text-emerald-400" />
-               <span className="font-black text-zinc-100">{cartItemCount || 0} Items</span>
-               <span className="text-emerald-400 font-mono font-bold border-l border-zinc-800 pl-3 ml-1">${(cartTotal || 0).toFixed(2)}</span>
+             <button onClick={() => setIsCheckingOut && setIsCheckingOut(true)} className="bg-zinc-900 border border-zinc-800 px-3 py-2 sm:px-4 sm:py-2.5 rounded-xl flex items-center gap-3 shadow-inner hover:bg-zinc-800 transition-colors group">
+               <ShoppingCart size={18} className="text-emerald-400 group-hover:scale-110 transition-transform" />
+               <span className="font-black text-zinc-100 hidden sm:block">{cartItemCount || 0} Items</span>
+               <span className="text-emerald-400 font-mono font-bold sm:border-l sm:border-zinc-800 sm:pl-3 sm:ml-1">${(cartTotal || 0).toFixed(2)}</span>
              </button>
           </div>
         </div>
 
-        <div className="md:hidden max-w-6xl mx-auto w-full px-4 pb-4">
-          <button 
-            onClick={() => setIsMenuOpen(!isMenuOpen)}
-            className="w-full bg-zinc-900 border border-zinc-800 hover:bg-zinc-800 text-zinc-300 px-4 py-3.5 rounded-2xl flex items-center justify-between transition-all active:scale-95 shadow-inner"
-          >
-            <div className="flex items-center gap-3">
-              <Menu size={16} className="text-zinc-400" />
-              <span className="text-[10px] font-black uppercase tracking-widest flex items-center gap-1.5">
-                 <span className="text-zinc-600">Explore:</span> <span className="text-emerald-400">{mobileActiveLabel}</span>
-              </span>
-            </div>
-            <ChevronDown size={16} className={`text-zinc-500 transition-transform duration-300 ${isMenuOpen ? 'rotate-180' : ''}`} />
-          </button>
-        </div>
-
-        <div className="hidden md:block max-w-6xl mx-auto w-full px-4 pb-3">
-           <div className="flex items-center gap-2 border-b border-zinc-900 pb-2 overflow-x-auto whitespace-nowrap scrollbar-hide">
-              {filteredCategories.map((cat: string) => renderCategoryButton(cat, false))}
-           </div>
-        </div>
-
+        {/* UNIFIED APP DRAWER */}
         {isMenuOpen && (
-          <div className="md:hidden absolute top-full left-0 right-0 bg-zinc-950/95 backdrop-blur-xl border-b border-zinc-800 shadow-[0_20px_40px_rgba(0,0,0,0.5)] z-50 px-4 py-4 flex flex-col gap-2 max-h-[60vh] overflow-y-auto animate-in slide-in-from-top-2">
-            {filteredCategories.map((cat: string) => renderCategoryButton(cat, true))}
+          <div className="absolute top-full left-0 w-full sm:w-80 bg-zinc-950/95 backdrop-blur-xl border-b sm:border-r border-zinc-800 shadow-[0_20px_40px_rgba(0,0,0,0.5)] z-50 flex flex-col max-h-[80vh] overflow-y-auto animate-in slide-in-from-top-2 sm:slide-in-from-left-2">
+            <div className="p-4 border-b border-zinc-800/80 bg-zinc-900/30">
+               <span className="text-[10px] font-black uppercase tracking-widest text-zinc-500">Explore Categories</span>
+            </div>
+            <div className="p-3 flex flex-col gap-1.5">
+              {filteredCategories.map((cat: string) => renderCategoryButton(cat))}
+            </div>
             
-            <div className="border-t border-zinc-800/80 mt-2 pt-2">
+            <div className="border-t border-zinc-800/80 p-3 mt-2">
               <button 
                 onClick={() => { setShowPolicies && setShowPolicies(true); setIsMenuOpen(false); }} 
-                className="w-full flex items-center gap-2 px-5 py-4 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all border bg-zinc-900/50 border-zinc-800/50 text-zinc-400 hover:bg-zinc-800 hover:text-zinc-100"
+                className="w-full flex items-center gap-3 px-4 py-4 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all border bg-zinc-900/50 border-zinc-800/50 text-zinc-400 hover:bg-zinc-800 hover:text-zinc-100"
               >
                 <Info size={16} className="text-zinc-500" /> Store Policies
               </button>
