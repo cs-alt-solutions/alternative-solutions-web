@@ -1,12 +1,13 @@
+// sandbox/apps/admin/inventory-editor/components/EditorCommerce.tsx
 import React from 'react';
-import { DollarSign, Plus, X, Boxes, Minus, TicketPercent, Award, Star } from 'lucide-react';
+import { DollarSign, Plus, X, Boxes, Minus, TicketPercent, Award, ChefHat, Zap, RotateCcw } from 'lucide-react';
 
 export default function EditorCommerce({
   updatedItem, setUpdatedItem, 
   handleAddSize, handleRemoveSize, handleSizeChange,
   handleOptionChange, handleAddOption, handleRemoveOption, 
   handleStrainChange, handleAddStrain, handleRemoveStrain,
-  showWeightTiers, showVariants, openCampaignConfig
+  showWeightTiers, showVariants
 }: any) {
   return (
     <>
@@ -44,14 +45,12 @@ export default function EditorCommerce({
            </h2>
            <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
              {updatedItem.options.map((opt: any) => {
-               // SAFEGUARD: Prevents initial render crash before the Smart Parser populates the array
                const safeStrains = Array.isArray(opt.strains) ? opt.strains : [{ name: opt.label || '', type: 'N/A' }];
 
                return (
                  <div key={opt.id} className="bg-zinc-950 border border-zinc-800 rounded-xl p-4 flex flex-col gap-3 relative group">
                    <button onClick={() => handleRemoveOption(opt.id)} className="absolute top-2 right-2 p-1.5 bg-zinc-900 rounded-md text-zinc-600 hover:text-rose-400 opacity-0 group-hover:opacity-100 transition-all"><X size={12}/></button>
                    
-                   {/* DYNAMIC MULTI-CHAMBER UI */}
                    <div className="space-y-2">
                       <label className="text-[9px] font-bold text-zinc-500 uppercase tracking-widest mb-1 block">Chambers / Flavors</label>
                       {safeStrains.map((strain: any, sIdx: number) => (
@@ -111,43 +110,29 @@ export default function EditorCommerce({
          </section>
       )}
 
-      {/* SECTION 5: MERCHANDISING & CAMPAIGN TOGGLE */}
+      {/* SECTION 5: IDENTITY TAGS & LIFECYCLE */}
       <section className="bg-zinc-900/30 border border-zinc-800/80 rounded-3xl p-6 md:p-8 shadow-sm">
          <h2 className="text-sm font-black uppercase tracking-widest text-zinc-100 flex items-center gap-2 mb-6 pb-4 border-b border-zinc-800/50">
-           <TicketPercent size={16} className="text-pink-400" /> Merchandising & Campaigns
+           <TicketPercent size={16} className="text-pink-400" /> Identity Tags & Lifecycle
          </h2>
          
-         <div className="flex flex-wrap gap-4 mb-8">
-            <button onClick={()=>setUpdatedItem({...updatedItem, isTopShelf: !updatedItem.isTopShelf})} className={`px-4 py-3 rounded-xl text-xs font-black uppercase tracking-widest border transition-all flex items-center gap-2 ${updatedItem.isTopShelf ? 'bg-amber-500 text-zinc-950 border-amber-500 shadow-md' : 'bg-zinc-950 text-zinc-500 border-zinc-800 hover:border-amber-500/50 hover:text-amber-400'}`}><Award size={16}/> Top Shelf / Reserve</button>
-            <button onClick={()=>setUpdatedItem({...updatedItem, featured: !updatedItem.featured})} className={`px-4 py-3 rounded-xl text-xs font-black uppercase tracking-widest border transition-all flex items-center gap-2 ${updatedItem.featured ? 'bg-cyan-500 text-zinc-950 border-cyan-500 shadow-md' : 'bg-zinc-950 text-zinc-500 border-zinc-800 hover:border-cyan-500/50 hover:text-cyan-400'}`}><Star size={16}/> Featured Drop</button>
+         <div className="mb-8">
+            <h3 className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest mb-3">Permanent Classifications</h3>
+            <div className="flex flex-wrap gap-4">
+               <button onClick={()=>setUpdatedItem({...updatedItem, isTopShelf: !updatedItem.isTopShelf})} className={`px-4 py-3 rounded-xl text-xs font-black uppercase tracking-widest border transition-all flex items-center gap-2 ${updatedItem.isTopShelf ? 'bg-amber-500 text-zinc-950 border-amber-500 shadow-md' : 'bg-zinc-950 text-zinc-500 border-zinc-800 hover:border-amber-500/50 hover:text-amber-400'}`}><Award size={16}/> Top Shelf</button>
+               <button onClick={()=>setUpdatedItem({...updatedItem, isChefsReserve: !updatedItem.isChefsReserve})} className={`px-4 py-3 rounded-xl text-xs font-black uppercase tracking-widest border transition-all flex items-center gap-2 ${updatedItem.isChefsReserve ? 'bg-fuchsia-500 text-zinc-950 border-fuchsia-500 shadow-md' : 'bg-zinc-950 text-zinc-500 border-zinc-800 hover:border-fuchsia-500/50 hover:text-fuchsia-400'}`}><ChefHat size={16}/> Chef's Reserve</button>
+            </div>
          </div>
 
-         <div className={`border rounded-2xl p-5 transition-all duration-500 flex flex-col sm:flex-row sm:items-center justify-between gap-4 ${updatedItem.dailyDeal ? 'bg-pink-500/5 border-pink-500/30' : 'bg-zinc-950 border-zinc-800'}`}>
-            <div className="flex items-center gap-4">
-              <button 
-                onClick={() => setUpdatedItem({ ...updatedItem, dailyDeal: !updatedItem.dailyDeal, dealType: !updatedItem.dailyDeal ? 'One-Shot' : 'None' })} 
-                className={`w-12 h-6 rounded-full relative transition-colors ${updatedItem.dailyDeal ? 'bg-pink-500' : 'bg-zinc-800'}`}
-              >
-                <div className={`w-4 h-4 rounded-full bg-white absolute top-1 transition-all ${updatedItem.dailyDeal ? 'left-7' : 'left-1'}`} />
-              </button>
-              <div>
-                <h4 className={`text-sm font-black uppercase tracking-widest ${updatedItem.dailyDeal ? 'text-pink-400' : 'text-zinc-400'}`}>
-                  Active Campaign
-                </h4>
-                <p className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest mt-0.5">
-                  {updatedItem.dailyDeal ? 'Deal is live on the storefront' : 'No active campaigns'}
-                </p>
-              </div>
+         <div>
+            <h3 className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest mb-3 flex items-center justify-between">
+              Temporary Lifecycle Tags
+              <span className="text-[8px] text-zinc-600 font-normal normal-case hidden sm:block">Turn off when no longer applicable</span>
+            </h3>
+            <div className="flex flex-wrap gap-4">
+               <button onClick={()=>setUpdatedItem({...updatedItem, isNewDrop: !updatedItem.isNewDrop})} className={`px-4 py-3 rounded-xl text-xs font-black uppercase tracking-widest border transition-all flex items-center gap-2 ${updatedItem.isNewDrop ? 'bg-cyan-500 text-zinc-950 border-cyan-500 shadow-md' : 'bg-zinc-950 text-zinc-500 border-zinc-800 hover:border-cyan-500/50 hover:text-cyan-400'}`}><Zap size={16}/> New Arrival</button>
+               <button onClick={()=>setUpdatedItem({...updatedItem, isReturned: !updatedItem.isReturned})} className={`px-4 py-3 rounded-xl text-xs font-black uppercase tracking-widest border transition-all flex items-center gap-2 ${updatedItem.isReturned ? 'bg-lime-500 text-zinc-950 border-lime-500 shadow-md' : 'bg-zinc-950 text-zinc-500 border-zinc-800 hover:border-lime-500/50 hover:text-lime-400'}`}><RotateCcw size={16}/> Returned</button>
             </div>
-            
-            {updatedItem.dailyDeal && openCampaignConfig && (
-              <button 
-                onClick={(e) => { e.preventDefault(); openCampaignConfig(updatedItem); }} 
-                className="bg-zinc-900 hover:bg-pink-500 hover:text-zinc-950 text-pink-400 border border-pink-500/50 px-4 py-3 sm:py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all"
-              >
-                Configure Strategy
-              </button>
-            )}
          </div>
       </section>
     </>

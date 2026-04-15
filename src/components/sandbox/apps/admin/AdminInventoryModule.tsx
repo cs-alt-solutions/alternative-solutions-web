@@ -1,3 +1,4 @@
+// sandbox/apps/admin/AdminInventoryModule.tsx
 'use client';
 
 import React, { useState, useMemo } from 'react';
@@ -32,13 +33,16 @@ export default function AdminInventoryModule({ stock, setStock, inventoryMatrix,
   const [statusFilter, setStatusFilter] = useState('All');
   const [sortConfig, setSortConfig] = useState({ key: 'name', direction: 'asc' });
 
+  // FIXED: Brand new schema defaults tailored perfectly to your architecture
   const getBlankItem = () => ({
     id: `itm-${Math.random().toString(36).substr(2, 9)}`,
     name: '', brand: '', lineage: '', strainType: 'Hybrid', 
     descBase: '', descFeels: '', descTaste: '', descUses: '', descFact: '',
     mainCategory: mainCategories[0], subCategory: subCategories[mainCategories[0]]?.[0] || 'Uncategorized',
-    price: 0, onHand: 0, featured: false, isTopShelf: false, dailyDeal: false,
-    dealType: 'One-Shot', dealText: '', dealDays: [], iconName: 'Leaf', options: [], 
+    price: 0, onHand: 0, 
+    isTopShelf: false, isChefsReserve: false, isNewDrop: false, isReturned: false, 
+    dailyDeal: false, dealType: 'One-Shot', dealText: '', dealDays: [], 
+    iconName: 'Leaf', options: [], 
     dealConfig: { type: 'DISCOUNT', discountType: 'PERCENT', discountValue: 15, unit: 'UNITS' },
     sizes: [{ id: `sz-${Date.now()}-1`, label: 'Standard', price: 0, bundleQty: 1, promoLabel: '', promoPrice: '' }],
     status: 'active'
@@ -94,6 +98,12 @@ export default function AdminInventoryModule({ stock, setStock, inventoryMatrix,
     const newStatus = item.status === 'archived' ? 'active' : 'archived';
     const updatedItem = { ...item, status: newStatus };
     
+    // FIXED: Smart Tagging. Automatically flags as "Returned" and wipes "New Arrival" if un-archived.
+    if (newStatus === 'active') {
+       updatedItem.isReturned = true;
+       updatedItem.isNewDrop = false;
+    }
+
     setNotification(newStatus === 'archived' ? `Archiving ${item.name}...` : `Restoring ${item.name}...`);
     try {
       const { error } = await supabase
@@ -109,7 +119,7 @@ export default function AdminInventoryModule({ stock, setStock, inventoryMatrix,
         );
       if (error) throw error;
       setStock((prev: any[]) => prev.map((i: any) => i.id === updatedItem.id ? updatedItem : i));
-      setNotification(newStatus === 'archived' ? `${item.name} moved to Archive.` : `${item.name} Restored to Active.`);
+      setNotification(newStatus === 'archived' ? `${item.name} moved to Archive.` : `${item.name} Restored to Active (Marked as Returned).`);
     } catch (err) {
       console.error("Vault Write Error:", err);
       setNotification(`Failed to change archive status.`);
@@ -191,10 +201,14 @@ export default function AdminInventoryModule({ stock, setStock, inventoryMatrix,
     if (categoryFilter !== 'All') {
       result = result.filter(i => i.mainCategory === categoryFilter);
     }
+    
+    // FIXED: Updated Table Filtering to match new schemas
     if (statusFilter !== 'All') {
       if (statusFilter === 'Active Promo') result = result.filter(i => i.dailyDeal);
       if (statusFilter === 'Top Shelf') result = result.filter(i => i.isTopShelf);
-      if (statusFilter === 'Featured') result = result.filter(i => i.featured);
+      if (statusFilter === 'Chef\'s Reserve') result = result.filter(i => i.isChefsReserve);
+      if (statusFilter === 'New Arrival') result = result.filter(i => i.isNewDrop);
+      if (statusFilter === 'Returned') result = result.filter(i => i.isReturned);
       if (statusFilter === 'Smoky Steals') result = result.filter(i => i.subCategory?.toLowerCase().includes('steals'));
 
       if (statusFilter === 'Low Stock') result = result.filter(i => {

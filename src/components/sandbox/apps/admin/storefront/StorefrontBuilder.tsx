@@ -144,17 +144,50 @@ export default function StorefrontBuilder({ homeConfig, setHomeConfig, mainCateg
 
            <div className="space-y-10 scale-[0.95] transform origin-top border border-dashed border-zinc-800 p-6 rounded-3xl bg-zinc-950/50 relative">
               
-              {/* Hero Banner Editor */}
-              <div onClick={() => openEdit('hero', homeConfig.hero)} className={`cursor-pointer group relative w-full ${heroTheme.heroGrad} rounded-3xl p-8 md:p-12 flex flex-col md:flex-row items-center justify-between shadow-2xl overflow-hidden transition-all hover:ring-4 ring-white/20`}>
-                 <div className="absolute inset-0 bg-black/40 hidden group-hover:flex items-center justify-center z-50 backdrop-blur-sm transition-all">
-                     <span className="bg-zinc-900 text-white px-6 py-3 rounded-xl font-black uppercase tracking-widest text-xs flex items-center gap-2"><Edit3 size={16}/> Edit Hero Banner</span>
+              {/* FIXED: Master Hero Banner Preview now uses the Neon Billboard or the Image Background */}
+              <div onClick={() => openEdit('hero', homeConfig.hero)} className={`cursor-pointer group relative w-full ${(homeConfig.hero as any).imgUrl ? 'bg-zinc-950' : heroTheme.heroGrad} rounded-3xl p-4 md:p-8 flex flex-col justify-end shadow-2xl overflow-hidden transition-all hover:ring-4 ring-white/20 min-h-[350px] md:min-h-[450px]`}>
+                 
+                 {(homeConfig.hero as any).imgUrl ? (
+                    <div className="absolute inset-0 z-0 group-hover:scale-105 transition-transform duration-1000 pointer-events-none">
+                      <img src={(homeConfig.hero as any).imgUrl} className={`w-full h-full object-cover opacity-30`} alt="Hero" />
+                      <div className={`absolute inset-0 bg-linear-to-t from-zinc-950 via-zinc-950/80 to-zinc-950/60`} />
+                    </div>
+                 ) : (
+                    <div className="absolute inset-0 z-0 group-hover:scale-105 transition-transform duration-1000 pointer-events-none">
+                       <div className="absolute inset-0 bg-[linear-gradient(to_right,#80808012_1px,transparent_1px),linear-gradient(to_bottom,#80808012_1px,transparent_1px)] bg-[size:24px_24px]"></div>
+                       <div className="absolute inset-0 bg-radial-gradient from-transparent to-zinc-950"></div>
+                    </div>
+                 )}
+                 
+                 <div className="absolute inset-0 bg-black/40 hidden group-hover:flex items-center justify-center z-50 backdrop-blur-sm transition-all rounded-3xl">
+                      <span className="bg-zinc-900 text-white px-6 py-3 rounded-xl font-black uppercase tracking-widest text-xs flex items-center gap-2"><Edit3 size={16}/> Edit Hero Banner</span>
                  </div>
-                 <div className="relative z-10 pointer-events-none">
-                   <h2 className="text-4xl md:text-6xl font-black text-white uppercase tracking-tighter leading-none mb-2 drop-shadow-md whitespace-pre-line">{homeConfig.hero.title}</h2>
-                   <p className="text-xs font-black uppercase tracking-widest text-white/80 mb-6 drop-shadow">{homeConfig.hero.subtitle}</p>
-                   <button className="bg-zinc-950 text-white px-6 py-3 rounded-xl text-xs font-black uppercase tracking-widest shadow-lg">{homeConfig.hero.buttonText}</button>
+
+                 {/* NEON SIGN PREVIEW */}
+                 <div className="relative z-10 flex flex-col items-center justify-center w-full h-full my-auto py-4 pointer-events-none">
+                     <div className="border-[3px] border-pink-500 p-6 md:p-10 rounded-3xl shadow-[0_0_30px_rgba(236,72,153,0.4),inset_0_0_30px_rgba(236,72,153,0.4)] bg-zinc-950/80 backdrop-blur-md flex flex-col items-center text-center animate-[pulse_3s_ease-in-out_infinite] max-w-3xl mx-auto w-full group-hover:shadow-[0_0_50px_rgba(236,72,153,0.6),inset_0_0_40px_rgba(236,72,153,0.6)] transition-shadow duration-700">
+                         <div className="relative mb-2">
+                           <HeroIcon size={48} className="text-pink-500 drop-shadow-[0_0_15px_rgba(236,72,153,1)] animate-bounce relative z-10" />
+                           <div className="absolute inset-0 bg-pink-500 blur-2xl opacity-50 rounded-full animate-pulse"></div>
+                         </div>
+                         <div className="space-y-1 md:space-y-2 w-full">
+                             {homeConfig.hero.title.split('\n').map((line: string, i: number) => {
+                                 const isCyan = i % 2 !== 0;
+                                 return (
+                                   <h2 key={i} className={`text-4xl md:text-6xl lg:text-7xl font-black uppercase tracking-tighter leading-none ${isCyan ? 'text-cyan-300 drop-shadow-[0_0_15px_rgba(6,182,212,0.8)]' : 'text-pink-400 drop-shadow-[0_0_15px_rgba(236,72,153,0.8)]'}`}>
+                                       {line}
+                                   </h2>
+                                 )
+                             })}
+                         </div>
+                         <p className="mt-6 text-pink-100 font-black tracking-[0.3em] uppercase text-[10px] md:text-xs drop-shadow-[0_0_8px_rgba(236,72,153,0.8)]">
+                             {homeConfig.hero.subtitle}
+                         </p>
+                         <div className="mt-8 px-8 py-3 border-2 border-cyan-400 text-cyan-300 font-black uppercase tracking-widest rounded-xl shadow-[0_0_15px_rgba(6,182,212,0.3),inset_0_0_15px_rgba(6,182,212,0.3)] hover:bg-cyan-400 hover:text-zinc-950 hover:shadow-[0_0_30px_rgba(6,182,212,0.8)] transition-all">
+                             <span className="relative z-10">{homeConfig.hero.buttonText}</span>
+                         </div>
+                     </div>
                  </div>
-                 <HeroIcon size={140} className="text-white/20 absolute right-0 md:-right-10 top-1/2 -translate-y-1/2 rotate-12" />
               </div>
 
               {/* Bento Grid Editor */}
@@ -184,10 +217,12 @@ export default function StorefrontBuilder({ homeConfig, setHomeConfig, mainCateg
                            </div>
                          </div>
 
+                         {/* FIXED: Faded Layout logic synced */}
                          {c.imgUrl ? (
                             <div className="absolute inset-0 z-0">
-                               <img src={c.imgUrl} className="w-full h-full object-cover" />
-                               <div className={`absolute inset-0 bg-linear-to-t via-black/40 to-transparent ${theme.bentoOverlay}`} />
+                               <img src={c.imgUrl} className="w-full h-full object-cover opacity-40 mix-blend-luminosity" />
+                               <div className={`absolute inset-0 bg-linear-to-t from-zinc-950 via-zinc-950/60 to-zinc-950/40`} />
+                               <div className={`absolute inset-0 bg-linear-to-t ${theme.bentoOverlay} opacity-30`} />
                             </div>
                          ) : (
                             <div className={`absolute inset-0 z-0 ${theme.bentoFallback}`} />
@@ -271,6 +306,19 @@ export default function StorefrontBuilder({ homeConfig, setHomeConfig, mainCateg
                                          </select>
                                      </div>
                                  </div>
+                                 {/* FIXED: Now you can add an image to the master banner too! */}
+                                 {editingBlock === 'hero' && (
+                                     <div className="border-t border-zinc-800/80 pt-4 mt-2">
+                                         <label className="text-[10px] font-bold text-cyan-400 uppercase tracking-widest flex items-center gap-2 mb-2"><ImageIcon size={12}/> Background Image URL</label>
+                                         <div className="flex gap-2">
+                                           <input type="text" value={editForm.imgUrl || ''} onChange={e => setEditForm({...editForm, imgUrl: e.target.value})} placeholder="https://..." className="flex-1 bg-zinc-900 border border-cyan-500/30 rounded-xl p-3 text-sm font-mono text-cyan-100 focus:border-cyan-500 outline-none" />
+                                           <button onClick={() => setShowInventoryModal(true)} className="px-4 bg-zinc-800 hover:bg-zinc-700 text-cyan-400 rounded-xl border border-zinc-700 text-xs font-black uppercase tracking-widest transition-colors flex items-center gap-2 whitespace-nowrap">
+                                             <Search size={14}/> Find
+                                           </button>
+                                         </div>
+                                         <p className="text-[9px] text-zinc-500 mt-2 uppercase tracking-widest leading-relaxed">Adding an image will override the solid Neon aesthetic for the master slide.</p>
+                                     </div>
+                                 )}
                                </>
                            )}
 
@@ -366,11 +414,10 @@ export default function StorefrontBuilder({ homeConfig, setHomeConfig, mainCateg
              onClose={() => setShowInventoryModal(false)} 
              inventoryMatrix={inventoryMatrix || []} 
              onSelect={(item: any) => { 
-               // FIXED: Target actual db imageUrl string
                setEditForm({...editForm, imgUrl: item.imageUrl || item.imgUrl || item.image || ''}); 
                setShowInventoryModal(false); 
              }} 
-             context={{lane: 'Category Box Background'}} 
+             context={{lane: 'Background'}} 
            />
         </div>
     );

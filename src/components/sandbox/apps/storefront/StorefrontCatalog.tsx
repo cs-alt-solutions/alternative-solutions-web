@@ -1,7 +1,7 @@
 // sandbox/apps/storefront/StorefrontCatalog.tsx
 import React, { useEffect, useState } from 'react';
 import { useStickyState } from '@/hooks/useStickyState';
-import { Info, Flame, ShoppingCart, Leaf, Wind, Cookie, Droplet, Shirt, LayoutGrid, Tag, Award, Sparkles, Star, ArrowRight, Home, Activity } from 'lucide-react';
+import { Info, Flame, ShoppingCart, Leaf, Wind, Cookie, Droplet, Shirt, LayoutGrid, Tag, Award, Sparkles, Star, ArrowRight, Home, Activity, ChevronLeft, ChevronRight, RotateCcw, Zap } from 'lucide-react';
 import { StorefrontCard, getRequiredGrams } from './StorefrontComponents';
 import StorefrontHeader from './StorefrontHeader';
 import { IconMap, ThemeMap, getThemeColor } from '../admin/storefront/StorefrontBuilder';
@@ -50,8 +50,8 @@ export default function StorefrontCatalog({
     const bOOS = isItemOOS(b) ? 1 : 0;
     if (aOOS !== bOOS) return aOOS - bOOS;
 
-    const aScore = (a.isTopShelf || a.featured ? 3 : 0) + (a.dailyDeal ? 1 : 0);
-    const bScore = (b.isTopShelf || b.featured ? 3 : 0) + (b.dailyDeal ? 1 : 0);
+    const aScore = (a.isTopShelf || a.isChefsReserve || a.isNewDrop || a.isReturned ? 3 : 0) + (a.dailyDeal ? 1 : 0);
+    const bScore = (b.isTopShelf || b.isChefsReserve || b.isNewDrop || b.isReturned ? 3 : 0) + (b.dailyDeal ? 1 : 0);
     
     if (aScore > bScore) return -1;
     if (aScore < bScore) return 1;
@@ -87,9 +87,10 @@ export default function StorefrontCatalog({
     return i.dailyDeal; 
   });
 
-  const newDropsBucket = safeInventory.filter((i: any) => i.featured && !i.isConfiguredDeal && !i.subCategory?.toLowerCase().includes('steals'));
-  const premiumVaultBucket = safeInventory.filter((i: any) => i.isTopShelf && !i.featured && !i.isConfiguredDeal && !i.subCategory?.toLowerCase().includes('steals'));
-  const smokyStealsBucket = safeInventory.filter((i: any) => i.subCategory?.toLowerCase().includes('steals') && !i.dailyDeal && !i.featured);
+  const newDropsBucket = safeInventory.filter((i: any) => i.isNewDrop && !i.isConfiguredDeal && !i.subCategory?.toLowerCase().includes('steals'));
+  const premiumVaultBucket = safeInventory.filter((i: any) => (i.isTopShelf || i.isChefsReserve) && !i.isNewDrop && !i.isConfiguredDeal && !i.subCategory?.toLowerCase().includes('steals'));
+  const smokyStealsBucket = safeInventory.filter((i: any) => i.subCategory?.toLowerCase().includes('steals') && !i.dailyDeal && !i.isNewDrop);
+  const returnedBucket = safeInventory.filter((i: any) => i.isReturned && !i.isNewDrop && !i.isConfiguredDeal && !i.subCategory?.toLowerCase().includes('steals'));
 
   const activeTodaysDeals = todaysDeals.filter(item => !isItemOOS(item));
 
@@ -110,8 +111,18 @@ export default function StorefrontCatalog({
       const isNewDrop = item.campaignTag === 'NEW_DROP';
       const isClearance = item.campaignTag === 'VAULT_CLEARANCE';
       
+      let catName = item.subCategory && item.subCategory !== 'All' ? item.subCategory : item.mainCategory;
+      if (catName === 'Flower & Plants') catName = 'Premium Flower';
+      if (catName === 'Vapes & Pens') catName = 'Vapes';
+      if (catName === 'Merch & Extras') catName = 'Gear';
+      if (catName === 'Healthcare & Topicals') catName = 'Wellness';
+
+      let topText = "DAILY DEAL";
+      if (isNewDrop) topText = "FRESH DROP";
+      if (isClearance) topText = "CLEARANCE";
+      
       return {
-        title: isNewDrop ? "FRESH DROP" : isClearance ? "VAULT CLEARANCE" : "DAILY DEAL",
+        title: `${topText}\nON ${catName.toUpperCase()}`,
         subtitle: item.name,
         buttonText: "Shop Deal",
         themeColor: isNewDrop ? "cyan" : isClearance ? "rose" : "orange",
@@ -126,13 +137,14 @@ export default function StorefrontCatalog({
   ];
 
   const slideCount = heroSlides.length;
+  
   useEffect(() => {
     if (slideCount <= 1) return;
     const interval = setInterval(() => {
       setHeroIndex(prev => (prev + 1) % slideCount);
     }, 5000);
     return () => clearInterval(interval);
-  }, [slideCount]);
+  }, [slideCount, heroIndex]);
 
   const activeHero = heroSlides[heroIndex] || heroSlides[0];
   const activeTheme = ThemeMap[activeHero.themeColor] || ThemeMap['cyan'];
@@ -141,6 +153,15 @@ export default function StorefrontCatalog({
   const SecIcon = IconMap[homeConfig.secondary.icon] || Award;
   
   const isMasterSlide = heroIndex === 0;
+
+  const nextSlide = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setHeroIndex(prev => (prev + 1) % slideCount);
+  };
+  const prevSlide = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setHeroIndex(prev => (prev - 1 + slideCount) % slideCount);
+  };
 
   return (
     <>
@@ -159,7 +180,8 @@ export default function StorefrontCatalog({
            <div className="animate-in fade-in slide-in-from-bottom-4 space-y-10 pt-2 sm:pt-0">
              
              {/* THE NEON BILLBOARD CAROUSEL */}
-             <div onClick={activeHero.action} className={`w-full ${activeHero.imgUrl ? 'bg-zinc-950' : activeTheme.heroGrad} cursor-pointer rounded-3xl ${isMasterSlide ? 'p-4 md:p-8' : 'p-8 md:p-12'} flex flex-col justify-end shadow-2xl overflow-hidden relative group transition-all duration-700 min-h-[350px] md:min-h-[450px]`}>
+             {/* OPTIMIZED: Canonical min-h classes */}
+             <div onClick={activeHero.action} className={`w-full ${activeHero.imgUrl ? 'bg-zinc-950' : activeTheme.heroGrad} cursor-pointer rounded-3xl ${isMasterSlide ? 'p-4 md:p-8' : 'p-8 md:p-12'} flex flex-col justify-end shadow-2xl overflow-hidden relative group transition-all duration-700 min-h-87.5 md:min-h-112.5`}>
                 
                 {/* Background Textures */}
                 {activeHero.imgUrl ? (
@@ -171,7 +193,8 @@ export default function StorefrontCatalog({
                    <div className="absolute inset-0 z-0 group-hover:scale-105 transition-transform duration-1000">
                       {isMasterSlide && (
                          <>
-                            <div className="absolute inset-0 bg-[linear-gradient(to_right,#80808012_1px,transparent_1px),linear-gradient(to_bottom,#80808012_1px,transparent_1px)] bg-[size:24px_24px]"></div>
+                            {/* OPTIMIZED: Canonical bg-size class */}
+                            <div className="absolute inset-0 bg-[linear-gradient(to_right,#80808012_1px,transparent_1px),linear-gradient(to_bottom,#80808012_1px,transparent_1px)] bg-size-[24px_24px]"></div>
                             <div className="absolute inset-0 bg-radial-gradient from-transparent to-zinc-950"></div>
                          </>
                       )}
@@ -180,15 +203,12 @@ export default function StorefrontCatalog({
                 
                 {/* Content Logic */}
                 {isMasterSlide ? (
-                    // MASTER SLIDE: THE NEON SIGN
-                    <div className="relative z-10 flex flex-col items-center justify-center w-full h-full my-auto py-4">
+                    <div className="relative z-10 flex flex-col items-center justify-center w-full h-full my-auto py-4 pointer-events-none">
                         <div className="border-[3px] border-pink-500 p-6 md:p-10 rounded-3xl shadow-[0_0_30px_rgba(236,72,153,0.4),inset_0_0_30px_rgba(236,72,153,0.4)] bg-zinc-950/80 backdrop-blur-md flex flex-col items-center text-center animate-[pulse_3s_ease-in-out_infinite] max-w-3xl mx-auto w-full group-hover:shadow-[0_0_50px_rgba(236,72,153,0.6),inset_0_0_40px_rgba(236,72,153,0.6)] transition-shadow duration-700">
-                            
                             <div className="relative mb-2">
                               <ActiveHeroIcon size={48} className="text-pink-500 drop-shadow-[0_0_15px_rgba(236,72,153,1)] animate-bounce relative z-10" />
                               <div className="absolute inset-0 bg-pink-500 blur-2xl opacity-50 rounded-full animate-pulse"></div>
                             </div>
-                            
                             <div className="space-y-1 md:space-y-2 w-full">
                                 {activeHero.title.split('\n').map((line: string, i: number) => {
                                     const isCyan = i % 2 !== 0;
@@ -199,45 +219,56 @@ export default function StorefrontCatalog({
                                     )
                                 })}
                             </div>
-
                             <p className="mt-6 text-pink-100 font-black tracking-[0.3em] uppercase text-[10px] md:text-xs drop-shadow-[0_0_8px_rgba(236,72,153,0.8)]">
                                 {activeHero.subtitle}
                             </p>
-
-                            <div className="mt-8 px-8 py-3 border-2 border-cyan-400 text-cyan-300 font-black uppercase tracking-widest rounded-xl shadow-[0_0_15px_rgba(6,182,212,0.3),inset_0_0_15px_rgba(6,182,212,0.3)] hover:bg-cyan-400 hover:text-zinc-950 hover:shadow-[0_0_30px_rgba(6,182,212,0.8)] transition-all cursor-pointer relative overflow-hidden">
+                            <div className="mt-8 px-8 py-3 border-2 border-cyan-400 text-cyan-300 font-black uppercase tracking-widest rounded-xl shadow-[0_0_15px_rgba(6,182,212,0.3),inset_0_0_15px_rgba(6,182,212,0.3)] hover:bg-cyan-400 hover:text-zinc-950 hover:shadow-[0_0_30px_rgba(6,182,212,0.8)] transition-all pointer-events-auto relative overflow-hidden">
                                 <span className="relative z-10">{activeHero.buttonText}</span>
                             </div>
                         </div>
                     </div>
                 ) : (
-                    // PRODUCT SLIDES: CLEAN BOTTOM LAYOUT
-                    <div className="relative z-10 flex flex-col md:flex-row items-start md:items-end justify-between w-full mt-auto gap-6 pt-32">
+                    <div className="relative z-10 flex flex-col md:flex-row items-start md:items-end justify-between w-full mt-auto gap-6 pt-32 pointer-events-none">
                       <div>
-                          <h2 key={`title-${heroIndex}`} className="text-3xl md:text-5xl font-black text-white uppercase tracking-tighter leading-none mb-2 drop-shadow-lg whitespace-pre-line animate-in slide-in-from-left-4 fade-in duration-500">
-                            {activeHero.title}
-                          </h2>
-                          <p key={`sub-${heroIndex}`} className={`text-sm md:text-base font-black uppercase tracking-widest mb-0 drop-shadow-md animate-in slide-in-from-left-4 fade-in duration-500 delay-75 text-zinc-300`}>
+                          <div key={`title-${heroIndex}`} className="flex flex-col gap-1 mb-2 animate-in slide-in-from-left-4 fade-in duration-500">
+                             {activeHero.title.split('\n').map((line: string, i: number) => {
+                                 const isCyan = i % 2 !== 0;
+                                 return (
+                                   <h2 key={i} className={`text-3xl md:text-5xl lg:text-6xl font-black uppercase tracking-tighter leading-none ${isCyan ? 'text-cyan-300 drop-shadow-[0_0_15px_rgba(6,182,212,0.9)]' : 'text-pink-400 drop-shadow-[0_0_15px_rgba(236,72,153,0.9)]'}`}>
+                                       {line}
+                                   </h2>
+                                 )
+                             })}
+                          </div>
+                          <p key={`sub-${heroIndex}`} className={`text-sm md:text-xl font-black uppercase tracking-widest mb-0 drop-shadow-[0_2px_6px_rgba(0,0,0,0.9)] animate-in slide-in-from-left-4 fade-in duration-500 delay-75 text-white`}>
                             {activeHero.subtitle}
                           </p>
                       </div>
-                      
-                      <button key={`btn-${heroIndex}`} className="shrink-0 bg-zinc-950/90 backdrop-blur-md text-white px-8 py-4 rounded-xl text-sm font-black uppercase tracking-widest hover:bg-zinc-900 transition-colors shadow-2xl animate-in slide-in-from-bottom-4 fade-in duration-500 delay-150 border border-zinc-800">
+                      <button key={`btn-${heroIndex}`} className="shrink-0 bg-zinc-950/90 backdrop-blur-md text-white px-8 py-4 rounded-xl text-sm font-black uppercase tracking-widest hover:bg-zinc-900 transition-colors shadow-[0_0_20px_rgba(0,0,0,0.8)] animate-in slide-in-from-bottom-4 fade-in duration-500 delay-150 border border-zinc-800 pointer-events-auto">
                           {activeHero.buttonText}
                       </button>
-
                       {!activeHero.imgUrl && (
                         <ActiveHeroIcon key={`icon-${heroIndex}`} size={180} className="text-white/10 absolute right-0 md:-right-10 top-1/2 -translate-y-1/2 rotate-12 group-hover:scale-110 transition-transform duration-700 animate-in fade-in zoom-in-90" />
                       )}
                     </div>
                 )}
                 
-                {/* Carousel Indicators */}
+                {/* MANUAL CONTROLS */}
                 {slideCount > 1 && (
-                  <div className="absolute top-6 right-6 flex items-center gap-2 z-20 bg-zinc-950/50 backdrop-blur-md px-3 py-2 rounded-full border border-zinc-800/50">
-                    {heroSlides.map((_, i) => (
-                      <div key={i} className={`w-2 h-2 rounded-full transition-all duration-500 ${i === heroIndex ? 'bg-white scale-125 shadow-[0_0_10px_white]' : 'bg-white/30'}`} />
-                    ))}
-                  </div>
+                  <>
+                    <button onClick={prevSlide} className="absolute left-4 md:left-6 top-1/2 -translate-y-1/2 z-30 p-3 bg-zinc-950/60 backdrop-blur-md text-white rounded-full hover:bg-zinc-900 border border-zinc-700/50 opacity-0 group-hover:opacity-100 transition-opacity hover:scale-110 active:scale-95 shadow-xl">
+                      <ChevronLeft size={24} />
+                    </button>
+                    <button onClick={nextSlide} className="absolute right-4 md:right-6 top-1/2 -translate-y-1/2 z-30 p-3 bg-zinc-950/60 backdrop-blur-md text-white rounded-full hover:bg-zinc-900 border border-zinc-700/50 opacity-0 group-hover:opacity-100 transition-opacity hover:scale-110 active:scale-95 shadow-xl">
+                      <ChevronRight size={24} />
+                    </button>
+
+                    <div className="absolute top-6 right-6 flex items-center gap-2 z-20 bg-zinc-950/50 backdrop-blur-md px-3 py-2 rounded-full border border-zinc-800/50 pointer-events-auto" onClick={(e) => e.stopPropagation()}>
+                      {heroSlides.map((_, i) => (
+                        <button key={i} onClick={(e) => { e.stopPropagation(); setHeroIndex(i); }} className={`w-2 h-2 rounded-full transition-all duration-300 ${i === heroIndex ? 'bg-white scale-125 shadow-[0_0_10px_white]' : 'bg-white/30 hover:bg-white/70'}`} />
+                      ))}
+                    </div>
+                  </>
                 )}
              </div>
 
@@ -295,17 +326,17 @@ export default function StorefrontCatalog({
                 <SecIcon size={140} className="text-black/10 absolute right-0 md:-right-4 top-1/2 -translate-y-1/2 group-hover:rotate-12 transition-transform duration-700" />
              </div>
 
-             {/* CAROUSEL: FRESH FEATURES */}
+             {/* CAROUSEL: NEW ARRIVALS */}
              {newDropsBucket.length > 0 && (
                 <div className="pt-6 animate-in fade-in mt-6 border-t border-zinc-800/50 relative overflow-hidden">
                    <div className="flex items-center justify-between mb-8 pt-6 relative z-10">
                      <div className="flex items-center gap-4">
                        <div className="p-3 bg-cyan-500/10 rounded-2xl border border-cyan-500/40 shadow-[0_0_20px_rgba(6,182,212,0.3)]">
-                         <Star size={24} className="text-cyan-400 animate-pulse" />
+                         <Zap size={24} className="text-cyan-400 animate-pulse" />
                        </div>
                        <div>
-                         <h3 className="text-3xl md:text-5xl font-black uppercase tracking-tighter text-transparent bg-clip-text bg-linear-to-r from-blue-500 via-cyan-400 to-indigo-400 drop-shadow-[0_0_10px_rgba(6,182,212,0.3)]">Fresh Drops</h3>
-                         <p className="text-xs font-bold text-zinc-400 uppercase tracking-widest mt-1 hidden sm:block">New additions and highlighted selections.</p>
+                         <h3 className="text-3xl md:text-5xl font-black uppercase tracking-tighter text-transparent bg-clip-text bg-linear-to-r from-blue-500 via-cyan-400 to-indigo-400 drop-shadow-[0_0_10px_rgba(6,182,212,0.3)]">New Arrivals</h3>
+                         <p className="text-xs font-bold text-zinc-400 uppercase tracking-widest mt-1 hidden sm:block">Fresh drops hitting the vault.</p>
                        </div>
                      </div>
                      <div className="flex items-center gap-2 text-[10px] font-black text-zinc-400 uppercase tracking-widest bg-zinc-900/80 backdrop-blur-md px-4 py-2 rounded-full border border-zinc-800 shadow-md relative z-10">
@@ -323,10 +354,29 @@ export default function StorefrontCatalog({
                 </div>
              )}
 
+             {/* BACK BY POPULAR DEMAND */}
+             {returnedBucket.length > 0 && (
+                <div className="pt-6 animate-in fade-in mt-6 border-t border-zinc-800/50 relative overflow-hidden">
+                   <div className="flex items-center gap-4 mb-8 pt-6 relative z-10">
+                     <div className="p-3 bg-lime-500/10 rounded-2xl border border-lime-500/40 shadow-[0_0_20px_rgba(132,204,22,0.3)]">
+                       <RotateCcw size={24} className="text-lime-400" />
+                     </div>
+                     <div>
+                       <h3 className="text-3xl md:text-5xl font-black uppercase tracking-tighter text-transparent bg-clip-text bg-linear-to-r from-green-500 via-lime-400 to-emerald-400 drop-shadow-[0_0_10px_rgba(132,204,22,0.3)]">Back In The Vault</h3>
+                       <p className="text-xs font-bold text-zinc-400 uppercase tracking-widest mt-1">Returned by popular demand.</p>
+                     </div>
+                   </div>
+                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 relative z-10">
+                     {returnedBucket.map((item: any) => (
+                       <StorefrontCard key={item.id} item={item} cart={cart} updateCart={updateCart} clientConfig={clientConfig} />
+                     ))}
+                   </div>
+                </div>
+             )}
+
              {/* REGULAR LIVE DEALS */}
              {todaysDeals.length > 0 && (
                 <div id="live-deals-section" className="pt-8 animate-in fade-in slide-in-from-bottom-8 duration-700 mt-6 border-t border-zinc-800/50 scroll-mt-24 relative overflow-hidden">
-                   {/* Background Glow */}
                    <div className="absolute top-0 right-1/4 w-1/3 h-32 bg-orange-500/5 blur-3xl rounded-full" />
                    
                    <div className="flex items-center gap-4 mb-8 pt-6 relative z-10">
@@ -346,11 +396,10 @@ export default function StorefrontCatalog({
                 </div>
              )}
 
-             {/* SMOKY STEALS - WITH NEW SMOKE ANIMATION */}
+             {/* SMOKY STEALS */}
              {smokyStealsBucket.length > 0 && (
                 <div className="pt-8 animate-in fade-in zoom-in-95 slide-in-from-bottom-12 duration-1000 mt-8 border-t border-zinc-800/50 relative overflow-hidden">
                  
-                 {/* Background Smoke Effect Engine */}
                  <div className="absolute top-0 left-1/4 w-1/2 h-32 bg-lime-500/5 blur-3xl rounded-full animate-pulse" />
                  <div className="absolute top-0 left-1/3 w-1/3 h-24 bg-zinc-500/10 blur-3xl rounded-full animate-pulse delay-75" />
 
@@ -390,11 +439,11 @@ export default function StorefrontCatalog({
                </div>
              )}
 
-             {todaysDeals.length === 0 && newDropsBucket.length === 0 && premiumVaultBucket.length === 0 && smokyStealsBucket.length === 0 && (
+             {todaysDeals.length === 0 && newDropsBucket.length === 0 && premiumVaultBucket.length === 0 && smokyStealsBucket.length === 0 && returnedBucket.length === 0 && (
                <div className="flex flex-col items-center justify-center py-24 bg-zinc-900/20 rounded-3xl border border-dashed border-zinc-800/50 mt-6">
                   <div className="w-16 h-16 bg-zinc-950 rounded-full border border-zinc-800 flex items-center justify-center mb-4"> <Info size={24} className="text-zinc-600" /> </div>
-                  <p className="text-zinc-400 font-bold text-sm uppercase tracking-widest">No Active Deals</p>
-                  <p className="text-zinc-600 text-xs mt-2">Check back soon for new promotions.</p>
+                  <p className="text-zinc-400 font-bold text-sm uppercase tracking-widest">No Active Stock</p>
+                  <p className="text-zinc-600 text-xs mt-2">Check back soon.</p>
                </div>
              )}
            </div>

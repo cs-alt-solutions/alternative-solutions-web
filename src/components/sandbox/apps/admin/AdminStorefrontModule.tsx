@@ -2,7 +2,7 @@
 'use client';
 
 import React, { useState, useMemo } from 'react';
-import { Store, Flame, Award, ChefHat, Star, X, Edit3, Settings } from 'lucide-react';
+import { Store, Flame, Award, ChefHat, Star, X, Edit3, Settings, Zap, RotateCcw } from 'lucide-react';
 import { useStickyState } from '@/hooks/useStickyState';
 import { createClient } from '@supabase/supabase-js';
 
@@ -19,7 +19,7 @@ export const defaultHomeConfig = {
     { name: "Flower", cat: "Flower & Plants", sub: "All", icon: "Leaf", color: "emerald", desc: "Premium flower and reserve tiers.", span: "md:col-span-2 md:row-span-2", imgUrl: "" },
     { name: "Vapes", cat: "Vapes & Pens", sub: "All", icon: "Wind", color: "cyan", desc: "Disposables & carts.", span: "col-span-1 md:col-span-1 md:row-span-2", imgUrl: "" },
     { name: "Pre Rolls", cat: "Flower & Plants", sub: "Pre-Rolls & Blunts", icon: "Tag", color: "pink", desc: "Ready to enjoy.", span: "col-span-1 md:col-span-1 md:row-span-1", imgUrl: "" },
-    { name: "Concentrates", cat: "Concentrates", sub: "All", icon: "Droplet", color: "orange", desc: "Dabs & sauces.", span: "col-span-2 md:col-span-1 md:row-span-1", imgUrl: "" }
+    { name: "Mystery Bags", cat: "Merch & Extras", sub: "Mystery Bags", icon: "Sparkles", color: "fuchsia", desc: "Surprise assortments.", span: "col-span-1 md:col-span-1 md:row-span-1", imgUrl: "" }
   ],
   secondary: { title: "Don't Miss\nThese Deals", subtitle: "While Supplies Last.", buttonText: "Click To Save", colorFrom: "emerald-500", colorTo: "emerald-500", icon: "Award" }
 };
@@ -29,7 +29,7 @@ export default function AdminStorefrontModule({ stock, setStock, inventoryMatrix
   const [shiftChange, setShiftChange] = useStickyState(clientConfig.shiftChange || '12:00', `store_shift_change_${clientConfig?.id}`);
   const [storeOverride, setStoreOverride] = useStickyState('AUTO', `store_override_${clientConfig?.id}`); 
   const [campaignView, setCampaignView] = useState<'WEEK' | 'LIST'>('WEEK'); 
-  const [activeDetailView, setActiveDetailView] = useState<'PROMOS' | 'TOPSHELF' | 'CHEF' | 'FEATURED' | null>(null);
+  const [activeDetailView, setActiveDetailView] = useState<'PROMOS' | 'TOPSHELF' | 'CHEF' | 'NEW_ARRIVALS' | 'RETURNED' | null>(null);
   
   const [adminView, setAdminView] = useState<'OPERATIONS' | 'BUILDER'>('OPERATIONS');
   const [homeConfig, setHomeConfig] = useStickyState(defaultHomeConfig, `alt_solutions_home_config_v1`);
@@ -131,16 +131,17 @@ export default function AdminStorefrontModule({ stock, setStock, inventoryMatrix
     }
   };
 
-  // FIXED: Strictly filter to ensure only items with active assigned days count!
+  // FIXED: Flawless Metric Tracking aligned with new Identity Tags
   const activeDeals = useMemo(() => (inventoryMatrix || []).filter((i: any) => {
     if (i.dealType === 'One-Shot') return i.dealDays && i.dealDays.length > 0;
     if (i.dealType === 'Recurring') return true;
     return false;
   }), [inventoryMatrix]);
   
-  const topShelfItems = useMemo(() => (inventoryMatrix || []).filter((i: any) => i.isTopShelf && i.mainCategory !== 'Edibles'), [inventoryMatrix]);
-  const chefsReserveItems = useMemo(() => (inventoryMatrix || []).filter((i: any) => i.isTopShelf && i.mainCategory === 'Edibles'), [inventoryMatrix]);
-  const featuredItems = useMemo(() => (inventoryMatrix || []).filter((i: any) => i.featured), [inventoryMatrix]);
+  const topShelfItems = useMemo(() => (inventoryMatrix || []).filter((i: any) => i.isTopShelf), [inventoryMatrix]);
+  const chefsReserveItems = useMemo(() => (inventoryMatrix || []).filter((i: any) => i.isChefsReserve), [inventoryMatrix]);
+  const newArrivalItems = useMemo(() => (inventoryMatrix || []).filter((i: any) => i.isNewDrop), [inventoryMatrix]);
+  const returnedItems = useMemo(() => (inventoryMatrix || []).filter((i: any) => i.isReturned), [inventoryMatrix]);
 
   const overstockCandidates = useMemo(() => {
     return (inventoryMatrix || [])
@@ -174,9 +175,7 @@ export default function AdminStorefrontModule({ stock, setStock, inventoryMatrix
   return (
     <div className="p-4 md:p-8 animate-in fade-in">
       
-      {/* WIRED the new onRemove prop to the modal */}
       <CampaignConfigModal isOpen={isConfigModalOpen} onClose={() => setIsConfigModalOpen(false)} item={campaignItem} onSave={handleSaveCampaign} onRemove={handleQuickRemove} />
-      
       <StorefrontSettings isOpen={isSettingsModalOpen} onClose={() => setIsSettingsModalOpen(false)} weeklySchedule={weeklySchedule} handleScheduleChange={handleScheduleChange} shiftChange={shiftChange} setShiftChange={setShiftChange} handleSaveHours={handleSaveHours} />
       <InventorySelectorModal isOpen={isSelectorOpen} onClose={() => setIsSelectorOpen(false)} inventoryMatrix={inventoryMatrix} onSelect={handleSelectFromInventory} context={selectorContext} />
 
@@ -219,7 +218,8 @@ export default function AdminStorefrontModule({ stock, setStock, inventoryMatrix
          <StorefrontBuilder homeConfig={homeConfig} setHomeConfig={setHomeConfig} mainCategories={mainCategories} subCategories={subCategories} inventoryMatrix={inventoryMatrix} />
       ) : (
         <>
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+          {/* FIXED: Scaled out to 5 grid columns to track all new identities flawlessly */}
+          <div className="grid grid-cols-2 lg:grid-cols-5 gap-4 mb-6">
              <button onClick={() => setActiveDetailView(activeDetailView === 'PROMOS' ? null : 'PROMOS')} className={`bg-zinc-900/50 backdrop-blur-sm border rounded-4xl p-5 flex flex-col justify-center items-center text-center transition-all active:scale-95 ${activeDetailView === 'PROMOS' ? 'border-pink-500/50 bg-pink-500/10' : 'border-zinc-800 hover:border-zinc-700'}`}>
                 <Flame size={20} className="text-pink-400 mb-2" />
                 <span className="text-3xl font-black text-zinc-100 leading-none">{activeDeals.length}</span>
@@ -228,17 +228,22 @@ export default function AdminStorefrontModule({ stock, setStock, inventoryMatrix
              <button onClick={() => setActiveDetailView(activeDetailView === 'TOPSHELF' ? null : 'TOPSHELF')} className={`bg-zinc-900/50 backdrop-blur-sm border rounded-4xl p-5 flex flex-col justify-center items-center text-center transition-all active:scale-95 ${activeDetailView === 'TOPSHELF' ? 'border-amber-500/50 bg-amber-500/10' : 'border-zinc-800 hover:border-zinc-700'}`}>
                 <Award size={20} className="text-amber-400 mb-2" />
                 <span className="text-3xl font-black text-zinc-100 leading-none">{topShelfItems.length}</span>
-                <span className="text-[9px] font-black text-zinc-500 uppercase tracking-widest mt-1">Top Shelf Items</span>
+                <span className="text-[9px] font-black text-zinc-500 uppercase tracking-widest mt-1">Top Shelf</span>
              </button>
              <button onClick={() => setActiveDetailView(activeDetailView === 'CHEF' ? null : 'CHEF')} className={`bg-zinc-900/50 backdrop-blur-sm border rounded-4xl p-5 flex flex-col justify-center items-center text-center transition-all active:scale-95 ${activeDetailView === 'CHEF' ? 'border-fuchsia-500/50 bg-fuchsia-500/10' : 'border-zinc-800 hover:border-zinc-700'}`}>
                 <ChefHat size={20} className="text-fuchsia-400 mb-2" />
                 <span className="text-3xl font-black text-zinc-100 leading-none">{chefsReserveItems.length}</span>
                 <span className="text-[9px] font-black text-zinc-500 uppercase tracking-widest mt-1">Chef's Reserve</span>
              </button>
-             <button onClick={() => setActiveDetailView(activeDetailView === 'FEATURED' ? null : 'FEATURED')} className={`bg-zinc-900/50 backdrop-blur-sm border rounded-4xl p-5 flex flex-col justify-center items-center text-center transition-all active:scale-95 ${activeDetailView === 'FEATURED' ? 'border-cyan-500/50 bg-cyan-500/10' : 'border-zinc-800 hover:border-zinc-700'}`}>
-                <Star size={20} className="text-cyan-400 mb-2 z-10" />
-                <span className="text-3xl font-black text-zinc-100 leading-none z-10">{featuredItems.length}</span>
-                <span className="text-[9px] font-black text-zinc-500 uppercase tracking-widest mt-1 z-10">Featured Drops</span>
+             <button onClick={() => setActiveDetailView(activeDetailView === 'NEW_ARRIVALS' ? null : 'NEW_ARRIVALS')} className={`bg-zinc-900/50 backdrop-blur-sm border rounded-4xl p-5 flex flex-col justify-center items-center text-center transition-all active:scale-95 ${activeDetailView === 'NEW_ARRIVALS' ? 'border-cyan-500/50 bg-cyan-500/10' : 'border-zinc-800 hover:border-zinc-700'}`}>
+                <Zap size={20} className="text-cyan-400 mb-2 z-10" />
+                <span className="text-3xl font-black text-zinc-100 leading-none z-10">{newArrivalItems.length}</span>
+                <span className="text-[9px] font-black text-zinc-500 uppercase tracking-widest mt-1 z-10">New Arrivals</span>
+             </button>
+             <button onClick={() => setActiveDetailView(activeDetailView === 'RETURNED' ? null : 'RETURNED')} className={`bg-zinc-900/50 backdrop-blur-sm border rounded-4xl p-5 flex flex-col justify-center items-center text-center transition-all active:scale-95 ${activeDetailView === 'RETURNED' ? 'border-lime-500/50 bg-lime-500/10' : 'border-zinc-800 hover:border-zinc-700'}`}>
+                <RotateCcw size={20} className="text-lime-400 mb-2 z-10" />
+                <span className="text-3xl font-black text-zinc-100 leading-none z-10">{returnedItems.length}</span>
+                <span className="text-[9px] font-black text-zinc-500 uppercase tracking-widest mt-1 z-10">Returned</span>
              </button>
           </div>
 
@@ -248,7 +253,8 @@ export default function AdminStorefrontModule({ stock, setStock, inventoryMatrix
               {activeDetailView === 'PROMOS' && renderDetailList(activeDeals, "No active promotions found.")}
               {activeDetailView === 'TOPSHELF' && renderDetailList(topShelfItems, "No Top Shelf items found.")}
               {activeDetailView === 'CHEF' && renderDetailList(chefsReserveItems, "No Chef's Reserve items.")}
-              {activeDetailView === 'FEATURED' && renderDetailList(featuredItems, "No featured items found.")}
+              {activeDetailView === 'NEW_ARRIVALS' && renderDetailList(newArrivalItems, "No new arrivals found.")}
+              {activeDetailView === 'RETURNED' && renderDetailList(returnedItems, "No returned items found.")}
             </div>
           )}
 
