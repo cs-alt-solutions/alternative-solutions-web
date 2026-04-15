@@ -1,3 +1,4 @@
+// sandbox/apps/admin/AdminStorefrontModule.tsx
 'use client';
 
 import React, { useState, useMemo } from 'react';
@@ -31,7 +32,7 @@ export default function AdminStorefrontModule({ stock, setStock, inventoryMatrix
   const [activeDetailView, setActiveDetailView] = useState<'PROMOS' | 'TOPSHELF' | 'CHEF' | 'FEATURED' | null>(null);
   
   const [adminView, setAdminView] = useState<'OPERATIONS' | 'BUILDER'>('OPERATIONS');
-  const [homeConfig, setHomeConfig] = useStickyState(defaultHomeConfig, `division_home_config_v1`);
+  const [homeConfig, setHomeConfig] = useStickyState(defaultHomeConfig, `alt_solutions_home_config_v1`);
 
   const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false);
   const [isConfigModalOpen, setIsConfigModalOpen] = useState(false);
@@ -39,9 +40,8 @@ export default function AdminStorefrontModule({ stock, setStock, inventoryMatrix
   const [selectorContext, setSelectorContext] = useState<any>(null); 
   const [campaignItem, setCampaignItem] = useState<any>(null);
 
-  // INJECTED NEW PRIMARY CATEGORY HERE
   const mainCategories = clientConfig.categories || ['Flower & Plants', 'Vapes & Pens', 'Edibles', 'Concentrates', 'Healthcare & Topicals', 'Merch & Extras'];
-  const [subCategories] = useStickyState<Record<string, string[]>>(clientConfig.subCategories || {}, `inv_subcats_v2_${clientConfig?.id || 'division'}`);
+  const [subCategories] = useStickyState<Record<string, string[]>>(clientConfig.subCategories || {}, `inv_subcats_v2_${clientConfig?.id || 'alt_solutions'}`);
 
   const openInventorySelector = (dayId: number, lane: string) => {
     setSelectorContext({ dayId, lane });
@@ -70,7 +70,7 @@ export default function AdminStorefrontModule({ stock, setStock, inventoryMatrix
       if (!supabaseUrl || !supabaseKey) return;
       const supabase = createClient(supabaseUrl, supabaseKey);
       await supabase.from('client_inventory').upsert(
-          { client_id: clientConfig.id || 'division', item_id: updatedItem.id, payload: updatedItem },
+          { client_id: clientConfig.id || 'alt_solutions', item_id: updatedItem.id, payload: updatedItem },
           { onConflict: 'client_id, item_id' }
         );
       setNotification(`Strategy Locked: ${updatedItem.name}`);
@@ -89,7 +89,7 @@ export default function AdminStorefrontModule({ stock, setStock, inventoryMatrix
       const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
       if (supabaseUrl && supabaseKey) {
         const supabase = createClient(supabaseUrl, supabaseKey);
-        supabase.from('client_inventory').upsert({ client_id: clientConfig.id || 'division', item_id: updated.id, payload: updated }, { onConflict: 'client_id, item_id' }).then();
+        supabase.from('client_inventory').upsert({ client_id: clientConfig.id || 'alt_solutions', item_id: updated.id, payload: updated }, { onConflict: 'client_id, item_id' }).then();
       }
     } catch (err) { console.error(err); }
   };
@@ -119,7 +119,7 @@ export default function AdminStorefrontModule({ stock, setStock, inventoryMatrix
       if (supabaseUrl && supabaseKey) {
         const supabase = createClient(supabaseUrl, supabaseKey);
         const payloads = itemsToUpdate.map((item: any) => ({
-          client_id: clientConfig.id || 'division',
+          client_id: clientConfig.id || 'alt_solutions',
           item_id: item.id,
           payload: { ...item, dealType: 'None', dailyDeal: false, dealDays: [], campaignTag: '' }
         }));
@@ -131,7 +131,13 @@ export default function AdminStorefrontModule({ stock, setStock, inventoryMatrix
     }
   };
 
-  const activeDeals = useMemo(() => (inventoryMatrix || []).filter((i: any) => i.dailyDeal || i.dealType === 'One-Shot' || i.dealType === 'Recurring'), [inventoryMatrix]);
+  // FIXED: Strictly filter to ensure only items with active assigned days count!
+  const activeDeals = useMemo(() => (inventoryMatrix || []).filter((i: any) => {
+    if (i.dealType === 'One-Shot') return i.dealDays && i.dealDays.length > 0;
+    if (i.dealType === 'Recurring') return true;
+    return false;
+  }), [inventoryMatrix]);
+  
   const topShelfItems = useMemo(() => (inventoryMatrix || []).filter((i: any) => i.isTopShelf && i.mainCategory !== 'Edibles'), [inventoryMatrix]);
   const chefsReserveItems = useMemo(() => (inventoryMatrix || []).filter((i: any) => i.isTopShelf && i.mainCategory === 'Edibles'), [inventoryMatrix]);
   const featuredItems = useMemo(() => (inventoryMatrix || []).filter((i: any) => i.featured), [inventoryMatrix]);
@@ -168,7 +174,9 @@ export default function AdminStorefrontModule({ stock, setStock, inventoryMatrix
   return (
     <div className="p-4 md:p-8 animate-in fade-in">
       
-      <CampaignConfigModal isOpen={isConfigModalOpen} onClose={() => setIsConfigModalOpen(false)} item={campaignItem} onSave={handleSaveCampaign} />
+      {/* WIRED the new onRemove prop to the modal */}
+      <CampaignConfigModal isOpen={isConfigModalOpen} onClose={() => setIsConfigModalOpen(false)} item={campaignItem} onSave={handleSaveCampaign} onRemove={handleQuickRemove} />
+      
       <StorefrontSettings isOpen={isSettingsModalOpen} onClose={() => setIsSettingsModalOpen(false)} weeklySchedule={weeklySchedule} handleScheduleChange={handleScheduleChange} shiftChange={shiftChange} setShiftChange={setShiftChange} handleSaveHours={handleSaveHours} />
       <InventorySelectorModal isOpen={isSelectorOpen} onClose={() => setIsSelectorOpen(false)} inventoryMatrix={inventoryMatrix} onSelect={handleSelectFromInventory} context={selectorContext} />
 
@@ -208,7 +216,7 @@ export default function AdminStorefrontModule({ stock, setStock, inventoryMatrix
       </div>
 
       {adminView === 'BUILDER' ? (
-         <StorefrontBuilder homeConfig={homeConfig} setHomeConfig={setHomeConfig} mainCategories={mainCategories} subCategories={subCategories} />
+         <StorefrontBuilder homeConfig={homeConfig} setHomeConfig={setHomeConfig} mainCategories={mainCategories} subCategories={subCategories} inventoryMatrix={inventoryMatrix} />
       ) : (
         <>
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">

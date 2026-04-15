@@ -1,5 +1,5 @@
 // sandbox/apps/storefront/StorefrontCatalog.tsx
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useStickyState } from '@/hooks/useStickyState';
 import { Info, Flame, ShoppingCart, Leaf, Wind, Cookie, Droplet, Shirt, LayoutGrid, Tag, Award, Sparkles, Star, ArrowRight, Home, Activity } from 'lucide-react';
 import { StorefrontCard, getRequiredGrams } from './StorefrontComponents';
@@ -7,12 +7,12 @@ import StorefrontHeader from './StorefrontHeader';
 import { IconMap, ThemeMap, getThemeColor } from '../admin/storefront/StorefrontBuilder';
 
 const defaultHomeConfig = {
-  hero: { title: "30% OFF\nSALE", subtitle: "On Select Brands. Let's Stock Up!", buttonText: "Shop The Sale", colorFrom: "pink-600", colorTo: "rose-600", icon: "Flame" },
+  hero: { title: "DAILY DEALS\nARE LIVE", subtitle: "Don't Miss Out On Today's Drops", buttonText: "Click Here For Daily Deals", colorFrom: "cyan-600", colorTo: "blue-600", icon: "Flame" },
   bento: [
     { name: "Flower", cat: "Flower & Plants", sub: "All", icon: "Leaf", color: "emerald", desc: "Premium flower and reserve tiers.", span: "md:col-span-2 md:row-span-2", imgUrl: "" },
     { name: "Vapes", cat: "Vapes & Pens", sub: "All", icon: "Wind", color: "cyan", desc: "Disposables & carts.", span: "col-span-1 md:col-span-1 md:row-span-2", imgUrl: "" },
     { name: "Pre Rolls", cat: "Flower & Plants", sub: "Pre-Rolls & Blunts", icon: "Tag", color: "pink", desc: "Ready to enjoy.", span: "col-span-1 md:col-span-1 md:row-span-1", imgUrl: "" },
-    { name: "Concentrates", cat: "Concentrates", sub: "All", icon: "Droplet", color: "orange", desc: "Dabs & sauces.", span: "col-span-2 md:col-span-1 md:row-span-1", imgUrl: "" }
+    { name: "Mystery Bags", cat: "Merch & Extras", sub: "Mystery Bags", icon: "Sparkles", color: "fuchsia", desc: "Surprise assortments.", span: "col-span-1 md:col-span-1 md:row-span-1", imgUrl: "" }
   ],
   secondary: { title: "Don't Miss\nThese Deals", subtitle: "While Supplies Last.", buttonText: "Click To Save", colorFrom: "emerald-500", colorTo: "emerald-500", icon: "Award" }
 };
@@ -25,7 +25,8 @@ export default function StorefrontCatalog({
   setIsCheckingOut, clientConfig 
 }: any) {
   
-  const [homeConfig] = useStickyState(defaultHomeConfig, `division_home_config_v1`);
+  const [homeConfig] = useStickyState(defaultHomeConfig, `alt_solutions_home_config_v1`);
+  const [heroIndex, setHeroIndex] = useState(0);
 
   const isItemOOS = (item: any) => {
      const activeSubCat = item.subCategory?.toLowerCase() || '';
@@ -80,10 +81,47 @@ export default function StorefrontCatalog({
   const premiumVaultBucket = safeInventory.filter((i: any) => i.isTopShelf && !i.featured && !i.isConfiguredDeal && !i.subCategory?.toLowerCase().includes('steals'));
   const smokyStealsBucket = safeInventory.filter((i: any) => i.subCategory?.toLowerCase().includes('steals') && !i.dailyDeal && !i.featured);
 
-  const heroTheme = ThemeMap[getThemeColor((homeConfig.hero as any).color || homeConfig.hero.colorFrom)] || ThemeMap['pink'];
-  const secTheme = ThemeMap[getThemeColor((homeConfig.secondary as any).color || homeConfig.secondary.colorFrom)] || ThemeMap['emerald'];
+  // Dynamic Carousel Engine Logic
+  const heroSlides: any[] = [
+    {
+      title: homeConfig.hero.title,
+      subtitle: homeConfig.hero.subtitle,
+      buttonText: homeConfig.hero.buttonText,
+      themeColor: getThemeColor((homeConfig.hero as any).color || homeConfig.hero.colorFrom),
+      icon: homeConfig.hero.icon,
+      imgUrl: (homeConfig.hero as any).imgUrl || undefined,
+      action: () => {
+         const dealsSection = document.getElementById('live-deals-section');
+         if (dealsSection) dealsSection.scrollIntoView({ behavior: 'smooth' });
+      }
+    },
+    // FIXED: Scanning for imageUrl, imgUrl, or image
+    ...todaysDeals.filter((i:any) => i.imageUrl || i.imgUrl || i.image).slice(0, 3).map((item: any) => ({
+      title: "DAILY DEAL",
+      subtitle: item.name,
+      buttonText: "Shop Deal",
+      themeColor: "orange",
+      icon: "Flame",
+      imgUrl: item.imageUrl || item.imgUrl || item.image,
+      action: () => {
+         const dealsSection = document.getElementById('live-deals-section');
+         if (dealsSection) dealsSection.scrollIntoView({ behavior: 'smooth' });
+      }
+    }))
+  ];
 
-  const HeroIcon = IconMap[homeConfig.hero.icon] || Flame;
+  useEffect(() => {
+    if (heroSlides.length <= 1) return;
+    const interval = setInterval(() => {
+      setHeroIndex(prev => (prev + 1) % heroSlides.length);
+    }, 5000);
+    return () => clearInterval(interval);
+  }, [heroSlides.length]);
+
+  const activeHero = heroSlides[heroIndex] || heroSlides[0];
+  const activeTheme = ThemeMap[activeHero.themeColor] || ThemeMap['cyan'];
+  const ActiveHeroIcon = IconMap[activeHero.icon] || Flame;
+  const secTheme = ThemeMap[getThemeColor((homeConfig.secondary as any).color || homeConfig.secondary.colorFrom)] || ThemeMap['emerald'];
   const SecIcon = IconMap[homeConfig.secondary.icon] || Award;
 
   return (
@@ -102,14 +140,28 @@ export default function StorefrontCatalog({
          {isFeaturedTab ? (
            <div className="animate-in fade-in slide-in-from-bottom-4 space-y-10 pt-2 sm:pt-0">
              
-             {/* DYNAMIC: Promo Banner 1 (Primary) */}
-             <div className={`w-full ${heroTheme.heroGrad} rounded-3xl p-8 md:p-12 flex flex-col md:flex-row items-center justify-between shadow-2xl overflow-hidden relative group`}>
+             {/* DYNAMIC: Promo Banner 1 (Primary) - Now a Carousel */}
+             <div onClick={activeHero.action} className={`w-full ${activeTheme.heroGrad} cursor-pointer rounded-3xl p-8 md:p-12 flex flex-col md:flex-row items-center justify-between shadow-2xl overflow-hidden relative group transition-all duration-700`}>
+                {activeHero.imgUrl && (
+                   <div className="absolute inset-0 z-0 opacity-40 mix-blend-overlay group-hover:scale-105 transition-transform duration-700">
+                     <img src={activeHero.imgUrl} className="w-full h-full object-cover" alt="Deal Background" />
+                   </div>
+                )}
                 <div className="relative z-10">
-                  <h2 className="text-4xl md:text-6xl font-black text-white uppercase tracking-tighter leading-none mb-2 drop-shadow-md whitespace-pre-line">{homeConfig.hero.title}</h2>
-                  <p className="text-xs font-black uppercase tracking-widest text-white/80 mb-6 drop-shadow">{homeConfig.hero.subtitle}</p>
-                  <button className="bg-zinc-950 text-white px-6 py-3 rounded-xl text-xs font-black uppercase tracking-widest hover:bg-zinc-900 transition-colors shadow-lg">{homeConfig.hero.buttonText}</button>
+                  <h2 key={`title-${heroIndex}`} className="text-4xl md:text-6xl font-black text-white uppercase tracking-tighter leading-none mb-2 drop-shadow-md whitespace-pre-line animate-in slide-in-from-left-4 fade-in duration-500">{activeHero.title}</h2>
+                  <p key={`sub-${heroIndex}`} className="text-xs font-black uppercase tracking-widest text-white/80 mb-6 drop-shadow animate-in slide-in-from-left-4 fade-in duration-500 delay-75">{activeHero.subtitle}</p>
+                  <button key={`btn-${heroIndex}`} className="bg-zinc-950 text-white px-6 py-3 rounded-xl text-xs font-black uppercase tracking-widest hover:bg-zinc-900 transition-colors shadow-lg animate-in slide-in-from-bottom-4 fade-in duration-500 delay-150">{activeHero.buttonText}</button>
                 </div>
-                <HeroIcon size={140} className="text-white/20 absolute right-0 md:-right-10 top-1/2 -translate-y-1/2 rotate-12 group-hover:scale-110 transition-transform duration-700" />
+                <ActiveHeroIcon key={`icon-${heroIndex}`} size={140} className="text-white/20 absolute right-0 md:-right-10 top-1/2 -translate-y-1/2 rotate-12 group-hover:scale-110 transition-transform duration-700 animate-in fade-in zoom-in-90" />
+                
+                {/* Carousel Indicators */}
+                {heroSlides.length > 1 && (
+                  <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex items-center gap-2 z-20">
+                    {heroSlides.map((_, i) => (
+                      <div key={i} className={`w-2 h-2 rounded-full transition-all duration-500 ${i === heroIndex ? 'bg-white scale-125' : 'bg-white/30'}`} />
+                    ))}
+                  </div>
+                )}
              </div>
 
              {/* DYNAMIC: Auto-Packing Dense Bento Grid */}
@@ -195,7 +247,7 @@ export default function StorefrontCatalog({
 
              {/* REGULAR LIVE DEALS */}
              {todaysDeals.length > 0 && (
-                <div className="pt-6 animate-in fade-in mt-6 border-t border-zinc-800/50">
+                <div id="live-deals-section" className="pt-6 animate-in fade-in mt-6 border-t border-zinc-800/50 scroll-mt-24">
                    <div className="flex items-center gap-3 mb-6 pt-6">
                      <div className="p-2 bg-orange-500/10 rounded-xl border border-orange-500/30 shadow-[0_0_15px_rgba(249,115,22,0.2)]">
                        <Flame size={16} className="text-orange-400 animate-pulse" />
@@ -213,6 +265,7 @@ export default function StorefrontCatalog({
                 </div>
              )}
 
+             {/* SMOKY STEALS */}
              {smokyStealsBucket.length > 0 && (
                 <div className="pt-6 animate-in fade-in mt-6 border-t border-zinc-800/50">
                  <div className="flex items-center gap-3 mb-6 pt-6">
@@ -230,6 +283,7 @@ export default function StorefrontCatalog({
                 </div>
              )}
 
+             {/* PREMIUM VAULT */}
              {premiumVaultBucket.length > 0 && (
                 <div className="pt-6 animate-in fade-in mt-6 border-t border-zinc-800/50">
                  <div className="flex items-center gap-4 mb-6 pt-6">

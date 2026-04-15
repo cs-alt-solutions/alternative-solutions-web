@@ -1,5 +1,7 @@
+// sandbox/apps/admin/storefront/StorefrontBuilder.tsx
 import React, { useState } from 'react';
-import { Edit3, X, Image as ImageIcon, Flame, Award, Leaf, Wind, Tag, Droplet, Sparkles, Star, Save, ArrowLeft, ArrowRight, Trash2, Plus, Activity } from 'lucide-react';
+import { Edit3, X, Image as ImageIcon, Flame, Award, Leaf, Wind, Tag, Droplet, Sparkles, Star, Save, ArrowLeft, ArrowRight, Trash2, Plus, Activity, Search } from 'lucide-react';
+import InventorySelectorModal from './InventorySelectorModal';
 
 export const IconMap: any = { Flame, Award, Leaf, Wind, Tag, Droplet, Sparkles, Star, Activity };
 
@@ -77,9 +79,10 @@ export const getThemeColor = (configColor: string) => {
     return 'emerald';
 };
 
-export default function StorefrontBuilder({ homeConfig, setHomeConfig, mainCategories, subCategories }: any) {
+export default function StorefrontBuilder({ homeConfig, setHomeConfig, mainCategories, subCategories, inventoryMatrix }: any) {
     const [editingBlock, setEditingBlock] = useState<string | null>(null);
     const [editForm, setEditForm] = useState<any>(null);
+    const [showInventoryModal, setShowInventoryModal] = useState(false);
 
     const openEdit = (blockId: string, data: any) => {
         setEditingBlock(blockId);
@@ -124,7 +127,6 @@ export default function StorefrontBuilder({ homeConfig, setHomeConfig, mainCateg
         setHomeConfig({ ...homeConfig, bento: newBento });
     };
 
-    // FIX: Cast as any to avoid legacy prop TS error
     const heroTheme = ThemeMap[getThemeColor((homeConfig.hero as any).color || homeConfig.hero.colorFrom)] || ThemeMap['pink'];
     const secTheme = ThemeMap[getThemeColor((homeConfig.secondary as any).color || homeConfig.secondary.colorFrom)] || ThemeMap['emerald'];
 
@@ -228,7 +230,7 @@ export default function StorefrontBuilder({ homeConfig, setHomeConfig, mainCateg
 
            {/* Editor Slide-Over Modal */}
            {editingBlock && (
-               <div className="fixed inset-0 z-[100] flex justify-end bg-black/80 backdrop-blur-sm animate-in fade-in">
+               <div className="fixed inset-0 z-100 flex justify-end bg-black/80 backdrop-blur-sm animate-in fade-in">
                    <div className="w-full max-w-md bg-zinc-950 h-full border-l border-zinc-800 flex flex-col shadow-2xl animate-in slide-in-from-right-8">
                        <div className="p-6 border-b border-zinc-800 flex items-center justify-between bg-zinc-900/50">
                            <h3 className="text-lg font-black uppercase tracking-widest text-white flex items-center gap-2"><Edit3 size={18} className="text-cyan-400"/> {editingBlock.includes('bento') ? 'Edit Category Box' : 'Edit Banner'}</h3>
@@ -253,7 +255,6 @@ export default function StorefrontBuilder({ homeConfig, setHomeConfig, mainCateg
                                  <div className="grid grid-cols-2 gap-4">
                                      <div>
                                          <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest block mb-2">Color Theme</label>
-                                         {/* Updated to cast hero property to any for older config compat */}
                                          <select value={getThemeColor(editForm.color || editForm.colorFrom)} onChange={e => setEditForm({...editForm, color: e.target.value})} className="w-full bg-zinc-900 border border-zinc-800 rounded-xl p-3 text-sm font-bold text-white focus:border-cyan-500 outline-none">
                                              <option value="pink">Pink</option>
                                              <option value="emerald">Emerald</option>
@@ -339,8 +340,13 @@ export default function StorefrontBuilder({ homeConfig, setHomeConfig, mainCateg
                                  </div>
                                  <div>
                                      <label className="text-[10px] font-bold text-cyan-400 uppercase tracking-widest flex items-center gap-2 mb-2"><ImageIcon size={12}/> Background Image URL</label>
-                                     <input type="text" value={editForm.imgUrl} onChange={e => setEditForm({...editForm, imgUrl: e.target.value})} placeholder="https://..." className="w-full bg-zinc-900 border border-cyan-500/30 rounded-xl p-3 text-sm font-mono text-cyan-100 focus:border-cyan-500 outline-none" />
-                                     <p className="text-[9px] text-zinc-500 mt-2 uppercase tracking-widest leading-relaxed">Paste a direct image URL. It will automatically scale, crop, and apply the correct color gradients to match the theme.</p>
+                                     <div className="flex gap-2">
+                                       <input type="text" value={editForm.imgUrl || ''} onChange={e => setEditForm({...editForm, imgUrl: e.target.value})} placeholder="https://..." className="flex-1 bg-zinc-900 border border-cyan-500/30 rounded-xl p-3 text-sm font-mono text-cyan-100 focus:border-cyan-500 outline-none" />
+                                       <button onClick={() => setShowInventoryModal(true)} className="px-4 bg-zinc-800 hover:bg-zinc-700 text-cyan-400 rounded-xl border border-zinc-700 text-xs font-black uppercase tracking-widest transition-colors flex items-center gap-2 whitespace-nowrap">
+                                         <Search size={14}/> Find
+                                       </button>
+                                     </div>
+                                     <p className="text-[9px] text-zinc-500 mt-2 uppercase tracking-widest leading-relaxed">Paste a direct image URL or search your inventory. It will automatically scale, crop, and apply the correct color gradients to match the theme.</p>
                                  </div>
                                </>
                            )}
@@ -354,6 +360,18 @@ export default function StorefrontBuilder({ homeConfig, setHomeConfig, mainCateg
                    </div>
                </div>
            )}
+
+           <InventorySelectorModal 
+             isOpen={showInventoryModal} 
+             onClose={() => setShowInventoryModal(false)} 
+             inventoryMatrix={inventoryMatrix || []} 
+             onSelect={(item: any) => { 
+               // FIXED: Target actual db imageUrl string
+               setEditForm({...editForm, imgUrl: item.imageUrl || item.imgUrl || item.image || ''}); 
+               setShowInventoryModal(false); 
+             }} 
+             context={{lane: 'Category Box Background'}} 
+           />
         </div>
     );
 }

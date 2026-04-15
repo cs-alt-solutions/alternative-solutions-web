@@ -1,10 +1,11 @@
+// sandbox/apps/admin/storefront/CampaignConfigModal.tsx
 'use client';
 
 import React, { useState, useEffect, useMemo } from 'react';
-import { X, Zap, Repeat, Flame, Tag, Calendar, ShoppingBag, Layers, Percent } from 'lucide-react';
+import { X, Zap, Repeat, Flame, Tag, Calendar, ShoppingBag, Layers, Percent, Trash2 } from 'lucide-react';
 import { DAYS_OF_WEEK } from './StorefrontSettings';
 
-export default function CampaignConfigModal({ isOpen, onClose, item, onSave }: any) {
+export default function CampaignConfigModal({ isOpen, onClose, item, onSave, onRemove }: any) {
   const [lane, setLane] = useState<'One-Shot' | 'Recurring'>('One-Shot');
   const [selectedDays, setSelectedDays] = useState<number[]>([]);
   const [campaignTag, setCampaignTag] = useState('PROMO');
@@ -26,7 +27,7 @@ export default function CampaignConfigModal({ isOpen, onClose, item, onSave }: a
   const [discountType, setDiscountType] = useState<'PERCENT' | 'DOLLAR' | 'FIXED' | 'TIERED'>('PERCENT');
   const [discountValue, setDiscountValue] = useState<number | string>(15);
   
-  // NEW: Size-Specific State for Tiered Overrides
+  // Size-Specific State for Tiered Overrides
   const [editedSizes, setEditedSizes] = useState<any[]>([]);
 
   const basePriceDisplay = useMemo(() => {
@@ -48,9 +49,8 @@ export default function CampaignConfigModal({ isOpen, onClose, item, onSave }: a
       setSelectedDays(item.dealDays || []);
       setCampaignTag(item.campaignTag || 'PROMO');
       
-      // Load current sizes into state so we can edit promo prices
       const defaultSizes = item.sizes && item.sizes.length > 0 
-        ? JSON.parse(JSON.stringify(item.sizes)) // Deep copy
+        ? JSON.parse(JSON.stringify(item.sizes)) 
         : [{ id: `sz-default`, label: 'Standard', price: item.price || 0, bundleQty: 1, promoLabel: '', promoPrice: '' }];
       setEditedSizes(defaultSizes);
       
@@ -106,7 +106,7 @@ export default function CampaignConfigModal({ isOpen, onClose, item, onSave }: a
       dealDays: selectedDays,
       campaignTag: campaignTag,
       dealConfig,
-      sizes: editedSizes // Save the specific tier overrides
+      sizes: editedSizes
     };
     onSave(updatedItem);
   };
@@ -189,8 +189,6 @@ export default function CampaignConfigModal({ isOpen, onClose, item, onSave }: a
             </div>
 
             <div className="bg-zinc-900 border border-zinc-800 rounded-3xl p-5">
-              
-              {/* Type 1: DISCOUNT (Now Supports Tiered Overrides) */}
               {logicType === 'DISCOUNT' && (
                 <div className="flex flex-col gap-3">
                   <div className="flex items-center gap-3">
@@ -198,7 +196,6 @@ export default function CampaignConfigModal({ isOpen, onClose, item, onSave }: a
                       <option value="PERCENT">% Off Original</option>
                       <option value="DOLLAR">$ Off Original</option>
                       <option value="FIXED">Set Fixed Price</option>
-                      {/* Only show Tiered if the product actually has multiple sizes */}
                       {editedSizes.length > 1 && <option value="TIERED">Set Price Per Size</option>}
                     </select>
                     
@@ -210,7 +207,6 @@ export default function CampaignConfigModal({ isOpen, onClose, item, onSave }: a
                     )}
                   </div>
 
-                  {/* NEW: TIERED SIZES OVERRIDE UI */}
                   {discountType === 'TIERED' && (
                     <div className="w-full mt-2 space-y-2 border-t border-zinc-800/50 pt-4 animate-in fade-in slide-in-from-top-2">
                       <label className="text-[9px] font-black uppercase tracking-widest text-zinc-500 flex justify-between">
@@ -245,7 +241,6 @@ export default function CampaignConfigModal({ isOpen, onClose, item, onSave }: a
                 </div>
               )}
 
-              {/* Type 2: BUNDLE */}
               {logicType === 'BUNDLE' && (
                 <div className="flex items-center gap-3">
                   <span className="text-[10px] font-black uppercase text-zinc-500">Buy</span>
@@ -258,7 +253,6 @@ export default function CampaignConfigModal({ isOpen, onClose, item, onSave }: a
                 </div>
               )}
 
-              {/* Type 3: BOGO */}
               {logicType === 'BOGO' && (
                 <div className="space-y-3">
                   <div className="flex items-center gap-3">
@@ -286,10 +280,17 @@ export default function CampaignConfigModal({ isOpen, onClose, item, onSave }: a
         </div>
 
         {/* Footer */}
-        <div className="p-4 border-t border-zinc-800/50 bg-zinc-900/50 shrink-0">
+        <div className="p-4 border-t border-zinc-800/50 bg-zinc-900/50 shrink-0 flex flex-col gap-3">
            <button onClick={handleSave} disabled={selectedDays.length === 0} className="w-full py-4 bg-pink-500 hover:bg-pink-400 disabled:bg-zinc-800 disabled:text-zinc-600 text-zinc-950 rounded-2xl font-black uppercase tracking-widest transition-all active:scale-95 shadow-lg">
              {selectedDays.length === 0 ? 'Select Active Days' : 'Lock Campaign Strategy'}
            </button>
+           
+           {/* DYNAMIC REMOVE BUTTON: Appears if this item is currently flagged as a deal */}
+           {(item.dealType === 'One-Shot' || item.dealType === 'Recurring' || item.dailyDeal) && (
+             <button onClick={() => { if(onRemove) onRemove(item); onClose(); }} className="w-full py-3 bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 border border-rose-500/20 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all active:scale-95 flex items-center justify-center gap-2">
+               <Trash2 size={14} /> Remove Campaign & Reset Item
+             </button>
+           )}
         </div>
 
       </div>

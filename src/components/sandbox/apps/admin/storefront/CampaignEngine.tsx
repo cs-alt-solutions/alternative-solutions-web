@@ -1,3 +1,4 @@
+// sandbox/apps/admin/storefront/CampaignEngine.tsx
 'use client';
 
 import React from 'react';
@@ -7,17 +8,18 @@ import { DAYS_OF_WEEK } from './StorefrontSettings';
 export default function CampaignEngine({ activeDeals, openCampaignConfig, removeDeal, openInventorySelector, weeklySchedule, clearOneShots }: any) {
   
   const oneShotDeals = activeDeals.filter((d: any) => d.dealType === 'One-Shot');
-  const recurringDeals = activeDeals.filter((d: any) => d.dealType === 'Recurring' || d.dailyDeal);
+  
+  // FIXED: Strictly check Recurring dealType to match our new standard
+  const recurringDeals = activeDeals.filter((d: any) => d.dealType === 'Recurring');
 
   // Filter out any days that are explicitly marked as closed in the schedule
   const activeDays = DAYS_OF_WEEK.filter(day => {
     const sched = weeklySchedule?.[day.id];
-    return !sched?.isClosed; // If there's no schedule object, assume it's open
+    return !sched?.isClosed; 
   });
   
   const closedDaysCount = 7 - activeDays.length;
 
-  // Hardcoded map to ensure Tailwind compiles the grid columns correctly
   const gridColsClass = 
     activeDays.length === 7 ? 'xl:grid-cols-7' :
     activeDays.length === 6 ? 'xl:grid-cols-6' :
@@ -49,14 +51,19 @@ export default function CampaignEngine({ activeDeals, openCampaignConfig, remove
 
   const renderDealCard = (deal: any) => {
     const ItemIcon = deal.iconName === 'Leaf' ? Leaf : deal.iconName === 'Box' ? Box : ImageIcon;
-    const isLowStock = deal.onHand <= 5; 
+    
+    // FIXED: Accurately calculate total stock across base and variants
+    const totalStock = deal.onHand || (deal.options ? deal.options.reduce((sum: number, o: any) => sum + (Number(o.stock) || 0), 0) : 0);
+    
+    // FIXED: Only flag as killed if stock literally hits 0 or below
+    const isLowStock = totalStock <= 0; 
     
     return (
       <div key={deal.id} className={`relative bg-zinc-900 border ${isLowStock ? 'border-rose-500/50 opacity-60 grayscale' : 'border-zinc-800'} p-3 rounded-2xl hover:border-pink-500/50 transition-all group shadow-sm flex flex-col gap-2`}>
         <button onClick={(e) => { e.stopPropagation(); removeDeal(deal); }} className="absolute -top-2 -right-2 bg-zinc-950 border border-zinc-800 text-zinc-500 hover:text-rose-400 hover:border-rose-500/50 p-1.5 rounded-full z-20 opacity-0 group-hover:opacity-100 transition-all scale-90 hover:scale-100">
           <X size={12} />
         </button>
-        {isLowStock && <div className="absolute inset-0 bg-zinc-950/80 backdrop-blur-[1px] z-10 rounded-2xl flex items-center justify-center border border-rose-500/30"><span className="text-[10px] font-black text-rose-400 uppercase tracking-widest bg-zinc-950 px-2 py-1 rounded border border-rose-500/50">Deal Killed: Low Stock</span></div>}
+        {isLowStock && <div className="absolute inset-0 bg-zinc-950/80 backdrop-blur-[1px] z-10 rounded-2xl flex items-center justify-center border border-rose-500/30"><span className="text-[10px] font-black text-rose-400 uppercase tracking-widest bg-zinc-950 px-2 py-1 rounded border border-rose-500/50">Deal Killed: Out of Stock</span></div>}
         
         <div className="flex items-center gap-2.5 cursor-pointer" onClick={() => openCampaignConfig(deal)}>
           <div className="w-8 h-8 rounded-lg bg-zinc-950 overflow-hidden shrink-0 border border-zinc-800 text-zinc-700 flex items-center justify-center">
