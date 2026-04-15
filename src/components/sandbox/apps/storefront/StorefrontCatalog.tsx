@@ -76,12 +76,23 @@ export default function StorefrontCatalog({
 
   const isFeaturedTab = activeCategory === 'Home' || activeCategory === 'Daily Deals';
   
-  const todaysDeals = safeInventory.filter((i: any) => i.dailyDeal);
+  const currentDayId = new Date().getDay();
+  
+  const todaysDeals = safeInventory.filter((i: any) => {
+    if (i.dealType === 'One-Shot' || i.dealType === 'Recurring') {
+      if (i.dealDays && i.dealDays.includes(currentDayId)) return true;
+      if (i.dealType === 'Recurring' && (!i.dealDays || i.dealDays.length === 0)) return true;
+      return false;
+    }
+    return i.dailyDeal; 
+  });
+
   const newDropsBucket = safeInventory.filter((i: any) => i.featured && !i.isConfiguredDeal && !i.subCategory?.toLowerCase().includes('steals'));
   const premiumVaultBucket = safeInventory.filter((i: any) => i.isTopShelf && !i.featured && !i.isConfiguredDeal && !i.subCategory?.toLowerCase().includes('steals'));
   const smokyStealsBucket = safeInventory.filter((i: any) => i.subCategory?.toLowerCase().includes('steals') && !i.dailyDeal && !i.featured);
 
-  // Dynamic Carousel Engine Logic
+  const activeTodaysDeals = todaysDeals.filter(item => !isItemOOS(item));
+
   const heroSlides: any[] = [
     {
       title: homeConfig.hero.title,
@@ -95,34 +106,41 @@ export default function StorefrontCatalog({
          if (dealsSection) dealsSection.scrollIntoView({ behavior: 'smooth' });
       }
     },
-    // FIXED: Scanning for imageUrl, imgUrl, or image
-    ...todaysDeals.filter((i:any) => i.imageUrl || i.imgUrl || i.image).slice(0, 3).map((item: any) => ({
-      title: "DAILY DEAL",
-      subtitle: item.name,
-      buttonText: "Shop Deal",
-      themeColor: "orange",
-      icon: "Flame",
-      imgUrl: item.imageUrl || item.imgUrl || item.image,
-      action: () => {
-         const dealsSection = document.getElementById('live-deals-section');
-         if (dealsSection) dealsSection.scrollIntoView({ behavior: 'smooth' });
-      }
-    }))
+    ...activeTodaysDeals.map((item: any) => {
+      const isNewDrop = item.campaignTag === 'NEW_DROP';
+      const isClearance = item.campaignTag === 'VAULT_CLEARANCE';
+      
+      return {
+        title: isNewDrop ? "FRESH DROP" : isClearance ? "VAULT CLEARANCE" : "DAILY DEAL",
+        subtitle: item.name,
+        buttonText: "Shop Deal",
+        themeColor: isNewDrop ? "cyan" : isClearance ? "rose" : "orange",
+        icon: isNewDrop ? "Star" : isClearance ? "Tag" : "Flame",
+        imgUrl: item.imageUrl || item.imgUrl || item.image || item.image_url || undefined,
+        action: () => {
+           const dealsSection = document.getElementById('live-deals-section');
+           if (dealsSection) dealsSection.scrollIntoView({ behavior: 'smooth' });
+        }
+      };
+    })
   ];
 
+  const slideCount = heroSlides.length;
   useEffect(() => {
-    if (heroSlides.length <= 1) return;
+    if (slideCount <= 1) return;
     const interval = setInterval(() => {
-      setHeroIndex(prev => (prev + 1) % heroSlides.length);
+      setHeroIndex(prev => (prev + 1) % slideCount);
     }, 5000);
     return () => clearInterval(interval);
-  }, [heroSlides.length]);
+  }, [slideCount]);
 
   const activeHero = heroSlides[heroIndex] || heroSlides[0];
   const activeTheme = ThemeMap[activeHero.themeColor] || ThemeMap['cyan'];
   const ActiveHeroIcon = IconMap[activeHero.icon] || Flame;
   const secTheme = ThemeMap[getThemeColor((homeConfig.secondary as any).color || homeConfig.secondary.colorFrom)] || ThemeMap['emerald'];
   const SecIcon = IconMap[homeConfig.secondary.icon] || Award;
+  
+  const isMasterSlide = heroIndex === 0;
 
   return (
     <>
@@ -140,25 +158,84 @@ export default function StorefrontCatalog({
          {isFeaturedTab ? (
            <div className="animate-in fade-in slide-in-from-bottom-4 space-y-10 pt-2 sm:pt-0">
              
-             {/* DYNAMIC: Promo Banner 1 (Primary) - Now a Carousel */}
-             <div onClick={activeHero.action} className={`w-full ${activeTheme.heroGrad} cursor-pointer rounded-3xl p-8 md:p-12 flex flex-col md:flex-row items-center justify-between shadow-2xl overflow-hidden relative group transition-all duration-700`}>
-                {activeHero.imgUrl && (
-                   <div className="absolute inset-0 z-0 opacity-40 mix-blend-overlay group-hover:scale-105 transition-transform duration-700">
-                     <img src={activeHero.imgUrl} className="w-full h-full object-cover" alt="Deal Background" />
+             {/* THE NEON BILLBOARD CAROUSEL */}
+             <div onClick={activeHero.action} className={`w-full ${activeHero.imgUrl ? 'bg-zinc-950' : activeTheme.heroGrad} cursor-pointer rounded-3xl ${isMasterSlide ? 'p-4 md:p-8' : 'p-8 md:p-12'} flex flex-col justify-end shadow-2xl overflow-hidden relative group transition-all duration-700 min-h-[350px] md:min-h-[450px]`}>
+                
+                {/* Background Textures */}
+                {activeHero.imgUrl ? (
+                   <div className="absolute inset-0 z-0 group-hover:scale-105 transition-transform duration-1000">
+                     <img src={activeHero.imgUrl} className={`w-full h-full object-cover ${isMasterSlide ? 'opacity-30' : 'opacity-90'}`} alt="Deal Background" />
+                     <div className={`absolute inset-0 bg-linear-to-t ${isMasterSlide ? 'from-zinc-950 via-zinc-950/80 to-zinc-950/60' : 'from-zinc-950/90 via-zinc-950/20 to-transparent'}`} />
+                   </div>
+                ) : (
+                   <div className="absolute inset-0 z-0 group-hover:scale-105 transition-transform duration-1000">
+                      {isMasterSlide && (
+                         <>
+                            <div className="absolute inset-0 bg-[linear-gradient(to_right,#80808012_1px,transparent_1px),linear-gradient(to_bottom,#80808012_1px,transparent_1px)] bg-[size:24px_24px]"></div>
+                            <div className="absolute inset-0 bg-radial-gradient from-transparent to-zinc-950"></div>
+                         </>
+                      )}
                    </div>
                 )}
-                <div className="relative z-10">
-                  <h2 key={`title-${heroIndex}`} className="text-4xl md:text-6xl font-black text-white uppercase tracking-tighter leading-none mb-2 drop-shadow-md whitespace-pre-line animate-in slide-in-from-left-4 fade-in duration-500">{activeHero.title}</h2>
-                  <p key={`sub-${heroIndex}`} className="text-xs font-black uppercase tracking-widest text-white/80 mb-6 drop-shadow animate-in slide-in-from-left-4 fade-in duration-500 delay-75">{activeHero.subtitle}</p>
-                  <button key={`btn-${heroIndex}`} className="bg-zinc-950 text-white px-6 py-3 rounded-xl text-xs font-black uppercase tracking-widest hover:bg-zinc-900 transition-colors shadow-lg animate-in slide-in-from-bottom-4 fade-in duration-500 delay-150">{activeHero.buttonText}</button>
-                </div>
-                <ActiveHeroIcon key={`icon-${heroIndex}`} size={140} className="text-white/20 absolute right-0 md:-right-10 top-1/2 -translate-y-1/2 rotate-12 group-hover:scale-110 transition-transform duration-700 animate-in fade-in zoom-in-90" />
+                
+                {/* Content Logic */}
+                {isMasterSlide ? (
+                    // MASTER SLIDE: THE NEON SIGN
+                    <div className="relative z-10 flex flex-col items-center justify-center w-full h-full my-auto py-4">
+                        <div className="border-[3px] border-pink-500 p-6 md:p-10 rounded-3xl shadow-[0_0_30px_rgba(236,72,153,0.4),inset_0_0_30px_rgba(236,72,153,0.4)] bg-zinc-950/80 backdrop-blur-md flex flex-col items-center text-center animate-[pulse_3s_ease-in-out_infinite] max-w-3xl mx-auto w-full group-hover:shadow-[0_0_50px_rgba(236,72,153,0.6),inset_0_0_40px_rgba(236,72,153,0.6)] transition-shadow duration-700">
+                            
+                            <div className="relative mb-2">
+                              <ActiveHeroIcon size={48} className="text-pink-500 drop-shadow-[0_0_15px_rgba(236,72,153,1)] animate-bounce relative z-10" />
+                              <div className="absolute inset-0 bg-pink-500 blur-2xl opacity-50 rounded-full animate-pulse"></div>
+                            </div>
+                            
+                            <div className="space-y-1 md:space-y-2 w-full">
+                                {activeHero.title.split('\n').map((line: string, i: number) => {
+                                    const isCyan = i % 2 !== 0;
+                                    return (
+                                      <h2 key={i} className={`text-4xl md:text-6xl lg:text-7xl font-black uppercase tracking-tighter leading-none ${isCyan ? 'text-cyan-300 drop-shadow-[0_0_15px_rgba(6,182,212,0.8)]' : 'text-pink-400 drop-shadow-[0_0_15px_rgba(236,72,153,0.8)]'}`}>
+                                          {line}
+                                      </h2>
+                                    )
+                                })}
+                            </div>
+
+                            <p className="mt-6 text-pink-100 font-black tracking-[0.3em] uppercase text-[10px] md:text-xs drop-shadow-[0_0_8px_rgba(236,72,153,0.8)]">
+                                {activeHero.subtitle}
+                            </p>
+
+                            <div className="mt-8 px-8 py-3 border-2 border-cyan-400 text-cyan-300 font-black uppercase tracking-widest rounded-xl shadow-[0_0_15px_rgba(6,182,212,0.3),inset_0_0_15px_rgba(6,182,212,0.3)] hover:bg-cyan-400 hover:text-zinc-950 hover:shadow-[0_0_30px_rgba(6,182,212,0.8)] transition-all cursor-pointer relative overflow-hidden">
+                                <span className="relative z-10">{activeHero.buttonText}</span>
+                            </div>
+                        </div>
+                    </div>
+                ) : (
+                    // PRODUCT SLIDES: CLEAN BOTTOM LAYOUT
+                    <div className="relative z-10 flex flex-col md:flex-row items-start md:items-end justify-between w-full mt-auto gap-6 pt-32">
+                      <div>
+                          <h2 key={`title-${heroIndex}`} className="text-3xl md:text-5xl font-black text-white uppercase tracking-tighter leading-none mb-2 drop-shadow-lg whitespace-pre-line animate-in slide-in-from-left-4 fade-in duration-500">
+                            {activeHero.title}
+                          </h2>
+                          <p key={`sub-${heroIndex}`} className={`text-sm md:text-base font-black uppercase tracking-widest mb-0 drop-shadow-md animate-in slide-in-from-left-4 fade-in duration-500 delay-75 text-zinc-300`}>
+                            {activeHero.subtitle}
+                          </p>
+                      </div>
+                      
+                      <button key={`btn-${heroIndex}`} className="shrink-0 bg-zinc-950/90 backdrop-blur-md text-white px-8 py-4 rounded-xl text-sm font-black uppercase tracking-widest hover:bg-zinc-900 transition-colors shadow-2xl animate-in slide-in-from-bottom-4 fade-in duration-500 delay-150 border border-zinc-800">
+                          {activeHero.buttonText}
+                      </button>
+
+                      {!activeHero.imgUrl && (
+                        <ActiveHeroIcon key={`icon-${heroIndex}`} size={180} className="text-white/10 absolute right-0 md:-right-10 top-1/2 -translate-y-1/2 rotate-12 group-hover:scale-110 transition-transform duration-700 animate-in fade-in zoom-in-90" />
+                      )}
+                    </div>
+                )}
                 
                 {/* Carousel Indicators */}
-                {heroSlides.length > 1 && (
-                  <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex items-center gap-2 z-20">
+                {slideCount > 1 && (
+                  <div className="absolute top-6 right-6 flex items-center gap-2 z-20 bg-zinc-950/50 backdrop-blur-md px-3 py-2 rounded-full border border-zinc-800/50">
                     {heroSlides.map((_, i) => (
-                      <div key={i} className={`w-2 h-2 rounded-full transition-all duration-500 ${i === heroIndex ? 'bg-white scale-125' : 'bg-white/30'}`} />
+                      <div key={i} className={`w-2 h-2 rounded-full transition-all duration-500 ${i === heroIndex ? 'bg-white scale-125 shadow-[0_0_10px_white]' : 'bg-white/30'}`} />
                     ))}
                   </div>
                 )}
@@ -185,8 +262,9 @@ export default function StorefrontCatalog({
                      >
                        {c.imgUrl ? (
                           <div className="absolute inset-0 z-0 group-hover:scale-105 transition-transform duration-700">
-                             <img src={c.imgUrl} alt={c.name} className="w-full h-full object-cover" />
-                             <div className={`absolute inset-0 bg-linear-to-t via-black/40 to-transparent ${theme.bentoOverlay}`} />
+                             <img src={c.imgUrl} alt={c.name} className="w-full h-full object-cover opacity-40 mix-blend-luminosity" />
+                             <div className={`absolute inset-0 bg-linear-to-t from-zinc-950 via-zinc-950/60 to-zinc-950/40`} />
+                             <div className={`absolute inset-0 bg-linear-to-t ${theme.bentoOverlay} opacity-30`} />
                           </div>
                        ) : (
                           <div className={`absolute inset-0 z-0 ${theme.bentoFallback} group-hover:scale-105 transition-transform duration-700`} />
@@ -219,23 +297,23 @@ export default function StorefrontCatalog({
 
              {/* CAROUSEL: FRESH FEATURES */}
              {newDropsBucket.length > 0 && (
-                <div className="pt-6 animate-in fade-in mt-6 border-t border-zinc-800/50">
-                   <div className="flex items-center justify-between mb-6 pt-6">
-                     <div className="flex items-center gap-3">
-                       <div className="p-2 bg-cyan-500/20 rounded-xl border border-cyan-500/30 shadow-[0_0_15px_rgba(6,182,212,0.3)]">
-                         <Star size={16} className="text-cyan-400 animate-pulse" />
+                <div className="pt-6 animate-in fade-in mt-6 border-t border-zinc-800/50 relative overflow-hidden">
+                   <div className="flex items-center justify-between mb-8 pt-6 relative z-10">
+                     <div className="flex items-center gap-4">
+                       <div className="p-3 bg-cyan-500/10 rounded-2xl border border-cyan-500/40 shadow-[0_0_20px_rgba(6,182,212,0.3)]">
+                         <Star size={24} className="text-cyan-400 animate-pulse" />
                        </div>
                        <div>
-                         <h3 className="text-xl md:text-2xl font-black uppercase tracking-tighter text-cyan-400">Fresh Features</h3>
-                         <p className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest mt-0.5 hidden sm:block">New additions and highlighted selections.</p>
+                         <h3 className="text-3xl md:text-5xl font-black uppercase tracking-tighter text-transparent bg-clip-text bg-linear-to-r from-blue-500 via-cyan-400 to-indigo-400 drop-shadow-[0_0_10px_rgba(6,182,212,0.3)]">Fresh Drops</h3>
+                         <p className="text-xs font-bold text-zinc-400 uppercase tracking-widest mt-1 hidden sm:block">New additions and highlighted selections.</p>
                        </div>
                      </div>
-                     <div className="flex items-center gap-2 text-[10px] font-black text-zinc-500 uppercase tracking-widest bg-zinc-900 px-3 py-1.5 rounded-full border border-zinc-800">
+                     <div className="flex items-center gap-2 text-[10px] font-black text-zinc-400 uppercase tracking-widest bg-zinc-900/80 backdrop-blur-md px-4 py-2 rounded-full border border-zinc-800 shadow-md relative z-10">
                        Swipe <ArrowRight size={12} className="inline" />
                      </div>
                    </div>
                    
-                   <div className="flex overflow-x-auto snap-x snap-mandatory scrollbar-hide gap-6 pb-4 -mx-4 px-4 md:mx-0 md:px-0">
+                   <div className="flex overflow-x-auto snap-x snap-mandatory scrollbar-hide gap-6 pb-4 -mx-4 px-4 md:mx-0 md:px-0 relative z-10">
                      {newDropsBucket.map((item: any) => (
                        <div key={item.id} className="snap-start shrink-0 w-[85vw] sm:w-85">
                          <StorefrontCard item={item} cart={cart} updateCart={updateCart} clientConfig={clientConfig} />
@@ -247,17 +325,20 @@ export default function StorefrontCatalog({
 
              {/* REGULAR LIVE DEALS */}
              {todaysDeals.length > 0 && (
-                <div id="live-deals-section" className="pt-6 animate-in fade-in mt-6 border-t border-zinc-800/50 scroll-mt-24">
-                   <div className="flex items-center gap-3 mb-6 pt-6">
-                     <div className="p-2 bg-orange-500/10 rounded-xl border border-orange-500/30 shadow-[0_0_15px_rgba(249,115,22,0.2)]">
-                       <Flame size={16} className="text-orange-400 animate-pulse" />
+                <div id="live-deals-section" className="pt-8 animate-in fade-in slide-in-from-bottom-8 duration-700 mt-6 border-t border-zinc-800/50 scroll-mt-24 relative overflow-hidden">
+                   {/* Background Glow */}
+                   <div className="absolute top-0 right-1/4 w-1/3 h-32 bg-orange-500/5 blur-3xl rounded-full" />
+                   
+                   <div className="flex items-center gap-4 mb-8 pt-6 relative z-10">
+                     <div className="p-3 bg-orange-500/10 rounded-2xl border border-orange-500/40 shadow-[0_0_20px_rgba(249,115,22,0.3)]">
+                       <Flame size={24} className="text-orange-400 animate-bounce" />
                      </div>
                      <div>
-                       <h3 className="text-xl md:text-2xl font-black uppercase tracking-tighter text-transparent bg-clip-text bg-linear-to-r from-pink-500 to-orange-400">Live Right Now</h3>
-                       <p className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest mt-0.5">Active daily and weekly promos.</p>
+                       <h3 className="text-3xl md:text-5xl font-black uppercase tracking-tighter text-transparent bg-clip-text bg-linear-to-r from-pink-500 via-orange-400 to-yellow-400 drop-shadow-[0_0_10px_rgba(249,115,22,0.3)]">Live Right Now</h3>
+                       <p className="text-xs font-bold text-zinc-400 uppercase tracking-widest mt-1">Active daily and weekly promos.</p>
                      </div>
                    </div>
-                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 relative z-10">
                      {todaysDeals.map((item: any, idx: number) => (
                        <StorefrontCard key={item.id} item={item} cart={cart} updateCart={updateCart} clientConfig={clientConfig} isHero={idx === 0} />
                      ))}
@@ -265,19 +346,27 @@ export default function StorefrontCatalog({
                 </div>
              )}
 
-             {/* SMOKY STEALS */}
+             {/* SMOKY STEALS - WITH NEW SMOKE ANIMATION */}
              {smokyStealsBucket.length > 0 && (
-                <div className="pt-6 animate-in fade-in mt-6 border-t border-zinc-800/50">
-                 <div className="flex items-center gap-3 mb-6 pt-6">
-                     <div className="p-2 bg-zinc-950 rounded-xl border border-dashed border-lime-500/30">
-                       <Tag size={16} className="text-lime-400" />
+                <div className="pt-8 animate-in fade-in zoom-in-95 slide-in-from-bottom-12 duration-1000 mt-8 border-t border-zinc-800/50 relative overflow-hidden">
+                 
+                 {/* Background Smoke Effect Engine */}
+                 <div className="absolute top-0 left-1/4 w-1/2 h-32 bg-lime-500/5 blur-3xl rounded-full animate-pulse" />
+                 <div className="absolute top-0 left-1/3 w-1/3 h-24 bg-zinc-500/10 blur-3xl rounded-full animate-pulse delay-75" />
+
+                 <div className="flex items-center gap-4 mb-8 pt-6 relative z-10">
+                     <div className="p-3 bg-zinc-950 rounded-2xl border border-dashed border-lime-500/50 shadow-[0_0_20px_rgba(132,204,22,0.15)] relative overflow-hidden group">
+                       <div className="absolute inset-0 bg-lime-500/20 blur-md group-hover:scale-150 transition-transform duration-1000" />
+                       <Wind size={24} className="text-lime-400 relative z-10 animate-pulse" />
                      </div>
                      <div>
-                       <h3 className="text-xl md:text-2xl font-black uppercase tracking-tighter text-transparent bg-clip-text bg-linear-to-r from-lime-400 to-yellow-400">Smoky Steals</h3>
-                       <p className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest mt-0.5">Premium Selections at Clearance Prices</p>
+                       <h3 className="text-3xl md:text-5xl font-black uppercase tracking-tighter text-transparent bg-clip-text bg-linear-to-r from-zinc-500 via-lime-400 to-zinc-400 drop-shadow-[0_0_10px_rgba(132,204,22,0.2)]">
+                         Smoky Steals
+                       </h3>
+                       <p className="text-xs font-bold text-zinc-400 uppercase tracking-widest mt-1">Premium Selections • Clearance Prices</p>
                      </div>
                    </div>
-                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 relative z-10">
                      {smokyStealsBucket.map((item: any) => <StorefrontCard key={item.id} item={item} cart={cart} updateCart={updateCart} clientConfig={clientConfig} />)}
                    </div>
                 </div>
@@ -285,17 +374,17 @@ export default function StorefrontCatalog({
 
              {/* PREMIUM VAULT */}
              {premiumVaultBucket.length > 0 && (
-                <div className="pt-6 animate-in fade-in mt-6 border-t border-zinc-800/50">
-                 <div className="flex items-center gap-4 mb-6 pt-6">
-                    <div className="p-2 bg-amber-500/10 rounded-xl border border-amber-500/30 shadow-[0_0_15px_rgba(245,158,11,0.2)]"> 
-                      <Award size={16} className="text-amber-400" /> 
+                <div className="pt-8 animate-in fade-in mt-8 border-t border-zinc-800/50 relative overflow-hidden">
+                 <div className="flex items-center gap-4 mb-8 pt-6 relative z-10">
+                    <div className="p-3 bg-amber-500/10 rounded-2xl border border-amber-500/40 shadow-[0_0_20px_rgba(245,158,11,0.3)]"> 
+                      <Award size={24} className="text-amber-400" /> 
                     </div>
                     <div> 
-                      <h3 className="text-xl md:text-2xl font-black uppercase tracking-tighter text-transparent bg-clip-text bg-linear-to-r from-amber-400 to-amber-200">The Premium Vault</h3> 
-                      <p className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest mt-0.5">Exclusive Top Shelf Selections</p> 
+                      <h3 className="text-3xl md:text-5xl font-black uppercase tracking-tighter text-transparent bg-clip-text bg-linear-to-r from-yellow-500 via-amber-400 to-amber-200 drop-shadow-[0_0_10px_rgba(245,158,11,0.3)]">The Premium Vault</h3> 
+                      <p className="text-xs font-bold text-zinc-400 uppercase tracking-widest mt-1">Exclusive Top Shelf Selections</p> 
                     </div>
                  </div>
-                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 relative z-10">
                    {premiumVaultBucket.map((item: any) => <StorefrontCard key={item.id} item={item} cart={cart} updateCart={updateCart} clientConfig={clientConfig} />)}
                  </div>
                </div>
