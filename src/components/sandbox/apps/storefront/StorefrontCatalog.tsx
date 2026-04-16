@@ -13,7 +13,10 @@ export default function StorefrontCatalog({
   setIsCheckingOut, clientConfig 
 }: any) {
   
-  const [homeConfig] = useStickyState(clientConfig.homeConfig || { hero: {}, bento: [], secondary: {} }, `alt_solutions_home_config_v1`);
+  // DYNAMIC CONFIG HOOKUP: Read straight from DB passed via clientConfig
+  const fallbackConfig = { hero: {}, bento: [], secondary: {} };
+  const [homeConfig] = useStickyState(clientConfig?.homeConfig || fallbackConfig, `alt_solutions_home_config_v3_${clientConfig?.id}`);
+  
   const [heroIndex, setHeroIndex] = useState(0);
 
   const isItemOOS = (item: any) => {
@@ -67,10 +70,19 @@ export default function StorefrontCatalog({
   const currentDayId = new Date().getDay();
   const currentDayName = new Date().toLocaleDateString('en-US', { weekday: 'long' });
   
-  // DYNAMIC DAILY SLOGAN ENGINE - Sourced from Config!
-  const todaySchedule = clientConfig.dailySchedule?.[currentDayId] || { title: "Daily Drop", sub: "Today's recurring specials." };
-  const dayTitle = todaySchedule.title;
-  const daySub = todaySchedule.sub;
+  // DYNAMIC DAILY SLOGAN ENGINE
+  let dayTitle = "Daily Drop";
+  let daySub = "Today's recurring specials.";
+  
+  switch(currentDayId) {
+    case 0: dayTitle = "Sunday Strains"; daySub = "Prep for the week ahead."; break;
+    case 1: dayTitle = "Munchie Monday"; daySub = "Start the week deliciously."; break;
+    case 2: dayTitle = "Dabs & Badder"; daySub = "Your premium extract drop."; break;
+    case 3: dayTitle = "Weed Wednesday"; daySub = "The ultimate mid-week re-up."; break;
+    case 4: dayTitle = "Dabs & Badder"; daySub = "Thursday's premium extract drop."; break;
+    case 5: dayTitle = "Flower Friday"; daySub = "Fresh buds for the weekend."; break;
+    case 6: dayTitle = "Shatterday"; daySub = "Elevate your Saturday."; break;
+  }
 
   const oneShotDeals = safeInventory.filter((i: any) => {
     if (i.dealType === 'One-Shot') return i.dealDays && i.dealDays.includes(currentDayId);
@@ -95,12 +107,12 @@ export default function StorefrontCatalog({
 
   const heroSlides: any[] = [
     {
-      title: homeConfig.hero.title || "DAILY DEALS",
-      subtitle: homeConfig.hero.subtitle || "Specials",
-      buttonText: homeConfig.hero.buttonText || "Shop",
-      themeColor: getThemeColor((homeConfig.hero as any).color || homeConfig.hero.colorFrom || "cyan-600"),
-      icon: homeConfig.hero.icon || "Flame",
-      imgUrl: (homeConfig.hero as any).imgUrl || undefined,
+      title: homeConfig?.hero?.title || 'LOADING...',
+      subtitle: homeConfig?.hero?.subtitle || '',
+      buttonText: homeConfig?.hero?.buttonText || 'ENTER',
+      themeColor: getThemeColor((homeConfig?.hero as any)?.color || homeConfig?.hero?.colorFrom),
+      icon: homeConfig?.hero?.icon || 'Flame',
+      imgUrl: (homeConfig?.hero as any)?.imgUrl || undefined,
       action: () => {
          const dealsSection = document.getElementById('live-deals-section');
          if (dealsSection) dealsSection.scrollIntoView({ behavior: 'smooth' });
@@ -149,12 +161,8 @@ export default function StorefrontCatalog({
   const activeHero = heroSlides[heroIndex] || heroSlides[0];
   const activeTheme = ThemeMap[activeHero.themeColor] || ThemeMap['cyan'];
   const ActiveHeroIcon = IconMap[activeHero.icon] || Flame;
-  
-  const secTitle = homeConfig.secondary?.title || "Specials";
-  const secSubtitle = homeConfig.secondary?.subtitle || "Don't miss out.";
-  const secBtnText = homeConfig.secondary?.buttonText || "Shop";
-  const secTheme = ThemeMap[getThemeColor((homeConfig.secondary as any)?.color || homeConfig.secondary?.colorFrom || "emerald-500")] || ThemeMap['emerald'];
-  const SecIcon = IconMap[homeConfig.secondary?.icon || 'Award'] || Award;
+  const secTheme = ThemeMap[getThemeColor((homeConfig?.secondary as any)?.color || homeConfig?.secondary?.colorFrom)] || ThemeMap['emerald'];
+  const SecIcon = IconMap[homeConfig?.secondary?.icon] || Award;
   
   const isMasterSlide = heroIndex === 0;
 
@@ -183,10 +191,7 @@ export default function StorefrontCatalog({
          {isFeaturedTab ? (
            <div className="animate-in fade-in slide-in-from-bottom-4 space-y-10 pt-2 sm:pt-0">
              
-             {/* THE NEON BILLBOARD CAROUSEL */}
-             <div onClick={activeHero.action} className={`w-full ${activeHero.imgUrl ? 'bg-zinc-950' : activeTheme.heroGrad} cursor-pointer rounded-3xl ${isMasterSlide ? 'p-4 md:p-8' : 'p-8 md:p-12'} flex flex-col justify-end shadow-2xl overflow-hidden relative group transition-all duration-700 h-[400px] md:h-[500px]`}>
-                
-                {/* Background Textures */}
+             <div onClick={activeHero.action} className={`w-full ${activeHero.imgUrl ? 'bg-zinc-950' : activeTheme.heroGrad} cursor-pointer rounded-3xl ${isMasterSlide ? 'p-4 md:p-8' : 'p-8 md:p-12'} flex flex-col justify-end shadow-2xl overflow-hidden relative group transition-all duration-700 h-100 md:h-125`}>
                 {activeHero.imgUrl ? (
                    <div className="absolute inset-0 z-0 group-hover:scale-105 transition-transform duration-1000">
                      <img src={activeHero.imgUrl} className={`w-full h-full object-cover ${isMasterSlide ? 'opacity-30' : 'opacity-90'}`} alt="Deal Background" />
@@ -203,7 +208,6 @@ export default function StorefrontCatalog({
                    </div>
                 )}
                 
-                {/* Content Logic */}
                 {isMasterSlide ? (
                     <div className="relative z-10 flex flex-col items-center justify-center w-full h-full my-auto py-4 pointer-events-none">
                         <div className="flex flex-col items-center text-center animate-[pulse_3s_ease-in-out_infinite] max-w-3xl mx-auto w-full">
@@ -212,7 +216,7 @@ export default function StorefrontCatalog({
                               <div className="absolute inset-0 bg-pink-500 blur-2xl opacity-50 rounded-full animate-pulse"></div>
                             </div>
                             <div className="space-y-1 md:space-y-2 w-full">
-                                {activeHero.title.split('\n').map((line: string, i: number) => {
+                                {activeHero.title?.split('\n').map((line: string, i: number) => {
                                     const isCyan = i % 2 !== 0;
                                     return (
                                       <h2 key={i} className={`text-5xl md:text-7xl lg:text-8xl font-black uppercase tracking-tighter leading-none ${isCyan ? 'text-cyan-300 drop-shadow-[0_0_20px_rgba(6,182,212,0.9)]' : 'text-pink-400 drop-shadow-[0_0_20px_rgba(236,72,153,0.9)]'}`}>
@@ -233,7 +237,7 @@ export default function StorefrontCatalog({
                     <div className="relative z-10 flex flex-col md:flex-row items-start md:items-end justify-between w-full mt-auto gap-6 pointer-events-none">
                       <div>
                           <div key={`title-${heroIndex}`} className="flex flex-col gap-1 mb-2 animate-in slide-in-from-left-4 fade-in duration-500">
-                             {activeHero.title.split('\n').map((line: string, i: number) => {
+                             {activeHero.title?.split('\n').map((line: string, i: number) => {
                                  const isCyan = i % 2 !== 0;
                                  return (
                                    <h2 key={i} className={`text-4xl md:text-6xl lg:text-7xl font-black uppercase tracking-tighter leading-none ${isCyan ? 'text-cyan-300 drop-shadow-[0_0_15px_rgba(6,182,212,0.9)]' : 'text-pink-400 drop-shadow-[0_0_15px_rgba(236,72,153,0.9)]'}`}>
@@ -255,15 +259,10 @@ export default function StorefrontCatalog({
                     </div>
                 )}
                 
-                {/* MANUAL CONTROLS */}
                 {slideCount > 1 && (
                   <>
-                    <button onClick={prevSlide} className="absolute left-4 md:left-6 top-1/2 -translate-y-1/2 z-30 p-3 bg-zinc-950/60 backdrop-blur-md text-white rounded-full hover:bg-zinc-900 border border-zinc-700/50 opacity-0 group-hover:opacity-100 transition-opacity hover:scale-110 active:scale-95 shadow-xl">
-                      <ChevronLeft size={24} />
-                    </button>
-                    <button onClick={nextSlide} className="absolute right-4 md:right-6 top-1/2 -translate-y-1/2 z-30 p-3 bg-zinc-950/60 backdrop-blur-md text-white rounded-full hover:bg-zinc-900 border border-zinc-700/50 opacity-0 group-hover:opacity-100 transition-opacity hover:scale-110 active:scale-95 shadow-xl">
-                      <ChevronRight size={24} />
-                    </button>
+                    <button onClick={prevSlide} className="absolute left-4 md:left-6 top-1/2 -translate-y-1/2 z-30 p-3 bg-zinc-950/60 backdrop-blur-md text-white rounded-full hover:bg-zinc-900 border border-zinc-700/50 opacity-0 group-hover:opacity-100 transition-opacity hover:scale-110 active:scale-95 shadow-xl"><ChevronLeft size={24} /></button>
+                    <button onClick={nextSlide} className="absolute right-4 md:right-6 top-1/2 -translate-y-1/2 z-30 p-3 bg-zinc-950/60 backdrop-blur-md text-white rounded-full hover:bg-zinc-900 border border-zinc-700/50 opacity-0 group-hover:opacity-100 transition-opacity hover:scale-110 active:scale-95 shadow-xl"><ChevronRight size={24} /></button>
 
                     <div className="absolute top-6 right-6 flex items-center gap-2 z-20 bg-zinc-950/50 backdrop-blur-md px-3 py-2 rounded-full border border-zinc-800/50 pointer-events-auto" onClick={(e) => e.stopPropagation()}>
                       {heroSlides.map((_, i) => (
@@ -274,8 +273,7 @@ export default function StorefrontCatalog({
                 )}
              </div>
 
-             {/* DYNAMIC: Auto-Packing Dense Bento Grid */}
-             {homeConfig.bento && homeConfig.bento.length > 0 && (
+             {homeConfig?.bento && homeConfig.bento.length > 0 && (
                <div className="pt-4">
                  <h3 className="text-xl sm:text-2xl font-black uppercase tracking-tighter text-zinc-100 mb-6 text-center">Shop By Categories</h3>
                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4 grid-flow-row-dense auto-rows-[160px] md:auto-rows-[180px]">
@@ -320,26 +318,21 @@ export default function StorefrontCatalog({
                </div>
              )}
 
-             {/* DYNAMIC: Promo Banner 2 (Secondary) */}
-             <div className={`w-full h-[250px] md:h-[300px] ${secTheme.secBg} rounded-3xl p-8 md:p-12 flex flex-col md:flex-row items-center justify-between shadow-xl border border-zinc-700 overflow-hidden relative group`}>
+             <div className={`w-full h-62.5 md:h-75 ${secTheme.secBg} rounded-3xl p-8 md:p-12 flex flex-col md:flex-row items-center justify-between shadow-xl border border-zinc-700 overflow-hidden relative group`}>
                 <div className="relative z-10 my-auto">
-                  <p className="text-xs font-black uppercase tracking-widest text-zinc-900 mb-2">{secSubtitle}</p>
-                  <h2 className="text-4xl md:text-5xl font-black text-zinc-950 uppercase tracking-tighter leading-none mb-6 whitespace-pre-line">{secTitle}</h2>
-                  <button className={`bg-zinc-950 ${secTheme.secBtnText} px-6 py-3 rounded-xl text-xs font-black uppercase tracking-widest shadow-lg border border-zinc-800`}>{secBtnText}</button>
+                  <p className="text-xs font-black uppercase tracking-widest text-zinc-900 mb-2">{homeConfig?.secondary?.subtitle}</p>
+                  <h2 className="text-4xl md:text-5xl font-black text-zinc-950 uppercase tracking-tighter leading-none mb-6 whitespace-pre-line">{homeConfig?.secondary?.title}</h2>
+                  <button className={`bg-zinc-950 ${secTheme.secBtnText} px-6 py-3 rounded-xl text-xs font-black uppercase tracking-widest shadow-lg border border-zinc-800`}>{homeConfig?.secondary?.buttonText}</button>
                 </div>
                 <SecIcon size={140} className="text-black/10 absolute right-0 md:-right-4 top-1/2 -translate-y-1/2 group-hover:rotate-12 transition-transform duration-700" />
              </div>
 
-             {/* DYNAMIC DAY: RECURRING DEALS SECTION */}
              {recurringDeals.length > 0 && (
                 <div id="recurring-deals-section" className="pt-8 animate-in fade-in slide-in-from-bottom-8 duration-700 mt-6 border-t border-zinc-800/50 scroll-mt-24 relative overflow-hidden">
                    <div className="absolute top-0 left-1/4 w-1/3 h-32 bg-indigo-500/5 blur-3xl rounded-full" />
-                   
                    <div className="flex items-center gap-6 mb-8 pt-6 relative z-10 pl-2">
-                     <div className="shrink-0 border-[3px] border-rose-500 text-rose-500 px-3 py-1 rounded-md transform -rotate-12 shadow-[0_0_15px_rgba(244,63,94,0.4)] bg-zinc-950/80 backdrop-blur-sm relative after:absolute after:inset-0 after:border after:border-rose-500/30 after:rounded-md after:m-[-6px]">
-                       <span className="text-lg md:text-2xl font-black uppercase tracking-[0.2em] leading-none block pt-1">
-                         {currentDayName}
-                       </span>
+                     <div className="shrink-0 border-[3px] border-rose-500 text-rose-500 px-3 py-1 rounded-md transform -rotate-12 shadow-[0_0_15px_rgba(244,63,94,0.4)] bg-zinc-950/80 backdrop-blur-sm relative after:absolute after:inset-0 after:border after:border-rose-500/30 after:rounded-md after:-m-1.5">
+                       <span className="text-lg md:text-2xl font-black uppercase tracking-[0.2em] leading-none block pt-1">{currentDayName}</span>
                      </div>
                      <div>
                        <h3 className="text-3xl md:text-5xl font-black uppercase tracking-tighter text-transparent bg-clip-text bg-linear-to-r from-violet-500 via-indigo-400 to-cyan-400 drop-shadow-[0_0_10px_rgba(99,102,241,0.3)]">{dayTitle}</h3>
@@ -347,18 +340,14 @@ export default function StorefrontCatalog({
                      </div>
                    </div>
                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 relative z-10">
-                     {recurringDeals.map((item: any) => (
-                       <StorefrontCard key={item.id} item={item} cart={cart} updateCart={updateCart} clientConfig={clientConfig} />
-                     ))}
+                     {recurringDeals.map((item: any) => <StorefrontCard key={item.id} item={item} cart={cart} updateCart={updateCart} clientConfig={clientConfig} />)}
                    </div>
                 </div>
              )}
 
-             {/* LIVE RIGHT NOW: ONE-SHOT FLASH DEALS */}
              {oneShotDeals.length > 0 && (
                 <div id="live-deals-section" className="pt-8 animate-in fade-in slide-in-from-bottom-8 duration-700 mt-6 border-t border-zinc-800/50 scroll-mt-24 relative overflow-hidden">
                    <div className="absolute top-0 right-1/4 w-1/3 h-32 bg-orange-500/5 blur-3xl rounded-full" />
-                   
                    <div className="flex items-center gap-4 mb-8 pt-6 relative z-10">
                      <div className="p-3 bg-orange-500/10 rounded-2xl border border-orange-500/40 shadow-[0_0_20px_rgba(249,115,22,0.3)]">
                        <Flame size={24} className="text-orange-400 animate-bounce" />
@@ -369,14 +358,11 @@ export default function StorefrontCatalog({
                      </div>
                    </div>
                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 relative z-10">
-                     {oneShotDeals.map((item: any, idx: number) => (
-                       <StorefrontCard key={item.id} item={item} cart={cart} updateCart={updateCart} clientConfig={clientConfig} isHero={idx === 0} />
-                     ))}
+                     {oneShotDeals.map((item: any, idx: number) => <StorefrontCard key={item.id} item={item} cart={cart} updateCart={updateCart} clientConfig={clientConfig} isHero={idx === 0} />)}
                    </div>
                 </div>
              )}
 
-             {/* CAROUSEL: NEW ARRIVALS */}
              {newDropsBucket.length > 0 && (
                 <div className="pt-6 animate-in fade-in mt-6 border-t border-zinc-800/50 relative overflow-hidden">
                    <div className="flex items-center justify-between mb-8 pt-6 relative z-10">
@@ -404,7 +390,6 @@ export default function StorefrontCatalog({
                 </div>
              )}
 
-             {/* BACK BY POPULAR DEMAND */}
              {returnedBucket.length > 0 && (
                 <div className="pt-6 animate-in fade-in mt-6 border-t border-zinc-800/50 relative overflow-hidden">
                    <div className="flex items-center gap-4 mb-8 pt-6 relative z-10">
@@ -417,20 +402,15 @@ export default function StorefrontCatalog({
                      </div>
                    </div>
                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 relative z-10">
-                     {returnedBucket.map((item: any) => (
-                       <StorefrontCard key={item.id} item={item} cart={cart} updateCart={updateCart} clientConfig={clientConfig} />
-                     ))}
+                     {returnedBucket.map((item: any) => <StorefrontCard key={item.id} item={item} cart={cart} updateCart={updateCart} clientConfig={clientConfig} />)}
                    </div>
                 </div>
              )}
 
-             {/* SMOKY STEALS */}
              {smokyStealsBucket.length > 0 && (
                 <div className="pt-8 animate-in fade-in zoom-in-95 slide-in-from-bottom-12 duration-1000 mt-8 border-t border-zinc-800/50 relative overflow-hidden">
-                 
                  <div className="absolute top-0 left-1/4 w-1/2 h-32 bg-lime-500/5 blur-3xl rounded-full animate-pulse" />
                  <div className="absolute top-0 left-1/3 w-1/3 h-24 bg-zinc-500/10 blur-3xl rounded-full animate-pulse delay-75" />
-
                  <div className="flex items-center gap-4 mb-8 pt-6 relative z-10">
                      <div className="p-3 bg-zinc-950 rounded-2xl border border-dashed border-lime-500/50 shadow-[0_0_20px_rgba(132,204,22,0.15)] relative overflow-hidden group">
                        <div className="absolute inset-0 bg-lime-500/20 blur-md group-hover:scale-150 transition-transform duration-1000" />
@@ -449,7 +429,6 @@ export default function StorefrontCatalog({
                 </div>
              )}
 
-             {/* PREMIUM VAULT */}
              {premiumVaultBucket.length > 0 && (
                 <div className="pt-8 animate-in fade-in mt-8 border-t border-zinc-800/50 relative overflow-hidden">
                  <div className="flex items-center gap-4 mb-8 pt-6 relative z-10">

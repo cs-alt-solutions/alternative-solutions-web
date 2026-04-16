@@ -31,8 +31,12 @@ export default function StorefrontTerminal({ clientConfig, onExit }: any) {
   
   const [initialCheckDone, setInitialCheckDone] = useState(false);
 
+  // --- NEW: Live Config State ---
+  // Starts with local file, hydrates from DB
+  const [liveConfig, setLiveConfig] = useState(clientConfig);
+
   const defaultHours = clientConfig.storeHours || { open: '08:00', shiftChange: '12:00', close: '17:00' };
-  const [storeHours] = useStickyState(defaultHours, `store_hours_${clientConfig?.id}`);
+  const [storeHours, setStoreHours] = useStickyState(defaultHours, `store_hours_${clientConfig?.id}`);
   
   const [activeCategory, setActiveCategory] = useState<string>('Daily Deals');
   const [activeSubCategory, setActiveSubCategory] = useState<string>('All'); 
@@ -64,25 +68,45 @@ export default function StorefrontTerminal({ clientConfig, onExit }: any) {
   const [rawInventory, setRawInventory] = useState<any[]>([]);
   const [isLoadingInventory, setIsLoadingInventory] = useState(true);
 
-  const [masterCategories] = useStickyState<string[]>(clientConfig.categories || ['Flower & Plants', 'Vapes & Pens', 'Edibles', 'Concentrates', 'Merch & Extras'], `inv_cats_${clientConfig?.id || 'division'}`);
-  const [masterSubCategories] = useStickyState<Record<string, string[]>>(clientConfig.subCategories || {}, `inv_subcats_v2_${clientConfig?.id || 'division'}`);
-
-  // Dynamic Sticky State Operations Data (Pulling from Client Config!)
-  const [deliveryZones] = useStickyState<any[]>(clientConfig.deliveryZones || [], `ops_zones_${clientConfig.id}`);
-  const [storePolicies] = useStickyState<string[]>(clientConfig.storePolicies || [], `ops_policies_${clientConfig.id}`);
-  const [team] = useStickyState<any>(clientConfig.team || { dispatchers: [], drivers: [] }, `ops_team_${clientConfig.id}`);
-  const [warranty] = useStickyState<string>(clientConfig.warranty || "", `ops_warranty_${clientConfig.id}`);
+  // Setup Setters for Sticky State so the DB can overwrite them
+  const [masterCategories, setMasterCategories] = useStickyState<string[]>(clientConfig.categories || ['Flower & Plants', 'Vapes & Pens', 'Edibles', 'Concentrates', 'Merch & Extras'], `inv_cats_v3_${clientConfig?.id || 'division'}`);
+  const [masterSubCategories, setMasterSubCategories] = useStickyState<Record<string, string[]>>(clientConfig.subCategories || {}, `inv_subcats_v3_${clientConfig?.id || 'division'}`);
+  const [deliveryZones, setDeliveryZones] = useStickyState<any[]>(clientConfig.deliveryZones || [], `ops_zones_v3_${clientConfig.id}`);
+  const [storePolicies, setStorePolicies] = useStickyState<string[]>(clientConfig.storePolicies || [], `ops_policies_v3_${clientConfig.id}`);
+  const [team, setTeam] = useStickyState<any>(clientConfig.team || { dispatchers: [], drivers: [] }, `ops_team_v3_${clientConfig.id}`);
+  const [warranty, setWarranty] = useStickyState<string>(clientConfig.warranty || "", `ops_warranty_v3_${clientConfig.id}`);
 
   useEffect(() => {
-    const fetchLiveInventory = async () => {
+    const fetchStoreData = async () => {
       try {
-        const { data, error } = await supabase.from('client_inventory').select('payload').eq('client_id', clientConfig.id);
-        if (error) throw error;
-        if (data) setRawInventory(data.map(row => row.payload));
+        // 1. Fetch Live Inventory
+        const { data: invData, error: invErr } = await supabase.from('client_inventory').select('payload').eq('client_id', clientConfig.id);
+        if (invErr) throw invErr;
+        if (invData) setRawInventory(invData.map(row => row.payload));
+
+        // 2. Fetch Live Global Settings (The new DB Hookup)
+        const { data: setData, error: setErr } = await supabase.from('client_settings').select('payload').eq('client_id', clientConfig.id).single();
+        
+        if (setData && setData.payload) {
+           const dbConf = setData.payload;
+           
+           // Merge the live DB settings into the config passed to the UI
+           setLiveConfig((prev: any) => ({ ...prev, ...dbConf }));
+           
+           // Hydrate the sticky state engines directly
+           if (dbConf.categories) setMasterCategories(dbConf.categories);
+           if (dbConf.subCategories) setMasterSubCategories(dbConf.subCategories);
+           if (dbConf.storeHours) setStoreHours(dbConf.storeHours);
+           if (dbConf.deliveryZones) setDeliveryZones(dbConf.deliveryZones);
+           if (dbConf.storePolicies) setStorePolicies(dbConf.storePolicies);
+           if (dbConf.team) setTeam(dbConf.team);
+           if (dbConf.warranty) setWarranty(dbConf.warranty);
+        }
+
       } catch (err) { console.error("Market Sync Error:", err); } 
       finally { setIsLoadingInventory(false); }
     };
-    fetchLiveInventory();
+    fetchStoreData();
   }, [clientConfig.id]);
 
   const [orderRef, setOrderRef] = useState('');
@@ -179,7 +203,7 @@ export default function StorefrontTerminal({ clientConfig, onExit }: any) {
     e.preventDefault();
     setError("");
     const inputUpper = codeInput.trim().toUpperCase();
-    const adminPass = clientConfig?.adminSecurity?.passphrase || 'VAULT-ACCESS-99';
+    const adminPass = liveConfig?.adminSecurity?.passphrase || 'VAULT-ACCESS-99';
 
     if (inputUpper === timeData.activeCode || inputUpper === 'OVERRIDE' || codeInput.trim() === adminPass) {
       setIsVerified(true);
@@ -196,7 +220,7 @@ export default function StorefrontTerminal({ clientConfig, onExit }: any) {
   };
 
   const handleBypass = () => {
-    const adminPass = clientConfig?.adminSecurity?.passphrase || 'VAULT-ACCESS-99';
+    const adminPass = liveConfig?.adminSecurity?.passphrase || 'VAULT-ACCESS-99';
     if (bypassCode.toUpperCase() === 'OVERRIDE' || bypassCode === adminPass) {
        setIsBypassed(true);
        setIsVerified(true); 
@@ -315,8 +339,8 @@ export default function StorefrontTerminal({ clientConfig, onExit }: any) {
   
   const cartItemCount = Object.values(cart).reduce((total: number, cartItem: any) => total + (cartItem?.qty || 0), 0);
   
-  // DYNAMIC FEE PULLED FROM CONFIG
-  const digitalFeeAmount = clientConfig?.fees?.digitalPaymentFee || 0;
+  // Use Live DB Config for Fee Setup
+  const digitalFeeAmount = liveConfig?.fees?.digitalPaymentFee || 0;
   const convenienceFee = paymentMethod === 'CASHAPP' ? digitalFeeAmount : 0;
   const grandTotal = cartTotal + convenienceFee;
 
@@ -348,7 +372,7 @@ export default function StorefrontTerminal({ clientConfig, onExit }: any) {
   }
 
   if (!isVerified) {
-    return <StorefrontGatekeeper clientConfig={clientConfig} codeInput={codeInput} setCodeInput={setCodeInput} error={error} setError={setError} handleAuth={handleAuth} />;
+    return <StorefrontGatekeeper clientConfig={liveConfig} codeInput={codeInput} setCodeInput={setCodeInput} error={error} setError={setError} handleAuth={handleAuth} />;
   }
 
   if (isLoadingInventory) {
@@ -403,7 +427,7 @@ export default function StorefrontTerminal({ clientConfig, onExit }: any) {
           timeData={timeData} cart={cart} updateCart={updateCart}
           hasSubmittedOnce={hasSubmittedOnce} setHasSubmittedOnce={setHasSubmittedOnce} 
           submittedCart={submittedCart} setSubmittedCart={setSubmittedCart}
-          orderRef={orderRef} setOrderRef={setOrderRef} inventory={inventory} clientConfig={clientConfig}
+          orderRef={orderRef} setOrderRef={setOrderRef} inventory={inventory} clientConfig={liveConfig}
         />
       ) : (
         <StorefrontCatalog 
@@ -411,7 +435,7 @@ export default function StorefrontTerminal({ clientConfig, onExit }: any) {
           activeCategory={activeCategory} setActiveCategory={setActiveCategory}
           activeSubCategory={activeSubCategory} setActiveSubCategory={setActiveSubCategory} availableSubCategories={availableSubCategories}
           categories={categories} filteredInventory={filteredInventory} cart={cart} updateCart={updateCart}
-          timeData={timeData} setIsCheckingOut={setIsCheckingOut} clientConfig={clientConfig}
+          timeData={timeData} setIsCheckingOut={setIsCheckingOut} clientConfig={liveConfig}
         />
       )}
     </div>

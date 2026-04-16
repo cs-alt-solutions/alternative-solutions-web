@@ -1,4 +1,3 @@
-// sandbox/apps/admin/AdminTerminal.tsx
 'use client';
 
 import React, { useState, useMemo, useEffect } from 'react';
@@ -31,7 +30,9 @@ export default function AdminTerminal({ clientConfig, onExit }: { clientConfig: 
   const [stock, setStock] = useState<any[]>([]);
   const [isSyncing, setIsSyncing] = useState(true);
 
-  // NEW: State bridge to pass items between Storefront and Inventory modules
+  // NEW: Store the global database settings
+  const [globalSettings, setGlobalSettings] = useState<any>(clientConfig);
+
   const [jumpToEditItem, setJumpToEditItem] = useState<any>(null);
 
   const handleJumpToInventory = (item: any) => {
@@ -42,15 +43,28 @@ export default function AdminTerminal({ clientConfig, onExit }: { clientConfig: 
   useEffect(() => {
     if (!isAuthorized) return;
     
-    const fetchInventory = async () => {
+    const fetchVaultData = async () => {
       try {
-        const { data, error } = await supabase
+        // 1. Fetch Inventory
+        const { data: invData, error: invErr } = await supabase
           .from('client_inventory')
           .select('payload')
           .eq('client_id', cid);
           
-        if (error) throw error;
-        if (data) setStock(data.map(row => row.payload));
+        if (invErr) throw invErr;
+        if (invData) setStock(invData.map(row => row.payload));
+
+        // 2. Fetch Global Settings
+        const { data: setData, error: setErr } = await supabase
+          .from('client_settings')
+          .select('payload')
+          .eq('client_id', cid)
+          .single();
+          
+        if (setData && setData.payload) {
+           setGlobalSettings((prev: any) => ({ ...prev, ...setData.payload }));
+        }
+
       } catch (err) {
         console.error("Vault Sync Error:", err);
         setNotification("Failed to sync with master database.");
@@ -59,7 +73,7 @@ export default function AdminTerminal({ clientConfig, onExit }: { clientConfig: 
       }
     };
     
-    fetchInventory();
+    fetchVaultData();
   }, [cid, isAuthorized]);
 
   useEffect(() => {
@@ -109,7 +123,7 @@ export default function AdminTerminal({ clientConfig, onExit }: { clientConfig: 
   if (!isAuthorized) {
     return (
       <div className="min-h-dvh bg-zinc-950 flex flex-col items-center justify-center p-6 relative selection:bg-cyan-500/30">
-        <div className="absolute inset-0 bg-[linear-gradient(to_right,#80808012_1px,transparent_1px),linear-gradient(to_bottom,#80808012_1px,transparent_1px)] bg-[size:24px_24px]"></div>
+        <div className="absolute inset-0 bg-[linear-gradient(to_right,#80808012_1px,transparent_1px),linear-gradient(to_bottom,#80808012_1px,transparent_1px)] bg-size-[24px_24px]"></div>
         
         <div className="z-10 w-full max-w-md flex flex-col items-center animate-in fade-in zoom-in-95 duration-500">
           <div className="relative mb-8">
@@ -198,10 +212,9 @@ export default function AdminTerminal({ clientConfig, onExit }: { clientConfig: 
         ) : (
           <>
             {activeModule === 'fulfillment' && <AdminFulfillmentModule orders={orders} setOrders={setOrders} notification={notification} setNotification={setNotification} />}
-            {/* FIXED: Wires the jumpToEditItem and clear callback into the Inventory Module */}
-            {activeModule === 'inventory' && <AdminInventoryModule stock={stock} setStock={setStock} inventoryMatrix={inventoryMatrix} setNotification={setNotification} clientConfig={clientConfig} jumpToEditItem={jumpToEditItem} clearJumpToEdit={() => setJumpToEditItem(null)} />}
-            {activeModule === 'storefront' && <AdminStorefrontModule stock={stock} setStock={setStock} inventoryMatrix={inventoryMatrix} setNotification={setNotification} clientConfig={clientConfig} onJumpToInventory={handleJumpToInventory} />}
-            {activeModule === 'operations' && <AdminOperationsModule clientConfig={clientConfig} setNotification={setNotification} />}
+            {activeModule === 'inventory' && <AdminInventoryModule stock={stock} setStock={setStock} inventoryMatrix={inventoryMatrix} setNotification={setNotification} clientConfig={globalSettings} jumpToEditItem={jumpToEditItem} clearJumpToEdit={() => setJumpToEditItem(null)} />}
+            {activeModule === 'storefront' && <AdminStorefrontModule stock={stock} setStock={setStock} inventoryMatrix={inventoryMatrix} setNotification={setNotification} clientConfig={globalSettings} onJumpToInventory={handleJumpToInventory} />}
+            {activeModule === 'operations' && <AdminOperationsModule clientConfig={globalSettings} setNotification={setNotification} />}
           </>
         )}
       </main>

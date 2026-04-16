@@ -1,3 +1,4 @@
+// sandbox/apps/storefront/StorefrontCheckout.tsx
 'use client';
 
 import React from 'react';
@@ -15,6 +16,8 @@ export default function StorefrontCheckout({
 }: any) {
 
   const cartItems = Object.values(cart);
+  
+  // DYNAMIC CONFIG: Pull the fee dynamically
   const digitalFeeAmount = clientConfig?.fees?.digitalPaymentFee || 0;
   const convenienceFee = paymentMethod === 'CASHAPP' ? digitalFeeAmount : 0;
   const grandTotal = cartTotal + convenienceFee;

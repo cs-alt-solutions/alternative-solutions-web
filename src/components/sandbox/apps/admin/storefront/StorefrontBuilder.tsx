@@ -1,72 +1,17 @@
-// sandbox/apps/admin/storefront/StorefrontBuilder.tsx
 import React, { useState, useRef } from 'react';
-import { Edit3, X, Image as ImageIcon, Flame, Award, Leaf, Wind, Tag, Droplet, Sparkles, Star, Save, ArrowLeft, ArrowRight, Trash2, Plus, Activity, Search, UploadCloud } from 'lucide-react';
+import { Edit3, X, Image as ImageIcon, Flame, Award, Leaf, Wind, Tag, Droplet, Sparkles, Star, Save, ArrowLeft, ArrowRight, Trash2, Plus, Activity, Search, UploadCloud, CloudLightning } from 'lucide-react';
 import { createClient } from '@supabase/supabase-js';
 import InventorySelectorModal from './InventorySelectorModal';
 
 export const IconMap: any = { Flame, Award, Leaf, Wind, Tag, Droplet, Sparkles, Star, Activity };
 
 export const ThemeMap: Record<string, any> = {
-  emerald: {
-    heroGrad: 'bg-linear-to-r from-emerald-600 to-teal-600',
-    secBg: 'bg-emerald-500',
-    secBtnText: 'text-emerald-400',
-    bentoHover: 'hover:border-emerald-500',
-    bentoOverlay: 'from-emerald-950',
-    bentoFallback: 'bg-linear-to-b from-emerald-900 via-zinc-900 to-black',
-    bentoIconBg: 'bg-emerald-500/10',
-    bentoIconText: 'text-emerald-400',
-  },
-  cyan: {
-    heroGrad: 'bg-linear-to-r from-cyan-600 to-blue-600',
-    secBg: 'bg-cyan-500',
-    secBtnText: 'text-cyan-400',
-    bentoHover: 'hover:border-cyan-500',
-    bentoOverlay: 'from-cyan-950',
-    bentoFallback: 'bg-linear-to-b from-cyan-900 via-zinc-900 to-black',
-    bentoIconBg: 'bg-cyan-500/10',
-    bentoIconText: 'text-cyan-400',
-  },
-  pink: {
-    heroGrad: 'bg-linear-to-r from-pink-600 to-rose-600',
-    secBg: 'bg-pink-500',
-    secBtnText: 'text-pink-400',
-    bentoHover: 'hover:border-pink-500',
-    bentoOverlay: 'from-pink-950',
-    bentoFallback: 'bg-linear-to-b from-pink-900 via-zinc-900 to-black',
-    bentoIconBg: 'bg-pink-500/10',
-    bentoIconText: 'text-pink-400',
-  },
-  orange: {
-    heroGrad: 'bg-linear-to-r from-orange-600 to-red-600',
-    secBg: 'bg-orange-500',
-    secBtnText: 'text-orange-400',
-    bentoHover: 'hover:border-orange-500',
-    bentoOverlay: 'from-orange-950',
-    bentoFallback: 'bg-linear-to-b from-orange-900 via-zinc-900 to-black',
-    bentoIconBg: 'bg-orange-500/10',
-    bentoIconText: 'text-orange-400',
-  },
-  fuchsia: {
-    heroGrad: 'bg-linear-to-r from-fuchsia-600 to-purple-600',
-    secBg: 'bg-fuchsia-500',
-    secBtnText: 'text-fuchsia-400',
-    bentoHover: 'hover:border-fuchsia-500',
-    bentoOverlay: 'from-fuchsia-950',
-    bentoFallback: 'bg-linear-to-b from-fuchsia-900 via-zinc-900 to-black',
-    bentoIconBg: 'bg-fuchsia-500/10',
-    bentoIconText: 'text-fuchsia-400',
-  },
-  amber: {
-    heroGrad: 'bg-linear-to-r from-amber-500 to-orange-500',
-    secBg: 'bg-amber-500',
-    secBtnText: 'text-amber-400',
-    bentoHover: 'hover:border-amber-500',
-    bentoOverlay: 'from-amber-950',
-    bentoFallback: 'bg-linear-to-b from-amber-900 via-zinc-900 to-black',
-    bentoIconBg: 'bg-emerald-500/10',
-    bentoIconText: 'text-emerald-400',
-  }
+  emerald: { heroGrad: 'bg-linear-to-r from-emerald-600 to-teal-600', secBg: 'bg-emerald-500', secBtnText: 'text-emerald-400', bentoHover: 'hover:border-emerald-500', bentoOverlay: 'from-emerald-950', bentoFallback: 'bg-linear-to-b from-emerald-900 via-zinc-900 to-black', bentoIconBg: 'bg-emerald-500/10', bentoIconText: 'text-emerald-400' },
+  cyan: { heroGrad: 'bg-linear-to-r from-cyan-600 to-blue-600', secBg: 'bg-cyan-500', secBtnText: 'text-cyan-400', bentoHover: 'hover:border-cyan-500', bentoOverlay: 'from-cyan-950', bentoFallback: 'bg-linear-to-b from-cyan-900 via-zinc-900 to-black', bentoIconBg: 'bg-cyan-500/10', bentoIconText: 'text-cyan-400' },
+  pink: { heroGrad: 'bg-linear-to-r from-pink-600 to-rose-600', secBg: 'bg-pink-500', secBtnText: 'text-pink-400', bentoHover: 'hover:border-pink-500', bentoOverlay: 'from-pink-950', bentoFallback: 'bg-linear-to-b from-pink-900 via-zinc-900 to-black', bentoIconBg: 'bg-pink-500/10', bentoIconText: 'text-pink-400' },
+  orange: { heroGrad: 'bg-linear-to-r from-orange-600 to-red-600', secBg: 'bg-orange-500', secBtnText: 'text-orange-400', bentoHover: 'hover:border-orange-500', bentoOverlay: 'from-orange-950', bentoFallback: 'bg-linear-to-b from-orange-900 via-zinc-900 to-black', bentoIconBg: 'bg-orange-500/10', bentoIconText: 'text-orange-400' },
+  fuchsia: { heroGrad: 'bg-linear-to-r from-fuchsia-600 to-purple-600', secBg: 'bg-fuchsia-500', secBtnText: 'text-fuchsia-400', bentoHover: 'hover:border-fuchsia-500', bentoOverlay: 'from-fuchsia-950', bentoFallback: 'bg-linear-to-b from-fuchsia-900 via-zinc-900 to-black', bentoIconBg: 'bg-fuchsia-500/10', bentoIconText: 'text-fuchsia-400' },
+  amber: { heroGrad: 'bg-linear-to-r from-amber-500 to-orange-500', secBg: 'bg-amber-500', secBtnText: 'text-amber-400', bentoHover: 'hover:border-amber-500', bentoOverlay: 'from-amber-950', bentoFallback: 'bg-linear-to-b from-amber-900 via-zinc-900 to-black', bentoIconBg: 'bg-amber-500/10', bentoIconText: 'text-amber-400' }
 };
 
 export const getThemeColor = (configColor: string) => {
@@ -85,6 +30,7 @@ export default function StorefrontBuilder({ homeConfig, setHomeConfig, mainCateg
     const [editForm, setEditForm] = useState<any>(null);
     const [showInventoryModal, setShowInventoryModal] = useState(false);
     const [isUploading, setIsUploading] = useState(false);
+    const [isPublishing, setIsPublishing] = useState(false);
     const fileInputRef = useRef<HTMLInputElement>(null);
 
     const openEdit = (blockId: string, data: any) => {
@@ -106,10 +52,37 @@ export default function StorefrontBuilder({ homeConfig, setHomeConfig, mainCateg
         setEditingBlock(null);
     };
 
+    const handlePublishToDatabase = async () => {
+        if (!clientConfig?.id) return;
+        setIsPublishing(true);
+        try {
+            const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
+            const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
+            const supabase = createClient(supabaseUrl, supabaseKey);
+
+            // Fetch current settings to merge
+            const { data, error } = await supabase.from('client_settings').select('payload').eq('client_id', clientConfig.id).single();
+            const currentPayload = data?.payload || {};
+            const updatedPayload = { ...currentPayload, homeConfig: homeConfig };
+
+            const { error: updateError } = await supabase.from('client_settings').update({ 
+                payload: updatedPayload,
+                updated_at: new Date().toISOString()
+            }).eq('client_id', clientConfig.id);
+
+            if (updateError) throw updateError;
+            alert("Layout Published to Live Storefront!");
+        } catch (err) {
+            console.error("Publish Error:", err);
+            alert("Failed to publish layout to database.");
+        } finally {
+            setIsPublishing(false);
+        }
+    };
+
     const handleFileUpload = async (file: File) => {
       if (!file || !clientConfig?.id) return;
       setIsUploading(true);
-      
       try {
         const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
         const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
@@ -148,9 +121,7 @@ export default function StorefrontBuilder({ homeConfig, setHomeConfig, mainCateg
 
     const addBento = () => {
         if (homeConfig.bento.length >= 6) return;
-        const newBento = [...homeConfig.bento, {
-            name: "New Category", cat: mainCategories[0], sub: "All", icon: "Tag", color: "cyan", desc: "Short description here.", span: "col-span-1 md:col-span-1 md:row-span-1", imgUrl: ""
-        }];
+        const newBento = [...homeConfig.bento, { name: "New Category", cat: mainCategories[0], sub: "All", icon: "Tag", color: "cyan", desc: "Short description here.", span: "col-span-1 md:col-span-1 md:row-span-1", imgUrl: "" }];
         setHomeConfig({ ...homeConfig, bento: newBento });
     };
 
@@ -167,13 +138,21 @@ export default function StorefrontBuilder({ homeConfig, setHomeConfig, mainCateg
                <h3 className="text-xl font-black text-white uppercase tracking-tight">Visual Layout Builder</h3>
                <p className="text-[10px] text-zinc-500 uppercase tracking-widest mt-1">Click any section to edit. Rearrange category blocks dynamically.</p>
              </div>
+             
+             {/* THE NEW PUBLISH TO DB BUTTON */}
+             <button 
+                onClick={handlePublishToDatabase}
+                disabled={isPublishing}
+                className="bg-cyan-500 hover:bg-cyan-400 text-zinc-950 px-6 py-2.5 rounded-xl text-xs font-black uppercase tracking-widest flex items-center gap-2 transition-all shadow-[0_0_20px_rgba(6,182,212,0.3)] hover:scale-105 active:scale-95 disabled:opacity-50"
+             >
+                {isPublishing ? <Activity size={16} className="animate-spin" /> : <CloudLightning size={16} />} 
+                {isPublishing ? 'Syncing...' : 'Publish to Live'}
+             </button>
            </div>
 
            <div className="space-y-10 scale-[0.95] transform origin-top border border-dashed border-zinc-800 p-6 rounded-3xl bg-zinc-950/50 relative">
               
-              {/* FIXED: Master Hero Banner Preview locked height to prevent layout jumps */}
-              <div onClick={() => openEdit('hero', homeConfig.hero)} className={`cursor-pointer group relative w-full ${(homeConfig.hero as any).imgUrl ? 'bg-zinc-950' : heroTheme.heroGrad} rounded-3xl p-4 md:p-8 flex flex-col justify-end shadow-2xl overflow-hidden transition-all hover:ring-4 ring-white/20 h-[400px] md:h-[500px]`}>
-                 
+              <div onClick={() => openEdit('hero', homeConfig.hero)} className={`cursor-pointer group relative w-full ${(homeConfig.hero as any).imgUrl ? 'bg-zinc-950' : heroTheme.heroGrad} rounded-3xl p-4 md:p-8 flex flex-col justify-end shadow-2xl overflow-hidden transition-all hover:ring-4 ring-white/20 h-100 md:h-125`}>
                  {(homeConfig.hero as any).imgUrl ? (
                     <div className="absolute inset-0 z-0 group-hover:scale-105 transition-transform duration-1000 pointer-events-none">
                       <img src={(homeConfig.hero as any).imgUrl} className={`w-full h-full object-cover opacity-30`} alt="Hero" />
@@ -185,13 +164,10 @@ export default function StorefrontBuilder({ homeConfig, setHomeConfig, mainCateg
                        <div className="absolute inset-0 bg-radial-gradient from-transparent to-zinc-950"></div>
                     </div>
                  )}
-                 
                  <div className="absolute inset-0 bg-black/40 hidden group-hover:flex items-center justify-center z-50 backdrop-blur-sm transition-all rounded-3xl">
                       <span className="bg-zinc-900 text-white px-6 py-3 rounded-xl font-black uppercase tracking-widest text-xs flex items-center gap-2"><Edit3 size={16}/> Edit Hero Banner</span>
                  </div>
-
                  <div className="relative z-10 flex flex-col items-center justify-center w-full h-full my-auto py-4 pointer-events-none">
-                     {/* FIXED: Removed neon box wrapper to mirror live storefront exactly */}
                      <div className="flex flex-col items-center text-center animate-[pulse_3s_ease-in-out_infinite] max-w-3xl mx-auto w-full transition-shadow duration-700">
                          <div className="relative mb-2">
                            <HeroIcon size={48} className="text-pink-500 drop-shadow-[0_0_15px_rgba(236,72,153,1)] animate-bounce relative z-10" />
@@ -232,7 +208,6 @@ export default function StorefrontBuilder({ homeConfig, setHomeConfig, mainCateg
 
                      return (
                        <div key={idx} className={`group relative overflow-hidden ${sanitizedSpan} bg-zinc-950 border-2 border-zinc-800 shadow-lg rounded-3xl p-6 flex flex-col items-start justify-end gap-1 ${theme.bentoHover} transition-all`}>
-                         
                          <div className="absolute inset-0 bg-black/60 hidden group-hover:flex flex-col items-center justify-center z-50 backdrop-blur-sm transition-all gap-3">
                            <button onClick={(e) => { e.stopPropagation(); openEdit(`bento-${idx}`, c); }} className="bg-zinc-900 hover:bg-zinc-800 text-white px-4 py-2 rounded-xl font-black uppercase tracking-widest text-[10px] flex items-center gap-2 transition-colors"><Edit3 size={14}/> Edit Content</button>
                            <div className="flex items-center gap-2">
@@ -265,7 +240,6 @@ export default function StorefrontBuilder({ homeConfig, setHomeConfig, mainCateg
                        </div>
                      );
                   })}
-
                   {homeConfig.bento.length < 6 && (
                       <button onClick={addBento} className="col-span-1 md:col-span-1 md:row-span-1 border-2 border-dashed border-zinc-700 rounded-3xl flex flex-col items-center justify-center text-zinc-500 hover:text-cyan-400 hover:border-cyan-500/50 hover:bg-cyan-500/5 transition-all group min-h-40">
                           <div className="p-3 bg-zinc-900 rounded-full group-hover:bg-cyan-500/20 transition-colors mb-2"><Plus size={24}/></div>
@@ -275,9 +249,7 @@ export default function StorefrontBuilder({ homeConfig, setHomeConfig, mainCateg
                 </div>
               </div>
 
-              {/* Secondary Banner Editor */}
-              {/* FIXED: Added strict h-[250px] md:h-[300px] locking to prevent glitchy jumps */}
-              <div onClick={() => openEdit('secondary', homeConfig.secondary)} className={`cursor-pointer group relative w-full h-[250px] md:h-[300px] ${secTheme.secBg} rounded-3xl p-8 md:p-12 flex flex-col md:flex-row items-center justify-between shadow-xl border border-zinc-700 overflow-hidden transition-all hover:ring-4 ring-white/20`}>
+              <div onClick={() => openEdit('secondary', homeConfig.secondary)} className={`cursor-pointer group relative w-full h-62.5 md:h-75 ${secTheme.secBg} rounded-3xl p-8 md:p-12 flex flex-col md:flex-row items-center justify-between shadow-xl border border-zinc-700 overflow-hidden transition-all hover:ring-4 ring-white/20`}>
                  <div className="absolute inset-0 bg-black/40 hidden group-hover:flex items-center justify-center z-50 backdrop-blur-sm transition-all">
                      <span className="bg-zinc-900 text-white px-6 py-3 rounded-xl font-black uppercase tracking-widest text-xs flex items-center gap-2"><Edit3 size={16}/> Edit Banner</span>
                  </div>
@@ -290,7 +262,6 @@ export default function StorefrontBuilder({ homeConfig, setHomeConfig, mainCateg
               </div>
            </div>
 
-           {/* Editor Slide-Over Modal */}
            {editingBlock && (
                <div className="fixed inset-0 z-100 flex justify-end bg-black/80 backdrop-blur-sm animate-in fade-in">
                    <div className="w-full max-w-md bg-zinc-950 h-full border-l border-zinc-800 flex flex-col shadow-2xl animate-in slide-in-from-right-8">
@@ -403,7 +374,6 @@ export default function StorefrontBuilder({ homeConfig, setHomeConfig, mainCateg
                                </>
                            )}
 
-                           {/* IMAGE CONTROLS FOR ALL BLOCKS */}
                            <div className="border-t border-zinc-800/80 pt-6 mt-2">
                                <label className="text-[10px] font-bold text-cyan-400 uppercase tracking-widest flex items-center gap-2 mb-3"><ImageIcon size={14}/> Graphic Selection</label>
                                <div className="space-y-3">
@@ -422,7 +392,6 @@ export default function StorefrontBuilder({ homeConfig, setHomeConfig, mainCateg
                                      {isUploading ? <UploadCloud size={20} className="text-cyan-400 animate-bounce" /> : <UploadCloud size={20} className="text-zinc-600 group-hover:text-cyan-400" />}
                                      <span className="text-[10px] font-black uppercase tracking-widest text-zinc-500 group-hover:text-cyan-400">{isUploading ? 'Uploading to Vault...' : 'Upload Local Image'}</span>
                                    </button>
-                                   {/* ACTIVE UPLOAD ENGINE: Wired to your local disk */}
                                    <input type="file" ref={fileInputRef} onChange={(e) => {if (e.target.files && e.target.files[0]) handleFileUpload(e.target.files[0]);}} className="hidden" accept="image/*" />
                                </div>
                            </div>
@@ -437,16 +406,7 @@ export default function StorefrontBuilder({ homeConfig, setHomeConfig, mainCateg
                </div>
            )}
 
-           <InventorySelectorModal 
-             isOpen={showInventoryModal} 
-             onClose={() => setShowInventoryModal(false)} 
-             inventoryMatrix={inventoryMatrix || []} 
-             onSelect={(item: any) => { 
-               setEditForm({...editForm, imgUrl: item.imageUrl || item.imgUrl || item.image || ''}); 
-               setShowInventoryModal(false); 
-             }} 
-             context={{lane: 'Background'}} 
-           />
+           <InventorySelectorModal isOpen={showInventoryModal} onClose={() => setShowInventoryModal(false)} inventoryMatrix={inventoryMatrix || []} onSelect={(item: any) => { setEditForm({...editForm, imgUrl: item.imageUrl || item.imgUrl || item.image || ''}); setShowInventoryModal(false); }} context={{lane: 'Background'}} />
         </div>
     );
 }

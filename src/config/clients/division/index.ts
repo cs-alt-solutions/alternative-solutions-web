@@ -33,6 +33,7 @@ export const divisionConfig = {
     6: { open: '08:00', close: '17:00', isClosed: false },
   },
 
+  // --- NEW UNIFIED ENGINE DATA ---
   team: {
     dispatchers: ["@MisterDoobie", "@RedsRosin", "@JonSpliff", "@MrsDoobieDuo"],
     drivers: ["@balance0n1", "@Laylo757", "@King_Maso", "@MistrSandman", "@Roman_Empire145", "@true80skid", "@Thouzand420", "@KyleTheNewGuy"]
@@ -64,6 +65,7 @@ export const divisionConfig = {
     5: { title: "Flower Friday", sub: "Fresh buds for the weekend." },
     6: { title: "Shatterday", sub: "Elevate your Saturday." }
   },
+  // -------------------------------
   
   categories: ['Flower & Plants', 'Vapes & Pens', 'Edibles', 'Concentrates', 'Merch & Extras', 'Healthcare & Topicals'],  
   subCategories: {
@@ -145,14 +147,14 @@ export const divisionConfig = {
   ],
 
   deliveryZones: [
-    { name: 'Williamsburg Areas', minimum: 40 },
-    { name: 'Gloucester / Hayes / Yorktown', minimum: 100 },
-    { name: 'Newport News / Hampton', minimum: 100 },
-    { name: 'Quinton / Charles City Areas', minimum: 100 },
-    { name: 'West Point / Saluda Area', minimum: 150 },
-    { name: 'Richmond & Surrounding Areas', minimum: 200 },
-    { name: 'Southside Areas', minimum: 200 },
-    { name: 'Ashland & Surrounding Areas', minimum: 250 },
-    { name: 'Suffolk', minimum: 250 }
+    { name: 'Williamsburg Areas', minimum: 50 },
+    { name: 'Gloucester / Hayes / Yorktown', minimum: 75 },
+    { name: 'Newport News / Hampton', minimum: 75 },
+    { name: 'Quinton / Charles City Areas', minimum: 75 },
+    { name: 'West Point / Saluda Area', minimum: 75 },
+    { name: 'Richmond & Surrounding Areas', minimum: 100 },
+    { name: 'Southside Areas', minimum: 100 },
+    { name: 'Ashland & Surrounding Areas', minimum: 150 },
+    { name: 'Suffolk', minimum: 150 }
   ]
 };
