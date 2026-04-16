@@ -50,8 +50,8 @@ export default function StorefrontCatalog({
     const bOOS = isItemOOS(b) ? 1 : 0;
     if (aOOS !== bOOS) return aOOS - bOOS;
 
-    const aScore = (a.isTopShelf || a.isChefsReserve || a.isNewDrop || a.isReturned ? 3 : 0) + (a.dailyDeal ? 1 : 0);
-    const bScore = (b.isTopShelf || b.isChefsReserve || b.isNewDrop || b.isReturned ? 3 : 0) + (b.dailyDeal ? 1 : 0);
+    const aScore = (a.isTopShelf || a.isChefsReserve || a.isNewDrop || a.isReturned || a.isClearance ? 3 : 0) + (a.dailyDeal ? 1 : 0);
+    const bScore = (b.isTopShelf || b.isChefsReserve || b.isNewDrop || b.isReturned || b.isClearance ? 3 : 0) + (b.dailyDeal ? 1 : 0);
     
     if (aScore > bScore) return -1;
     if (aScore < bScore) return 1;
@@ -87,10 +87,10 @@ export default function StorefrontCatalog({
     return i.dailyDeal; 
   });
 
-  const newDropsBucket = safeInventory.filter((i: any) => i.isNewDrop && !i.isConfiguredDeal && !i.subCategory?.toLowerCase().includes('steals'));
-  const premiumVaultBucket = safeInventory.filter((i: any) => (i.isTopShelf || i.isChefsReserve) && !i.isNewDrop && !i.isConfiguredDeal && !i.subCategory?.toLowerCase().includes('steals'));
-  const smokyStealsBucket = safeInventory.filter((i: any) => i.subCategory?.toLowerCase().includes('steals') && !i.dailyDeal && !i.isNewDrop);
-  const returnedBucket = safeInventory.filter((i: any) => i.isReturned && !i.isNewDrop && !i.isConfiguredDeal && !i.subCategory?.toLowerCase().includes('steals'));
+  const newDropsBucket = safeInventory.filter((i: any) => i.isNewDrop && !i.isConfiguredDeal && !i.isClearance);
+  const premiumVaultBucket = safeInventory.filter((i: any) => (i.isTopShelf || i.isChefsReserve) && !i.isNewDrop && !i.isConfiguredDeal && !i.isClearance);
+  const smokyStealsBucket = safeInventory.filter((i: any) => i.isClearance && !i.dailyDeal);
+  const returnedBucket = safeInventory.filter((i: any) => i.isReturned && !i.isNewDrop && !i.isConfiguredDeal && !i.isClearance);
 
   const activeTodaysDeals = todaysDeals.filter(item => !isItemOOS(item));
 
@@ -180,8 +180,8 @@ export default function StorefrontCatalog({
            <div className="animate-in fade-in slide-in-from-bottom-4 space-y-10 pt-2 sm:pt-0">
              
              {/* THE NEON BILLBOARD CAROUSEL */}
-             {/* OPTIMIZED: Canonical min-h classes */}
-             <div onClick={activeHero.action} className={`w-full ${activeHero.imgUrl ? 'bg-zinc-950' : activeTheme.heroGrad} cursor-pointer rounded-3xl ${isMasterSlide ? 'p-4 md:p-8' : 'p-8 md:p-12'} flex flex-col justify-end shadow-2xl overflow-hidden relative group transition-all duration-700 min-h-87.5 md:min-h-112.5`}>
+             {/* FIXED: Replaced variable min-heights with absolute locked heights (h-[400px] md:h-[500px]) to prevent glitchy container jumping */}
+             <div onClick={activeHero.action} className={`w-full ${activeHero.imgUrl ? 'bg-zinc-950' : activeTheme.heroGrad} cursor-pointer rounded-3xl ${isMasterSlide ? 'p-4 md:p-8' : 'p-8 md:p-12'} flex flex-col justify-end shadow-2xl overflow-hidden relative group transition-all duration-700 h-[400px] md:h-[500px]`}>
                 
                 {/* Background Textures */}
                 {activeHero.imgUrl ? (
@@ -193,7 +193,6 @@ export default function StorefrontCatalog({
                    <div className="absolute inset-0 z-0 group-hover:scale-105 transition-transform duration-1000">
                       {isMasterSlide && (
                          <>
-                            {/* OPTIMIZED: Canonical bg-size class */}
                             <div className="absolute inset-0 bg-[linear-gradient(to_right,#80808012_1px,transparent_1px),linear-gradient(to_bottom,#80808012_1px,transparent_1px)] bg-size-[24px_24px]"></div>
                             <div className="absolute inset-0 bg-radial-gradient from-transparent to-zinc-950"></div>
                          </>
@@ -204,7 +203,8 @@ export default function StorefrontCatalog({
                 {/* Content Logic */}
                 {isMasterSlide ? (
                     <div className="relative z-10 flex flex-col items-center justify-center w-full h-full my-auto py-4 pointer-events-none">
-                        <div className="border-[3px] border-pink-500 p-6 md:p-10 rounded-3xl shadow-[0_0_30px_rgba(236,72,153,0.4),inset_0_0_30px_rgba(236,72,153,0.4)] bg-zinc-950/80 backdrop-blur-md flex flex-col items-center text-center animate-[pulse_3s_ease-in-out_infinite] max-w-3xl mx-auto w-full group-hover:shadow-[0_0_50px_rgba(236,72,153,0.6),inset_0_0_40px_rgba(236,72,153,0.6)] transition-shadow duration-700">
+                        {/* FIXED: Removed the border, background box, and shadow to create a free-floating neon sign effect */}
+                        <div className="flex flex-col items-center text-center animate-[pulse_3s_ease-in-out_infinite] max-w-3xl mx-auto w-full">
                             <div className="relative mb-2">
                               <ActiveHeroIcon size={48} className="text-pink-500 drop-shadow-[0_0_15px_rgba(236,72,153,1)] animate-bounce relative z-10" />
                               <div className="absolute inset-0 bg-pink-500 blur-2xl opacity-50 rounded-full animate-pulse"></div>
@@ -213,7 +213,7 @@ export default function StorefrontCatalog({
                                 {activeHero.title.split('\n').map((line: string, i: number) => {
                                     const isCyan = i % 2 !== 0;
                                     return (
-                                      <h2 key={i} className={`text-4xl md:text-6xl lg:text-7xl font-black uppercase tracking-tighter leading-none ${isCyan ? 'text-cyan-300 drop-shadow-[0_0_15px_rgba(6,182,212,0.8)]' : 'text-pink-400 drop-shadow-[0_0_15px_rgba(236,72,153,0.8)]'}`}>
+                                      <h2 key={i} className={`text-5xl md:text-7xl lg:text-8xl font-black uppercase tracking-tighter leading-none ${isCyan ? 'text-cyan-300 drop-shadow-[0_0_20px_rgba(6,182,212,0.9)]' : 'text-pink-400 drop-shadow-[0_0_20px_rgba(236,72,153,0.9)]'}`}>
                                           {line}
                                       </h2>
                                     )
@@ -222,19 +222,19 @@ export default function StorefrontCatalog({
                             <p className="mt-6 text-pink-100 font-black tracking-[0.3em] uppercase text-[10px] md:text-xs drop-shadow-[0_0_8px_rgba(236,72,153,0.8)]">
                                 {activeHero.subtitle}
                             </p>
-                            <div className="mt-8 px-8 py-3 border-2 border-cyan-400 text-cyan-300 font-black uppercase tracking-widest rounded-xl shadow-[0_0_15px_rgba(6,182,212,0.3),inset_0_0_15px_rgba(6,182,212,0.3)] hover:bg-cyan-400 hover:text-zinc-950 hover:shadow-[0_0_30px_rgba(6,182,212,0.8)] transition-all pointer-events-auto relative overflow-hidden">
+                            <div className="mt-8 px-8 py-3 border-2 border-cyan-400 text-cyan-300 font-black uppercase tracking-widest rounded-xl shadow-[0_0_15px_rgba(6,182,212,0.3),inset_0_0_15px_rgba(6,182,212,0.3)] hover:bg-cyan-400 hover:text-zinc-950 hover:shadow-[0_0_30px_rgba(6,182,212,0.8)] transition-all pointer-events-auto relative overflow-hidden bg-zinc-950/40 backdrop-blur-sm">
                                 <span className="relative z-10">{activeHero.buttonText}</span>
                             </div>
                         </div>
                     </div>
                 ) : (
-                    <div className="relative z-10 flex flex-col md:flex-row items-start md:items-end justify-between w-full mt-auto gap-6 pt-32 pointer-events-none">
+                    <div className="relative z-10 flex flex-col md:flex-row items-start md:items-end justify-between w-full mt-auto gap-6 pointer-events-none">
                       <div>
                           <div key={`title-${heroIndex}`} className="flex flex-col gap-1 mb-2 animate-in slide-in-from-left-4 fade-in duration-500">
                              {activeHero.title.split('\n').map((line: string, i: number) => {
                                  const isCyan = i % 2 !== 0;
                                  return (
-                                   <h2 key={i} className={`text-3xl md:text-5xl lg:text-6xl font-black uppercase tracking-tighter leading-none ${isCyan ? 'text-cyan-300 drop-shadow-[0_0_15px_rgba(6,182,212,0.9)]' : 'text-pink-400 drop-shadow-[0_0_15px_rgba(236,72,153,0.9)]'}`}>
+                                   <h2 key={i} className={`text-4xl md:text-6xl lg:text-7xl font-black uppercase tracking-tighter leading-none ${isCyan ? 'text-cyan-300 drop-shadow-[0_0_15px_rgba(6,182,212,0.9)]' : 'text-pink-400 drop-shadow-[0_0_15px_rgba(236,72,153,0.9)]'}`}>
                                        {line}
                                    </h2>
                                  )
@@ -317,8 +317,9 @@ export default function StorefrontCatalog({
              </div>
 
              {/* DYNAMIC: Promo Banner 2 (Secondary) */}
-             <div className={`w-full ${secTheme.secBg} rounded-3xl p-8 md:p-12 flex flex-col md:flex-row items-center justify-between shadow-xl border border-zinc-700 overflow-hidden relative group`}>
-                <div className="relative z-10">
+             {/* FIXED: Locked height to match design flow and prevent variable size jumps */}
+             <div className={`w-full h-[250px] md:h-[300px] ${secTheme.secBg} rounded-3xl p-8 md:p-12 flex flex-col md:flex-row items-center justify-between shadow-xl border border-zinc-700 overflow-hidden relative group`}>
+                <div className="relative z-10 my-auto">
                   <p className="text-xs font-black uppercase tracking-widest text-zinc-900 mb-2">{homeConfig.secondary.subtitle}</p>
                   <h2 className="text-4xl md:text-5xl font-black text-zinc-950 uppercase tracking-tighter leading-none mb-6 whitespace-pre-line">{homeConfig.secondary.title}</h2>
                   <button className={`bg-zinc-950 ${secTheme.secBtnText} px-6 py-3 rounded-xl text-xs font-black uppercase tracking-widest shadow-lg border border-zinc-800`}>{homeConfig.secondary.buttonText}</button>

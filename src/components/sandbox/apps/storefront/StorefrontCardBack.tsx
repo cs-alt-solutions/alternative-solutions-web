@@ -40,7 +40,10 @@ export default function StorefrontCardBack({
   
   const isPreRoll = activeSubCat.includes('pre-roll') || activeSubCat.includes('blunt');
   const isRawFlower = isFlower && !isPreRoll;
-  const expectsDNA = !isVape && !isMerch;
+  
+  // NEW: We now treat both Vapes and Pre-Rolls as "Expanded Variant" layouts
+  const expandVariants = isVape || isPreRoll;
+  const expectsDNA = !expandVariants && !isMerch;
 
   const hasTrueVariants = safeOptions.length > 0 && safeOptions[0].label !== 'Standard';
   const displayStock = hasTrueVariants 
@@ -96,7 +99,6 @@ export default function StorefrontCardBack({
 
   const currentSubtotal = lineTotal;
 
-  // --- NEW: Smart Sorting for Sizes and Variants ---
   // Pushes any out-of-stock size tiers to the bottom of the list
   const sortedSizes = [...safeSizes].sort((a: any, b: any) => {
     const aReq = isRawFlower ? getRequiredGrams(a.label) : 1;
@@ -175,8 +177,8 @@ export default function StorefrontCardBack({
         </div>
       </div>
 
-      {/* SCROLLABLE DNA SECTION (Hidden for Vapes to maximize options space) */}
-      {!isVape && (
+      {/* SCROLLABLE DNA SECTION (Hidden for Vapes & Pre-Rolls to maximize options space) */}
+      {!expandVariants && (
         <div className="flex-1 overflow-y-auto scrollbar-hide p-4 space-y-3 relative">
           {(item?.descBase || (hasDNA && expectsDNA)) ? (
             <div className="bg-zinc-900/50 border border-zinc-800/50 rounded-xl p-3 flex flex-col gap-2.5">
@@ -238,13 +240,13 @@ export default function StorefrontCardBack({
       )}
 
       {/* STATIC BOTTOM CONTROL PANEL (Options & Cart) */}
-      <div className={`${isVape ? 'flex-1 overflow-hidden' : 'shrink-0'} bg-zinc-950 border-t border-zinc-800/50 relative z-20 flex flex-col`}>
+      <div className={`${expandVariants ? 'flex-1 overflow-hidden' : 'shrink-0'} bg-zinc-950 border-t border-zinc-800/50 relative z-20 flex flex-col`}>
         
-        {/* STATIC OPTIONS / SIZES (Pre-rolls unlock variants) */}
-        {((safeSizes.length > 1 && !isVape && !isMerch && !isPreRoll) || (hasMultipleOptions && safeOptions.length > 0)) && (
-          <div className={`px-4 pt-3 pb-1 space-y-2 ${isVape ? 'flex-1 flex flex-col overflow-hidden' : ''}`}>
+        {/* STATIC OPTIONS / SIZES */}
+        {((safeSizes.length > 1 && !expandVariants && !isMerch) || (hasMultipleOptions && safeOptions.length > 0)) && (
+          <div className={`px-4 pt-3 pb-1 space-y-2 ${expandVariants ? 'flex-1 flex flex-col overflow-hidden' : ''}`}>
             
-            {safeSizes.length > 1 && !isVape && !isMerch && !isPreRoll && (
+            {safeSizes.length > 1 && !expandVariants && !isMerch && (
               <div className="grid grid-cols-2 sm:grid-cols-4 bg-zinc-900 border border-zinc-800/50 rounded-lg p-1 gap-1">
                 {sortedSizes.map((s: any) => {
                   const isSelected = selectedSize?.id === s.id;
@@ -279,7 +281,7 @@ export default function StorefrontCardBack({
             )}
 
             {hasMultipleOptions && safeOptions.length > 0 && (
-              <div className={isVape ? 'flex-1 flex flex-col overflow-hidden' : ''}>
+              <div className={expandVariants ? 'flex-1 flex flex-col overflow-hidden' : ''}>
                 <div className="flex justify-between items-start mb-2 px-1 shrink-0">
                   <label className="text-[9px] font-black text-zinc-500 uppercase tracking-widest leading-tight">
                      {item?.dealConfig?.type === 'BUNDLE' ? `Mix & Match (Deal: ${item.dealConfig.buyQty} for $${item.dealConfig.bundlePrice})` : UI.selectOptions}
@@ -289,8 +291,8 @@ export default function StorefrontCardBack({
                   </span>
                 </div>
                 
-                {/* DYNAMIC HEIGHT: Unlocked for Vapes, safeguarded for Flower/Pre-rolls */}
-                <div className={`flex flex-col gap-1.5 bg-zinc-900/50 border border-zinc-800/50 rounded-xl p-1.5 overflow-y-auto scrollbar-hide ${isVape ? 'flex-1' : 'max-h-28'}`}>
+                {/* DYNAMIC HEIGHT: Unlocked for Vapes and Pre-Rolls */}
+                <div className={`flex flex-col gap-1.5 bg-zinc-900/50 border border-zinc-800/50 rounded-xl p-1.5 overflow-y-auto scrollbar-hide ${expandVariants ? 'flex-1' : 'max-h-28'}`}>
                   {sortedOptions.map((opt: any) => {
                     const stockVal = opt.stock !== undefined ? opt.stock : displayStock;
                     const instancesInBundle = safeSelectedOptions.filter((so:any) => so?.id === opt.id).length;
@@ -334,7 +336,7 @@ export default function StorefrontCardBack({
         )}
 
         {/* CART ACTIONS */}
-        <div className={`px-4 pb-4 shrink-0 ${((safeSizes.length > 1 && !isVape && !isMerch && !isPreRoll) || (hasMultipleOptions && safeOptions.length > 0)) ? 'pt-1' : 'pt-4'}`}>
+        <div className={`px-4 pb-4 shrink-0 ${((safeSizes.length > 1 && !expandVariants && !isMerch) || (hasMultipleOptions && safeOptions.length > 0)) ? 'pt-1' : 'pt-4'}`}>
            {savingsText && qty > 0 && (
               <div className="absolute -top-2.5 left-1/2 -translate-x-1/2 bg-pink-500 text-zinc-950 px-3 py-0.5 rounded-full text-[8px] font-black uppercase tracking-widest shadow-md whitespace-nowrap z-30">
                  {savingsText}

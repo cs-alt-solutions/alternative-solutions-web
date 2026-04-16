@@ -1,6 +1,6 @@
 // sandbox/apps/admin/inventory-editor/components/EditorCommerce.tsx
 import React from 'react';
-import { DollarSign, Plus, X, Boxes, Minus, TicketPercent, Award, ChefHat, Zap, RotateCcw } from 'lucide-react';
+import { DollarSign, Plus, X, Boxes, Minus, TicketPercent, Award, ChefHat, Zap, RotateCcw, Tag } from 'lucide-react';
 
 export default function EditorCommerce({
   updatedItem, setUpdatedItem, 
@@ -132,6 +132,7 @@ export default function EditorCommerce({
             <div className="flex flex-wrap gap-4">
                <button onClick={()=>setUpdatedItem({...updatedItem, isNewDrop: !updatedItem.isNewDrop})} className={`px-4 py-3 rounded-xl text-xs font-black uppercase tracking-widest border transition-all flex items-center gap-2 ${updatedItem.isNewDrop ? 'bg-cyan-500 text-zinc-950 border-cyan-500 shadow-md' : 'bg-zinc-950 text-zinc-500 border-zinc-800 hover:border-cyan-500/50 hover:text-cyan-400'}`}><Zap size={16}/> New Arrival</button>
                <button onClick={()=>setUpdatedItem({...updatedItem, isReturned: !updatedItem.isReturned})} className={`px-4 py-3 rounded-xl text-xs font-black uppercase tracking-widest border transition-all flex items-center gap-2 ${updatedItem.isReturned ? 'bg-lime-500 text-zinc-950 border-lime-500 shadow-md' : 'bg-zinc-950 text-zinc-500 border-zinc-800 hover:border-lime-500/50 hover:text-lime-400'}`}><RotateCcw size={16}/> Returned</button>
+               <button onClick={()=>setUpdatedItem({...updatedItem, isClearance: !updatedItem.isClearance})} className={`px-4 py-3 rounded-xl text-xs font-black uppercase tracking-widest border transition-all flex items-center gap-2 ${updatedItem.isClearance ? 'bg-rose-500 text-zinc-950 border-rose-500 shadow-md' : 'bg-zinc-950 text-zinc-500 border-zinc-800 hover:border-rose-500/50 hover:text-rose-400'}`}><Tag size={16}/> Smoky Steal (Clearance)</button>
             </div>
          </div>
       </section>

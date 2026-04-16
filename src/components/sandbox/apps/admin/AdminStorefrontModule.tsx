@@ -2,7 +2,7 @@
 'use client';
 
 import React, { useState, useMemo } from 'react';
-import { Store, Flame, Award, ChefHat, Star, X, Edit3, Settings, Zap, RotateCcw } from 'lucide-react';
+import { Store, Flame, Award, ChefHat, Star, X, Edit3, Settings, Zap, RotateCcw, Tag } from 'lucide-react';
 import { useStickyState } from '@/hooks/useStickyState';
 import { createClient } from '@supabase/supabase-js';
 
@@ -24,12 +24,13 @@ export const defaultHomeConfig = {
   secondary: { title: "Don't Miss\nThese Deals", subtitle: "While Supplies Last.", buttonText: "Click To Save", colorFrom: "emerald-500", colorTo: "emerald-500", icon: "Award" }
 };
 
-export default function AdminStorefrontModule({ stock, setStock, inventoryMatrix, setNotification, clientConfig }: any) {
+// FIXED: Receives onJumpToInventory from the parent Terminal
+export default function AdminStorefrontModule({ stock, setStock, inventoryMatrix, setNotification, clientConfig, onJumpToInventory }: any) {
   const [weeklySchedule, setWeeklySchedule] = useStickyState<any>(clientConfig.weeklySchedule || {}, `store_weekly_hours_${clientConfig?.id}`);
   const [shiftChange, setShiftChange] = useStickyState(clientConfig.shiftChange || '12:00', `store_shift_change_${clientConfig?.id}`);
   const [storeOverride, setStoreOverride] = useStickyState('AUTO', `store_override_${clientConfig?.id}`); 
   const [campaignView, setCampaignView] = useState<'WEEK' | 'LIST'>('WEEK'); 
-  const [activeDetailView, setActiveDetailView] = useState<'PROMOS' | 'TOPSHELF' | 'CHEF' | 'NEW_ARRIVALS' | 'RETURNED' | null>(null);
+  const [activeDetailView, setActiveDetailView] = useState<'PROMOS' | 'TOPSHELF' | 'CHEF' | 'NEW_ARRIVALS' | 'RETURNED' | 'SMOKY_STEALS' | null>(null);
   
   const [adminView, setAdminView] = useState<'OPERATIONS' | 'BUILDER'>('OPERATIONS');
   const [homeConfig, setHomeConfig] = useStickyState(defaultHomeConfig, `alt_solutions_home_config_v1`);
@@ -131,7 +132,6 @@ export default function AdminStorefrontModule({ stock, setStock, inventoryMatrix
     }
   };
 
-  // FIXED: Flawless Metric Tracking aligned with new Identity Tags
   const activeDeals = useMemo(() => (inventoryMatrix || []).filter((i: any) => {
     if (i.dealType === 'One-Shot') return i.dealDays && i.dealDays.length > 0;
     if (i.dealType === 'Recurring') return true;
@@ -142,6 +142,7 @@ export default function AdminStorefrontModule({ stock, setStock, inventoryMatrix
   const chefsReserveItems = useMemo(() => (inventoryMatrix || []).filter((i: any) => i.isChefsReserve), [inventoryMatrix]);
   const newArrivalItems = useMemo(() => (inventoryMatrix || []).filter((i: any) => i.isNewDrop), [inventoryMatrix]);
   const returnedItems = useMemo(() => (inventoryMatrix || []).filter((i: any) => i.isReturned), [inventoryMatrix]);
+  const smokyStealsItems = useMemo(() => (inventoryMatrix || []).filter((i: any) => i.isClearance), [inventoryMatrix]);
 
   const overstockCandidates = useMemo(() => {
     return (inventoryMatrix || [])
@@ -153,7 +154,8 @@ export default function AdminStorefrontModule({ stock, setStock, inventoryMatrix
       .slice(0, 6); 
   }, [inventoryMatrix]);
 
-  const renderDetailList = (items: any[], emptyMessage: string) => {
+  // FIXED: Added isPromoList flag to dynamically route the edit button click!
+  const renderDetailList = (items: any[], emptyMessage: string, isPromoList: boolean = false) => {
     if (items.length === 0) return <div className="p-6 text-center text-zinc-500 text-xs font-bold uppercase tracking-widest border border-dashed border-zinc-800 rounded-2xl">{emptyMessage}</div>;
     return (
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
@@ -164,7 +166,14 @@ export default function AdminStorefrontModule({ stock, setStock, inventoryMatrix
                <p className="text-[9px] font-bold text-zinc-500 uppercase tracking-widest">{item.mainCategory}</p>
              </div>
              <div className="flex items-center gap-3 shrink-0">
-               <button onClick={() => openCampaignConfig(item)} className="p-2 bg-zinc-900 hover:bg-emerald-500/20 border border-zinc-800 hover:border-emerald-500/50 rounded-xl text-zinc-500 hover:text-emerald-400 transition-colors"><Edit3 size={16} /></button>
+               {/* FIXED: Promos open the Campaign Modal. Everything else jumps to the Inventory Editor. */}
+               <button 
+                 onClick={() => isPromoList ? openCampaignConfig(item) : onJumpToInventory(item)} 
+                 className="p-2 bg-zinc-900 hover:bg-emerald-500/20 border border-zinc-800 hover:border-emerald-500/50 rounded-xl text-zinc-500 hover:text-emerald-400 transition-colors"
+                 title={isPromoList ? "Edit Campaign Schedule" : "Edit Item Data in Vault"}
+               >
+                 <Edit3 size={16} />
+               </button>
              </div>
            </div>
         ))}
@@ -215,11 +224,10 @@ export default function AdminStorefrontModule({ stock, setStock, inventoryMatrix
       </div>
 
       {adminView === 'BUILDER' ? (
-         <StorefrontBuilder homeConfig={homeConfig} setHomeConfig={setHomeConfig} mainCategories={mainCategories} subCategories={subCategories} inventoryMatrix={inventoryMatrix} />
+         <StorefrontBuilder homeConfig={homeConfig} setHomeConfig={setHomeConfig} mainCategories={mainCategories} subCategories={subCategories} inventoryMatrix={inventoryMatrix} clientConfig={clientConfig} />
       ) : (
         <>
-          {/* FIXED: Scaled out to 5 grid columns to track all new identities flawlessly */}
-          <div className="grid grid-cols-2 lg:grid-cols-5 gap-4 mb-6">
+          <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-4 mb-6">
              <button onClick={() => setActiveDetailView(activeDetailView === 'PROMOS' ? null : 'PROMOS')} className={`bg-zinc-900/50 backdrop-blur-sm border rounded-4xl p-5 flex flex-col justify-center items-center text-center transition-all active:scale-95 ${activeDetailView === 'PROMOS' ? 'border-pink-500/50 bg-pink-500/10' : 'border-zinc-800 hover:border-zinc-700'}`}>
                 <Flame size={20} className="text-pink-400 mb-2" />
                 <span className="text-3xl font-black text-zinc-100 leading-none">{activeDeals.length}</span>
@@ -245,16 +253,24 @@ export default function AdminStorefrontModule({ stock, setStock, inventoryMatrix
                 <span className="text-3xl font-black text-zinc-100 leading-none z-10">{returnedItems.length}</span>
                 <span className="text-[9px] font-black text-zinc-500 uppercase tracking-widest mt-1 z-10">Returned</span>
              </button>
+             <button onClick={() => setActiveDetailView(activeDetailView === 'SMOKY_STEALS' ? null : 'SMOKY_STEALS')} className={`bg-zinc-900/50 backdrop-blur-sm border rounded-4xl p-5 flex flex-col justify-center items-center text-center transition-all active:scale-95 ${activeDetailView === 'SMOKY_STEALS' ? 'border-rose-500/50 bg-rose-500/10' : 'border-zinc-800 hover:border-zinc-700'}`}>
+                <Tag size={20} className="text-rose-500 mb-2 z-10" />
+                <span className="text-3xl font-black text-zinc-100 leading-none z-10">{smokyStealsItems.length}</span>
+                <span className="text-[9px] font-black text-zinc-500 uppercase tracking-widest mt-1 z-10">Smoky Steals</span>
+             </button>
           </div>
 
           {activeDetailView && (
             <div className="bg-zinc-900/80 backdrop-blur-md border border-zinc-800 rounded-4xl p-6 mb-8 shadow-xl animate-in slide-in-from-top-4 relative">
               <button onClick={() => setActiveDetailView(null)} className="absolute top-4 right-4 text-zinc-500 hover:text-rose-400 transition-colors p-2 bg-zinc-950 rounded-full border border-zinc-800"><X size={14}/></button>
-              {activeDetailView === 'PROMOS' && renderDetailList(activeDeals, "No active promotions found.")}
-              {activeDetailView === 'TOPSHELF' && renderDetailList(topShelfItems, "No Top Shelf items found.")}
-              {activeDetailView === 'CHEF' && renderDetailList(chefsReserveItems, "No Chef's Reserve items.")}
-              {activeDetailView === 'NEW_ARRIVALS' && renderDetailList(newArrivalItems, "No new arrivals found.")}
-              {activeDetailView === 'RETURNED' && renderDetailList(returnedItems, "No returned items found.")}
+              
+              {/* FIXED: Passing the true boolean ONLY to the Promos list */}
+              {activeDetailView === 'PROMOS' && renderDetailList(activeDeals, "No active promotions found.", true)}
+              {activeDetailView === 'TOPSHELF' && renderDetailList(topShelfItems, "No Top Shelf items found.", false)}
+              {activeDetailView === 'CHEF' && renderDetailList(chefsReserveItems, "No Chef's Reserve items.", false)}
+              {activeDetailView === 'NEW_ARRIVALS' && renderDetailList(newArrivalItems, "No new arrivals found.", false)}
+              {activeDetailView === 'RETURNED' && renderDetailList(returnedItems, "No returned items found.", false)}
+              {activeDetailView === 'SMOKY_STEALS' && renderDetailList(smokyStealsItems, "No Smoky Steals (Clearance) items found.", false)}
             </div>
           )}
 

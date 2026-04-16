@@ -1,6 +1,7 @@
 // sandbox/apps/admin/storefront/StorefrontBuilder.tsx
-import React, { useState } from 'react';
-import { Edit3, X, Image as ImageIcon, Flame, Award, Leaf, Wind, Tag, Droplet, Sparkles, Star, Save, ArrowLeft, ArrowRight, Trash2, Plus, Activity, Search } from 'lucide-react';
+import React, { useState, useRef } from 'react';
+import { Edit3, X, Image as ImageIcon, Flame, Award, Leaf, Wind, Tag, Droplet, Sparkles, Star, Save, ArrowLeft, ArrowRight, Trash2, Plus, Activity, Search, UploadCloud } from 'lucide-react';
+import { createClient } from '@supabase/supabase-js';
 import InventorySelectorModal from './InventorySelectorModal';
 
 export const IconMap: any = { Flame, Award, Leaf, Wind, Tag, Droplet, Sparkles, Star, Activity };
@@ -63,8 +64,8 @@ export const ThemeMap: Record<string, any> = {
     bentoHover: 'hover:border-amber-500',
     bentoOverlay: 'from-amber-950',
     bentoFallback: 'bg-linear-to-b from-amber-900 via-zinc-900 to-black',
-    bentoIconBg: 'bg-amber-500/10',
-    bentoIconText: 'text-amber-400',
+    bentoIconBg: 'bg-emerald-500/10',
+    bentoIconText: 'text-emerald-400',
   }
 };
 
@@ -79,10 +80,12 @@ export const getThemeColor = (configColor: string) => {
     return 'emerald';
 };
 
-export default function StorefrontBuilder({ homeConfig, setHomeConfig, mainCategories, subCategories, inventoryMatrix }: any) {
+export default function StorefrontBuilder({ homeConfig, setHomeConfig, mainCategories, subCategories, inventoryMatrix, clientConfig }: any) {
     const [editingBlock, setEditingBlock] = useState<string | null>(null);
     const [editForm, setEditForm] = useState<any>(null);
     const [showInventoryModal, setShowInventoryModal] = useState(false);
+    const [isUploading, setIsUploading] = useState(false);
+    const fileInputRef = useRef<HTMLInputElement>(null);
 
     const openEdit = (blockId: string, data: any) => {
         setEditingBlock(blockId);
@@ -101,6 +104,30 @@ export default function StorefrontBuilder({ homeConfig, setHomeConfig, mainCateg
             setHomeConfig({ ...homeConfig, bento: newBento });
         }
         setEditingBlock(null);
+    };
+
+    const handleFileUpload = async (file: File) => {
+      if (!file || !clientConfig?.id) return;
+      setIsUploading(true);
+      
+      try {
+        const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
+        const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
+        const supabase = createClient(supabaseUrl, supabaseKey);
+
+        const fileExt = file.name.split('.').pop();
+        const filename = `${clientConfig.id}/storefront/marketing/${editingBlock}-${Date.now()}.${fileExt}`;
+        
+        const { error: uploadError } = await supabase.storage.from('client-assets').upload(filename, file, { upsert: true });
+        if (uploadError) throw uploadError;
+        
+        const { data: { publicUrl } } = supabase.storage.from('client-assets').getPublicUrl(filename);
+        setEditForm({ ...editForm, imgUrl: publicUrl });
+      } catch (err) {
+        console.error("Layout Builder Upload Error:", err);
+      } finally {
+        setIsUploading(false);
+      }
     };
 
     const moveBento = (idx: number, direction: number) => {
@@ -144,8 +171,8 @@ export default function StorefrontBuilder({ homeConfig, setHomeConfig, mainCateg
 
            <div className="space-y-10 scale-[0.95] transform origin-top border border-dashed border-zinc-800 p-6 rounded-3xl bg-zinc-950/50 relative">
               
-              {/* FIXED: Master Hero Banner Preview now uses the Neon Billboard or the Image Background */}
-              <div onClick={() => openEdit('hero', homeConfig.hero)} className={`cursor-pointer group relative w-full ${(homeConfig.hero as any).imgUrl ? 'bg-zinc-950' : heroTheme.heroGrad} rounded-3xl p-4 md:p-8 flex flex-col justify-end shadow-2xl overflow-hidden transition-all hover:ring-4 ring-white/20 min-h-[350px] md:min-h-[450px]`}>
+              {/* FIXED: Master Hero Banner Preview locked height to prevent layout jumps */}
+              <div onClick={() => openEdit('hero', homeConfig.hero)} className={`cursor-pointer group relative w-full ${(homeConfig.hero as any).imgUrl ? 'bg-zinc-950' : heroTheme.heroGrad} rounded-3xl p-4 md:p-8 flex flex-col justify-end shadow-2xl overflow-hidden transition-all hover:ring-4 ring-white/20 h-[400px] md:h-[500px]`}>
                  
                  {(homeConfig.hero as any).imgUrl ? (
                     <div className="absolute inset-0 z-0 group-hover:scale-105 transition-transform duration-1000 pointer-events-none">
@@ -154,7 +181,7 @@ export default function StorefrontBuilder({ homeConfig, setHomeConfig, mainCateg
                     </div>
                  ) : (
                     <div className="absolute inset-0 z-0 group-hover:scale-105 transition-transform duration-1000 pointer-events-none">
-                       <div className="absolute inset-0 bg-[linear-gradient(to_right,#80808012_1px,transparent_1px),linear-gradient(to_bottom,#80808012_1px,transparent_1px)] bg-[size:24px_24px]"></div>
+                       <div className="absolute inset-0 bg-[linear-gradient(to_right,#80808012_1px,transparent_1px),linear-gradient(to_bottom,#80808012_1px,transparent_1px)] bg-size-[24px_24px]"></div>
                        <div className="absolute inset-0 bg-radial-gradient from-transparent to-zinc-950"></div>
                     </div>
                  )}
@@ -163,9 +190,9 @@ export default function StorefrontBuilder({ homeConfig, setHomeConfig, mainCateg
                       <span className="bg-zinc-900 text-white px-6 py-3 rounded-xl font-black uppercase tracking-widest text-xs flex items-center gap-2"><Edit3 size={16}/> Edit Hero Banner</span>
                  </div>
 
-                 {/* NEON SIGN PREVIEW */}
                  <div className="relative z-10 flex flex-col items-center justify-center w-full h-full my-auto py-4 pointer-events-none">
-                     <div className="border-[3px] border-pink-500 p-6 md:p-10 rounded-3xl shadow-[0_0_30px_rgba(236,72,153,0.4),inset_0_0_30px_rgba(236,72,153,0.4)] bg-zinc-950/80 backdrop-blur-md flex flex-col items-center text-center animate-[pulse_3s_ease-in-out_infinite] max-w-3xl mx-auto w-full group-hover:shadow-[0_0_50px_rgba(236,72,153,0.6),inset_0_0_40px_rgba(236,72,153,0.6)] transition-shadow duration-700">
+                     {/* FIXED: Removed neon box wrapper to mirror live storefront exactly */}
+                     <div className="flex flex-col items-center text-center animate-[pulse_3s_ease-in-out_infinite] max-w-3xl mx-auto w-full transition-shadow duration-700">
                          <div className="relative mb-2">
                            <HeroIcon size={48} className="text-pink-500 drop-shadow-[0_0_15px_rgba(236,72,153,1)] animate-bounce relative z-10" />
                            <div className="absolute inset-0 bg-pink-500 blur-2xl opacity-50 rounded-full animate-pulse"></div>
@@ -174,7 +201,7 @@ export default function StorefrontBuilder({ homeConfig, setHomeConfig, mainCateg
                              {homeConfig.hero.title.split('\n').map((line: string, i: number) => {
                                  const isCyan = i % 2 !== 0;
                                  return (
-                                   <h2 key={i} className={`text-4xl md:text-6xl lg:text-7xl font-black uppercase tracking-tighter leading-none ${isCyan ? 'text-cyan-300 drop-shadow-[0_0_15px_rgba(6,182,212,0.8)]' : 'text-pink-400 drop-shadow-[0_0_15px_rgba(236,72,153,0.8)]'}`}>
+                                   <h2 key={i} className={`text-5xl md:text-7xl lg:text-8xl font-black uppercase tracking-tighter leading-none ${isCyan ? 'text-cyan-300 drop-shadow-[0_0_20px_rgba(6,182,212,0.8)]' : 'text-pink-400 drop-shadow-[0_0_20px_rgba(236,72,153,0.8)]'}`}>
                                        {line}
                                    </h2>
                                  )
@@ -183,7 +210,7 @@ export default function StorefrontBuilder({ homeConfig, setHomeConfig, mainCateg
                          <p className="mt-6 text-pink-100 font-black tracking-[0.3em] uppercase text-[10px] md:text-xs drop-shadow-[0_0_8px_rgba(236,72,153,0.8)]">
                              {homeConfig.hero.subtitle}
                          </p>
-                         <div className="mt-8 px-8 py-3 border-2 border-cyan-400 text-cyan-300 font-black uppercase tracking-widest rounded-xl shadow-[0_0_15px_rgba(6,182,212,0.3),inset_0_0_15px_rgba(6,182,212,0.3)] hover:bg-cyan-400 hover:text-zinc-950 hover:shadow-[0_0_30px_rgba(6,182,212,0.8)] transition-all">
+                         <div className="mt-8 px-8 py-3 border-2 border-cyan-400 text-cyan-300 font-black uppercase tracking-widest rounded-xl shadow-[0_0_15px_rgba(6,182,212,0.3),inset_0_0_15px_rgba(6,182,212,0.3)] hover:bg-cyan-400 hover:text-zinc-950 hover:shadow-[0_0_30px_rgba(6,182,212,0.8)] transition-all bg-zinc-950/40 backdrop-blur-sm">
                              <span className="relative z-10">{homeConfig.hero.buttonText}</span>
                          </div>
                      </div>
@@ -217,7 +244,6 @@ export default function StorefrontBuilder({ homeConfig, setHomeConfig, mainCateg
                            </div>
                          </div>
 
-                         {/* FIXED: Faded Layout logic synced */}
                          {c.imgUrl ? (
                             <div className="absolute inset-0 z-0">
                                <img src={c.imgUrl} className="w-full h-full object-cover opacity-40 mix-blend-luminosity" />
@@ -250,11 +276,12 @@ export default function StorefrontBuilder({ homeConfig, setHomeConfig, mainCateg
               </div>
 
               {/* Secondary Banner Editor */}
-              <div onClick={() => openEdit('secondary', homeConfig.secondary)} className={`cursor-pointer group relative w-full ${secTheme.secBg} rounded-3xl p-8 md:p-12 flex flex-col md:flex-row items-center justify-between shadow-xl border border-zinc-700 overflow-hidden transition-all hover:ring-4 ring-white/20`}>
+              {/* FIXED: Added strict h-[250px] md:h-[300px] locking to prevent glitchy jumps */}
+              <div onClick={() => openEdit('secondary', homeConfig.secondary)} className={`cursor-pointer group relative w-full h-[250px] md:h-[300px] ${secTheme.secBg} rounded-3xl p-8 md:p-12 flex flex-col md:flex-row items-center justify-between shadow-xl border border-zinc-700 overflow-hidden transition-all hover:ring-4 ring-white/20`}>
                  <div className="absolute inset-0 bg-black/40 hidden group-hover:flex items-center justify-center z-50 backdrop-blur-sm transition-all">
                      <span className="bg-zinc-900 text-white px-6 py-3 rounded-xl font-black uppercase tracking-widest text-xs flex items-center gap-2"><Edit3 size={16}/> Edit Banner</span>
                  </div>
-                 <div className="relative z-10 pointer-events-none">
+                 <div className="relative z-10 pointer-events-none my-auto">
                    <p className="text-xs font-black uppercase tracking-widest text-zinc-900 mb-2">{homeConfig.secondary.subtitle}</p>
                    <h2 className="text-4xl md:text-5xl font-black text-zinc-950 uppercase tracking-tighter leading-none mb-6 whitespace-pre-line">{homeConfig.secondary.title}</h2>
                    <button className={`bg-zinc-950 ${secTheme.secBtnText} px-6 py-3 rounded-xl text-xs font-black uppercase tracking-widest shadow-lg border border-zinc-800`}>{homeConfig.secondary.buttonText}</button>
@@ -306,19 +333,6 @@ export default function StorefrontBuilder({ homeConfig, setHomeConfig, mainCateg
                                          </select>
                                      </div>
                                  </div>
-                                 {/* FIXED: Now you can add an image to the master banner too! */}
-                                 {editingBlock === 'hero' && (
-                                     <div className="border-t border-zinc-800/80 pt-4 mt-2">
-                                         <label className="text-[10px] font-bold text-cyan-400 uppercase tracking-widest flex items-center gap-2 mb-2"><ImageIcon size={12}/> Background Image URL</label>
-                                         <div className="flex gap-2">
-                                           <input type="text" value={editForm.imgUrl || ''} onChange={e => setEditForm({...editForm, imgUrl: e.target.value})} placeholder="https://..." className="flex-1 bg-zinc-900 border border-cyan-500/30 rounded-xl p-3 text-sm font-mono text-cyan-100 focus:border-cyan-500 outline-none" />
-                                           <button onClick={() => setShowInventoryModal(true)} className="px-4 bg-zinc-800 hover:bg-zinc-700 text-cyan-400 rounded-xl border border-zinc-700 text-xs font-black uppercase tracking-widest transition-colors flex items-center gap-2 whitespace-nowrap">
-                                             <Search size={14}/> Find
-                                           </button>
-                                         </div>
-                                         <p className="text-[9px] text-zinc-500 mt-2 uppercase tracking-widest leading-relaxed">Adding an image will override the solid Neon aesthetic for the master slide.</p>
-                                     </div>
-                                 )}
                                </>
                            )}
 
@@ -386,18 +400,32 @@ export default function StorefrontBuilder({ homeConfig, setHomeConfig, mainCateg
                                          </select>
                                      </div>
                                  </div>
-                                 <div>
-                                     <label className="text-[10px] font-bold text-cyan-400 uppercase tracking-widest flex items-center gap-2 mb-2"><ImageIcon size={12}/> Background Image URL</label>
-                                     <div className="flex gap-2">
-                                       <input type="text" value={editForm.imgUrl || ''} onChange={e => setEditForm({...editForm, imgUrl: e.target.value})} placeholder="https://..." className="flex-1 bg-zinc-900 border border-cyan-500/30 rounded-xl p-3 text-sm font-mono text-cyan-100 focus:border-cyan-500 outline-none" />
-                                       <button onClick={() => setShowInventoryModal(true)} className="px-4 bg-zinc-800 hover:bg-zinc-700 text-cyan-400 rounded-xl border border-zinc-700 text-xs font-black uppercase tracking-widest transition-colors flex items-center gap-2 whitespace-nowrap">
-                                         <Search size={14}/> Find
-                                       </button>
-                                     </div>
-                                     <p className="text-[9px] text-zinc-500 mt-2 uppercase tracking-widest leading-relaxed">Paste a direct image URL or search your inventory. It will automatically scale, crop, and apply the correct color gradients to match the theme.</p>
-                                 </div>
                                </>
                            )}
+
+                           {/* IMAGE CONTROLS FOR ALL BLOCKS */}
+                           <div className="border-t border-zinc-800/80 pt-6 mt-2">
+                               <label className="text-[10px] font-bold text-cyan-400 uppercase tracking-widest flex items-center gap-2 mb-3"><ImageIcon size={14}/> Graphic Selection</label>
+                               <div className="space-y-3">
+                                   <div className="flex gap-2">
+                                     <input type="text" value={editForm.imgUrl || ''} onChange={e => setEditForm({...editForm, imgUrl: e.target.value})} placeholder="https://..." className="flex-1 bg-zinc-900 border border-zinc-800 rounded-xl p-3 text-xs font-mono text-cyan-100 focus:border-cyan-500 outline-none" />
+                                     <button onClick={() => setShowInventoryModal(true)} className="px-4 bg-zinc-800 hover:bg-zinc-700 text-cyan-400 rounded-xl border border-zinc-700 text-xs font-black uppercase tracking-widest transition-colors flex items-center gap-2 whitespace-nowrap">
+                                       <Search size={14}/> Find
+                                     </button>
+                                   </div>
+                                   
+                                   <button 
+                                     onClick={() => fileInputRef.current?.click()} 
+                                     disabled={isUploading}
+                                     className="w-full bg-zinc-900 hover:bg-zinc-800 border-2 border-dashed border-zinc-800 hover:border-cyan-500/50 py-4 rounded-xl flex flex-col items-center justify-center gap-2 transition-all group"
+                                   >
+                                     {isUploading ? <UploadCloud size={20} className="text-cyan-400 animate-bounce" /> : <UploadCloud size={20} className="text-zinc-600 group-hover:text-cyan-400" />}
+                                     <span className="text-[10px] font-black uppercase tracking-widest text-zinc-500 group-hover:text-cyan-400">{isUploading ? 'Uploading to Vault...' : 'Upload Local Image'}</span>
+                                   </button>
+                                   {/* ACTIVE UPLOAD ENGINE: Wired to your local disk */}
+                                   <input type="file" ref={fileInputRef} onChange={(e) => {if (e.target.files && e.target.files[0]) handleFileUpload(e.target.files[0]);}} className="hidden" accept="image/*" />
+                               </div>
+                           </div>
                        </div>
                        
                        <div className="p-6 border-t border-zinc-800 bg-zinc-950">

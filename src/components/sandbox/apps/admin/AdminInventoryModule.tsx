@@ -1,7 +1,7 @@
 // sandbox/apps/admin/AdminInventoryModule.tsx
 'use client';
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { Download, X } from 'lucide-react';
 import { useStickyState } from '@/hooks/useStickyState';
 import { supabase } from '@/utils/supabase';
@@ -12,7 +12,8 @@ import AdminInventoryHeader from './AdminInventoryHeader';
 import AdminInventoryToolbar from './AdminInventoryToolbar';
 import AdminInventoryTable from './AdminInventoryTable';
 
-export default function AdminInventoryModule({ stock, setStock, inventoryMatrix, setNotification, clientConfig }: any) {
+// FIXED: Receives the jumpToEditItem bridge state from AdminTerminal
+export default function AdminInventoryModule({ stock, setStock, inventoryMatrix, setNotification, clientConfig, jumpToEditItem, clearJumpToEdit }: any) {
   
   const mainCategories = clientConfig.categories || ['Flower & Plants', 'Vapes & Pens', 'Edibles', 'Concentrates', 'Healthcare & Topicals', 'Merch & Extras'];
   const defaultSubCats = clientConfig.subCategories || {};
@@ -33,14 +34,13 @@ export default function AdminInventoryModule({ stock, setStock, inventoryMatrix,
   const [statusFilter, setStatusFilter] = useState('All');
   const [sortConfig, setSortConfig] = useState({ key: 'name', direction: 'asc' });
 
-  // FIXED: Brand new schema defaults tailored perfectly to your architecture
   const getBlankItem = () => ({
     id: `itm-${Math.random().toString(36).substr(2, 9)}`,
     name: '', brand: '', lineage: '', strainType: 'Hybrid', 
     descBase: '', descFeels: '', descTaste: '', descUses: '', descFact: '',
     mainCategory: mainCategories[0], subCategory: subCategories[mainCategories[0]]?.[0] || 'Uncategorized',
     price: 0, onHand: 0, 
-    isTopShelf: false, isChefsReserve: false, isNewDrop: false, isReturned: false, 
+    isTopShelf: false, isChefsReserve: false, isNewDrop: false, isReturned: false, isClearance: false,
     dailyDeal: false, dealType: 'One-Shot', dealText: '', dealDays: [], 
     iconName: 'Leaf', options: [], 
     dealConfig: { type: 'DISCOUNT', discountType: 'PERCENT', discountValue: 15, unit: 'UNITS' },
@@ -65,6 +65,14 @@ export default function AdminInventoryModule({ stock, setStock, inventoryMatrix,
       setIsAdding(true);
     }
   };
+
+  // FIXED: The auto-trigger effect that catches the jump command
+  useEffect(() => {
+    if (jumpToEditItem) {
+      openEditor(jumpToEditItem);
+      if (clearJumpToEdit) clearJumpToEdit();
+    }
+  }, [jumpToEditItem, clearJumpToEdit]);
 
   const handleSaveProduct = async (itemToSave: any, isNew: boolean) => {
     setNotification("Syncing with Vault...");
@@ -98,7 +106,6 @@ export default function AdminInventoryModule({ stock, setStock, inventoryMatrix,
     const newStatus = item.status === 'archived' ? 'active' : 'archived';
     const updatedItem = { ...item, status: newStatus };
     
-    // FIXED: Smart Tagging. Automatically flags as "Returned" and wipes "New Arrival" if un-archived.
     if (newStatus === 'active') {
        updatedItem.isReturned = true;
        updatedItem.isNewDrop = false;
@@ -202,14 +209,13 @@ export default function AdminInventoryModule({ stock, setStock, inventoryMatrix,
       result = result.filter(i => i.mainCategory === categoryFilter);
     }
     
-    // FIXED: Updated Table Filtering to match new schemas
     if (statusFilter !== 'All') {
       if (statusFilter === 'Active Promo') result = result.filter(i => i.dailyDeal);
       if (statusFilter === 'Top Shelf') result = result.filter(i => i.isTopShelf);
       if (statusFilter === 'Chef\'s Reserve') result = result.filter(i => i.isChefsReserve);
       if (statusFilter === 'New Arrival') result = result.filter(i => i.isNewDrop);
       if (statusFilter === 'Returned') result = result.filter(i => i.isReturned);
-      if (statusFilter === 'Smoky Steals') result = result.filter(i => i.subCategory?.toLowerCase().includes('steals'));
+      if (statusFilter === 'Smoky Steals') result = result.filter(i => i.isClearance);
 
       if (statusFilter === 'Low Stock') result = result.filter(i => {
         const hasVariants = i.options && i.options.length > 0 && i.options[0].label !== 'Standard';
