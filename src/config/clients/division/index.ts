@@ -24,7 +24,7 @@ export const divisionConfig = {
   storeHours: { open: '08:00', shiftChange: '12:00', close: '17:00' },
   shiftChange: '12:00',
   weeklySchedule: {
-    0: { open: '08:00', close: '17:00', isClosed: true },
+    0: { open: '08:00', close: '17:00', isClosed: false },
     1: { open: '08:00', close: '17:00', isClosed: true },
     2: { open: '08:00', close: '17:00', isClosed: false },
     3: { open: '08:00', close: '17:00', isClosed: false },
@@ -32,11 +32,42 @@ export const divisionConfig = {
     5: { open: '08:00', close: '17:00', isClosed: false },
     6: { open: '08:00', close: '17:00', isClosed: false },
   },
+
+  team: {
+    dispatchers: ["@MisterDoobie", "@RedsRosin", "@JonSpliff", "@MrsDoobieDuo"],
+    drivers: ["@balance0n1", "@Laylo757", "@King_Maso", "@MistrSandman", "@Roman_Empire145", "@true80skid", "@Thouzand420", "@KyleTheNewGuy"]
+  },
   
-  categories: ['Flower & Plants', 'Vapes & Pens', 'Edibles', 'Concentrates', 'Merch & Extras'],
+  warranty: `ALL of our electronics/electronic devices come with a "DUD WARRANTY", meaning if it's not working, leaking, or clearly a "dud" reach out with 48 HOURS with said device and we WILL honor you with a replacement.\n\nWe Stand Behind EVERY Item!\nFor questions, concerns, or issues please contact @RedsRosin or @JonSpliff!`,
   
+  fees: {
+    digitalPaymentFee: 10
+  },
+
+  homeConfig: {
+    hero: { title: "DAILY DEALS\nARE LIVE", subtitle: "Don't Miss Out On Today's Drops", buttonText: "Click Here For Daily Deals", colorFrom: "cyan-600", colorTo: "blue-600", icon: "Flame" },
+    bento: [
+      { name: "Flower", cat: "Flower & Plants", sub: "All", icon: "Leaf", color: "emerald", desc: "Premium flower and reserve tiers.", span: "md:col-span-2 md:row-span-2", imgUrl: "" },
+      { name: "Vapes", cat: "Vapes & Pens", sub: "All", icon: "Wind", color: "cyan", desc: "Disposables & carts.", span: "col-span-1 md:col-span-1 md:row-span-2", imgUrl: "" },
+      { name: "Pre Rolls", cat: "Flower & Plants", sub: "Pre-Rolls & Blunts", icon: "Tag", color: "pink", desc: "Ready to enjoy.", span: "col-span-1 md:col-span-1 md:row-span-1", imgUrl: "" },
+      { name: "Mystery Bags", cat: "Merch & Extras", sub: "Mystery Bags", icon: "Sparkles", color: "fuchsia", desc: "Surprise assortments.", span: "col-span-1 md:col-span-1 md:row-span-1", imgUrl: "" }
+    ],
+    secondary: { title: "Don't Miss\nThese Deals", subtitle: "While Supplies Last.", buttonText: "Click To Save", colorFrom: "emerald-500", colorTo: "emerald-500", icon: "Award" }
+  },
+
+  dailySchedule: {
+    0: { title: "Sunday Strains", sub: "Prep for the week ahead." },
+    1: { title: "Munchie Monday", sub: "Start the week deliciously." },
+    2: { title: "Dabs & Badder", sub: "Your premium extract drop." },
+    3: { title: "Weed Wednesday", sub: "The ultimate mid-week re-up." },
+    4: { title: "Dabs & Badder", sub: "Thursday's premium extract drop." },
+    5: { title: "Flower Friday", sub: "Fresh buds for the weekend." },
+    6: { title: "Shatterday", sub: "Elevate your Saturday." }
+  },
+  
+  categories: ['Flower & Plants', 'Vapes & Pens', 'Edibles', 'Concentrates', 'Merch & Extras', 'Healthcare & Topicals'],  
   subCategories: {
-    'Flower & Plants': ['Premium Flower', 'Pre-Rolls & Blunts', 'Trees & Plants', 'Featured Brands'],
+    'Flower & Prerolls': ['Top Shelf', 'Pre-Rolls & Blunts', 'Premium', 'Featured Brands', 'SMOKEY STEALS!'],
     'Vapes & Pens': ['Disposables', '510 Cartridges'],
     'Edibles': ['Gummies & Candies', 'Baked Goods & Snacks', 'Infused Beverages', "Mrs. Doob's Fun Food", "Mrs. Doob's Drinks"],
     'Concentrates': ['Wax & Dabs', 'Rosin & Resin'],
@@ -105,10 +136,12 @@ export const divisionConfig = {
   ],
 
   storePolicies: [
+    "Access codes are strictly for verified members. Sharing codes with unverified individuals will result in permanent removal.",
+    "All sales are final once delivery is completed and verified.",
+    "Drivers do not carry excess inventory. Exact change or digital payment is required.",
     "You MUST be 21+ to order.",
     "NO Medical Card Required.",
-    "NO meetups. Delivery to residential addresses ONLY.",
-    "Drivers DO NOT carry change. Exact cash or CashApp only."
+    "NO meetups. Delivery to residential addresses ONLY."
   ],
 
   deliveryZones: [

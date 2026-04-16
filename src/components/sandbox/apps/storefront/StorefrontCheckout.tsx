@@ -11,11 +11,12 @@ export default function StorefrontCheckout({
   progressPercent, paymentMethod, setPaymentMethod,
   handleCopyOrder, isCopied, setIsCopied, setIsCheckingOut, setCart, onExit,
   timeData, cart, updateCart, hasSubmittedOnce, setHasSubmittedOnce, 
-  submittedCart, setSubmittedCart, orderRef, inventory
+  submittedCart, setSubmittedCart, orderRef, inventory, clientConfig
 }: any) {
 
   const cartItems = Object.values(cart);
-  const convenienceFee = paymentMethod === 'CASHAPP' ? 10 : 0;
+  const digitalFeeAmount = clientConfig?.fees?.digitalPaymentFee || 0;
+  const convenienceFee = paymentMethod === 'CASHAPP' ? digitalFeeAmount : 0;
   const grandTotal = cartTotal + convenienceFee;
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -251,7 +252,7 @@ export default function StorefrontCheckout({
                       <Banknote size={16} /> <span className="text-[10px] font-black uppercase tracking-widest">Cash</span>
                     </button>
                     <button type="button" onClick={() => setPaymentMethod('CASHAPP')} className={`px-4 py-3 rounded-xl border flex flex-col items-center justify-center gap-1 transition-all ${paymentMethod === 'CASHAPP' ? 'bg-cyan-500/10 border-cyan-500/50 text-cyan-400' : 'bg-zinc-950 border-zinc-800 text-zinc-500 hover:border-zinc-700'}`}>
-                      <CreditCard size={16} /> <span className="text-[10px] font-black uppercase tracking-widest">Digital (+$10)</span>
+                      <CreditCard size={16} /> <span className="text-[10px] font-black uppercase tracking-widest">Digital (+${digitalFeeAmount})</span>
                     </button>
                   </div>
                 </div>
@@ -264,7 +265,7 @@ export default function StorefrontCheckout({
                 </div>
                 {convenienceFee > 0 && (
                   <div className="flex justify-between text-[11px] font-bold text-cyan-400 uppercase tracking-widest">
-                    <span>Digital Fee</span> <span className="font-mono">+$10.00</span>
+                    <span>Digital Fee</span> <span className="font-mono">+${digitalFeeAmount.toFixed(2)}</span>
                   </div>
                 )}
                 <div className="flex justify-between text-lg font-black text-zinc-100 uppercase tracking-widest pt-3 border-t border-zinc-800/50 mt-2">

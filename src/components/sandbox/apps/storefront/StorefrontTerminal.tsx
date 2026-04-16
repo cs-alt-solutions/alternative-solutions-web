@@ -1,3 +1,4 @@
+// src/components/sandbox/apps/storefront/StorefrontTerminal.tsx
 'use client';
 
 import React, { useState, useMemo, useEffect } from 'react';
@@ -12,33 +13,6 @@ import StorefrontCatalog from './StorefrontCatalog';
 import StorefrontClosed from './StorefrontClosed';
 import StorefrontGatekeeper from './StorefrontGatekeeper';
 import { getRequiredGrams } from './StorefrontComponents';
-
-// --- SHARED DEFAULT OPERATIONS DATA ---
-export const DEFAULT_ZONES = [
-  { name: "Williamsburg Areas", minimum: 50 },
-  { name: "Gloucester / Hayes / Yorktown", minimum: 75 },
-  { name: "Newport News / Hampton", minimum: 75 },
-  { name: "Quinton / Charles City Areas", minimum: 75 },
-  { name: "West Point / Saluda Area", minimum: 75 },
-  { name: "Richmond & Surrounding Areas", minimum: 100 },
-  { name: "Southside Areas", minimum: 100 },
-  { name: "Ashland & Surrounding Areas", minimum: 150 },
-  { name: "Suffolk", minimum: 150 }
-];
-
-export const DEFAULT_TEAM = {
-  dispatchers: ["@MisterDoobie", "@RedsRosin", "@JonSpliff", "@MrsDoobieDuo"],
-  drivers: ["@balance0n1", "@Laylo757", "@King_Maso", "@MistrSandman", "@Roman_Empire145", "@true80skid", "@Thouzand420", "@KyleTheNewGuy"]
-};
-
-export const DEFAULT_WARRANTY = `ALL of our electronics/electronic devices come with a "DUD WARRANTY", meaning if it's not working, leaking, or clearly a "dud" reach out with 48 HOURS with said device and we WILL honor you with a replacement.\n\nWe Stand Behind EVERY Item!\nFor questions, concerns, or issues please contact @RedsRosin or @JonSpliff!`;
-
-export const DEFAULT_POLICIES = [
-  "Access codes are strictly for verified members. Sharing codes with unverified individuals will result in permanent removal.",
-  "All sales are final once delivery is completed and verified.",
-  "Drivers do not carry excess inventory. Exact change or digital payment is required."
-];
-// --------------------------------------
 
 const timeToMins = (timeStr: string) => {
   if (!timeStr) return 0;
@@ -93,11 +67,11 @@ export default function StorefrontTerminal({ clientConfig, onExit }: any) {
   const [masterCategories] = useStickyState<string[]>(clientConfig.categories || ['Flower & Plants', 'Vapes & Pens', 'Edibles', 'Concentrates', 'Merch & Extras'], `inv_cats_${clientConfig?.id || 'division'}`);
   const [masterSubCategories] = useStickyState<Record<string, string[]>>(clientConfig.subCategories || {}, `inv_subcats_v2_${clientConfig?.id || 'division'}`);
 
-  // Dynamic Sticky State Operations Data
-  const [deliveryZones] = useStickyState<any[]>(DEFAULT_ZONES, `ops_zones_${clientConfig.id}`);
-  const [storePolicies] = useStickyState<string[]>(DEFAULT_POLICIES, `ops_policies_${clientConfig.id}`);
-  const [team] = useStickyState<any>(DEFAULT_TEAM, `ops_team_${clientConfig.id}`);
-  const [warranty] = useStickyState<string>(DEFAULT_WARRANTY, `ops_warranty_${clientConfig.id}`);
+  // Dynamic Sticky State Operations Data (Pulling from Client Config!)
+  const [deliveryZones] = useStickyState<any[]>(clientConfig.deliveryZones || [], `ops_zones_${clientConfig.id}`);
+  const [storePolicies] = useStickyState<string[]>(clientConfig.storePolicies || [], `ops_policies_${clientConfig.id}`);
+  const [team] = useStickyState<any>(clientConfig.team || { dispatchers: [], drivers: [] }, `ops_team_${clientConfig.id}`);
+  const [warranty] = useStickyState<string>(clientConfig.warranty || "", `ops_warranty_${clientConfig.id}`);
 
   useEffect(() => {
     const fetchLiveInventory = async () => {
@@ -340,7 +314,10 @@ export default function StorefrontTerminal({ clientConfig, onExit }: any) {
   }, [cart, inventory]);
   
   const cartItemCount = Object.values(cart).reduce((total: number, cartItem: any) => total + (cartItem?.qty || 0), 0);
-  const convenienceFee = paymentMethod === 'CASHAPP' ? 10 : 0;
+  
+  // DYNAMIC FEE PULLED FROM CONFIG
+  const digitalFeeAmount = clientConfig?.fees?.digitalPaymentFee || 0;
+  const convenienceFee = paymentMethod === 'CASHAPP' ? digitalFeeAmount : 0;
   const grandTotal = cartTotal + convenienceFee;
 
   const activeZoneObj = deliveryZones.find((z: any) => z.name === detectedZone);
@@ -426,7 +403,7 @@ export default function StorefrontTerminal({ clientConfig, onExit }: any) {
           timeData={timeData} cart={cart} updateCart={updateCart}
           hasSubmittedOnce={hasSubmittedOnce} setHasSubmittedOnce={setHasSubmittedOnce} 
           submittedCart={submittedCart} setSubmittedCart={setSubmittedCart}
-          orderRef={orderRef} setOrderRef={setOrderRef} inventory={inventory}
+          orderRef={orderRef} setOrderRef={setOrderRef} inventory={inventory} clientConfig={clientConfig}
         />
       ) : (
         <StorefrontCatalog 

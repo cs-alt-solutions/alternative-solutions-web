@@ -1,21 +1,9 @@
-// sandbox/apps/storefront/StorefrontCatalog.tsx
 import React, { useEffect, useState } from 'react';
 import { useStickyState } from '@/hooks/useStickyState';
 import { Info, Flame, ShoppingCart, Leaf, Wind, Cookie, Droplet, Shirt, LayoutGrid, Tag, Award, Sparkles, Star, ArrowRight, Home, Activity, ChevronLeft, ChevronRight, RotateCcw, Zap } from 'lucide-react';
 import { StorefrontCard, getRequiredGrams } from './StorefrontComponents';
 import StorefrontHeader from './StorefrontHeader';
 import { IconMap, ThemeMap, getThemeColor } from '../admin/storefront/StorefrontBuilder';
-
-const defaultHomeConfig = {
-  hero: { title: "DAILY DEALS\nARE LIVE", subtitle: "Don't Miss Out On Today's Drops", buttonText: "Click Here For Daily Deals", colorFrom: "cyan-600", colorTo: "blue-600", icon: "Flame" },
-  bento: [
-    { name: "Flower", cat: "Flower & Plants", sub: "All", icon: "Leaf", color: "emerald", desc: "Premium flower and reserve tiers.", span: "md:col-span-2 md:row-span-2", imgUrl: "" },
-    { name: "Vapes", cat: "Vapes & Pens", sub: "All", icon: "Wind", color: "cyan", desc: "Disposables & carts.", span: "col-span-1 md:col-span-1 md:row-span-2", imgUrl: "" },
-    { name: "Pre Rolls", cat: "Flower & Plants", sub: "Pre-Rolls & Blunts", icon: "Tag", color: "pink", desc: "Ready to enjoy.", span: "col-span-1 md:col-span-1 md:row-span-1", imgUrl: "" },
-    { name: "Mystery Bags", cat: "Merch & Extras", sub: "Mystery Bags", icon: "Sparkles", color: "fuchsia", desc: "Surprise assortments.", span: "col-span-1 md:col-span-1 md:row-span-1", imgUrl: "" }
-  ],
-  secondary: { title: "Don't Miss\nThese Deals", subtitle: "While Supplies Last.", buttonText: "Click To Save", colorFrom: "emerald-500", colorTo: "emerald-500", icon: "Award" }
-};
 
 export default function StorefrontCatalog({
   onExit, cartItemCount, cartTotal, setShowPolicies,
@@ -25,7 +13,7 @@ export default function StorefrontCatalog({
   setIsCheckingOut, clientConfig 
 }: any) {
   
-  const [homeConfig] = useStickyState(defaultHomeConfig, `alt_solutions_home_config_v1`);
+  const [homeConfig] = useStickyState(clientConfig.homeConfig || { hero: {}, bento: [], secondary: {} }, `alt_solutions_home_config_v1`);
   const [heroIndex, setHeroIndex] = useState(0);
 
   const isItemOOS = (item: any) => {
@@ -77,14 +65,25 @@ export default function StorefrontCatalog({
   const isFeaturedTab = activeCategory === 'Home' || activeCategory === 'Daily Deals';
   
   const currentDayId = new Date().getDay();
+  const currentDayName = new Date().toLocaleDateString('en-US', { weekday: 'long' });
   
-  const todaysDeals = safeInventory.filter((i: any) => {
-    if (i.dealType === 'One-Shot' || i.dealType === 'Recurring') {
-      if (i.dealDays && i.dealDays.includes(currentDayId)) return true;
-      if (i.dealType === 'Recurring' && (!i.dealDays || i.dealDays.length === 0)) return true;
-      return false;
+  // DYNAMIC DAILY SLOGAN ENGINE - Sourced from Config!
+  const todaySchedule = clientConfig.dailySchedule?.[currentDayId] || { title: "Daily Drop", sub: "Today's recurring specials." };
+  const dayTitle = todaySchedule.title;
+  const daySub = todaySchedule.sub;
+
+  const oneShotDeals = safeInventory.filter((i: any) => {
+    if (i.dealType === 'One-Shot') return i.dealDays && i.dealDays.includes(currentDayId);
+    if (i.dailyDeal && i.dealType !== 'Recurring') return true; 
+    return false;
+  });
+
+  const recurringDeals = safeInventory.filter((i: any) => {
+    if (i.dealType === 'Recurring') {
+      if (!i.dealDays || i.dealDays.length === 0) return true;
+      return i.dealDays.includes(currentDayId);
     }
-    return i.dailyDeal; 
+    return false;
   });
 
   const newDropsBucket = safeInventory.filter((i: any) => i.isNewDrop && !i.isConfiguredDeal && !i.isClearance);
@@ -92,15 +91,15 @@ export default function StorefrontCatalog({
   const smokyStealsBucket = safeInventory.filter((i: any) => i.isClearance && !i.dailyDeal);
   const returnedBucket = safeInventory.filter((i: any) => i.isReturned && !i.isNewDrop && !i.isConfiguredDeal && !i.isClearance);
 
-  const activeTodaysDeals = todaysDeals.filter(item => !isItemOOS(item));
+  const activeTodaysDeals = [...oneShotDeals, ...recurringDeals].filter(item => !isItemOOS(item));
 
   const heroSlides: any[] = [
     {
-      title: homeConfig.hero.title,
-      subtitle: homeConfig.hero.subtitle,
-      buttonText: homeConfig.hero.buttonText,
-      themeColor: getThemeColor((homeConfig.hero as any).color || homeConfig.hero.colorFrom),
-      icon: homeConfig.hero.icon,
+      title: homeConfig.hero.title || "DAILY DEALS",
+      subtitle: homeConfig.hero.subtitle || "Specials",
+      buttonText: homeConfig.hero.buttonText || "Shop",
+      themeColor: getThemeColor((homeConfig.hero as any).color || homeConfig.hero.colorFrom || "cyan-600"),
+      icon: homeConfig.hero.icon || "Flame",
       imgUrl: (homeConfig.hero as any).imgUrl || undefined,
       action: () => {
          const dealsSection = document.getElementById('live-deals-section');
@@ -118,6 +117,7 @@ export default function StorefrontCatalog({
       if (catName === 'Healthcare & Topicals') catName = 'Wellness';
 
       let topText = "DAILY DEAL";
+      if (item.dealType === 'Recurring') topText = dayTitle.toUpperCase();
       if (isNewDrop) topText = "FRESH DROP";
       if (isClearance) topText = "CLEARANCE";
       
@@ -129,7 +129,7 @@ export default function StorefrontCatalog({
         icon: isNewDrop ? "Star" : isClearance ? "Tag" : "Flame",
         imgUrl: item.imageUrl || item.imgUrl || item.image || item.image_url || undefined,
         action: () => {
-           const dealsSection = document.getElementById('live-deals-section');
+           const dealsSection = document.getElementById(item.dealType === 'Recurring' ? 'recurring-deals-section' : 'live-deals-section');
            if (dealsSection) dealsSection.scrollIntoView({ behavior: 'smooth' });
         }
       };
@@ -149,8 +149,12 @@ export default function StorefrontCatalog({
   const activeHero = heroSlides[heroIndex] || heroSlides[0];
   const activeTheme = ThemeMap[activeHero.themeColor] || ThemeMap['cyan'];
   const ActiveHeroIcon = IconMap[activeHero.icon] || Flame;
-  const secTheme = ThemeMap[getThemeColor((homeConfig.secondary as any).color || homeConfig.secondary.colorFrom)] || ThemeMap['emerald'];
-  const SecIcon = IconMap[homeConfig.secondary.icon] || Award;
+  
+  const secTitle = homeConfig.secondary?.title || "Specials";
+  const secSubtitle = homeConfig.secondary?.subtitle || "Don't miss out.";
+  const secBtnText = homeConfig.secondary?.buttonText || "Shop";
+  const secTheme = ThemeMap[getThemeColor((homeConfig.secondary as any)?.color || homeConfig.secondary?.colorFrom || "emerald-500")] || ThemeMap['emerald'];
+  const SecIcon = IconMap[homeConfig.secondary?.icon || 'Award'] || Award;
   
   const isMasterSlide = heroIndex === 0;
 
@@ -180,7 +184,6 @@ export default function StorefrontCatalog({
            <div className="animate-in fade-in slide-in-from-bottom-4 space-y-10 pt-2 sm:pt-0">
              
              {/* THE NEON BILLBOARD CAROUSEL */}
-             {/* FIXED: Replaced variable min-heights with absolute locked heights (h-[400px] md:h-[500px]) to prevent glitchy container jumping */}
              <div onClick={activeHero.action} className={`w-full ${activeHero.imgUrl ? 'bg-zinc-950' : activeTheme.heroGrad} cursor-pointer rounded-3xl ${isMasterSlide ? 'p-4 md:p-8' : 'p-8 md:p-12'} flex flex-col justify-end shadow-2xl overflow-hidden relative group transition-all duration-700 h-[400px] md:h-[500px]`}>
                 
                 {/* Background Textures */}
@@ -203,7 +206,6 @@ export default function StorefrontCatalog({
                 {/* Content Logic */}
                 {isMasterSlide ? (
                     <div className="relative z-10 flex flex-col items-center justify-center w-full h-full my-auto py-4 pointer-events-none">
-                        {/* FIXED: Removed the border, background box, and shadow to create a free-floating neon sign effect */}
                         <div className="flex flex-col items-center text-center animate-[pulse_3s_ease-in-out_infinite] max-w-3xl mx-auto w-full">
                             <div className="relative mb-2">
                               <ActiveHeroIcon size={48} className="text-pink-500 drop-shadow-[0_0_15px_rgba(236,72,153,1)] animate-bounce relative z-10" />
@@ -273,59 +275,106 @@ export default function StorefrontCatalog({
              </div>
 
              {/* DYNAMIC: Auto-Packing Dense Bento Grid */}
-             <div className="pt-4">
-               <h3 className="text-xl sm:text-2xl font-black uppercase tracking-tighter text-zinc-100 mb-6 text-center">Shop By Categories</h3>
-               <div className="grid grid-cols-2 md:grid-cols-4 gap-4 grid-flow-row-dense auto-rows-[160px] md:auto-rows-[180px]">
-                 {homeConfig.bento.map((c: any, idx: number) => {
-                   const BIcon = IconMap[c.icon] || Tag;
-                   const sanitizedSpan = c.span.replace(/md:col-start-\d+/g, '').trim();
-                   const theme = ThemeMap[getThemeColor(c.color)] || ThemeMap['emerald'];
+             {homeConfig.bento && homeConfig.bento.length > 0 && (
+               <div className="pt-4">
+                 <h3 className="text-xl sm:text-2xl font-black uppercase tracking-tighter text-zinc-100 mb-6 text-center">Shop By Categories</h3>
+                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4 grid-flow-row-dense auto-rows-[160px] md:auto-rows-[180px]">
+                   {homeConfig.bento.map((c: any, idx: number) => {
+                     const BIcon = IconMap[c.icon] || Tag;
+                     const sanitizedSpan = c.span.replace(/md:col-start-\d+/g, '').trim();
+                     const theme = ThemeMap[getThemeColor(c.color)] || ThemeMap['emerald'];
 
-                   return (
-                     <button 
-                       key={idx}
-                       onClick={() => {
-                          setActiveCategory(c.cat);
-                          if (c.sub) setActiveSubCategory(c.sub);
-                          else setActiveSubCategory('All');
-                       }}
-                       className={`rounded-3xl p-6 flex flex-col items-start justify-end gap-1 ${theme.bentoHover} transition-all group relative overflow-hidden ${sanitizedSpan} bg-zinc-950 border-2 border-zinc-800 shadow-lg`}
-                     >
-                       {c.imgUrl ? (
-                          <div className="absolute inset-0 z-0 group-hover:scale-105 transition-transform duration-700">
-                             <img src={c.imgUrl} alt={c.name} className="w-full h-full object-cover opacity-40 mix-blend-luminosity" />
-                             <div className={`absolute inset-0 bg-linear-to-t from-zinc-950 via-zinc-950/60 to-zinc-950/40`} />
-                             <div className={`absolute inset-0 bg-linear-to-t ${theme.bentoOverlay} opacity-30`} />
-                          </div>
-                       ) : (
-                          <div className={`absolute inset-0 z-0 ${theme.bentoFallback} group-hover:scale-105 transition-transform duration-700`} />
-                       )}
-  
-                       <div className="relative z-10 w-full flex flex-col items-start">
-                          <div className={`p-3 rounded-xl border border-zinc-800/50 mb-4 group-hover:scale-110 transition-transform bg-zinc-950/80 ${theme.bentoIconText}`}>
-                             <BIcon size={24} />
-                          </div>
-                          <span className="text-sm sm:text-lg font-black uppercase tracking-widest text-zinc-100 drop-shadow-md">{c.name}</span>
-                          <p className={`text-[9px] sm:text-[10px] font-bold text-zinc-400 uppercase tracking-widest leading-relaxed text-left ${(sanitizedSpan.includes('row-span-2') ? '' : 'hidden md:block')}`}>
-                             {c.desc}
-                          </p>
-                       </div>
-                     </button>
-                   );
-                 })}
+                     return (
+                       <button 
+                         key={idx}
+                         onClick={() => {
+                            setActiveCategory(c.cat);
+                            if (c.sub) setActiveSubCategory(c.sub);
+                            else setActiveSubCategory('All');
+                         }}
+                         className={`rounded-3xl p-6 flex flex-col items-start justify-end gap-1 ${theme.bentoHover} transition-all group relative overflow-hidden ${sanitizedSpan} bg-zinc-950 border-2 border-zinc-800 shadow-lg`}
+                       >
+                         {c.imgUrl ? (
+                            <div className="absolute inset-0 z-0 group-hover:scale-105 transition-transform duration-700">
+                               <img src={c.imgUrl} alt={c.name} className="w-full h-full object-cover opacity-40 mix-blend-luminosity" />
+                               <div className={`absolute inset-0 bg-linear-to-t from-zinc-950 via-zinc-950/60 to-zinc-950/40`} />
+                               <div className={`absolute inset-0 bg-linear-to-t ${theme.bentoOverlay} opacity-30`} />
+                            </div>
+                         ) : (
+                            <div className={`absolute inset-0 z-0 ${theme.bentoFallback} group-hover:scale-105 transition-transform duration-700`} />
+                         )}
+    
+                         <div className="relative z-10 w-full flex flex-col items-start">
+                            <div className={`p-3 rounded-xl border border-zinc-800/50 mb-4 group-hover:scale-110 transition-transform bg-zinc-950/80 ${theme.bentoIconText}`}>
+                               <BIcon size={24} />
+                            </div>
+                            <span className="text-sm sm:text-lg font-black uppercase tracking-widest text-zinc-100 drop-shadow-md">{c.name}</span>
+                            <p className={`text-[9px] sm:text-[10px] font-bold text-zinc-400 uppercase tracking-widest leading-relaxed text-left ${(sanitizedSpan.includes('row-span-2') ? '' : 'hidden md:block')}`}>
+                               {c.desc}
+                            </p>
+                         </div>
+                       </button>
+                     );
+                   })}
+                 </div>
                </div>
-             </div>
+             )}
 
              {/* DYNAMIC: Promo Banner 2 (Secondary) */}
-             {/* FIXED: Locked height to match design flow and prevent variable size jumps */}
              <div className={`w-full h-[250px] md:h-[300px] ${secTheme.secBg} rounded-3xl p-8 md:p-12 flex flex-col md:flex-row items-center justify-between shadow-xl border border-zinc-700 overflow-hidden relative group`}>
                 <div className="relative z-10 my-auto">
-                  <p className="text-xs font-black uppercase tracking-widest text-zinc-900 mb-2">{homeConfig.secondary.subtitle}</p>
-                  <h2 className="text-4xl md:text-5xl font-black text-zinc-950 uppercase tracking-tighter leading-none mb-6 whitespace-pre-line">{homeConfig.secondary.title}</h2>
-                  <button className={`bg-zinc-950 ${secTheme.secBtnText} px-6 py-3 rounded-xl text-xs font-black uppercase tracking-widest shadow-lg border border-zinc-800`}>{homeConfig.secondary.buttonText}</button>
+                  <p className="text-xs font-black uppercase tracking-widest text-zinc-900 mb-2">{secSubtitle}</p>
+                  <h2 className="text-4xl md:text-5xl font-black text-zinc-950 uppercase tracking-tighter leading-none mb-6 whitespace-pre-line">{secTitle}</h2>
+                  <button className={`bg-zinc-950 ${secTheme.secBtnText} px-6 py-3 rounded-xl text-xs font-black uppercase tracking-widest shadow-lg border border-zinc-800`}>{secBtnText}</button>
                 </div>
                 <SecIcon size={140} className="text-black/10 absolute right-0 md:-right-4 top-1/2 -translate-y-1/2 group-hover:rotate-12 transition-transform duration-700" />
              </div>
+
+             {/* DYNAMIC DAY: RECURRING DEALS SECTION */}
+             {recurringDeals.length > 0 && (
+                <div id="recurring-deals-section" className="pt-8 animate-in fade-in slide-in-from-bottom-8 duration-700 mt-6 border-t border-zinc-800/50 scroll-mt-24 relative overflow-hidden">
+                   <div className="absolute top-0 left-1/4 w-1/3 h-32 bg-indigo-500/5 blur-3xl rounded-full" />
+                   
+                   <div className="flex items-center gap-6 mb-8 pt-6 relative z-10 pl-2">
+                     <div className="shrink-0 border-[3px] border-rose-500 text-rose-500 px-3 py-1 rounded-md transform -rotate-12 shadow-[0_0_15px_rgba(244,63,94,0.4)] bg-zinc-950/80 backdrop-blur-sm relative after:absolute after:inset-0 after:border after:border-rose-500/30 after:rounded-md after:m-[-6px]">
+                       <span className="text-lg md:text-2xl font-black uppercase tracking-[0.2em] leading-none block pt-1">
+                         {currentDayName}
+                       </span>
+                     </div>
+                     <div>
+                       <h3 className="text-3xl md:text-5xl font-black uppercase tracking-tighter text-transparent bg-clip-text bg-linear-to-r from-violet-500 via-indigo-400 to-cyan-400 drop-shadow-[0_0_10px_rgba(99,102,241,0.3)]">{dayTitle}</h3>
+                       <p className="text-xs font-bold text-zinc-400 uppercase tracking-widest mt-1">{daySub}</p>
+                     </div>
+                   </div>
+                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 relative z-10">
+                     {recurringDeals.map((item: any) => (
+                       <StorefrontCard key={item.id} item={item} cart={cart} updateCart={updateCart} clientConfig={clientConfig} />
+                     ))}
+                   </div>
+                </div>
+             )}
+
+             {/* LIVE RIGHT NOW: ONE-SHOT FLASH DEALS */}
+             {oneShotDeals.length > 0 && (
+                <div id="live-deals-section" className="pt-8 animate-in fade-in slide-in-from-bottom-8 duration-700 mt-6 border-t border-zinc-800/50 scroll-mt-24 relative overflow-hidden">
+                   <div className="absolute top-0 right-1/4 w-1/3 h-32 bg-orange-500/5 blur-3xl rounded-full" />
+                   
+                   <div className="flex items-center gap-4 mb-8 pt-6 relative z-10">
+                     <div className="p-3 bg-orange-500/10 rounded-2xl border border-orange-500/40 shadow-[0_0_20px_rgba(249,115,22,0.3)]">
+                       <Flame size={24} className="text-orange-400 animate-bounce" />
+                     </div>
+                     <div>
+                       <h3 className="text-3xl md:text-5xl font-black uppercase tracking-tighter text-transparent bg-clip-text bg-linear-to-r from-pink-500 via-orange-400 to-yellow-400 drop-shadow-[0_0_10px_rgba(249,115,22,0.3)]">Live Right Now</h3>
+                       <p className="text-xs font-bold text-zinc-400 uppercase tracking-widest mt-1">Active daily flash promos.</p>
+                     </div>
+                   </div>
+                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 relative z-10">
+                     {oneShotDeals.map((item: any, idx: number) => (
+                       <StorefrontCard key={item.id} item={item} cart={cart} updateCart={updateCart} clientConfig={clientConfig} isHero={idx === 0} />
+                     ))}
+                   </div>
+                </div>
+             )}
 
              {/* CAROUSEL: NEW ARRIVALS */}
              {newDropsBucket.length > 0 && (
@@ -375,28 +424,6 @@ export default function StorefrontCatalog({
                 </div>
              )}
 
-             {/* REGULAR LIVE DEALS */}
-             {todaysDeals.length > 0 && (
-                <div id="live-deals-section" className="pt-8 animate-in fade-in slide-in-from-bottom-8 duration-700 mt-6 border-t border-zinc-800/50 scroll-mt-24 relative overflow-hidden">
-                   <div className="absolute top-0 right-1/4 w-1/3 h-32 bg-orange-500/5 blur-3xl rounded-full" />
-                   
-                   <div className="flex items-center gap-4 mb-8 pt-6 relative z-10">
-                     <div className="p-3 bg-orange-500/10 rounded-2xl border border-orange-500/40 shadow-[0_0_20px_rgba(249,115,22,0.3)]">
-                       <Flame size={24} className="text-orange-400 animate-bounce" />
-                     </div>
-                     <div>
-                       <h3 className="text-3xl md:text-5xl font-black uppercase tracking-tighter text-transparent bg-clip-text bg-linear-to-r from-pink-500 via-orange-400 to-yellow-400 drop-shadow-[0_0_10px_rgba(249,115,22,0.3)]">Live Right Now</h3>
-                       <p className="text-xs font-bold text-zinc-400 uppercase tracking-widest mt-1">Active daily and weekly promos.</p>
-                     </div>
-                   </div>
-                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 relative z-10">
-                     {todaysDeals.map((item: any, idx: number) => (
-                       <StorefrontCard key={item.id} item={item} cart={cart} updateCart={updateCart} clientConfig={clientConfig} isHero={idx === 0} />
-                     ))}
-                   </div>
-                </div>
-             )}
-
              {/* SMOKY STEALS */}
              {smokyStealsBucket.length > 0 && (
                 <div className="pt-8 animate-in fade-in zoom-in-95 slide-in-from-bottom-12 duration-1000 mt-8 border-t border-zinc-800/50 relative overflow-hidden">
@@ -440,7 +467,7 @@ export default function StorefrontCatalog({
                </div>
              )}
 
-             {todaysDeals.length === 0 && newDropsBucket.length === 0 && premiumVaultBucket.length === 0 && smokyStealsBucket.length === 0 && returnedBucket.length === 0 && (
+             {oneShotDeals.length === 0 && recurringDeals.length === 0 && newDropsBucket.length === 0 && premiumVaultBucket.length === 0 && smokyStealsBucket.length === 0 && returnedBucket.length === 0 && (
                <div className="flex flex-col items-center justify-center py-24 bg-zinc-900/20 rounded-3xl border border-dashed border-zinc-800/50 mt-6">
                   <div className="w-16 h-16 bg-zinc-950 rounded-full border border-zinc-800 flex items-center justify-center mb-4"> <Info size={24} className="text-zinc-600" /> </div>
                   <p className="text-zinc-400 font-bold text-sm uppercase tracking-widest">No Active Stock</p>
