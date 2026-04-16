@@ -48,9 +48,11 @@ export const divisionConfig = {
   homeConfig: {
     hero: { title: "DAILY DEALS\nARE LIVE", subtitle: "Don't Miss Out On Today's Drops", buttonText: "Click Here For Daily Deals", colorFrom: "cyan-600", colorTo: "blue-600", icon: "Flame" },
     bento: [
-      { name: "Flower", cat: "Flower & Plants", sub: "All", icon: "Leaf", color: "emerald", desc: "Premium flower and reserve tiers.", span: "md:col-span-2 md:row-span-2", imgUrl: "" },
+      // 👇 CHANGED cat TO "Flower & Prerolls"
+      { name: "Flower", cat: "Flower & Prerolls", sub: "All", icon: "Leaf", color: "emerald", desc: "Premium flower and reserve tiers.", span: "md:col-span-2 md:row-span-2", imgUrl: "" },
       { name: "Vapes", cat: "Vapes & Pens", sub: "All", icon: "Wind", color: "cyan", desc: "Disposables & carts.", span: "col-span-1 md:col-span-1 md:row-span-2", imgUrl: "" },
-      { name: "Pre Rolls", cat: "Flower & Plants", sub: "Pre-Rolls & Blunts", icon: "Tag", color: "pink", desc: "Ready to enjoy.", span: "col-span-1 md:col-span-1 md:row-span-1", imgUrl: "" },
+      // 👇 CHANGED cat TO "Flower & Prerolls"
+      { name: "Pre Rolls", cat: "Flower & Prerolls", sub: "Pre-Rolls & Blunts", icon: "Tag", color: "pink", desc: "Ready to enjoy.", span: "col-span-1 md:col-span-1 md:row-span-1", imgUrl: "" },
       { name: "Mystery Bags", cat: "Merch & Extras", sub: "Mystery Bags", icon: "Sparkles", color: "fuchsia", desc: "Surprise assortments.", span: "col-span-1 md:col-span-1 md:row-span-1", imgUrl: "" }
     ],
     secondary: { title: "Don't Miss\nThese Deals", subtitle: "While Supplies Last.", buttonText: "Click To Save", colorFrom: "emerald-500", colorTo: "emerald-500", icon: "Award" }

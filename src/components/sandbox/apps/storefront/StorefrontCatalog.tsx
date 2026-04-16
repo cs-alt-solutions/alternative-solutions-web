@@ -13,7 +13,6 @@ export default function StorefrontCatalog({
   setIsCheckingOut, clientConfig 
 }: any) {
   
-  // DYNAMIC CONFIG HOOKUP: Read straight from DB passed via clientConfig
   const fallbackConfig = { hero: {}, bento: [], secondary: {} };
   const [homeConfig] = useStickyState(clientConfig?.homeConfig || fallbackConfig, `alt_solutions_home_config_v3_${clientConfig?.id}`);
   
@@ -22,7 +21,7 @@ export default function StorefrontCatalog({
   const isItemOOS = (item: any) => {
      const activeSubCat = item.subCategory?.toLowerCase() || '';
      const isPreRoll = activeSubCat.includes('pre-roll') || activeSubCat.includes('blunt');
-     const isRawFlower = item.mainCategory === 'Flower & Plants' && !isPreRoll;
+     const isRawFlower = item.mainCategory === 'Flower & Prerolls' && !isPreRoll; // FIXED
 
      if (isRawFlower) {
          const minGrams = item.sizes?.length > 0 ? Math.min(...item.sizes.map((s:any) => getRequiredGrams(s.label))) : 1;
@@ -58,7 +57,7 @@ export default function StorefrontCatalog({
   let bgBoxClass = "bg-emerald-500/10 border-emerald-500/20";
   let textGradientClass = "from-emerald-400 via-cyan-400 to-blue-500";
 
-  if (activeCategory === 'Flower & Plants') HeaderIcon = Leaf;
+  if (activeCategory === 'Flower & Prerolls') HeaderIcon = Leaf; // FIXED
   else if (activeCategory === 'Vapes & Pens') { HeaderIcon = Wind; iconColorClass = "text-cyan-400"; bgBoxClass = "bg-cyan-500/10 border-cyan-500/20"; textGradientClass = "from-cyan-400 via-blue-400 to-indigo-500"; }
   else if (activeCategory === 'Edibles') { HeaderIcon = Cookie; iconColorClass = "text-amber-400"; bgBoxClass = "bg-amber-500/10 border-amber-500/20"; textGradientClass = "from-amber-400 via-orange-400 to-rose-500"; }
   else if (activeCategory === 'Concentrates') { HeaderIcon = Droplet; iconColorClass = "text-orange-500"; bgBoxClass = "bg-orange-500/10 border-orange-500/20"; textGradientClass = "from-orange-500 via-red-400 to-rose-600"; }
@@ -70,7 +69,6 @@ export default function StorefrontCatalog({
   const currentDayId = new Date().getDay();
   const currentDayName = new Date().toLocaleDateString('en-US', { weekday: 'long' });
   
-  // DYNAMIC DAILY SLOGAN ENGINE
   let dayTitle = "Daily Drop";
   let daySub = "Today's recurring specials.";
   
@@ -123,7 +121,7 @@ export default function StorefrontCatalog({
       const isClearance = item.campaignTag === 'VAULT_CLEARANCE';
       
       let catName = item.subCategory && item.subCategory !== 'All' ? item.subCategory : item.mainCategory;
-      if (catName === 'Flower & Plants') catName = 'Premium Flower';
+      if (catName === 'Flower & Prerolls') catName = 'Premium Flower'; // FIXED
       if (catName === 'Vapes & Pens') catName = 'Vapes';
       if (catName === 'Merch & Extras') catName = 'Gear';
       if (catName === 'Healthcare & Topicals') catName = 'Wellness';

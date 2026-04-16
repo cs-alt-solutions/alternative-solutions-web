@@ -27,7 +27,7 @@ export default function StorefrontHeader({
     } else if (cat === 'All') {
       Icon = LayoutGrid;
       iconColor = "text-emerald-500";
-    } else if (cat === 'Flower & Plants') {
+    } else if (cat === 'Flower & Prerolls') { // FIXED MAPPING
       Icon = Leaf;
       iconColor = "text-emerald-400";
     } else if (cat === 'Vapes & Pens') {
@@ -111,7 +111,6 @@ export default function StorefrontHeader({
           </div>
         </div>
 
-        {/* UNIFIED APP DRAWER */}
         {isMenuOpen && (
           <div className="absolute top-full left-0 w-full sm:w-80 bg-zinc-950/95 backdrop-blur-xl border-b sm:border-r border-zinc-800 shadow-[0_20px_40px_rgba(0,0,0,0.5)] z-50 flex flex-col max-h-[80vh] overflow-y-auto animate-in slide-in-from-top-2 sm:slide-in-from-left-2">
             <div className="p-4 border-b border-zinc-800/80 bg-zinc-900/30">

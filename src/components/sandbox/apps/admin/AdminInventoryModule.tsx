@@ -1,4 +1,3 @@
-// sandbox/apps/admin/AdminInventoryModule.tsx
 'use client';
 
 import React, { useState, useMemo, useEffect } from 'react';
@@ -12,10 +11,9 @@ import AdminInventoryHeader from './AdminInventoryHeader';
 import AdminInventoryToolbar from './AdminInventoryToolbar';
 import AdminInventoryTable from './AdminInventoryTable';
 
-// FIXED: Receives the jumpToEditItem bridge state from AdminTerminal
 export default function AdminInventoryModule({ stock, setStock, inventoryMatrix, setNotification, clientConfig, jumpToEditItem, clearJumpToEdit }: any) {
   
-  const mainCategories = clientConfig.categories || ['Flower & Plants', 'Vapes & Pens', 'Edibles', 'Concentrates', 'Healthcare & Topicals', 'Merch & Extras'];
+  const mainCategories = clientConfig.categories || ['Flower & Prerolls', 'Vapes & Pens', 'Edibles', 'Concentrates', 'Healthcare & Topicals', 'Merch & Extras'];
   const defaultSubCats = clientConfig.subCategories || {};
   const defaultTiers = clientConfig.pricingTiers || [];
 
@@ -31,6 +29,7 @@ export default function AdminInventoryModule({ stock, setStock, inventoryMatrix,
 
   const [searchTerm, setSearchTerm] = useState('');
   const [categoryFilter, setCategoryFilter] = useState('All');
+  const [subCategoryFilter, setSubCategoryFilter] = useState('All'); // NEW FILTER STATE
   const [statusFilter, setStatusFilter] = useState('All');
   const [sortConfig, setSortConfig] = useState({ key: 'name', direction: 'asc' });
 
@@ -66,7 +65,6 @@ export default function AdminInventoryModule({ stock, setStock, inventoryMatrix,
     }
   };
 
-  // FIXED: The auto-trigger effect that catches the jump command
   useEffect(() => {
     if (jumpToEditItem) {
       openEditor(jumpToEditItem);
@@ -195,20 +193,30 @@ export default function AdminInventoryModule({ stock, setStock, inventoryMatrix,
   const processedInventory = useMemo(() => {
     let result = [...inventoryMatrix];
 
+    // Status Mode Filter
     if (viewMode === 'active') {
       result = result.filter(i => i.status !== 'archived');
     } else {
       result = result.filter(i => i.status === 'archived');
     }
 
+    // Search Filter
     if (searchTerm) {
       const lowerTerm = searchTerm.toLowerCase();
       result = result.filter(i => i.name?.toLowerCase().includes(lowerTerm) || i.id?.toLowerCase().includes(lowerTerm) || i.brand?.toLowerCase().includes(lowerTerm));
     }
+    
+    // Main Category Filter
     if (categoryFilter !== 'All') {
       result = result.filter(i => i.mainCategory === categoryFilter);
     }
+
+    // NEW: Subcategory Filter
+    if (subCategoryFilter !== 'All') {
+       result = result.filter(i => i.subCategory === subCategoryFilter);
+    }
     
+    // Promotional/Stock Status Filter
     if (statusFilter !== 'All') {
       if (statusFilter === 'Active Promo') result = result.filter(i => i.dailyDeal);
       if (statusFilter === 'Top Shelf') result = result.filter(i => i.isTopShelf);
@@ -229,6 +237,7 @@ export default function AdminInventoryModule({ stock, setStock, inventoryMatrix,
       });
     }
 
+    // Sorter
     result.sort((a, b) => {
       let aVal: any = 0; let bVal: any = 0;
       if (sortConfig.key === 'name') { aVal = a.name?.toLowerCase() || ''; bVal = b.name?.toLowerCase() || ''; }
@@ -249,9 +258,9 @@ export default function AdminInventoryModule({ stock, setStock, inventoryMatrix,
       return 0;
     });
     return result;
-  }, [inventoryMatrix, searchTerm, categoryFilter, statusFilter, sortConfig, viewMode]);
+  }, [inventoryMatrix, searchTerm, categoryFilter, subCategoryFilter, statusFilter, sortConfig, viewMode]); // Added subCategoryFilter dependency
 
-  if (isManagingCats) return <AdminInventoryCategoryManager mainCategories={mainCategories} subCategories={subCategories} setSubCategories={setSubCategories} standardTiers={standardTiers} setStandardTiers={setStandardTiers} setNotification={setNotification} onClose={() => setIsManagingCats(false)} />;
+  if (isManagingCats) return <AdminInventoryCategoryManager clientConfig={clientConfig} mainCategories={mainCategories} subCategories={subCategories} setSubCategories={setSubCategories} standardTiers={standardTiers} setStandardTiers={setStandardTiers} setNotification={setNotification} onClose={() => setIsManagingCats(false)} />;
   
   if (editingItem) return (
     <AdminInventoryEditor 
@@ -310,6 +319,7 @@ export default function AdminInventoryModule({ stock, setStock, inventoryMatrix,
       <AdminInventoryToolbar 
         searchTerm={searchTerm} setSearchTerm={setSearchTerm}
         categoryFilter={categoryFilter} setCategoryFilter={setCategoryFilter} mainCategories={mainCategories}
+        subCategoryFilter={subCategoryFilter} setSubCategoryFilter={setSubCategoryFilter} subCategories={subCategories}
         statusFilter={statusFilter} setStatusFilter={setStatusFilter}
       />
 

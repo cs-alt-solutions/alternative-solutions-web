@@ -1,7 +1,9 @@
 import React, { useState } from 'react';
-import { Tag, X, Plus, Scale, GripVertical } from 'lucide-react';
+import { Tag, X, Plus, Scale, GripVertical, Activity, CloudLightning } from 'lucide-react';
+import { createClient } from '@supabase/supabase-js';
 
 export default function AdminInventoryCategoryManager({ 
+  clientConfig, // Allows us to target the correct database row
   mainCategories, 
   subCategories, setSubCategories, 
   standardTiers, setStandardTiers, 
@@ -11,9 +13,48 @@ export default function AdminInventoryCategoryManager({
   const [newSubCatName, setNewSubCatName] = useState('');
   const [selectedMainCatForNewSub, setSelectedMainCatForNewSub] = useState(mainCategories[0]);
   const [newTierName, setNewTierName] = useState('');
+  const [isPublishing, setIsPublishing] = useState(false);
 
   // --- DRAG AND DROP STATE ---
   const [draggedItem, setDraggedItem] = useState<{ cat: string, index: number } | null>(null);
+
+  // --- NEW: PUSH TO SUPABASE ---
+  const handlePublishToDatabase = async () => {
+    setIsPublishing(true);
+    try {
+        const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
+        const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
+        const supabase = createClient(supabaseUrl, supabaseKey);
+        
+        // Fallback to 'division' if clientConfig isn't explicitly passed down yet
+        const clientId = clientConfig?.id || 'division';
+
+        // 1. Fetch current settings to merge
+        const { data, error } = await supabase.from('client_settings').select('payload').eq('client_id', clientId).single();
+        const currentPayload = data?.payload || {};
+        
+        // 2. Overwrite with the newly ordered subcategories and tiers
+        const updatedPayload = { 
+            ...currentPayload, 
+            subCategories: subCategories,
+            pricingTiers: standardTiers // Saves pricing tiers to DB as well
+        };
+
+        // 3. Push to DB
+        const { error: updateError } = await supabase.from('client_settings').update({ 
+            payload: updatedPayload,
+            updated_at: new Date().toISOString()
+        }).eq('client_id', clientId);
+
+        if (updateError) throw updateError;
+        setNotification("Categories & Tiers Published to Live Storefront!");
+    } catch (err) {
+        console.error("Publish Error:", err);
+        setNotification("Failed to publish to database.");
+    } finally {
+        setIsPublishing(false);
+    }
+  };
 
   const handleAddSubCategory = (e: React.FormEvent) => {
     e.preventDefault();
@@ -37,7 +78,6 @@ export default function AdminInventoryCategoryManager({
   // --- DRAG AND DROP HANDLERS ---
   const handleDragStart = (e: React.DragEvent, cat: string, index: number) => {
     setDraggedItem({ cat, index });
-    // Makes the drag image slightly transparent
     e.currentTarget.classList.add('opacity-50');
   };
 
@@ -46,15 +86,12 @@ export default function AdminInventoryCategoryManager({
     if (!draggedItem || draggedItem.cat !== cat) return;
     if (draggedItem.index === targetIndex) return;
 
-    // Create a deep copy of the current list
     const currentList = [...subCategories[cat]];
     const draggedElement = currentList[draggedItem.index];
 
-    // Splice to reorder
     currentList.splice(draggedItem.index, 1);
     currentList.splice(targetIndex, 0, draggedElement);
 
-    // Update state instantly for live UI feedback
     setSubCategories({ ...subCategories, [cat]: currentList });
     setDraggedItem({ cat, index: targetIndex });
   };
@@ -83,13 +120,24 @@ export default function AdminInventoryCategoryManager({
   };
 
   return (
-    <div className="p-4 md:p-8 animate-in slide-in-from-right-8 space-y-8">
+    <div className="p-4 md:p-8 animate-in slide-in-from-right-8 space-y-8 pb-32">
       <div className="flex items-center justify-between">
         <div>
            <h2 className="text-2xl font-black text-white uppercase tracking-tight">Database Settings</h2>
            <p className="text-[10px] font-bold text-zinc-500 uppercase tracking-[0.2em] mt-1">Map Categories & Tiers</p>
         </div>
-        <button onClick={onClose} className="p-2 bg-zinc-900 border border-zinc-800 rounded-xl text-zinc-500 hover:text-rose-400 transition-colors shadow-lg active:scale-95"><X size={20}/></button>
+        <div className="flex items-center gap-4">
+           {/* THE NEW PUBLISH BUTTON */}
+           <button 
+              onClick={handlePublishToDatabase}
+              disabled={isPublishing}
+              className="bg-cyan-500 hover:bg-cyan-400 text-zinc-950 px-6 py-2.5 rounded-xl text-xs font-black uppercase tracking-widest flex items-center gap-2 transition-all shadow-[0_0_20px_rgba(6,182,212,0.3)] hover:scale-105 active:scale-95 disabled:opacity-50"
+           >
+              {isPublishing ? <Activity size={16} className="animate-spin" /> : <CloudLightning size={16} />} 
+              {isPublishing ? 'Syncing...' : 'Publish to Live'}
+           </button>
+           <button onClick={onClose} className="p-2 bg-zinc-900 border border-zinc-800 rounded-xl text-zinc-500 hover:text-rose-400 transition-colors shadow-lg active:scale-95"><X size={20}/></button>
+        </div>
       </div>
 
       {/* SECTION 1: SUBCATEGORIES */}
@@ -165,7 +213,6 @@ export default function AdminInventoryCategoryManager({
           </div>
         </div>
       </div>
-
     </div>
   );
 }

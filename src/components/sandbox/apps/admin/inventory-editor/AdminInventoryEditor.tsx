@@ -85,7 +85,8 @@ export default function AdminInventoryEditor({ initialItem, isAdding, mainCatego
       const defaultMain = initialItem?.mainCategory || mainCategories[0];
       const defaultSub = initialItem?.subCategory || subCategories[defaultMain]?.[0] || 'Uncategorized';
       
-      const isFlowerCat = defaultMain === 'Flower & Plants';
+      // FIXED MAPPING: Updated from "Flower & Plants" to "Flower & Prerolls"
+      const isFlowerCat = defaultMain === 'Flower & Prerolls';
       const isPreRollCat = defaultSub === 'Pre-Rolls & Blunts';
       const isRawFlower = isFlowerCat && !isPreRollCat;
       
@@ -154,7 +155,9 @@ export default function AdminInventoryEditor({ initialItem, isAdding, mainCatego
     }
 
     let newSizes = [...updatedItem.sizes];
-    const isFlowerCat = newMain === 'Flower & Plants';
+    
+    // FIXED MAPPING: Updated from "Flower & Plants" to "Flower & Prerolls"
+    const isFlowerCat = newMain === 'Flower & Prerolls';
     const isPreRollCat = newSub === 'Pre-Rolls & Blunts';
     const isRawFlowerCat = isFlowerCat && !isPreRollCat;
 
@@ -284,7 +287,8 @@ export default function AdminInventoryEditor({ initialItem, isAdding, mainCatego
   const activeMainCat = updatedItem.mainCategory;
   const activeSubCat = updatedItem.subCategory;
   
-  const isFlowerCat = activeMainCat === 'Flower & Plants';
+  // FIXED MAPPING: Updated from "Flower & Plants" to "Flower & Prerolls"
+  const isFlowerCat = activeMainCat === 'Flower & Prerolls';
   const isPreRoll = isFlowerCat && activeSubCat === 'Pre-Rolls & Blunts';
   const isRawFlower = isFlowerCat && !isPreRoll;
   
@@ -295,7 +299,6 @@ export default function AdminInventoryEditor({ initialItem, isAdding, mainCatego
   
   const showVariants = !isRawFlower && !isMerch; 
   const showDNA = !isVape && !isMerch; 
-  // LINEAGE HIDDEN FOR HEALTHCARE & TOPICALS
   const showLineage = !isMerch && !isDisposable && !isTopical;
   const showWeightTiers = isRawFlower;
   const showUnitPrice = !isRawFlower;
