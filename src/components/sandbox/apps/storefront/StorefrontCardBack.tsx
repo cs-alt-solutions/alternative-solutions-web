@@ -41,7 +41,6 @@ export default function StorefrontCardBack({
   const isPreRoll = activeSubCat.includes('pre-roll') || activeSubCat.includes('blunt');
   const isRawFlower = isFlower && !isPreRoll;
   
-  // NEW: We now treat both Vapes and Pre-Rolls as "Expanded Variant" layouts
   const expandVariants = isVape || isPreRoll;
   const expectsDNA = !expandVariants && !isMerch;
 
@@ -99,7 +98,6 @@ export default function StorefrontCardBack({
 
   const currentSubtotal = lineTotal;
 
-  // Pushes any out-of-stock size tiers to the bottom of the list
   const sortedSizes = [...safeSizes].sort((a: any, b: any) => {
     const aReq = isRawFlower ? getRequiredGrams(a.label) : 1;
     const bReq = isRawFlower ? getRequiredGrams(b.label) : 1;
@@ -108,7 +106,6 @@ export default function StorefrontCardBack({
     return aOOS - bOOS;
   });
 
-  // Pushes any out-of-stock variants/flavors to the bottom of the scrollable list
   const sortedOptions = [...safeOptions].sort((a: any, b: any) => {
     const aStock = a.stock !== undefined ? a.stock : displayStock;
     const bStock = b.stock !== undefined ? b.stock : displayStock;
@@ -177,7 +174,7 @@ export default function StorefrontCardBack({
         </div>
       </div>
 
-      {/* SCROLLABLE DNA SECTION (Hidden for Vapes & Pre-Rolls to maximize options space) */}
+      {/* SCROLLABLE DNA SECTION */}
       {!expandVariants && (
         <div className="flex-1 overflow-y-auto scrollbar-hide p-4 space-y-3 relative">
           {(item?.descBase || (hasDNA && expectsDNA)) ? (
@@ -291,7 +288,7 @@ export default function StorefrontCardBack({
                   </span>
                 </div>
                 
-                {/* DYNAMIC HEIGHT: Unlocked for Vapes and Pre-Rolls */}
+                {/* DYNAMIC HEIGHT */}
                 <div className={`flex flex-col gap-1.5 bg-zinc-900/50 border border-zinc-800/50 rounded-xl p-1.5 overflow-y-auto scrollbar-hide ${expandVariants ? 'flex-1' : 'max-h-28'}`}>
                   {sortedOptions.map((opt: any) => {
                     const stockVal = opt.stock !== undefined ? opt.stock : displayStock;
@@ -302,10 +299,26 @@ export default function StorefrontCardBack({
 
                     return (
                       <div key={opt.id} className={`flex items-center justify-between p-2 rounded-lg border transition-all ${isOutOfStock ? 'bg-zinc-950 border-zinc-800/50 opacity-50 grayscale' : isSelected ? 'bg-zinc-800 border-zinc-700' : 'bg-zinc-900 border-zinc-800 hover:border-zinc-700'}`}>
-                        <span className={`text-[10px] font-black uppercase tracking-wider flex-1 pr-2 ${isOutOfStock ? 'text-zinc-600 line-through' : 'text-zinc-300'}`}>
-                          {formatStrainText(opt.label)}
-                        </span>
                         
+                        {/* LINEAGE DISPLAY ENGINE */}
+                        <div className="flex flex-col flex-1 min-w-0 pr-2 justify-center">
+                          <span className={`text-[10px] font-black uppercase tracking-wider flex items-center flex-wrap gap-x-1 ${isOutOfStock ? 'text-zinc-600 line-through' : 'text-zinc-300'}`}>
+                            {formatStrainText(opt.label)}
+                          </span>
+                          
+                          {/* DYNAMIC DNA TREE RENDERER */}
+                          {opt.strains && opt.strains.some((s:any) => s.lineage && s.lineage.trim() !== '') && (
+                            <div className="flex flex-col mt-0.5 gap-0.5">
+                               {opt.strains.map((s:any, idx:number) => s.lineage?.trim() ? (
+                                 <span key={idx} className={`text-[8px] font-bold tracking-widest uppercase truncate ${isOutOfStock ? 'text-zinc-700' : 'text-zinc-500'}`}>
+                                   <span className={isOutOfStock ? 'text-zinc-700' : 'text-indigo-400/80'}>↳</span> {s.lineage}
+                                 </span>
+                               ) : null)}
+                            </div>
+                          )}
+                        </div>
+                        
+                        {/* CART CONTROLS */}
                         <div className="flex items-center gap-2 shrink-0">
                            <button 
                              disabled={instancesInBundle === 0 || isOutOfStock}

@@ -53,6 +53,12 @@ export default function AdminInventoryEditor({ initialItem, isAdding, mainCatego
         sizes: Array.isArray(initialItem.sizes) && initialItem.sizes.length > 0 ? [...initialItem.sizes] : [{ id: `sz-${Date.now()}`, label: 'Standard', price: initialItem.price || 0 }],
         
         options: Array.isArray(initialItem.options) ? initialItem.options.map((opt: any) => {
+            // NEW LOGIC: Use the rich strain array if we already saved it to the DB
+            if (opt.strains && opt.strains.length > 0) {
+               return { id: opt.id, stock: opt.stock, label: opt.label, strains: opt.strains };
+            }
+
+            // LEGACY LOGIC: Parse it out of the old label format if it's an old entry
             const labelParts = (opt.label || '').split(/\s*(?:\/|\+)\s*/);
             const parsedStrains = labelParts.map((part: string) => {
                 let name = part;
@@ -68,13 +74,14 @@ export default function AdminInventoryEditor({ initialItem, isAdding, mainCatego
                     else if (type.toLowerCase() === 'indica dom hybrid') type = 'Indica Dom Hybrid';
                     else if (type.toLowerCase() === 'cbd') type = 'CBD';
                 }
-                return { name, type };
+                return { name, type, lineage: '' };
             });
             
             return { 
               id: opt.id, 
               stock: opt.stock, 
-              strains: parsedStrains.length > 0 ? parsedStrains : [{ name: '', type: 'N/A' }] 
+              label: opt.label,
+              strains: parsedStrains.length > 0 ? parsedStrains : [{ name: '', type: 'N/A', lineage: '' }] 
             };
         }) : []
       });
@@ -85,9 +92,8 @@ export default function AdminInventoryEditor({ initialItem, isAdding, mainCatego
       const defaultMain = initialItem?.mainCategory || mainCategories[0];
       const defaultSub = initialItem?.subCategory || subCategories[defaultMain]?.[0] || 'Uncategorized';
       
-      // FIXED MAPPING: Updated from "Flower & Plants" to "Flower & Prerolls"
       const isFlowerCat = defaultMain === 'Flower & Prerolls';
-      const isPreRollCat = defaultSub === 'Pre-Rolls & Blunts';
+      const isPreRollCat = defaultSub.toLowerCase().includes('pre-roll') || defaultSub.toLowerCase().includes('blunt');
       const isRawFlower = isFlowerCat && !isPreRollCat;
       
       let initialSizes = [{ id: `sz-${Date.now()}`, label: 'Standard', price: 0 }];
@@ -156,9 +162,8 @@ export default function AdminInventoryEditor({ initialItem, isAdding, mainCatego
 
     let newSizes = [...updatedItem.sizes];
     
-    // FIXED MAPPING: Updated from "Flower & Plants" to "Flower & Prerolls"
     const isFlowerCat = newMain === 'Flower & Prerolls';
-    const isPreRollCat = newSub === 'Pre-Rolls & Blunts';
+    const isPreRollCat = newSub.toLowerCase().includes('pre-roll') || newSub.toLowerCase().includes('blunt');
     const isRawFlowerCat = isFlowerCat && !isPreRollCat;
 
     const isStandard = newSizes.length === 1 && newSizes[0].label === 'Standard';
@@ -221,7 +226,7 @@ export default function AdminInventoryEditor({ initialItem, isAdding, mainCatego
        ...prev,
        options: prev.options.map((o: any) => {
            if (o.id === optId && o.strains.length < 3) {
-               return { ...o, strains: [...o.strains, { name: '', type: 'N/A' }] };
+               return { ...o, strains: [...o.strains, { name: '', type: 'N/A', lineage: '' }] };
            }
            return o;
        })
@@ -252,7 +257,7 @@ export default function AdminInventoryEditor({ initialItem, isAdding, mainCatego
   const handleAddOption = () => {
     setUpdatedItem((prev: any) => ({
       ...prev,
-      options: [...prev.options, { id: `opt-${Date.now()}`, stock: 0, strains: [{ name: 'New Variant', type: 'N/A' }] }]
+      options: [...prev.options, { id: `opt-${Date.now()}`, stock: 0, strains: [{ name: 'New Variant', type: 'N/A', lineage: '' }] }]
     }));
   };
 
@@ -277,7 +282,8 @@ export default function AdminInventoryEditor({ initialItem, isAdding, mainCatego
             return { 
                id: opt.id, 
                stock: opt.stock, 
-               label: labelParts.join(' / ') || 'Standard' 
+               label: labelParts.join(' / ') || 'Standard',
+               strains: opt.strains // WE NOW SAVE THE RAW STRAINS ARRAY WITH LINEAGE!
             };
         })
     };
@@ -285,11 +291,10 @@ export default function AdminInventoryEditor({ initialItem, isAdding, mainCatego
   };
 
   const activeMainCat = updatedItem.mainCategory;
-  const activeSubCat = updatedItem.subCategory;
+  const activeSubCat = updatedItem.subCategory || '';
   
-  // FIXED MAPPING: Updated from "Flower & Plants" to "Flower & Prerolls"
   const isFlowerCat = activeMainCat === 'Flower & Prerolls';
-  const isPreRoll = isFlowerCat && activeSubCat === 'Pre-Rolls & Blunts';
+  const isPreRoll = isFlowerCat && (activeSubCat.toLowerCase().includes('pre-roll') || activeSubCat.toLowerCase().includes('blunt'));
   const isRawFlower = isFlowerCat && !isPreRoll;
   
   const isVape = activeMainCat === 'Vapes & Pens';
