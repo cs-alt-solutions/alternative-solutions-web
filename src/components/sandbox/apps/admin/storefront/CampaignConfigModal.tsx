@@ -115,7 +115,7 @@ export default function CampaignConfigModal({ isOpen, onClose, item, onSave, onR
     { id: 'PROMO', label: 'Promo', color: 'bg-pink-500/10 border-pink-500/30 text-pink-400' },
     { id: 'NEW_DROP', label: 'New Drop', color: 'bg-cyan-500/10 border-cyan-500/30 text-cyan-400' },
     { id: 'TOP_SHELF', label: 'Top Shelf', color: 'bg-amber-500/10 border-amber-500/30 text-amber-400' },
-    { id: 'VAULT_CLEARANCE', label: 'Clearance', color: 'bg-rose-500/10 border-rose-500/30 text-rose-400' },
+    { id: 'Warehouse_CLEARANCE', label: 'Clearance', color: 'bg-rose-500/10 border-rose-500/30 text-rose-400' },
     { id: 'FEATURED', label: 'Featured', color: 'bg-indigo-500/10 border-indigo-500/30 text-indigo-400' },
   ];
 

@@ -62,7 +62,7 @@ export const DASHBOARD_COPY = {
       BUCKETS: {
         PERSONAL: "Personal Survival",
         BUSINESS: "Business Fuel",
-        VAULT: "The Vault (Fun/Rainy Day)"
+        Warehouse: "The Warehouse (Fun/Rainy Day)"
       },
       TABLE: {
         SOURCE: "Shift Details",

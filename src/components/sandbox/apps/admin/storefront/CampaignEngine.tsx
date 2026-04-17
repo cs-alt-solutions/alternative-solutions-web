@@ -31,7 +31,7 @@ export default function CampaignEngine({ activeDeals, openCampaignConfig, remove
     switch(tag) {
       case 'NEW_DROP': return 'border-cyan-500/50 bg-cyan-500/10 text-cyan-400';
       case 'TOP_SHELF': return 'border-amber-500/50 bg-amber-500/10 text-amber-400';
-      case 'VAULT_CLEARANCE': return 'border-rose-500/50 bg-rose-500/10 text-rose-400';
+      case 'Warehouse_CLEARANCE': return 'border-rose-500/50 bg-rose-500/10 text-rose-400';
       case 'HAPPY_HOUR': return 'border-indigo-500/50 bg-indigo-500/10 text-indigo-400';
       default: return 'border-pink-500/20 bg-pink-500/10 text-pink-500';
     }

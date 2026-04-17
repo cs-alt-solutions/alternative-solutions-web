@@ -36,7 +36,7 @@ export const MARKETING_COPY = {
         TEXT: "BUILT ON ENTERPRISE-GRADE INFRASTRUCTURE",
         STACK: [
           { name: "NEXT.JS", desc: "The engine. Makes the whole ecosystem load lightning fast." },
-          { name: "SUPABASE", desc: "The vault. Where all your data is locked down and secured." },
+          { name: "SUPABASE", desc: "The Warehouse. Where all your data is locked down and secured." },
           { name: "VERCEL", desc: "The grid. Keeps the system online 24/7 without a hiccup." },
           { name: "STRIPE", desc: "The bank. Enterprise-grade checkout so you get paid safely." },
           { name: "GITHUB", desc: "The blueprint room. Where every line of code history is stored." },

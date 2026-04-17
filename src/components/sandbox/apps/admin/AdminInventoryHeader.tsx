@@ -1,7 +1,7 @@
 import React from 'react';
-import { Boxes, Printer, Download, MapPinned, Plus } from 'lucide-react';
+import { Boxes, PackageSearch, Download, MapPinned, Plus } from 'lucide-react';
 
-export default function AdminInventoryHeader({ onExportAudit, onBackup, onManageCats, onAddProduct }: any) {
+export default function AdminInventoryHeader({ onOpenAudit, onBackup, onManageCats, onAddProduct }: any) {
   return (
     <div className="flex flex-col xl:flex-row xl:items-end justify-between gap-6 mb-8 border-b border-zinc-800/50 pb-8">
       <div className="flex items-center gap-4">
@@ -9,7 +9,8 @@ export default function AdminInventoryHeader({ onExportAudit, onBackup, onManage
           <Boxes size={32} />
         </div>
         <div>
-          <h2 className="text-3xl font-black text-white uppercase tracking-tight">Master Vault</h2>
+          {/* UPDATED: Master Vault -> Master Warehouse */}
+          <h2 className="text-3xl font-black text-white uppercase tracking-tight">Master Warehouse</h2>
           <div className="text-xs font-bold text-zinc-500 uppercase tracking-[0.3em] flex items-center gap-2">
             Live Database <span className="w-1.5 h-1.5 rounded-full bg-cyan-500 animate-pulse" />
           </div>
@@ -17,9 +18,11 @@ export default function AdminInventoryHeader({ onExportAudit, onBackup, onManage
       </div>
       
       <div className="flex flex-wrap items-center gap-3">
-        <button onClick={onExportAudit} className="bg-zinc-900 hover:bg-zinc-800 text-fuchsia-400 border border-fuchsia-900/50 font-black uppercase tracking-widest py-3 px-5 rounded-2xl text-[10px] transition-all flex items-center gap-2 shadow-lg hover:border-fuchsia-400/50 active:scale-95">
-          <Printer size={16} /> Audit Report
+        {/* UPDATED: Audit & Reports -> Logistics Terminal */}
+        <button onClick={onOpenAudit} className="bg-zinc-900 hover:bg-zinc-800 text-fuchsia-400 border border-fuchsia-900/50 font-black uppercase tracking-widest py-3 px-5 rounded-2xl text-[10px] transition-all flex items-center gap-2 shadow-lg hover:border-fuchsia-400/50 active:scale-95">
+          <PackageSearch size={16} /> Logistics Terminal
         </button>
+        
         <button onClick={onBackup} className="bg-zinc-900 hover:bg-zinc-800 text-cyan-400 border border-cyan-900/50 font-black uppercase tracking-widest py-3 px-5 rounded-2xl text-[10px] transition-all flex items-center gap-2 shadow-lg hover:border-cyan-400/50 active:scale-95">
           <Download size={16} /> Backup System
         </button>

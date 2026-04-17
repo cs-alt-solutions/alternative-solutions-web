@@ -41,8 +41,11 @@ export default function StorefrontCardBack({
   const isPreRoll = activeSubCat.includes('pre-roll') || activeSubCat.includes('blunt');
   const isRawFlower = isFlower && !isPreRoll;
   
-  const expandVariants = isVape || isPreRoll;
-  const expectsDNA = !expandVariants && !isMerch;
+  // SMART MATCHING FOR HARDWARE
+  const isHardware = isMerch || activeSubCat.includes('batteries') || activeSubCat.includes('hardware') || activeSubCat.includes('gear') || activeSubCat.includes('glass') || activeSubCat.includes('accessories');
+  
+  const expandVariants = isVape || isPreRoll || activeCat.includes('concentrates');
+  const expectsDNA = !expandVariants && !isHardware;
 
   const hasTrueVariants = safeOptions.length > 0 && safeOptions[0].label !== 'Standard';
   const displayStock = hasTrueVariants 

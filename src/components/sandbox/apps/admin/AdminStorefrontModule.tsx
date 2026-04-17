@@ -128,7 +128,7 @@ export default function AdminStorefrontModule({ stock, setStock, inventoryMatrix
       }
       setNotification('One-Shot Sprints successfully scrubbed.');
     } catch (err) {
-      setNotification('Cleared locally, but failed to sync to vault.');
+      setNotification('Cleared locally, but failed to sync to Warehouse.');
     }
   };
 
@@ -170,7 +170,7 @@ export default function AdminStorefrontModule({ stock, setStock, inventoryMatrix
                <button 
                  onClick={() => isPromoList ? openCampaignConfig(item) : onJumpToInventory(item)} 
                  className="p-2 bg-zinc-900 hover:bg-emerald-500/20 border border-zinc-800 hover:border-emerald-500/50 rounded-xl text-zinc-500 hover:text-emerald-400 transition-colors"
-                 title={isPromoList ? "Edit Campaign Schedule" : "Edit Item Data in Vault"}
+                 title={isPromoList ? "Edit Campaign Schedule" : "Edit Item Data in Warehouse"}
                >
                  <Edit3 size={16} />
                </button>

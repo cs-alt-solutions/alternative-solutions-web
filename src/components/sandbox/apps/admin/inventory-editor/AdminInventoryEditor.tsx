@@ -2,7 +2,7 @@
 'use client';
 
 import React, { useState, useRef, useEffect } from 'react';
-import { Trash2, Save, Image as ImageIcon, Leaf, Flame, Box } from 'lucide-react';
+import { Trash2, Save, Image as ImageIcon, Leaf, Flame, Box, Lock } from 'lucide-react';
 import { supabase } from '@/utils/supabase'; 
 
 import EditorIdentity from './components/EditorIdentity';
@@ -22,6 +22,9 @@ export default function AdminInventoryEditor({ initialItem, isAdding, mainCatego
   const [isUploadingIcon, setIsUploadingIcon] = useState(false);
   const [isConfirmingDelete, setIsConfirmingDelete] = useState(false);
   const [descMode, setDescMode] = useState<'desc' | 'fact'>('desc');
+
+  // MASTER LOCK STATE: Secures the "Nuke" button from accidental employee clicks.
+  const [isMasterUnlocked, setIsMasterUnlocked] = useState(false);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
   const iconInputRef = useRef<HTMLInputElement>(null);
@@ -53,12 +56,10 @@ export default function AdminInventoryEditor({ initialItem, isAdding, mainCatego
         sizes: Array.isArray(initialItem.sizes) && initialItem.sizes.length > 0 ? [...initialItem.sizes] : [{ id: `sz-${Date.now()}`, label: 'Standard', price: initialItem.price || 0 }],
         
         options: Array.isArray(initialItem.options) ? initialItem.options.map((opt: any) => {
-            // NEW LOGIC: Use the rich strain array if we already saved it to the DB
             if (opt.strains && opt.strains.length > 0) {
                return { id: opt.id, stock: opt.stock, label: opt.label, strains: opt.strains };
             }
 
-            // LEGACY LOGIC: Parse it out of the old label format if it's an old entry
             const labelParts = (opt.label || '').split(/\s*(?:\/|\+)\s*/);
             const parsedStrains = labelParts.map((part: string) => {
                 let name = part;
@@ -134,7 +135,7 @@ export default function AdminInventoryEditor({ initialItem, isAdding, mainCatego
       const { data: { publicUrl } } = supabase.storage.from('client-assets').getPublicUrl(filename);
       
       setUpdatedItem((prev: any) => ({ ...prev, [type === 'main' ? 'imageUrl' : 'iconUrl']: publicUrl }));
-      if (setNotification) setNotification(`${type === 'main' ? 'Image' : 'Stamp'} Synced to Vault.`);
+      if (setNotification) setNotification(`${type === 'main' ? 'Image' : 'Stamp'} Synced to Warehouse.`);
     } catch (err) { 
       console.error("Asset Upload Error:", err); 
       if (setNotification) setNotification("Upload failed."); 
@@ -283,28 +284,33 @@ export default function AdminInventoryEditor({ initialItem, isAdding, mainCatego
                id: opt.id, 
                stock: opt.stock, 
                label: labelParts.join(' / ') || 'Standard',
-               strains: opt.strains // WE NOW SAVE THE RAW STRAINS ARRAY WITH LINEAGE!
+               strains: opt.strains
             };
         })
     };
     onSave(itemToSave, isAdding); 
   };
 
-  const activeMainCat = updatedItem.mainCategory;
-  const activeSubCat = updatedItem.subCategory || '';
+  const activeMainCat = updatedItem.mainCategory || '';
+  const activeSubCat = (updatedItem.subCategory || '').toLowerCase();
   
   const isFlowerCat = activeMainCat === 'Flower & Prerolls';
-  const isPreRoll = isFlowerCat && (activeSubCat.toLowerCase().includes('pre-roll') || activeSubCat.toLowerCase().includes('blunt'));
+  const isPreRoll = isFlowerCat && (activeSubCat.includes('pre-roll') || activeSubCat.includes('blunt'));
   const isRawFlower = isFlowerCat && !isPreRoll;
   
-  const isVape = activeMainCat === 'Vapes & Pens';
-  const isDisposable = isVape && activeSubCat === 'Disposables';
-  const isMerch = activeMainCat === 'Merch & Extras';
+  const isHardwareOrGear = 
+      activeMainCat === 'Merch & Extras' || 
+      activeSubCat.includes('batteries') || 
+      activeSubCat.includes('hardware') || 
+      activeSubCat.includes('gear') || 
+      activeSubCat.includes('glass') ||
+      activeSubCat.includes('accessories');
+
   const isTopical = activeMainCat === 'Healthcare & Topicals';
   
-  const showVariants = !isRawFlower && !isMerch; 
-  const showDNA = !isVape && !isMerch; 
-  const showLineage = !isMerch && !isDisposable && !isTopical;
+  const showVariants = !isRawFlower; 
+  const showDNA = !isHardwareOrGear; 
+  const showLineage = !isHardwareOrGear && !isTopical;
   const showWeightTiers = isRawFlower;
   const showUnitPrice = !isRawFlower;
 
@@ -313,7 +319,6 @@ export default function AdminInventoryEditor({ initialItem, isAdding, mainCatego
   return (
     <div className="min-h-screen bg-zinc-950 text-zinc-100 selection:bg-emerald-500/30 selection:text-white pb-32 animate-in fade-in duration-500">
       
-      {/* HEADER */}
       <div className="sticky top-0 z-50 bg-zinc-950/80 backdrop-blur-xl border-b border-zinc-800/50 px-6 py-4 flex items-center justify-between shadow-md">
         <div className="flex items-center gap-4">
           <div className="w-12 h-12 rounded-xl bg-zinc-900 border border-zinc-800 flex items-center justify-center shrink-0 overflow-hidden text-zinc-500">
@@ -321,16 +326,26 @@ export default function AdminInventoryEditor({ initialItem, isAdding, mainCatego
           </div>
           <div>
             <h1 className="text-xl font-black uppercase tracking-tighter text-zinc-100 leading-tight flex items-center gap-3">
-               {isAdding ? "New Vault Entry" : updatedItem.name || "Unnamed Product"}
+               {isAdding ? "New Warehouse Entry" : updatedItem.name || "Unnamed Product"}
                {!isAdding && (
-                 isConfirmingDelete ? (
-                   <div className="flex items-center gap-2 bg-rose-500/10 border border-rose-500/30 p-1 rounded-xl animate-in zoom-in-95">
-                      <span className="text-[10px] font-bold text-rose-400 uppercase px-2 tracking-widest">Are you sure?</span>
-                      <button onClick={() => setIsConfirmingDelete(false)} className="px-3 py-1.5 bg-zinc-900 rounded-lg text-zinc-400 text-[10px] uppercase font-black hover:text-zinc-100">Cancel</button>
-                      <button onClick={() => onDelete(updatedItem.id)} className="px-3 py-1.5 bg-rose-500 rounded-lg text-zinc-950 text-[10px] uppercase font-black hover:bg-rose-400 flex items-center gap-1 shadow-[0_0_15px_rgba(244,63,94,0.4)]"><Trash2 size={12}/> Confirm Nuke</button>
-                   </div>
+                 isMasterUnlocked ? (
+                   isConfirmingDelete ? (
+                     <div className="flex items-center gap-2 bg-rose-500/10 border border-rose-500/30 p-1 rounded-xl animate-in zoom-in-95">
+                        <span className="text-[10px] font-bold text-rose-400 uppercase px-2 tracking-widest">Are you sure?</span>
+                        <button onClick={() => setIsConfirmingDelete(false)} className="px-3 py-1.5 bg-zinc-900 rounded-lg text-zinc-400 text-[10px] uppercase font-black hover:text-zinc-100">Cancel</button>
+                        <button onClick={() => onDelete(updatedItem.id)} className="px-3 py-1.5 bg-rose-500 rounded-lg text-zinc-950 text-[10px] uppercase font-black hover:bg-rose-400 flex items-center gap-1 shadow-[0_0_15px_rgba(244,63,94,0.4)]"><Trash2 size={12}/> Confirm Nuke</button>
+                     </div>
+                   ) : (
+                     <button onClick={() => setIsConfirmingDelete(true)} className="bg-zinc-950 border border-rose-500/30 hover:bg-rose-500/10 text-rose-400 font-black px-3 py-1.5 rounded-lg text-[9px] uppercase tracking-widest transition-all flex items-center gap-1.5 opacity-50 hover:opacity-100"><Trash2 size={12} /> Nuke</button>
+                   )
                  ) : (
-                   <button onClick={() => setIsConfirmingDelete(true)} className="bg-zinc-950 border border-rose-500/30 hover:bg-rose-500/10 text-rose-400 font-black px-3 py-1.5 rounded-lg text-[9px] uppercase tracking-widest transition-all flex items-center gap-1.5 opacity-50 hover:opacity-100"><Trash2 size={12} /> Nuke</button>
+                   <button 
+                     onClick={() => setIsMasterUnlocked(true)} 
+                     className="bg-zinc-950 border border-zinc-800 text-zinc-600 font-black px-3 py-1.5 rounded-lg text-[9px] uppercase tracking-widest transition-all flex items-center gap-1.5 hover:text-rose-400 hover:border-rose-500/30 opacity-50 hover:opacity-100"
+                     title="Click to Unlock Master Override"
+                   >
+                     <Lock size={12} /> Locked
+                   </button>
                  )
                )}
             </h1>
@@ -344,7 +359,6 @@ export default function AdminInventoryEditor({ initialItem, isAdding, mainCatego
       </div>
 
       <div className="max-w-4xl mx-auto p-6 md:p-8 space-y-8 mt-4">
-        
         <EditorIdentity 
           updatedItem={updatedItem} setUpdatedItem={setUpdatedItem}
           mainCategories={mainCategories} subCategories={subCategories}
@@ -354,21 +368,19 @@ export default function AdminInventoryEditor({ initialItem, isAdding, mainCatego
           isUploadingMain={isUploadingMain} isUploadingIcon={isUploadingIcon}
           showUnitPrice={showUnitPrice}
         />
-
         <EditorDNA 
           updatedItem={updatedItem} setUpdatedItem={setUpdatedItem}
           descMode={descMode} setDescMode={setDescMode}
           showDNA={showDNA} showLineage={showLineage}
         />
-
         <EditorCommerce 
           updatedItem={updatedItem} setUpdatedItem={setUpdatedItem}
           handleAddSize={handleAddSize} handleRemoveSize={handleRemoveSize} handleSizeChange={handleSizeChange}
           handleOptionChange={handleOptionChange} handleAddOption={handleAddOption} handleRemoveOption={handleRemoveOption}
           handleStrainChange={handleStrainChange} handleAddStrain={handleAddStrain} handleRemoveStrain={handleRemoveStrain}
           showWeightTiers={showWeightTiers} showVariants={showVariants} openCampaignConfig={openCampaignConfig}
+          isHardwareOrGear={isHardwareOrGear}
         />
-
       </div>
     </div>
   );

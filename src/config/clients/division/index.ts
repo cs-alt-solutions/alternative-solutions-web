@@ -10,7 +10,7 @@ export const divisionConfig = {
   
   adminSecurity: {
     adminId: 'ADMIN-01',
-    passphrase: 'VAULT-ACCESS-99'
+    passphrase: 'Warehouse-ACCESS-99'
   },
   
   security: {
@@ -110,7 +110,7 @@ export const divisionConfig = {
     {
       id: 'admin',
       name: 'Admin Terminal',
-      description: 'Secure vault for inventory management and operations.',
+      description: 'Secure Warehouse for inventory management and operations.',
       icon: 'Lock',
       path: '/sandbox/division?app=admin',
       status: 'production',

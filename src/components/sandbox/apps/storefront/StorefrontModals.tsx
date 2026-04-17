@@ -39,11 +39,11 @@ export const PoliciesModal = ({ storePolicies, onClose }: any) => {
               </p>
             </div>
 
-            {/* THE VAULT RULES CARD */}
+            {/* THE Warehouse RULES CARD */}
             <div className="bg-zinc-950/50 border border-rose-500/20 p-5 rounded-2xl shadow-inner relative overflow-hidden">
               <div className="absolute top-0 right-0 w-40 h-40 bg-rose-500/10 rounded-full blur-3xl pointer-events-none" />
               <h3 className="text-rose-400 font-black uppercase tracking-widest text-[11px] mb-4 flex items-center gap-2 relative z-10">
-                <ShieldAlert size={14} /> The Vault Rules
+                <ShieldAlert size={14} /> The Warehouse Rules
               </h3>
               
               <div className="space-y-4 relative z-10">

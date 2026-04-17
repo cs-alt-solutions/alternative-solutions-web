@@ -19,7 +19,7 @@ export default function AdminTerminal({ clientConfig, onExit }: { clientConfig: 
   const [authError, setAuthError] = useState('');
 
   const requiredAdminId = clientConfig?.adminSecurity?.adminId || 'ADMIN-01';
-  const requiredPassphrase = clientConfig?.adminSecurity?.passphrase || 'VAULT-ACCESS-99';
+  const requiredPassphrase = clientConfig?.adminSecurity?.passphrase || 'Warehouse-ACCESS-99';
 
   const [activeModule, setActiveModule] = useState<'fulfillment' | 'inventory' | 'storefront' | 'operations'>('inventory'); 
   const [notification, setNotification] = useState<string | null>(null);
@@ -43,7 +43,7 @@ export default function AdminTerminal({ clientConfig, onExit }: { clientConfig: 
   useEffect(() => {
     if (!isAuthorized) return;
     
-    const fetchVaultData = async () => {
+    const fetchWarehouseData = async () => {
       try {
         // 1. Fetch Inventory
         const { data: invData, error: invErr } = await supabase
@@ -66,14 +66,14 @@ export default function AdminTerminal({ clientConfig, onExit }: { clientConfig: 
         }
 
       } catch (err) {
-        console.error("Vault Sync Error:", err);
+        console.error("Warehouse Sync Error:", err);
         setNotification("Failed to sync with master database.");
       } finally {
         setIsSyncing(false);
       }
     };
     
-    fetchVaultData();
+    fetchWarehouseData();
   }, [cid, isAuthorized]);
 
   useEffect(() => {
@@ -135,7 +135,7 @@ export default function AdminTerminal({ clientConfig, onExit }: { clientConfig: 
 
           <h1 className="text-2xl font-black tracking-tight mb-1 text-center text-zinc-100 uppercase">{clientConfig.name} <span className="text-cyan-400">Admin</span></h1>
           <p className="text-zinc-500 text-[10px] font-black tracking-[0.3em] mb-10 uppercase text-center flex items-center justify-center gap-2">
-            <Lock size={12} className="text-rose-500" /> Client Vault Access
+            <Lock size={12} className="text-rose-500" /> Client Warehouse Access
           </p>
 
           <form onSubmit={handleAdminAuth} className="w-full bg-zinc-900/80 backdrop-blur-md border border-zinc-800 p-6 rounded-3xl shadow-2xl">
@@ -146,7 +146,7 @@ export default function AdminTerminal({ clientConfig, onExit }: { clientConfig: 
               </div>
               <div className="relative">
                 <KeyRound size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-zinc-500" />
-                <input type="password" value={passphrase} onChange={(e) => { setAuthError(""); setPassphrase(e.target.value); }} placeholder="VAULT PASSPHRASE" className="w-full bg-zinc-950 border border-zinc-800 rounded-xl py-4 pl-12 pr-4 text-sm font-black tracking-widest text-cyan-400 outline-none focus:border-cyan-500/50 transition-all placeholder:text-zinc-700" />
+                <input type="password" value={passphrase} onChange={(e) => { setAuthError(""); setPassphrase(e.target.value); }} placeholder="Warehouse PASSPHRASE" className="w-full bg-zinc-950 border border-zinc-800 rounded-xl py-4 pl-12 pr-4 text-sm font-black tracking-widest text-cyan-400 outline-none focus:border-cyan-500/50 transition-all placeholder:text-zinc-700" />
               </div>
             </div>
 
@@ -158,7 +158,7 @@ export default function AdminTerminal({ clientConfig, onExit }: { clientConfig: 
             )}
 
             <button type="submit" disabled={!operatorId || !passphrase} className="w-full bg-cyan-500 hover:bg-cyan-400 text-zinc-950 font-black uppercase tracking-widest py-4 rounded-xl disabled:opacity-50 transition-all flex items-center justify-center gap-2 group shadow-[0_0_20px_rgba(6,182,212,0.2)]">
-              Unlock Vault <ArrowRight size={18} className="group-hover:translate-x-1 transition-transform" />
+              Unlock Warehouse <ArrowRight size={18} className="group-hover:translate-x-1 transition-transform" />
             </button>
           </form>
 
@@ -200,14 +200,14 @@ export default function AdminTerminal({ clientConfig, onExit }: { clientConfig: 
            <button onClick={() => setActiveModule('operations')} className={`px-4 py-2 rounded-lg text-xs font-black uppercase tracking-widest flex items-center gap-2 transition-all ${activeModule === 'operations' ? 'bg-indigo-500/20 text-indigo-400' : 'text-zinc-500 hover:text-zinc-300'}`}>Ops</button>
         </div>
 
-        <button onClick={simulateNewOrder} className="bg-zinc-800 p-2 rounded-xl text-emerald-400 border border-emerald-900/30 active:scale-95 transition-all hover:bg-emerald-500/10 hidden sm:block"><Zap size={20} /></button>
+        
       </header>
 
       <main className="flex-1 overflow-y-auto w-full relative">
         {isSyncing ? (
           <div className="absolute inset-0 flex flex-col items-center justify-center text-zinc-500 animate-in fade-in duration-500">
             <Database size={48} className="mb-4 text-cyan-500/50 animate-pulse" />
-            <span className="text-xs font-black tracking-[0.2em] uppercase">Syncing Live Vault...</span>
+            <span className="text-xs font-black tracking-[0.2em] uppercase">Syncing Live Warehouse...</span>
           </div>
         ) : (
           <>

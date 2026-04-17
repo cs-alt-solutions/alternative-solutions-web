@@ -14,7 +14,7 @@ export default function StorefrontClosed({ showBypass, setShowBypass, bypassCode
         </button>
         
         <h1 className="text-3xl font-black tracking-widest mb-2 uppercase text-zinc-100">Market Closed</h1>
-        <p className="text-sm font-bold text-zinc-500 mb-8 max-w-xs">The vault is sealed for the day. Please check back tomorrow when the market reopens.</p>
+        <p className="text-sm font-bold text-zinc-500 mb-8 max-w-xs">The Warehouse is sealed for the day. Please check back tomorrow when the market reopens.</p>
         
         {showBypass ? (
           <div className="w-full animate-in slide-in-from-top-4 fade-in duration-300">

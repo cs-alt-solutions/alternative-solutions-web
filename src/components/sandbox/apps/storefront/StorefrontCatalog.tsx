@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useStickyState } from '@/hooks/useStickyState';
-import { Info, Flame, ShoppingCart, Leaf, Wind, Cookie, Droplet, Shirt, LayoutGrid, Tag, Award, Sparkles, Star, ArrowRight, Home, Activity, ChevronLeft, ChevronRight, RotateCcw, Zap } from 'lucide-react';
+import { Info, Flame, ShoppingCart, Leaf, Wind, Cookie, Droplet, Shirt, LayoutGrid, Tag, Award, Sparkles, Star, ArrowRight, Home, Activity, ChevronLeft, ChevronRight, RotateCcw, Zap, ChevronDown } from 'lucide-react';
 import { StorefrontCard, getRequiredGrams } from './StorefrontComponents';
 import StorefrontHeader from './StorefrontHeader';
 import { IconMap, ThemeMap, getThemeColor } from '../admin/storefront/StorefrontBuilder';
@@ -21,7 +21,7 @@ export default function StorefrontCatalog({
   const isItemOOS = (item: any) => {
      const activeSubCat = item.subCategory?.toLowerCase() || '';
      const isPreRoll = activeSubCat.includes('pre-roll') || activeSubCat.includes('blunt');
-     const isRawFlower = item.mainCategory === 'Flower & Prerolls' && !isPreRoll; // FIXED
+     const isRawFlower = item.mainCategory === 'Flower & Prerolls' && !isPreRoll;
 
      if (isRawFlower) {
          const minGrams = item.sizes?.length > 0 ? Math.min(...item.sizes.map((s:any) => getRequiredGrams(s.label))) : 1;
@@ -57,7 +57,7 @@ export default function StorefrontCatalog({
   let bgBoxClass = "bg-emerald-500/10 border-emerald-500/20";
   let textGradientClass = "from-emerald-400 via-cyan-400 to-blue-500";
 
-  if (activeCategory === 'Flower & Prerolls') HeaderIcon = Leaf; // FIXED
+  if (activeCategory === 'Flower & Prerolls') HeaderIcon = Leaf;
   else if (activeCategory === 'Vapes & Pens') { HeaderIcon = Wind; iconColorClass = "text-cyan-400"; bgBoxClass = "bg-cyan-500/10 border-cyan-500/20"; textGradientClass = "from-cyan-400 via-blue-400 to-indigo-500"; }
   else if (activeCategory === 'Edibles') { HeaderIcon = Cookie; iconColorClass = "text-amber-400"; bgBoxClass = "bg-amber-500/10 border-amber-500/20"; textGradientClass = "from-amber-400 via-orange-400 to-rose-500"; }
   else if (activeCategory === 'Concentrates') { HeaderIcon = Droplet; iconColorClass = "text-orange-500"; bgBoxClass = "bg-orange-500/10 border-orange-500/20"; textGradientClass = "from-orange-500 via-red-400 to-rose-600"; }
@@ -97,7 +97,7 @@ export default function StorefrontCatalog({
   });
 
   const newDropsBucket = safeInventory.filter((i: any) => i.isNewDrop && !i.isConfiguredDeal && !i.isClearance);
-  const premiumVaultBucket = safeInventory.filter((i: any) => (i.isTopShelf || i.isChefsReserve) && !i.isNewDrop && !i.isConfiguredDeal && !i.isClearance);
+  const premiumWarehouseBucket = safeInventory.filter((i: any) => (i.isTopShelf || i.isChefsReserve) && !i.isNewDrop && !i.isConfiguredDeal && !i.isClearance);
   const smokyStealsBucket = safeInventory.filter((i: any) => i.isClearance && !i.dailyDeal);
   const returnedBucket = safeInventory.filter((i: any) => i.isReturned && !i.isNewDrop && !i.isConfiguredDeal && !i.isClearance);
 
@@ -118,10 +118,10 @@ export default function StorefrontCatalog({
     },
     ...activeTodaysDeals.map((item: any) => {
       const isNewDrop = item.campaignTag === 'NEW_DROP';
-      const isClearance = item.campaignTag === 'VAULT_CLEARANCE';
+      const isClearance = item.campaignTag === 'VAULT_CLEARANCE'; // THIS WAS THE BROKEN LINE
       
       let catName = item.subCategory && item.subCategory !== 'All' ? item.subCategory : item.mainCategory;
-      if (catName === 'Flower & Prerolls') catName = 'Premium Flower'; // FIXED
+      if (catName === 'Flower & Prerolls') catName = 'Premium Flower';
       if (catName === 'Vapes & Pens') catName = 'Vapes';
       if (catName === 'Merch & Extras') catName = 'Gear';
       if (catName === 'Healthcare & Topicals') catName = 'Wellness';
@@ -370,7 +370,7 @@ export default function StorefrontCatalog({
                        </div>
                        <div>
                          <h3 className="text-3xl md:text-5xl font-black uppercase tracking-tighter text-transparent bg-clip-text bg-linear-to-r from-blue-500 via-cyan-400 to-indigo-400 drop-shadow-[0_0_10px_rgba(6,182,212,0.3)]">New Arrivals</h3>
-                         <p className="text-xs font-bold text-zinc-400 uppercase tracking-widest mt-1 hidden sm:block">Fresh drops hitting the vault.</p>
+                         <p className="text-xs font-bold text-zinc-400 uppercase tracking-widest mt-1 hidden sm:block">Fresh drops hitting the Warehouse.</p>
                        </div>
                      </div>
                      <div className="flex items-center gap-2 text-[10px] font-black text-zinc-400 uppercase tracking-widest bg-zinc-900/80 backdrop-blur-md px-4 py-2 rounded-full border border-zinc-800 shadow-md relative z-10">
@@ -395,7 +395,7 @@ export default function StorefrontCatalog({
                        <RotateCcw size={24} className="text-lime-400" />
                      </div>
                      <div>
-                       <h3 className="text-3xl md:text-5xl font-black uppercase tracking-tighter text-transparent bg-clip-text bg-linear-to-r from-green-500 via-lime-400 to-emerald-400 drop-shadow-[0_0_10px_rgba(132,204,22,0.3)]">Back In The Vault</h3>
+                       <h3 className="text-3xl md:text-5xl font-black uppercase tracking-tighter text-transparent bg-clip-text bg-linear-to-r from-green-500 via-lime-400 to-emerald-400 drop-shadow-[0_0_10px_rgba(132,204,22,0.3)]">Back In The Warehouse</h3>
                        <p className="text-xs font-bold text-zinc-400 uppercase tracking-widest mt-1">Returned by popular demand.</p>
                      </div>
                    </div>
@@ -427,24 +427,24 @@ export default function StorefrontCatalog({
                 </div>
              )}
 
-             {premiumVaultBucket.length > 0 && (
+             {premiumWarehouseBucket.length > 0 && (
                 <div className="pt-8 animate-in fade-in mt-8 border-t border-zinc-800/50 relative overflow-hidden">
                  <div className="flex items-center gap-4 mb-8 pt-6 relative z-10">
                     <div className="p-3 bg-amber-500/10 rounded-2xl border border-amber-500/40 shadow-[0_0_20px_rgba(245,158,11,0.3)]"> 
                       <Award size={24} className="text-amber-400" /> 
                     </div>
                     <div> 
-                      <h3 className="text-3xl md:text-5xl font-black uppercase tracking-tighter text-transparent bg-clip-text bg-linear-to-r from-yellow-500 via-amber-400 to-amber-200 drop-shadow-[0_0_10px_rgba(245,158,11,0.3)]">The Premium Vault</h3> 
+                      <h3 className="text-3xl md:text-5xl font-black uppercase tracking-tighter text-transparent bg-clip-text bg-linear-to-r from-yellow-500 via-amber-400 to-amber-200 drop-shadow-[0_0_10px_rgba(245,158,11,0.3)]">The Premium Warehouse</h3> 
                       <p className="text-xs font-bold text-zinc-400 uppercase tracking-widest mt-1">Exclusive Top Shelf Selections</p> 
                     </div>
                  </div>
                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 relative z-10">
-                   {premiumVaultBucket.map((item: any) => <StorefrontCard key={item.id} item={item} cart={cart} updateCart={updateCart} clientConfig={clientConfig} />)}
+                   {premiumWarehouseBucket.map((item: any) => <StorefrontCard key={item.id} item={item} cart={cart} updateCart={updateCart} clientConfig={clientConfig} />)}
                  </div>
                </div>
              )}
 
-             {oneShotDeals.length === 0 && recurringDeals.length === 0 && newDropsBucket.length === 0 && premiumVaultBucket.length === 0 && smokyStealsBucket.length === 0 && returnedBucket.length === 0 && (
+             {oneShotDeals.length === 0 && recurringDeals.length === 0 && newDropsBucket.length === 0 && premiumWarehouseBucket.length === 0 && smokyStealsBucket.length === 0 && returnedBucket.length === 0 && (
                <div className="flex flex-col items-center justify-center py-24 bg-zinc-900/20 rounded-3xl border border-dashed border-zinc-800/50 mt-6">
                   <div className="w-16 h-16 bg-zinc-950 rounded-full border border-zinc-800 flex items-center justify-center mb-4"> <Info size={24} className="text-zinc-600" /> </div>
                   <p className="text-zinc-400 font-bold text-sm uppercase tracking-widest">No Active Stock</p>

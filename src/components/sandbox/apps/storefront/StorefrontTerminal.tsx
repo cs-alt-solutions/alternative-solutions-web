@@ -193,7 +193,7 @@ export default function StorefrontTerminal({ clientConfig, onExit }: any) {
     e.preventDefault();
     setError("");
     const inputUpper = codeInput.trim().toUpperCase();
-    const adminPass = liveConfig?.adminSecurity?.passphrase || 'VAULT-ACCESS-99';
+    const adminPass = liveConfig?.adminSecurity?.passphrase || 'Warehouse-ACCESS-99';
 
     if (inputUpper === timeData.activeCode || inputUpper === 'OVERRIDE' || codeInput.trim() === adminPass) {
       setIsVerified(true);
@@ -210,7 +210,7 @@ export default function StorefrontTerminal({ clientConfig, onExit }: any) {
   };
 
   const handleBypass = () => {
-    const adminPass = liveConfig?.adminSecurity?.passphrase || 'VAULT-ACCESS-99';
+    const adminPass = liveConfig?.adminSecurity?.passphrase || 'Warehouse-ACCESS-99';
     if (bypassCode.toUpperCase() === 'OVERRIDE' || bypassCode === adminPass) {
        setIsBypassed(true);
        setIsVerified(true); 

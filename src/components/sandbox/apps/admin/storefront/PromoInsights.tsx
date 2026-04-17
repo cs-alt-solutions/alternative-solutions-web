@@ -34,7 +34,7 @@ export default function PromoInsights({ overstockCandidates, openCampaignConfig 
                Promo Candidates
              </h3>
              <p className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest mt-0.5">
-               {hasCandidates ? `${overstockCandidates.length} Items Flagged for Promotion` : 'Vault is optimized'}
+               {hasCandidates ? `${overstockCandidates.length} Items Flagged for Promotion` : 'Warehouse is optimized'}
              </p>
            </div>
          </div>
@@ -93,7 +93,7 @@ export default function PromoInsights({ overstockCandidates, openCampaignConfig 
             </div>
           ) : (
             <div className="flex items-center justify-center p-8 border border-dashed border-zinc-800 rounded-3xl bg-zinc-950/50">
-              <span className="text-[10px] font-black uppercase tracking-widest text-zinc-600">Vault is highly optimized. No overstock detected.</span>
+              <span className="text-[10px] font-black uppercase tracking-widest text-zinc-600">Warehouse is highly optimized. No overstock detected.</span>
             </div>
           )}
         </div>

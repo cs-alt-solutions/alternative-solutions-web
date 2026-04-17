@@ -14,7 +14,7 @@ export const SYSTEM_CONFIG = {
   PAYROLL_MATRIX: {
     PERSONAL: 0.50,
     BUSINESS: 0.30,
-    VAULT: 0.20
+    Warehouse: 0.20
   },
   SURVIVAL_BUDGET: {
     RENT: 0.60,      

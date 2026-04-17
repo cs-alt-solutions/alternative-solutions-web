@@ -23,7 +23,7 @@ export default function InventorySelectorModal({ isOpen, onClose, inventoryMatri
           <div className="flex items-center justify-between mb-4">
             <div>
               <h2 className="text-lg font-black text-zinc-100 uppercase tracking-widest flex items-center gap-2">
-                <Package size={18} className="text-emerald-400" /> Select Vault Target
+                <Package size={18} className="text-emerald-400" /> Select Warehouse Target
               </h2>
               <p className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest mt-1">
                 Assigning to: <span className="text-emerald-400">{context?.lane}</span> {context?.dayId ? `on Day ${context.dayId}` : ''}

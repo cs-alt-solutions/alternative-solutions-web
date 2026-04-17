@@ -78,7 +78,7 @@ export default function AdminInventoryTable({ processedInventory, handleSort, op
                 <div className="flex items-center justify-end gap-2">Base <span className="hidden lg:inline">Price</span> <ArrowUpDown size={12} className="opacity-50 group-hover:opacity-100 shrink-0" /></div>
               </th>
               <th onClick={() => handleSort('stock')} className="py-3 px-3 sm:px-4 text-[9px] sm:text-[10px] font-black uppercase tracking-widest text-zinc-500 cursor-pointer hover:text-zinc-300 transition-colors group text-right">
-                <div className="flex items-center justify-end gap-2">Vault <span className="hidden lg:inline">Stock</span> <ArrowUpDown size={12} className="opacity-50 group-hover:opacity-100 shrink-0" /></div>
+                <div className="flex items-center justify-end gap-2">Warehouse <span className="hidden lg:inline">Stock</span> <ArrowUpDown size={12} className="opacity-50 group-hover:opacity-100 shrink-0" /></div>
               </th>
               <th className="py-3 px-3 sm:px-4 text-right text-[9px] sm:text-[10px] font-black uppercase tracking-widest text-zinc-500">Actions</th>
             </tr>
@@ -207,7 +207,7 @@ export default function AdminInventoryTable({ processedInventory, handleSort, op
                     <span className="text-xs sm:text-sm font-black text-zinc-300 font-mono">${displayPrice.toFixed(0) || '0'}</span>
                   </td>
                   
-                  {/* VAULT STOCK DISPLAY */}
+                  {/* Warehouse STOCK DISPLAY */}
                   <td className="py-3 px-3 sm:px-4 text-right">
                     <div className="flex flex-col items-end">
                       <span className={`text-xs sm:text-sm font-black font-mono ${displayStock <= 0 ? 'text-rose-500' : isAbundant && !item.dailyDeal ? 'text-cyan-400' : 'text-emerald-400'}`}>

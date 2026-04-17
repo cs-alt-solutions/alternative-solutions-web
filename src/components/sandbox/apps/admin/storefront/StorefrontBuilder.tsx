@@ -390,7 +390,7 @@ export default function StorefrontBuilder({ homeConfig, setHomeConfig, mainCateg
                                      className="w-full bg-zinc-900 hover:bg-zinc-800 border-2 border-dashed border-zinc-800 hover:border-cyan-500/50 py-4 rounded-xl flex flex-col items-center justify-center gap-2 transition-all group"
                                    >
                                      {isUploading ? <UploadCloud size={20} className="text-cyan-400 animate-bounce" /> : <UploadCloud size={20} className="text-zinc-600 group-hover:text-cyan-400" />}
-                                     <span className="text-[10px] font-black uppercase tracking-widest text-zinc-500 group-hover:text-cyan-400">{isUploading ? 'Uploading to Vault...' : 'Upload Local Image'}</span>
+                                     <span className="text-[10px] font-black uppercase tracking-widest text-zinc-500 group-hover:text-cyan-400">{isUploading ? 'Uploading to Warehouse...' : 'Upload Local Image'}</span>
                                    </button>
                                    <input type="file" ref={fileInputRef} onChange={(e) => {if (e.target.files && e.target.files[0]) handleFileUpload(e.target.files[0]);}} className="hidden" accept="image/*" />
                                </div>
