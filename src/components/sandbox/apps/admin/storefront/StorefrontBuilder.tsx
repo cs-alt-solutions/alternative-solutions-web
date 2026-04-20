@@ -1,3 +1,4 @@
+// src/components/sandbox/apps/admin/storefront/StorefrontBuilder.tsx
 import React, { useState, useRef } from 'react';
 import { Flame, Award, Leaf, Wind, Tag, Droplet, Sparkles, Star, Activity, CloudLightning } from 'lucide-react';
 import { createClient } from '@supabase/supabase-js';
@@ -9,13 +10,14 @@ import BuilderBentoBlock from './builder/BuilderBentoBlock';
 import BuilderSecondaryBlock from './builder/BuilderSecondaryBlock';
 
 export const IconMap: any = { Flame, Award, Leaf, Wind, Tag, Droplet, Sparkles, Star, Activity };
+
 export const ThemeMap: Record<string, any> = {
-  emerald: { heroGrad: 'bg-linear-to-r from-emerald-600 to-teal-600', secBg: 'bg-emerald-500', secBtnText: 'text-emerald-400', bentoHover: 'hover:border-emerald-500', bentoOverlay: 'from-emerald-950', bentoFallback: 'bg-linear-to-b from-emerald-900 via-zinc-900 to-black', bentoIconBg: 'bg-emerald-500/10', bentoIconText: 'text-emerald-400' },
-  cyan: { heroGrad: 'bg-linear-to-r from-cyan-600 to-blue-600', secBg: 'bg-cyan-500', secBtnText: 'text-cyan-400', bentoHover: 'hover:border-cyan-500', bentoOverlay: 'from-cyan-950', bentoFallback: 'bg-linear-to-b from-cyan-900 via-zinc-900 to-black', bentoIconBg: 'bg-cyan-500/10', bentoIconText: 'text-cyan-400' },
-  pink: { heroGrad: 'bg-linear-to-r from-pink-600 to-rose-600', secBg: 'bg-pink-500', secBtnText: 'text-pink-400', bentoHover: 'hover:border-pink-500', bentoOverlay: 'from-pink-950', bentoFallback: 'bg-linear-to-b from-pink-900 via-zinc-900 to-black', bentoIconBg: 'bg-pink-500/10', bentoIconText: 'text-pink-400' },
-  orange: { heroGrad: 'bg-linear-to-r from-orange-600 to-red-600', secBg: 'bg-orange-500', secBtnText: 'text-orange-400', bentoHover: 'hover:border-orange-500', bentoOverlay: 'from-orange-950', bentoFallback: 'bg-linear-to-b from-orange-900 via-zinc-900 to-black', bentoIconBg: 'bg-orange-500/10', bentoIconText: 'text-orange-400' },
-  fuchsia: { heroGrad: 'bg-linear-to-r from-fuchsia-600 to-purple-600', secBg: 'bg-fuchsia-500', secBtnText: 'text-fuchsia-400', bentoHover: 'hover:border-fuchsia-500', bentoOverlay: 'from-fuchsia-950', bentoFallback: 'bg-linear-to-b from-fuchsia-900 via-zinc-900 to-black', bentoIconBg: 'bg-fuchsia-500/10', bentoIconText: 'text-fuchsia-400' },
-  amber: { heroGrad: 'bg-linear-to-r from-amber-500 to-orange-500', secBg: 'bg-amber-500', secBtnText: 'text-amber-400', bentoHover: 'hover:border-amber-500', bentoOverlay: 'from-amber-950', bentoFallback: 'bg-linear-to-b from-amber-900 via-zinc-900 to-black', bentoIconBg: 'bg-amber-500/10', bentoIconText: 'text-amber-400' }
+  emerald: { heroGrad: 'bg-linear-to-r from-emerald-600 to-teal-600', secBg: 'bg-emerald-500/10 border-2 border-emerald-500/30', secText: 'text-emerald-400', secBtnText: 'text-emerald-400', bentoHover: 'hover:border-emerald-500', bentoOverlay: 'from-emerald-950', bentoFallback: 'bg-linear-to-b from-emerald-900 via-zinc-900 to-black', bentoIconBg: 'bg-emerald-500/10', bentoIconText: 'text-emerald-400' },
+  cyan: { heroGrad: 'bg-linear-to-r from-cyan-600 to-blue-600', secBg: 'bg-cyan-500/10 border-2 border-cyan-500/30', secText: 'text-cyan-400', secBtnText: 'text-cyan-400', bentoHover: 'hover:border-cyan-500', bentoOverlay: 'from-cyan-950', bentoFallback: 'bg-linear-to-b from-cyan-900 via-zinc-900 to-black', bentoIconBg: 'bg-cyan-500/10', bentoIconText: 'text-cyan-400' },
+  pink: { heroGrad: 'bg-linear-to-r from-pink-600 to-rose-600', secBg: 'bg-pink-500/10 border-2 border-pink-500/30', secText: 'text-pink-400', secBtnText: 'text-pink-400', bentoHover: 'hover:border-pink-500', bentoOverlay: 'from-pink-950', bentoFallback: 'bg-linear-to-b from-pink-900 via-zinc-900 to-black', bentoIconBg: 'bg-pink-500/10', bentoIconText: 'text-pink-400' },
+  orange: { heroGrad: 'bg-linear-to-r from-orange-600 to-red-600', secBg: 'bg-orange-500/10 border-2 border-orange-500/30', secText: 'text-orange-400', secBtnText: 'text-orange-400', bentoHover: 'hover:border-orange-500', bentoOverlay: 'from-orange-950', bentoFallback: 'bg-linear-to-b from-orange-900 via-zinc-900 to-black', bentoIconBg: 'bg-orange-500/10', bentoIconText: 'text-orange-400' },
+  fuchsia: { heroGrad: 'bg-linear-to-r from-fuchsia-600 to-purple-600', secBg: 'bg-fuchsia-500/10 border-2 border-fuchsia-500/30', secText: 'text-fuchsia-400', secBtnText: 'text-fuchsia-400', bentoHover: 'hover:border-fuchsia-500', bentoOverlay: 'from-fuchsia-950', bentoFallback: 'bg-linear-to-b from-fuchsia-900 via-zinc-900 to-black', bentoIconBg: 'bg-fuchsia-500/10', bentoIconText: 'text-fuchsia-400' },
+  amber: { heroGrad: 'bg-linear-to-r from-amber-500 to-orange-500', secBg: 'bg-amber-500/10 border-2 border-amber-500/30', secText: 'text-amber-400', secBtnText: 'text-amber-400', bentoHover: 'hover:border-amber-500', bentoOverlay: 'from-amber-950', bentoFallback: 'bg-linear-to-b from-amber-900 via-zinc-900 to-black', bentoIconBg: 'bg-amber-500/10', bentoIconText: 'text-amber-400' }
 };
 
 export const getThemeColor = (configColor: string) => {
@@ -39,6 +41,12 @@ export const getSmartBentoSpan = (idx: number, total: number) => {
 };
 
 export default function StorefrontBuilder({ homeConfig, setHomeConfig, mainCategories, subCategories, inventoryMatrix, clientConfig }: any) {
+    
+    // 🚀 ARCHITECTURE ENFORCEMENT: Force the builder to use the Master Config File,
+    // bypassing any stubborn browser cache that parent components might be passing down.
+    const activeMainCats = clientConfig?.categories || mainCategories || [];
+    const activeSubCats = clientConfig?.subCategories || subCategories || {};
+
     const [editingBlock, setEditingBlock] = useState<string | null>(null);
     const [editForm, setEditForm] = useState<any>(null);
     const [showInventoryModal, setShowInventoryModal] = useState(false);
@@ -101,7 +109,7 @@ export default function StorefrontBuilder({ homeConfig, setHomeConfig, mainCateg
 
     const addBento = () => {
         if (homeConfig.bento.length >= 6) return;
-        setHomeConfig({ ...homeConfig, bento: [...homeConfig.bento, { name: "New Category", cat: mainCategories[0], sub: "All", icon: "Tag", color: "cyan", desc: "Short description here.", imgUrl: "" }] });
+        setHomeConfig({ ...homeConfig, bento: [...homeConfig.bento, { name: "New Category", cat: activeMainCats[0], sub: "All", icon: "Tag", color: "cyan", desc: "Short description here.", imgUrl: "" }] });
     };
 
     return (
@@ -120,14 +128,14 @@ export default function StorefrontBuilder({ homeConfig, setHomeConfig, mainCateg
            <div className="space-y-10 scale-[0.95] transform origin-top border border-dashed border-zinc-800 p-6 rounded-3xl bg-zinc-950/50 relative">
               <BuilderHeroBlock homeConfig={homeConfig} openEdit={openEdit} />
               <BuilderBentoBlock homeConfig={homeConfig} openEdit={openEdit} moveBento={moveBento} removeBento={removeBento} addBento={addBento} />
-              <CategoryArtManager homeConfig={homeConfig} setHomeConfig={setHomeConfig} mainCategories={mainCategories} clientConfig={clientConfig} onOpenPicker={(cat: string) => { setActiveCatPicker(cat); setShowInventoryModal(true); }} />
+              <CategoryArtManager homeConfig={homeConfig} setHomeConfig={setHomeConfig} mainCategories={activeMainCats} clientConfig={clientConfig} onOpenPicker={(cat: string) => { setActiveCatPicker(cat); setShowInventoryModal(true); }} />
               <BuilderSecondaryBlock homeConfig={homeConfig} openEdit={openEdit} />
            </div>
 
            <BuilderEditSlideover 
               editingBlock={editingBlock} setEditingBlock={setEditingBlock} 
               editForm={editForm} setEditForm={setEditForm} 
-              mainCategories={mainCategories} subCategories={subCategories} 
+              mainCategories={activeMainCats} subCategories={activeSubCats} 
               handleSave={handleSave} fileInputRef={fileInputRef} isUploading={isUploading} 
               setShowInventoryModal={setShowInventoryModal} setActiveCatPicker={setActiveCatPicker} 
            />

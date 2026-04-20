@@ -85,7 +85,7 @@ export default function CatalogDealLanes({ recurringDeals, oneShotDeals, newDrop
                      </div>
                      <div>
                        <h3 className="text-3xl md:text-5xl font-black uppercase tracking-tighter text-transparent bg-clip-text bg-linear-to-r from-zinc-500 via-lime-400 to-zinc-400">Smoky Steals</h3>
-                       <p className="text-xs font-bold text-zinc-400 uppercase tracking-widest mt-1">Premium Selections • Clearance Prices</p>
+                       <p className="text-xs font-bold text-lime-400 uppercase tracking-widest mt-1">While supplies last, don't miss out on these Smoky Steals!</p>
                      </div>
                    </div>
                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 relative z-10">

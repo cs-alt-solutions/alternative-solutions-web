@@ -2,7 +2,7 @@
 'use client';
 
 import React from 'react';
-import { ArrowLeft, CheckCircle, Minus, Plus, ShoppingCart, X, Trash2, Wind, Droplet, Cookie, Sparkles, Flame } from 'lucide-react';
+import { ArrowLeft, CheckCircle, Minus, Plus, ShoppingCart, X, Trash2, Wind, Droplet, Cookie, Sparkles, Flame, Info } from 'lucide-react';
 import { getRequiredGrams } from './StorefrontComponents';
 
 export default function StorefrontCardBack({ 
@@ -37,6 +37,7 @@ export default function StorefrontCardBack({
   const activeSubCat = item?.subCategory?.toLowerCase() || '';
   const isVape = activeCat.includes('vape');
   const isMerch = activeCat.includes('merch');
+  const isEdible = activeCat.includes('edible'); // <-- TARGET ACQUIRED
   
   const isPreRoll = activeSubCat.includes('pre-roll') || activeSubCat.includes('blunt');
   const isRawFlower = isFlower && !isPreRoll;
@@ -177,10 +178,77 @@ export default function StorefrontCardBack({
         </div>
       </div>
 
-      {/* SCROLLABLE DNA SECTION */}
+      {/* SCROLLABLE DATA SECTION */}
       {!expandVariants && (
-        <div className="flex-1 overflow-y-auto scrollbar-hide p-4 space-y-3 relative">
-          {(item?.descBase || (hasDNA && expectsDNA)) ? (
+        <div className="flex-1 overflow-y-auto scrollbar-hide p-4 space-y-3 relative flex flex-col justify-center">
+          
+          {/* 🚀 THE EDIBLES COMPLIANCE LABEL 🚀 */}
+          {isEdible ? (
+             <div className="bg-zinc-100 border-[3px] border-zinc-900 rounded-lg p-3 flex flex-col text-zinc-950 font-sans shadow-inner mx-auto w-full max-w-70">
+                <div className="border-b-4 border-zinc-950 pb-1 mb-2 flex items-end justify-between">
+                  <div>
+                    <h4 className="text-xl font-black uppercase tracking-tighter leading-none">Product Facts</h4>
+                    <p className="text-[8px] font-black uppercase tracking-widest text-zinc-600 mt-0.5">Dosing & Contents Guide</p>
+                  </div>
+                  <Info size={18} className="text-zinc-900 mb-1" />
+                </div>
+
+                <div className="flex flex-col gap-1.5">
+                   {/* Maps 'descFact' to Total Package Amount */}
+                   {item?.descFact ? (
+                     <div className="flex justify-between items-end border-b-2 border-zinc-900 pb-1">
+                        <span className="text-[10px] font-black uppercase tracking-widest">Per Package</span>
+                        <span className="text-sm font-black">{item.descFact}</span>
+                     </div>
+                   ) : (
+                     <div className="flex justify-between items-end border-b-2 border-zinc-900 pb-1">
+                        <span className="text-[10px] font-black uppercase tracking-widest">Per Package</span>
+                        <span className="text-sm font-black text-zinc-400">N/A</span>
+                     </div>
+                   )}
+                   
+                   {/* Maps 'descUses' to Per Serving Amount */}
+                   {item?.descUses ? (
+                     <div className="flex justify-between items-end border-b border-zinc-400 pb-1">
+                        <span className="text-[9px] font-black uppercase tracking-widest text-zinc-700">Per Serving</span>
+                        <span className="text-xs font-black text-zinc-800">{item.descUses}</span>
+                     </div>
+                   ) : (
+                     <div className="flex justify-between items-end border-b border-zinc-400 pb-1">
+                        <span className="text-[9px] font-black uppercase tracking-widest text-zinc-700">Per Serving</span>
+                        <span className="text-xs font-black text-zinc-400">N/A</span>
+                     </div>
+                   )}
+
+                   {/* Maps 'descTaste' to Flavor/Type */}
+                   {item?.descTaste && (
+                     <div className="flex justify-between items-end border-b border-zinc-400 pb-1">
+                        <span className="text-[9px] font-black uppercase tracking-widest text-zinc-700">Flavor Profile</span>
+                        <span className="text-[10px] font-black text-zinc-800 text-right max-w-[60%] leading-tight">{item.descTaste}</span>
+                     </div>
+                   )}
+
+                   {/* Maps 'descFeels' to Expected Effect */}
+                   {item?.descFeels && (
+                     <div className="flex justify-between items-end border-b-[3px] border-zinc-900 pb-1 mt-1">
+                        <span className="text-[9px] font-black uppercase tracking-widest text-zinc-900">Expected Effect</span>
+                        <span className="text-[10px] font-black text-zinc-900 text-right max-w-[50%] leading-tight">{item.descFeels}</span>
+                     </div>
+                   )}
+                </div>
+
+                {item?.descBase && (
+                   <p className="text-[9px] text-zinc-700 italic leading-snug mt-2 text-center px-2">
+                     "{item.descBase}"
+                   </p>
+                )}
+
+                <p className="text-[6px] font-bold uppercase tracking-widest text-zinc-500 leading-tight text-center mt-3 pt-2 border-t border-zinc-300">
+                  WARNING: Consumption of cannabis may impair your ability to drive a car or operate machinery. Please consume responsibly.
+                </p>
+             </div>
+          ) : (item?.descBase || (hasDNA && expectsDNA)) ? (
+            /* STANDARD DNA LAYOUT */
             <div className="bg-zinc-900/50 border border-zinc-800/50 rounded-xl p-3 flex flex-col gap-2.5">
                {item?.descBase && (
                   <p className={`text-[10px] text-zinc-300 italic leading-relaxed ${(hasDNA && expectsDNA) ? 'border-b border-zinc-800/50 pb-2' : ''}`}>

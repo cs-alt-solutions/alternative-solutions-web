@@ -1,7 +1,8 @@
+// sandbox/apps/admin/AdminInventoryModule.tsx
 'use client';
 
 import React, { useState, useMemo, useEffect } from 'react';
-import { Download, X } from 'lucide-react';
+import { Download, X, Package } from 'lucide-react';
 import { useStickyState } from '@/hooks/useStickyState';
 import { supabase } from '@/utils/supabase';
 
@@ -14,28 +15,28 @@ import AdminInventoryAudit from './inventory-audit/AdminInventoryAudit';
 
 export default function AdminInventoryModule({ stock, setStock, inventoryMatrix, setNotification, clientConfig, jumpToEditItem, clearJumpToEdit }: any) {
   
-  const mainCategories = clientConfig.categories || ['Flower & Prerolls', 'Vapes & Pens', 'Edibles', 'Concentrates', 'Healthcare & Topicals', 'Merch & Extras'];
-  const defaultSubCats = clientConfig.subCategories || {};
-  const defaultTiers = clientConfig.pricingTiers || [];
-
-  const [subCategories, setSubCategories] = useStickyState<Record<string, string[]>>(defaultSubCats, `inv_subcats_v2_${clientConfig?.id || 'division'}`);
-  const [standardTiers, setStandardTiers] = useStickyState<string[]>(defaultTiers, `inv_tiers_v2_${clientConfig?.id || 'division'}`);
+  // 🚀 THE FILE IS LAW: Direct read from index.ts. NO BROWSER CACHING.
+  const mainCategories = clientConfig?.categories || ['Flower & Prerolls', 'Vapes & Pens', 'Edibles', 'Concentrates', 'Healthcare & Topicals', 'Merch & Extras'];
+  const subCategories = clientConfig?.subCategories || {};
+  
+  // We still use state for standardTiers if you want them editable, but we'll bump the cache key just in case.
+  const [standardTiers, setStandardTiers] = useStickyState<string[]>(clientConfig?.pricingTiers || [], `inv_tiers_v8_${clientConfig?.id || 'division'}`);
 
   const [editingItem, setEditingItem] = useState<any>(null);
   const [isAdding, setIsAdding] = useState(false);
   const [isManagingCats, setIsManagingCats] = useState(false);
-  
   const [isAuditing, setIsAuditing] = useState(false);
-  
   const [showBackupModal, setShowBackupModal] = useState(false);
 
   const [viewMode, setViewMode] = useState<'active' | 'archived'>('active');
-
   const [searchTerm, setSearchTerm] = useState('');
   const [categoryFilter, setCategoryFilter] = useState('All');
   const [subCategoryFilter, setSubCategoryFilter] = useState('All'); 
   const [statusFilter, setStatusFilter] = useState('All');
   const [sortConfig, setSortConfig] = useState({ key: 'name', direction: 'asc' });
+
+  const [rawInventory, setRawInventory] = useState<any[]>([]);
+  const [isLoadingInventory, setIsLoadingInventory] = useState(true);
 
   const getBlankItem = () => ({
     id: `itm-${Math.random().toString(36).substr(2, 9)}`,
@@ -54,13 +55,9 @@ export default function AdminInventoryModule({ stock, setStock, inventoryMatrix,
   const openEditor = (item?: any) => {
     if (item) {
       setEditingItem({ 
-        ...getBlankItem(), 
-        ...item,
-        descBase: item.descBase || '',
-        descFeels: item.descFeels || '',
-        descTaste: item.descTaste || '',
-        descUses: item.descUses || '',
-        descFact: item.descFact || ''
+        ...getBlankItem(), ...item,
+        descBase: item.descBase || '', descFeels: item.descFeels || '', descTaste: item.descTaste || '',
+        descUses: item.descUses || '', descFact: item.descFact || ''
       });
       setIsAdding(false);
     } else {
@@ -76,30 +73,35 @@ export default function AdminInventoryModule({ stock, setStock, inventoryMatrix,
     }
   }, [jumpToEditItem, clearJumpToEdit]);
 
+  // 🚀 DATABASE SYNC
+  useEffect(() => {
+    const fetchStoreData = async () => {
+      try {
+        const { data: invData, error: invErr } = await supabase.from('client_inventory').select('payload').eq('client_id', clientConfig.id);
+        if (invErr) throw invErr;
+        if (invData) setRawInventory(invData.map(row => row.payload));
+      } catch (err) { console.error("Market Sync Error:", err); } 
+      finally { setIsLoadingInventory(false); }
+    };
+    fetchStoreData();
+  }, [clientConfig.id]);
+
   const handleSaveProduct = async (itemToSave: any, isNew: boolean) => {
     setNotification("Syncing with Warehouse...");
     try {
-      const { error } = await supabase
-        .from('client_inventory')
-        .upsert(
-          { 
-            client_id: clientConfig.id || 'division', 
-            item_id: itemToSave.id, 
-            payload: itemToSave,
-            updated_at: new Date().toISOString()
-          },
+      const { error } = await supabase.from('client_inventory').upsert(
+          { client_id: clientConfig.id || 'division', item_id: itemToSave.id, payload: itemToSave, updated_at: new Date().toISOString() },
           { onConflict: 'client_id, item_id' }
-        );
+      );
       if (error) throw error;
-      setStock((prev: any[]) => {
+      setRawInventory(prev => {
         if (isNew) return [itemToSave, ...prev];
-        return prev.map((i: any) => i.id === itemToSave.id ? itemToSave : i);
+        return prev.map(i => i.id === itemToSave.id ? itemToSave : i);
       });
       setNotification(isNew ? `Added: ${itemToSave.name}` : `Updated: ${itemToSave.name}`);
       setEditingItem(null);
       setIsAdding(false);
     } catch (err) {
-      console.error("Warehouse Write Error:", err);
       setNotification(`Failed to save to master database.`);
     }
   };
@@ -107,55 +109,35 @@ export default function AdminInventoryModule({ stock, setStock, inventoryMatrix,
   const handleToggleArchive = async (item: any) => {
     const newStatus = item.status === 'archived' ? 'active' : 'archived';
     const updatedItem = { ...item, status: newStatus };
+    if (newStatus === 'active') { updatedItem.isReturned = true; updatedItem.isNewDrop = false; }
     
-    if (newStatus === 'active') {
-       updatedItem.isReturned = true;
-       updatedItem.isNewDrop = false;
-    }
-
     setNotification(newStatus === 'archived' ? `Deactivating ${item.name}...` : `Restoring ${item.name}...`);
     try {
-      const { error } = await supabase
-        .from('client_inventory')
-        .upsert(
-          { 
-            client_id: clientConfig.id || 'division', 
-            item_id: updatedItem.id, 
-            payload: updatedItem,
-            updated_at: new Date().toISOString()
-          },
+      const { error } = await supabase.from('client_inventory').upsert(
+          { client_id: clientConfig.id || 'division', item_id: updatedItem.id, payload: updatedItem, updated_at: new Date().toISOString() },
           { onConflict: 'client_id, item_id' }
-        );
+      );
       if (error) throw error;
-      setStock((prev: any[]) => prev.map((i: any) => i.id === updatedItem.id ? updatedItem : i));
-      setNotification(newStatus === 'archived' ? `${item.name} moved to Inactive Roster.` : `${item.name} Restored to Active Roster (Marked as Returned).`);
-    } catch (err) {
-      console.error("Warehouse Write Error:", err);
-      setNotification(`Failed to change roster status.`);
-    }
+      setRawInventory(prev => prev.map(i => i.id === updatedItem.id ? updatedItem : i));
+      setNotification(newStatus === 'archived' ? `${item.name} moved to Inactive Roster.` : `${item.name} Restored to Active Roster.`);
+    } catch (err) { setNotification(`Failed to change roster status.`); }
   };
 
   const handleDeleteProduct = async (itemId: string) => {
     try {
-      const { error } = await supabase
-        .from('client_inventory')
-        .delete()
-        .match({ client_id: clientConfig.id || 'division', item_id: itemId });
+      const { error } = await supabase.from('client_inventory').delete().match({ client_id: clientConfig.id || 'division', item_id: itemId });
       if (error) throw error;
-      setStock((prev: any[]) => prev.filter((item: any) => item.id !== itemId));
+      setRawInventory(prev => prev.filter(item => item.id !== itemId));
       setEditingItem(null);
       setIsAdding(false);
       setNotification(`Product Nuked from Warehouse.`);
-    } catch (err) {
-      console.error("Warehouse Delete Error:", err);
-      setNotification(`Failed to delete product.`);
-    }
+    } catch (err) { setNotification(`Failed to delete product.`); }
   };
 
   const handleExportBackup = () => {
     try {
       const cid = clientConfig?.id || 'division';
-      const fileContent = `// MASTER Warehouse BACKUP - ${new Date().toLocaleString()}\n\nexport const divisionInventory = ${JSON.stringify(stock, null, 2)};\n`;
+      const fileContent = `// MASTER Warehouse BACKUP - ${new Date().toLocaleString()}\n\nexport const divisionInventory = ${JSON.stringify(rawInventory, null, 2)};\n`;
       const blob = new Blob([fileContent], { type: "application/typescript" });
       const href = URL.createObjectURL(blob);
       const link = document.createElement("a");
@@ -166,40 +148,25 @@ export default function AdminInventoryModule({ stock, setStock, inventoryMatrix,
       document.body.removeChild(link);
       setNotification("Warehouse Exported!");
       setShowBackupModal(false);
-    } catch (err) {
-      setNotification("Export Failed.");
-    }
+    } catch (err) { setNotification("Export Failed."); }
   };
 
   const handleSort = (key: string) => {
-    setSortConfig(prev => ({
-      key,
-      direction: prev.key === key && prev.direction === 'asc' ? 'desc' : 'asc'
-    }));
+    setSortConfig(prev => ({ key, direction: prev.key === key && prev.direction === 'asc' ? 'desc' : 'asc' }));
   };
 
   const processedInventory = useMemo(() => {
-    let result = [...inventoryMatrix];
+    let result = [...rawInventory];
 
-    if (viewMode === 'active') {
-      result = result.filter(i => i.status !== 'archived');
-    } else {
-      result = result.filter(i => i.status === 'archived');
-    }
+    if (viewMode === 'active') result = result.filter(i => i.status !== 'archived');
+    else result = result.filter(i => i.status === 'archived');
 
     if (searchTerm) {
       const lowerTerm = searchTerm.toLowerCase();
       result = result.filter(i => i.name?.toLowerCase().includes(lowerTerm) || i.id?.toLowerCase().includes(lowerTerm) || i.brand?.toLowerCase().includes(lowerTerm));
     }
-    
-    if (categoryFilter !== 'All') {
-      result = result.filter(i => i.mainCategory === categoryFilter);
-    }
-
-    if (subCategoryFilter !== 'All') {
-       result = result.filter(i => i.subCategory === subCategoryFilter);
-    }
-    
+    if (categoryFilter !== 'All') result = result.filter(i => i.mainCategory === categoryFilter);
+    if (subCategoryFilter !== 'All') result = result.filter(i => i.subCategory === subCategoryFilter);
     if (statusFilter !== 'All') {
       if (statusFilter === 'Active Promo') result = result.filter(i => i.dailyDeal);
       if (statusFilter === 'Top Shelf') result = result.filter(i => i.isTopShelf);
@@ -207,17 +174,13 @@ export default function AdminInventoryModule({ stock, setStock, inventoryMatrix,
       if (statusFilter === 'New Arrival') result = result.filter(i => i.isNewDrop);
       if (statusFilter === 'Returned') result = result.filter(i => i.isReturned);
       if (statusFilter === 'Smoky Steals') result = result.filter(i => i.isClearance);
-
-      if (statusFilter === 'Low Stock') result = result.filter(i => {
-        const hasVariants = i.options && i.options.length > 0 && i.options[0].label !== 'Standard';
-        const stockNum = hasVariants ? i.options.reduce((s:number, o:any) => s + (Number(o.stock)||0), 0) : (i.onHand || 0);
-        return stockNum > 0 && stockNum <= 15;
-      });
-      if (statusFilter === 'Out of Stock') result = result.filter(i => {
-        const hasVariants = i.options && i.options.length > 0 && i.options[0].label !== 'Standard';
-        const stockNum = hasVariants ? i.options.reduce((s:number, o:any) => s + (Number(o.stock)||0), 0) : (i.onHand || 0);
-        return stockNum <= 0;
-      });
+      if (statusFilter === 'Low Stock' || statusFilter === 'Out of Stock') {
+        result = result.filter(i => {
+          const hasVariants = i.options && i.options.length > 0 && i.options[0].label !== 'Standard';
+          const stockNum = hasVariants ? i.options.reduce((s:number, o:any) => s + (Number(o.stock)||0), 0) : (i.onHand || 0);
+          return statusFilter === 'Low Stock' ? (stockNum > 0 && stockNum <= 15) : stockNum <= 0;
+        });
+      }
     }
 
     result.sort((a, b) => {
@@ -240,30 +203,29 @@ export default function AdminInventoryModule({ stock, setStock, inventoryMatrix,
       return 0;
     });
     return result;
-  }, [inventoryMatrix, searchTerm, categoryFilter, subCategoryFilter, statusFilter, sortConfig, viewMode]);
+  }, [rawInventory, searchTerm, categoryFilter, subCategoryFilter, statusFilter, sortConfig, viewMode]);
 
-  if (isAuditing) return (
-     <AdminInventoryAudit 
-        stock={stock} 
-        setStock={setStock} 
-        setNotification={setNotification} 
-        clientConfig={clientConfig} 
-        onClose={() => setIsAuditing(false)} 
-     />
-  );
-  if (isManagingCats) return <AdminInventoryCategoryManager clientConfig={clientConfig} mainCategories={mainCategories} subCategories={subCategories} setSubCategories={setSubCategories} standardTiers={standardTiers} setStandardTiers={setStandardTiers} setNotification={setNotification} onClose={() => setIsManagingCats(false)} />;
+  if (isLoadingInventory) {
+    return (
+      <div className="min-h-dvh flex flex-col items-center justify-center p-6 text-zinc-100">
+        <div className="animate-pulse flex flex-col items-center">
+           <Package size={40} className="text-cyan-400 mb-4 drop-shadow-[0_0_15px_rgba(34,211,238,0.5)]" />
+           <span className="text-[10px] font-black uppercase tracking-widest text-cyan-400">Syncing Warehouse...</span>
+        </div>
+      </div>
+    );
+  }
+
+  if (isAuditing) return <AdminInventoryAudit stock={rawInventory} setStock={setRawInventory} setNotification={setNotification} clientConfig={clientConfig} onClose={() => setIsAuditing(false)} />;
+  
+  if (isManagingCats) return <AdminInventoryCategoryManager clientConfig={clientConfig} mainCategories={mainCategories} subCategories={subCategories} setStandardTiers={setStandardTiers} setNotification={setNotification} onClose={() => setIsManagingCats(false)} />;
   
   if (editingItem) return (
     <AdminInventoryEditor 
-      initialItem={editingItem} 
-      isAdding={isAdding} 
-      mainCategories={mainCategories} 
-      subCategories={subCategories} 
-      onSave={handleSaveProduct} 
-      onDelete={handleDeleteProduct}
-      onCancel={() => { setEditingItem(null); setIsAdding(false); }} 
-      client_id={clientConfig.id} 
-      setNotification={setNotification}
+      initialItem={editingItem} isAdding={isAdding} 
+      mainCategories={mainCategories} subCategories={subCategories} 
+      onSave={handleSaveProduct} onDelete={handleDeleteProduct} onCancel={() => { setEditingItem(null); setIsAdding(false); }} 
+      client_id={clientConfig.id} setNotification={setNotification}
     />
   );
 
@@ -283,25 +245,14 @@ export default function AdminInventoryModule({ stock, setStock, inventoryMatrix,
         </div>
       )}
 
-      <AdminInventoryHeader 
-        onOpenAudit={() => setIsAuditing(true)}
-        onBackup={() => setShowBackupModal(true)}
-        onManageCats={() => setIsManagingCats(true)}
-        onAddProduct={() => openEditor()}
-      />
+      <AdminInventoryHeader onOpenAudit={() => setIsAuditing(true)} onBackup={() => setShowBackupModal(true)} onManageCats={() => setIsManagingCats(true)} onAddProduct={() => openEditor()} />
 
       <div className="flex items-center gap-6 mb-6 px-2 border-b border-zinc-800/50">
-        <button 
-          onClick={() => setViewMode('active')}
-          className={`pb-4 text-[10px] font-black uppercase tracking-widest transition-all relative ${viewMode === 'active' ? 'text-cyan-400' : 'text-zinc-500 hover:text-zinc-300'}`}
-        >
+        <button onClick={() => setViewMode('active')} className={`pb-4 text-[10px] font-black uppercase tracking-widest transition-all relative ${viewMode === 'active' ? 'text-cyan-400' : 'text-zinc-500 hover:text-zinc-300'}`}>
           Active Roster
           {viewMode === 'active' && <div className="absolute bottom-0 left-0 w-full h-0.5 bg-cyan-400 shadow-[0_0_10px_rgba(34,211,238,0.5)]" />}
         </button>
-        <button 
-          onClick={() => setViewMode('archived')}
-          className={`pb-4 text-[10px] font-black uppercase tracking-widest transition-all relative ${viewMode === 'archived' ? 'text-amber-400' : 'text-zinc-500 hover:text-zinc-300'}`}
-        >
+        <button onClick={() => setViewMode('archived')} className={`pb-4 text-[10px] font-black uppercase tracking-widest transition-all relative ${viewMode === 'archived' ? 'text-amber-400' : 'text-zinc-500 hover:text-zinc-300'}`}>
           Inactive Roster
           {viewMode === 'archived' && <div className="absolute bottom-0 left-0 w-full h-0.5 bg-amber-400 shadow-[0_0_10px_rgba(251,191,36,0.5)]" />}
         </button>
@@ -314,13 +265,7 @@ export default function AdminInventoryModule({ stock, setStock, inventoryMatrix,
         statusFilter={statusFilter} setStatusFilter={setStatusFilter}
       />
 
-      <AdminInventoryTable 
-        processedInventory={processedInventory}
-        handleSort={handleSort} openEditor={openEditor}
-        mainCategories={mainCategories} subCategories={subCategories}
-        onQuickSave={handleSaveProduct}
-        onToggleArchive={handleToggleArchive}
-      />
+      <AdminInventoryTable processedInventory={processedInventory} handleSort={handleSort} openEditor={openEditor} mainCategories={mainCategories} subCategories={subCategories} onQuickSave={handleSaveProduct} onToggleArchive={handleToggleArchive} />
     </div>
   );
 }

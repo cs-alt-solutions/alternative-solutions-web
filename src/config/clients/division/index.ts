@@ -1,3 +1,4 @@
+// src/config/clients/division/index.ts
 export const divisionConfig = {
   id: 'division',
   accessCode: 'doobie',
@@ -33,7 +34,6 @@ export const divisionConfig = {
     6: { open: '08:00', close: '17:00', isClosed: false },
   },
 
-  // --- NEW UNIFIED ENGINE DATA ---
   team: {
     dispatchers: ["@MisterDoobie", "@RedsRosin", "@JonSpliff", "@MrsDoobieDuo"],
     drivers: ["@balance0n1", "@Laylo757", "@King_Maso", "@MistrSandman", "@Roman_Empire145", "@true80skid", "@Thouzand420", "@KyleTheNewGuy"]
@@ -48,10 +48,8 @@ export const divisionConfig = {
   homeConfig: {
     hero: { title: "DAILY DEALS\nARE LIVE", subtitle: "Don't Miss Out On Today's Drops", buttonText: "Click Here For Daily Deals", colorFrom: "cyan-600", colorTo: "blue-600", icon: "Flame" },
     bento: [
-      // 👇 CHANGED cat TO "Flower & Prerolls"
       { name: "Flower", cat: "Flower & Prerolls", sub: "All", icon: "Leaf", color: "emerald", desc: "Premium flower and reserve tiers.", span: "md:col-span-2 md:row-span-2", imgUrl: "" },
       { name: "Vapes", cat: "Vapes & Pens", sub: "All", icon: "Wind", color: "cyan", desc: "Disposables & carts.", span: "col-span-1 md:col-span-1 md:row-span-2", imgUrl: "" },
-      // 👇 CHANGED cat TO "Flower & Prerolls"
       { name: "Pre Rolls", cat: "Flower & Prerolls", sub: "Pre-Rolls & Blunts", icon: "Tag", color: "pink", desc: "Ready to enjoy.", span: "col-span-1 md:col-span-1 md:row-span-1", imgUrl: "" },
       { name: "Mystery Bags", cat: "Merch & Extras", sub: "Mystery Bags", icon: "Sparkles", color: "fuchsia", desc: "Surprise assortments.", span: "col-span-1 md:col-span-1 md:row-span-1", imgUrl: "" }
     ],
@@ -67,13 +65,13 @@ export const divisionConfig = {
     5: { title: "Flower Friday", sub: "Fresh buds for the weekend." },
     6: { title: "Shatterday", sub: "Elevate your Saturday." }
   },
-  // -------------------------------
   
-  categories: ['Flower & Plants', 'Vapes & Pens', 'Edibles', 'Concentrates', 'Merch & Extras', 'Healthcare & Topicals'],  
+  categories: ['Flower & Prerolls', 'Vapes & Pens', 'Edibles', 'Concentrates', 'Merch & Extras', 'Healthcare & Topicals'],  
   subCategories: {
     'Flower & Prerolls': ['Top Shelf', 'Pre-Rolls & Blunts', 'Premium', 'Featured Brands', 'SMOKEY STEALS!'],
     'Vapes & Pens': ['Disposables', '510 Cartridges'],
-    'Edibles': ['Gummies & Candies', 'Baked Goods & Snacks', 'Infused Beverages', "Mrs. Doob's Fun Food", "Mrs. Doob's Drinks"],
+    // 👇 The updated Edibles mapping
+    'Edibles': ['Baked Goods & Chocolates', 'Gummies & Candies', 'Infused Beverages & Syrups', 'Pantry & Spreads'],
     'Concentrates': ['Wax & Dabs', 'Rosin & Resin'],
     'Merch & Extras': ['Apparel & Gear', 'Healthcare & Topicals', 'Accessories']
   },

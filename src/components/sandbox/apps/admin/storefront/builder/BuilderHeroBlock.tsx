@@ -29,8 +29,9 @@ export default function BuilderHeroBlock({ homeConfig, openEdit }: any) {
                     <div className="absolute inset-0 bg-pink-500 blur-2xl opacity-50 rounded-full animate-pulse"></div>
                     </div>
                     <div className="space-y-1 md:space-y-2 w-full">
+                        {/* NEON STROBE OUTLINE APPLIED HERE */}
                         {homeConfig.hero.title.split('\n').map((line: string, i: number) => (
-                            <h2 key={i} className={`text-5xl md:text-7xl lg:text-8xl font-black uppercase tracking-tighter leading-none ${i % 2 !== 0 ? 'text-cyan-300 drop-shadow-[0_0_20px_rgba(6,182,212,0.8)]' : 'text-pink-400 drop-shadow-[0_0_20px_rgba(236,72,153,0.8)]'}`}>
+                            <h2 key={i} className={`text-5xl md:text-7xl lg:text-8xl font-black uppercase tracking-tighter leading-none text-transparent ${i % 2 !== 0 ? '[-webkit-text-stroke:2px_var(--color-cyan-400)] drop-shadow-[0_0_20px_rgba(6,182,212,0.8)]' : '[-webkit-text-stroke:2px_var(--color-pink-500)] drop-shadow-[0_0_20px_rgba(236,72,153,0.8)]'}`}>
                                 {line}
                             </h2>
                         ))}

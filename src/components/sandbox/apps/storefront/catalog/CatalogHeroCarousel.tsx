@@ -38,8 +38,9 @@ export default function CatalogHeroCarousel({ heroSlides, heroIndex, setHeroInde
                             <div className="absolute inset-0 bg-pink-500 blur-2xl opacity-50 rounded-full animate-pulse"></div>
                         </div>
                         <div className="space-y-1 md:space-y-2 w-full">
+                            {/* NEON STROBE OUTLINE APPLIED HERE */}
                             {activeHero.title?.split('\n').map((line: string, i: number) => (
-                                <h2 key={i} className={`text-5xl md:text-7xl lg:text-8xl font-black uppercase tracking-tighter leading-none ${i % 2 !== 0 ? 'text-cyan-300 drop-shadow-[0_0_20px_rgba(6,182,212,0.9)]' : 'text-pink-400 drop-shadow-[0_0_20px_rgba(236,72,153,0.9)]'}`}>{line}</h2>
+                                <h2 key={i} className={`text-5xl md:text-7xl lg:text-8xl font-black uppercase tracking-tighter leading-none text-transparent ${i % 2 !== 0 ? '[-webkit-text-stroke:2px_var(--color-cyan-400)]drop-shadow-[0_0_20px_rgba(6,182,212,0.9)]' : '[-webkit-text-stroke:2px_var(--color-pink-500)] drop-shadow-[0_0_20px_rgba(236,72,153,0.9)]'}`}>{line}</h2>
                             ))}
                         </div>
                         <p className="mt-6 text-pink-100 font-black tracking-[0.3em] uppercase text-[10px] md:text-xs drop-shadow-[0_0_8px_rgba(236,72,153,0.8)]">{activeHero.subtitle}</p>
@@ -53,7 +54,7 @@ export default function CatalogHeroCarousel({ heroSlides, heroIndex, setHeroInde
                     <div>
                         <div key={`title-${heroIndex}`} className="flex flex-col gap-1 mb-2 animate-in slide-in-from-left-4 fade-in duration-500">
                             {activeHero.title?.split('\n').map((line: string, i: number) => (
-                                <h2 key={i} className={`text-4xl md:text-6xl lg:text-7xl font-black uppercase tracking-tighter leading-none ${i % 2 !== 0 ? 'text-cyan-300 drop-shadow-[0_0_15px_rgba(6,182,212,0.9)]' : 'text-pink-400 drop-shadow-[0_0_15px_rgba(236,72,153,0.9)]'}`}>{line}</h2>
+                                <h2 key={i} className={`text-4xl md:text-6xl lg:text-7xl font-black uppercase tracking-tighter leading-none text-transparent ${i % 2 !== 0 ? '[-webkit-text-stroke:2px_var(--color-cyan-400)] drop-shadow-[0_0_15px_rgba(6,182,212,0.9)]' : '[-webkit-text-stroke:2px_var(--color-pink-500)] drop-shadow-[0_0_15px_rgba(236,72,153,0.9)]'}`}>{line}</h2>
                             ))}
                         </div>
                         <p key={`sub-${heroIndex}`} className={`text-sm md:text-xl font-black uppercase tracking-widest mb-0 drop-shadow-[0_2px_6px_rgba(0,0,0,0.9)] animate-in slide-in-from-left-4 fade-in duration-500 delay-75 text-white`}>{activeHero.subtitle}</p>
