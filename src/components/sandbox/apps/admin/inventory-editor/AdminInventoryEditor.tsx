@@ -1,4 +1,4 @@
-// sandbox/apps/admin/inventory-editor/AdminInventoryEditor.tsx
+// src/components/sandbox/apps/admin/inventory-editor/AdminInventoryEditor.tsx
 'use client';
 
 import React, { useState, useRef, useEffect } from 'react';
@@ -21,6 +21,7 @@ export default function AdminInventoryEditor({ initialItem, isAdding, mainCatego
   const [isUploadingMain, setIsUploadingMain] = useState(false);
   const [isUploadingIcon, setIsUploadingIcon] = useState(false);
   const [isConfirmingDelete, setIsConfirmingDelete] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
   const [descMode, setDescMode] = useState<'desc' | 'fact'>('desc');
 
   // MASTER LOCK STATE: Secures the "Nuke" button from accidental employee clicks.
@@ -266,7 +267,9 @@ export default function AdminInventoryEditor({ initialItem, isAdding, mainCatego
     setUpdatedItem((prev: any) => ({ ...prev, options: prev.options.filter((o: any) => o.id !== id) }));
   };
 
-  const handleSave = () => { 
+  // 🚀 SUPABASE WAREHOUSE SYNC ROUTINE 🚀
+  const handleSave = async () => { 
+    setIsSaving(true);
     const itemToSave = {
         ...updatedItem,
         options: updatedItem.options.map((opt: any) => {
@@ -288,7 +291,57 @@ export default function AdminInventoryEditor({ initialItem, isAdding, mainCatego
             };
         })
     };
-    onSave(itemToSave, isAdding); 
+
+    if (setNotification) setNotification('Syncing to Warehouse...');
+
+    try {
+      // Upsert to the multi-tenant architecture
+      const { error } = await supabase
+        .from('client_inventory')
+        .upsert({
+          client_id: cid,
+          item_id: itemToSave.id,
+          payload: itemToSave,
+          updated_at: new Date().toISOString()
+        }, { onConflict: 'client_id,item_id' }); // Ensures updates overwrite correctly instead of duplicating
+
+      // Fallback in case PostgreSQL throws a constraint error before explicit mapping
+      if (error) {
+         if (error.code === '42P10' || error.message.includes('unique constraint')) {
+            await supabase.from('client_inventory').delete().match({ client_id: cid, item_id: itemToSave.id });
+            const { error: insertErr } = await supabase.from('client_inventory').insert({
+              client_id: cid,
+              item_id: itemToSave.id,
+              payload: itemToSave,
+              updated_at: new Date().toISOString()
+            });
+            if (insertErr) throw insertErr;
+         } else {
+             throw error;
+         }
+      }
+
+      if (setNotification) setNotification('Warehouse Synced Successfully.');
+      onSave(itemToSave, isAdding); 
+    } catch (err: any) {
+      console.error("Warehouse Sync Error:", err);
+      if (setNotification) setNotification("Sync failed. Check terminal logs.");
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const handleNuke = async () => {
+    setIsConfirmingDelete(false);
+    if (setNotification) setNotification("Nuking item from Warehouse...");
+    try {
+      await supabase.from('client_inventory').delete().match({ client_id: cid, item_id: updatedItem.id });
+      if (setNotification) setNotification("Item nuked.");
+      onDelete(updatedItem.id);
+    } catch (err) {
+      console.error("Nuke Error:", err);
+      if (setNotification) setNotification("Failed to nuke item.");
+    }
   };
 
   const activeMainCat = updatedItem.mainCategory || '';
@@ -333,7 +386,7 @@ export default function AdminInventoryEditor({ initialItem, isAdding, mainCatego
                      <div className="flex items-center gap-2 bg-rose-500/10 border border-rose-500/30 p-1 rounded-xl animate-in zoom-in-95">
                         <span className="text-[10px] font-bold text-rose-400 uppercase px-2 tracking-widest">Are you sure?</span>
                         <button onClick={() => setIsConfirmingDelete(false)} className="px-3 py-1.5 bg-zinc-900 rounded-lg text-zinc-400 text-[10px] uppercase font-black hover:text-zinc-100">Cancel</button>
-                        <button onClick={() => onDelete(updatedItem.id)} className="px-3 py-1.5 bg-rose-500 rounded-lg text-zinc-950 text-[10px] uppercase font-black hover:bg-rose-400 flex items-center gap-1 shadow-[0_0_15px_rgba(244,63,94,0.4)]"><Trash2 size={12}/> Confirm Nuke</button>
+                        <button onClick={handleNuke} className="px-3 py-1.5 bg-rose-500 rounded-lg text-zinc-950 text-[10px] uppercase font-black hover:bg-rose-400 flex items-center gap-1 shadow-[0_0_15px_rgba(244,63,94,0.4)]"><Trash2 size={12}/> Confirm Nuke</button>
                      </div>
                    ) : (
                      <button onClick={() => setIsConfirmingDelete(true)} className="bg-zinc-950 border border-rose-500/30 hover:bg-rose-500/10 text-rose-400 font-black px-3 py-1.5 rounded-lg text-[9px] uppercase tracking-widest transition-all flex items-center gap-1.5 opacity-50 hover:opacity-100"><Trash2 size={12} /> Nuke</button>
@@ -353,8 +406,10 @@ export default function AdminInventoryEditor({ initialItem, isAdding, mainCatego
           </div>
         </div>
         <div className="flex items-center gap-3">
-          <button onClick={onCancel} className="bg-zinc-950 border border-zinc-800 hover:bg-zinc-900 text-zinc-400 font-black px-5 py-2.5 rounded-xl text-[10px] uppercase tracking-widest transition-all">Cancel</button>
-          <button onClick={handleSave} className="bg-emerald-500 hover:bg-emerald-400 text-zinc-950 font-black px-6 py-2.5 rounded-xl text-[10px] uppercase tracking-widest transition-all flex items-center gap-2 shadow-lg"><Save size={14} /> Save</button>
+          <button onClick={onCancel} disabled={isSaving} className="bg-zinc-950 border border-zinc-800 hover:bg-zinc-900 text-zinc-400 font-black px-5 py-2.5 rounded-xl text-[10px] uppercase tracking-widest transition-all disabled:opacity-50">Cancel</button>
+          <button onClick={handleSave} disabled={isSaving} className="bg-emerald-500 hover:bg-emerald-400 text-zinc-950 font-black px-6 py-2.5 rounded-xl text-[10px] uppercase tracking-widest transition-all flex items-center gap-2 shadow-lg disabled:opacity-50">
+            <Save size={14} /> {isSaving ? 'Syncing...' : 'Save'}
+          </button>
         </div>
       </div>
 

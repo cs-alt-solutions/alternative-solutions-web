@@ -1,9 +1,10 @@
+// src/components/sandbox/apps/storefront/StorefrontCatalog.tsx
 import React, { useEffect, useState } from 'react';
 import { useStickyState } from '@/hooks/useStickyState';
 import { Info, Flame, ShoppingCart, Leaf, Wind, Cookie, Droplet, Shirt, LayoutGrid, Tag, Award, Sparkles, Star, ArrowRight, Home, Activity, ChevronLeft, ChevronRight, RotateCcw, Zap, ChevronDown } from 'lucide-react';
 import { StorefrontCard, getRequiredGrams } from './StorefrontComponents';
 import StorefrontHeader from './StorefrontHeader';
-import { IconMap, ThemeMap, getThemeColor } from '../admin/storefront/StorefrontBuilder';
+import { IconMap, ThemeMap, getThemeColor, getSmartBentoSpan } from '../admin/storefront/StorefrontBuilder';
 
 export default function StorefrontCatalog({
   onExit, cartItemCount, cartTotal, setShowPolicies,
@@ -13,7 +14,7 @@ export default function StorefrontCatalog({
   setIsCheckingOut, clientConfig 
 }: any) {
   
-  const fallbackConfig = { hero: {}, bento: [], secondary: {} };
+  const fallbackConfig = { hero: {}, bento: [], secondary: {}, categoryImages: {} };
   const [homeConfig] = useStickyState(clientConfig?.homeConfig || fallbackConfig, `alt_solutions_home_config_v3_${clientConfig?.id}`);
   
   const [heroIndex, setHeroIndex] = useState(0);
@@ -118,7 +119,7 @@ export default function StorefrontCatalog({
     },
     ...activeTodaysDeals.map((item: any) => {
       const isNewDrop = item.campaignTag === 'NEW_DROP';
-      const isClearance = item.campaignTag === 'VAULT_CLEARANCE'; // THIS WAS THE BROKEN LINE
+      const isClearance = item.campaignTag === 'VAULT_CLEARANCE';
       
       let catName = item.subCategory && item.subCategory !== 'All' ? item.subCategory : item.mainCategory;
       if (catName === 'Flower & Prerolls') catName = 'Premium Flower';
@@ -277,8 +278,11 @@ export default function StorefrontCatalog({
                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4 grid-flow-row-dense auto-rows-[160px] md:auto-rows-[180px]">
                    {homeConfig.bento.map((c: any, idx: number) => {
                      const BIcon = IconMap[c.icon] || Tag;
-                     const sanitizedSpan = c.span.replace(/md:col-start-\d+/g, '').trim();
+                     const sanitizedSpan = getSmartBentoSpan(idx, homeConfig.bento.length);
                      const theme = ThemeMap[getThemeColor(c.color)] || ThemeMap['emerald'];
+                     
+                     // 🚀 FALLBACK LOGIC
+                     const displayImg = c.imgUrl || homeConfig.categoryImages?.[c.cat] || null;
 
                      return (
                        <button 
@@ -290,9 +294,9 @@ export default function StorefrontCatalog({
                          }}
                          className={`rounded-3xl p-6 flex flex-col items-start justify-end gap-1 ${theme.bentoHover} transition-all group relative overflow-hidden ${sanitizedSpan} bg-zinc-950 border-2 border-zinc-800 shadow-lg`}
                        >
-                         {c.imgUrl ? (
+                         {displayImg ? (
                             <div className="absolute inset-0 z-0 group-hover:scale-105 transition-transform duration-700">
-                               <img src={c.imgUrl} alt={c.name} className="w-full h-full object-cover opacity-40 mix-blend-luminosity" />
+                               <img src={displayImg} alt={c.name} className="w-full h-full object-cover opacity-40 mix-blend-luminosity" />
                                <div className={`absolute inset-0 bg-linear-to-t from-zinc-950 via-zinc-950/60 to-zinc-950/40`} />
                                <div className={`absolute inset-0 bg-linear-to-t ${theme.bentoOverlay} opacity-30`} />
                             </div>
