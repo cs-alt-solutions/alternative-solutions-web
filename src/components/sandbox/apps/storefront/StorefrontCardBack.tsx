@@ -100,7 +100,7 @@ export default function StorefrontCardBack({
   });
 
   return (
-    <div className="absolute inset-0 w-full h-full backface-hidden transform-[rotateY(180deg)] bg-zinc-950 border border-zinc-800 rounded-[2.5rem] flex flex-col shadow-2xl overflow-hidden">
+    <div className="absolute inset-0 w-full h-full backface-hidden transform-[rotateY(180deg)] bg-zinc-950 border border-zinc-800 rounded-[2.5rem] flex flex-row shadow-2xl overflow-hidden">
       
       {isCompletelyOOS && (
         <div className="absolute inset-0 z-50 bg-zinc-950/80 backdrop-blur-sm flex items-center justify-center rounded-[2.5rem]">
@@ -109,53 +109,56 @@ export default function StorefrontCardBack({
         </div>
       )}
 
-      {/* FLOATING BACK BUTTON FOR EDIBLES */}
-      {isEdible && (
-         <button onClick={() => setIsFlipped(false)} className="absolute top-4 left-4 z-50 p-1.5 bg-zinc-950/50 hover:bg-zinc-900 border border-zinc-800 backdrop-blur-sm text-zinc-400 rounded-lg transition-colors active:scale-95">
-           <ArrowLeft size={16} />
-         </button>
-      )}
+      {/* LEFT COLUMN (60%) */}
+      <div className={`w-[60%] h-full flex flex-col relative z-10 ${isEdible ? 'bg-zinc-900 border-r-2 border-zinc-800' : 'border-r border-zinc-800/50 p-4 sm:p-5 pb-6 overflow-y-auto scrollbar-hide'}`}>
+         {isEdible ? (
+           <EdibleComplianceLabel item={item} cleanItemName={cleanItemName} isSideStacked={true} />
+         ) : (
+           <div className="flex flex-col h-full">
+              {/* 🚀 FIXED: New Scaled Header for Flower/Vape */}
+              <div className="flex items-start justify-between gap-2 mb-3 shrink-0 pb-3 border-b border-zinc-800/50">
+                 <div className="flex flex-col min-w-0 pr-2">
+                   <p className="text-[8px] sm:text-[9px] font-black uppercase tracking-widest text-zinc-500 mb-1">Cultivar Profile</p>
+                   <h3 className="text-base sm:text-xl font-black text-zinc-100 uppercase tracking-tighter leading-none wrap-break-word">{cleanItemName}</h3>
+                   {item?.brand && <span className="text-[8px] sm:text-[9px] font-black text-emerald-500 uppercase tracking-widest mt-1.5 block">BY {item.brand}</span>}
+                 </div>
+                 {item?.iconUrl && (
+                   <div className="w-10 h-10 rounded-full border border-zinc-800 bg-zinc-950 overflow-hidden shrink-0 shadow-lg flex items-center justify-center">
+                     <img src={item.iconUrl} alt="Brand Stamp" className="max-w-[80%] max-h-[80%] object-contain" />
+                   </div>
+                 )}
+              </div>
+              
+              <div className="flex flex-col flex-1 overflow-y-auto scrollbar-hide pr-1">
+                  {(item?.descBase || item?.lineage || item?.strainType || (hasDNA && expectsDNA)) ? (
+                     <ProductDnaPanel item={item} UI={UI} hasDNA={hasDNA} expectsDNA={expectsDNA} />
+                  ) : expectsDNA ? (
+                     <div className="flex items-center justify-center pt-10"><span className="text-[9px] font-black uppercase tracking-widest text-zinc-600">{UI.noDna}</span></div>
+                  ) : null}
+              </div>
+           </div>
+         )}
+      </div>
 
-      {/* STANDARD HEADER FOR NON-EDIBLES */}
-      {!isEdible && (
-        <div className={`flex items-center justify-between p-3 md:p-4 border-b border-zinc-800/50 shrink-0 bg-zinc-950 z-10 pb-3`}>
-          <button onClick={() => setIsFlipped(false)} className="p-1.5 bg-zinc-900 border border-zinc-800 hover:bg-zinc-800 text-zinc-400 rounded-lg transition-colors active:scale-95 shrink-0">
-            <ArrowLeft size={16} />
-          </button>
-          <div className="flex items-center gap-2.5 overflow-hidden ml-auto">
-            {item?.iconUrl && <div className="w-8 h-8 rounded-full border border-zinc-800 bg-white/95 overflow-hidden shrink-0 shadow-lg flex items-center justify-center"><img src={item.iconUrl} alt="Brand Stamp" className="max-w-[80%] max-h-[80%] object-contain" /></div>}
-            <div className="flex flex-col items-end overflow-hidden">
-              <h3 className="text-xs font-black text-zinc-100 truncate uppercase tracking-wider">{cleanItemName}</h3>
-              {item?.brand && <span className="text-[7px] font-black text-emerald-500 uppercase tracking-widest truncate mt-0.5">BY {item.brand}</span>}
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* SCROLLABLE DATA SECTION (Injecting DNA or Edible Label) */}
-      {!expandVariants && (
-        <div className={`flex-1 overflow-y-auto scrollbar-hide relative flex flex-col justify-center min-h-0 ${isEdible ? 'p-0' : 'p-4'}`}>
-          {isEdible ? (
-             <EdibleComplianceLabel item={item} cleanItemName={cleanItemName} />
-          ) : (item?.descBase || (hasDNA && expectsDNA)) ? (
-             <ProductDnaPanel item={item} UI={UI} hasDNA={hasDNA} expectsDNA={expectsDNA} />
-          ) : expectsDNA ? (
-             <div className="w-full flex items-center justify-center py-2"><span className="text-[10px] font-black uppercase tracking-widest text-zinc-600">{UI.noDna}</span></div>
-          ) : null}
-        </div>
-      )}
-
-      {/* CART & COMMERCE CONTROLS (Injecting Add to Cart, pricing, variants) */}
-      <CardCommerceControls 
-         item={item} UI={UI} config={config} safeSizes={safeSizes} sortedSizes={sortedSizes} 
-         selectedSize={selectedSize} setSelectedSize={setSelectedSize} expandVariants={expandVariants} 
-         isMerch={isMerch} isRawFlower={isRawFlower} displayStock={displayStock} 
-         hasMultipleOptions={hasMultipleOptions} safeOptions={safeOptions} sortedOptions={sortedOptions} 
-         safeSelectedOptions={safeSelectedOptions} handleSelectOption={handleSelectOption} 
-         savingsText={savingsText} qty={qty} updateCart={updateCart} cartAddQty={cartAddQty} 
-         isReadyToAdd={isReadyToAdd} isMaxReached={isMaxReached} projectedAddPrice={projectedAddPrice} 
-         currentSubtotal={currentSubtotal} 
-      />
+      {/* RIGHT COLUMN (40%) */}
+      <div className="w-[40%] h-full flex flex-col relative pt-3 pb-3 pr-2 pl-1.5 bg-zinc-950">
+         <div className="shrink-0 flex justify-end mb-2">
+            <button onClick={() => setIsFlipped(false)} className="p-1.5 bg-zinc-900 border border-zinc-800 hover:bg-zinc-800 text-zinc-400 rounded-lg transition-colors active:scale-95 shadow-sm">
+              <ArrowLeft size={16} />
+            </button>
+         </div>
+         
+         <CardCommerceControls 
+           item={item} UI={UI} config={config} safeSizes={safeSizes} sortedSizes={sortedSizes} 
+           selectedSize={selectedSize} setSelectedSize={setSelectedSize} expandVariants={expandVariants} 
+           isMerch={isMerch} isRawFlower={isRawFlower} displayStock={displayStock} 
+           hasMultipleOptions={hasMultipleOptions} safeOptions={safeOptions} sortedOptions={sortedOptions} 
+           safeSelectedOptions={safeSelectedOptions} handleSelectOption={handleSelectOption} 
+           savingsText={savingsText} qty={qty} updateCart={updateCart} cartAddQty={cartAddQty} 
+           isReadyToAdd={isReadyToAdd} isMaxReached={isMaxReached} projectedAddPrice={projectedAddPrice} 
+           currentSubtotal={currentSubtotal} isSideStacked={true}
+         />
+      </div>
     </div>
   );
 }
