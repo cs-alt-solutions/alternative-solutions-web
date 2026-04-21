@@ -26,7 +26,6 @@ export const StorefrontCard = ({ item, cart, updateCart, clientConfig, isHero = 
   const cleanOptions = rawOptions.filter((o: any) => o && typeof o === 'object');
   const options = cleanOptions.length > 0 ? cleanOptions : [{ id: 'std', label: 'Standard', stock: item?.onHand || 0 }];
   
-  const initialOption = options.find((o: any) => (o?.stock !== undefined ? o.stock : item?.onHand) > 0) || options[0];
   const [selectedSize, setSelectedSize] = useState(sizes[0]);
   
   let bundleQty = selectedSize?.bundleQty || 1;
@@ -53,10 +52,10 @@ export const StorefrontCard = ({ item, cart, updateCart, clientConfig, isHero = 
   const forceHideVariants = isRawFlower || isMerch;
   const hasMultipleOptions = !forceHideVariants && (options.length > 1 || (options.length === 1 && options[0]?.label !== 'Standard'));
 
+  // 🚀 FIXED: We no longer auto-select an option. Variants start at 0.
   useEffect(() => {
-    if (bundleQty === 1) setSelectedOptions([initialOption]);
-    else setSelectedOptions([]);
-  }, [selectedSize?.id, bundleQty, initialOption?.id]);
+    setSelectedOptions([]);
+  }, [selectedSize?.id, bundleQty]);
 
   const handleSelectOption = (opts: any[]) => {
     setSelectedOptions(opts);
@@ -80,6 +79,7 @@ export const StorefrontCard = ({ item, cart, updateCart, clientConfig, isHero = 
      const gramsNeeded = getRequiredGrams(selectedSize.label);
      maxStockForDisplay = Math.floor((item?.onHand || 0) / gramsNeeded);
   } else {
+     const initialOption = options.find((o: any) => (o?.stock !== undefined ? o.stock : item?.onHand) > 0) || options[0];
      maxStockForDisplay = forceHideVariants ? item?.onHand : (initialOption?.stock !== undefined ? initialOption.stock : item?.onHand);
   }
   const isMaxReached = qty > 0 && qty >= maxStockForDisplay; 
