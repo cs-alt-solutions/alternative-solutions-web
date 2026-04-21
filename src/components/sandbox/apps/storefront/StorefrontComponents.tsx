@@ -52,7 +52,6 @@ export const StorefrontCard = ({ item, cart, updateCart, clientConfig, isHero = 
   const forceHideVariants = isRawFlower || isMerch;
   const hasMultipleOptions = !forceHideVariants && (options.length > 1 || (options.length === 1 && options[0]?.label !== 'Standard'));
 
-  // 🚀 FIXED: We no longer auto-select an option. Variants start at 0.
   useEffect(() => {
     setSelectedOptions([]);
   }, [selectedSize?.id, bundleQty]);
@@ -120,13 +119,14 @@ export const StorefrontCard = ({ item, cart, updateCart, clientConfig, isHero = 
           baseLowestPrice={baseLowestPrice} activeLowestPrice={activeLowestPrice} 
           setIsFlipped={setIsFlipped} clientConfig={clientConfig}
         />
+        {/* 🚀 FIXED: Added cart={safeCart} below so the size rows know their quantities */}
         <StorefrontCardBack 
           item={item} cleanItemName={cleanItemName} setIsFlipped={setIsFlipped} isFlower={isFlower}
           sizes={sizes} options={options} selectedSize={selectedSize} setSelectedSize={setSelectedSize}
           bundleQty={bundleQty} selectedOptions={selectedOptions} handleSelectOption={handleSelectOption}
           removeSelectedOption={removeSelectedOption} hasMultipleOptions={hasMultipleOptions}
           qty={qty} updateCart={updateCart} isBundleComplete={isBundleComplete} isMaxReached={isMaxReached}
-          clientConfig={clientConfig}
+          clientConfig={clientConfig} cart={safeCart} 
         />
       </div>
     </div>

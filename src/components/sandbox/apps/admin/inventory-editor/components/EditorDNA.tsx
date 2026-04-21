@@ -1,45 +1,91 @@
 import React from 'react';
-import { BookText, Wind, Cookie, Droplet, Sparkles, Activity, Plus, Trash2 } from 'lucide-react';
+import { BookText, Wind, Cookie, Droplet, Sparkles, Activity, Plus, Trash2, ListPlus } from 'lucide-react';
 
 export default function EditorDNA({
   updatedItem, setUpdatedItem, descMode, setDescMode, showDNA, showLineage, isEdible
 }: any) {
   
-  // Initialize dynamic details array from existing data or create a blank one
-  const edibleDetails = updatedItem.edibleDetails || (updatedItem.descBase ? [{ id: Date.now(), type: 'description', text: updatedItem.descBase }] : []);
+  const activeSubCat = updatedItem?.subCategory?.toLowerCase() || '';
+  const isPreRoll = activeSubCat.includes('pre-roll') || activeSubCat.includes('blunt');
+
+  // Initialize dynamic details array
+  const dynamicDetails = updatedItem.smartDetails || updatedItem.edibleDetails || (updatedItem.descBase ? [{ id: Date.now(), type: 'description', text: updatedItem.descBase }] : []);
 
   const handleDetailChange = (index: number, field: string, val: string) => {
-     const newDetails = [...edibleDetails];
+     const newDetails = [...dynamicDetails];
      newDetails[index] = { ...newDetails[index], [field]: val };
-     
-     // We automatically sync descBase as a fallback so the live storefront doesn't break
-     const fallbackDesc = newDetails.map(d => d.text).join('\n\n');
-     setUpdatedItem({ ...updatedItem, edibleDetails: newDetails, descBase: fallbackDesc });
+     const fallbackDesc = newDetails.filter(d => d.type === 'description').map(d => d.text).join('\n\n');
+     setUpdatedItem({ ...updatedItem, smartDetails: newDetails, edibleDetails: newDetails, descBase: fallbackDesc });
   };
 
   const addDetail = (e: any) => {
      e.preventDefault();
-     setUpdatedItem({ ...updatedItem, edibleDetails: [...edibleDetails, { id: Date.now(), type: 'description', text: '' }] });
+     const newDetails = [...dynamicDetails, { id: Date.now(), type: 'description', text: '' }];
+     setUpdatedItem({ ...updatedItem, smartDetails: newDetails, edibleDetails: newDetails });
   };
 
   const removeDetail = (index: number, e: any) => {
      e.preventDefault();
-     const newDetails = [...edibleDetails];
+     const newDetails = [...dynamicDetails];
      newDetails.splice(index, 1);
-     const fallbackDesc = newDetails.map(d => d.text).join('\n\n');
-     setUpdatedItem({ ...updatedItem, edibleDetails: newDetails, descBase: fallbackDesc });
+     const fallbackDesc = newDetails.filter(d => d.type === 'description').map(d => d.text).join('\n\n');
+     setUpdatedItem({ ...updatedItem, smartDetails: newDetails, edibleDetails: newDetails, descBase: fallbackDesc });
   };
+
+  // Reusable block builder for both Edibles and Pre-Rolls
+  const renderDynamicDetails = () => (
+    <div className="bg-zinc-950/50 border border-zinc-800/80 rounded-2xl p-5 md:p-6">
+       <div className="flex items-center justify-between mb-4 border-b border-zinc-800/80 pb-3">
+          <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-wider flex items-center gap-2">
+             <ListPlus size={14} className="text-emerald-400" /> Descriptions & Disclaimers
+          </label>
+          <button onClick={addDetail} className="flex items-center gap-1.5 text-[9px] font-black uppercase tracking-widest text-emerald-400 hover:text-emerald-300 transition-colors bg-emerald-500/10 px-3 py-1.5 rounded-lg border border-emerald-500/20 active:scale-95">
+             <Plus size={12} /> Add Block
+          </button>
+       </div>
+
+       <div className="space-y-3">
+          {dynamicDetails.length === 0 && (
+             <div className="text-center py-6 text-zinc-600 text-xs font-bold uppercase tracking-widest italic border border-dashed border-zinc-800 rounded-xl">
+               No details added
+             </div>
+          )}
+          {dynamicDetails.map((detail: any, index: number) => (
+             <div key={detail.id || index} className="flex gap-3 items-start bg-zinc-900 border border-zinc-800 rounded-xl p-3 group focus-within:border-emerald-500/30 transition-colors">
+               <div className="flex flex-col gap-2 shrink-0">
+                   <select 
+                     value={detail.type} 
+                     onChange={(e) => handleDetailChange(index, 'type', e.target.value)}
+                     className={`bg-zinc-950 border border-zinc-800 rounded-lg p-2.5 text-[9px] font-black uppercase tracking-widest outline-none w-32 cursor-pointer ${detail.type === 'disclaimer' ? 'text-rose-400' : 'text-zinc-300'}`}
+                   >
+                     <option value="description">Description</option>
+                     <option value="disclaimer">Disclaimer</option>
+                   </select>
+               </div>
+               <textarea 
+                 value={detail.text}
+                 onChange={(e) => handleDetailChange(index, 'text', e.target.value)}
+                 rows={2}
+                 placeholder={`Enter ${detail.type} text...`}
+                 className="flex-1 bg-transparent text-sm text-zinc-100 placeholder:text-zinc-600 outline-none resize-none pt-1.5 min-w-0"
+               />
+               <button onClick={(e) => removeDetail(index, e)} className="p-2 text-zinc-600 hover:text-rose-400 hover:bg-rose-500/10 rounded-lg transition-colors mt-0.5">
+                  <Trash2 size={16} />
+               </button>
+             </div>
+          ))}
+       </div>
+    </div>
+  );
 
   return (
     <section className="bg-zinc-900/30 border border-zinc-800/80 rounded-3xl p-6 md:p-8 shadow-sm">
        <h2 className="text-sm font-black uppercase tracking-widest text-zinc-100 flex items-center gap-2 mb-6 pb-4 border-b border-zinc-800/50">
-         <BookText size={16} className="text-emerald-400" /> {showDNA ? (isEdible ? 'Product Facts & Dosing' : 'Product DNA & Description') : 'Product Description'}
+         <BookText size={16} className="text-emerald-400" /> {isEdible ? 'Product Facts & Dosing' : isPreRoll ? 'Pre-Roll Details & Warnings' : showDNA ? 'Product DNA & Description' : 'Product Description'}
        </h2>
        
        {isEdible ? (
          <div className="space-y-6 animate-in fade-in zoom-in-95 duration-300">
-            
-            {/* DOSING & CONTENTS BOX */}
             <div className="bg-zinc-950/50 border border-emerald-500/30 shadow-[0_0_15px_rgba(16,185,129,0.05)] rounded-2xl p-5 md:p-6">
                <div className="flex items-center gap-2 mb-5 border-b border-zinc-800/80 pb-3">
                   <Activity size={16} className="text-emerald-400" />
@@ -47,7 +93,6 @@ export default function EditorDNA({
                </div>
                
                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-                  {/* UNIFIED TOTAL PACKAGE INPUT */}
                   <div>
                      <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-wider mb-2 block ml-1">Total Container Amount</label>
                      <div className="flex bg-zinc-900 border border-zinc-800 rounded-xl overflow-hidden focus-within:border-emerald-500/50 transition-colors">
@@ -71,7 +116,6 @@ export default function EditorDNA({
                      </div>
                   </div>
 
-                  {/* UNIFIED PER SERVING INPUT */}
                   <div>
                      <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-wider mb-2 block ml-1">Individual Dose Amount</label>
                      <div className="flex bg-zinc-900 border border-zinc-800 rounded-xl overflow-hidden focus-within:border-emerald-500/50 transition-colors">
@@ -120,50 +164,15 @@ export default function EditorDNA({
                </div>
             </div>
             
-            {/* DYNAMIC DESCRIPTIONS & DISCLAIMERS BOX */}
-            <div className="bg-zinc-950/50 border border-zinc-800/80 rounded-2xl p-5 md:p-6">
-               <div className="flex items-center justify-between mb-4 border-b border-zinc-800/80 pb-3">
-                  <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-wider block">Descriptions & Disclaimers</label>
-                  <button onClick={addDetail} className="flex items-center gap-1.5 text-[9px] font-black uppercase tracking-widest text-emerald-400 hover:text-emerald-300 transition-colors bg-emerald-500/10 px-3 py-1.5 rounded-lg border border-emerald-500/20 active:scale-95">
-                     <Plus size={12} /> Add Block
-                  </button>
-               </div>
-
-               <div className="space-y-3">
-                  {edibleDetails.length === 0 && (
-                     <div className="text-center py-6 text-zinc-600 text-xs font-bold uppercase tracking-widest italic border border-dashed border-zinc-800 rounded-xl">
-                       No details added
-                     </div>
-                  )}
-                  {edibleDetails.map((detail: any, index: number) => (
-                     <div key={detail.id || index} className="flex gap-3 items-start bg-zinc-900 border border-zinc-800 rounded-xl p-3 group focus-within:border-emerald-500/30 transition-colors">
-                       <div className="flex flex-col gap-2 shrink-0">
-                           <select 
-                             value={detail.type} 
-                             onChange={(e) => handleDetailChange(index, 'type', e.target.value)}
-                             className={`bg-zinc-950 border border-zinc-800 rounded-lg p-2.5 text-[9px] font-black uppercase tracking-widest outline-none w-32 cursor-pointer ${detail.type === 'disclaimer' ? 'text-amber-400' : 'text-zinc-300'}`}
-                           >
-                             <option value="description">Description</option>
-                             <option value="disclaimer">Disclaimer</option>
-                           </select>
-                       </div>
-                       <textarea 
-                         value={detail.text}
-                         onChange={(e) => handleDetailChange(index, 'text', e.target.value)}
-                         rows={2}
-                         placeholder={`Enter ${detail.type} text...`}
-                         className="flex-1 bg-transparent text-sm text-zinc-100 placeholder:text-zinc-600 outline-none resize-none pt-1.5 min-w-0"
-                       />
-                       <button onClick={(e) => removeDetail(index, e)} className="p-2 text-zinc-600 hover:text-rose-400 hover:bg-rose-500/10 rounded-lg transition-colors mt-0.5">
-                          <Trash2 size={16} />
-                       </button>
-                     </div>
-                  ))}
-               </div>
-            </div>
+            {renderDynamicDetails()}
+         </div>
+       ) : isPreRoll ? (
+         <div className="space-y-6 animate-in fade-in zoom-in-95 duration-300">
+            {/* 🚀 FIXED: Pre-Rolls strip away Sensory DNA and rely purely on Dynamic Details */}
+            {renderDynamicDetails()}
          </div>
        ) : (
-         /* STANDARD DNA FORM FOR NON-EDIBLES */
+         /* STANDARD DNA FORM FOR NON-EDIBLES / NON-PREROLLS */
          <div className="space-y-5 animate-in fade-in zoom-in-95 duration-300">
             <div className="bg-zinc-950/50 border border-zinc-800/80 rounded-2xl p-5 mb-5">
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-3">

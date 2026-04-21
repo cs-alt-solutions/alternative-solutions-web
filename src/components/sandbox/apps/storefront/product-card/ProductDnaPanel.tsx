@@ -4,13 +4,14 @@ import { Wind, Droplet, Cookie, Sparkles, Dna } from 'lucide-react';
 export default function ProductDnaPanel({ item, UI, hasDNA, expectsDNA }: any) {
   if (!item?.descBase && !hasDNA && !item?.lineage && !item?.strainType) return null;
 
+  // 🚀 FIXED: Reduced main flex gap from gap-3 to gap-1.5
   return (
-    <div className="flex flex-col gap-3 pb-2">
+    <div className="flex flex-col gap-1.5 pb-1">
        
        {/* GENETICS BLOCK */}
        {(item?.lineage || (item?.strainType && item.strainType !== 'N/A')) && (
-         <div className="bg-zinc-900/50 border border-zinc-800/80 rounded-xl p-2.5 flex flex-col gap-2">
-            <div className="flex items-center gap-1.5 border-b border-zinc-800/50 pb-1.5 mb-0.5">
+         <div className="bg-zinc-900/50 border border-zinc-800/80 rounded-lg p-2 flex flex-col gap-1.5">
+            <div className="flex items-center gap-1.5 border-b border-zinc-800/50 pb-1 mb-0.5">
                <Dna size={12} className="text-indigo-400" />
                <span className="text-[8px] sm:text-[9px] font-black uppercase tracking-widest text-zinc-400">Genetics</span>
             </div>
@@ -31,7 +32,7 @@ export default function ProductDnaPanel({ item, UI, hasDNA, expectsDNA }: any) {
 
        {/* SENSORY DNA BLOCK */}
        {hasDNA && expectsDNA && (
-         <div className="bg-zinc-900/50 border border-zinc-800/80 rounded-xl p-2.5 flex flex-col gap-2.5">
+         <div className="bg-zinc-900/50 border border-zinc-800/80 rounded-lg p-2 flex flex-col gap-2">
             <div className="grid grid-cols-3 gap-2">
               {item?.descFeels && (
                 <div className="flex flex-col border-r border-zinc-800/50 pr-1">
@@ -63,7 +64,7 @@ export default function ProductDnaPanel({ item, UI, hasDNA, expectsDNA }: any) {
             </div>
 
             {item?.descFact && (
-              <div className="pt-2 border-t border-zinc-800/50 flex flex-col gap-1">
+              <div className="pt-1.5 border-t border-zinc-800/50 flex flex-col gap-0.5">
                 <div className="flex items-center gap-1">
                    <Sparkles size={10} className="text-pink-400 shrink-0" />
                    <span className="text-[7px] font-black uppercase tracking-widest text-zinc-500">{UI.insiderFact}</span>
@@ -76,7 +77,7 @@ export default function ProductDnaPanel({ item, UI, hasDNA, expectsDNA }: any) {
 
        {/* STANDARD DESCRIPTION */}
        {item?.descBase && (
-          <div className="pt-1">
+          <div className="pt-0.5">
             <p className="text-[8px] sm:text-[9px] text-zinc-400 font-medium leading-relaxed whitespace-pre-wrap text-justify">
               {item.descBase}
             </p>
