@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 import { ArrowUpDown, Boxes, Leaf, Flame, Box, Image as ImageIcon, Award, Star, Edit3, Zap, Check, X, Archive, ArchiveRestore } from 'lucide-react';
 
-export default function AdminInventoryTable({ processedInventory, handleSort, openEditor, mainCategories, subCategories, onQuickSave, onToggleArchive }: any) {
+export default function AdminInventoryTable({ processedInventory = [], handleSort, openEditor, mainCategories, subCategories, onQuickSave, onToggleArchive }: any) {
   
   const [quickEditId, setQuickEditId] = useState<string | null>(null);
   const [quickEditForm, setQuickEditForm] = useState<any>({});
@@ -11,7 +11,6 @@ export default function AdminInventoryTable({ processedInventory, handleSort, op
     setQuickEditId(item.id);
     const displayPrice = item.price || (item.sizes?.length > 0 ? Math.min(...item.sizes.map((s: any) => s.price || 0)) : 0);
     
-    // STRICT VARIANT DETECTION
     const hasVariants = item.options && item.options.length > 0 && item.options[0].label !== 'Standard';
     let displayStock = 0;
     
@@ -35,7 +34,6 @@ export default function AdminInventoryTable({ processedInventory, handleSort, op
       price: Number(quickEditForm.quickPrice) || 0,
     };
     
-    // Only update top-level onHand if this isn't a variant-driven item
     if (!quickEditForm.hasVariants) {
        updated.onHand = quickEditForm.quickStock === '' ? 0 : Number(quickEditForm.quickStock);
     }
@@ -44,7 +42,6 @@ export default function AdminInventoryTable({ processedInventory, handleSort, op
        updated.sizes[0].price = Number(quickEditForm.quickPrice) || 0;
     }
 
-    // Clean up our temporary quick edit keys so they don't bloat the database payload
     delete updated.quickPrice;
     delete updated.quickStock;
     delete updated.hasVariants;
@@ -55,9 +52,7 @@ export default function AdminInventoryTable({ processedInventory, handleSort, op
 
   return (
     <div className="bg-zinc-900/30 border border-zinc-800 rounded-3xl overflow-hidden shadow-inner">
-      {/* Completely removed overflow-x-auto to ensure it behaves as a block */}
       <div className="w-full">
-        {/* Set table-layout: fixed to force columns to respect constraints */}
         <table className="w-full text-left border-collapse table-fixed">
           <thead>
             <tr className="bg-zinc-900/80 border-b border-zinc-800">
@@ -82,7 +77,7 @@ export default function AdminInventoryTable({ processedInventory, handleSort, op
               <th onClick={() => handleSort('stock')} className="py-2 sm:py-3 px-2 sm:px-3 text-[8px] sm:text-[9px] font-black uppercase tracking-widest text-zinc-500 cursor-pointer hover:text-zinc-300 transition-colors group text-right w-1/12">
                 <div className="flex items-center justify-end gap-1">Stock <ArrowUpDown size={10} className="opacity-50 group-hover:opacity-100 shrink-0 hidden sm:block" /></div>
               </th>
-              <th className="py-2 sm:py-3 px-2 sm:px-3 text-right text-[8px] sm:text-[9px] font-black uppercase tracking-widest text-zinc-500  sm:w-25">Actions</th>
+              <th className="py-2 sm:py-3 px-2 sm:px-3 text-right text-[8px] sm:text-[9px] font-black uppercase tracking-widest text-zinc-500 sm:w-25">Actions</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-zinc-800/50">
@@ -126,8 +121,6 @@ export default function AdminInventoryTable({ processedInventory, handleSort, op
                        <td className="py-2 sm:py-3 px-2 sm:px-3 text-right">
                          <input type="number" value={quickEditForm.quickPrice} onChange={e => setQuickEditForm({...quickEditForm, quickPrice: e.target.value})} className="w-10 sm:w-12 bg-zinc-950 border border-amber-500/30 rounded-md p-1.5 text-[10px] sm:text-xs font-mono font-bold text-amber-400 outline-none text-right focus:border-amber-500" />
                        </td>
-                       
-                       {/* DYNAMIC STOCK EDIT COLUMN */}
                        <td className="py-2 sm:py-3 px-2 sm:px-3 text-right">
                          {quickEditForm.hasVariants ? (
                            <div className="flex flex-col items-end gap-0.5">
@@ -138,7 +131,6 @@ export default function AdminInventoryTable({ processedInventory, handleSort, op
                            <input type="number" value={quickEditForm.quickStock} onChange={e => setQuickEditForm({...quickEditForm, quickStock: e.target.value})} className="w-10 sm:w-12 bg-zinc-950 border border-zinc-700 rounded-md p-1.5 text-[10px] sm:text-xs font-mono font-bold text-zinc-100 outline-none text-right focus:border-cyan-500/50" />
                          )}
                        </td>
-
                        <td className="py-2 sm:py-3 px-2 sm:px-3 text-right">
                          <div className="flex flex-col sm:flex-row justify-end gap-1">
                            <button onClick={saveQuickEdit} className="p-1.5 sm:p-2 bg-emerald-500 hover:bg-emerald-400 border border-emerald-400 rounded-md text-zinc-950 shadow-md transition-colors flex justify-center"><Check size={12}/></button>
@@ -151,7 +143,6 @@ export default function AdminInventoryTable({ processedInventory, handleSort, op
 
               const ItemIcon = item.iconName === 'Leaf' ? Leaf : item.iconName === 'Flame' ? Flame : item.iconName === 'Box' ? Box : ImageIcon;
               
-              // STRICT VARIANT DETECTION FOR STANDARD DISPLAY
               const hasVariants = item.options && item.options.length > 0 && item.options[0].label !== 'Standard';
               let displayStock = 0;
               if (hasVariants) {
@@ -171,7 +162,6 @@ export default function AdminInventoryTable({ processedInventory, handleSort, op
                         {item.imageUrl ? <img src={item.imageUrl} alt={item.name} className="w-full h-full object-cover" /> : <ItemIcon size={12} />}
                       </div>
                       <div className="flex flex-col min-w-0">
-                        {/* Allowed text to wrap naturally instead of truncating off-screen */}
                         <span className={`font-black text-[9px] sm:text-[11px] leading-tight wrap-break-word ${item.isTopShelf ? 'text-amber-400' : 'text-zinc-100'}`}>{item.name?.replace(/\s*\(\s*Top Shelf\s*\)\s*/i, '').trim() || 'Unnamed Item'}</span>
                         {item.brand && <span className="text-[6px] sm:text-[7px] font-bold text-emerald-500/70 uppercase tracking-widest wrap-break-word mt-0.5">BY {item.brand}</span>}
                       </div>
@@ -205,8 +195,6 @@ export default function AdminInventoryTable({ processedInventory, handleSort, op
                   <td className="py-2 sm:py-3 px-2 sm:px-3 text-right">
                     <span className="text-[9px] sm:text-[11px] font-black text-zinc-300 font-mono">${displayPrice.toFixed(0) || '0'}</span>
                   </td>
-                  
-                  {/* Warehouse STOCK DISPLAY */}
                   <td className="py-2 sm:py-3 px-2 sm:px-3 text-right">
                     <div className="flex flex-col items-end">
                       <span className={`text-[9px] sm:text-[11px] font-black font-mono ${displayStock <= 0 ? 'text-rose-500' : isAbundant && !item.dailyDeal ? 'text-cyan-400' : 'text-emerald-400'}`}>
@@ -217,7 +205,6 @@ export default function AdminInventoryTable({ processedInventory, handleSort, op
                       )}
                     </div>
                   </td>
-
                   <td className="py-2 sm:py-3 px-2 sm:px-3 text-right">
                     <div className="flex flex-row justify-end gap-1 flex-wrap">
                        <button 
@@ -244,7 +231,7 @@ export default function AdminInventoryTable({ processedInventory, handleSort, op
       </div>
       
       <div className="bg-zinc-950/80 border-t border-zinc-800 px-6 py-3 flex items-center justify-between">
-        <span className="text-[8px] sm:text-[9px] font-bold text-zinc-500 uppercase tracking-widest">Displaying {processedInventory.length} items</span>
+        <span className="text-[8px] sm:text-[9px] font-bold text-zinc-500 uppercase tracking-widest">Displaying {(processedInventory || []).length} items</span>
         <span className="text-[8px] sm:text-[9px] font-mono text-zinc-600">DB_SYNC_ACTIVE</span>
       </div>
     </div>

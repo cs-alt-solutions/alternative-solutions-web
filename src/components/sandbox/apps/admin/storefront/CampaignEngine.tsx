@@ -7,12 +7,10 @@ import { DAYS_OF_WEEK } from './StorefrontSettings';
 
 export default function CampaignEngine({ activeDeals, openCampaignConfig, removeDeal, openInventorySelector, weeklySchedule, clearOneShots }: any) {
   
-  const oneShotDeals = activeDeals.filter((d: any) => d.dealType === 'One-Shot');
-  
-  // FIXED: Strictly check Recurring dealType to match our new standard
+  // 🚀 SYNCHRONIZED LOGIC: Matches the Live Storefront perfectly
+  const oneShotDeals = activeDeals.filter((d: any) => d.dealType === 'One-Shot' || (d.dailyDeal && d.dealType !== 'Recurring'));
   const recurringDeals = activeDeals.filter((d: any) => d.dealType === 'Recurring');
 
-  // Filter out any days that are explicitly marked as closed in the schedule
   const activeDays = DAYS_OF_WEEK.filter(day => {
     const sched = weeklySchedule?.[day.id];
     return !sched?.isClosed; 
@@ -51,11 +49,7 @@ export default function CampaignEngine({ activeDeals, openCampaignConfig, remove
 
   const renderDealCard = (deal: any) => {
     const ItemIcon = deal.iconName === 'Leaf' ? Leaf : deal.iconName === 'Box' ? Box : ImageIcon;
-    
-    // FIXED: Accurately calculate total stock across base and variants
     const totalStock = deal.onHand || (deal.options ? deal.options.reduce((sum: number, o: any) => sum + (Number(o.stock) || 0), 0) : 0);
-    
-    // FIXED: Only flag as killed if stock literally hits 0 or below
     const isLowStock = totalStock <= 0; 
     
     return (
@@ -118,8 +112,19 @@ export default function CampaignEngine({ activeDeals, openCampaignConfig, remove
           </div>
           <div className={`grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 ${gridColsClass} gap-3`}>
             {activeDays.map((day) => {
-              const todaysDeals = oneShotDeals.filter((d: any) => d.dealDays?.includes(day.id));
+              
+              // 🚀 GHOST DEAL CATCHER
+              const todaysDeals = oneShotDeals.filter((d: any) => {
+                // If it has specific days, check if today is one of them.
+                if (d.dealDays && Array.isArray(d.dealDays) && d.dealDays.length > 0) {
+                    return d.dealDays.includes(day.id);
+                }
+                // If it lost its days entirely, default it to TODAY's column so it's not invisible.
+                return day.id === new Date().getDay();
+              });
+
               const isToday = new Date().getDay() === day.id;
+              
               return (
                 <div key={`oneshot-${day.id}`} className={`flex flex-col rounded-3xl border transition-all ${isToday ? 'bg-amber-500/5 border-amber-500/30 shadow-[0_0_15px_rgba(245,158,11,0.05)]' : 'bg-zinc-950/30 border-zinc-800/50'}`}>
                   <div className={`p-2 border-b text-center ${isToday ? 'border-amber-500/30 bg-amber-500/10' : 'border-zinc-800/50 bg-zinc-950'}`}>
@@ -162,7 +167,6 @@ export default function CampaignEngine({ activeDeals, openCampaignConfig, remove
             })}
           </div>
         </div>
-
       </div>
     </div>
   );

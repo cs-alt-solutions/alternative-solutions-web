@@ -15,11 +15,18 @@ import AdminInventoryAudit from './inventory-audit/AdminInventoryAudit';
 
 export default function AdminInventoryModule({ stock, setStock, inventoryMatrix, setNotification, clientConfig, jumpToEditItem, clearJumpToEdit }: any) {
   
-  // 🚀 THE FILE IS LAW: Direct read from index.ts. NO BROWSER CACHING.
-  const mainCategories = clientConfig?.categories || ['Flower & Prerolls', 'Vapes & Pens', 'Edibles', 'Concentrates', 'Healthcare & Topicals', 'Merch & Extras'];
+  // 🚀 MASTER CATEGORY LIST: "Backroom Stash" is BANISHED from here.
+  // It is now strictly managed as a Configuration Drop in the Storefront Builder.
+  const mainCategories = clientConfig?.categories || [
+    'Flower & Prerolls', 
+    'Vapes & Pens', 
+    'Edibles', 
+    'Concentrates', 
+    'Healthcare & Topicals', 
+    'Merch & Extras'
+  ];
   const subCategories = clientConfig?.subCategories || {};
   
-  // We still use state for standardTiers if you want them editable, but we'll bump the cache key just in case.
   const [standardTiers, setStandardTiers] = useStickyState<string[]>(clientConfig?.pricingTiers || [], `inv_tiers_v8_${clientConfig?.id || 'division'}`);
 
   const [editingItem, setEditingItem] = useState<any>(null);
@@ -73,7 +80,6 @@ export default function AdminInventoryModule({ stock, setStock, inventoryMatrix,
     }
   }, [jumpToEditItem, clearJumpToEdit]);
 
-  // 🚀 DATABASE SYNC
   useEffect(() => {
     const fetchStoreData = async () => {
       try {

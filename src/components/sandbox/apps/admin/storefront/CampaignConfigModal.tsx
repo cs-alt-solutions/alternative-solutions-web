@@ -71,7 +71,7 @@ export default function CampaignConfigModal({ isOpen, onClose, item, onSave, onR
          setLogicType('DISCOUNT');
          setDiscountType('PERCENT');
          setDiscountValue(15);
-         setUnit(item.mainCategory === 'Flower & Plants' || item.mainCategory === 'Concentrates' ? 'GRAMS' : 'UNITS'); 
+         setUnit(item.mainCategory === 'Flower & Pre-rolls' || item.mainCategory === 'Concentrates' ? 'GRAMS' : 'UNITS'); 
       }
     }
   }, [item, isOpen]);

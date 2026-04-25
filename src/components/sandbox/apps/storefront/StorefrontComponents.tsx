@@ -41,14 +41,15 @@ export const StorefrontCard = ({ item, cart, updateCart, clientConfig, isHero = 
   
   const [selectedOptions, setSelectedOptions] = useState<any[]>([]);
 
-  // SMART CATEGORY DETECTION
-  const isFlower = item?.mainCategory === 'Flower & Plants';
-  const isMerch = item?.mainCategory === 'Merch & Extras';
+  // 🚀 BULLETPROOF CATEGORY DETECTION
+  const activeMainCat = item?.mainCategory?.toLowerCase() || '';
+  const isUglies = item?.mainCategory === 'Backroom Stash'; // Ties identity directly
+  const isFlower = activeMainCat.includes('flower') || isUglies;
+  const isMerch = activeMainCat.includes('merch');
   const activeSubCat = item?.subCategory?.toLowerCase() || '';
   const isPreRoll = activeSubCat.includes('pre-roll') || activeSubCat.includes('blunt');
-  const isRawFlower = isFlower && !isPreRoll;
+  const isRawFlower = (isFlower && !isPreRoll);
 
-  // Only force hide variants for Raw Flower and Merch
   const forceHideVariants = isRawFlower || isMerch;
   const hasMultipleOptions = !forceHideVariants && (options.length > 1 || (options.length === 1 && options[0]?.label !== 'Standard'));
 
@@ -119,7 +120,6 @@ export const StorefrontCard = ({ item, cart, updateCart, clientConfig, isHero = 
           baseLowestPrice={baseLowestPrice} activeLowestPrice={activeLowestPrice} 
           setIsFlipped={setIsFlipped} clientConfig={clientConfig}
         />
-        {/* 🚀 FIXED: Added cart={safeCart} below so the size rows know their quantities */}
         <StorefrontCardBack 
           item={item} cleanItemName={cleanItemName} setIsFlipped={setIsFlipped} isFlower={isFlower}
           sizes={sizes} options={options} selectedSize={selectedSize} setSelectedSize={setSelectedSize}

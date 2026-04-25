@@ -1,3 +1,4 @@
+// sandbox/apps/storefront/StorefrontCatalog.tsx
 import React, { useEffect, useState } from 'react';
 import { useStickyState } from '@/hooks/useStickyState';
 import { Info, ShoppingCart, Leaf, Wind, Cookie, Droplet, Shirt, Tag, Activity } from 'lucide-react';
@@ -16,14 +17,14 @@ export default function StorefrontCatalog({
   setIsCheckingOut, clientConfig 
 }: any) {
   
-  const fallbackConfig = { hero: {}, bento: [], secondary: {}, categoryImages: {} };
+  const fallbackConfig = { hero: {}, bento: [], categoryImages: {} };
   const [homeConfig] = useStickyState(clientConfig?.homeConfig || fallbackConfig, `alt_solutions_home_config_v3_${clientConfig?.id}`);
   const [heroIndex, setHeroIndex] = useState(0);
 
   const isItemOOS = (item: any) => {
      const activeSubCat = item.subCategory?.toLowerCase() || '';
      const isPreRoll = activeSubCat.includes('pre-roll') || activeSubCat.includes('blunt');
-     const isRawFlower = item.mainCategory === 'Flower & Prerolls' && !isPreRoll;
+     const isRawFlower = (item.mainCategory?.includes('Flower') || item.mainCategory === 'Backroom Stash') && !isPreRoll;
 
      if (isRawFlower) {
          const minGrams = item.sizes?.length > 0 ? Math.min(...item.sizes.map((s:any) => getRequiredGrams(s.label))) : 1;
@@ -55,7 +56,7 @@ export default function StorefrontCatalog({
   let bgBoxClass = "bg-emerald-500/10 border-emerald-500/20";
   let textGradientClass = "from-emerald-400 via-cyan-400 to-blue-500";
 
-  if (activeCategory === 'Flower & Prerolls') HeaderIcon = Leaf;
+  if (activeCategory?.includes('Flower')) HeaderIcon = Leaf;
   else if (activeCategory === 'Vapes & Pens') { HeaderIcon = Wind; iconColorClass = "text-cyan-400"; bgBoxClass = "bg-cyan-500/10 border-cyan-500/20"; textGradientClass = "from-cyan-400 via-blue-400 to-indigo-500"; }
   else if (activeCategory === 'Edibles') { HeaderIcon = Cookie; iconColorClass = "text-amber-400"; bgBoxClass = "bg-amber-500/10 border-amber-500/20"; textGradientClass = "from-amber-400 via-orange-400 to-rose-500"; }
   else if (activeCategory === 'Concentrates') { HeaderIcon = Droplet; iconColorClass = "text-orange-500"; bgBoxClass = "bg-orange-500/10 border-orange-500/20"; textGradientClass = "from-orange-500 via-red-400 to-rose-600"; }
@@ -79,6 +80,22 @@ export default function StorefrontCatalog({
     case 6: dayTitle = "Shatterday"; daySub = "Elevate your Saturday."; break;
   }
 
+  const isStashActive = homeConfig?.stashConfig?.active;
+  const rawStashDrops = isStashActive ? (homeConfig?.backroomStash || []) : [];
+  
+  const backroomStashDrops = rawStashDrops.map((drop: any) => ({
+      id: drop.id,
+      name: drop.name,
+      mainCategory: 'Backroom Stash', 
+      subCategory: drop.category || 'Flower', 
+      imageUrl: drop.imgUrl, 
+      onHand: 999, 
+      sizes: drop.sizes || [],
+      price: drop.sizes?.length > 0 ? Math.min(...drop.sizes.map((s:any) => s.price || 0)) : 0,
+      options: [],
+      iconName: drop.category === 'Flower' ? 'Leaf' : drop.category === 'Concentrates' ? 'Droplet' : drop.category === 'Edibles' ? 'Cookie' : 'Wind'
+  }));
+
   const oneShotDeals = safeInventory.filter((i: any) => i.dealType === 'One-Shot' ? i.dealDays?.includes(currentDayId) : i.dailyDeal && i.dealType !== 'Recurring');
   const recurringDeals = safeInventory.filter((i: any) => i.dealType === 'Recurring' && (!i.dealDays || i.dealDays.length === 0 || i.dealDays.includes(currentDayId)));
   const newDropsBucket = safeInventory.filter((i: any) => i.isNewDrop && !i.isConfiguredDeal && !i.isClearance);
@@ -95,7 +112,7 @@ export default function StorefrontCatalog({
     },
     ...activeTodaysDeals.map((item: any) => {
       let catName = item.subCategory && item.subCategory !== 'All' ? item.subCategory : item.mainCategory;
-      if (catName === 'Flower & Prerolls') catName = 'Premium Flower';
+      if (catName?.includes('Flower')) catName = 'Premium Flower';
       if (catName === 'Vapes & Pens') catName = 'Vapes';
       
       let topText = item.dealType === 'Recurring' ? dayTitle.toUpperCase() : item.campaignTag === 'NEW_DROP' ? "FRESH DROP" : item.campaignTag === 'VAULT_CLEARANCE' ? "CLEARANCE" : "DAILY DEAL";
@@ -115,9 +132,6 @@ export default function StorefrontCatalog({
     return () => clearInterval(interval);
   }, [heroSlides.length]);
 
-  const secTheme = ThemeMap[getThemeColor((homeConfig?.secondary as any)?.color || homeConfig?.secondary?.colorFrom)] || ThemeMap['emerald'];
-  const SecIcon = IconMap[homeConfig?.secondary?.icon] || IconMap['Award'];
-
   return (
     <>
       <StorefrontHeader 
@@ -133,28 +147,14 @@ export default function StorefrontCatalog({
              <CatalogHeroCarousel heroSlides={heroSlides} heroIndex={heroIndex} setHeroIndex={setHeroIndex} />
              <CatalogBentoGrid homeConfig={homeConfig} setActiveCategory={setActiveCategory} setActiveSubCategory={setActiveSubCategory} />
              
-             {/* THE NEW DARK NEON SECONDARY BANNER */}
-             <div className={`w-full h-62.5 md:h-75 ${secTheme.secBg} rounded-3xl p-8 md:p-12 flex flex-col md:flex-row items-center justify-between shadow-[0_0_30px_rgba(0,0,0,0.5)] border border-zinc-700 overflow-hidden relative group`}>
-                <div className="relative z-10 my-auto">
-                    <p className={`text-xs font-black uppercase tracking-widest mb-2 ${secTheme.secText}`}>{homeConfig?.secondary?.subtitle}</p>
-                    <h2 className="text-4xl md:text-5xl font-black text-white uppercase tracking-tighter leading-none mb-6 whitespace-pre-line">{homeConfig?.secondary?.title}</h2>
-                    <button className={`bg-zinc-950 ${secTheme.secBtnText} px-6 py-3 rounded-xl text-xs font-black uppercase tracking-widest shadow-lg border border-zinc-800`}>{homeConfig?.secondary?.buttonText}</button>
-                </div>
-                <SecIcon size={140} className="text-white/5 absolute right-0 md:-right-4 top-1/2 -translate-y-1/2 group-hover:rotate-12 transition-transform duration-700" />
-             </div>
+             {/* 🚀 Redundant Secondary Block NUKED from here! Flows straight into Deals now. */}
 
              <CatalogDealLanes 
                 recurringDeals={recurringDeals} oneShotDeals={oneShotDeals} newDropsBucket={newDropsBucket} 
                 premiumWarehouseBucket={premiumWarehouseBucket} smokyStealsBucket={smokyStealsBucket} returnedBucket={returnedBucket} 
+                vaultDropBucket={backroomStashDrops} 
                 currentDayName={currentDayName} dayTitle={dayTitle} daySub={daySub} cart={cart} updateCart={updateCart} clientConfig={clientConfig} 
              />
-
-             {oneShotDeals.length === 0 && recurringDeals.length === 0 && newDropsBucket.length === 0 && premiumWarehouseBucket.length === 0 && smokyStealsBucket.length === 0 && returnedBucket.length === 0 && (
-               <div className="flex flex-col items-center justify-center py-24 bg-zinc-900/20 rounded-3xl border border-dashed border-zinc-800/50 mt-6">
-                  <div className="w-16 h-16 bg-zinc-950 rounded-full border border-zinc-800 flex items-center justify-center mb-4"><Info size={24} className="text-zinc-600" /></div>
-                  <p className="text-zinc-400 font-bold text-sm uppercase tracking-widest">No Active Stock</p>
-               </div>
-             )}
            </div>
          ) : (
            <div className="mb-8 animate-in fade-in slide-in-from-bottom-4">

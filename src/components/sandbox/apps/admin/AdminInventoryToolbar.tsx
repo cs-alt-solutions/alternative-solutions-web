@@ -1,10 +1,13 @@
+// sandbox/apps/admin/AdminInventoryToolbar.tsx
+'use client';
+
 import React from 'react';
 import { Search, Filter, ChevronDown } from 'lucide-react';
 
 export default function AdminInventoryToolbar({ 
   searchTerm, setSearchTerm, 
   categoryFilter, setCategoryFilter, mainCategories, 
-  subCategoryFilter, setSubCategoryFilter, subCategories, // NEW PROPS
+  subCategoryFilter, setSubCategoryFilter, subCategories,
   statusFilter, setStatusFilter 
 }: any) {
   
@@ -13,7 +16,7 @@ export default function AdminInventoryToolbar({
 
   return (
     <div className="bg-zinc-900/60 border border-zinc-800 rounded-3xl p-4 mb-6 flex flex-col md:flex-row items-center gap-4 shadow-sm">
-      {/* Search */}
+      {/* Search Section */}
       <div className="relative w-full md:w-auto md:flex-1">
         <Search size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-zinc-500" />
         <input 
@@ -25,11 +28,11 @@ export default function AdminInventoryToolbar({
         />
       </div>
 
-      {/* Filters */}
+      {/* Filters Container */}
       <div className="flex flex-wrap w-full md:w-auto gap-3">
         
-        {/* Main Category Dropdown */}
-        <div className="relative flex-1 min-w-[140px]">
+        {/* Main Category Dropdown - Now includes "Backroom Stash" */}
+        <div className="relative flex-1 min-w-35">
           <Filter size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500" />
           <select 
             value={categoryFilter} 
@@ -45,9 +48,9 @@ export default function AdminInventoryToolbar({
           <ChevronDown size={14} className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-600 pointer-events-none" />
         </div>
 
-        {/* NEW: Subcategory Dropdown (Only shows if a main cat is selected and has subs) */}
+        {/* Dynamic Subcategory Dropdown */}
         {categoryFilter !== 'All' && availableSubs.length > 0 && (
-          <div className="relative flex-1 min-w-[140px] animate-in fade-in zoom-in-95 duration-200">
+          <div className="relative flex-1 min-w-35 animate-in fade-in zoom-in-95 duration-200">
             <select 
               value={subCategoryFilter} 
               onChange={(e) => setSubCategoryFilter(e.target.value)}
@@ -60,8 +63,8 @@ export default function AdminInventoryToolbar({
           </div>
         )}
 
-        {/* Status Dropdown */}
-        <div className="relative flex-1 min-w-[140px]">
+        {/* Global Status Dropdown */}
+        <div className="relative flex-1 min-w-35">
            <select 
             value={statusFilter} 
             onChange={(e) => setStatusFilter(e.target.value)}
@@ -70,7 +73,10 @@ export default function AdminInventoryToolbar({
             <option value="All">All Statuses</option>
             <option value="Active Promo">🔥 Active Promo</option>
             <option value="Top Shelf">🏆 Top Shelf</option>
-            <option value="Featured">⭐ Featured</option>
+            <option value="Chef's Reserve">👨‍🍳 Chef's Reserve</option>
+            <option value="New Arrival">✨ New Arrival</option>
+            <option value="Returned">🔄 Returned</option>
+            <option value="Smoky Steals">💨 Smoky Steals</option>
             <option value="Low Stock">⚠️ Low Stock</option>
             <option value="Out of Stock">🚫 Out of Stock</option>
           </select>

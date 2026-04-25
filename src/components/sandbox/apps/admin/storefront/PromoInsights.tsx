@@ -56,7 +56,7 @@ export default function PromoInsights({ overstockCandidates, openCampaignConfig 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
               {overstockCandidates.map((item: any) => {
                 const totalStock = item.onHand || (item.options ? item.options.reduce((sum: number, o: any) => sum + (Number(o.stock) || 0), 0) : 0);
-                const isFlower = item.mainCategory === 'Flower & Plants';
+                const isFlower = item.mainCategory === 'Flower & Pre-rolls';
                 const tierStatus = getMaxTier(totalStock, isFlower);
                 
                 return (

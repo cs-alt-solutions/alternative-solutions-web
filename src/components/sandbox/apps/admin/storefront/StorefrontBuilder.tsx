@@ -1,14 +1,17 @@
-// src/components/sandbox/apps/admin/storefront/StorefrontBuilder.tsx
+// sandbox/apps/admin/storefront/StorefrontBuilder.tsx
 import React, { useState, useRef } from 'react';
-import { Flame, Award, Leaf, Wind, Tag, Droplet, Sparkles, Star, Activity, CloudLightning } from 'lucide-react';
+import { 
+  Flame, Award, Leaf, Wind, Tag, Droplet, Sparkles, Star, Activity, CloudLightning 
+} from 'lucide-react';
 import { createClient } from '@supabase/supabase-js';
+
 import InventorySelectorModal from './InventorySelectorModal';
 import CategoryArtManager from './CategoryArtManager';
 import BuilderEditSlideover from './builder/BuilderEditSlideover';
 import BuilderHeroBlock from './builder/BuilderHeroBlock';
 import BuilderBentoBlock from './builder/BuilderBentoBlock';
-import BuilderSecondaryBlock from './builder/BuilderSecondaryBlock';
 
+// 🚀 SHARED EXPORTS (Required by StorefrontCatalog)
 export const IconMap: any = { Flame, Award, Leaf, Wind, Tag, Droplet, Sparkles, Star, Activity };
 
 export const ThemeMap: Record<string, any> = {
@@ -42,8 +45,6 @@ export const getSmartBentoSpan = (idx: number, total: number) => {
 
 export default function StorefrontBuilder({ homeConfig, setHomeConfig, mainCategories, subCategories, inventoryMatrix, clientConfig }: any) {
     
-    // 🚀 ARCHITECTURE ENFORCEMENT: Force the builder to use the Master Config File,
-    // bypassing any stubborn browser cache that parent components might be passing down.
     const activeMainCats = clientConfig?.categories || mainCategories || [];
     const activeSubCats = clientConfig?.subCategories || subCategories || {};
 
@@ -62,7 +63,7 @@ export default function StorefrontBuilder({ homeConfig, setHomeConfig, mainCateg
 
     const handleSave = () => {
         if (editingBlock === 'hero') setHomeConfig({ ...homeConfig, hero: editForm });
-        else if (editingBlock === 'secondary') setHomeConfig({ ...homeConfig, secondary: editForm });
+        // Cleaned out secondary save logic as it no longer exists
         else if (editingBlock?.startsWith('bento-')) {
             const idx = parseInt(editingBlock.split('-')[1]);
             const newBento = [...homeConfig.bento];
@@ -129,7 +130,7 @@ export default function StorefrontBuilder({ homeConfig, setHomeConfig, mainCateg
               <BuilderHeroBlock homeConfig={homeConfig} openEdit={openEdit} />
               <BuilderBentoBlock homeConfig={homeConfig} openEdit={openEdit} moveBento={moveBento} removeBento={removeBento} addBento={addBento} />
               <CategoryArtManager homeConfig={homeConfig} setHomeConfig={setHomeConfig} mainCategories={activeMainCats} clientConfig={clientConfig} onOpenPicker={(cat: string) => { setActiveCatPicker(cat); setShowInventoryModal(true); }} />
-              <BuilderSecondaryBlock homeConfig={homeConfig} openEdit={openEdit} />
+              {/* 🚀 Redundant Secondary Block NUKED from here */}
            </div>
 
            <BuilderEditSlideover 

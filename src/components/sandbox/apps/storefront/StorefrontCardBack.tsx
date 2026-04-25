@@ -47,7 +47,6 @@ export default function StorefrontCardBack({
   const displayStock = hasTrueVariants ? safeOptions.reduce((sum: number, opt: any) => sum + (Number(opt.stock) || 0), 0) : (item?.onHand || 0);
   const rawPrice = Number(selectedSize?.price || 0);
   let activeBasePrice = rawPrice;
-  let lineTotal = rawPrice * qty;
   let savingsText = "";
 
   const isCompletelyOOS = isRawFlower && safeSizes.length > 0 ? displayStock < Math.min(...safeSizes.map((s:any) => getRequiredGrams(s.label))) : displayStock <= 0;
@@ -71,23 +70,47 @@ export default function StorefrontCardBack({
     projectedAddPrice = activeBasePrice * cartAddQty;
   }
 
+  let trueCartQty = 0;
+  let trueBaseTotal = 0;
+  let trueLineTotal = 0;
+  
+  Object.keys(cart || {}).forEach(k => {
+    if (k.startsWith(item.id + '_') || k === item.id) {
+      const cItem = cart[k];
+      const cQty = cItem.qty || 0;
+      trueCartQty += cQty;
+      
+      let cPrice = Number(cItem.size?.price || rawPrice);
+      trueBaseTotal += cPrice * cQty;
+      
+      if (item?.dailyDeal && config && config.type === 'DISCOUNT') {
+         if (config.discountType === 'TIERED' && cItem.size?.promoPrice) cPrice = Number(cItem.size.promoPrice);
+         else if (config.discountType === 'PERCENT') cPrice = cPrice * (1 - config.discountValue / 100);
+         else if (config.discountType === 'DOLLAR') cPrice = Math.max(0, cPrice - config.discountValue);
+         else if (config.discountType === 'FIXED') cPrice = config.discountValue;
+      }
+      trueLineTotal += cPrice * cQty;
+    }
+  });
+
   if (item?.dailyDeal && config) {
     if (config.type === 'DISCOUNT') {
-      lineTotal = activeBasePrice * qty;
-      if (lineTotal < rawPrice * qty && qty > 0) savingsText = `Saved $${((rawPrice * qty) - lineTotal).toFixed(2)}`;
+      if (trueLineTotal < trueBaseTotal && trueCartQty > 0) {
+         savingsText = `Saved $${(trueBaseTotal - trueLineTotal).toFixed(2)}`;
+      }
     } else if (config.type === 'BUNDLE') {
-      const bundles = Math.floor(qty / config.buyQty);
-      const remainder = qty % config.buyQty;
-      lineTotal = (bundles * config.bundlePrice) + (remainder * rawPrice);
-      if (bundles > 0) savingsText = `Bundle Saved $${((rawPrice * qty) - lineTotal).toFixed(2)}`;
+      const bundles = Math.floor(trueCartQty / config.buyQty);
+      const remainder = trueCartQty % config.buyQty;
+      trueLineTotal = (bundles * config.bundlePrice) + (remainder * rawPrice);
+      if (bundles > 0) savingsText = `Bundle Saved $${(trueBaseTotal - trueLineTotal).toFixed(2)}`;
     } else if (config.type === 'BOGO') {
-      lineTotal = rawPrice * qty;
-      const earnedQty = Math.floor(qty / config.buyQty) * config.getQty;
+      trueLineTotal = trueBaseTotal;
+      const earnedQty = Math.floor(trueCartQty / config.buyQty) * config.getQty;
       if (earnedQty > 0) savingsText = `Unlocked ${earnedQty} ${config.discount === 'PCT_50' ? '50% OFF' : config.discount === 'PENNY' ? 'FOR 1¢' : 'FREE'}! (Auto-added at checkout)`;
     }
   }
 
-  const currentSubtotal = lineTotal;
+  const currentSubtotal = trueLineTotal;
 
   const sortedSizes = [...safeSizes].sort((a: any, b: any) => {
     const aReq = isRawFlower ? getRequiredGrams(a.label) : 1;
@@ -101,36 +124,48 @@ export default function StorefrontCardBack({
 
   return (
     <div className="absolute inset-0 w-full h-full backface-hidden transform-[rotateY(180deg)] bg-zinc-950 border border-zinc-800 rounded-[2.5rem] flex flex-row shadow-2xl overflow-hidden">
-      
-      {isCompletelyOOS && (
-        <div className="absolute inset-0 z-50 bg-zinc-950/80 backdrop-blur-sm flex items-center justify-center rounded-[2.5rem]">
-           <button onClick={(e) => { e.stopPropagation(); setIsFlipped(false); }} className="absolute top-6 left-6 p-2 bg-zinc-900 border border-zinc-800 rounded-full text-zinc-400 hover:text-white transition-colors"><ArrowLeft size={16} /></button>
-           <div className="bg-rose-500 text-zinc-950 font-black uppercase tracking-widest px-6 py-2.5 rounded-xl shadow-[0_0_20px_rgba(244,63,94,0.4)] border border-rose-400 transform -rotate-12 scale-110">Sold Out</div>
-        </div>
-      )}
 
-      {/* LEFT COLUMN (60%): Smart Labels & Cultivar Panel */}
-      <div className={`w-[60%] h-full flex flex-col relative z-10 ${isEdible || isPreRoll ? 'bg-zinc-900 border-r-2 border-zinc-800' : 'border-r border-zinc-800/50 p-4 sm:p-5 pb-6 overflow-y-auto scrollbar-hide'}`}>
+      {/* 🚀 LEFT COLUMN: Reduced horizontal padding (px-2.5 sm:px-3) to allow boxes to stretch wider */}
+      <div className={`${isCompletelyOOS ? 'w-full' : 'w-[60%]'} h-full flex flex-col relative z-10 transition-all duration-300 ${isEdible || isPreRoll ? 'bg-zinc-900 border-r-2 border-zinc-800' : isCompletelyOOS ? 'bg-zinc-950 p-4 sm:p-5 pb-6 overflow-y-auto scrollbar-hide' : 'border-r border-zinc-800/50 px-2.5 py-4 sm:px-3 sm:py-5 pb-6 overflow-y-auto scrollbar-hide'}`}>
+         
+         {isCompletelyOOS && (
+            <div className="absolute top-4 right-4 z-50">
+              <button onClick={() => setIsFlipped(false)} className="p-1.5 bg-zinc-900 border border-zinc-800 hover:bg-zinc-800 text-zinc-400 rounded-lg transition-colors active:scale-95 shadow-sm">
+                <ArrowLeft size={16} />
+              </button>
+            </div>
+         )}
+
          {isEdible ? (
            <EdibleComplianceLabel item={item} cleanItemName={cleanItemName} isSideStacked={true} />
          ) : isPreRoll ? (
            <PreRollLabel item={item} cleanItemName={cleanItemName} isSideStacked={true} />
          ) : (
-           <div className="flex flex-col h-full">
-              <div className="flex items-start justify-between gap-2 mb-1.5 shrink-0 pb-1.5 border-b border-zinc-800/50">
-                 <div className="flex flex-col min-w-0 pr-2">
-                   <p className="text-[8px] sm:text-[9px] font-black uppercase tracking-widest text-zinc-500 mb-0.5">{profileLabel}</p>
-                   <h3 className="text-base sm:text-xl font-black text-zinc-100 uppercase tracking-tighter leading-none wrap-break-word">{cleanItemName}</h3>
-                   {item?.brand && <span className="text-[8px] sm:text-[9px] font-black text-emerald-500 uppercase tracking-widest mt-1 block">BY {item.brand}</span>}
+           <div className="flex flex-col h-full relative">
+              
+              {isCompletelyOOS && (
+                <div className="absolute top-0 right-12 text-[10px] font-black uppercase tracking-widest text-rose-500 bg-rose-500/10 border border-rose-500/20 px-2 py-1 rounded-md">
+                  Sold Out
+                </div>
+              )}
+
+              <div className={`flex items-start justify-between gap-2 mb-1.5 shrink-0 pb-1.5 border-b border-zinc-800/50 ${isCompletelyOOS ? 'pr-20' : 'pr-1'}`}>
+                 <div className="flex flex-col min-w-0">
+                   <p className={`font-black uppercase tracking-widest text-zinc-500 mb-0.5 ${isCompletelyOOS ? 'text-[9px] sm:text-[10px]' : 'text-[8px] sm:text-[9px]'}`}>
+                     {profileLabel}
+                   </p>
+                   <h3 className={`font-black text-zinc-100 uppercase tracking-tighter leading-none wrap-break-word transition-all ${isCompletelyOOS ? 'text-xl sm:text-3xl mb-1' : 'text-base sm:text-xl'}`}>
+                     {cleanItemName}
+                   </h3>
+                   {item?.brand && (
+                     <span className={`font-black text-emerald-500 uppercase tracking-widest block mt-0.5 ${isCompletelyOOS ? 'text-[9px] sm:text-[10px]' : 'text-[8px] sm:text-[9px]'}`}>
+                       BY {item.brand}
+                     </span>
+                   )}
                  </div>
-                 {item?.iconUrl && (
-                   <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-full border border-zinc-800 bg-zinc-950 overflow-hidden shrink-0 shadow-lg flex items-center justify-center">
-                     <img src={item.iconUrl} alt="Brand Stamp" className="max-w-[80%] max-h-[80%] object-contain" />
-                   </div>
-                 )}
               </div>
               
-              <div className="flex flex-col flex-1 overflow-y-auto scrollbar-hide pr-1">
+              <div className="flex flex-col flex-1 overflow-y-auto scrollbar-hide pr-1 mt-2">
                   {(item?.descBase || item?.lineage || item?.strainType || (hasDNA && expectsDNA)) ? (
                      <ProductDnaPanel item={item} UI={UI} hasDNA={hasDNA} expectsDNA={expectsDNA} />
                   ) : expectsDNA ? (
@@ -141,25 +176,28 @@ export default function StorefrontCardBack({
          )}
       </div>
 
-      {/* RIGHT COLUMN (40%): Universal Commerce Controls */}
-      <div className="w-[40%] h-full flex flex-col relative pt-3 pb-3 pr-2 pl-1.5 bg-zinc-950">
-         <div className="shrink-0 flex justify-end mb-1.5">
-            <button onClick={() => setIsFlipped(false)} className="p-1.5 bg-zinc-900 border border-zinc-800 hover:bg-zinc-800 text-zinc-400 rounded-lg transition-colors active:scale-95 shadow-sm">
-              <ArrowLeft size={16} />
-            </button>
-         </div>
-         
-         <CardCommerceControls 
-           item={item} UI={UI} config={config} safeSizes={safeSizes} sortedSizes={sortedSizes} 
-           selectedSize={selectedSize} setSelectedSize={setSelectedSize}
-           isRawFlower={isRawFlower} displayStock={displayStock} 
-           hasMultipleOptions={hasMultipleOptions} safeOptions={safeOptions} sortedOptions={sortedOptions} 
-           safeSelectedOptions={safeSelectedOptions} handleSelectOption={handleSelectOption} 
-           savingsText={savingsText} qty={qty} updateCart={updateCart} cartAddQty={cartAddQty} 
-           isReadyToAdd={isReadyToAdd} isMaxReached={isMaxReached} projectedAddPrice={projectedAddPrice} 
-           currentSubtotal={currentSubtotal} cart={cart} 
-         />
-      </div>
+      {!isCompletelyOOS && (
+        <div className="w-[40%] h-full flex flex-col relative pt-3 pb-3 pr-2 pl-1.5 bg-zinc-950 transition-all duration-300">
+           <div className="shrink-0 flex justify-end mb-1.5 z-10">
+              <button onClick={() => setIsFlipped(false)} className="p-1.5 bg-zinc-900 border border-zinc-800 hover:bg-zinc-800 text-zinc-400 rounded-lg transition-colors active:scale-95 shadow-sm">
+                <ArrowLeft size={16} />
+              </button>
+           </div>
+           
+           <CardCommerceControls 
+             item={item} UI={UI} config={config} safeSizes={safeSizes} sortedSizes={sortedSizes} 
+             selectedSize={selectedSize} setSelectedSize={setSelectedSize}
+             isRawFlower={isRawFlower} displayStock={displayStock} 
+             hasMultipleOptions={hasMultipleOptions} safeOptions={safeOptions} sortedOptions={sortedOptions} 
+             safeSelectedOptions={safeSelectedOptions} handleSelectOption={handleSelectOption} 
+             savingsText={savingsText} 
+             qty={trueCartQty}
+             updateCart={updateCart} cartAddQty={cartAddQty} 
+             isReadyToAdd={isReadyToAdd} isMaxReached={isMaxReached} projectedAddPrice={projectedAddPrice} 
+             currentSubtotal={currentSubtotal} cart={cart} 
+           />
+        </div>
+      )}
     </div>
   );
 }

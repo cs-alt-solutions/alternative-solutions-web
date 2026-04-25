@@ -22,8 +22,6 @@ export default function AdminInventoryEditor({ initialItem, isAdding, mainCatego
   const [isUploadingIcon, setIsUploadingIcon] = useState(false);
   const [isConfirmingDelete, setIsConfirmingDelete] = useState(false);
   const [descMode, setDescMode] = useState<'desc' | 'fact'>('desc');
-
-  // MASTER LOCK STATE: Secures the "Nuke" button from accidental employee clicks.
   const [isMasterUnlocked, setIsMasterUnlocked] = useState(false);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -93,7 +91,8 @@ export default function AdminInventoryEditor({ initialItem, isAdding, mainCatego
       const defaultMain = initialItem?.mainCategory || mainCategories[0];
       const defaultSub = initialItem?.subCategory || subCategories[defaultMain]?.[0] || 'Uncategorized';
       
-      const isFlowerCat = defaultMain === 'Flower & Prerolls';
+      // Recognized 'Backroom Stash' as a raw flower type
+      const isFlowerCat = defaultMain === 'Flower & Prerolls' || defaultMain === 'Backroom Stash';
       const isPreRollCat = defaultSub.toLowerCase().includes('pre-roll') || defaultSub.toLowerCase().includes('blunt');
       const isRawFlower = isFlowerCat && !isPreRollCat;
       
@@ -163,7 +162,7 @@ export default function AdminInventoryEditor({ initialItem, isAdding, mainCatego
 
     let newSizes = [...updatedItem.sizes];
     
-    const isFlowerCat = newMain === 'Flower & Prerolls';
+    const isFlowerCat = newMain === 'Flower & Prerolls' || newMain === 'Backroom Stash';
     const isPreRollCat = newSub.toLowerCase().includes('pre-roll') || newSub.toLowerCase().includes('blunt');
     const isRawFlowerCat = isFlowerCat && !isPreRollCat;
 
@@ -294,10 +293,9 @@ export default function AdminInventoryEditor({ initialItem, isAdding, mainCatego
   const activeMainCat = updatedItem.mainCategory || '';
   const activeSubCat = (updatedItem.subCategory || '').toLowerCase();
   
-  // 🚀 WE CALCULATE THE EDIBLE FLAG HERE
   const isEdible = activeMainCat.toLowerCase().includes('edible');
   
-  const isFlowerCat = activeMainCat === 'Flower & Prerolls';
+  const isFlowerCat = activeMainCat === 'Flower & Prerolls' || activeMainCat === 'Backroom Stash';
   const isPreRoll = isFlowerCat && (activeSubCat.includes('pre-roll') || activeSubCat.includes('blunt'));
   const isRawFlower = isFlowerCat && !isPreRoll;
   
@@ -321,7 +319,6 @@ export default function AdminInventoryEditor({ initialItem, isAdding, mainCatego
 
   return (
     <div className="min-h-screen bg-zinc-950 text-zinc-100 selection:bg-emerald-500/30 selection:text-white pb-32 animate-in fade-in duration-500">
-      
       <div className="sticky top-0 z-50 bg-zinc-950/80 backdrop-blur-xl border-b border-zinc-800/50 px-6 py-4 flex items-center justify-between shadow-md">
         <div className="flex items-center gap-4">
           <div className="w-12 h-12 rounded-xl bg-zinc-900 border border-zinc-800 flex items-center justify-center shrink-0 overflow-hidden text-zinc-500">
@@ -375,7 +372,7 @@ export default function AdminInventoryEditor({ initialItem, isAdding, mainCatego
           updatedItem={updatedItem} setUpdatedItem={setUpdatedItem}
           descMode={descMode} setDescMode={setDescMode}
           showDNA={showDNA} showLineage={showLineage}
-          isEdible={isEdible} // 🚀 WE PASS IT DOWN HERE
+          isEdible={isEdible}
         />
         <EditorCommerce 
           updatedItem={updatedItem} setUpdatedItem={setUpdatedItem}
