@@ -24,21 +24,35 @@ export default function StorefrontCardBack({
     uses: 'Uses', insiderFact: 'Insider Fact'
   };
 
-  const safeSizes = sizes || [];
-  const safeOptions = options || [];
-  const safeSelectedOptions = selectedOptions || [];
-  const safeBundleQty = bundleQty || 1;
-
-  const hasDNA = item?.descFeels || item?.descTaste || item?.descUses || item?.descFact;
-  const config = item?.dealConfig;
-  
+  // 1. IDENTIFY PRODUCT TYPE FIRST
   const activeCat = item?.mainCategory?.toLowerCase() || '';
   const activeSubCat = item?.subCategory?.toLowerCase() || '';
   const isMerch = activeCat.includes('merch');
   const isEdible = activeCat.includes('edible'); 
   const isPreRoll = activeSubCat.includes('pre-roll') || activeSubCat.includes('blunt');
   const isRawFlower = isFlower && !isPreRoll;
+  
+  const isDisposable = activeSubCat.includes('disposable') || activeSubCat.includes('vape') || cleanItemName?.toLowerCase().includes('disposable');
   const isHardware = isMerch || activeSubCat.includes('batteries') || activeSubCat.includes('hardware') || activeSubCat.includes('gear') || activeSubCat.includes('glass') || activeSubCat.includes('accessories');
+  
+  // 🚀 2. GHOST DATA SCRUBBER: Filter out legacy raw flower sizes if item is a vape or edible
+  const safeSizes = (sizes || []).filter((s: any) => {
+      if (isDisposable || isHardware || isEdible) {
+          const lbl = (s.label || '').toLowerCase();
+          // If the size label contains raw flower weights, kill it.
+          if (lbl.includes('3.5') || lbl.includes('1/8') || lbl.includes('7g') || lbl.includes('14g') || lbl.includes('28g') || lbl.includes('ounce') || lbl.includes('quarter') || lbl.includes('half')) {
+              return false;
+          }
+      }
+      return true;
+  });
+
+  const safeOptions = options || [];
+  const safeSelectedOptions = selectedOptions || [];
+  const safeBundleQty = bundleQty || 1;
+
+  const hasDNA = item?.descFeels || item?.descTaste || item?.descUses || item?.descFact;
+  const config = item?.dealConfig;
   
   const expectsDNA = !isHardware;
   const profileLabel = isHardware ? 'Product Details' : 'Cultivar Profile';
@@ -123,81 +137,74 @@ export default function StorefrontCardBack({
   });
 
   return (
-    <div className="absolute inset-0 w-full h-full backface-hidden transform-[rotateY(180deg)] bg-zinc-950 border border-zinc-800 rounded-[2.5rem] flex flex-row shadow-2xl overflow-hidden">
-
-      {/* 🚀 LEFT COLUMN: Reduced horizontal padding (px-2.5 sm:px-3) to allow boxes to stretch wider */}
-      <div className={`${isCompletelyOOS ? 'w-full' : 'w-[60%]'} h-full flex flex-col relative z-10 transition-all duration-300 ${isEdible || isPreRoll ? 'bg-zinc-900 border-r-2 border-zinc-800' : isCompletelyOOS ? 'bg-zinc-950 p-4 sm:p-5 pb-6 overflow-y-auto scrollbar-hide' : 'border-r border-zinc-800/50 px-2.5 py-4 sm:px-3 sm:py-5 pb-6 overflow-y-auto scrollbar-hide'}`}>
-         
-         {isCompletelyOOS && (
-            <div className="absolute top-4 right-4 z-50">
-              <button onClick={() => setIsFlipped(false)} className="p-1.5 bg-zinc-900 border border-zinc-800 hover:bg-zinc-800 text-zinc-400 rounded-lg transition-colors active:scale-95 shadow-sm">
-                <ArrowLeft size={16} />
-              </button>
+    <div className="absolute inset-0 w-full h-full backface-hidden transform-[rotateY(180deg)] bg-zinc-950 border border-zinc-800 rounded-[2.5rem] flex flex-col shadow-2xl overflow-hidden">
+       
+       <div className={`shrink-0 flex items-center justify-between z-20 px-4 pt-3 ${isCompletelyOOS ? 'pb-1' : ''}`}>
+          {isCompletelyOOS && (
+            <div className="text-[10px] font-black uppercase tracking-widest text-rose-500 bg-rose-500/10 border border-rose-500/20 px-2 py-1 rounded-md">
+              Sold Out
             </div>
-         )}
+          )}
+          <button onClick={() => setIsFlipped(false)} className="p-1.5 ml-auto bg-zinc-900 border border-zinc-800 hover:bg-zinc-800 text-zinc-400 rounded-lg transition-colors active:scale-95 shadow-sm">
+            <ArrowLeft size={16} />
+          </button>
+       </div>
 
-         {isEdible ? (
-           <EdibleComplianceLabel item={item} cleanItemName={cleanItemName} isSideStacked={true} />
-         ) : isPreRoll ? (
-           <PreRollLabel item={item} cleanItemName={cleanItemName} isSideStacked={true} />
-         ) : (
-           <div className="flex flex-col h-full relative">
-              
-              {isCompletelyOOS && (
-                <div className="absolute top-0 right-12 text-[10px] font-black uppercase tracking-widest text-rose-500 bg-rose-500/10 border border-rose-500/20 px-2 py-1 rounded-md">
-                  Sold Out
-                </div>
-              )}
+       <div className={`flex-1 min-h-0 overflow-y-auto scrollbar-hide ${isDisposable ? 'flex flex-col px-4 pb-4 gap-4' : 'flex flex-row'}`}>
+          
+          <div className={`${isCompletelyOOS || isDisposable ? 'w-full' : 'w-[60%]'} flex flex-col relative z-10 transition-all duration-300 ${!isDisposable && (isEdible || isPreRoll) ? 'bg-zinc-900 border-r-2 border-zinc-800' : isCompletelyOOS ? 'bg-zinc-950 px-4 pb-6' : isDisposable ? '' : 'border-r border-zinc-800/50 px-3 pb-6'}`}>
+             
+             {isEdible ? (
+               <EdibleComplianceLabel item={item} cleanItemName={cleanItemName} isSideStacked={true} />
+             ) : isPreRoll ? (
+               <PreRollLabel item={item} cleanItemName={cleanItemName} isSideStacked={true} />
+             ) : (
+               <div className="flex flex-col h-full relative">
+                  <div className={`flex items-start justify-between gap-2 mb-1.5 shrink-0 pb-1.5 border-b border-zinc-800/50 pr-1`}>
+                     <div className="flex flex-col min-w-0">
+                       <p className={`font-black uppercase tracking-widest text-zinc-500 mb-0.5 ${isCompletelyOOS ? 'text-[9px] sm:text-[10px]' : 'text-[8px] sm:text-[9px]'}`}>
+                         {profileLabel}
+                       </p>
+                       <h3 className={`font-black text-zinc-100 uppercase tracking-tighter leading-none wrap-break-word transition-all ${isCompletelyOOS ? 'text-xl sm:text-3xl mb-1' : 'text-base sm:text-xl'}`}>
+                         {cleanItemName}
+                       </h3>
+                       {item?.brand && (
+                         <span className={`font-black text-emerald-500 uppercase tracking-widest block mt-0.5 ${isCompletelyOOS ? 'text-[9px] sm:text-[10px]' : 'text-[8px] sm:text-[9px]'}`}>
+                           BY {item.brand}
+                         </span>
+                       )}
+                     </div>
+                  </div>
+                  
+                  <div className={`flex flex-col flex-1 ${isDisposable ? 'mt-2' : 'overflow-y-auto scrollbar-hide pr-1 mt-2'}`}>
+                     {(item?.descBase || item?.lineage || item?.strainType || (hasDNA && expectsDNA) || isDisposable) ? (
+                        <ProductDnaPanel item={item} UI={UI} hasDNA={hasDNA} expectsDNA={expectsDNA} isDisposable={isDisposable} cleanItemName={cleanItemName} />
+                     ) : expectsDNA ? (
+                        <div className="flex items-center justify-center pt-10"><span className="text-[9px] font-black uppercase tracking-widest text-zinc-600">{UI.noDna}</span></div>
+                     ) : null}
+                  </div>
+               </div>
+             )}
+          </div>
 
-              <div className={`flex items-start justify-between gap-2 mb-1.5 shrink-0 pb-1.5 border-b border-zinc-800/50 ${isCompletelyOOS ? 'pr-20' : 'pr-1'}`}>
-                 <div className="flex flex-col min-w-0">
-                   <p className={`font-black uppercase tracking-widest text-zinc-500 mb-0.5 ${isCompletelyOOS ? 'text-[9px] sm:text-[10px]' : 'text-[8px] sm:text-[9px]'}`}>
-                     {profileLabel}
-                   </p>
-                   <h3 className={`font-black text-zinc-100 uppercase tracking-tighter leading-none wrap-break-word transition-all ${isCompletelyOOS ? 'text-xl sm:text-3xl mb-1' : 'text-base sm:text-xl'}`}>
-                     {cleanItemName}
-                   </h3>
-                   {item?.brand && (
-                     <span className={`font-black text-emerald-500 uppercase tracking-widest block mt-0.5 ${isCompletelyOOS ? 'text-[9px] sm:text-[10px]' : 'text-[8px] sm:text-[9px]'}`}>
-                       BY {item.brand}
-                     </span>
-                   )}
-                 </div>
-              </div>
-              
-              <div className="flex flex-col flex-1 overflow-y-auto scrollbar-hide pr-1 mt-2">
-                  {(item?.descBase || item?.lineage || item?.strainType || (hasDNA && expectsDNA)) ? (
-                     <ProductDnaPanel item={item} UI={UI} hasDNA={hasDNA} expectsDNA={expectsDNA} />
-                  ) : expectsDNA ? (
-                     <div className="flex items-center justify-center pt-10"><span className="text-[9px] font-black uppercase tracking-widest text-zinc-600">{UI.noDna}</span></div>
-                  ) : null}
-              </div>
-           </div>
-         )}
-      </div>
-
-      {!isCompletelyOOS && (
-        <div className="w-[40%] h-full flex flex-col relative pt-3 pb-3 pr-2 pl-1.5 bg-zinc-950 transition-all duration-300">
-           <div className="shrink-0 flex justify-end mb-1.5 z-10">
-              <button onClick={() => setIsFlipped(false)} className="p-1.5 bg-zinc-900 border border-zinc-800 hover:bg-zinc-800 text-zinc-400 rounded-lg transition-colors active:scale-95 shadow-sm">
-                <ArrowLeft size={16} />
-              </button>
-           </div>
-           
-           <CardCommerceControls 
-             item={item} UI={UI} config={config} safeSizes={safeSizes} sortedSizes={sortedSizes} 
-             selectedSize={selectedSize} setSelectedSize={setSelectedSize}
-             isRawFlower={isRawFlower} displayStock={displayStock} 
-             hasMultipleOptions={hasMultipleOptions} safeOptions={safeOptions} sortedOptions={sortedOptions} 
-             safeSelectedOptions={safeSelectedOptions} handleSelectOption={handleSelectOption} 
-             savingsText={savingsText} 
-             qty={trueCartQty}
-             updateCart={updateCart} cartAddQty={cartAddQty} 
-             isReadyToAdd={isReadyToAdd} isMaxReached={isMaxReached} projectedAddPrice={projectedAddPrice} 
-             currentSubtotal={currentSubtotal} cart={cart} 
-           />
-        </div>
-      )}
+          {!isCompletelyOOS && (
+            <div className={`${isDisposable ? 'w-full mt-auto pt-2 border-t border-zinc-800/50' : 'w-[40%] pl-2 pr-3 pb-3'} flex flex-col relative bg-zinc-950 transition-all duration-300`}>
+               <CardCommerceControls 
+                 item={item} UI={UI} config={config} safeSizes={safeSizes} sortedSizes={sortedSizes} 
+                 selectedSize={selectedSize} setSelectedSize={setSelectedSize}
+                 isRawFlower={isRawFlower} displayStock={displayStock} 
+                 hasMultipleOptions={hasMultipleOptions} safeOptions={safeOptions} sortedOptions={sortedOptions} 
+                 safeSelectedOptions={safeSelectedOptions} handleSelectOption={handleSelectOption} 
+                 savingsText={savingsText} 
+                 qty={trueCartQty}
+                 updateCart={updateCart} cartAddQty={cartAddQty} 
+                 isReadyToAdd={isReadyToAdd} isMaxReached={isMaxReached} projectedAddPrice={projectedAddPrice} 
+                 currentSubtotal={currentSubtotal} cart={cart} 
+               />
+            </div>
+          )}
+          
+       </div>
     </div>
   );
 }

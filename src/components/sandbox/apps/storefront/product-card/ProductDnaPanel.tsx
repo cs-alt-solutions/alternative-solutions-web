@@ -1,16 +1,44 @@
 // sandbox/apps/storefront/product-card/ProductDnaPanel.tsx
 import React from 'react';
 import { Wind, Droplet, Cookie, Sparkles, Dna } from 'lucide-react';
+import { DisposableHardwareLabel } from './DisposableHardwareLabel';
 
-export default function ProductDnaPanel({ item, UI, hasDNA, expectsDNA }: any) {
-  if (!item?.descBase && !hasDNA && !item?.lineage && !item?.strainType) return null;
+export default function ProductDnaPanel({ item, UI, hasDNA, expectsDNA, isDisposable, cleanItemName }: any) {
+  
+  // MOCK LOGIC FALLBACK: Auto-detect based on names
+  const itemNameLower = (cleanItemName || item?.name || '').toLowerCase();
+  
+  let mockTankCount = 1;
+  let mockIncludesPreRoll = false;
+  let mockIncludesGummy = false;
+
+  if (itemNameLower.includes('switch') || itemNameLower.includes('space club')) { mockTankCount = 3; } 
+  else if (itemNameLower.includes('triple threat')) { mockTankCount = 2; mockIncludesPreRoll = true; mockIncludesGummy = true; }
+  else if (itemNameLower.includes('fried og')) { mockTankCount = 1; mockIncludesPreRoll = true; }
+  else if (itemNameLower.includes('quad')) { mockTankCount = 4; }
+
+  // REAL DATA PRIORITIZATION
+  const finalTankCount = item?.tankCount !== undefined ? item.tankCount : mockTankCount;
+  const finalIncludesPreRoll = item?.includesPreRoll !== undefined ? item.includesPreRoll : mockIncludesPreRoll;
+  const finalIncludesGummy = item?.includesGummy !== undefined ? item.includesGummy : mockIncludesGummy;
+
+  if (!item?.descBase && !hasDNA && !item?.lineage && !item?.strainType && !isDisposable) return null;
 
   return (
-    <div className="flex flex-col gap-1.5 pb-1">
+    <div className="flex flex-col gap-1.5 pb-1 w-full">
        
+       {/* 🚀 DISPOSABLE HARDWARE BLOCK (Description is passed inside) */}
+       {isDisposable && (
+         <DisposableHardwareLabel
+           tankCount={finalTankCount}
+           includesPreRoll={finalIncludesPreRoll}
+           includesGummy={finalIncludesGummy}
+           description={item?.descBase} 
+         />
+       )}
+
        {/* GENETICS BLOCK */}
-       {(item?.lineage || (item?.strainType && item.strainType !== 'N/A')) && (
-         // 🚀 FIXED: Dropped padding from p-2 to p-1.5 to reclaim horizontal space
+       {!isDisposable && (item?.lineage || (item?.strainType && item.strainType !== 'N/A')) && (
          <div className="bg-zinc-900/50 border border-zinc-800/80 rounded-lg p-1.5 flex flex-col gap-1.5">
             <div className="flex items-center gap-1.5 border-b border-zinc-800/50 pb-1 mb-0.5">
                <Dna size={12} className="text-indigo-400" />
@@ -32,8 +60,7 @@ export default function ProductDnaPanel({ item, UI, hasDNA, expectsDNA }: any) {
        )}
 
        {/* SENSORY DNA BLOCK */}
-       {hasDNA && expectsDNA && (
-         // 🚀 FIXED: Dropped padding from p-2 to p-1.5, reduced internal gap to 1.5
+       {!isDisposable && hasDNA && expectsDNA && (
          <div className="bg-zinc-900/50 border border-zinc-800/80 rounded-lg p-1.5 flex flex-col gap-1.5">
             <div className="grid grid-cols-3 gap-1.5">
               {item?.descFeels && (
@@ -77,8 +104,8 @@ export default function ProductDnaPanel({ item, UI, hasDNA, expectsDNA }: any) {
          </div>
        )}
 
-       {/* STANDARD DESCRIPTION */}
-       {item?.descBase && (
+       {/* STANDARD DESCRIPTION (Hidden for disposables since it's now injected in the component above) */}
+       {!isDisposable && item?.descBase && (
           <div className="pt-0.5">
             <p className="text-[8px] sm:text-[9px] text-zinc-400 font-medium leading-relaxed whitespace-pre-wrap text-justify">
               {item.descBase}
