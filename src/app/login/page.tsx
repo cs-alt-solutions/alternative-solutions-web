@@ -6,6 +6,7 @@ import { WEBSITE_COPY, SANDBOX_CLIENTS } from '@/utils/glossary';
 import { Globe, Users, Shield, ArrowLeft, Lock } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import { loginAdmin } from '@/app/actions';
 
 export default function GatewayPage() {
   const [authMode, setAuthMode] = useState<'lobby' | 'client_auth' | 'master_auth'>('lobby');
@@ -96,16 +97,55 @@ export default function GatewayPage() {
     );
   }
 
-  // ==========================================
-  // PATH B: MASTER COMMAND (PLACEHOLDER)
+ // ==========================================
+  // PATH B: MASTER COMMAND
   // ==========================================
   if (authMode === 'master_auth') {
     return (
-      <div className="min-h-screen bg-zinc-950 flex flex-col items-center justify-center p-6 text-zinc-100">
-        <button onClick={() => setAuthMode('lobby')} className="absolute top-6 left-6 text-zinc-500 hover:text-white flex items-center gap-2 transition-colors">
+      <div className="min-h-screen bg-zinc-950 flex flex-col items-center justify-center p-6 text-zinc-100 relative overflow-hidden">
+        {/* Amber/Gold background aura for Master Command */}
+        <div className="absolute inset-0 bg-linear-to-b from-amber-900/10 via-orange-900/10 to-red-900/10 pointer-events-none"></div>
+
+        <button 
+          onClick={() => { setAuthMode('lobby'); setErrorMsg(''); }} 
+          className="absolute top-6 left-6 text-zinc-500 hover:text-white flex items-center gap-2 transition-colors z-20"
+        >
           <ArrowLeft size={16} /> <span className="text-xs font-bold uppercase tracking-widest">Gateway</span>
         </button>
-        <div className="animate-pulse text-amber-400 font-bold uppercase tracking-widest">Master Command Loading...</div>
+
+        <div className="z-10 w-full max-w-xs flex flex-col items-center animate-in fade-in zoom-in-95 duration-300">
+          <div className="bg-zinc-900 p-4 rounded-2xl mb-6 shadow-[0_0_20px_rgba(245,158,11,0.15)] border border-zinc-800 flex items-center justify-center relative">
+            <Shield size={40} className="text-amber-400 drop-shadow-[0_0_8px_rgba(245,158,11,0.8)] relative z-10" />
+            <Lock size={16} className="text-zinc-500 absolute -bottom-2 -right-2 bg-zinc-900 rounded-full" />
+          </div>
+          <h1 className="text-2xl font-black tracking-widest mb-1 text-center text-zinc-100 uppercase">MASTER COMMAND</h1>
+          <p className="text-zinc-500 text-sm font-semibold tracking-wide mb-8 uppercase text-center">System Override</p>
+
+          <form action={async (formData) => { await loginAdmin(formData); }} className="w-full flex flex-col items-center gap-4">
+            <input 
+              type="email" 
+              name="email"
+              placeholder="ADMIN EMAIL"
+              className="w-full bg-zinc-950 border border-zinc-700 rounded-xl p-4 text-center font-black tracking-widest text-lg text-white focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500 uppercase placeholder:text-zinc-600 placeholder:text-sm placeholder:font-bold"
+              required
+              autoFocus
+            />
+            <input 
+              type="password" 
+              name="password"
+              placeholder="AUTHORIZATION KEY"
+              className="w-full bg-zinc-950 border border-zinc-700 rounded-xl p-4 text-center font-black tracking-widest text-2xl text-amber-400 focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500 placeholder:text-zinc-600 placeholder:text-sm placeholder:font-bold placeholder:tracking-widest"
+              required
+            />
+            
+            <button 
+              type="submit" 
+              className="w-full bg-amber-500 hover:bg-amber-400 text-zinc-950 font-black uppercase tracking-widest py-4 rounded-xl shadow-[0_0_15px_rgba(245,158,11,0.3)] mt-4 transition-all"
+            >
+              Engage Override
+            </button>
+          </form>
+        </div>
       </div>
     );
   }

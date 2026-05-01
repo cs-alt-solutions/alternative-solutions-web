@@ -6,6 +6,27 @@ import { divisionConfig } from './clients/division';
 export const SANDBOX_CLIENTS = {
   // Inject The Division's entire payload cleanly
   division: divisionConfig,
+
+  // Luckystrike Designs Partner Portal
+  luckystrike: {
+    id: 'luckystrike',
+    accessCode: 'LUCKY',
+    agencyName: "Luckystrike Designs",
+    appTitle: "Partner Portal & Asset Hub",
+    security: { pin: "1982", lockedMessage: "Luckystrike Partner Access" }, 
+    primaryContact: "Carmen",
+    apps: [
+      { 
+        id: 'asset-hub', 
+        name: "Asset Dropzone", 
+        description: "Secure, direct upload portal for bike builds, merch graphics, and shop photography.", 
+        icon: "PackageSearch", 
+        status: "beta",
+        lastUpdated: "Just Now",
+        updateLog: "Portal Initialized"
+      }
+    ]
+  },
   
   // Keep the smaller Automotive dummy client inline (or move to its own file later!)
   automotive: {
@@ -16,13 +37,13 @@ export const SANDBOX_CLIENTS = {
     security: { pin: "2026", lockedMessage: "Service Bay Terminal" },
     primaryContact: "Mike Foreman",
     apps: [
-      { id: 'procurement', name: "Parts Procurement", description: "Daily Dealer Pickups", iconName: "Truck", themeKey: "cyan" },
-      { id: 'fulfillment', name: "Service Bay Pull", description: "Pull Parts for Techs", iconName: "Wrench", themeKey: "amber" }
+      { id: 'procurement', name: "Parts Procurement", description: "Daily Dealer Pickups", icon: "Truck", themeKey: "cyan" },
+      { id: 'fulfillment', name: "Service Bay Pull", description: "Pull Parts for Techs", icon: "Wrench", themeKey: "amber" }
     ],
     logistics: {
       vendors: ["NAPA Auto Parts", "O'Reilly", "OEM Dealer"],
       locations: {
-        bays: { id: 'loc-bays', name: "Service Bays", iconName: 'Wrench', themeKey: 'amber' }
+        bays: { id: 'loc-bays', name: "Service Bays", icon: 'Wrench', themeKey: 'amber' }
       },
       catalog: [
         { id: 'pt-1', name: 'Synthetic 5W-30', unit: 'Quart', preferredVendor: "NAPA Auto Parts", locations: ['loc-bays'] },
