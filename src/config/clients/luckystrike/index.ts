@@ -7,7 +7,7 @@ export const luckystrikeConfig = {
   primaryContact: 'Carmen & Jeremy',
   appTitle: 'LuckyStrike Portal',
   security: {
-    pin: '7777', // The access pin you'll give them
+    pin: '1982', // The access pin you'll give them
     lockedMessage: 'Enter access code to view the Virtual Garage prototype.',
   },
   apps: [
