@@ -1,7 +1,7 @@
 'use client';
 
 import React, { Suspense } from 'react';
-import StorefrontTerminal from '@/components/sandbox/apps/storefront/StorefrontTerminal';
+import StorefrontTerminal from '@/components/sandbox/apps/division/storefront/StorefrontTerminal';
 import { divisionConfig } from '@/config/clients/division';
 
 function WarehouseLoader() {

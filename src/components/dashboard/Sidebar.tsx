@@ -1,3 +1,4 @@
+/* src/components/dashboard/Sidebar.tsx */
 'use client';
 
 import React from 'react';
@@ -11,7 +12,8 @@ import {
   Settings, 
   LogOut,
   Users,
-  Box
+  Box,
+  Briefcase // <-- Added Briefcase icon
 } from 'lucide-react';
 import { WEBSITE_COPY } from '@/utils/glossary';
 
@@ -19,12 +21,13 @@ export default function Sidebar() {
   const pathname = usePathname();
   const copy = WEBSITE_COPY.DASHBOARD.SIDEBAR;
 
-  // ZONE 1: THE DAILY DRIVER (Separated into logical subcategories)
+  // ZONE 1: THE DAILY DRIVER
   const navGroups = [
     {
       label: copy.GROUPS.COMMAND, // "My Workspace"
       items: [
         { name: copy.OVERVIEW, href: '/dashboard', icon: LayoutDashboard },
+        { name: 'CLIENT HQ', href: '/dashboard/clients', icon: Briefcase }, // <-- Added the Client Directory Link
         { name: copy.FOUNDATION, href: '/dashboard/foundation', icon: Construction },
         { name: copy.ECOSYSTEM_MANAGER, href: '/dashboard/ecosystem', icon: Box },
       ]
@@ -33,16 +36,15 @@ export default function Sidebar() {
       label: copy.GROUPS.OPERATIONS, // "Life & Logistics"
       items: [
         { name: copy.LEDGER, href: '/dashboard/ledger', icon: Wallet },
-        { name: copy.BETA_COMMAND, href: '/dashboard/beta-command', icon: Users }, // Moved to Operations
+        { name: copy.BETA_COMMAND, href: '/dashboard/beta-command', icon: Users },
         { name: copy.BROADCAST, href: '/dashboard/broadcast', icon: Radio },
       ]
     }
   ];
 
-  // ZONE 2: THE ENGINE ROOM (Strictly System Admin)
+  // ZONE 2: THE ENGINE ROOM
   const adminItems = [
     { name: copy.CONFIG, href: '/dashboard/settings', icon: Settings },
-    // If we add high-level database or server access later, it goes here.
   ];
 
   return (
@@ -66,7 +68,7 @@ export default function Sidebar() {
             </h3>
             <div className="space-y-1">
               {group.items.map((item) => {
-                const isActive = pathname === item.href;
+                const isActive = pathname === item.href || pathname.startsWith(`${item.href}/`);
                 return (
                   <Link
                     key={item.name}
@@ -87,7 +89,7 @@ export default function Sidebar() {
         ))}
       </nav>
 
-      {/* ZONE 2: THE ENGINE ROOM (Pinned to bottom) */}
+      {/* ZONE 2: THE ENGINE ROOM */}
       <div className="p-4 border-t border-white/5 space-y-4 bg-bg-surface-200/30">
         <div>
            <h3 className="px-4 text-[10px] font-mono font-bold text-purple-400 uppercase tracking-widest mb-3 opacity-80">
@@ -114,7 +116,7 @@ export default function Sidebar() {
           </div>
         </div>
 
-        {/* EXIT COMPONENT (Isolated destructive action - Orange to adhere to our color ledger) */}
+        {/* EXIT COMPONENT */}
         <Link 
           href="/" 
           className="flex items-center gap-3 px-4 py-3 text-xs font-mono text-orange-500/70 hover:text-orange-400 hover:bg-orange-500/10 rounded-xl transition-colors border border-transparent hover:border-orange-500/20"

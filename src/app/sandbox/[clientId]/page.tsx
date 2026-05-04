@@ -8,11 +8,11 @@ import { SANDBOX_CLIENTS } from '@/utils/glossary';
 import { Activity, Truck, PackageSearch, Wrench, X, Globe, UserCircle, ShoppingCart, TestTube, AlertTriangle, Cpu, Layers, ArrowRight, Store, Lock, ShieldCheck } from 'lucide-react';
 
 // MICRO-APP ENGINE IMPORTS
-import LogisticsTerminal from '@/components/sandbox/apps/logistics/LogisticsTerminal';
-import AdminTerminal from '@/components/sandbox/apps/admin/AdminTerminal';
-import FulfillmentTerminal from '@/components/sandbox/apps/fulfillment/FulfillmentTerminal';
-import StorefrontTerminal from '@/components/sandbox/apps/storefront/StorefrontTerminal';
-import AssetHubTerminal from '@/components/sandbox/apps/asset-hub/AssetHubTerminal';
+import LogisticsTerminal from '@/components/sandbox/apps/division/logistics/LogisticsTerminal';
+import AdminTerminal from '@/components/sandbox/apps/division/admin/AdminTerminal';
+import FulfillmentTerminal from '@/components/sandbox/apps/division/fulfillment/FulfillmentTerminal';
+import StorefrontTerminal from '@/components/sandbox/apps/division/storefront/StorefrontTerminal';
+import AssetHubTerminal from '@/components/sandbox/apps/luckystrike/asset-hub/AssetHubTerminal';
 
 // Dynamic icon mapper for the hub registry
 const IconMapper = ({ name, className }: { name: string, className?: string }) => {

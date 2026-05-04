@@ -196,3 +196,24 @@ export async function toggleAnonymity(id: string, currentDisplayName: string, or
   revalidatePath('/blueprint');
   return { success: true };
 }
+// Add this to src/app/actions.ts
+
+export async function createNewClient(formData: FormData) {
+  const clientName = formData.get('clientName') as string;
+  
+  // Convert "Luckystrike Designs" to "luckystrike-designs"
+  const clientId = clientName.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, '');
+
+  const { error } = await supabase.from('clients').insert([{
+    id: clientId,
+    name: clientName,
+    status: 'ACTIVE'
+  }]);
+
+  if (!error) {
+    await logPulse('NEW_CLIENT', `Provisioned HQ for: ${clientName}`);
+    revalidatePath('/dashboard'); // Refreshes the UI instantly
+  }
+  
+  return { success: !error, clientId, error: error?.message };
+}

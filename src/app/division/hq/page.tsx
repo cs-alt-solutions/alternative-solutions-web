@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, Suspense } from 'react';
-import AdminTerminal from '@/components/sandbox/apps/admin/AdminTerminal';
+import AdminTerminal from '@/components/sandbox/apps/division/admin/AdminTerminal';
 import { divisionConfig } from '@/config/clients/division';
 import { ShieldAlert, ArrowRight } from 'lucide-react';
 

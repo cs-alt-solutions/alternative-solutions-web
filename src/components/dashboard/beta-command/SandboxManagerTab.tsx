@@ -3,16 +3,20 @@
 
 import React, { useState } from 'react';
 import { WEBSITE_COPY, SANDBOX_CLIENTS } from '@/utils/glossary';
-import { Terminal, Key, ShieldAlert, Edit2, Users, ChevronRight, ExternalLink } from 'lucide-react';
+import { Terminal, Key, ShieldAlert, Edit2, Users, ExternalLink, FolderOpen, Briefcase, Eye, EyeOff } from 'lucide-react';
 import Link from 'next/link';
 import EditSandboxModal from './EditSandboxModal';
 
 export default function SandboxManagerTab() {
   const [clients, setClients] = useState<any[]>(Object.values(SANDBOX_CLIENTS));
-  const copy = WEBSITE_COPY.DASHBOARD.BETA_COMMAND.SANDBOXES;
+  const [revealedCredentials, setRevealedCredentials] = useState<string | null>(null);
   
   const [editingClient, setEditingClient] = useState<any | null>(null);
   const [managingAccessFor, setManagingAccessFor] = useState<any | null>(null);
+
+  const toggleReveal = (clientId: string) => {
+    setRevealedCredentials(prev => prev === clientId ? null : clientId);
+  };
 
   const handleSaveClient = (updatedClient: any) => {
     setClients(prev => prev.map(c => c.id === updatedClient.id ? updatedClient : c));
@@ -22,98 +26,107 @@ export default function SandboxManagerTab() {
   return (
     <div className="space-y-6 animate-in fade-in duration-500">
       
-      <div className="bg-amber-500/10 border border-amber-500/30 rounded-2xl p-6 flex items-start gap-4">
-        <ShieldAlert className="text-amber-400 shrink-0 mt-1" size={24} />
-        <div>
-          <h3 className="text-amber-400 font-bold uppercase tracking-widest text-sm mb-2">{copy.INFO_TITLE}</h3>
-          <p className="text-amber-500/70 text-xs font-mono leading-relaxed">{copy.INFO_DESC}</p>
+      {/* HEADER SECTION */}
+      <div className="flex items-center justify-between">
+        <div className="bg-brand-primary/10 border border-brand-primary/30 rounded-xl px-4 py-3 flex items-center gap-3">
+          <Briefcase className="text-brand-primary" size={18} />
+          <h3 className="text-brand-primary font-bold uppercase tracking-widest text-xs">Active Client Roster</h3>
         </div>
+        <button className="bg-white/5 hover:bg-white/10 text-white border border-white/10 px-4 py-2 rounded-lg text-xs font-bold uppercase tracking-widest transition-colors">
+          + New Client
+        </button>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {clients.map((client) => (
-          <div key={client.id} className="bg-black/40 border border-white/5 hover:border-cyan-500/30 transition-colors rounded-2xl p-6 group flex flex-col relative overflow-hidden">
-            
-            <div className="absolute top-0 right-0 w-32 h-32 bg-cyan-500/5 rounded-full blur-3xl group-hover:bg-cyan-500/10 transition-all pointer-events-none"></div>
-
-            <div className="flex items-start justify-between mb-6 relative z-10">
-              <div>
-                <h4 className="text-xl font-black text-white uppercase tracking-tight">{client.agencyName}</h4>
-                <p className="text-xs text-slate-500 font-mono mt-1">{client.appTitle}</p>
-              </div>
-              <div className="w-10 h-10 rounded-xl bg-cyan-500/10 border border-cyan-500/30 flex items-center justify-center text-cyan-400 shadow-[0_0_15px_rgba(34,211,238,0.2)]">
-                <Terminal size={20} />
-              </div>
-            </div>
-
-            <div className="grid grid-cols-2 gap-4 mb-6 relative z-10">
-              <div className="bg-black/50 border border-white/5 rounded-xl p-3">
-                <p className="text-[9px] text-slate-500 font-mono uppercase tracking-widest mb-1 flex items-center gap-1">
-                  <Key size={10} /> {copy.LBL_ACCESS_CODE}
-                </p>
-                <p className="text-cyan-400 font-bold font-mono tracking-widest">{client.accessCode}</p>
-              </div>
+      <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
+        {clients.map((client) => {
+          const isRevealed = revealedCredentials === client.id;
+          // Temporary mock data until we update the DB schema
+          const industry = client.id === 'luckystrike' ? 'Custom Fabrication' : client.id === 'division' ? 'E-Commerce / Retail' : 'Automotive Service';
+          
+          return (
+            <div key={client.id} className="bg-bg-surface-100 border border-white/5 hover:border-brand-primary/30 transition-colors rounded-2xl p-6 group flex flex-col relative overflow-hidden">
               
-              <div className="bg-black/50 border border-white/5 rounded-xl p-3">
-                <p className="text-[9px] text-slate-500 font-mono uppercase tracking-widest mb-1 flex items-center gap-1">
-                  <ShieldAlert size={10} /> {copy.LBL_MASTER_PIN}
-                </p>
-                <p className="text-amber-400 font-bold font-mono tracking-widest">{client.security.pin}</p>
-              </div>
-            </div>
-            
-            <div className="mb-6 pt-4 border-t border-white/5 relative z-10 flex-1">
-                <p className="text-[9px] text-slate-500 font-mono uppercase tracking-widest mb-2 flex items-center gap-1">
-                  <Users size={10} /> {copy.LBL_PRIMARY_CONTACT}
-                </p>
-                <p className="text-sm font-bold text-white">{client.primaryContact || "Unassigned"}</p>
-            </div>
+              <div className="absolute top-0 right-0 w-32 h-32 bg-brand-primary/5 rounded-full blur-3xl group-hover:bg-brand-primary/10 transition-all pointer-events-none"></div>
 
-            <div className="flex flex-col gap-3 mt-auto relative z-10">
-                <div className="flex gap-3">
+              {/* CLIENT IDENTITY */}
+              <div className="flex items-start justify-between mb-6 relative z-10">
+                <div>
+                  <div className="flex items-center gap-2 mb-2">
+                    <span className="text-[9px] font-black uppercase tracking-widest bg-white/10 text-white px-2 py-0.5 rounded-sm">
+                      {industry}
+                    </span>
+                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                  </div>
+                  <h4 className="text-xl font-black text-white uppercase tracking-tight">{client.agencyName}</h4>
+                  <p className="text-xs text-slate-500 font-mono mt-1">{client.appTitle}</p>
+                </div>
+                <div className="w-10 h-10 rounded-xl bg-bg-surface-200 border border-white/10 flex items-center justify-center text-slate-400">
+                  <Terminal size={20} />
+                </div>
+              </div>
+
+              {/* SECURED CREDENTIALS */}
+              <div className="bg-black/50 border border-white/5 rounded-xl p-4 mb-6 relative z-10 flex items-center justify-between">
+                <div className="flex gap-6">
+                  <div>
+                    <p className="text-[9px] text-slate-500 font-mono uppercase tracking-widest mb-1 flex items-center gap-1">
+                      <Key size={10} /> Workspace Code
+                    </p>
+                    <p className="text-brand-primary font-bold font-mono tracking-widest">
+                      {isRevealed ? client.accessCode : '••••••••'}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-[9px] text-slate-500 font-mono uppercase tracking-widest mb-1 flex items-center gap-1">
+                      <ShieldAlert size={10} /> Master PIN
+                    </p>
+                    <p className="text-amber-400 font-bold font-mono tracking-widest">
+                      {isRevealed ? client.security.pin : '••••'}
+                    </p>
+                  </div>
+                </div>
+                <button 
+                  onClick={() => toggleReveal(client.id)}
+                  className="text-slate-500 hover:text-white transition-colors bg-white/5 p-2 rounded-lg"
+                  title={isRevealed ? "Hide Credentials" : "Reveal Credentials"}
+                >
+                  {isRevealed ? <EyeOff size={16} /> : <Eye size={16} />}
+                </button>
+              </div>
+
+              {/* COMMAND ACTIONS */}
+              <div className="flex flex-col sm:flex-row gap-3 mt-auto relative z-10 pt-4 border-t border-white/5">
+                  <Link 
+                    href={`/dashboard/clients/${client.id}`}
+                    className="flex-2 py-3 bg-brand-primary/10 hover:bg-brand-primary text-brand-primary hover:text-bg-surface-100 border border-brand-primary/30 rounded-xl text-xs font-bold uppercase tracking-widest flex items-center justify-center gap-2 transition-all"
+                  >
+                    <FolderOpen size={14} /> Open Client HQ
+                  </Link>
+                  
+                  <Link 
+                    href={`/sandbox/${client.id}`}
+                    target="_blank"
+                    className="flex-1 py-3 bg-white/5 hover:bg-white/10 border border-white/10 text-white rounded-xl text-xs font-bold uppercase tracking-widest flex items-center justify-center gap-2 transition-all"
+                  >
+                    Portal <ExternalLink size={14} />
+                  </Link>
+
                   <button 
                     onClick={() => setEditingClient(client)}
-                    className="flex-1 py-3 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl text-xs font-bold text-white uppercase tracking-widest flex items-center justify-center gap-2 transition-colors"
+                    className="py-3 px-4 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl text-slate-400 hover:text-white transition-colors"
                   >
-                    <Edit2 size={14} /> {copy.BTN_EDIT}
+                    <Edit2 size={14} />
                   </button>
-                  <button 
-                    onClick={() => setManagingAccessFor(client)}
-                    className="flex-1 py-3 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl text-xs font-bold text-white uppercase tracking-widest flex items-center justify-center gap-2 transition-colors"
-                  >
-                    <Users size={14} /> {copy.BTN_MANAGE}
-                  </button>
-                </div>
-                
-                <Link 
-                  href={`/sandbox/${client.id}`}
-                  target="_blank"
-                  className="w-full py-3 bg-cyan-500/10 hover:bg-cyan-500/20 border border-cyan-500/30 text-cyan-400 rounded-xl text-xs font-bold uppercase tracking-widest flex items-center justify-center gap-2 transition-all shadow-[0_0_15px_rgba(34,211,238,0.1)]"
-                >
-                  {copy.BTN_PORTAL} <ExternalLink size={14} />
-                </Link>
+              </div>
             </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
 
+      {/* MODALS */}
       {editingClient && (
-        <EditSandboxModal 
-          client={editingClient} 
-          onClose={() => setEditingClient(null)} 
-          onSave={handleSaveClient} 
-        />
+        <EditSandboxModal client={editingClient} onClose={() => setEditingClient(null)} onSave={handleSaveClient} />
       )}
-
-      {managingAccessFor && (
-          <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center">
-              <div className="bg-zinc-900 border border-zinc-800 p-8 rounded-2xl text-center">
-                  <p className="text-fuchsia-400 animate-pulse font-mono text-sm uppercase tracking-widest">Access Control Matrix Initializing...</p>
-                  <button onClick={() => setManagingAccessFor(null)} className="mt-4 text-xs text-zinc-500 hover:text-white uppercase tracking-widest">Close</button>
-              </div>
-          </div>
-      )}
-
     </div>
   );
 }

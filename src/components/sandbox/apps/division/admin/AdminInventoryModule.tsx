@@ -11,7 +11,7 @@ import AdminInventoryEditor from './inventory-editor/AdminInventoryEditor';
 import AdminInventoryHeader from './AdminInventoryHeader';
 import AdminInventoryToolbar from './AdminInventoryToolbar';
 import AdminInventoryTable from './AdminInventoryTable';
-import AdminInventoryAudit from './inventory-audit/AdminInventoryAudit';
+import AdminInventoryAudit from '../inventory-audit/AdminInventoryAudit';
 
 export default function AdminInventoryModule({ stock, setStock, inventoryMatrix, setNotification, clientConfig, jumpToEditItem, clearJumpToEdit }: any) {
   

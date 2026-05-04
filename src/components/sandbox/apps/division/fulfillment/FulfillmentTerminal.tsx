@@ -1,4 +1,4 @@
-/* src/components/sandbox/apps/fulfillment/FulfillmentTerminal.tsx */
+/* src/components/sandbox/apps/division/fulfillment/FulfillmentTerminal.tsx */
 'use client';
 
 import React, { useState, useMemo } from 'react';

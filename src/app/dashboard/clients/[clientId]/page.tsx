@@ -1,93 +1,319 @@
-/* src/app/dashboard/clients/[clientId]/page.tsx */
-import React from 'react';
-import { supabase } from '@/utils/supabase';
-import { FileImage, FileText, Download, Briefcase } from 'lucide-react';
+/* src/app/sandbox/[clientId]/page.tsx */
+'use client';
 
-export default async function ClientDossierPage({ params }: { params: { clientId: string } }) {
-  // Awaiting params (Best practice for Next.js 15+)
-  const resolvedParams = await params;
-  const clientId = resolvedParams.clientId; // e.g., 'luckystrike'
-  const bucketName = 'client-assets';
+import React, { useState, useEffect } from 'react';
+import { useParams, useRouter } from 'next/navigation';
+import Gatekeeper from '@/components/sandbox/shared/Gatekeeper';
+import { SANDBOX_CLIENTS } from '@/utils/glossary';
+import { Activity, Truck, PackageSearch, Wrench, X, Globe, UserCircle, ShoppingCart, TestTube, AlertTriangle, Cpu, Layers, ArrowRight, Store, Lock, ShieldCheck } from 'lucide-react';
 
-  // 1. Fetch the list of files in this specific client's folder
-  const { data: files, error } = await supabase.storage
-    .from(bucketName)
-    .list(clientId, {
-      limit: 100,
-      offset: 0,
-      sortBy: { column: 'created_at', order: 'desc' },
-    });
+// MICRO-APP ENGINE IMPORTS
+import LogisticsTerminal from '@/components/sandbox/apps/division/logistics/LogisticsTerminal';
+import AdminTerminal from '@/components/sandbox/apps/division/admin/AdminTerminal';
+import FulfillmentTerminal from '@/components/sandbox/apps/division/fulfillment/FulfillmentTerminal';
+import StorefrontTerminal from '@/components/sandbox/apps/division/storefront/StorefrontTerminal';
+import AssetHubTerminal from '@/components/sandbox/apps/luckystrike/asset-hub/AssetHubTerminal';
+// LUCKYSTRIKE CUSTOM IMPORTS
+import InteractiveGarage from '@/components/sandbox/apps/luckystrike/InteractiveGarage';
 
-  const validFiles = files?.filter(f => f.name !== '.emptyFolderPlaceholder') || [];
+// Dynamic icon mapper for the hub registry
+const IconMapper = ({ name, className }: { name: string, className?: string }) => {
+  switch (name) {
+    case 'Activity': return <Activity className={className} />;
+    case 'Truck': return <Truck className={className} />;
+    case 'PackageSearch': return <PackageSearch className={className} />;
+    case 'Wrench': return <Wrench className={className} />;
+    case 'ShoppingCart': return <ShoppingCart className={className} />;
+    case 'Store': return <Store className={className} />;
+    case 'Lock': return <Lock className={className} />;
+    default: return <Globe className={className} />;
+  }
+};
 
+export default function DynamicSandboxPage() {
+  const params = useParams();
+  const router = useRouter();
+  const clientId = params.clientId as string;
+  
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [isMounted, setIsMounted] = useState(false);
+  const [activeAppId, setActiveAppId] = useState<string | null>(null);
+
+  useEffect(() => {
+    // FAST-PASS: Read the auth token from the main login screen to bypass Gatekeeper
+    const hasFastPass = localStorage.getItem(`sandbox_auth_${clientId}`);
+    if (hasFastPass === 'true') {
+      setIsAuthenticated(true);
+    }
+    setIsMounted(true);
+  }, [clientId]);
+
+  if (!isMounted) return null;
+
+  const clientConfig = (SANDBOX_CLIENTS as any)[clientId];
+
+  if (!clientConfig) {
+    return (
+      <div className="min-h-screen bg-zinc-950 flex flex-col items-center justify-center text-zinc-500">
+        <p className="uppercase tracking-widest font-bold text-sm">404 | Workspace Not Found</p>
+      </div>
+    );
+  }
+
+  // The Main "Welcome Mat" Gatekeeper
+  if (!isAuthenticated) {
+    return (
+      <Gatekeeper 
+        onUnlock={() => {
+          localStorage.setItem(`sandbox_auth_${clientId}`, 'true');
+          setIsAuthenticated(true);
+        }} 
+        appTitle={clientConfig.appTitle}
+        pin={clientConfig.security?.pin || '1234'}
+        lockedMessage={clientConfig.security?.lockedMessage}
+      />
+    );
+  }
+
+  // ==========================================
+  // PLUG-AND-PLAY APP ROUTER
+  // ==========================================
+  if (activeAppId) {
+    if (activeAppId === 'logistics') return <LogisticsTerminal clientConfig={clientConfig} onExit={() => setActiveAppId(null)} />;
+    if (activeAppId === 'admin') return <AdminTerminal clientConfig={clientConfig} onExit={() => setActiveAppId(null)} />;
+    if (activeAppId === 'fulfillment') return <FulfillmentTerminal clientConfig={clientConfig} operatorId={clientConfig.primaryContact || "OPERATOR"} onExit={() => setActiveAppId(null)} />;
+    if (activeAppId === 'storefront') return <StorefrontTerminal clientConfig={clientConfig} onExit={() => setActiveAppId(null)} />;
+    if (activeAppId === 'asset-hub') return <AssetHubTerminal clientConfig={clientConfig} onExit={() => setActiveAppId(null)} />;
+    
+    // THE LUCKYSTRIKE VIRTUAL GARAGE ROUTE
+    if (activeAppId === 'garage' || activeAppId === 'interactive-garage') {
+      return (
+        <div className="min-h-screen bg-[#1B2123] relative text-[#E5E4E2]">
+          {/* Custom Exit Button for the Garage */}
+          <button 
+            onClick={() => setActiveAppId(null)} 
+            className="absolute top-6 right-6 text-[#E5E4E2] hover:text-[#ADFF2F] flex items-center gap-2 transition-colors z-50 bg-[#2C3539] px-4 py-2 rounded-xl border border-[#1B2123] shadow-lg"
+          >
+            <X size={16} /> <span className="text-xs font-black uppercase tracking-widest">Exit Garage</span>
+          </button>
+          
+          <div className="p-8 pt-24 h-full max-w-7xl mx-auto">
+            <div className="border-b border-[#2C3539] pb-6 mb-8">
+              <h1 className="text-3xl font-black text-[#E5E4E2] uppercase tracking-widest">
+                Project // {clientConfig.name || 'LuckyStrike Designs'}
+              </h1>
+              <p className="text-[#ADFF2F] font-mono mt-2">
+                Phase: Immersive Platform Prototype
+              </p>
+            </div>
+            
+            {/* The actual Garage Component */}
+            <InteractiveGarage />
+            
+          </div>
+        </div>
+      );
+    }
+
+    return (
+      <div className="min-h-screen bg-zinc-950 flex flex-col items-center justify-center text-zinc-100 p-6">
+        <button onClick={() => setActiveAppId(null)} className="absolute top-6 left-6 text-zinc-500 hover:text-rose-400 flex items-center gap-2 transition-colors z-50">
+          <X size={16} /> <span className="text-xs font-bold uppercase tracking-widest">Exit App</span>
+        </button>
+        <div className="text-center animate-pulse">
+            <p className="text-cyan-400 font-black tracking-widest uppercase italic">Engine Initializing...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Group Apps for the UI
+  const sharedApps = clientConfig.apps.filter((app: any) => app.id === 'logistics');
+  const clientSpecificApps = clientConfig.apps.filter((app: any) => app.id !== 'logistics');
+
+  // ==========================================
+  // THE DYNAMIC CLIENT HUB (TESTING LAB)
+  // ==========================================
   return (
-    <div className="p-8 space-y-8 animate-in fade-in duration-700">
+    <div className="min-h-screen bg-zinc-950 flex flex-col items-center p-6 md:p-12 text-zinc-100 relative overflow-x-hidden selection:bg-cyan-500/30">
       
-      {/* DOSSIER HEADER */}
-      <div className="flex items-center gap-4 border-b border-white/10 pb-6">
-        <div className="bg-brand-primary/10 p-4 rounded-2xl border border-brand-primary/20 shadow-[0_0_20px_rgba(6,182,212,0.15)]">
-          <Briefcase size={32} className="text-brand-primary" />
+      {/* Blueprint Grid Background */}
+      <div className="absolute inset-0 bg-[linear-gradient(to_right,#80808012_1px,transparent_1px),linear-gradient(to_bottom,#80808012_1px,transparent_1px)] bg-size-[24px_24px] pointer-events-none"></div>
+
+      {/* Top Header / Nav - UPGRADED FOR CO-BRANDING */}
+      <div className="relative z-20 w-full max-w-5xl flex justify-between items-center mb-8 bg-zinc-900/80 backdrop-blur-md border border-zinc-800 p-4 sm:p-6 rounded-2xl shadow-lg">
+         <div className="flex items-center gap-4">
+           <div className="bg-cyan-500/10 p-3 rounded-xl border border-cyan-500/30 hidden sm:block">
+             <Layers size={28} className="text-cyan-400" />
+           </div>
+           <div>
+             <div className="flex items-center gap-2 mb-1.5">
+               <span className="text-[9px] font-black tracking-widest uppercase text-cyan-400 bg-cyan-500/10 px-2 py-0.5 rounded-sm border border-cyan-500/20">Client Portal</span>
+               <span className="text-[9px] font-mono tracking-widest uppercase text-zinc-500">Engineered by Alt Solutions</span>
+             </div>
+             <h1 className="font-black tracking-widest uppercase text-lg sm:text-2xl text-zinc-100 flex items-center gap-2">
+               {clientConfig.agencyName || 'Alternative Solutions'} <span className="text-zinc-600 font-light">|</span> <span className="text-zinc-400 text-base sm:text-xl">Command</span>
+             </h1>
+             <div className="flex items-center gap-2 mt-1">
+               <UserCircle size={12} className="text-zinc-500" />
+               <p className="text-[10px] font-mono text-zinc-500 uppercase tracking-widest">Authorized: {clientConfig.primaryContact || 'ADMIN'}</p>
+             </div>
+           </div>
+         </div>
+         <button onClick={() => {
+             localStorage.removeItem(`sandbox_auth_${clientId}`);
+             router.push('/login');
+           }} 
+           className="flex items-center gap-2 text-zinc-500 hover:text-rose-400 transition-colors bg-zinc-950 border border-zinc-800 px-4 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest shadow-inner">
+           <X size={14} /> Disconnect
+         </button>
+      </div>
+
+      {/* PREMIUM CLIENT ONBOARDING BANNER (Replaces the raw Developer Warning) */}
+      <div className="relative z-20 w-full max-w-5xl bg-cyan-500/5 border border-cyan-500/20 rounded-2xl p-6 mb-12 flex flex-col sm:flex-row items-start sm:items-center gap-5 shadow-[0_0_30px_rgba(34,211,238,0.03)] backdrop-blur-sm animate-in slide-in-from-top-4">
+        <div className="bg-cyan-500/10 p-3.5 rounded-full border border-cyan-500/30 shrink-0 shadow-inner">
+          <ShieldCheck size={24} className="text-cyan-400" />
         </div>
         <div>
-          <h1 className="text-3xl font-black text-white uppercase tracking-widest">
-            {clientId} <span className="text-slate-500">Dossier</span>
-          </h1>
-          <p className="text-xs font-mono text-brand-primary uppercase tracking-widest mt-1">
-            Active Client Ecosystem
+          <h2 className="text-cyan-400 font-black uppercase tracking-widest text-sm mb-1.5 flex items-center gap-2">
+            Dedicated Client Infrastructure <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse" />
+          </h2>
+          <p className="text-zinc-400 text-xs font-medium leading-relaxed max-w-3xl">
+            Welcome to your custom command center. This secure portal was engineered specifically for <strong>{clientConfig.agencyName}</strong> by Alternative Solutions to transfer assets, review live prototypes, and streamline our development pipeline.
           </p>
         </div>
       </div>
 
-      {/* THE VAULT (ASSET GRID) */}
-      <div>
-        <h2 className="text-xl font-black text-white uppercase tracking-widest mb-4 flex items-center gap-2">
-          The Vault <span className="text-xs font-bold text-slate-500 bg-slate-800 px-2 py-0.5 rounded-full">{validFiles.length} Assets</span>
-        </h2>
+      {/* Modules Area */}
+      <div className="relative z-20 w-full max-w-5xl space-y-12">
         
-        {validFiles.length === 0 ? (
-          <div className="bg-bg-surface-100 border border-white/5 rounded-2xl p-12 text-center">
-            <p className="text-slate-500 font-mono text-sm uppercase tracking-widest">Vault is currently empty. Waiting on client upload.</p>
+        {/* GROUP 1: Client Specific Apps */}
+        <section className="animate-in fade-in duration-500">
+          <div className="flex items-center gap-3 mb-6 border-b border-zinc-800 pb-4">
+            <Cpu size={20} className="text-zinc-500" />
+            <h3 className="font-black text-xl text-zinc-100 uppercase tracking-widest">Active Modules</h3>
+            <span className="ml-auto text-[9px] font-mono text-cyan-400 bg-cyan-500/10 border border-cyan-500/20 px-2.5 py-1 rounded hidden sm:block">SYSTEM ROUTER</span>
           </div>
-        ) : (
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-            {validFiles.map((file) => {
-              // Using standard getPublicUrl since the bucket is public!
-              const { data: publicUrlData } = supabase.storage.from(bucketName).getPublicUrl(`${clientId}/${file.name}`);
-              const fileUrl = publicUrlData.publicUrl;
-              const isImage = file.metadata?.mimetype?.includes('image');
-
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {clientSpecificApps.map((app: any) => {
+              const isRecentlyUpdated = app.lastUpdated && (app.lastUpdated.toLowerCase().includes('today') || app.lastUpdated.toLowerCase().includes('now'));
+              
               return (
-                <div key={file.id} className="bg-bg-surface-100 border border-white/5 rounded-2xl overflow-hidden group hover:border-brand-primary/50 transition-all">
+                <div key={app.id} className="group relative bg-zinc-900 border border-zinc-800 hover:border-cyan-500/50 rounded-4xl p-6 transition-all duration-300 hover:-translate-y-1 shadow-xl flex flex-col h-full overflow-hidden">
+                  <div className="absolute top-0 right-0 w-32 h-32 bg-linear-to-bl from-cyan-500/5 to-transparent rounded-bl-full opacity-0 group-hover:opacity-100 transition-opacity"></div>
                   
-                  {/* File Preview */}
-                  <div className="aspect-square bg-bg-surface-200 flex items-center justify-center relative overflow-hidden">
-                    {isImage ? (
-                      <img src={fileUrl} alt={file.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
-                    ) : (
-                      <FileText size={48} className="text-slate-600" />
-                    )}
+                  {/* Status Badge */}
+                  <div className="absolute top-5 left-5">
+                    <span className={`text-[9px] font-black uppercase tracking-[0.2em] px-2.5 py-1 rounded-md border ${app.status === 'beta' ? 'bg-cyan-500/10 text-cyan-400 border-cyan-500/30' : app.status === 'alpha' ? 'bg-amber-500/10 text-amber-400 border-amber-500/30' : 'bg-zinc-800 text-zinc-500 border-zinc-700'}`}>
+                      {app.status || 'dev'}
+                    </span>
                   </div>
 
-                  {/* File Details & Download */}
-                  <div className="p-4 bg-bg-surface-100 flex justify-between items-center">
-                    <p className="text-[10px] font-mono text-slate-400 truncate max-w-37.5">{file.name}</p>
-                    <a 
-                      href={fileUrl} 
-                      download 
-                      target="_blank"
-                      rel="noreferrer"
-                      className="text-brand-primary hover:text-white transition-colors bg-brand-primary/10 p-1.5 rounded-lg"
-                    >
-                      <Download size={14} />
-                    </a>
+                  {/* LIVE ACTIVITY TRACKER */}
+                  {app.lastUpdated && (
+                    <div className="absolute top-5 right-5 flex flex-col items-end">
+                      <span className={`text-[8px] font-black uppercase tracking-widest px-2 py-1 rounded-md flex items-center gap-1.5 border shadow-inner ${isRecentlyUpdated ? 'bg-cyan-500/10 text-cyan-400 border-cyan-500/30' : 'bg-zinc-950 text-zinc-500 border-zinc-800'}`}>
+                        {isRecentlyUpdated ? <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse" /> : <Activity size={10} />}
+                        {app.lastUpdated}
+                      </span>
+                      {app.updateLog && (
+                        <span className="text-[8px] text-zinc-500 font-bold uppercase tracking-widest mt-1.5 max-w-32 truncate text-right">
+                          {app.updateLog}
+                        </span>
+                      )}
+                    </div>
+                  )}
+
+                  <div className="flex items-center gap-4 mt-10 mb-4 relative z-10">
+                    <div className={`p-3.5 rounded-2xl bg-zinc-950 border border-zinc-800 group-hover:border-cyan-500/50 group-hover:shadow-[0_0_15px_rgba(34,211,238,0.2)] transition-all`}>
+                      <IconMapper name={app.icon} className="w-6 h-6 text-cyan-400" />
+                    </div>
+                    <div>
+                      <h3 className="font-black text-zinc-100 uppercase tracking-wider text-base">{app.name}</h3>
+                      <p className="text-[10px] font-mono text-zinc-500 uppercase tracking-widest">ID: {app.id}</p>
+                    </div>
                   </div>
+                  
+                  <p className="text-xs text-zinc-400 font-medium leading-relaxed mb-8 flex-1 relative z-10">
+                    {app.description}
+                  </p>
+                  
+                  <button onClick={() => setActiveAppId(app.id)} className="w-full flex items-center justify-between bg-zinc-950 hover:bg-cyan-500 text-cyan-400 hover:text-zinc-950 border border-zinc-800 hover:border-cyan-500 py-3.5 px-5 rounded-xl font-black uppercase tracking-widest text-[10px] transition-all relative z-10 group/btn">
+                    <span>Initialize Module</span>
+                    <ArrowRight size={14} className="group-hover/btn:translate-x-1 transition-transform" />
+                  </button>
                 </div>
               );
             })}
           </div>
-        )}
-      </div>
+        </section>
 
+        {/* GROUP 2: Shared Infrastructure (Logistics) */}
+        {sharedApps.length > 0 && (
+          <section className="animate-in fade-in duration-700">
+            <div className="flex items-center gap-3 mb-6 border-b border-zinc-800 pb-4">
+              <Layers size={20} className="text-zinc-500" />
+              <h3 className="font-black text-xl text-zinc-100 uppercase tracking-widest">Shared Infrastructure</h3>
+              <span className="ml-auto text-[9px] font-mono text-cyan-400 bg-cyan-500/10 border border-cyan-500/20 px-2.5 py-1 rounded hidden sm:block">CORE ENGINE</span>
+            </div>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {sharedApps.map((app: any) => {
+                const isRecentlyUpdated = app.lastUpdated && (app.lastUpdated.toLowerCase().includes('today') || app.lastUpdated.toLowerCase().includes('now'));
+
+                return (
+                  <div key={app.id} className="group relative bg-zinc-900 border border-zinc-800 hover:border-cyan-500/50 rounded-4xl p-6 transition-all duration-300 hover:-translate-y-1 shadow-xl flex flex-col h-full overflow-hidden">
+                    <div className="absolute top-0 right-0 w-32 h-32 bg-linear-to-bl from-cyan-500/5 to-transparent rounded-bl-full opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                    
+                    {/* Status Badge */}
+                    <div className="absolute top-5 left-5">
+                      <span className={`text-[9px] font-black uppercase tracking-[0.2em] px-2.5 py-1 rounded-md border ${app.status === 'beta' ? 'bg-cyan-500/10 text-cyan-400 border-cyan-500/30' : app.status === 'alpha' ? 'bg-amber-500/10 text-amber-400 border-amber-500/30' : 'bg-zinc-800 text-zinc-500 border-zinc-700'}`}>
+                        {app.status || 'dev'}
+                      </span>
+                    </div>
+
+                    {/* LIVE ACTIVITY TRACKER */}
+                    {app.lastUpdated && (
+                      <div className="absolute top-5 right-5 flex flex-col items-end">
+                        <span className={`text-[8px] font-black uppercase tracking-widest px-2 py-1 rounded-md flex items-center gap-1.5 border shadow-inner ${isRecentlyUpdated ? 'bg-cyan-500/10 text-cyan-400 border-cyan-500/30' : 'bg-zinc-950 text-zinc-500 border-zinc-800'}`}>
+                          {isRecentlyUpdated ? <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse" /> : <Activity size={10} />}
+                          {app.lastUpdated}
+                        </span>
+                        {app.updateLog && (
+                          <span className="text-[8px] text-zinc-500 font-bold uppercase tracking-widest mt-1.5 max-w-32 truncate text-right">
+                            {app.updateLog}
+                          </span>
+                        )}
+                      </div>
+                    )}
+
+                    <div className="flex items-center gap-4 mt-10 mb-4 relative z-10">
+                      <div className={`p-3.5 rounded-2xl bg-zinc-950 border border-zinc-800 group-hover:border-cyan-500/50 group-hover:shadow-[0_0_15px_rgba(34,211,238,0.2)] transition-all`}>
+                        <IconMapper name={app.icon} className="w-6 h-6 text-cyan-400" />
+                      </div>
+                      <div>
+                        <h3 className="font-black text-zinc-100 uppercase tracking-wider text-base">{app.name}</h3>
+                        <p className="text-[10px] font-mono text-zinc-500 uppercase tracking-widest">ID: {app.id}</p>
+                      </div>
+                    </div>
+                    
+                    <p className="text-xs text-zinc-400 font-medium leading-relaxed mb-8 flex-1 relative z-10">
+                      {app.description}
+                    </p>
+                    
+                    <button onClick={() => setActiveAppId(app.id)} className="w-full flex items-center justify-between bg-zinc-950 hover:bg-cyan-500 text-cyan-400 hover:text-zinc-950 border border-zinc-800 hover:border-cyan-500 py-3.5 px-5 rounded-xl font-black uppercase tracking-widest text-[10px] transition-all relative z-10 group/btn">
+                      <span>Initialize Module</span>
+                      <ArrowRight size={14} className="group-hover/btn:translate-x-1 transition-transform" />
+                    </button>
+                  </div>
+                );
+              })}
+            </div>
+          </section>
+        )}
+
+      </div>
     </div>
   );
 }
