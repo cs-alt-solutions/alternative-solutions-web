@@ -48,7 +48,7 @@ export default function Sidebar() {
   ];
 
   return (
-    <aside className="w-64 bg-bg-surface-100 border-r border-white/5 h-screen flex flex-col hidden md:flex">
+    <aside className="w-64 bg-bg-surface-100 border-r border-white/5 h-screen flex flex-col md:flex">
       {/* BRANDING */}
       <div className="p-8">
         <div className="text-xl font-black text-white italic tracking-tighter uppercase">

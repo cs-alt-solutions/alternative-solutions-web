@@ -70,7 +70,6 @@ export const divisionConfig = {
   subCategories: {
     'Flower & Prerolls': ['Top Shelf', 'Pre-Rolls & Blunts', 'Premium', 'Featured Brands', 'SMOKEY STEALS!'],
     'Vapes & Pens': ['Disposables', '510 Cartridges'],
-    // 👇 The updated Edibles mapping
     'Edibles': ['Baked Goods & Chocolates', 'Gummies & Candies', 'Infused Beverages & Syrups', 'Pantry & Spreads'],
     'Concentrates': ['Wax & Dabs', 'Rosin & Resin'],
     'Merch & Extras': ['Apparel & Gear', 'Healthcare & Topicals', 'Accessories']
@@ -97,43 +96,53 @@ export const divisionConfig = {
   apps: [
     {
       id: 'storefront',
+      category: 'prototype',
       name: 'Consumer Storefront',
       description: 'The front-facing e-commerce interface for customer orders.',
       icon: 'Store',
-      path: '/sandbox/division?app=storefront',
       status: 'production',
       lastUpdated: 'Today',
       updateLog: 'Connected to Supabase DB'
     },
     {
       id: 'admin',
+      category: 'prototype',
       name: 'Admin Terminal',
       description: 'Secure Warehouse for inventory management and operations.',
       icon: 'Lock',
-      path: '/sandbox/division?app=admin',
       status: 'production',
       lastUpdated: 'Today',
       updateLog: 'Database sync active'
     },
     {
       id: 'fulfillment',
+      category: 'concept',
       name: 'Fulfillment Center',
       description: 'Order processing and routing interface.',
       icon: 'Package',
-      path: '/sandbox/division?app=fulfillment',
       status: 'concept',
       lastUpdated: 'Mar 25',
       updateLog: 'Initial UI Layout'
     },
     {
       id: 'logistics',
+      category: 'concept',
       name: 'Logistics Fleet',
       description: 'Driver routing and delivery confirmation.',
       icon: 'Truck',
-      path: '/sandbox/division?app=logistics',
       status: 'concept',
       lastUpdated: 'Mar 20',
       updateLog: 'Map routing conceptualized'
+    },
+    {
+      id: 'asset-hub',
+      category: 'resource',
+      name: 'Secure Asset Vault',
+      description: 'Direct pipeline for uploading high-res photos, branding, and documents.',
+      icon: 'PackageSearch',
+      status: 'live',
+      lastUpdated: 'Today',
+      updateLog: 'Vault Online'
     }
   ],
 
