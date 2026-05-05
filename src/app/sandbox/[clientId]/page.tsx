@@ -6,7 +6,7 @@ import { useParams, useRouter } from 'next/navigation';
 import Gatekeeper from '@/components/sandbox/shared/Gatekeeper';
 import { SANDBOX_CLIENTS } from '@/utils/glossary';
 import { supabase } from '@/utils/supabase';
-import { Activity, Truck, PackageSearch, Wrench, X, Globe, UserCircle, ShoppingCart, TestTube, AlertTriangle, Cpu, Layers, ArrowRight, Store, Lock, ShieldCheck, Package } from 'lucide-react';
+import { Activity, Truck, PackageSearch, Wrench, X, Globe, UserCircle, ShoppingCart, TestTube, AlertTriangle, Cpu, Layers, ArrowRight, Store, Lock, ShieldCheck, Package, Loader2 } from 'lucide-react';
 
 // MICRO-APP ENGINE IMPORTS
 import LogisticsTerminal from '@/components/sandbox/apps/division/logistics/LogisticsTerminal';
@@ -40,32 +40,64 @@ export default function DynamicSandboxPage() {
   const [isMounted, setIsMounted] = useState(false);
   const [activeAppId, setActiveAppId] = useState<string | null>(null);
   
-  // LIVE DATABASE STATE
+  // LIVE DATABASE / ROUTING STATE
+  const [isInitializing, setIsInitializing] = useState(true);
+  const [clientConfig, setClientConfig] = useState<any>(null);
   const [dbPin, setDbPin] = useState<string | null>(null);
 
   useEffect(() => {
-    // FAST-PASS: Read the auth token from the main login screen to bypass Gatekeeper
-    const hasFastPass = localStorage.getItem(`sandbox_auth_${clientId}`);
-    if (hasFastPass === 'true') {
-      setIsAuthenticated(true);
-    }
-    setIsMounted(true);
+    const setupWorkspace = async () => {
+      // 1. Initial State Handlers
+      setIsMounted(true);
+      const hasFastPass = localStorage.getItem(`sandbox_auth_${clientId}`);
+      if (hasFastPass === 'true') setIsAuthenticated(true);
 
-    // SYNCHRONIZE WITH THE DATABASE
-    const fetchDbPin = async () => {
-      const { data } = await supabase.from('clients').select('master_pin').eq('id', clientId).single();
-      if (data && data.master_pin) setDbPin(data.master_pin.toString());
+      // 2. The Bridge: Map UUID -> Database -> Local Config
+      const { data: dbData } = await supabase.from('clients').select('*').eq('id', clientId).maybeSingle();
+
+      if (dbData) {
+         if (dbData.master_pin) setDbPin(dbData.master_pin.toString());
+         
+         // Bulletproof Matching: Lowercase and trim to destroy naming mismatches
+         const dbName = dbData.name?.toLowerCase().trim();
+         const matchedConfig = Object.values(SANDBOX_CLIENTS).find(
+           (c: any) => c.name?.toLowerCase().trim() === dbName || 
+                       c.agencyName?.toLowerCase().trim() === dbName ||
+                       c.id === clientId // Ultimate fallback
+         );
+         
+         if (matchedConfig) setClientConfig(matchedConfig);
+      } else {
+         // Fallback: If navigating directly to /sandbox/division (Local ID)
+         const localData = (SANDBOX_CLIENTS as any)[clientId];
+         if (localData) {
+            setClientConfig(localData);
+            // Attempt to sync the PIN from DB based on name anyway
+            const { data: nameMatch } = await supabase.from('clients').select('master_pin').eq('name', localData.name).maybeSingle();
+            if (nameMatch && nameMatch.master_pin) setDbPin(nameMatch.master_pin.toString());
+         }
+      }
+      setIsInitializing(false);
     };
-    fetchDbPin();
+
+    setupWorkspace();
   }, [clientId]);
 
-  if (!isMounted) return null;
-
-  const clientConfig = (SANDBOX_CLIENTS as any)[clientId];
+  if (!isMounted || isInitializing) {
+    return (
+      <div className="min-h-screen bg-zinc-950 flex flex-col items-center justify-center">
+        <div className="flex flex-col items-center">
+          <Loader2 className="w-8 h-8 animate-spin text-cyan-500 mb-4" />
+          <p className="text-cyan-500 font-mono text-[10px] uppercase tracking-widest">Establishing Secure Connection...</p>
+        </div>
+      </div>
+    );
+  }
 
   if (!clientConfig) {
     return (
       <div className="min-h-screen bg-zinc-950 flex flex-col items-center justify-center text-zinc-500">
+        <AlertTriangle size={48} className="mb-4 text-orange-500/50" />
         <p className="uppercase tracking-widest font-bold text-sm">404 | Workspace Not Found</p>
       </div>
     );
@@ -80,7 +112,6 @@ export default function DynamicSandboxPage() {
           setIsAuthenticated(true);
         }} 
         appTitle={clientConfig.appTitle}
-        // READ FROM DB FIRST, FALLBACK TO LOCAL CONFIG
         pin={dbPin || clientConfig.security?.pin || '1234'} 
         lockedMessage={clientConfig.security?.lockedMessage}
       />
@@ -97,7 +128,6 @@ export default function DynamicSandboxPage() {
     if (activeAppId === 'storefront') return <StorefrontTerminal clientConfig={clientConfig} onExit={() => setActiveAppId(null)} />;
     if (activeAppId === 'asset-hub') return <AssetHubTerminal clientConfig={clientConfig} onExit={() => setActiveAppId(null)} />;
     
-    // THE LUCKYSTRIKE VIRTUAL GARAGE ROUTE
     if (activeAppId === 'garage' || activeAppId === 'interactive-garage') {
       return (
         <div className="min-h-screen bg-[#1B2123] relative text-[#E5E4E2]">
@@ -142,7 +172,6 @@ export default function DynamicSandboxPage() {
   const concepts = clientConfig.apps.filter((app: any) => app.category === 'concept');
   const resources = clientConfig.apps.filter((app: any) => app.category === 'resource');
 
-  // Dynamic Card Renderer with High-Energy Styling
   const renderAppCard = (app: any, variant: 'main' | 'sidebar' = 'main') => {
     const isAssetHub = app.id === 'asset-hub';
     const isConcept = app.category === 'concept';
@@ -226,7 +255,6 @@ export default function DynamicSandboxPage() {
         <div className="flex flex-col xl:flex-row gap-8 lg:gap-12">
           
           <div className="flex-1 flex flex-col gap-12">
-            {/* ZONE 1: ACTIVE PROTOTYPES */}
             {prototypes.length > 0 && (
               <section className="relative">
                 <div className="mb-6 flex items-center gap-3">
@@ -244,7 +272,6 @@ export default function DynamicSandboxPage() {
               </section>
             )}
 
-            {/* ZONE 2: THE CONCEPT LAB */}
             {concepts.length > 0 && (
               <section className="relative mt-4">
                 <div className="absolute -left-6 top-0 bottom-0 w-px bg-linear-to-b from-purple-500/50 to-transparent hidden md:block"></div>
@@ -264,7 +291,6 @@ export default function DynamicSandboxPage() {
             )}
           </div>
 
-          {/* RIGHT COLUMN: Command & Resources Sidebar */}
           {resources.length > 0 && (
             <div className="w-full xl:w-96 shrink-0">
               <div className="sticky top-8 bg-zinc-900/30 border border-zinc-800/80 rounded-3xl p-6 lg:p-8 backdrop-blur-xl shadow-2xl">
@@ -282,7 +308,6 @@ export default function DynamicSandboxPage() {
                    {resources.map((app: any) => renderAppCard(app, 'sidebar'))}
                 </div>
 
-                {/* Placeholder for future sidebar items (Contracts, Billing) */}
                 <div className="mt-8 pt-6 border-t border-zinc-800/50 space-y-3">
                    <div className="bg-zinc-950/50 border border-zinc-800/50 rounded-xl p-4 flex items-center justify-between opacity-50 grayscale cursor-not-allowed">
                       <div className="flex items-center gap-3">

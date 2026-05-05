@@ -100,6 +100,7 @@ export const divisionConfig = {
       name: 'Consumer Storefront',
       description: 'The front-facing e-commerce interface for customer orders.',
       icon: 'Store',
+      path: '/sandbox/division?app=storefront',
       status: 'production',
       lastUpdated: 'Today',
       updateLog: 'Connected to Supabase DB'
@@ -110,6 +111,7 @@ export const divisionConfig = {
       name: 'Admin Terminal',
       description: 'Secure Warehouse for inventory management and operations.',
       icon: 'Lock',
+      path: '/sandbox/division?app=admin',
       status: 'production',
       lastUpdated: 'Today',
       updateLog: 'Database sync active'
@@ -120,6 +122,7 @@ export const divisionConfig = {
       name: 'Fulfillment Center',
       description: 'Order processing and routing interface.',
       icon: 'Package',
+      path: '/sandbox/division?app=fulfillment',
       status: 'concept',
       lastUpdated: 'Mar 25',
       updateLog: 'Initial UI Layout'
@@ -130,6 +133,7 @@ export const divisionConfig = {
       name: 'Logistics Fleet',
       description: 'Driver routing and delivery confirmation.',
       icon: 'Truck',
+      path: '/sandbox/division?app=logistics',
       status: 'concept',
       lastUpdated: 'Mar 20',
       updateLog: 'Map routing conceptualized'
