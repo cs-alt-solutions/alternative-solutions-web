@@ -2,7 +2,8 @@
 
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { supabase } from '@/utils/supabase';
+// WE NEED THIS LINE BACK! This connects us to the secure browser client.
+import { supabase } from '@/utils/supabase'; 
 import { ShieldCheck, Lock, Loader2 } from 'lucide-react';
 import { WEBSITE_COPY } from '@/utils/glossary';
 
