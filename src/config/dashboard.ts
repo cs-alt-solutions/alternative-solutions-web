@@ -8,7 +8,7 @@ export const DASHBOARD_COPY = {
     FOUNDATION: "The Drafting Table",
     LEDGER: "The Ledger",
     ECOSYSTEM_MANAGER: "My Products",
-    BETA_COMMAND: "Members & Access",
+    BETA_COMMAND: "Beta Command",
     BROADCAST: "Emails & Updates", 
     AGENTS: "AI Assistants", 
     CONFIG: "Settings", 
@@ -116,9 +116,9 @@ export const DASHBOARD_COPY = {
   },
 
   BETA_COMMAND: {
-    TITLE: "Members & Access",
-    SUBTITLE: "Who has the keys to your apps.",
-    STATUS: "Live",
+    TITLE: 'Beta Command', // <-- FIXED
+    SUBTITLE: 'Experimental features and community feedback.', // <-- FIXED
+    STATUS: 'Live System',
     TABS: { MATRIX: "User List", FEEDBACK: "Feedback", POLLING: "Roadmap Votes", SANDBOXES: "Demo Portals" },
     MATRIX: {
       SEARCH_PLACEHOLDER: "Search by name or email...",
@@ -146,6 +146,37 @@ export const DASHBOARD_COPY = {
         PRIMARY_CONTACT: "Primary Contact",
         BTN_SAVE: "Commit Changes",
         BTN_CANCEL: "Abort"
+      }
+    }
+  },
+
+  MEMBERS: {
+    INVITE_MODAL: {
+      TITLE: "Authorize New Member",
+      DESC: "Grant system access and define clearance levels.",
+      FIELDS: { EMAIL: "Email Address", ROLE: "System Role", WORKSPACE: "Workspace Assignment" },
+      ROLES: { OBSERVER: "Observer (View Only)", CLIENT: "Client Owner", STAFF: "Internal Staff", ADMIN: "Super Admin" },
+      ACTIONS: { CANCEL: "Abort", SUBMIT: "Send Invitation", SAVING: "Transmitting..." }
+    },
+    ACCESS_TAB: {
+      STATUS_ACTIVE: "Active",
+      STATUS_PENDING: "Pending / Invited",
+      BTN_RESEND: "Resend Invite",
+      BTN_RESENDING: "Transmitting...",
+    }
+  },
+
+  ONBOARDING: {
+    UPDATE_PASSWORD: {
+      TITLE: "Initialize Account",
+      SUBTITLE: "Set your secure password to access the Command Center.",
+      FIELDS: {
+        NEW_PASSWORD: "New Secure Password",
+        CONFIRM_PASSWORD: "Confirm Password"
+      },
+      ACTIONS: {
+        SUBMIT: "Save & Enter System",
+        SAVING: "Encrypting..."
       }
     }
   },

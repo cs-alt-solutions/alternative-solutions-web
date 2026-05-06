@@ -133,7 +133,7 @@ export default function AssetHubTerminal({ clientConfig, onExit }: { clientConfi
            <h1 className="font-black tracking-widest uppercase text-xl text-zinc-100 flex items-center gap-3">
              <PackageSearch className="text-cyan-400" /> Secure Asset Hub
            </h1>
-           <p className="text-xs text-zinc-500 uppercase tracking-widest mt-1">Direct Pipeline to Shift Studio</p>
+           <p className="text-xs text-zinc-500 uppercase tracking-widest mt-1">Direct Pipeline to Our Development!</p>
         </div>
         <button onClick={onExit} className="flex items-center gap-2 text-zinc-500 hover:text-rose-400 transition-colors bg-zinc-900 border border-zinc-800 px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest shadow-inner">
            <X size={14} /> Exit Hub

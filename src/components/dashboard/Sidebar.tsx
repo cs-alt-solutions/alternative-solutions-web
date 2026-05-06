@@ -13,7 +13,9 @@ import {
   LogOut,
   Users,
   Box,
-  Briefcase // <-- Added Briefcase icon
+  Briefcase,
+  Key,
+  TestTube
 } from 'lucide-react';
 import { WEBSITE_COPY } from '@/utils/glossary';
 
@@ -24,27 +26,30 @@ export default function Sidebar() {
   // ZONE 1: THE DAILY DRIVER
   const navGroups = [
     {
-      label: copy.GROUPS.COMMAND, // "My Workspace"
+      label: copy.GROUPS?.COMMAND || 'COMMAND', 
       items: [
-        { name: copy.OVERVIEW, href: '/dashboard', icon: LayoutDashboard },
-        { name: 'CLIENT HQ', href: '/dashboard/clients', icon: Briefcase }, // <-- Added the Client Directory Link
-        { name: copy.FOUNDATION, href: '/dashboard/foundation', icon: Construction },
-        { name: copy.ECOSYSTEM_MANAGER, href: '/dashboard/ecosystem', icon: Box },
+        { name: copy.OVERVIEW || 'OVERVIEW', href: '/dashboard', icon: LayoutDashboard },
+        { name: 'CLIENT HQ', href: '/dashboard/clients', icon: Briefcase },
+        { name: copy.FOUNDATION || 'FOUNDATION', href: '/dashboard/foundation', icon: Construction },
+        { name: copy.ECOSYSTEM_MANAGER || 'ECOSYSTEM', href: '/dashboard/ecosystem', icon: Box },
       ]
     },
     {
-      label: copy.GROUPS.OPERATIONS, // "Life & Logistics"
+      label: copy.GROUPS?.OPERATIONS || 'OPERATIONS', 
       items: [
-        { name: copy.LEDGER, href: '/dashboard/ledger', icon: Wallet },
-        { name: copy.BETA_COMMAND, href: '/dashboard/beta-command', icon: Users },
-        { name: copy.BROADCAST, href: '/dashboard/broadcast', icon: Radio },
+        { name: copy.LEDGER || 'LEDGER', href: '/dashboard/ledger', icon: Wallet },
+        // Restoring Beta Command here
+        { name: copy.BETA_COMMAND || 'BETA COMMAND', href: '/dashboard/beta-command', icon: TestTube },
+        { name: copy.BROADCAST || 'BROADCAST', href: '/dashboard/broadcast', icon: Radio },
       ]
     }
   ];
 
-  // ZONE 2: THE ENGINE ROOM
+  // ZONE 2: THE ENGINE ROOM (High Privilege)
   const adminItems = [
-    { name: copy.CONFIG, href: '/dashboard/settings', icon: Settings },
+    // Ensuring Members & Access is here
+    { name: 'MEMBERS & ACCESS', href: '/dashboard/members', icon: Key }, 
+    { name: copy.CONFIG || 'CONFIG', href: '/dashboard/settings', icon: Settings },
   ];
 
   return (
@@ -59,7 +64,6 @@ export default function Sidebar() {
         </p>
       </div>
 
-      {/* ZONE 1: ACTIVE WORKSPACE WITH SUBCATEGORIES */}
       <nav className="flex-1 px-4 space-y-8 overflow-y-auto">
         {navGroups.map((group) => (
           <div key={group.label}>
@@ -89,7 +93,6 @@ export default function Sidebar() {
         ))}
       </nav>
 
-      {/* ZONE 2: THE ENGINE ROOM */}
       <div className="p-4 border-t border-white/5 space-y-4 bg-bg-surface-200/30">
         <div>
            <h3 className="px-4 text-[10px] font-mono font-bold text-purple-400 uppercase tracking-widest mb-3 opacity-80">
@@ -97,7 +100,7 @@ export default function Sidebar() {
           </h3>
           <div className="space-y-1">
             {adminItems.map((item) => {
-              const isActive = pathname === item.href;
+              const isActive = pathname === item.href || pathname.startsWith(`${item.href}/`);
               return (
                 <Link
                   key={item.name}
@@ -116,12 +119,11 @@ export default function Sidebar() {
           </div>
         </div>
 
-        {/* EXIT COMPONENT */}
         <Link 
           href="/" 
           className="flex items-center gap-3 px-4 py-3 text-xs font-mono text-orange-500/70 hover:text-orange-400 hover:bg-orange-500/10 rounded-xl transition-colors border border-transparent hover:border-orange-500/20"
         >
-          <LogOut size={18} /> {copy.EXIT}
+          <LogOut size={18} /> {copy.EXIT || 'EXIT SYSTEM'}
         </Link>
       </div>
     </aside>
