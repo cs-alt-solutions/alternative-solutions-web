@@ -1,15 +1,16 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 
-// We MUST use the service_role key to invite users securely from the backend.
-// This key bypasses Row Level Security (RLS) and has full admin rights.
-const supabaseAdmin = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY! 
-);
-
 export async function POST(request: Request) {
   try {
+    // 1. MOVED INSIDE: We only initialize the secure connection at runtime!
+    // We MUST use the service_role key to invite users securely from the backend.
+    // This key bypasses Row Level Security (RLS) and has full admin rights.
+    const supabaseAdmin = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY! 
+    );
+
     const body = await request.json();
     const { email, role, workspace } = body;
 
@@ -17,7 +18,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Email is required' }, { status: 400 });
     }
 
-    // 1. Send the invite via Supabase Admin Auth
+    // 2. Send the invite via Supabase Admin Auth
     // We pass the role and workspace into the user's raw_user_meta_data 
     // so our database triggers can catch it and update the profiles table automatically.
     const { data, error } = await supabaseAdmin.auth.admin.inviteUserByEmail(email, {
