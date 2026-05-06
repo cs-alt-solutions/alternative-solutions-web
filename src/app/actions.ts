@@ -1,7 +1,5 @@
-/* src/app/actions.ts */
 'use server';
 
-import { supabase } from '@/utils/supabase';
 import { revalidatePath } from 'next/cache';
 import { Directive } from '@/utils/glossary';
 import { createClient } from '@/utils/supabase/server';
@@ -16,6 +14,8 @@ const fromEmail = process.env.NEXT_PUBLIC_COMPANY_EMAIL || 'hello@alternativesol
 export async function loginAdmin(formData: FormData) {
   const email = formData.get('email') as string;
   const password = formData.get('password') as string;
+  
+  // 1. Create a secure SERVER client for this specific request
   const supabase = await createClient();
 
   const { error } = await supabase.auth.signInWithPassword({
@@ -31,6 +31,7 @@ export async function loginAdmin(formData: FormData) {
 
 // --- SYSTEM COMMAND: PULSE ---
 export async function logPulse(eventType: string, message: string) {
+  const supabase = await createClient();
   await supabase.from('pulse_log').insert([{ event_type: eventType, message }]);
   revalidatePath('/dashboard');
 }
@@ -45,6 +46,7 @@ export async function joinWaitlist(formData: FormData) {
   }
 
   try {
+    const supabase = await createClient();
     const { error } = await supabase
       .from('supporters')
       .upsert({ 
@@ -81,6 +83,7 @@ export async function sendCampaignBlast(audience: string, subject: string, conte
   }
 
   try {
+    const supabase = await createClient();
     let query = supabase.from('supporters').select('email, display_name').eq('status', 'ACTIVE');
     
     if (audience === 'FOUNDERS') {
@@ -126,6 +129,8 @@ export async function publishAudioLog(formData: FormData) {
   if (!file) return { success: false, error: 'NO_FILE' };
   const fileName = `${Date.now()}-${file.name}`;
 
+  const supabase = await createClient();
+
   const { data, error: storageError } = await supabase.storage
     .from('workshop_media')
     .upload(`episodes/${fileName}`, file);
@@ -150,6 +155,7 @@ export async function publishAudioLog(formData: FormData) {
 
 // --- PLANNER: DIRECTIVES ---
 export async function logDirective(directive: Omit<Directive, 'id' | 'status'>) {
+  const supabase = await createClient();
   const { error } = await supabase.from('ideas_ledger').insert([{
     title: directive.title,
     goal_id: directive.goalId,
@@ -167,6 +173,7 @@ export async function logDirective(directive: Omit<Directive, 'id' | 'status'>) 
 }
 
 export async function getActiveDirectives() {
+  const supabase = await createClient();
   const { data, error } = await supabase
     .from('ideas_ledger')
     .select('*')
@@ -178,6 +185,7 @@ export async function getActiveDirectives() {
 }
 
 export async function getActiveProjects() {
+  const supabase = await createClient();
   const { data, error } = await supabase
     .from('projects')
     .select('*')
@@ -189,6 +197,7 @@ export async function getActiveProjects() {
 }
 
 export async function toggleAnonymity(id: string, currentDisplayName: string, originalName: string | null) {
+  const supabase = await createClient();
   const newName = currentDisplayName === 'Anonymous' ? (originalName || 'Anonymous Builder') : 'Anonymous';
   const { error } = await supabase.from('supporters').update({ display_name: newName }).eq('id', id);
   if (error) return { success: false };
@@ -196,9 +205,9 @@ export async function toggleAnonymity(id: string, currentDisplayName: string, or
   revalidatePath('/blueprint');
   return { success: true };
 }
-// Add this to src/app/actions.ts
 
 export async function createNewClient(formData: FormData) {
+  const supabase = await createClient();
   const clientName = formData.get('clientName') as string;
   
   // Convert "Luckystrike Designs" to "luckystrike-designs"
@@ -212,7 +221,7 @@ export async function createNewClient(formData: FormData) {
 
   if (!error) {
     await logPulse('NEW_CLIENT', `Provisioned HQ for: ${clientName}`);
-    revalidatePath('/dashboard'); // Refreshes the UI instantly
+    revalidatePath('/dashboard'); 
   }
   
   return { success: !error, clientId, error: error?.message };
