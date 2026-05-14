@@ -154,7 +154,7 @@ export const DASHBOARD_COPY = {
     INVITE_MODAL: {
       TITLE: "Authorize New Member",
       DESC: "Grant system access and define clearance levels.",
-      FIELDS: { EMAIL: "Email Address", ROLE: "System Role", WORKSPACE: "Workspace Assignment" },
+      FIELDS: { NAME: "Full Name", EMAIL: "Email Address", ROLE: "System Role", WORKSPACE: "Workspace Assignment" },
       ROLES: { OBSERVER: "Observer (View Only)", CLIENT: "Client Owner", STAFF: "Internal Staff", ADMIN: "Super Admin" },
       ACTIONS: { CANCEL: "Abort", SUBMIT: "Send Invitation", SAVING: "Transmitting..." }
     },

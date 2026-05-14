@@ -1,9 +1,7 @@
-/* src/app/sandbox/[clientId]/page.tsx */
 'use client';
 
 import React, { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import Gatekeeper from '@/components/sandbox/shared/Gatekeeper';
 import { SANDBOX_CLIENTS } from '@/utils/glossary';
 import { supabase } from '@/utils/supabase';
 import { Activity, Truck, PackageSearch, Wrench, X, Globe, UserCircle, ShoppingCart, TestTube, AlertTriangle, Cpu, Layers, ArrowRight, Store, Lock, ShieldCheck, Package, Loader2 } from 'lucide-react';
@@ -36,29 +34,43 @@ export default function DynamicSandboxPage() {
   const router = useRouter();
   const clientId = params.clientId as string;
   
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isMounted, setIsMounted] = useState(false);
   const [activeAppId, setActiveAppId] = useState<string | null>(null);
   
   // LIVE DATABASE / ROUTING STATE
   const [isInitializing, setIsInitializing] = useState(true);
   const [clientConfig, setClientConfig] = useState<any>(null);
-  const [dbPin, setDbPin] = useState<string | null>(null);
 
   useEffect(() => {
     const setupWorkspace = async () => {
-      // 1. Initial State Handlers
       setIsMounted(true);
-      const hasFastPass = localStorage.getItem(`sandbox_auth_${clientId}`);
-      if (hasFastPass === 'true') setIsAuthenticated(true);
 
-      // 2. The Bridge: Map UUID -> Database -> Local Config
+      // 1. VERIFY REAL SUPABASE SESSION (No more fake local storage PINs)
+      const { data: { user }, error: authError } = await supabase.auth.getUser();
+      
+      if (authError || !user) {
+        router.push('/login');
+        return;
+      }
+
+      // 2. CHECK SECURITY CLEARANCE
+      const role = user.user_metadata?.role;
+      const userWorkspace = user.user_metadata?.workspace_id;
+      
+      // If they are Admin/Staff, or if their assigned workspace matches this URL, they get in.
+      const hasClearance = role === 'ADMIN' || role === 'STAFF' || userWorkspace === clientId;
+      
+      if (!hasClearance) {
+        console.warn("Unauthorized Access Attempt Blocked.");
+        router.push('/login?error=Unauthorized_Workspace');
+        return;
+      }
+
+      // 3. LOAD WORKSPACE CONFIGURATION
       const { data: dbData } = await supabase.from('clients').select('*').eq('id', clientId).maybeSingle();
 
       if (dbData) {
-         if (dbData.master_pin) setDbPin(dbData.master_pin.toString());
-         
-         // Bulletproof Matching: Lowercase and trim to destroy naming mismatches
+         // Bulletproof Matching
          const dbName = dbData.name?.toLowerCase().trim();
          const matchedConfig = Object.values(SANDBOX_CLIENTS).find(
            (c: any) => c.name?.toLowerCase().trim() === dbName || 
@@ -68,27 +80,25 @@ export default function DynamicSandboxPage() {
          
          if (matchedConfig) setClientConfig(matchedConfig);
       } else {
-         // Fallback: If navigating directly to /sandbox/division (Local ID)
+         // Fallback to local configs
          const localData = (SANDBOX_CLIENTS as any)[clientId];
          if (localData) {
             setClientConfig(localData);
-            // Attempt to sync the PIN from DB based on name anyway
-            const { data: nameMatch } = await supabase.from('clients').select('master_pin').eq('name', localData.name).maybeSingle();
-            if (nameMatch && nameMatch.master_pin) setDbPin(nameMatch.master_pin.toString());
          }
       }
+      
       setIsInitializing(false);
     };
 
     setupWorkspace();
-  }, [clientId]);
+  }, [clientId, router]);
 
   if (!isMounted || isInitializing) {
     return (
       <div className="min-h-screen bg-zinc-950 flex flex-col items-center justify-center">
         <div className="flex flex-col items-center">
           <Loader2 className="w-8 h-8 animate-spin text-cyan-500 mb-4" />
-          <p className="text-cyan-500 font-mono text-[10px] uppercase tracking-widest">Establishing Secure Connection...</p>
+          <p className="text-cyan-500 font-mono text-[10px] uppercase tracking-widest">Verifying Security Clearance...</p>
         </div>
       </div>
     );
@@ -100,21 +110,6 @@ export default function DynamicSandboxPage() {
         <AlertTriangle size={48} className="mb-4 text-orange-500/50" />
         <p className="uppercase tracking-widest font-bold text-sm">404 | Workspace Not Found</p>
       </div>
-    );
-  }
-
-  // The Main "Welcome Mat" Gatekeeper
-  if (!isAuthenticated) {
-    return (
-      <Gatekeeper 
-        onUnlock={() => {
-          localStorage.setItem(`sandbox_auth_${clientId}`, 'true');
-          setIsAuthenticated(true);
-        }} 
-        appTitle={clientConfig.appTitle}
-        pin={dbPin || clientConfig.security?.pin || '1234'} 
-        lockedMessage={clientConfig.security?.lockedMessage}
-      />
     );
   }
 
@@ -214,7 +209,7 @@ export default function DynamicSandboxPage() {
   };
 
   // ==========================================
-  // THE VIP CLIENT PORTAL (HIGH-ENERGY ASYMMETRICAL)
+  // THE VIP CLIENT PORTAL
   // ==========================================
   return (
     <div className="min-h-screen bg-zinc-950 flex flex-col items-center p-6 md:p-8 lg:p-12 text-zinc-100 relative overflow-x-hidden selection:bg-cyan-500/30">
@@ -242,8 +237,9 @@ export default function DynamicSandboxPage() {
              </p>
            </div>
            
-           <button onClick={() => {
-               localStorage.removeItem(`sandbox_auth_${clientId}`);
+           <button onClick={async () => {
+               // Properly sign out of Supabase to destroy the session securely
+               await supabase.auth.signOut();
                router.push('/login');
              }} 
              className="flex items-center gap-2 text-zinc-400 hover:text-rose-400 transition-colors bg-zinc-900/80 backdrop-blur-md border border-zinc-800 hover:border-rose-900/50 px-5 py-2.5 rounded-xl text-xs font-black uppercase tracking-widest shadow-sm">

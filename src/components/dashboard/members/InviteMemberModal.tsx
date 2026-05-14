@@ -1,7 +1,8 @@
 'use client';
 
 import React, { useState } from 'react';
-import { X, UserPlus, Mail, Shield, Loader2 } from 'lucide-react';
+import { useRouter } from 'next/navigation';
+import { X, UserPlus, Mail, Shield, Loader2, UserCircle } from 'lucide-react';
 import { WEBSITE_COPY } from '@/utils/glossary';
 
 interface InviteMemberModalProps {
@@ -10,7 +11,10 @@ interface InviteMemberModalProps {
 }
 
 export default function InviteMemberModal({ isOpen, onClose }: InviteMemberModalProps) {
+  const router = useRouter();
+  const [fullName, setFullName] = useState(''); // <-- NEW STATE
   const [email, setEmail] = useState('');
+  
   // Default to Client Owner and their first workspace
   const [role, setRole] = useState('CLIENT_OWNER');
   const [workspace, setWorkspace] = useState('luckystrike');
@@ -38,7 +42,8 @@ export default function InviteMemberModal({ isOpen, onClose }: InviteMemberModal
       const response = await fetch('/api/invites', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, role, workspace })
+        // Passing fullName to the API payload
+        body: JSON.stringify({ email, fullName, role, workspace }) 
       });
 
       if (!response.ok) {
@@ -48,9 +53,13 @@ export default function InviteMemberModal({ isOpen, onClose }: InviteMemberModal
 
       // Success! Close the modal and reset form
       onClose();
+      setFullName(''); // Reset name
       setEmail(''); 
       setRole('CLIENT_OWNER');
       setWorkspace('luckystrike');
+      
+      // Trigger Next.js to re-fetch the server component data
+      router.refresh();
       
     } catch (error) {
       console.error("Transmission failed:", error);
@@ -80,6 +89,22 @@ export default function InviteMemberModal({ isOpen, onClose }: InviteMemberModal
         </div>
 
         <form onSubmit={handleInvite} className="p-6 space-y-6">
+          
+          {/* NEW FULL NAME FIELD */}
+          <div className="space-y-2">
+            <label className="text-[9px] font-bold uppercase tracking-widest text-slate-500 flex items-center gap-2">
+              <UserCircle size={12} className="text-brand-primary" /> {copy?.FIELDS?.NAME || "Full Name"}
+            </label>
+            <input 
+              type="text" 
+              required
+              value={fullName}
+              onChange={(e) => setFullName(e.target.value)}
+              placeholder="e.g., John Doe"
+              className="w-full bg-black/50 border border-white/10 rounded-lg px-4 py-3 text-sm font-mono text-white focus:outline-none focus:border-cyan-400/50 transition-colors"
+            />
+          </div>
+
           <div className="space-y-2">
             <label className="text-[9px] font-bold uppercase tracking-widest text-slate-500 flex items-center gap-2">
               <Mail size={12} className="text-brand-primary" /> {copy?.FIELDS?.EMAIL || "Email"}

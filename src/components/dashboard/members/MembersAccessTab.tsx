@@ -7,23 +7,19 @@ import InviteMemberModal from './InviteMemberModal';
 import { WEBSITE_COPY } from '@/utils/glossary';
 
 export default function MembersAccessTab({ initialProfiles }: { initialProfiles: any[] }) {
-  // LIVE DATABASE STATE 
   const [profiles, setProfiles] = useState<any[]>(initialProfiles);
   const [expandedRow, setExpandedRow] = useState<string | null>(null);
   const [isInviteModalOpen, setIsInviteModalOpen] = useState(false);
 
-  // LISTENER: Sync the UI instantly when Next.js fetches new server data
   useEffect(() => {
     setProfiles(initialProfiles);
   }, [initialProfiles]);
   
-  // EDIT & ACTION STATE
   const [editingRole, setEditingRole] = useState<{ [key: string]: string }>({});
   const [editingWorkspace, setEditingWorkspace] = useState<{ [key: string]: string }>({});
   const [isSaving, setIsSaving] = useState<string | null>(null);
   const [isResending, setIsResending] = useState<string | null>(null);
 
-  // Fallback copy just in case the config isn't fully synced
   const copy = WEBSITE_COPY.DASHBOARD?.MEMBERS?.ACCESS_TAB || {
     STATUS_ACTIVE: "Active", STATUS_PENDING: "Pending", BTN_RESEND: "Resend Invite", BTN_RESENDING: "Sending..."
   };
@@ -44,7 +40,6 @@ export default function MembersAccessTab({ initialProfiles }: { initialProfiles:
     setIsSaving(null);
   };
 
-  // THE NEW RESEND PROTOCOL
   const handleResendInvite = async (userId: string, email: string) => {
     setIsResending(userId);
     try {
@@ -72,7 +67,6 @@ export default function MembersAccessTab({ initialProfiles }: { initialProfiles:
   return (
     <div className="space-y-6 animate-in fade-in duration-500">
       
-      {/* TOOLBAR */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between bg-black/40 border border-white/5 p-4 rounded-xl gap-4">
         <div className="relative w-full max-w-md">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-cyan-400/50" size={16} />
@@ -116,10 +110,30 @@ export default function MembersAccessTab({ initialProfiles }: { initialProfiles:
           {profiles.map((user, index) => {
             const isExpanded = expandedRow === user.id;
             const isAdmin = user.role === 'ADMIN';
-            const isPending = user.status !== 'ACTIVE';
+            
+            // THE NEW 3-STAGE STATUS LOGIC
+            const isInvited = user.status === 'INVITED';
+            const isPending = user.status === 'PENDING';
+            const isActive = user.status === 'ACTIVE' || (!isInvited && !isPending); // Fallback to active if unknown
+            
+            // Visual logic for the status dot and text
+            let statusText = 'Active';
+            let statusDotColor = 'bg-cyan-400 shadow-[0_0_8px_rgba(34,211,238,0.8)]';
+            
+            if (isInvited) {
+              statusText = 'Invited';
+              statusDotColor = 'bg-slate-600';
+            } else if (isPending) {
+              statusText = 'Pending Setup';
+              statusDotColor = 'bg-amber-400 shadow-[0_0_8px_rgba(251,191,36,0.8)]';
+            }
+
             const roleColor = isAdmin ? 'text-amber-400 border-amber-500/30 bg-amber-500/10' : 
                               user.role === 'CLIENT_OWNER' ? 'text-emerald-400 border-emerald-500/30 bg-emerald-500/10' :
                               'text-cyan-400 border-cyan-500/30 bg-cyan-500/10';
+
+            // Smart fallback for name
+            const displayName = user.full_name || user.email.split('@')[0];
 
             return (
               <div key={user.id} className="flex flex-col">
@@ -130,15 +144,17 @@ export default function MembersAccessTab({ initialProfiles }: { initialProfiles:
                   </div>
                   
                   <div className="col-span-1 md:col-span-5 flex items-center gap-3">
-                    <div className={`w-8 h-8 rounded-lg bg-black/50 border border-white/10 flex items-center justify-center shrink-0 ${isAdmin ? 'text-amber-400' : 'text-slate-400'}`}>
+                    <div className={`w-8 h-8 rounded-lg bg-black/50 border flex items-center justify-center shrink-0 ${isAdmin ? 'text-amber-400 border-amber-500/30' : !isActive ? 'text-slate-600 border-white/10 border-dashed' : 'text-slate-400 border-white/10'}`}>
                       <UserCircle size={18} />
                     </div>
-                    <div className="flex flex-col">
+                    <div className="flex flex-col gap-0.5">
                        <span className="text-sm font-bold text-slate-200 flex items-center gap-2">
-                          {user.full_name || 'Pending User'}
+                          {displayName}
                           {isAdmin && <BadgeCheck size={14} className="text-amber-400 drop-shadow-[0_0_8px_rgba(251,191,36,0.5)]" />}
                        </span>
-                       <span className="text-[10px] font-mono text-slate-500">{user.email}</span>
+                       <div className="flex items-center gap-2">
+                         <span className="text-[10px] font-mono text-slate-500">{user.email}</span>
+                       </div>
                     </div>
                   </div>
                   
@@ -155,9 +171,9 @@ export default function MembersAccessTab({ initialProfiles }: { initialProfiles:
                   
                   <div className="col-span-1 md:col-span-2 flex items-center justify-between md:justify-end gap-4 mt-2 md:mt-0">
                     <div className="flex items-center gap-2">
-                      <div className={`w-1.5 h-1.5 rounded-full ${!isPending ? 'bg-cyan-400 shadow-[0_0_8px_rgba(34,211,238,0.8)]' : 'bg-slate-600'}`} />
+                      <div className={`w-1.5 h-1.5 rounded-full ${statusDotColor}`} />
                       <span className="text-[10px] font-mono text-slate-400 uppercase">
-                        {!isPending ? copy.STATUS_ACTIVE : copy.STATUS_PENDING}
+                        {statusText}
                       </span>
                     </div>
                     <div className="text-white/20 group-hover:text-cyan-400 transition-colors">
@@ -169,17 +185,17 @@ export default function MembersAccessTab({ initialProfiles }: { initialProfiles:
                 <div className={`overflow-hidden transition-all duration-300 ease-in-out bg-black/40 border-t border-white/5 ${isExpanded ? 'max-h-125 opacity-100' : 'max-h-0 opacity-0'}`}>
                   <div className="p-6 grid grid-cols-1 md:grid-cols-2 gap-8">
                     
-                    {/* User Details & Resend Button */}
                     <div className="space-y-4">
                       <h4 className="text-[10px] font-mono text-cyan-400 uppercase tracking-widest">User Details</h4>
                       <div className="bg-black/50 border border-white/5 rounded-xl p-5 space-y-3 shadow-inner h-full">
-                        <div className="text-lg font-black text-white">{user.full_name || 'Awaiting Setup'}</div>
+                        <div className="text-lg font-black text-white flex items-center gap-3">
+                          {displayName}
+                        </div>
                         <div className="flex flex-col gap-3 pt-3 border-t border-white/5">
                           <div className="flex items-center gap-3 text-xs font-mono text-slate-400"><Mail size={12} className="text-brand-primary" /> {user.email}</div>
                           <div className="flex items-center gap-3 text-xs font-mono text-slate-400"><Calendar size={12} className="text-brand-primary" /> Added: {new Date(user.created_at).toLocaleDateString()}</div>
                           
-                          {/* RESEND INVITE BUTTON (Only shows if they aren't active) */}
-                          {isPending && (
+                          {!isActive && (
                             <div className="pt-2">
                               <button 
                                 onClick={() => handleResendInvite(user.id, user.email)}
@@ -191,12 +207,10 @@ export default function MembersAccessTab({ initialProfiles }: { initialProfiles:
                               </button>
                             </div>
                           )}
-
                         </div>
                       </div>
                     </div>
 
-                    {/* Access Control Manager */}
                     <div className="space-y-4">
                       <h4 className="text-[10px] font-mono text-cyan-400 uppercase tracking-widest">Edit Access & Role</h4>
                       <div className="bg-black/50 border border-white/5 rounded-xl p-5 shadow-inner flex flex-col gap-4">
