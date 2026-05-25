@@ -50,7 +50,7 @@ export async function GET(request: Request) {
       nextRoute = '/dashboard';
     } else if (workspaceId && workspaceId !== 'NONE') {
       // ALL clients dynamically route to their unified sandbox
-      nextRoute = `/sandbox/${workspaceId}`;
+      nextRoute = `/portal/${workspaceId}`;
     }
 
     return NextResponse.redirect(new URL(nextRoute, requestUrl.origin));
