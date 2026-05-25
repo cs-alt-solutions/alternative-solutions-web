@@ -2,14 +2,17 @@
 
 import React, { useState, useEffect } from 'react';
 import { supabase } from '@/utils/supabase'; 
-import { Search, UserCircle, Mail, Calendar, BadgeCheck, ChevronDown, ChevronUp, ShieldAlert, Loader2, Save, UserPlus, RefreshCw } from 'lucide-react';
+import { Search, UserCircle, Mail, Calendar, BadgeCheck, ChevronDown, ChevronUp, ShieldAlert, Loader2, Save, UserPlus, RefreshCw, Users, Shield, Beaker } from 'lucide-react';
 import InviteMemberModal from './InviteMemberModal';
 import { WEBSITE_COPY } from '@/utils/glossary';
+
+type FilterTab = 'ALL' | 'STAFF' | 'CLIENT' | 'BETA';
 
 export default function MembersAccessTab({ initialProfiles }: { initialProfiles: any[] }) {
   const [profiles, setProfiles] = useState<any[]>(initialProfiles);
   const [expandedRow, setExpandedRow] = useState<string | null>(null);
   const [isInviteModalOpen, setIsInviteModalOpen] = useState(false);
+  const [activeTab, setActiveTab] = useState<FilterTab>('ALL');
 
   useEffect(() => {
     setProfiles(initialProfiles);
@@ -50,11 +53,11 @@ export default function MembersAccessTab({ initialProfiles }: { initialProfiles:
       });
 
       if (!response.ok) throw new Error('Failed to resend');
-      alert("Transmission successful: New invite sent.");
+      alert("Transmission successful: New magic link sent.");
       
     } catch (error) {
       console.error("Resend failed:", error);
-      alert("Failed to resend invite. Check console.");
+      alert("Failed to resend magic link. Check console.");
     } finally {
       setIsResending(null);
     }
@@ -64,15 +67,39 @@ export default function MembersAccessTab({ initialProfiles }: { initialProfiles:
     setExpandedRow(expandedRow === id ? null : id);
   };
 
+  // Real-time filtering engine
+  const filteredProfiles = profiles.filter(user => {
+    if (activeTab === 'STAFF') return user.role === 'ADMIN' || user.role === 'STAFF';
+    if (activeTab === 'CLIENT') return user.role === 'CLIENT_OWNER';
+    if (activeTab === 'BETA') return user.role === 'BETA';
+    return true;
+  });
+
   return (
     <div className="space-y-6 animate-in fade-in duration-500">
       
+      {/* Dynamic Tab Navigation */}
+      <div className="flex flex-wrap gap-2 mb-4">
+        <button onClick={() => setActiveTab('ALL')} className={`px-4 py-2 rounded-full text-xs font-black uppercase tracking-widest transition-all ${activeTab === 'ALL' ? 'bg-cyan-500 text-zinc-950 shadow-[0_0_15px_rgba(34,211,238,0.3)]' : 'bg-zinc-900 text-zinc-500 hover:text-zinc-300 border border-zinc-800'}`}>
+          All Directory
+        </button>
+        <button onClick={() => setActiveTab('STAFF')} className={`flex items-center gap-2 px-4 py-2 rounded-full text-xs font-black uppercase tracking-widest transition-all ${activeTab === 'STAFF' ? 'bg-amber-500 text-zinc-950 shadow-[0_0_15px_rgba(245,158,11,0.3)]' : 'bg-zinc-900 text-zinc-500 hover:text-zinc-300 border border-zinc-800'}`}>
+          <Shield size={14} /> Internal Staff
+        </button>
+        <button onClick={() => setActiveTab('CLIENT')} className={`flex items-center gap-2 px-4 py-2 rounded-full text-xs font-black uppercase tracking-widest transition-all ${activeTab === 'CLIENT' ? 'bg-emerald-500 text-zinc-950 shadow-[0_0_15px_rgba(16,185,129,0.3)]' : 'bg-zinc-900 text-zinc-500 hover:text-zinc-300 border border-zinc-800'}`}>
+          <Users size={14} /> Clients
+        </button>
+        <button onClick={() => setActiveTab('BETA')} className={`flex items-center gap-2 px-4 py-2 rounded-full text-xs font-black uppercase tracking-widest transition-all ${activeTab === 'BETA' ? 'bg-purple-500 text-zinc-950 shadow-[0_0_15px_rgba(168,85,247,0.3)]' : 'bg-zinc-900 text-zinc-500 hover:text-zinc-300 border border-zinc-800'}`}>
+          <Beaker size={14} /> Beta Ops
+        </button>
+      </div>
+
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between bg-black/40 border border-white/5 p-4 rounded-xl gap-4">
         <div className="relative w-full max-w-md">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-cyan-400/50" size={16} />
           <input 
             type="text" 
-            placeholder="Search members..."
+            placeholder={`Search ${activeTab === 'ALL' ? 'all members' : activeTab.toLowerCase()}...`}
             className="w-full bg-black/50 border border-white/10 rounded-lg pl-10 pr-4 py-2 text-xs font-mono text-white focus:outline-none focus:border-cyan-400/50 transition-colors"
           />
         </div>
@@ -88,6 +115,9 @@ export default function MembersAccessTab({ initialProfiles }: { initialProfiles:
       <InviteMemberModal 
         isOpen={isInviteModalOpen} 
         onClose={() => setIsInviteModalOpen(false)} 
+        onSuccess={(newProfile) => {
+          setProfiles(prev => [newProfile, ...prev]);
+        }}
       />
 
       <div className="bg-bg-surface-200/30 border border-white/5 rounded-2xl overflow-hidden shadow-2xl">
@@ -99,24 +129,22 @@ export default function MembersAccessTab({ initialProfiles }: { initialProfiles:
           <div className="col-span-2 text-right">Status</div>
         </div>
 
-        {profiles.length === 0 && (
+        {filteredProfiles.length === 0 && (
           <div className="p-12 text-center text-slate-500 font-mono text-xs uppercase tracking-widest flex flex-col items-center">
              <ShieldAlert size={32} className="mb-3 opacity-50" />
-             No members registered yet.
+             No {activeTab === 'ALL' ? 'members' : activeTab.toLowerCase()} found in this sector.
           </div>
         )}
 
         <div className="divide-y divide-white/5">
-          {profiles.map((user, index) => {
+          {filteredProfiles.map((user, index) => {
             const isExpanded = expandedRow === user.id;
             const isAdmin = user.role === 'ADMIN';
             
-            // THE NEW 3-STAGE STATUS LOGIC
             const isInvited = user.status === 'INVITED';
             const isPending = user.status === 'PENDING';
-            const isActive = user.status === 'ACTIVE' || (!isInvited && !isPending); // Fallback to active if unknown
+            const isActive = user.status === 'ACTIVE' || (!isInvited && !isPending);
             
-            // Visual logic for the status dot and text
             let statusText = 'Active';
             let statusDotColor = 'bg-cyan-400 shadow-[0_0_8px_rgba(34,211,238,0.8)]';
             
@@ -130,9 +158,9 @@ export default function MembersAccessTab({ initialProfiles }: { initialProfiles:
 
             const roleColor = isAdmin ? 'text-amber-400 border-amber-500/30 bg-amber-500/10' : 
                               user.role === 'CLIENT_OWNER' ? 'text-emerald-400 border-emerald-500/30 bg-emerald-500/10' :
+                              user.role === 'BETA' ? 'text-purple-400 border-purple-500/30 bg-purple-500/10' :
                               'text-cyan-400 border-cyan-500/30 bg-cyan-500/10';
 
-            // Smart fallback for name
             const displayName = user.full_name || user.email.split('@')[0];
 
             return (
@@ -222,13 +250,14 @@ export default function MembersAccessTab({ initialProfiles }: { initialProfiles:
                              onChange={(e) => setEditingRole(prev => ({ ...prev, [user.id]: e.target.value }))}
                              className="w-full bg-zinc-900 border border-white/10 rounded-lg px-3 py-2 text-xs font-mono text-slate-200 focus:outline-none focus:border-cyan-500"
                            >
-                             <option value="OBSERVER">Observer (View Only)</option>
                              <option value="CLIENT_OWNER">Client Owner</option>
+                             <option value="BETA">Beta Tester</option>
                              <option value="STAFF">Internal Staff</option>
                              <option value="ADMIN">Super Admin</option>
                            </select>
                         </div>
 
+                        {/* NEW CONSOLIDATED WORKSPACE ASSIGNMENT MENU */}
                         <div className="space-y-2">
                            <label className="text-[9px] font-bold uppercase tracking-widest text-slate-500">Assign to Workspace</label>
                            <select 
@@ -236,10 +265,21 @@ export default function MembersAccessTab({ initialProfiles }: { initialProfiles:
                              onChange={(e) => setEditingWorkspace(prev => ({ ...prev, [user.id]: e.target.value }))}
                              className="w-full bg-zinc-900 border border-white/10 rounded-lg px-3 py-2 text-xs font-mono text-slate-200 focus:outline-none focus:border-cyan-500 uppercase"
                            >
-                             <option value="NONE">Unassigned</option>
-                             <option value="luckystrike">LUCKYSTRIKE</option>
-                             <option value="division">DIVISION</option>
-                             <option value="internal">INTERNAL_HQ</option>
+                             <option value="NONE">Unassigned (Waiting Room)</option>
+                             
+                             <optgroup label="Active Client Portals" className="bg-slate-800 text-emerald-400 font-bold">
+                               <option value="luckystrike" className="text-slate-200 bg-zinc-900">LUCKYSTRIKE</option>
+                               <option value="division" className="text-slate-200 bg-zinc-900">DIVISION</option>
+                             </optgroup>
+
+                             <optgroup label="Beta Test Labs" className="bg-slate-800 text-purple-400 font-bold">
+                               <option value="beta-omega" className="text-slate-200 bg-zinc-900">OMEGA PROTOTYPE</option>
+                               <option value="beta-nexus" className="text-slate-200 bg-zinc-900">NEXUS BUILD</option>
+                             </optgroup>
+
+                             <optgroup label="Internal Staff" className="bg-slate-800 text-amber-400 font-bold">
+                               <option value="internal-hq" className="text-slate-200 bg-zinc-900">STAFF HQ</option>
+                             </optgroup>
                            </select>
                         </div>
 

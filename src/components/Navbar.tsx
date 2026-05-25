@@ -12,7 +12,12 @@ export default function Navbar() {
   const pathname = usePathname();
 
   // ARCHITECTURE RULE: Hide public navigation in command environments
-  if (pathname.startsWith('/dashboard') || pathname.startsWith('/login') || pathname.startsWith('/sandbox')) {
+  if (
+    pathname.startsWith('/dashboard') || 
+    pathname.startsWith('/login') || 
+    pathname.startsWith('/sandbox') || 
+    pathname.startsWith('/portal') // <-- Added this to hide Navbar in the portal!
+  ) {
     return null;
   }
 

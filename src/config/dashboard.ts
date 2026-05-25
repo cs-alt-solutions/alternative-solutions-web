@@ -1,16 +1,17 @@
-/* src/config/dashboard.ts */
-
 export const DASHBOARD_COPY = {
   COMMON: { BRAND_VERSION: "Alternative Solutions Workspace", STATUS_ONLINE: "All Systems Go", ACTION_REVIEW: "Review" }, 
   SIDEBAR: { 
-    GROUPS: { INFRASTRUCTURE: "Settings & Setup", COMMAND: "My Workspace", OPERATIONS: "Life & Logistics", STUDIO: "Apps", SYSTEM: "System" }, 
+    GROUPS: { WORKSPACE: "My Workspace", HUMAN_MANAGEMENT: "Human Management", LOGISTICS: "Life & Logistics", SYSTEM: "System Admin" }, 
     OVERVIEW: "Home", 
     FOUNDATION: "The Drafting Table",
     LEDGER: "The Ledger",
     ECOSYSTEM_MANAGER: "My Products",
     BETA_COMMAND: "Beta Command",
     BROADCAST: "Emails & Updates", 
-    AGENTS: "AI Assistants", 
+    MEMBERS: "Members & Access",
+    CLIENTS: "Client HQ",
+    TASKS: "Tasks",
+    INFRASTRUCTURE: "Infrastructure",
     CONFIG: "Settings", 
     EXIT: "← Back to Website" 
   }, 
@@ -116,8 +117,8 @@ export const DASHBOARD_COPY = {
   },
 
   BETA_COMMAND: {
-    TITLE: 'Beta Command', // <-- FIXED
-    SUBTITLE: 'Experimental features and community feedback.', // <-- FIXED
+    TITLE: 'Beta Command',
+    SUBTITLE: 'Experimental features and community feedback.',
     STATUS: 'Live System',
     TABS: { MATRIX: "User List", FEEDBACK: "Feedback", POLLING: "Roadmap Votes", SANDBOXES: "Demo Portals" },
     MATRIX: {
@@ -150,9 +151,9 @@ export const DASHBOARD_COPY = {
     }
   },
 
-  MEMBERS: {
+  HUMAN_MANAGEMENT: {
     INVITE_MODAL: {
-      TITLE: "Authorize New Member",
+      TITLE: "Authorize New Human",
       DESC: "Grant system access and define clearance levels.",
       FIELDS: { NAME: "Full Name", EMAIL: "Email Address", ROLE: "System Role", WORKSPACE: "Workspace Assignment" },
       ROLES: { OBSERVER: "Observer (View Only)", CLIENT: "Client Owner", STAFF: "Internal Staff", ADMIN: "Super Admin" },
@@ -213,7 +214,6 @@ export const DASHBOARD_COPY = {
     MODAL: { TARGET_LABEL: "Where does this go?", TARGET_LEDGER: "Idea List", TARGET_FLOW: "Active Sprint", DATE_LABEL: "Due Date", TITLE_LABEL: "What needs to happen?", TITLE_PLACEHOLDER: "Type it out...", CLASS_LABEL: "Category", INTENSITY_LABEL: "Effort", PHASES_LABEL: "Steps", PHASE_ADD: "Add Step", PHASE_PLACEHOLDER: "First step...", STATUS_SUBMITTING: "Saving...", TYPES: { FEATURE: "New Feature", INFRA: "Under the Hood", BUG: "Fix a Bug" }, PRIORITIES: { LOW: "Low", MEDIUM: "Medium", HIGH: "High", CRITICAL: "Drop Everything" } } 
   },
 
-  // --- NEW STOREFRONT UI DICTIONARY ---
   STOREFRONT: {
     topShelf: "Top Shelf",
     featured: "Featured",

@@ -15,7 +15,13 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Email is required' }, { status: 400 });
     }
 
-    const { data, error } = await supabaseAdmin.auth.admin.inviteUserByEmail(email);
+    // Capture the origin URL exactly like the main invite route
+    const origin = request.headers.get('origin') || process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000';
+
+    // 2. Resend the invite and FORCE the Smart Router redirect
+    const { data, error } = await supabaseAdmin.auth.admin.inviteUserByEmail(email, {
+      redirectTo: `${origin}/api/auth/callback`
+    });
 
     // If Supabase flags that they are already verified, handle it cleanly!
     if (error?.status === 422 || error?.code === 'email_exists') {
