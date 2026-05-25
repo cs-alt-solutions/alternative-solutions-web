@@ -23,7 +23,7 @@ export default function MembersAccessTab({ initialProfiles }: { initialProfiles:
   const [isSaving, setIsSaving] = useState<string | null>(null);
   const [isResending, setIsResending] = useState<string | null>(null);
 
-  const copy = WEBSITE_COPY.DASHBOARD?.MEMBERS?.ACCESS_TAB || {
+   const copy = WEBSITE_COPY.DASHBOARD?.HUMAN_MANAGEMENT?.ACCESS_TAB || {
     STATUS_ACTIVE: "Active", STATUS_PENDING: "Pending", BTN_RESEND: "Resend Invite", BTN_RESENDING: "Sending..."
   };
 
