@@ -1,3 +1,4 @@
+/* src/app/portal/[clientId]/layout.tsx */
 'use client';
 
 import { usePathname } from 'next/navigation';
@@ -17,18 +18,24 @@ export default function PortalLayout({
 
   return (
     <div className="flex h-screen w-full bg-[#0B0F19] overflow-hidden">
-      {/* The Universal Sidebar */}
+      
+      {/* The Universal Responsive Sidebar */}
       <PortalSidebar clientId={clientId} />
 
       {/* The Main Content Area */}
-      <div className="flex-1 flex flex-col h-full overflow-hidden">
-        {/* The Universal Header */}
-        <PortalHeader clientId={clientId} />
+      <div className="flex-1 flex flex-col h-full overflow-hidden relative w-full">
+        
+        {/* The Universal Header - Wrapped to add left padding on mobile for the hamburger button */}
+        <div className="lg:pl-0 pl-14 transition-all">
+          <PortalHeader clientId={clientId} />
+        </div>
         
         {/* The Dynamic Switchboard Content Goes Here */}
-        <main className="flex-1 overflow-y-auto p-8">
+        {/* Adjusted padding for mobile screens */}
+        <main className="flex-1 overflow-y-auto p-4 lg:p-8">
           {children}
         </main>
+        
       </div>
     </div>
   );
