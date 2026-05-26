@@ -1,3 +1,4 @@
+/* src/config/dashboard.ts */
 export const DASHBOARD_COPY = {
   COMMON: { BRAND_VERSION: "Alternative Solutions Workspace", STATUS_ONLINE: "All Systems Go", ACTION_REVIEW: "Review" }, 
   SIDEBAR: { 
@@ -15,6 +16,20 @@ export const DASHBOARD_COPY = {
     CONFIG: "Settings", 
     EXIT: "← Back to Website" 
   }, 
+
+  // ADDED: Dedicated section for Client Portals to maintain Single Source of Truth
+  CLIENT_PORTAL: {
+    WELCOME_TITLE: "Welcome to your Workspace",
+    WELCOME_DESC: "This is your dedicated secure command center. Use this portal to securely transfer assets, review active prototypes, and manage your infrastructure with Alternative Solutions.",
+    MODULES: {
+      MESSAGES_TITLE: "Direct Messages",
+      MESSAGES_EMPTY: "No new messages. You're all caught up.",
+      TRANSFERS_TITLE: "Secure Transfer",
+      TRANSFERS_DESC: "Drop high-res photos, vectors, or documents directly into our development pipeline.",
+      PROTOTYPES_TITLE: "Active Prototypes",
+      PROTOTYPES_DESC: "View your deployed test environments."
+    }
+  },
   
   FOUNDATION: { 
     TITLE: "The Drafting Table", 

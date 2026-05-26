@@ -1,58 +1,49 @@
-import { TerminalSquare, FileUp, ShieldCheck } from 'lucide-react';
+/* src/app/portal/[clientId]/page.tsx */
+import React from 'react';
+import { Sparkles, MessageSquare } from 'lucide-react';
+import { WEBSITE_COPY } from '@/utils/glossary';
 
-export default async function ClientPortalDashboard({ 
+// 1. Mark the component as async and type params as a Promise
+export default async function ClientDashboardHome({ 
   params 
 }: { 
   params: Promise<{ clientId: string }> 
 }) {
-  // 1. Unwrap the params Promise (Required for modern Next.js App Router)
-  const resolvedParams = await params;
-  const clientId = resolvedParams.clientId || 'unknown';
-
-  // 2. Format the URL slug into a readable name (e.g., luckystrike -> Luckystrike)
-  const formattedName = clientId.charAt(0).toUpperCase() + clientId.slice(1).replace('-', ' ');
+  // 2. Await the promise to resolve the object
+  const { clientId } = await params;
+  const { WELCOME_TITLE, WELCOME_DESC, MODULES } = WEBSITE_COPY.DASHBOARD.CLIENT_PORTAL;
 
   return (
-    <div className="space-y-6 text-white max-w-5xl mx-auto">
-      {/* Welcome Banner */}
-      <div className="bg-slate-800/50 border border-slate-700 rounded-xl p-8 backdrop-blur-sm">
-        <h2 className="text-2xl font-bold mb-2 tracking-wide">
-          Welcome to your Infrastructure Portal
-        </h2>
-        <p className="text-slate-400">
-          This is the dedicated secure workspace for <span className="text-cyan-400 font-medium">{formattedName}</span>. 
-          Use the sidebar to access your file transfers, view active prototypes, and manage your account.
-        </p>
+    <div className="p-8 max-w-7xl mx-auto w-full animate-in fade-in duration-500">
+      
+      {/* 1. Personalized Welcome Banner */}
+      <div className="bg-brand-primary/5 border border-brand-primary/20 rounded-2xl p-8 relative overflow-hidden mb-8 shadow-[0_0_30px_rgba(6,182,212,0.05)]">
+        <div className="absolute -top-12 -right-12 w-40 h-40 bg-brand-primary/10 rounded-full blur-3xl pointer-events-none" />
+        <div className="relative z-10 max-w-3xl">
+          <div className="flex items-center gap-2 mb-3">
+            <Sparkles size={16} className="text-brand-primary" />
+            <span className="text-[10px] font-mono text-brand-primary uppercase tracking-widest">
+              {/* 3. Use the resolved clientId */}
+              {clientId.replace('-', ' ')} Workspace
+            </span>
+          </div>
+          <h1 className="text-3xl font-black text-white tracking-tight mb-4">{WELCOME_TITLE}</h1>
+          <p className="text-sm text-white/60 leading-relaxed font-light">{WELCOME_DESC}</p>
+        </div>
       </div>
 
-      {/* Default Quick Actions / Status */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      {/* 2. Functional Communication Grid */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         
-        {/* Secure Transfer Quick Link */}
-        <div className="bg-slate-900 border border-slate-800 rounded-xl p-6 flex flex-col items-center text-center hover:border-cyan-500/30 transition-colors cursor-pointer group">
-          <div className="w-12 h-12 bg-cyan-500/10 rounded-full flex items-center justify-center mb-4 text-cyan-400 group-hover:scale-110 transition-transform">
-            <FileUp className="w-6 h-6" />
+        {/* Message Board */}
+        <div className="bg-black/40 border border-white/5 rounded-2xl p-6 shadow-xl backdrop-blur-sm flex flex-col h-64">
+          <div className="flex items-center gap-3 mb-6 pb-4 border-b border-white/5">
+            <MessageSquare size={18} className="text-fuchsia-400" />
+            <h2 className="text-sm font-bold text-white uppercase tracking-widest">{MODULES.MESSAGES_TITLE}</h2>
           </div>
-          <h3 className="font-semibold mb-1">Secure Transfer</h3>
-          <p className="text-sm text-slate-500">Upload and receive assets securely</p>
-        </div>
-
-        {/* Prototypes Quick Link */}
-        <div className="bg-slate-900 border border-slate-800 rounded-xl p-6 flex flex-col items-center text-center hover:border-purple-500/30 transition-colors cursor-pointer group">
-          <div className="w-12 h-12 bg-purple-500/10 rounded-full flex items-center justify-center mb-4 text-purple-400 group-hover:scale-110 transition-transform">
-            <TerminalSquare className="w-6 h-6" />
+          <div className="flex-1 flex items-center justify-center text-center">
+            <p className="text-[10px] font-mono text-white/30 uppercase tracking-widest">{MODULES.MESSAGES_EMPTY}</p>
           </div>
-          <h3 className="font-semibold mb-1">Active Prototypes</h3>
-          <p className="text-sm text-slate-500">View your deployed test environments</p>
-        </div>
-
-        {/* Status Indicator */}
-        <div className="bg-slate-900 border border-slate-800 rounded-xl p-6 flex flex-col items-center text-center">
-          <div className="w-12 h-12 bg-emerald-500/10 rounded-full flex items-center justify-center mb-4 text-emerald-400">
-            <ShieldCheck className="w-6 h-6" />
-          </div>
-          <h3 className="font-semibold mb-1">System Status</h3>
-          <p className="text-sm text-emerald-500/70">All connections secure and active</p>
         </div>
 
       </div>

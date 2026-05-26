@@ -1,19 +1,21 @@
-/* src/components/sandbox/apps/asset-hub/AssetHubTerminal.tsx */
+/* src/components/sandbox/shared/AssetHubTerminal.tsx */
 'use client';
 
 import React, { useState, useEffect } from 'react';
 import { Upload, X, FileImage, ShieldCheck, PackageSearch, Trash2, FileText, Edit2, Check, Eye, Filter, Image as ImageIcon } from 'lucide-react';
 import { supabase } from '@/utils/supabase';
+import { useRouter } from 'next/navigation'; 
 
 type FilterType = 'ALL' | 'IMAGES' | 'DOCS';
 
-export default function AssetHubTerminal({ clientConfig, onExit }: { clientConfig: any, onExit: () => void }) {
+export default function AssetHubTerminal({ clientConfig }: { clientConfig: any }) {
+  const router = useRouter(); 
+  
   const [isUploading, setIsUploading] = useState(false);
   const [uploadStatus, setUploadStatus] = useState<string | null>(null);
   const [assets, setAssets] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  
-  // NEW ADVANCED FEATURES STATE
+
   const [activeFilter, setActiveFilter] = useState<FilterType>('ALL');
   const [previewAsset, setPreviewAsset] = useState<any | null>(null);
   const [renamingAsset, setRenamingAsset] = useState<string | null>(null);
@@ -28,14 +30,22 @@ export default function AssetHubTerminal({ clientConfig, onExit }: { clientConfi
 
   const fetchAssets = async () => {
     setIsLoading(true);
-    const { data, error } = await supabase.storage.from(bucketName).list(folderPath, {
-      sortBy: { column: 'created_at', order: 'desc' }
-    });
-    
-    if (data) {
-      setAssets(data.filter(f => f.name !== '.emptyFolderPlaceholder'));
+    try {
+      const { data, error } = await supabase.storage.from(bucketName).list(folderPath, {
+        sortBy: { column: 'created_at', order: 'desc' }
+      });
+
+      if (error) throw error; 
+
+      if (data) {
+        setAssets(data.filter(f => f.name !== '.emptyFolderPlaceholder'));
+      }
+    } catch (error) {
+      console.error("Asset fetch failed:", error);
+      setAssets([]); 
+    } finally {
+      setIsLoading(false);
     }
-    setIsLoading(false);
   };
 
   const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -43,20 +53,19 @@ export default function AssetHubTerminal({ clientConfig, onExit }: { clientConfi
     if (!files || files.length === 0) return;
 
     setIsUploading(true);
-    setUploadStatus(`Securing ${files.length} file(s)...`);
-    
+    setUploadStatus(`Processing ${files.length} file(s)...`);
+
     try {
       for (let i = 0; i < files.length; i++) {
         const file = files[i];
-        // Clean name to avoid weird URL issues
         const cleanName = file.name.replace(/[^a-zA-Z0-9.-]/g, '_');
         const filePath = `${folderPath}/${Date.now()}-${cleanName}`;
-        
+
         const { error } = await supabase.storage.from(bucketName).upload(filePath, file);
         if (error) throw error;
       }
       setUploadStatus('Transfer Complete.');
-      fetchAssets(); 
+      fetchAssets();
     } catch (error: any) {
       console.error("Upload error:", error);
       setUploadStatus('Transmission Error. Please try again.');
@@ -67,40 +76,56 @@ export default function AssetHubTerminal({ clientConfig, onExit }: { clientConfi
   };
 
   const handleDelete = async (fileName: string) => {
-    if (!confirm('Are you sure you want to permanently remove this asset?')) return;
-    
+    if (!window.confirm('Are you sure you want to permanently remove this asset?')) return;
+
     const { error } = await supabase.storage.from(bucketName).remove([`${folderPath}/${fileName}`]);
-    if (!error) fetchAssets(); 
+    if (error) {
+      console.error("Delete error:", error);
+      alert(`Delete Blocked: ${error.message}\n(Check your Supabase Storage Policies!)`);
+    } else {
+      fetchAssets();
+    }
   };
 
   const handleRename = async (oldName: string) => {
-    if (!newName.trim() || newName === oldName) {
+    if (!newName.trim()) {
       setRenamingAsset(null);
       return;
     }
 
     try {
-      // Preserve the file extension
+      // Isolate the timestamp so we don't break the unique database ID
       const ext = oldName.split('.').pop();
-      const cleanNewName = newName.includes('.') ? newName : `${newName}.${ext}`;
+      const timestampMatch = oldName.match(/^[0-9]+[-_]/);
+      const prefix = timestampMatch ? timestampMatch[0] : '';
       
+      const cleanNewName = newName.includes('.') ? newName : `${newName}.${ext}`;
+      const finalName = `${prefix}${cleanNewName}`;
+
+      if (finalName === oldName) {
+        setRenamingAsset(null);
+        return;
+      }
+
       const { error } = await supabase.storage.from(bucketName).move(
         `${folderPath}/${oldName}`,
-        `${folderPath}/${cleanNewName}`
+        `${folderPath}/${finalName}`
       );
 
-      if (error) throw error;
+      if (error) {
+        console.error("Rename error:", error);
+        alert(`Rename Blocked: ${error.message}\n(Check your Supabase Storage Policies!)`);
+        throw error;
+      }
       fetchAssets();
     } catch (err) {
       console.error("Rename failed", err);
-      alert("Failed to rename file. Make sure the name is unique.");
     } finally {
       setRenamingAsset(null);
       setNewName('');
     }
   };
 
-  // FILTER ENGINE
   const filteredAssets = assets.filter(file => {
     const isImage = file.metadata?.mimetype?.includes('image');
     if (activeFilter === 'IMAGES') return isImage;
@@ -109,7 +134,7 @@ export default function AssetHubTerminal({ clientConfig, onExit }: { clientConfi
   });
 
   return (
-    <div className="min-h-screen bg-zinc-950 flex flex-col p-6 text-zinc-100 selection:bg-cyan-500/30 overflow-y-auto relative">
+    <div className="bg-zinc-950 flex flex-col p-6 text-zinc-100 selection:bg-cyan-500/30 relative">
       
       {/* FULLSCREEN LIGHTBOX PREVIEWER */}
       {previewAsset && (
@@ -120,49 +145,49 @@ export default function AssetHubTerminal({ clientConfig, onExit }: { clientConfi
           
           <img 
             src={supabase.storage.from(bucketName).getPublicUrl(`${folderPath}/${previewAsset.name}`).data.publicUrl} 
-            alt={previewAsset.name} 
-            className="max-w-full max-h-[80vh] object-contain rounded-lg shadow-2xl border border-zinc-800"
+            alt={previewAsset.name.replace(/^[0-9]+[-_]/, '')} 
+            className="max-w-full max-h-[80vh] object-contain rounded-lg shadow-2xl border border-zinc-800" 
           />
-          <p className="mt-6 font-mono text-cyan-400 tracking-widest">{previewAsset.name}</p>
+          <p className="mt-6 font-mono text-cyan-400 tracking-widest">{previewAsset.name.replace(/^[0-9]+[-_]/, '')}</p>
         </div>
       )}
 
       {/* HEADER */}
-      <div className="w-full max-w-6xl mx-auto flex justify-between items-center mb-8 border-b border-zinc-800 pb-4">
+      <div className="w-full max-w-6xl mx-auto flex justify-between items-center mb-8 border-b border-zinc-800 pb-4 mt-4">
         <div>
-           <h1 className="font-black tracking-widest uppercase text-xl text-zinc-100 flex items-center gap-3">
-             <PackageSearch className="text-cyan-400" /> Secure Asset Hub
-           </h1>
-           <p className="text-xs text-zinc-500 uppercase tracking-widest mt-1">Direct Pipeline to Our Development!</p>
+          <h1 className="font-black tracking-widest uppercase text-xl text-zinc-100 flex items-center gap-3">
+            <PackageSearch className="text-cyan-400" /> Asset Hub
+          </h1>
+          <p className="text-xs text-zinc-500 uppercase tracking-widest mt-1">Direct Pipeline to Our Development</p>
         </div>
-        <button onClick={onExit} className="flex items-center gap-2 text-zinc-500 hover:text-rose-400 transition-colors bg-zinc-900 border border-zinc-800 px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest shadow-inner">
-           <X size={14} /> Exit Hub
+        <button onClick={() => router.push(`/portal/${clientConfig.id}`)} className="flex items-center gap-2 text-zinc-500 hover:text-rose-400 transition-colors bg-zinc-900 border border-zinc-800 px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest shadow-inner">
+          <X size={14} /> Exit Hub
         </button>
       </div>
 
-      <div className="w-full max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-4 gap-8">
+      <div className="w-full max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-4 gap-8 pb-12">
         
         {/* LEFT COLUMN: THE DROPZONE */}
         <div className="lg:col-span-1">
-          <div className="bg-zinc-900 border border-zinc-800 rounded-3xl p-8 text-center shadow-2xl relative overflow-hidden group top-6">
-              <div className="absolute inset-0 bg-linear-to-b from-cyan-900/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none"></div>
-              <div className="bg-zinc-950 border border-zinc-800 p-5 rounded-full inline-flex mb-6 group-hover:border-cyan-500/50 transition-colors shadow-inner">
-                  <Upload size={32} className="text-cyan-400" />
-              </div>
-              <h2 className="text-lg font-black uppercase tracking-widest mb-2">Upload Files</h2>
-              <p className="text-zinc-400 text-xs mb-8 max-w-50 mx-auto leading-relaxed">
-                  Drop high-res photos, vectors, or documents here.
+          <div className="bg-zinc-900 border border-zinc-800 rounded-3xl p-8 text-center shadow-2xl relative overflow-hidden group">
+            <div className="absolute inset-0 bg-linear-to-b from-cyan-900/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none"></div>
+            <div className="bg-zinc-950 border border-zinc-800 p-5 rounded-full inline-flex mb-6 group-hover:border-cyan-500/50 transition-colors shadow-inner">
+              <Upload size={32} className="text-cyan-400" />
+            </div>
+            <h2 className="text-lg font-black uppercase tracking-widest mb-2">Upload Files</h2>
+            <p className="text-zinc-400 text-xs mb-8 max-w-50 mx-auto leading-relaxed">
+              Drop high-res photos, vectors, or documents here.
+            </p>
+            <label className="cursor-pointer bg-cyan-500 hover:bg-cyan-400 text-zinc-950 font-black uppercase tracking-widest py-3 px-6 rounded-xl shadow-[0_0_15px_rgba(34,211,238,0.3)] transition-all inline-flex items-center gap-2 text-xs w-full justify-center">
+              <FileImage size={16} />
+              Select Files
+              <input type="file" className="hidden" onChange={handleFileUpload} multiple />
+            </label>
+            {uploadStatus && (
+              <p className={`mt-4 text-[10px] font-bold uppercase tracking-widest ${isUploading ? 'text-amber-400 animate-pulse' : 'text-emerald-400 flex justify-center items-center gap-1.5'}`}>
+                {!isUploading && <ShieldCheck size={12} />} {uploadStatus}
               </p>
-              <label className="cursor-pointer bg-cyan-500 hover:bg-cyan-400 text-zinc-950 font-black uppercase tracking-widest py-3 px-6 rounded-xl shadow-[0_0_15px_rgba(34,211,238,0.3)] transition-all inline-flex items-center gap-2 text-xs w-full justify-center">
-                  <FileImage size={16} />
-                  Select Files
-                  <input type="file" className="hidden" onChange={handleFileUpload} multiple />
-              </label>
-              {uploadStatus && (
-                  <p className={`mt-4 text-[10px] font-bold uppercase tracking-widest ${isUploading ? 'text-amber-400 animate-pulse' : 'text-emerald-400 flex justify-center items-center gap-1.5'}`}>
-                      {!isUploading && <ShieldCheck size={12} />} {uploadStatus}
-                  </p>
-              )}
+            )}
           </div>
         </div>
 
@@ -171,23 +196,23 @@ export default function AssetHubTerminal({ clientConfig, onExit }: { clientConfi
           
           {/* VAULT TOOLBAR */}
           <div className="flex flex-wrap items-center justify-between border-b border-zinc-800 pb-4 gap-4">
-             <div className="flex items-center gap-3">
-               <h2 className="text-sm font-black text-zinc-300 uppercase tracking-widest">Active Vault</h2>
-               <span className="text-[10px] font-mono text-zinc-500 bg-zinc-900 px-2 py-1 rounded-md border border-zinc-800">{filteredAssets.length} Files</span>
-             </div>
+            <div className="flex items-center gap-3">
+              <h2 className="text-sm font-black text-zinc-300 uppercase tracking-widest">Active Vault</h2>
+              <span className="text-[10px] font-mono text-zinc-500 bg-zinc-900 px-2 py-1 rounded-md border border-zinc-800">{filteredAssets.length} Files</span>
+            </div>
 
-             {/* FILTER CONTROLS */}
-             <div className="flex items-center bg-zinc-900 p-1 rounded-xl border border-zinc-800">
-                <button onClick={() => setActiveFilter('ALL')} className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all ${activeFilter === 'ALL' ? 'bg-cyan-500/20 text-cyan-400' : 'text-zinc-500 hover:text-zinc-300'}`}>
-                  <Filter size={12} /> All
-                </button>
-                <button onClick={() => setActiveFilter('IMAGES')} className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all ${activeFilter === 'IMAGES' ? 'bg-cyan-500/20 text-cyan-400' : 'text-zinc-500 hover:text-zinc-300'}`}>
-                  <ImageIcon size={12} /> Images
-                </button>
-                <button onClick={() => setActiveFilter('DOCS')} className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all ${activeFilter === 'DOCS' ? 'bg-cyan-500/20 text-cyan-400' : 'text-zinc-500 hover:text-zinc-300'}`}>
-                  <FileText size={12} /> Docs
-                </button>
-             </div>
+            {/* FILTER CONTROLS */}
+            <div className="flex items-center bg-zinc-900 p-1 rounded-xl border border-zinc-800">
+              <button onClick={() => setActiveFilter('ALL')} className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all ${activeFilter === 'ALL' ? 'bg-cyan-500/20 text-cyan-400' : 'text-zinc-500 hover:text-zinc-300'}`}>
+                <Filter size={12} /> All
+              </button>
+              <button onClick={() => setActiveFilter('IMAGES')} className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all ${activeFilter === 'IMAGES' ? 'bg-cyan-500/20 text-cyan-400' : 'text-zinc-500 hover:text-zinc-300'}`}>
+                <ImageIcon size={12} /> Images
+              </button>
+              <button onClick={() => setActiveFilter('DOCS')} className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all ${activeFilter === 'DOCS' ? 'bg-cyan-500/20 text-cyan-400' : 'text-zinc-500 hover:text-zinc-300'}`}>
+                <FileText size={12} /> Docs
+              </button>
+            </div>
           </div>
 
           {/* VAULT GRID */}
@@ -204,6 +229,9 @@ export default function AssetHubTerminal({ clientConfig, onExit }: { clientConfi
                 const fileUrl = publicUrlData.publicUrl;
                 const isImage = file.metadata?.mimetype?.includes('image');
                 const isRenaming = renamingAsset === file.name;
+                
+                // Aggressive stripping of the timestamp for the UI
+                const displayName = file.name.replace(/^[0-9]+[-_]/, '');
 
                 return (
                   <div key={file.name} className="bg-zinc-900 border border-zinc-800 rounded-xl overflow-hidden group hover:border-cyan-500/30 transition-all flex flex-col h-full relative">
@@ -211,7 +239,7 @@ export default function AssetHubTerminal({ clientConfig, onExit }: { clientConfi
                     {/* ASSET PREVIEW */}
                     <div className="aspect-square bg-zinc-950 flex items-center justify-center relative overflow-hidden flex-1">
                       {isImage ? (
-                        <img src={fileUrl} alt={file.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 opacity-70 group-hover:opacity-100" />
+                        <img src={fileUrl} alt={displayName} className="w-full h-full object-contain p-2 group-hover:scale-105 transition-transform duration-500 opacity-70 group-hover:opacity-100" />
                       ) : (
                         <FileText size={32} className="text-zinc-600 group-hover:text-cyan-500/50 transition-colors" />
                       )}
@@ -223,7 +251,7 @@ export default function AssetHubTerminal({ clientConfig, onExit }: { clientConfi
                             <Eye size={16} />
                           </button>
                         )}
-                        <button onClick={() => { setRenamingAsset(file.name); setNewName(file.name.split('.')[0]); }} className="bg-zinc-800/80 text-zinc-300 hover:bg-zinc-700 hover:text-white p-2 rounded-lg transition-colors border border-zinc-600">
+                        <button onClick={() => { setRenamingAsset(file.name); setNewName(displayName.split('.')[0]); }} className="bg-zinc-800/80 text-zinc-300 hover:bg-zinc-700 hover:text-white p-2 rounded-lg transition-colors border border-zinc-600">
                           <Edit2 size={16} />
                         </button>
                         <button onClick={() => handleDelete(file.name)} className="bg-rose-500/20 text-rose-400 hover:bg-rose-500 hover:text-white p-2 rounded-lg transition-colors border border-rose-500/30">
@@ -249,8 +277,8 @@ export default function AssetHubTerminal({ clientConfig, onExit }: { clientConfi
                           </button>
                         </div>
                       ) : (
-                        <p className="text-[10px] font-mono text-zinc-400 truncate w-full" title={file.name}>
-                          {file.name}
+                        <p className="text-[10px] font-mono text-zinc-400 truncate w-full" title={displayName}>
+                          {displayName}
                         </p>
                       )}
                     </div>

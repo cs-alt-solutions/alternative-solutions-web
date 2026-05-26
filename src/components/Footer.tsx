@@ -13,8 +13,13 @@ export default function Footer() {
   const formRef = useRef<HTMLFormElement>(null);
   const [status, setStatus] = useState<'idle' | 'loading' | 'success'>('idle');
   
-  // ARCHITECTURE RULE: Hide public footer in command environments (added sandbox)
-  if (pathname.startsWith('/dashboard') || pathname.startsWith('/login') || pathname.startsWith('/sandbox')) {
+  // ARCHITECTURE RULE: Hide public footer in command environments
+  if (
+    pathname.startsWith('/dashboard') || 
+    pathname.startsWith('/login') || 
+    pathname.startsWith('/sandbox') ||
+    pathname.startsWith('/portal') // <-- Add the new portal route!
+  ) {
     return null;
   }
 

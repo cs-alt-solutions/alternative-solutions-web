@@ -1,3 +1,4 @@
+/* src/app/portal/[clientId]/transfer/page.tsx */
 import { SANDBOX_CLIENTS } from '@/utils/glossary';
 import AssetHubTerminal from '@/components/sandbox/shared/AssetHubTerminal';
 
@@ -6,28 +7,24 @@ export default async function TransferPage({
 }: { 
   params: Promise<{ clientId: string }> 
 }) {
-  // 1. Unwrap params for Next.js 15+
   const resolvedParams = await params;
   const clientId = resolvedParams.clientId;
-
-  // 2. Fetch the client's specific config
   const clientConfig = SANDBOX_CLIENTS[clientId as keyof typeof SANDBOX_CLIENTS];
 
-  // 3. Fallback if config is missing
   if (!clientConfig) {
-    return <div className="p-8 text-rose-500">Error: Client configuration not found.</div>;
+    return (
+      <div className="flex h-full items-center justify-center">
+        <div className="p-8 text-rose-500 bg-rose-500/10 rounded-xl border border-rose-500/20 font-mono text-sm uppercase tracking-widest shadow-[0_0_20px_rgba(244,63,94,0.1)]">
+          Error: System configuration not found for this workspace.
+        </div>
+      </div>
+    );
   }
 
   return (
-    <div className="w-full h-full -mt-8 -mx-8">
-      {/* 
-        We use negative margins here to let the terminal fill the padding 
-        of the main PortalLayout wrapper seamlessly. 
-      */}
-      <AssetHubTerminal 
-        clientConfig={clientConfig} 
-        onExit={() => console.log("Exit handled by sidebar now")} 
-      />
+    <div className="-m-8 bg-zinc-950 min-h-[calc(100vh-4rem)]">
+      {/* We use -m-8 to break out of the portal's padding, and min-h to fill the screen */}
+      <AssetHubTerminal clientConfig={clientConfig} />
     </div>
   );
 }
