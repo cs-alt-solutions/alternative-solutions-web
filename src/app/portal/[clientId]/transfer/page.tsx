@@ -1,6 +1,7 @@
 /* src/app/portal/[clientId]/transfer/page.tsx */
 import { SANDBOX_CLIENTS } from '@/utils/glossary';
 import AssetHubTerminal from '@/components/sandbox/shared/AssetHubTerminal';
+import { redirect } from 'next/navigation';
 
 export default async function TransferPage({ 
   params 
@@ -22,9 +23,14 @@ export default async function TransferPage({
   }
 
   return (
-    <div className="-m-8 bg-zinc-950 min-h-[calc(100vh-4rem)]">
-      {/* We use -m-8 to break out of the portal's padding, and min-h to fill the screen */}
-      <AssetHubTerminal clientConfig={clientConfig} />
+    <div className="p-8">
+      <AssetHubTerminal 
+        clientConfig={clientConfig} 
+        onExit={async () => {
+          'use server'; // Marking this as a server action
+          redirect(`/portal/${clientId}`);
+        }} 
+      />
     </div>
   );
 }
