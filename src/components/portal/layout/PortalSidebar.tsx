@@ -100,7 +100,7 @@ export default function PortalSidebar({ clientId }: { clientId: string }) {
                     : `text-slate-400 hover:text-white hover:bg-slate-800/50 ${currentTheme.hoverText}`
                 }`}
               >
-                <item.icon className="w-5 h-5 flex-shrink-0" />
+                <item.icon className="w-5 h-5 shrink-0" />
                 <span className="text-sm font-medium">{item.name}</span>
               </Link>
             );

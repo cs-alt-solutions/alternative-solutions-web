@@ -22,6 +22,7 @@ export default function GatewayPage() {
     const { error } = await supabase.auth.signInWithOtp({
       email: email.trim(),
       options: {
+        shouldCreateUser: false, // <-- KILLS OPEN REGISTRATION
         emailRedirectTo: `${window.location.origin}/api/auth/callback`,
       },
     });

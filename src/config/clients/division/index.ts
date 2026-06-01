@@ -1,4 +1,4 @@
-// src/config/clients/division/index.ts
+/* src/config/clients/division/index.ts */
 export const divisionConfig = {
   id: 'division',
   accessCode: 'doobie',
@@ -137,17 +137,7 @@ export const divisionConfig = {
       status: 'concept',
       lastUpdated: 'Mar 20',
       updateLog: 'Map routing conceptualized'
-    },
-    {
-      id: 'asset-hub',
-      category: 'resource',
-      name: 'Secure Asset Vault',
-      description: 'Direct pipeline for uploading high-res photos, branding, and documents.',
-      icon: 'PackageSearch',
-      status: 'live',
-      lastUpdated: 'Today',
-      updateLog: 'Vault Online'
-    }
+    } // Removed the extra closing brace here!
   ],
 
   storePolicies: [
