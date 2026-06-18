@@ -1,19 +1,10 @@
-/* src/app/sandbox/[clientId]/page.tsx */
 'use client';
 
 import React, { useState, useEffect } from 'react';
 import { useParams, useRouter, useSearchParams } from 'next/navigation';
 import { SANDBOX_CLIENTS } from '@/utils/glossary';
-import { supabase } from '@/utils/supabase';
-import { X, AlertTriangle, Loader2 } from 'lucide-react';
-
-// MICRO-APP ENGINE IMPORTS
-import LogisticsTerminal from '@/components/sandbox/apps/division/logistics/LogisticsTerminal';
-import AdminTerminal from '@/components/sandbox/apps/division/admin/AdminTerminal';
-import FulfillmentTerminal from '@/components/sandbox/apps/division/fulfillment/FulfillmentTerminal';
-import StorefrontTerminal from '@/components/sandbox/apps/division/storefront/StorefrontTerminal';
-import AssetHubTerminal from '@/components/sandbox/shared/AssetHubTerminal';
-import InteractiveGarage from '@/components/sandbox/apps/luckystrike/InteractiveGarage';
+import { supabase } from '@/utils/supabase'; // Notice the updated client path!
+import { X, AlertTriangle, Loader2, ExternalLink } from 'lucide-react';
 
 export default function DynamicSandboxPage() {
   const params = useParams();
@@ -21,13 +12,12 @@ export default function DynamicSandboxPage() {
   const searchParams = useSearchParams();
   
   const clientId = params.clientId as string;
-  const appId = searchParams.get('app'); // Grab the app ID straight from the URL
+  const appId = searchParams.get('app'); 
   
   const [isMounted, setIsMounted] = useState(false);
-  
-  // LIVE DATABASE / ROUTING STATE
   const [isInitializing, setIsInitializing] = useState(true);
   const [clientConfig, setClientConfig] = useState<any>(null);
+  const [activeApp, setActiveApp] = useState<any>(null);
 
   useEffect(() => {
     const setupWorkspace = async () => {
@@ -53,7 +43,6 @@ export default function DynamicSandboxPage() {
         return;
       }
 
-      // If they somehow navigated here without an app specified, kick them back to the portal
       if (!appId) {
         router.push(`/portal/${clientId}/prototypes`);
         return;
@@ -62,20 +51,23 @@ export default function DynamicSandboxPage() {
       // 3. LOAD WORKSPACE CONFIGURATION
       const { data: dbData } = await supabase.from('clients').select('*').eq('id', clientId).maybeSingle();
 
+      let activeConfig = null;
       if (dbData) {
          const dbName = dbData.name?.toLowerCase().trim();
-         const matchedConfig = Object.values(SANDBOX_CLIENTS).find(
+         activeConfig = Object.values(SANDBOX_CLIENTS).find(
            (c: any) => c.name?.toLowerCase().trim() === dbName || 
                        c.agencyName?.toLowerCase().trim() === dbName ||
                        c.id === clientId
          );
-         
-         if (matchedConfig) setClientConfig(matchedConfig);
       } else {
-         const localData = (SANDBOX_CLIENTS as any)[clientId];
-         if (localData) {
-            setClientConfig(localData);
-         }
+         activeConfig = (SANDBOX_CLIENTS as any)[clientId];
+      }
+
+      if (activeConfig) {
+        setClientConfig(activeConfig);
+        // Find the specific app data so we can grab its external URL
+        const appData = activeConfig.apps?.find((a: any) => a.id === appId);
+        if (appData) setActiveApp(appData);
       }
       
       setIsInitializing(false);
@@ -89,66 +81,72 @@ export default function DynamicSandboxPage() {
       <div className="min-h-screen bg-zinc-950 flex flex-col items-center justify-center">
         <div className="flex flex-col items-center">
           <Loader2 className="w-8 h-8 animate-spin text-cyan-500 mb-4" />
-          <p className="text-cyan-500 font-mono text-[10px] uppercase tracking-widest">Initializing Environment...</p>
+          <p className="text-cyan-500 font-mono text-[10px] uppercase tracking-widest">Initializing Secure Sandbox...</p>
         </div>
       </div>
     );
   }
 
-  if (!clientConfig) {
+  if (!clientConfig || !activeApp) {
     return (
       <div className="min-h-screen bg-zinc-950 flex flex-col items-center justify-center text-zinc-500">
         <AlertTriangle size={48} className="mb-4 text-orange-500/50" />
-        <p className="uppercase tracking-widest font-bold text-sm">404 | Workspace Not Found</p>
+        <p className="uppercase tracking-widest font-bold text-sm">404 | Prototype Not Found</p>
+        <button onClick={() => router.push(`/portal/${clientId}/prototypes`)} className="mt-6 text-zinc-400 hover:text-cyan-400 flex items-center gap-2 transition-colors bg-zinc-900 border border-zinc-800 px-6 py-3 rounded-xl">
+          <X size={16} /> <span className="text-xs font-bold uppercase tracking-widest">Return to Dashboard</span>
+        </button>
       </div>
     );
   }
 
-  // Define the universal exit route
   const handleExit = () => router.push(`/portal/${clientId}/prototypes`);
 
   // ==========================================
-  // PLUG-AND-PLAY APP ROUTER
+  // THE NEW MICROSERVICE IFRAME VIEWER
   // ==========================================
-  if (appId === 'logistics') return <LogisticsTerminal clientConfig={clientConfig} onExit={handleExit} />;
-  if (appId === 'admin') return <AdminTerminal clientConfig={clientConfig} onExit={handleExit} />;
-  if (appId === 'fulfillment') return <FulfillmentTerminal clientConfig={clientConfig} operatorId={clientConfig.primaryContact || "OPERATOR"} onExit={handleExit} />;
-  if (appId === 'storefront') return <StorefrontTerminal clientConfig={clientConfig} onExit={handleExit} />;
-  if (appId === 'asset-hub') return <AssetHubTerminal clientConfig={clientConfig} onExit={handleExit} />;
   
-  if (appId === 'garage' || appId === 'interactive-garage') {
-    return (
-      <div className="min-h-screen bg-[#1B2123] relative text-[#E5E4E2]">
-        <button 
-          onClick={handleExit} 
-          className="absolute top-6 right-6 text-[#E5E4E2] hover:text-[#ADFF2F] flex items-center gap-2 transition-colors z-50 bg-[#2C3539] px-4 py-2 rounded-xl border border-[#1B2123] shadow-lg"
-        >
-          <X size={16} /> <span className="text-xs font-black uppercase tracking-widest">Exit Garage</span>
-        </button>
-        
-        <div className="p-8 pt-24 h-full max-w-7xl mx-auto">
-          <div className="border-b border-[#2C3539] pb-6 mb-8">
-            <h1 className="text-3xl font-black text-[#E5E4E2] uppercase tracking-widest">
-              Project // {clientConfig.name || 'LuckyStrike Designs'}
-            </h1>
-            <p className="text-[#ADFF2F] font-mono mt-2">
-              Phase: Immersive Platform Prototype
-            </p>
+  // If we haven't assigned an external URL to this app yet, show a clean placeholder
+  if (!activeApp.demoUrl) {
+      return (
+        <div className="min-h-screen bg-zinc-950 flex flex-col items-center justify-center text-zinc-100 p-6">
+          <div className="bg-zinc-900/50 border border-zinc-800 p-12 rounded-3xl flex flex-col items-center max-w-lg text-center">
+            <ExternalLink size={48} className="mb-6 text-cyan-500/50" />
+            <h2 className="text-2xl font-black uppercase tracking-widest mb-4">{activeApp.name}</h2>
+            <p className="text-zinc-400 mb-8 font-mono text-sm">This prototype is currently being deployed to a secure external sandbox. Check back shortly.</p>
+            <button onClick={handleExit} className="w-full text-zinc-950 hover:bg-cyan-400 flex items-center justify-center gap-2 transition-colors bg-cyan-500 px-6 py-4 rounded-xl">
+              <span className="text-sm font-black uppercase tracking-widest">Return to Workspace</span>
+            </button>
           </div>
-          <InteractiveGarage />
         </div>
-      </div>
-    );
+      );
   }
 
-  // Fallback if the requested app doesn't exist
+  // If the app HAS a demo URL, render it in the seamless window!
   return (
-    <div className="min-h-screen bg-zinc-950 flex flex-col items-center justify-center text-zinc-100 p-6">
-      <AlertTriangle size={48} className="mb-4 text-rose-500/50" />
-      <p className="uppercase tracking-widest font-bold text-sm text-rose-400 mb-6">404 | Prototype Not Found</p>
-      <button onClick={handleExit} className="text-zinc-400 hover:text-cyan-400 flex items-center gap-2 transition-colors bg-zinc-900 border border-zinc-800 px-6 py-3 rounded-xl">
-        <X size={16} /> <span className="text-xs font-bold uppercase tracking-widest">Return to Workspace</span>
-      </button>
+    <div className="min-h-screen bg-zinc-950 relative overflow-hidden flex flex-col">
+      {/* Universal Exit Bar */}
+      <div className="h-14 bg-zinc-950 border-b border-zinc-900 flex items-center justify-between px-6 shrink-0">
+        <div className="flex items-center gap-4">
+            <div className="w-2 h-2 rounded-full bg-cyan-500 animate-pulse"></div>
+            <span className="text-xs font-mono text-zinc-400 uppercase tracking-widest">Active Connection: <span className="text-cyan-500 font-bold">{activeApp.name}</span></span>
+        </div>
+        <button 
+          onClick={handleExit} 
+          className="text-zinc-400 hover:text-rose-400 flex items-center gap-2 transition-colors px-4 py-1.5 rounded-lg hover:bg-rose-500/10"
+        >
+          <span className="text-xs font-black uppercase tracking-widest">Close Sandbox</span> <X size={16} />
+        </button>
+      </div>
+      
+      {/* The Iframe Window */}
+      <div className="flex-1 w-full relative bg-black">
+         <iframe 
+            src={activeApp.demoUrl} 
+            className="absolute inset-0 w-full h-full border-none"
+            title={`${activeApp.name} Sandbox Environment`}
+            sandbox="allow-scripts allow-same-origin allow-forms allow-popups"
+         />
+      </div>
     </div>
   );
 }

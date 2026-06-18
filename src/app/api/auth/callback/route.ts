@@ -1,3 +1,4 @@
+/* src/app/api/auth/callback/route.ts */
 import { NextResponse } from 'next/server';
 import { createClient } from '@/utils/supabase/server';
 
@@ -33,27 +34,41 @@ export async function GET(request: Request) {
 
   // If authentication was successful, run the Smart Router
   if (userToRoute) {
-    // Mark their profile as ACTIVE in the database
-    await supabase.from('profiles')
-      .update({ status: 'ACTIVE' })
-      .eq('id', userToRoute.id);
+    // FETCH LIVE CLEARANCE: Read directly from the DB, not stale metadata
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('role, workspace_id, status')
+      .eq('id', userToRoute.id)
+      .single();
 
-    // THE SMART ROUTER: Read metadata and assign destination
-    const workspaceId = userToRoute.user_metadata?.workspace_id;
-    const role = userToRoute.user_metadata?.role;
-    
-    let nextRoute = '/dashboard'; // Default fallback
+    if (profile) {
+      // Mark their profile as ACTIVE if they are logging in for the first time
+      if (profile.status === 'INVITED' || profile.status === 'PENDING') {
+        await supabase.from('profiles')
+          .update({ status: 'ACTIVE' })
+          .eq('id', userToRoute.id);
+      }
 
-    // SCALABLE ROUTING: No more hardcoded client names!
-    if (role === 'ADMIN' || role === 'STAFF') {
-      // Internal team always lands at the master command center
-      nextRoute = '/dashboard';
-    } else if (workspaceId && workspaceId !== 'NONE') {
-      // ALL clients dynamically route to their unified sandbox
-      nextRoute = `/portal/${workspaceId}`;
+      // THE SMART ROUTER: Use the live database values
+      const workspaceId = profile.workspace_id;
+      const role = profile.role;
+      
+      let nextRoute = '/dashboard'; // Default fallback
+
+      // SCALABLE ROUTING: No more hardcoded client names!
+      if (role === 'ADMIN' || role === 'STAFF') {
+        // Internal team always lands at the master command center
+        nextRoute = '/dashboard';
+      } else if (workspaceId && workspaceId !== 'NONE') {
+        // ALL clients and beta testers dynamically route to their unified sandbox
+        nextRoute = `/portal/${workspaceId}`;
+      } else if (role === 'BETA' || role === 'CLIENT_OWNER') {
+        // Edge case fallback if they have a role but no workspace assigned
+        nextRoute = '/portal/unassigned';
+      }
+
+      return NextResponse.redirect(new URL(nextRoute, requestUrl.origin));
     }
-
-    return NextResponse.redirect(new URL(nextRoute, requestUrl.origin));
   }
 
   // If we hit this, the link is truly dead/invalid.

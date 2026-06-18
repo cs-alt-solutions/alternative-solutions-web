@@ -12,7 +12,7 @@ export default function BuildsTab() {
   const [projects, setProjects] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [showNewModal, setShowNewModal] = useState(false);
-  const [managingProject, setManagingProject] = useState<any | null>(null); // NEW: Unified Manager State
+  const [managingProject, setManagingProject] = useState<any | null>(null);
   
   const copy = WEBSITE_COPY.DASHBOARD.FOUNDATION.BUILDS;
 
@@ -54,6 +54,18 @@ export default function BuildsTab() {
     }
   };
 
+  const deleteProject = async (id: string) => {
+    if (!window.confirm("Are you sure you want to permanently delete this build? This cannot be undone.")) return;
+    
+    const { error } = await supabase.from('projects').delete().eq('id', id);
+    if (!error) {
+      fetchProjects();
+    } else {
+      console.error("Failed to delete:", error);
+      alert("Database error: Could not delete project.");
+    }
+  };
+
   if (loading) return <div className="p-12 text-center text-slate-500 font-mono text-xs uppercase tracking-widest animate-pulse">Syncing Drafting Table...</div>;
 
   return (
@@ -89,7 +101,8 @@ export default function BuildsTab() {
               key={project.id} 
               project={project} 
               onPromote={deployToEcosystem} 
-              onManage={(p) => setManagingProject(p)} // Unified Manager Trigger
+              onManage={(p) => setManagingProject(p)}
+              onDelete={deleteProject}
             />
           ))}
         </div>
@@ -118,63 +131,88 @@ export default function BuildsTab() {
               </button>
             </div>
 
-            <div className="overflow-y-auto pr-2 space-y-8 flex-1">
-                {/* Project Details Section */}
-                <div className="space-y-4">
-                  <div className="border-b border-zinc-800 pb-2 mb-4">
-                      <h3 className="text-xs font-bold text-zinc-400 uppercase tracking-widest flex items-center gap-2"><FolderKanban size={14}/> Core Details</h3>
-                  </div>
-                  <div>
-                    <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest mb-1 block">Project Title</label>
-                    <input type="text" defaultValue={managingProject.title || managingProject.name} className="w-full bg-black/50 border border-white/10 rounded-xl px-4 py-2.5 text-sm font-bold text-white focus:outline-none focus:border-cyan-500/50 transition-colors" />
-                  </div>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest mb-1 block">Client Name</label>
-                      <input type="text" defaultValue={managingProject.client_name || ''} className="w-full bg-black/50 border border-white/10 rounded-xl px-4 py-2.5 text-sm font-bold text-white focus:outline-none focus:border-cyan-500/50 transition-colors" />
-                    </div>
-                    <div>
-                      <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest mb-1 block">Funding Target ($)</label>
-                      <input type="number" defaultValue={managingProject.target_amount || 0} className="w-full bg-black/50 border border-white/10 rounded-xl px-4 py-2.5 text-sm font-bold text-white focus:outline-none focus:border-cyan-500/50 transition-colors" />
-                    </div>
-                  </div>
-                </div>
+            <form 
+              className="flex flex-col flex-1 overflow-hidden"
+              onSubmit={async (e) => {
+                e.preventDefault();
+                const formData = new FormData(e.currentTarget);
+                
+                // Save the updates to the database
+                const { error } = await supabase.from('projects').update({
+                  title: formData.get('title'),
+                  client_name: formData.get('client_name'),
+                  target_amount: formData.get('target_amount'),
+                  demo_url: formData.get('demo_url') // <-- THE HOOK!
+                }).eq('id', managingProject.id);
 
-                {/* Portal Access Section */}
-                <div className="space-y-4">
-                  <div className="border-b border-zinc-800 pb-2 mb-4">
-                      <h3 className="text-xs font-bold text-amber-400 uppercase tracking-widest flex items-center gap-2"><ShieldAlert size={14}/> Sandbox Access Control</h3>
-                  </div>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest mb-1 block">Access Code</label>
-                      <input type="text" placeholder="e.g., WELLNESS" className="w-full bg-black/50 border border-white/10 rounded-xl px-4 py-2.5 text-sm font-black text-cyan-400 focus:outline-none focus:border-cyan-500/50 transition-colors uppercase tracking-widest" />
+                if (!error) {
+                  setManagingProject(null);
+                  fetchProjects();
+                } else {
+                  alert(`Error saving configuration: ${error.message}`);
+                }
+              }}
+            >
+              <div className="overflow-y-auto pr-2 space-y-8 flex-1">
+                  {/* Project Details Section */}
+                  <div className="space-y-4">
+                    <div className="border-b border-zinc-800 pb-2 mb-4">
+                        <h3 className="text-xs font-bold text-zinc-400 uppercase tracking-widest flex items-center gap-2"><FolderKanban size={14}/> Core Details</h3>
                     </div>
                     <div>
-                      <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest mb-1 block">Master PIN</label>
-                      <input type="text" placeholder="e.g., 2026" className="w-full bg-black/50 border border-white/10 rounded-xl px-4 py-2.5 text-sm font-black text-amber-400 focus:outline-none focus:border-cyan-500/50 transition-colors tracking-widest" maxLength={4} />
+                      <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest mb-1 block">Project Title</label>
+                      <input type="text" name="title" defaultValue={managingProject.title || managingProject.name} className="w-full bg-black/50 border border-white/10 rounded-xl px-4 py-2.5 text-sm font-bold text-white focus:outline-none focus:border-cyan-500/50 transition-colors" />
                     </div>
-                  </div>
-                  <div>
-                    <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest mb-1 block">Primary Contact</label>
-                    <input type="text" placeholder="Name of primary stakeholder..." className="w-full bg-black/50 border border-white/10 rounded-xl px-4 py-2.5 text-sm font-bold text-white focus:outline-none focus:border-cyan-500/50 transition-colors" />
-                  </div>
-                </div>
-            </div>
 
-            <div className="flex gap-3 pt-4 border-t border-white/5 mt-6 shrink-0">
-              <button type="button" onClick={() => setManagingProject(null)} className="flex-1 py-3 rounded-xl font-bold text-xs text-zinc-400 bg-zinc-800 hover:bg-zinc-700 transition-colors uppercase tracking-widest">
-                Abort
-              </button>
-              <button type="button" onClick={() => { alert('Configuration saved to database.'); setManagingProject(null); fetchProjects(); }} className="flex-1 py-3 rounded-xl font-black text-xs text-zinc-950 bg-cyan-500 hover:bg-cyan-400 transition-all uppercase tracking-widest shadow-[0_0_15px_rgba(34,211,238,0.3)]">
-                Commit Changes
-              </button>
-            </div>
+                    {/* THE NEW VERCEL URL HOOK */}
+                    <div className="p-3 bg-cyan-500/5 border border-cyan-500/20 rounded-xl">
+                      <label className="text-[10px] font-bold text-cyan-500 uppercase tracking-widest mb-1 block">Live App URL (Vercel Link)</label>
+                      <input type="url" name="demo_url" defaultValue={managingProject.demo_url || ''} placeholder="https://shiftstudio.alternativesolutions.io" className="w-full bg-black/50 border border-white/10 rounded-lg px-4 py-2.5 text-sm font-mono text-cyan-400 focus:outline-none focus:border-cyan-500/50 transition-colors placeholder:text-cyan-900/50" />
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest mb-1 block">Client Name</label>
+                        <input type="text" name="client_name" defaultValue={managingProject.client_name || ''} className="w-full bg-black/50 border border-white/10 rounded-xl px-4 py-2.5 text-sm font-bold text-white focus:outline-none focus:border-cyan-500/50 transition-colors" />
+                      </div>
+                      <div>
+                        <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest mb-1 block">Funding Target ($)</label>
+                        <input type="number" name="target_amount" defaultValue={managingProject.target_amount || 0} className="w-full bg-black/50 border border-white/10 rounded-xl px-4 py-2.5 text-sm font-bold text-white focus:outline-none focus:border-cyan-500/50 transition-colors" />
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Portal Access Section */}
+                  <div className="space-y-4">
+                    <div className="border-b border-zinc-800 pb-2 mb-4">
+                        <h3 className="text-xs font-bold text-amber-400 uppercase tracking-widest flex items-center gap-2"><ShieldAlert size={14}/> Sandbox Access Control</h3>
+                    </div>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest mb-1 block">Access Code</label>
+                        <input type="text" placeholder="e.g., WELLNESS" className="w-full bg-black/50 border border-white/10 rounded-xl px-4 py-2.5 text-sm font-black text-cyan-400 focus:outline-none focus:border-cyan-500/50 transition-colors uppercase tracking-widest" />
+                      </div>
+                      <div>
+                        <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest mb-1 block">Master PIN</label>
+                        <input type="text" placeholder="e.g., 2026" className="w-full bg-black/50 border border-white/10 rounded-xl px-4 py-2.5 text-sm font-black text-amber-400 focus:outline-none focus:border-cyan-500/50 transition-colors tracking-widest" maxLength={4} />
+                      </div>
+                    </div>
+                  </div>
+              </div>
+
+              <div className="flex gap-3 pt-4 border-t border-white/5 mt-6 shrink-0">
+                <button type="button" onClick={() => setManagingProject(null)} className="flex-1 py-3 rounded-xl font-bold text-xs text-zinc-400 bg-zinc-800 hover:bg-zinc-700 transition-colors uppercase tracking-widest">
+                  Abort
+                </button>
+                <button type="submit" className="flex-1 py-3 rounded-xl font-black text-xs text-zinc-950 bg-cyan-500 hover:bg-cyan-400 transition-all uppercase tracking-widest shadow-[0_0_15px_rgba(34,211,238,0.3)]">
+                  Commit Changes
+                </button>
+              </div>
+            </form>
             
           </div>
         </div>
       )}
-
     </div>
   );
 }

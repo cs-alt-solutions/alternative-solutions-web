@@ -1,12 +1,6 @@
 /* src/config/sandbox.ts */
 
-// Import the modularized client configs
-import { divisionConfig } from './clients/division';
-
 export const SANDBOX_CLIENTS = {
-  // Inject The Division's entire payload cleanly
-  division: divisionConfig,
-
   // Luckystrike Designs Partner Portal
   luckystrike: {
     id: 'luckystrike',

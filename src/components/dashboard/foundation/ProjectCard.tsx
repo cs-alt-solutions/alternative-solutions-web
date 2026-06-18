@@ -3,17 +3,19 @@
 
 import React from 'react';
 import Link from 'next/link';
-import { Rocket, Settings, Beaker, Briefcase, Cpu, FolderKanban, Terminal } from 'lucide-react';
+import { Rocket, Settings, Beaker, Briefcase, Cpu, FolderKanban, Terminal, Trash2 } from 'lucide-react';
 import { WEBSITE_COPY } from '@/utils/glossary';
 
 interface ProjectCardProps {
   project: any;
   onPromote: (project: any) => void;
-  onManage: (project: any) => void; // NEW: Triggers the master modal
+  onManage: (project: any) => void;
+  onDelete: (id: string) => void;
 }
 
-export default function ProjectCard({ project, onPromote, onManage }: ProjectCardProps) {
+export default function ProjectCard({ project, onPromote, onManage, onDelete }: ProjectCardProps) {
   const copy = WEBSITE_COPY.DASHBOARD.FOUNDATION.BUILDS;
+
   const displayTitle = project.title || project.name || 'Untitled Project';
 
   const getTypeIcon = (type: string) => {
@@ -94,6 +96,14 @@ export default function ProjectCard({ project, onPromote, onManage }: ProjectCar
             <Settings size={14} /> Configure
           </button>
           
+          <button 
+            onClick={() => onDelete(project.id)}
+            className="py-3 px-4 bg-red-500/10 border border-red-500/30 text-red-400 hover:bg-red-500 hover:text-black rounded-2xl transition-all flex justify-center items-center"
+            title="Delete Build"
+          >
+            <Trash2 size={14} />
+          </button>
+          
           {project.status !== 'DEPLOYED' && (
             <button 
               onClick={() => onPromote(project)}
@@ -104,15 +114,23 @@ export default function ProjectCard({ project, onPromote, onManage }: ProjectCar
           )}
         </div>
         
-        <Link 
-          href="/login"
-          target="_blank"
-          className="w-full py-3 bg-cyan-500/10 border border-cyan-500/30 text-cyan-400 hover:bg-cyan-500 hover:text-black hover:shadow-[0_0_20px_rgba(34,211,238,0.3)] rounded-2xl font-mono text-[10px] uppercase tracking-widest font-bold transition-all flex justify-center items-center gap-2"
-        >
-          <Terminal size={14} /> Launch Sandbox
-        </Link>
+        {project.demo_url ? (
+          <Link 
+            href={project.demo_url}
+            target="_blank"
+            className="w-full py-3 bg-cyan-500/10 border border-cyan-500/30 text-cyan-400 hover:bg-cyan-500 hover:text-black hover:shadow-[0_0_20px_rgba(34,211,238,0.3)] rounded-2xl font-mono text-[10px] uppercase tracking-widest font-bold transition-all flex justify-center items-center gap-2"
+          >
+            <Terminal size={14} /> Launch Sandbox
+          </Link>
+        ) : (
+          <button 
+            disabled
+            className="w-full py-3 bg-white/5 border border-white/10 text-white/20 rounded-2xl font-mono text-[10px] uppercase tracking-widest font-bold transition-all flex justify-center items-center gap-2 cursor-not-allowed"
+          >
+            <Terminal size={14} /> No App URL Linked
+          </button>
+        )}
       </div>
-
     </div>
   );
 }

@@ -14,11 +14,11 @@ export default function NotFound() {
       <div className="relative z-10 w-full max-w-lg text-center">
         
         {/* GlitchBot Warning Avatar */}
-        <div className="relative w-24 h-24 bg-[#09090b] border-2 border-amber-500 rounded-2xl flex items-center justify-center shadow-[inset_0_0_30px_rgba(245,158,11,0.2)] mx-auto mb-10 group transition-all duration-300 hover:shadow-[inset_0_0_50px_rgba(245,158,11,0.4)]">
+        <div className="relative w-24 h-24 bg-bg-app border-2 border-amber-500 rounded-2xl flex items-center justify-center shadow-[inset_0_0_30px_rgba(245,158,11,0.2)] mx-auto mb-10 group transition-all duration-300 hover:shadow-[inset_0_0_50px_rgba(245,158,11,0.4)]">
           {/* Flashing "Eye" */}
           <div className="w-10 h-3 bg-amber-500 rounded-full shadow-[0_0_20px_#f59e0b] animate-[pulse_1s_ease-in-out_infinite]"></div>
           
-          <div className="absolute -bottom-3 -right-3 bg-[#09090b] border border-amber-500 text-amber-500 text-[10px] font-mono px-2 py-0.5 rounded uppercase tracking-widest">
+          <div className="absolute -bottom-3 -right-3 bg-bg-app border border-amber-500 text-amber-500 text-[10px] font-mono px-2 py-0.5 rounded uppercase tracking-widest">
             GLITCH_BOT
           </div>
         </div>

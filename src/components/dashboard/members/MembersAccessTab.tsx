@@ -1,5 +1,5 @@
+/* src/components/dashboard/members/MembersAccessTab.tsx */
 'use client';
-
 import React, { useState, useEffect } from 'react';
 import { supabase } from '@/utils/supabase'; 
 import { Search, UserCircle, Mail, Calendar, BadgeCheck, ChevronDown, ChevronUp, ShieldAlert, Loader2, Save, UserPlus, RefreshCw, Users, Shield, Beaker } from 'lucide-react';
@@ -10,20 +10,28 @@ type FilterTab = 'ALL' | 'STAFF' | 'CLIENT' | 'BETA';
 
 export default function MembersAccessTab({ initialProfiles }: { initialProfiles: any[] }) {
   const [profiles, setProfiles] = useState<any[]>(initialProfiles);
+  const [workspaces, setWorkspaces] = useState<any[]>([]); // NEW: Live Workspace Data
   const [expandedRow, setExpandedRow] = useState<string | null>(null);
   const [isInviteModalOpen, setIsInviteModalOpen] = useState(false);
   const [activeTab, setActiveTab] = useState<FilterTab>('ALL');
 
   useEffect(() => {
     setProfiles(initialProfiles);
+    
+    // NEW: Fetch all available workspaces from the database
+    const fetchWorkspaces = async () => {
+      const { data } = await supabase.from('projects').select('id, name, title, type');
+      if (data) setWorkspaces(data);
+    };
+    fetchWorkspaces();
   }, [initialProfiles]);
-  
+
   const [editingRole, setEditingRole] = useState<{ [key: string]: string }>({});
   const [editingWorkspace, setEditingWorkspace] = useState<{ [key: string]: string }>({});
   const [isSaving, setIsSaving] = useState<string | null>(null);
   const [isResending, setIsResending] = useState<string | null>(null);
 
-   const copy = WEBSITE_COPY.DASHBOARD?.HUMAN_MANAGEMENT?.ACCESS_TAB || {
+  const copy = WEBSITE_COPY.DASHBOARD?.HUMAN_MANAGEMENT?.ACCESS_TAB || {
     STATUS_ACTIVE: "Active", STATUS_PENDING: "Pending", BTN_RESEND: "Resend Invite", BTN_RESENDING: "Sending..."
   };
 
@@ -32,7 +40,7 @@ export default function MembersAccessTab({ initialProfiles }: { initialProfiles:
     const updates: any = {};
     if (editingRole[userId]) updates.role = editingRole[userId];
     if (editingWorkspace[userId]) updates.workspace_id = editingWorkspace[userId] === 'NONE' ? null : editingWorkspace[userId];
-
+    
     const { error } = await supabase.from('profiles').update(updates).eq('id', userId);
     
     if (!error) {
@@ -51,7 +59,6 @@ export default function MembersAccessTab({ initialProfiles }: { initialProfiles:
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email })
       });
-
       if (!response.ok) throw new Error('Failed to resend');
       alert("Transmission successful: New magic link sent.");
       
@@ -67,7 +74,6 @@ export default function MembersAccessTab({ initialProfiles }: { initialProfiles:
     setExpandedRow(expandedRow === id ? null : id);
   };
 
-  // Real-time filtering engine
   const filteredProfiles = profiles.filter(user => {
     if (activeTab === 'STAFF') return user.role === 'ADMIN' || user.role === 'STAFF';
     if (activeTab === 'CLIENT') return user.role === 'CLIENT_OWNER';
@@ -112,12 +118,14 @@ export default function MembersAccessTab({ initialProfiles }: { initialProfiles:
         </button>
       </div>
 
+      {/* NEW: Passing live workspaces down to the modal */}
       <InviteMemberModal 
         isOpen={isInviteModalOpen} 
         onClose={() => setIsInviteModalOpen(false)} 
         onSuccess={(newProfile) => {
           setProfiles(prev => [newProfile, ...prev]);
         }}
+        workspaces={workspaces}
       />
 
       <div className="bg-bg-surface-200/30 border border-white/5 rounded-2xl overflow-hidden shadow-2xl">
@@ -157,8 +165,8 @@ export default function MembersAccessTab({ initialProfiles }: { initialProfiles:
             }
 
             const roleColor = isAdmin ? 'text-amber-400 border-amber-500/30 bg-amber-500/10' : 
-                              user.role === 'CLIENT_OWNER' ? 'text-emerald-400 border-emerald-500/30 bg-emerald-500/10' :
-                              user.role === 'BETA' ? 'text-purple-400 border-purple-500/30 bg-purple-500/10' :
+                              user.role === 'CLIENT_OWNER' ? 'text-emerald-400 border-emerald-500/30 bg-emerald-500/10' : 
+                              user.role === 'BETA' ? 'text-purple-400 border-purple-500/30 bg-purple-500/10' : 
                               'text-cyan-400 border-cyan-500/30 bg-cyan-500/10';
 
             const displayName = user.full_name || user.email.split('@')[0];
@@ -190,9 +198,10 @@ export default function MembersAccessTab({ initialProfiles }: { initialProfiles:
                     <span className={`px-2 py-1 rounded text-[9px] font-black tracking-widest uppercase border ${roleColor}`}>
                       {user.role === 'CLIENT_OWNER' ? 'Client' : user.role || 'Observer'}
                     </span>
+                    {/* NEW: Displays Human Readable Workspace Name */}
                     {user.workspace_id && (
                       <span className="text-[9px] font-mono text-white/40 bg-white/5 px-2 py-1 rounded border border-white/10 uppercase">
-                         {user.workspace_id}
+                         {workspaces.find(w => w.id === user.workspace_id)?.title || workspaces.find(w => w.id === user.workspace_id)?.name || user.workspace_id}
                       </span>
                     )}
                   </div>
@@ -257,7 +266,7 @@ export default function MembersAccessTab({ initialProfiles }: { initialProfiles:
                            </select>
                         </div>
 
-                        {/* NEW CONSOLIDATED WORKSPACE ASSIGNMENT MENU */}
+                        {/* DYNAMIC WORKSPACE ASSIGNMENT MENU */}
                         <div className="space-y-2">
                            <label className="text-[9px] font-bold uppercase tracking-widest text-slate-500">Assign to Workspace</label>
                            <select 
@@ -268,17 +277,21 @@ export default function MembersAccessTab({ initialProfiles }: { initialProfiles:
                              <option value="NONE">Unassigned (Waiting Room)</option>
                              
                              <optgroup label="Active Client Portals" className="bg-slate-800 text-emerald-400 font-bold">
-                               <option value="luckystrike" className="text-slate-200 bg-zinc-900">LUCKYSTRIKE</option>
-                               <option value="division" className="text-slate-200 bg-zinc-900">DIVISION</option>
+                               {workspaces.filter(w => w.type === 'CLIENT').map(w => (
+                                 <option key={w.id} value={w.id} className="text-slate-200 bg-zinc-900">{w.title || w.name}</option>
+                               ))}
                              </optgroup>
 
                              <optgroup label="Beta Test Labs" className="bg-slate-800 text-purple-400 font-bold">
-                               <option value="beta-omega" className="text-slate-200 bg-zinc-900">OMEGA PROTOTYPE</option>
-                               <option value="beta-nexus" className="text-slate-200 bg-zinc-900">NEXUS BUILD</option>
+                               {workspaces.filter(w => w.type === 'PROTOTYPE').map(w => (
+                                 <option key={w.id} value={w.id} className="text-slate-200 bg-zinc-900">{w.title || w.name}</option>
+                               ))}
                              </optgroup>
 
                              <optgroup label="Internal Staff" className="bg-slate-800 text-amber-400 font-bold">
-                               <option value="internal-hq" className="text-slate-200 bg-zinc-900">STAFF HQ</option>
+                               {workspaces.filter(w => w.type === 'INTERNAL').map(w => (
+                                 <option key={w.id} value={w.id} className="text-slate-200 bg-zinc-900">{w.title || w.name}</option>
+                               ))}
                              </optgroup>
                            </select>
                         </div>
@@ -289,8 +302,8 @@ export default function MembersAccessTab({ initialProfiles }: { initialProfiles:
                              disabled={isSaving === user.id}
                              className="mt-2 w-full flex items-center justify-center gap-2 bg-cyan-500/10 border border-cyan-500/30 hover:bg-cyan-500 hover:text-slate-900 text-cyan-400 px-4 py-2.5 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all"
                            >
-                             {isSaving === user.id ? <Loader2 size={14} className="animate-spin" /> : <Save size={14} />} 
-                             Save Changes
+                             {isSaving === user.id ? <Loader2 size={14} className="animate-spin" /> : <Save size={14} />}
+                              Save Changes
                            </button>
                         )}
                       </div>

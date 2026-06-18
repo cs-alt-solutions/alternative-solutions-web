@@ -1,10 +1,10 @@
 /* src/components/dashboard/foundation/NewBuildModal.tsx */
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { supabase } from '@/utils/supabase';
-import { X, Rocket, Briefcase, Beaker, Calculator, DollarSign, Cpu, Loader2, Handshake, Percent, Tag, Wrench, Scale, MoreHorizontal, CalendarClock, Users } from 'lucide-react';
-import { WEBSITE_COPY, SYSTEM_CONFIG } from '@/utils/glossary';
+import { X, Rocket, Briefcase, Cpu, Loader2, Users } from 'lucide-react';
+import { WEBSITE_COPY } from '@/utils/glossary';
 
 interface NewBuildModalProps {
   onClose: () => void;
@@ -14,33 +14,34 @@ interface NewBuildModalProps {
 export default function NewBuildModal({ onClose, onSuccess }: NewBuildModalProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const copy = WEBSITE_COPY.DASHBOARD.FOUNDATION.NEW_BUILD_MODAL;
+
+  // We fetch existing clients from the database to populate the dropdown
+  const [existingClients, setExistingClients] = useState<any[]>([]);
   
-  // Advanced Hybrid Form State
+  // Advanced Factory State
   const [formData, setFormData] = useState({
     title: '',
-    type: 'PROTOTYPE',
-    client_name: '',
-    compensation_types: ['FIXED'], 
-    
-    // Fixed Capital / Internal Funding
-    fixed_amount: '', 
-    fixed_schedule: 'UPFRONT', 
-    
-    // Rev Share
-    rev_amount: '',
-    rev_type: 'PERCENTAGE', 
-    rev_trigger: 'GROSS_SALES',
-    
-    // Barter
-    barter_category: 'GOODS',
-    barter_terms: ''
+    type: 'INTERNAL', // Default to Internal
+    clientMode: 'EXISTING', // 'EXISTING' or 'NEW'
+    selectedClientId: '', // If existing
+    newClientName: '', // If new
   });
 
-  const fixedNum = parseFloat(formData.fixed_amount) || 0;
-  const platformCut = fixedNum * SYSTEM_CONFIG.FEES.PLATFORM_CUT; 
-  const netProfit = fixedNum - platformCut;
+  // Load clients when modal opens
+  useEffect(() => {
+    const fetchClients = async () => {
+      // In the future, this will fetch from a dedicated 'clients' table. 
+      // For now, we pull unique client names from existing projects as a fallback.
+      const { data } = await supabase.from('projects').select('client_name').not('client_name', 'is', null);
+      if (data) {
+        const uniqueClients = Array.from(new Set(data.map(d => d.client_name)));
+        setExistingClients(uniqueClients);
+      }
+    };
+    fetchClients();
+  }, []);
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
@@ -48,45 +49,24 @@ export default function NewBuildModal({ onClose, onSuccess }: NewBuildModalProps
     setFormData({ ...formData, type });
   };
 
-  const toggleCompType = (compType: string) => {
-    setFormData(prev => {
-      const types = prev.compensation_types;
-      if (types.includes(compType)) {
-        if (types.length === 1) return prev; 
-        return { ...prev, compensation_types: types.filter(t => t !== compType) };
-      } else {
-        return { ...prev, compensation_types: [...types, compType] };
-      }
-    });
-  };
-
-  const handleBarterCategory = (category: string) => {
-    setFormData({ ...formData, barter_category: category });
-  };
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
 
-    const compensationDetails = formData.type === 'INTERNAL' ? {} : {
-      fixed_schedule: formData.fixed_schedule,
-      rev_amount: formData.rev_amount,
-      rev_type: formData.rev_type,
-      rev_trigger: formData.rev_trigger,
-      barter_category: formData.barter_category
-    };
+    // Determine the final client name based on our intelligent logic
+    let finalClientName = null;
+    if (formData.type === 'CLIENT' || formData.type === 'PROTOTYPE') {
+      finalClientName = formData.clientMode === 'NEW' ? formData.newClientName : formData.selectedClientId;
+    }
 
     const { error } = await supabase.from('projects').insert({
-      name: formData.title, 
-      title: formData.title, 
+      name: formData.title,
+      title: formData.title,
       type: formData.type,
-      client_name: formData.client_name,
-      compensation_types: formData.type === 'INTERNAL' ? [] : formData.compensation_types,
-      target_amount: fixedNum, 
-      barter_terms: formData.type === 'INTERNAL' ? null : formData.barter_terms,
-      compensation_details: compensationDetails,
+      client_name: finalClientName,
       status: 'DRAFTING',
-      progress: 0
+      progress: 0,
+      // We will add target_url/demo_url here later when we wire up the iframes!
     });
 
     if (!error) {
@@ -98,16 +78,6 @@ export default function NewBuildModal({ onClose, onSuccess }: NewBuildModalProps
       setIsSubmitting(false);
     }
   };
-
-  // Smart UI Helpers
-  const getClientContext = () => {
-    if (formData.type === 'INTERNAL') return { label: 'Target Audience', placeholder: 'e.g., Solo Makers, Freelancers...', icon: Users };
-    if (formData.type === 'PROTOTYPE') return { label: 'Target Client', placeholder: 'Who are we pitching to?', icon: Briefcase };
-    return { label: 'Assigned Client', placeholder: 'Name of the active client...', icon: Briefcase };
-  };
-
-  const clientContext = getClientContext();
-  const ClientIcon = clientContext.icon;
 
   return (
     <div className="fixed inset-0 z-70 flex items-center justify-center bg-black/80 backdrop-blur-sm animate-in fade-in zoom-in-95 duration-200 p-4">
@@ -124,166 +94,97 @@ export default function NewBuildModal({ onClose, onSuccess }: NewBuildModalProps
         </div>
 
         <form onSubmit={handleSubmit} className="flex flex-col">
-          <div className="p-8 space-y-8 max-h-[70vh] overflow-y-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
+          <div className="p-8 space-y-8 max-h-[70vh] overflow-y-auto custom-scrollbar">
             
-            <div className="grid md:grid-cols-2 gap-6">
-              <div>
-                <label className="text-[10px] font-mono text-slate-400 uppercase tracking-widest mb-2 flex items-center gap-2">
-                  <Rocket size={12} /> Project Codename *
-                </label>
-                <input type="text" required name="title" value={formData.title} onChange={handleChange} placeholder="e.g., Logistic Ops Interface" className="w-full bg-black border border-slate-800 rounded-xl px-4 py-4 text-white focus:border-brand-primary outline-none transition-colors" />
-              </div>
-              <div>
-                <label className="text-[10px] font-mono text-slate-400 uppercase tracking-widest mb-2 flex items-center gap-2">
-                  <ClientIcon size={12} /> {clientContext.label}
-                </label>
-                <input type="text" name="client_name" value={formData.client_name} onChange={handleChange} placeholder={clientContext.placeholder} className="w-full bg-black border border-slate-800 rounded-xl px-4 py-4 text-white focus:border-brand-primary outline-none transition-colors" />
-              </div>
+            {/* 1. PROJECT NAME */}
+            <div>
+              <label className="text-[10px] font-mono text-slate-400 uppercase tracking-widest mb-2 flex items-center gap-2">
+                <Rocket size={12} /> Project Codename *
+              </label>
+              <input 
+                type="text" 
+                required 
+                name="title" 
+                value={formData.title} 
+                onChange={handleChange} 
+                placeholder="e.g., Shift Studio V1" 
+                className="w-full bg-black border border-slate-800 rounded-xl px-4 py-4 text-white focus:border-brand-primary outline-none transition-colors" 
+              />
             </div>
 
+            {/* 2. ARCHITECTURE CLASSIFICATION */}
             <div>
               <label className="text-[10px] font-mono text-slate-400 uppercase tracking-widest mb-3 flex">Architecture Classification</label>
-              <div className="grid md:grid-cols-3 gap-4">
-                <button type="button" onClick={() => handleTypeSelect('INTERNAL')} className={`p-4 rounded-xl border text-left transition-all flex flex-col gap-2 ${formData.type === 'INTERNAL' ? 'bg-cyan-500/10 border-cyan-500/50 shadow-[0_0_20px_rgba(34,211,238,0.1)] text-cyan-400' : 'bg-black border-slate-800 text-slate-500 hover:border-slate-600'}`}>
-                  <Cpu size={20} /> <span className="font-bold uppercase tracking-widest text-xs">Internal Core</span>
+              <div className="grid md:grid-cols-2 gap-4">
+                <button 
+                  type="button" 
+                  onClick={() => handleTypeSelect('INTERNAL')} 
+                  className={`p-4 rounded-xl border text-left transition-all flex flex-col gap-2 ${formData.type === 'INTERNAL' ? 'bg-cyan-500/10 border-cyan-500/50 shadow-[0_0_20px_rgba(34,211,238,0.1)] text-cyan-400' : 'bg-black border-slate-800 text-slate-500 hover:border-slate-600'}`}
+                >
+                  <Cpu size={20} /> 
+                  <span className="font-bold uppercase tracking-widest text-xs">Internal / SaaS</span>
+                  <span className="text-[10px] font-mono text-slate-500">Built for the Alternative Solutions Ecosystem.</span>
                 </button>
-                <button type="button" onClick={() => handleTypeSelect('PROTOTYPE')} className={`p-4 rounded-xl border text-left transition-all flex flex-col gap-2 ${formData.type === 'PROTOTYPE' ? 'bg-fuchsia-500/10 border-fuchsia-500/50 shadow-[0_0_20px_rgba(217,70,239,0.1)] text-fuchsia-400' : 'bg-black border-slate-800 text-slate-500 hover:border-slate-600'}`}>
-                  <Beaker size={20} /> <span className="font-bold uppercase tracking-widest text-xs">Spec Prototype</span>
-                </button>
-                <button type="button" onClick={() => handleTypeSelect('CLIENT')} className={`p-4 rounded-xl border text-left transition-all flex flex-col gap-2 ${formData.type === 'CLIENT' ? 'bg-emerald-500/10 border-emerald-500/50 shadow-[0_0_20px_rgba(16,185,129,0.1)] text-emerald-400' : 'bg-black border-slate-800 text-slate-500 hover:border-slate-600'}`}>
-                  <Briefcase size={20} /> <span className="font-bold uppercase tracking-widest text-xs">Client Portal</span>
+                <button 
+                  type="button" 
+                  onClick={() => handleTypeSelect('CLIENT')} 
+                  className={`p-4 rounded-xl border text-left transition-all flex flex-col gap-2 ${formData.type === 'CLIENT' ? 'bg-emerald-500/10 border-emerald-500/50 shadow-[0_0_20px_rgba(16,185,129,0.1)] text-emerald-400' : 'bg-black border-slate-800 text-slate-500 hover:border-slate-600'}`}
+                >
+                  <Briefcase size={20} /> 
+                  <span className="font-bold uppercase tracking-widest text-xs">Client Work</span>
+                  <span className="text-[10px] font-mono text-slate-500">Built for a specific external client or agency.</span>
                 </button>
               </div>
             </div>
 
-            {/* CONDITIONAL RENDER: Hide complex contracts if it's an internal tool */}
-            {formData.type === 'INTERNAL' ? (
+            {/* 3. INTELLIGENT CLIENT ROUTING (Only shows if CLIENT is selected) */}
+            {formData.type === 'CLIENT' && (
               <div className="pt-6 border-t border-slate-800 animate-in fade-in zoom-in-95">
-                <label className="text-[10px] font-mono text-cyan-400 uppercase tracking-widest mb-3 flex items-center gap-2">
-                  <Cpu size={14} /> Internal Funding Scope
-                </label>
-                <div>
-                  <label className="text-[10px] font-mono text-slate-400 uppercase tracking-widest mb-2 flex">Development Target ($)</label>
-                  <div className="relative max-w-sm">
-                    <DollarSign size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500" />
-                    <input type="number" name="fixed_amount" value={formData.fixed_amount} onChange={handleChange} placeholder="0.00" className="w-full bg-black border border-slate-800 rounded-xl pl-10 pr-4 py-4 text-sm text-white focus:border-cyan-400 outline-none transition-colors" />
-                  </div>
-                  <p className="text-[9px] text-slate-500 mt-3 font-mono uppercase tracking-widest leading-relaxed max-w-sm">
-                    Set a target to crowdfund this internal build directly on the public Ecosystem page.
-                  </p>
-                </div>
-              </div>
-            ) : (
-              /* HYBRID VALUE EXCHANGE CONFIGURATOR (For Prototypes & Client Portals) */
-              <div className="pt-6 border-t border-slate-800 animate-in fade-in zoom-in-95">
-                <label className="text-[10px] font-mono text-amber-400 uppercase tracking-widest mb-3 flex items-center gap-2">
-                  <Handshake size={14} /> Hybrid Contract Builder (Select Multiple)
+                <label className="text-[10px] font-mono text-emerald-400 uppercase tracking-widest mb-3 flex items-center gap-2">
+                  <Users size={14} /> Client Assignment
                 </label>
                 
-                <div className="flex gap-2 mb-6 bg-black p-1.5 rounded-xl border border-slate-800">
-                  <button type="button" onClick={() => toggleCompType('FIXED')} className={`flex-1 py-2 rounded-lg text-[10px] font-mono uppercase tracking-widest font-bold transition-all border ${formData.compensation_types.includes('FIXED') ? 'bg-amber-500/20 border-amber-500/30 text-amber-400 shadow-[0_0_15px_rgba(245,158,11,0.2)]' : 'border-transparent text-slate-500 hover:text-white'}`}>Fixed Capital</button>
-                  <button type="button" onClick={() => toggleCompType('REV_SHARE')} className={`flex-1 py-2 rounded-lg text-[10px] font-mono uppercase tracking-widest font-bold transition-all border ${formData.compensation_types.includes('REV_SHARE') ? 'bg-amber-500/20 border-amber-500/30 text-amber-400 shadow-[0_0_15px_rgba(245,158,11,0.2)]' : 'border-transparent text-slate-500 hover:text-white'}`}>Rev Share</button>
-                  <button type="button" onClick={() => toggleCompType('BARTER')} className={`flex-1 py-2 rounded-lg text-[10px] font-mono uppercase tracking-widest font-bold transition-all border ${formData.compensation_types.includes('BARTER') ? 'bg-amber-500/20 border-amber-500/30 text-amber-400 shadow-[0_0_15px_rgba(245,158,11,0.2)]' : 'border-transparent text-slate-500 hover:text-white'}`}>Value Trade</button>
+                <div className="flex gap-2 mb-4 bg-black p-1.5 rounded-xl border border-slate-800">
+                  <button 
+                    type="button" 
+                    onClick={() => setFormData({...formData, clientMode: 'EXISTING'})} 
+                    className={`flex-1 py-2 rounded-lg text-[10px] font-mono uppercase tracking-widest font-bold transition-all border ${formData.clientMode === 'EXISTING' ? 'bg-emerald-500/20 border-emerald-500/30 text-emerald-400 shadow-[0_0_15px_rgba(16,185,129,0.2)]' : 'border-transparent text-slate-500 hover:text-white'}`}
+                  >
+                    Existing Client
+                  </button>
+                  <button 
+                    type="button" 
+                    onClick={() => setFormData({...formData, clientMode: 'NEW'})} 
+                    className={`flex-1 py-2 rounded-lg text-[10px] font-mono uppercase tracking-widest font-bold transition-all border ${formData.clientMode === 'NEW' ? 'bg-emerald-500/20 border-emerald-500/30 text-emerald-400 shadow-[0_0_15px_rgba(16,185,129,0.2)]' : 'border-transparent text-slate-500 hover:text-white'}`}
+                  >
+                    + New Client
+                  </button>
                 </div>
 
-                <div className="space-y-4">
-                  {/* 1. FIXED BLOCK */}
-                  {formData.compensation_types.includes('FIXED') && (
-                    <div className="bg-slate-900/30 p-6 rounded-2xl border border-slate-800/50 animate-in fade-in zoom-in-95">
-                      <div className="grid md:grid-cols-2 gap-6">
-                        <div>
-                          <label className="text-[10px] font-mono text-slate-400 uppercase tracking-widest mb-2 flex">Total Fixed Funding ($)</label>
-                          <div className="relative">
-                            <DollarSign size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500" />
-                            <input type="number" required name="fixed_amount" value={formData.fixed_amount} onChange={handleChange} placeholder="0.00" className="w-full bg-black border border-slate-800 rounded-xl pl-10 pr-4 py-3 text-sm text-white focus:border-amber-400 outline-none transition-colors" />
-                          </div>
-                        </div>
-                        <div>
-                          <label className="text-[10px] font-mono text-slate-400 uppercase tracking-widest mb-2 flex">Payment Schedule</label>
-                          <div className="flex gap-2 h-11">
-                            <button type="button" onClick={() => setFormData({...formData, fixed_schedule: 'UPFRONT'})} className={`flex-1 rounded-lg text-[10px] font-mono uppercase tracking-widest font-bold transition-all border ${formData.fixed_schedule === 'UPFRONT' ? 'bg-amber-500/10 border-amber-500/30 text-amber-400' : 'bg-black border-slate-800 text-slate-500 hover:text-white'}`}>Upfront</button>
-                            <button type="button" onClick={() => setFormData({...formData, fixed_schedule: 'MILESTONES'})} className={`flex-1 rounded-lg text-[10px] font-mono uppercase tracking-widest font-bold transition-all border flex items-center justify-center gap-1 ${formData.fixed_schedule === 'MILESTONES' ? 'bg-amber-500/10 border-amber-500/30 text-amber-400' : 'bg-black border-slate-800 text-slate-500 hover:text-white'}`}><CalendarClock size={12}/> Tiers</button>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  )}
-
-                  {/* 2. REV SHARE BLOCK */}
-                  {formData.compensation_types.includes('REV_SHARE') && (
-                    <div className="bg-slate-900/30 p-6 rounded-2xl border border-slate-800/50 animate-in fade-in zoom-in-95">
-                      <div className="grid md:grid-cols-3 gap-4">
-                        <div>
-                          <label className="text-[10px] font-mono text-slate-400 uppercase tracking-widest mb-2 flex">Fee Structure</label>
-                          <select name="rev_type" value={formData.rev_type} onChange={handleChange} className="w-full bg-black border border-slate-800 rounded-xl px-4 py-3 text-xs text-white focus:border-amber-400 outline-none transition-colors cursor-pointer">
-                            <option value="PERCENTAGE">Percentage (%)</option>
-                            <option value="FLAT_FEE">Flat Fee ($)</option>
-                          </select>
-                        </div>
-                        <div>
-                          <label className="text-[10px] font-mono text-slate-400 uppercase tracking-widest mb-2 flex">Rate / Amount</label>
-                          <div className="relative">
-                            {formData.rev_type === 'PERCENTAGE' ? <Percent size={14} className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500" /> : <DollarSign size={14} className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500" />}
-                            <input type="number" step="0.01" required name="rev_amount" value={formData.rev_amount} onChange={handleChange} placeholder={formData.rev_type === 'PERCENTAGE' ? "10" : "0.20"} className="w-full bg-black border border-slate-800 rounded-xl pl-10 pr-4 py-3 text-sm text-white focus:border-amber-400 outline-none transition-colors" />
-                          </div>
-                        </div>
-                        <div>
-                          <label className="text-[10px] font-mono text-slate-400 uppercase tracking-widest mb-2 flex">Trigger Metric</label>
-                          <select name="rev_trigger" value={formData.rev_trigger} onChange={handleChange} className="w-full bg-black border border-slate-800 rounded-xl px-4 py-3 text-xs text-white focus:border-amber-400 outline-none transition-colors cursor-pointer">
-                            <option value="PER_TRANSACTION">Per Order/Transaction</option>
-                            <option value="GROSS_SALES">Total Gross Volume</option>
-                          </select>
-                        </div>
-                      </div>
-                    </div>
-                  )}
-
-                  {/* 3. BARTER BLOCK */}
-                  {formData.compensation_types.includes('BARTER') && (
-                    <div className="bg-slate-900/30 p-6 rounded-2xl border border-slate-800/50 animate-in fade-in zoom-in-95">
-                      <label className="text-[10px] font-mono text-slate-400 uppercase tracking-widest mb-3 flex">Trade Category</label>
-                      <div className="flex flex-wrap gap-2 mb-6">
-                        <button type="button" onClick={() => handleBarterCategory('GOODS')} className={`px-4 py-2 rounded-lg text-[10px] font-mono uppercase tracking-widest font-bold transition-all border flex items-center gap-2 ${formData.barter_category === 'GOODS' ? 'bg-amber-500/10 border-amber-500/30 text-amber-400' : 'bg-black border-slate-800 text-slate-500 hover:text-white'}`}><Tag size={12}/> Inventory</button>
-                        <button type="button" onClick={() => handleBarterCategory('SERVICES_AUTO')} className={`px-4 py-2 rounded-lg text-[10px] font-mono uppercase tracking-widest font-bold transition-all border flex items-center gap-2 ${formData.barter_category === 'SERVICES_AUTO' ? 'bg-amber-500/10 border-amber-500/30 text-amber-400' : 'bg-black border-slate-800 text-slate-500 hover:text-white'}`}><Wrench size={12}/> Auto Repair</button>
-                        <button type="button" onClick={() => handleBarterCategory('SERVICES_LEGAL')} className={`px-4 py-2 rounded-lg text-[10px] font-mono uppercase tracking-widest font-bold transition-all border flex items-center gap-2 ${formData.barter_category === 'SERVICES_LEGAL' ? 'bg-amber-500/10 border-amber-500/30 text-amber-400' : 'bg-black border-slate-800 text-slate-500 hover:text-white'}`}><Scale size={12}/> Consult</button>
-                        <button type="button" onClick={() => handleBarterCategory('OTHER')} className={`px-4 py-2 rounded-lg text-[10px] font-mono uppercase tracking-widest font-bold transition-all border flex items-center gap-2 ${formData.barter_category === 'OTHER' ? 'bg-amber-500/10 border-amber-500/30 text-amber-400' : 'bg-black border-slate-800 text-slate-500 hover:text-white'}`}><MoreHorizontal size={12}/> Custom</button>
-                      </div>
-                      
-                      <div>
-                        <label className="text-[10px] font-mono text-slate-400 uppercase tracking-widest mb-2 flex">Specific Trade Terms</label>
-                        <textarea 
-                          required name="barter_terms" value={formData.barter_terms} onChange={handleChange} rows={2}
-                          placeholder={formData.barter_category === 'GOODS' ? "e.g., Monthly supply of 5 disposables..." : "e.g., Free maintenance on fleet vehicles..."}
-                          className="w-full bg-black border border-slate-800 rounded-xl px-4 py-3 text-sm text-white focus:border-amber-400 outline-none transition-colors resize-none" 
-                        />
-                      </div>
-                    </div>
-                  )}
-                </div>
-              </div>
-            )}
-
-            {/* Real-Time Telemetry (Only active if Fixed Funding is present and > 0) */}
-            {((formData.type === 'INTERNAL' && fixedNum > 0) || (formData.compensation_types.includes('FIXED') && fixedNum > 0)) && (
-              <div className="bg-slate-900/50 border border-slate-800 rounded-xl p-6 relative overflow-hidden animate-in fade-in">
-                <div className="absolute top-0 left-0 w-1 h-full bg-emerald-500" />
-                <h3 className="text-[10px] font-mono text-slate-400 uppercase tracking-widest mb-4 flex items-center gap-2">
-                  <Calculator size={12} /> Funding Telemetry Matrix
-                </h3>
-                <div className="grid grid-cols-3 gap-4">
-                  <div>
-                    <div className="text-[10px] text-slate-500 uppercase tracking-widest mb-1">Gross Target</div>
-                    <div className="text-lg font-bold text-white">${fixedNum.toLocaleString()}</div>
-                  </div>
-                  <div>
-                    <div className="text-[10px] text-slate-500 uppercase tracking-widest mb-1">Tax / Reserve (15%)</div>
-                    <div className="text-lg font-bold text-red-400">-${platformCut.toLocaleString()}</div>
-                  </div>
-                  <div>
-                    <div className="text-[10px] text-brand-primary uppercase tracking-widest mb-1">Net Operating Fuel</div>
-                    <div className="text-2xl font-black text-emerald-400">${netProfit.toLocaleString()}</div>
-                  </div>
-                </div>
+                {formData.clientMode === 'EXISTING' ? (
+                  <select 
+                    name="selectedClientId" 
+                    value={formData.selectedClientId} 
+                    onChange={handleChange} 
+                    required 
+                    className="w-full bg-black border border-slate-800 rounded-xl px-4 py-4 text-sm text-white focus:border-emerald-400 outline-none transition-colors"
+                  >
+                    <option value="" disabled>Select a client from the Rolodex...</option>
+                    {existingClients.map((client, idx) => (
+                      <option key={idx} value={client}>{client}</option>
+                    ))}
+                  </select>
+                ) : (
+                  <input 
+                    type="text" 
+                    name="newClientName" 
+                    value={formData.newClientName} 
+                    onChange={handleChange} 
+                    required 
+                    placeholder="Enter new client name..." 
+                    className="w-full bg-black border border-slate-800 rounded-xl px-4 py-4 text-sm text-white focus:border-emerald-400 outline-none transition-colors" 
+                  />
+                )}
               </div>
             )}
 
@@ -293,12 +194,11 @@ export default function NewBuildModal({ onClose, onSuccess }: NewBuildModalProps
             <button type="button" onClick={onClose} className="flex-1 py-4 text-xs font-bold font-mono text-slate-400 uppercase tracking-widest hover:text-white transition-colors">
               Abort
             </button>
-            <button type="submit" disabled={isSubmitting} className="flex-2 py-4 bg-brand-primary/10 border border-brand-primary/30 text-brand-primary hover:bg-brand-primary hover:text-black rounded-xl text-xs font-bold font-mono uppercase tracking-widest transition-all flex justify-center items-center gap-2 disabled:opacity-50 shadow-[0_0_15px_rgba(6,182,212,0.2)]">
+            <button type="submit" disabled={isSubmitting || !formData.title} className="flex-2 py-4 bg-brand-primary/10 border border-brand-primary/30 text-brand-primary hover:bg-brand-primary hover:text-black rounded-xl text-xs font-bold font-mono uppercase tracking-widest transition-all flex justify-center items-center gap-2 disabled:opacity-50 shadow-[0_0_15px_rgba(6,182,212,0.2)]">
               {isSubmitting ? <Loader2 className="animate-spin" size={16} /> : <><Rocket size={16} /> Deploy to Drafting Table</>}
             </button>
           </div>
         </form>
-
       </div>
     </div>
   );

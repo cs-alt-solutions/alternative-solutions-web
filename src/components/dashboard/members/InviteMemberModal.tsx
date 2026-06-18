@@ -1,20 +1,20 @@
+/* src/components/dashboard/members/InviteMemberModal.tsx */
 'use client';
-
 import React, { useState } from 'react';
 import { X, Mail, Shield, Briefcase, Loader2, Send, UserPlus } from 'lucide-react';
 
 interface InviteMemberModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSuccess?: (newProfile: any) => void; // <-- ADDED THIS
+  onSuccess?: (newProfile: any) => void;
+  workspaces: any[]; // <-- NEW: Array of live workspaces
 }
 
-export default function InviteMemberModal({ isOpen, onClose, onSuccess }: InviteMemberModalProps) {
+export default function InviteMemberModal({ isOpen, onClose, onSuccess, workspaces = [] }: InviteMemberModalProps) {
   const [email, setEmail] = useState('');
   const [fullName, setFullName] = useState('');
   const [role, setRole] = useState('CLIENT_OWNER');
   const [workspace, setWorkspace] = useState('NONE');
-  
   const [isLoading, setIsLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
   const [successMsg, setSuccessMsg] = useState('');
@@ -159,10 +159,25 @@ export default function InviteMemberModal({ isOpen, onClose, onSuccess }: Invite
                     className="w-full bg-zinc-900 border border-zinc-800 rounded-xl px-3 py-3 text-xs font-mono text-zinc-300 focus:outline-none focus:border-cyan-500 uppercase"
                   >
                     <option value="NONE">Unassigned</option>
-                    <option value="luckystrike">LuckyStrike</option>
-                    <option value="division">Division</option>
-                    <option value="beta-ops">Beta Ops</option>
-                    <option value="internal">Internal HQ</option>
+                    
+                    {/* DYNAMIC DATABASE RENDER */}
+                    <optgroup label="Active Client Portals" className="bg-slate-800 text-emerald-400 font-bold">
+                      {workspaces.filter(w => w.type === 'CLIENT').map(w => (
+                        <option key={w.id} value={w.id} className="text-slate-200 bg-zinc-900">{w.title || w.name}</option>
+                      ))}
+                    </optgroup>
+
+                    <optgroup label="Beta Test Labs" className="bg-slate-800 text-purple-400 font-bold">
+                      {workspaces.filter(w => w.type === 'PROTOTYPE').map(w => (
+                        <option key={w.id} value={w.id} className="text-slate-200 bg-zinc-900">{w.title || w.name}</option>
+                      ))}
+                    </optgroup>
+
+                    <optgroup label="Internal Staff" className="bg-slate-800 text-amber-400 font-bold">
+                      {workspaces.filter(w => w.type === 'INTERNAL').map(w => (
+                        <option key={w.id} value={w.id} className="text-slate-200 bg-zinc-900">{w.title || w.name}</option>
+                      ))}
+                    </optgroup>
                   </select>
                 </div>
               </div>
@@ -183,7 +198,6 @@ export default function InviteMemberModal({ isOpen, onClose, onSuccess }: Invite
                   {isLoading ? 'Transmitting...' : 'Send Magic Link'}
                 </button>
               </div>
-
             </form>
           )}
         </div>
