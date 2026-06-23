@@ -41,6 +41,12 @@ export const MARKETING_COPY = {
     { title: "Deployment", desc: "Your engine goes live, lightning-fast and ready to scale." }
   ]
 },
+// Add this block inside the HOME object in src/config/marketing.ts
+PROBLEM_STATEMENT: {
+  TAG: "THE REALITY CHECK",
+  TITLE: "STOP RUNNING A BUSINESS ON TOP OF YOUR BUSINESS.",
+  DESC: "You started this to create, not to be an accountant. Stop guessing your profit margins, ditch the fragmented browser tabs, and connect your raw materials, daily builds, and finances into one intelligent command center."
+},
       AUTHORITY_BANNER: {
         TEXT: "BUILT ON ENTERPRISE-GRADE INFRASTRUCTURE",
         STACK: [
