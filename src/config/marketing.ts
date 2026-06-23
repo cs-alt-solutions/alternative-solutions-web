@@ -32,6 +32,15 @@ export const MARKETING_COPY = {
         CTA_SECONDARY: "Read The Story",
         CTA_SECONDARY_LINK: "/founder"
       },
+      METHODOLOGY: {
+  TAG: "THE ARCHITECT'S APPROACH",
+  TITLE: "HOW I BUILD",
+  STEPS: [
+    { title: "Discovery", desc: "We map out your business needs and identify the biggest points of friction." },
+    { title: "Architecture", desc: "I wire up a high-performance system using enterprise-grade tech." },
+    { title: "Deployment", desc: "Your engine goes live, lightning-fast and ready to scale." }
+  ]
+},
       AUTHORITY_BANNER: {
         TEXT: "BUILT ON ENTERPRISE-GRADE INFRASTRUCTURE",
         STACK: [
