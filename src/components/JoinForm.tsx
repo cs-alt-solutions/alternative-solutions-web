@@ -1,12 +1,11 @@
 /* src/components/JoinForm.tsx */
 'use client';
-
 import React, { useRef, useState, useEffect } from 'react';
 import { WEBSITE_COPY } from '@/utils/glossary';
-import { joinWaitlist } from '@/app/actions';
+import { joinWaitlist, submitSectorZeroIntake } from '@/app/actions';
 import { ArrowRight, CheckCircle2, Loader2, RefreshCw } from 'lucide-react';
 
-export default function JoinForm({ source }: { source: 'Shift Studio' | 'Restricted Access' }) {
+export default function JoinForm({ source }: { source: string }) {
   const [status, setStatus] = useState<'idle' | 'loading' | 'success'>('idle');
   const [mode, setMode] = useState<'apply' | 'returning'>('apply');
   const [message, setMessage] = useState('');
@@ -21,27 +20,43 @@ export default function JoinForm({ source }: { source: 'Shift Studio' | 'Restric
   }, []);
   // --------------------------------------------------
 
-  async function action(formData: FormData) {
-    setStatus('loading');
-    const res = await joinWaitlist(formData);
+  // CHANGED: Switching to standard React event to stop the page refresh
+  const handleSubmission = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault(); // <-- THIS IS THE LOCK. Stops the page from reloading!
+    setStatus('loading'); // 1. Fire the loading UI!
     
-    if (res?.success) {
-      // 1. Set Access in Browser
-      localStorage.setItem('alt_solutions_access', 'true');
+    try {
+      // Manually pull the form data out of the event
+      const formData = new FormData(e.currentTarget);
       
-      // 2. Notify Navbar to show links immediately
-      window.dispatchEvent(new Event('accessGranted'));
+      // 2. Log them in the Database (Waitlist/Supporters table)
+      const dbRes = await joinWaitlist(formData);
+      
+      // 3. Fire the Email Alert to your inbox!
+      const emailRes = await submitSectorZeroIntake(formData);
 
-      setStatus('success');
-      
-      if (res.isNew) setMessage(WEBSITE_COPY.ACCESS_HOOK.AUTO_SIGNUP);
-      else setMessage(WEBSITE_COPY.ACCESS_HOOK.SUCCESS_MSG);
-      
-      formRef.current?.reset();
-    } else {
+      if (dbRes?.success) {
+        // Set Access in Browser
+        localStorage.setItem('alt_solutions_access', 'true');
+        
+        // Notify Navbar to show links immediately
+        window.dispatchEvent(new Event('accessGranted'));
+        setStatus('success'); // Stop spinner, show checkmark
+        
+        if (dbRes.isNew) setMessage(WEBSITE_COPY.ACCESS_HOOK.AUTO_SIGNUP);
+        else setMessage(WEBSITE_COPY.ACCESS_HOOK.SUCCESS_MSG);
+        
+        formRef.current?.reset();
+      } else {
+        setStatus('idle');
+        alert("System Error: " + dbRes?.error);
+      }
+    } catch (err) {
       setStatus('idle');
+      console.error(err);
+      alert("Critical transmission failure. Please try again.");
     }
-  }
+  };
 
   if (status === 'success') {
     return (
@@ -58,7 +73,8 @@ export default function JoinForm({ source }: { source: 'Shift Studio' | 'Restric
 
   return (
     <div className="w-full">
-      <form ref={formRef} action={action} className="flex flex-col gap-5 w-full text-left animate-in fade-in duration-500">
+      {/* CHANGED: Using onSubmit instead of action */}
+      <form ref={formRef} onSubmit={handleSubmission} className="flex flex-col gap-5 w-full text-left animate-in fade-in duration-500">
         <input type="hidden" name="source" value={source} />
         
         {mode === 'apply' ? (
@@ -69,8 +85,8 @@ export default function JoinForm({ source }: { source: 'Shift Studio' | 'Restric
                 <input type="text" name="name" required className="w-full bg-black/50 border border-white/10 rounded-lg px-4 py-3 text-sm focus:outline-none focus:border-brand-primary/50 transition-colors text-white" />
               </div>
               <div className="space-y-1.5">
-                 <label className="text-[10px] font-mono text-text-muted uppercase tracking-widest pl-2">{copy.FIELDS.EMAIL}</label>
-                 <input type="email" name="email" required className="w-full bg-black/50 border border-white/10 rounded-lg px-4 py-3 text-sm focus:outline-none focus:border-brand-primary/50 transition-colors text-white" />
+                <label className="text-[10px] font-mono text-text-muted uppercase tracking-widest pl-2">{copy.FIELDS.EMAIL}</label>
+                <input type="email" name="email" required className="w-full bg-black/50 border border-white/10 rounded-lg px-4 py-3 text-sm focus:outline-none focus:border-brand-primary/50 transition-colors text-white" />
               </div>
             </div>
             <div className="space-y-1.5">

@@ -181,7 +181,7 @@ export default function EcosystemModuleEditor({ product, onClose, onRefresh }: E
       
       {/* LEFT COLUMN: THE LIVE PREVIEW */}
       <div className="hidden lg:flex flex-1 items-center justify-center p-8 xl:p-12 bg-black/90 relative overflow-y-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
-        <div className="absolute inset-0 bg-[url('/grid.svg')] bg-center mask-[linear-gradient(180deg,white,rgba(255,255,255,0))] opacity-20 pointer-events-none" />
+        <div className="absolute inset-0 bg-[linear-gradient(to_right,#ffffff15_1px,transparent_1px),linear-gradient(to_bottom,#ffffff15_1px,transparent_1px)] bg-size-[24px_24px] mask-[linear-gradient(180deg,white,rgba(255,255,255,0))] pointer-events-none" />
         
         <div className="w-full max-w-225 relative z-10 pointer-events-none scale-90 xl:scale-100 origin-center transition-transform my-auto">
            <div className="text-center mb-8">

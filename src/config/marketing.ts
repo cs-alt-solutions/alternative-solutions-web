@@ -6,7 +6,7 @@ export const MARKETING_COPY = {
     ECOSYSTEM: "The Ecosystem",
     STORY: "The Story",
     WORKSPACE: "Workspace",
-    BETA_CENTER: "THE LAB",
+    BETA_CENTER: "SECTOR ZERO", 
   },
   
   GLOBAL_FOOTER: {
@@ -14,23 +14,23 @@ export const MARKETING_COPY = {
     TAGLINE: "Built by a Human.",
     CTA: {
       TITLE: "CHOOSE YOUR PATH.",
-      DESC: "The foundation is being poured. Grab a seat, become a monthly backer, or just throw some fuel in the tank so I don't have to pick up extra shifts.",
-      BTN_TEXT: "ENTER THE LAB",
-      LINK: "/blueprint"
+      DESC: "The foundation is being poured. Grab a seat in Sector Zero, become a monthly backer, or throw some fuel in the tank.",
+      BTN_TEXT: "ENTER SECTOR ZERO",
+      LINK: "/sector-zero" 
     }
   },
 
   PUBLIC_SITE: {
     HOME: {
       HERO: {
-        TAG: "SYSTEM INITIALIZATION",
+        TAG: "", 
         TITLE_1: "BUILDING A",
         TITLE_2: "STRONGER FOUNDATION.",
-        SUBHEAD: "Running a business on 15 open browser tabs and sheer panic isn't sustainable. I build custom digital engines that actually share the same brain. It's about using smart automation to process your data instantly, so you can step off the 24/7 grind and actually enjoy the life you're building.",
-        CTA_PRIMARY: "Claim Your Seat",
-        CTA_PRIMARY_LINK: "/blueprint",
-        CTA_SECONDARY: "Explore the Ecosystem",
-        CTA_SECONDARY_LINK: "/products"
+        SUBHEAD: "I build custom, high-performance websites for everyday businesses. Instead of charging thousands of dollars upfront, I charge a low, flat-rate build fee and just $5 a month to cover the infrastructure and keep you online. You focus on your work; I handle the code.",
+        CTA_PRIMARY: "Enter Sector Zero",
+        CTA_PRIMARY_LINK: "/sector-zero",
+        CTA_SECONDARY: "Read The Story",
+        CTA_SECONDARY_LINK: "/founder"
       },
       AUTHORITY_BANNER: {
         TEXT: "BUILT ON ENTERPRISE-GRADE INFRASTRUCTURE",
@@ -43,20 +43,6 @@ export const MARKETING_COPY = {
           { name: "VS CODE", desc: "The workbench. Where the actual architecture is written." }
         ]
       },
-      PROBLEM_STATEMENT: {
-        TAG: "THE REALITY CHECK",
-        TITLE: "You know your trade. Your internal engine is a mess.",
-        DESC: "Everyone learns how to do their specific job, but nobody teaches you how to run the actual machine—the finances, the operations, the daily data. If you are holding your business together with sheer panic and exhausting manual work, your foundation is fractured. Let's rewire it."
-      },
-      METHODOLOGY: {
-        TAG: "THE PROCESS",
-        TITLE: "HOW THE ENGINE IS BUILT.",
-        STEPS: [
-          { title: "1. The Audit", desc: "I map out the fragile web of workarounds you're currently using to survive the week and find exactly what's making you want to pull your hair out." },
-          { title: "2. The Wiring", desc: "I architect a custom, unified system using real code and AI so things actually talk to each other natively." },
-          { title: "3. The Deployment", desc: "You get the keys to a single command center. No more bouncing between disconnected apps." }
-        ]
-      },
       FLAGSHIP: {
         TAG: "FOR THE SMALL BUSINESS",
         TITLE: "MEET SHIFT STUDIO",
@@ -65,10 +51,33 @@ export const MARKETING_COPY = {
         LINK: "/products/shift-studio"
       },
       BENTO: {
-        PRODUCT: { TAG: "THE ECOSYSTEM", TITLE: "ALL SYSTEMS. ONE BRAIN.", DESC: "Explore the full suite of hybrid frameworks built to run your business without the friction.", CTA: "See the Network", LINK: "/products" },
-        STORY: { TAG: "THE ARCHITECT", TITLE: "THE HARD BOUNDARY.", DESC: "Respect and integrity are the baseline. I don't care how big the check is; if you treat your people poorly, I won't build for you. Period.", CTA: "Read the Story", LINK: "/founder" },
-        BETA: { TAG: "CO-OP MODE", TITLE: "JOIN THE BUILD", DESC: "I am literally building the tools I want to use. Grab a spot on the waitlist and help me decide what to code next.", CTA: "Apply for Access", LINK: "/blueprint" },
-        TECH: { TAG: "INTERNAL WIRING", TITLE: "AI AS A PARTNER", DESC: "I don't sell generic AI wrappers. I use AI internally as a relentless coding partner to architect bulletproof systems faster.", CTA: "" }
+        PRODUCT: { 
+          TAG: "THE WORKSHOP", 
+          TITLE: "PROTOTYPES & BUILDS.", 
+          DESC: "This is my active development environment. Explore the experimental apps, custom internal tools, and future infrastructure add-ons currently being engineered.", 
+          CTA: "Enter The Ecosystem", 
+          LINK: "/products" 
+        },
+        STORY: { 
+          TAG: "THE ARCHITECT", 
+          TITLE: "THE HARD BOUNDARY.", 
+          DESC: "Respect and integrity are the baseline. I don't care how big the check is; if you treat your people poorly, I won't build for you. Period.", 
+          CTA: "Read the Story", 
+          LINK: "/founder" 
+        },
+        BETA: { 
+          TAG: "GROUND LEVEL", 
+          TITLE: "SECTOR ZERO", 
+          DESC: "Stop paying for bloated templates. Get a blazing-fast, professional digital storefront built on enterprise tech for a low setup fee + $5/mo.", 
+          CTA: "Apply for Sector Zero", 
+          LINK: "/sector-zero" 
+        },
+        TECH: { 
+          TAG: "INTERNAL WIRING", 
+          TITLE: "AI AS A PARTNER", 
+          DESC: "I don't sell generic AI wrappers. I use AI internally as a relentless coding partner to architect bulletproof systems faster.", 
+          CTA: "" 
+        }
       },
       LAUNCH_TELEMETRY: {
         COUNTDOWN_LABEL: "BETA ACCESS INITIALIZING IN",
@@ -82,7 +91,10 @@ export const MARKETING_COPY = {
   },
   
   ECOSYSTEM: {
-    HEADER: { TITLE: "The Ecosystem", DESC: "A family of tools that share the same brain. Everything just works together." },
+    HEADER: { 
+      TITLE: "The Ecosystem", 
+      DESC: "An active workshop of functional prototypes, internal systems, and one-off builds. These are the experimental tools being developed to power the future of the Alternative Solutions infrastructure." 
+    },
     ACTIVE: { TAG: "FOR THE MAKER", STATUS: "THE COMMERCE ENGINE • V1 BETA" },
     CLASSIFIED: { TITLE: "WHAT'S NEXT", STATUS: "EXPANDING THE NETWORK..." },
     CO_OP: { 
@@ -114,57 +126,65 @@ export const MARKETING_COPY = {
     FOOTER: { TITLE: "Ready to build something real?", CTA: "Enter The Ecosystem" }
   },
 
-  BLUEPRINT: {
+  SECTOR_ZERO: {
     HEADER: { 
-      TAG: "THE LAB • ARCHITECT PROTOCOL", 
-      TITLE_1: "ENTER THE", 
-      TITLE_2: "LABORATORY.", 
-      DESC: "Alternative Solutions isn't just a single app—it's an active workshop. I am building an entire ecosystem of different tools and resources designed specifically for small businesses starting from nothing. Our first flagship build is Shift Studio. Welcome to the drafting table." 
+      TAG: "SECTOR ZERO // THE GROUND LEVEL",
+      TITLE_1: "WELCOME TO",
+      TITLE_2: "SECTOR ZERO.",
+      DESC: "The giant corporate companies aren't going to fix their dysfunction. But the truth is, you don't need a warehouse full of bodies to run a successful business—you just need the right foundation. Instagram and Facebook are great tools, but they were never designed to be your professional website. Sector Zero is the ground level. I am here to help you step into the digital world the right way. Get a clean, high-performance storefront built on enterprise tech for a transparent, low setup fee and just $5/mo." 
     },
     THE_PLEDGE: {
-      TITLE_1: "100% Independent.",
-      TITLE_2: "100% Yours.",
-      DESC: "I started Alternative Solutions to escape the standard corporate tech trap. I don't have VC investors or millions in the bank. I'm literally funding this build by working an $18/hour part-time job doing inventory runs. When you secure a seat, you aren't just buying another piece of software. You are directly funding my ability to build a suite of alternative tools for everyday humans fighting to build their own futures."
+      TITLE_1: "No Agency Bloat.",
+      TITLE_2: "Zero Friction.",
+      DESC: "You believe in yourself enough to build this, and I believe in you enough to engineer the foundation. Let's establish your business in the digital world professionally. I review every application to ensure this framework actually fits your needs. There is no 'let's talk it out and see how much I can charge you'—you pay a simple, flat-rate build fee to get the engine running, and a flat $5/month for the infrastructure. You provide the vision; I handle the code."
     },
     REWARDS: {
-      TITLE: "The Perks",
+      TITLE: "The Specifications",
       RANKS: [
-        { title: "Founding Architect", desc: "Lock in the $5/mo V1.0 legacy rate for life. You were here when it was just a blueprint." },
-        { title: "Lab Partner", desc: "You get a direct line to the drafting table. Vote on features, test early builds, and tell me exactly what's broken." },
-        { title: "Apex Contributor", desc: "Immortalize your support. Your name or alias is permanently hardcoded into the 'Built By' page of the final platform." }
+        { 
+          title: "The Build", 
+          desc: "A blazing-fast 1-to-3 page custom storefront (Home, About, Contact) perfectly wired to route messages directly to your email." 
+        },
+        { 
+          title: "The Grid", 
+          desc: "Automatic listing on the Alternative Solutions Grid—a live directory driving organic traffic and SEO back to your business." 
+        },
+        { 
+          title: "The Mechanics & Domains", 
+          desc: "Don't have a web address yet? No sweat. I will help you hunt down the perfect domain. Until you are ready to buy one, your site can go live immediately on the Alternative Solutions Grid for free. Zero maintenance, enterprise hosting, and seamless domain wiring included." 
+        }
       ]
     },
     FUNDING_PATHS: {
-      TITLE: "CHOOSE YOUR PATH",
-      SUBTITLE: "Two ways to help build the foundation.",
+      TITLE: "START YOUR BUILD",
+      SUBTITLE: "Review the details and submit your project application.",
       PATH_1: {
-        TAG: "MONTHLY SUPPORT",
-        TITLE: "THE BACKER",
-        DESC: "Fuel the continuous development of the ecosystem. Set your own monthly amount to help cover development time and keep me at the keyboard.",
+        TAG: "THE BASELINE BUILD",
+        TITLE: "SECTOR ZERO BUILD",
+        DESC: "Get your site built and deployed. A simple, transparent setup fee covers your initial build, and the $5/month subscription covers enterprise-grade hosting and continuous system maintenance.",
         TIERS: [
-          { price: "$1 - $4", name: "Supporter", perk: "Added to the Foundation Roster & early updates." },
-          { price: "$5+", name: "The Builder", perk: "Unlocks legacy rate access for Shift Studio and future apps." }
+          { price: "Setup + $5/mo", name: "The Standard", perk: "Full website build, hosting, maintenance, and a spot on The Grid." }
         ],
-        BTN_TEXT: "BECOME A BACKER",
-        LINK: "https://support.alternativesolutions.io/b/14AbJ1dmbamu8RfbvT97G04" 
+        BTN_TEXT: "START YOUR APPLICATION",
+        LINK: "/sector-zero/apply" 
       },
       PATH_2: {
-        TAG: "ONE-TIME TIP",
-        TITLE: "THE BOOST",
+        TAG: "ONE-TIME BOOST",
+        TITLE: "THE COFFEE FUND",
         PRICE: "Custom",
         PERIOD: "one-time",
-        DESC: "You just want to throw some fuel in the tank today. A one-time tip to keep the coffee flowing and the code compiling.",
-        BTN_TEXT: "SEND A BOOST",
+        DESC: "Already have a site but want to support the bootstrap journey? Send a one-time tip to keep the coffee flowing and the code compiling.",
+        BTN_TEXT: "SEND A TIP",
         LINK: "https://support.alternativesolutions.io/b/5kQ3cv2Hx66e9VjdE197G05" 
       }
     },
     ROSTER: {
-      TAG: "LIVE TELEMETRY",
-      TITLE: "THE FOUNDATION ROSTER",
-      DESC: "To the early adopters keeping the lights on and the code compiling: thank you. You are building this foundation with me. (Contributors can choose to remain anonymous).",
-      EMPTY_STATE: "The grid is waiting. Be the first to initialize the foundation."
+      TAG: "THE GRID • LIVE PORTFOLIOS",
+      TITLE: "ACTIVE SECTOR ZERO CLIENTS",
+      DESC: "See who is running their business on the Alternative Solutions Grid. (Contributors can choose to remain anonymous).",
+      EMPTY_STATE: "The grid is waiting. Be the first to start your build."
     },
-    FOOTER: { TITLE: "Ready to join the foundation?", CTA: "Secure Your Architect Seat" }
+    FOOTER: { TITLE: "Ready to launch your website?", CTA: "Start Your Application" }
   },
 
   SHIFT_STUDIO_PAGE: {
@@ -304,7 +324,7 @@ export const MARKETING_COPY = {
 
   PUBLIC_LOGS: { SUBHEAD: "GLOBAL TRANSMISSIONS", TITLE: "PUBLIC AUDIO LOGS", DESC: "Unfiltered transmissions, raw strategy, and architectural updates from the build." },
   
-  ACCESS_HOOK: { FIELDS: { NAME: "What's your name?", EMAIL: "Email Address", PHONE: "Phone Number (Optional)" }, BTN_SUBMIT: "REQUEST CLEARANCE", SUCCESS_MSG: "ACCESS GRANTED. WELCOME TO THE BUILD.", AUTO_SIGNUP: "HEY, YOU WEREN'T ON THE LIST YET—BUT I SIGNED YOU UP. WELCOME IN." },
+  ACCESS_HOOK: { FIELDS: { NAME: "What's your name?", EMAIL: "Email Address", PHONE: "Phone Number (Optional)" }, BTN_SUBMIT: "SUBMIT PROJECT DETAILS", SUCCESS_MSG: "ACCESS GRANTED. WELCOME TO THE BUILD.", AUTO_SIGNUP: "HEY, YOU WEREN'T ON THE LIST YET—BUT I SIGNED YOU UP. WELCOME IN." },
   
   JOIN_PAGE: { 
     SUCCESS_MSG: "YOU'RE ON THE LIST. STAY TUNED.", 

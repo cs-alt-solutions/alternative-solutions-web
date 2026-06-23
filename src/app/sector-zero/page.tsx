@@ -1,23 +1,19 @@
-/* src/app/blueprint/page.tsx */
+/* src/app/sector-zero/page.tsx */
 import React from 'react';
 import Link from 'next/link';
-// IMPORT FIXED: Using the secure server client
 import { createClient } from '@/utils/supabase/server';
 import { WEBSITE_COPY } from '@/utils/glossary';
-import PricingCard from '@/components/core/PricingCard';
 import { ShieldCheck, Wrench, Hammer, Users, MessageSquare, TerminalSquare, Zap, Coffee, HeartHandshake, ArrowRight, Flame, Briefcase } from 'lucide-react';
 
 export const revalidate = 0; // Ensures the roster is always live
 
-export default async function BlueprintPage() {
-  // PATH FIXED: Removed .PUBLIC_SITE
-  const copy = WEBSITE_COPY.BLUEPRINT;
-  const fm = WEBSITE_COPY.FOUNDING_MEMBER;
+export default async function SectorZeroPage() {
+  // Pulling from the newly created SECTOR_ZERO object
+  const copy = WEBSITE_COPY.SECTOR_ZERO;
 
-  // AUTH FIXED: Initialize the secure server-side client
   const supabase = await createClient();
 
-  // 1. Fetch real backers (Amount > 0 excludes free observers from the public wall of fame)
+  // Fetch real backers for The Grid
   const { data: backersData } = await supabase
     .from('supporters')
     .select('*')
@@ -90,7 +86,7 @@ export default async function BlueprintPage() {
                  return (
                    <div key={idx} className="flex items-start gap-4">
                      <div className={`mt-1 shrink-0 ${colors[idx % 3]}`}>
-                       {idx === 0 ? <Users size={18} /> : idx === 1 ? <MessageSquare size={18} /> : <TerminalSquare size={18} />}
+                       {idx === 0 ? <Wrench size={18} /> : idx === 1 ? <Users size={18} /> : <TerminalSquare size={18} />}
                      </div>
                      <div>
                        <h4 className="text-white font-bold uppercase text-sm mb-1">{rank.title}</h4>
@@ -103,7 +99,7 @@ export default async function BlueprintPage() {
           </div>
         </div>
 
-        {/* SECTION 2: THE 2 FUNDING PATHS (Middle Row) */}
+        {/* SECTION 2: THE 2 FUNDING PATHS */}
         <section className="mb-24 scroll-mt-32" id="funding-options">
           <div className="text-center mb-12">
              <h2 className="text-3xl md:text-5xl font-black uppercase tracking-tight text-white mb-4">
@@ -114,10 +110,9 @@ export default async function BlueprintPage() {
              </p>
           </div>
 
-          {/* Clean 2-Column Grid */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-5xl mx-auto">
             
-            {/* PATH 1: THE BACKER (Monthly Tiered) */}
+            {/* PATH 1: THE BASELINE BUILD (Now points to /sector-zero/apply) */}
             <div className="bg-black/60 border border-brand-primary/30 hover:border-brand-primary/50 rounded-3xl p-8 backdrop-blur-xl shadow-[0_0_50px_rgba(6,182,212,0.1)] transition-all duration-500 relative flex flex-col h-full group">
               <div className="absolute top-0 left-0 w-full h-1 bg-linear-to-r from-transparent via-brand-primary to-transparent opacity-50" />
               <div className="inline-block px-3 py-1 bg-brand-primary/10 border border-brand-primary/30 rounded-full text-[9px] font-mono text-brand-primary uppercase tracking-widest mb-6 w-max">
@@ -130,11 +125,10 @@ export default async function BlueprintPage() {
                 {copy.FUNDING_PATHS.PATH_1.DESC}
               </p>
               
-              {/* Internal Tier Breakdown inside the card */}
               <div className="flex-1 space-y-3 mb-8">
                 {copy.FUNDING_PATHS.PATH_1.TIERS.map((tier: any, idx: number) => (
                   <div key={idx} className="bg-white/5 border border-white/10 rounded-xl p-4 flex gap-4 items-start">
-                    <div className="text-brand-primary font-black text-lg min-w-15">{tier.price}</div>
+                    <div className="text-brand-primary font-black text-lg min-w-25">{tier.price}</div>
                     <div>
                       <div className="text-xs font-bold text-white uppercase tracking-wider mb-1">{tier.name}</div>
                       <div className="text-xs text-slate-400 leading-snug">{tier.perk}</div>
@@ -144,13 +138,14 @@ export default async function BlueprintPage() {
               </div>
 
               <div className="mt-auto">
-                <Link href={copy.FUNDING_PATHS.PATH_1.LINK} className="flex items-center justify-center gap-2 w-full py-4 text-xs font-bold font-mono uppercase tracking-widest rounded-xl bg-brand-primary/10 text-brand-primary border border-brand-primary/30 hover:bg-brand-primary hover:text-black hover:shadow-[0_0_20px_rgba(6,182,212,0.4)] transition-all">
+                {/* THE NEW APPLY LINK */}
+                <Link href="/sector-zero/apply" className="flex items-center justify-center gap-2 w-full py-4 text-xs font-bold font-mono uppercase tracking-widest rounded-xl bg-brand-primary/10 text-brand-primary border border-brand-primary/30 hover:bg-brand-primary hover:text-black hover:shadow-[0_0_20px_rgba(6,182,212,0.4)] transition-all">
                   {copy.FUNDING_PATHS.PATH_1.BTN_TEXT} <ArrowRight size={14} className="group-hover:translate-x-1 transition-transform" />
                 </Link>
               </div>
             </div>
 
-            {/* PATH 2: THE BOOST (One-Time) */}
+            {/* PATH 2: THE BOOST */}
             <div className="bg-black/60 border border-orange-500/30 hover:border-orange-500/50 rounded-3xl p-8 backdrop-blur-xl shadow-[0_0_30px_rgba(249,115,22,0.05)] transition-all duration-500 relative flex flex-col h-full group">
               <div className="absolute top-0 left-0 w-full h-1 bg-linear-to-r from-transparent via-orange-500 to-transparent opacity-50" />
               <div className="inline-block px-3 py-1 bg-orange-500/10 border border-orange-500/30 rounded-full text-[9px] font-mono text-orange-400 uppercase tracking-widest mb-6 w-max">
@@ -175,7 +170,7 @@ export default async function BlueprintPage() {
           </div>
         </section>
 
-        {/* SECTION 3: THE FOUNDATION ROSTER (Bottom) */}
+        {/* SECTION 3: THE FOUNDATION ROSTER (The Grid) */}
         <section className="pt-16 border-t border-white/10 animate-in fade-in duration-1000 delay-300">
            <div className="text-center mb-12">
              <h2 className="text-sm font-mono text-brand-primary uppercase tracking-[0.3em] mb-4 flex items-center justify-center gap-2">

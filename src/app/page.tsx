@@ -1,9 +1,6 @@
 /* src/app/page.tsx */
 import React from 'react';
 import HomeHero from '@/components/home/HomeHero';
-import ProblemStatement from '@/components/home/ProblemStatement';
-import Methodology from '@/components/home/Methodology'; 
-import FlagshipFeature from '@/components/home/FlagshipFeature';
 import BentoGrid from '@/components/home/BentoGrid';
 
 export default function HomePage() {
@@ -16,9 +13,6 @@ export default function HomePage() {
 
       <div className="relative max-w-7xl mx-auto">
         <HomeHero />
-        <ProblemStatement />
-        <Methodology /> 
-        <FlagshipFeature />
         <BentoGrid />
       </div>
     </main>
