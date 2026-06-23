@@ -2,7 +2,7 @@
 
 import { revalidatePath } from 'next/cache';
 import { Directive } from '@/utils/glossary';
-import { createClient } from '@/utils/supabase/server';
+import { createClient } from '@/utils/supabase/server'; // <--- THIS WAS MISSING
 import { redirect } from 'next/navigation';
 import { Resend } from 'resend';
 
