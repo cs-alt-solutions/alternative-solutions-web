@@ -21,13 +21,15 @@ export default function SectorZeroApplicationPage() {
         setStatus('success');
         formRef.current?.reset();
       } else {
+        // CHANGED: This will now show the actual error message from the server!
+        alert("Server Error: " + (res?.error || "Unknown error"));
         setStatus('idle');
-        alert("Transmission failed. Please try again.");
       }
     } catch (err) {
       setStatus('idle');
+      // CHANGED: This will show you exactly where it crashed
       console.error("Submission Crash:", err);
-      alert("Critical failure. Please try again.");
+      alert("System Crash: " + (err instanceof Error ? err.message : "Check console"));
     }
   };
 
