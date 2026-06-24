@@ -284,7 +284,8 @@ export async function submitSectorZeroIntake(formData: FormData) {
 
     // 3. Fire the auto-responder to the applicant
     const { error: autoRespondError } = await resend.emails.send({
-      from: `Courtney | Alternative Solutions <${fromEmail}>`, 
+      from: `Courtney | Alternative Solutions <${fromEmail}>`,
+      replyTo: 'courtney@alternativesolutions.io',
       to: [email], 
       subject: `🚀 Website Application Received [${appId}]`,
       html: `
