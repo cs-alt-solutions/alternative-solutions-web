@@ -16,7 +16,7 @@ export default function Navbar() {
     pathname.startsWith('/dashboard') || 
     pathname.startsWith('/login') || 
     pathname.startsWith('/sandbox') || 
-    pathname.startsWith('/portal') // <-- Added this to hide Navbar in the portal!
+    pathname.startsWith('/portal')
   ) {
     return null;
   }
@@ -64,8 +64,9 @@ export default function Navbar() {
             >
               <Lock size={14} /> Portal Login
             </Link>
+
             <Link 
-              href="/blueprint" 
+              href="/sector-zero" // <-- REWIRED FROM /blueprint
               className="text-xs font-bold text-emerald-400 border border-emerald-500/50 hover:bg-emerald-400 hover:text-black px-5 py-2.5 rounded-lg transition-all shadow-[0_0_20px_rgba(52,211,153,0.15)] hover:shadow-[0_0_30px_rgba(52,211,153,0.4)] uppercase tracking-widest"
             >
               {WEBSITE_COPY.NAV.BETA_CENTER}
@@ -91,7 +92,6 @@ export default function Navbar() {
             {isMobileMenuOpen ? <X size={28} /> : <Menu size={28} />}
           </button>
         </div>
-
       </div>
 
       {/* MOBILE MENU DROPDOWN */}
@@ -120,7 +120,7 @@ export default function Navbar() {
           <div className="w-8 h-px bg-white/10" />
 
           <Link 
-            href="/blueprint" 
+            href="/sector-zero" // <-- REWIRED FROM /blueprint
             onClick={closeMenu}
             className="text-sm font-bold text-emerald-400 border border-emerald-500/50 px-6 py-3 rounded-lg uppercase tracking-widest w-full text-center"
           >

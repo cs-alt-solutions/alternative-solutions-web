@@ -104,7 +104,7 @@ PROBLEM_STATEMENT: {
       }
     }
   },
-  
+
   ECOSYSTEM: {
     HEADER: { 
       TITLE: "The Ecosystem", 
@@ -113,14 +113,14 @@ PROBLEM_STATEMENT: {
     ACTIVE: { TAG: "FOR THE MAKER", STATUS: "THE COMMERCE ENGINE • V1 BETA" },
     CLASSIFIED: { TITLE: "WHAT'S NEXT", STATUS: "EXPANDING THE NETWORK..." },
     CO_OP: { 
-      TITLE_1: "Got a problem?", 
-      TITLE_2: "Let's fix it.", 
-      DESC_1: "The whole point is that everything works together. I connect the dots; you tell me what's broken.", 
-      DESC_2: "My only rule: Integrity is required. I don't care if you have a massive budget—if you are toxic to your team or undermine your people, I won't work with you.",
-      DESC_3: "Value for value. Let's build something real.",
-      CARD_TITLE: "The Co-Op Program",
-      CARD_DESC: "Tell me what’s slowing you down. If it fits the ecosystem, I'll build it.",
-      CTA: "Pitch an Idea" 
+      TITLE_1: "Custom Architecture.", 
+      TITLE_2: "Let's build something real.", 
+      DESC_1: "I combine the skills of a programmer, business analyst, and AI user to connect disparate concepts across industries. I map out the friction and build strong, unified frameworks.", 
+      DESC_3: "The goal isn't just to survive. I build custom systems so you can thrive.",
+      CARD_TITLE: "Custom Solutions",
+      CARD_DESC: "Tell me what's slowing you down. Submit your project scope and let's connect the dots.",
+      CTA: "Submit Project Scope",
+      LINK: "/sector-zero/apply" 
     }
   },
 

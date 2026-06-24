@@ -10,7 +10,8 @@ import AppShowcaseCard from '@/components/products/AppShowcaseCard';
 import TerminalTab from '@/components/core/TerminalTab';
 
 export default function ProductsPage() {
-  const [activeTab, setActiveTab] = useState<'COMMERCE' | 'LAB' | 'PIPELINE'>('COMMERCE');
+  // CHANGED: Defaulting to 'LAB' (Prototypes) instead of 'COMMERCE'
+  const [activeTab, setActiveTab] = useState<'COMMERCE' | 'LAB' | 'PIPELINE'>('LAB');
   const [liveProducts, setLiveProducts] = useState<any[]>([]);
   
   const copy = WEBSITE_COPY.ECOSYSTEM;
@@ -150,7 +151,7 @@ export default function ProductsPage() {
               </h2>
               <div className="space-y-6 text-lg text-slate-300 font-light leading-relaxed">
                 <p>{copy.CO_OP.DESC_1}</p>
-                <p>{copy.CO_OP.DESC_2}</p>
+                <p>{copy.CO_OP.DESC_1}</p>
                 <p><strong className="text-amber-400 font-bold drop-shadow-[0_0_5px_rgba(245,158,11,0.5)]">{copy.CO_OP.DESC_3}</strong></p>
               </div>
             </div>
@@ -161,7 +162,9 @@ export default function ProductsPage() {
               </div>
               <h3 className="text-2xl text-white font-bold mb-4">{copy.CO_OP.CARD_TITLE}</h3>
               <p className="text-amber-200/70 text-sm mb-8">{copy.CO_OP.CARD_DESC}</p>
-              <Link href="/blueprint" className="block w-full text-center bg-amber-500/20 text-amber-400 border border-amber-500/50 font-black uppercase tracking-widest py-4 rounded hover:bg-amber-400 hover:text-black transition-all shadow-[0_0_15px_rgba(245,158,11,0.3)]">
+              
+              {/* CHANGED: Dynamically pulling the correct link to intake form */}
+              <Link href={copy.CO_OP.LINK || '/sector-zero/apply'} className="block w-full text-center bg-amber-500/20 text-amber-400 border border-amber-500/50 font-black uppercase tracking-widest py-4 rounded hover:bg-amber-400 hover:text-black transition-all shadow-[0_0_15px_rgba(245,158,11,0.3)]">
                 {copy.CO_OP.CTA}
               </Link>
             </div>
