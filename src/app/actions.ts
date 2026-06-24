@@ -1,10 +1,12 @@
+/* src/app/actions.ts */
 'use server';
 
 import { revalidatePath } from 'next/cache';
 import { Directive } from '@/utils/glossary';
-import { createClient } from '@/utils/supabase/server'; // <--- THIS WAS MISSING
+import { createClient } from '@/utils/supabase/server'; 
 import { redirect } from 'next/navigation';
 import { Resend } from 'resend';
+import AdminIntakeEmail from '@/components/emails/AdminIntakeEmail';
 
 // Initialize Resend
 const resend = new Resend(process.env.RESEND_API_KEY);
@@ -266,28 +268,18 @@ export async function submitSectorZeroIntake(formData: FormData) {
       return { success: false, error: "Database error. Please try again." };
     }
 
-    // 2. Fire the internal alert directly to your inbox
+    // 2. Fire the internal alert directly to your inbox using our new React template
     const { error: alertError } = await resend.emails.send({
       from: `Alternative Solutions <${fromEmail}>`, 
-      to: ['courtney@alternativesolutions.io'], 
+      to: ['courtney@alternativesolutions.io'], // Adjust this if your actual inbox differs
       subject: `🚨 INTAKE [${appId}]: ${businessName || name}`,
-      html: `
-        <div style="font-family: monospace; padding: 20px; background-color: #0a0a0a; color: #fff;">
-          <h2 style="color: #06b6d4; text-transform: uppercase;">Sector Zero Application</h2>
-          <p><strong>App ID:</strong> <span style="color: #06b6d4;">${appId}</span></p>
-          <p><strong>Name:</strong> ${name}</p>
-          <p><strong>Email:</strong> ${email}</p>
-          <p><strong>Business Name:</strong> ${businessName}</p>
-          <hr style="border-color: #333; margin: 20px 0;" />
-          <h3 style="color: #06b6d4; text-transform: uppercase; margin-bottom: 10px;">Digital Footprint</h3>
-          <p><strong>FB/IG:</strong> ${socialFacebook || 'None'}</p>
-          <p><strong>TikTok:</strong> ${socialTiktok || 'None'}</p>
-          <p><strong>Website:</strong> ${website || 'None'}</p>
-          <hr style="border-color: #333; margin: 20px 0;" />
-          <h3 style="color: #06b6d4; text-transform: uppercase; margin-bottom: 10px;">Project Scope</h3>
-          <p style="white-space: pre-wrap; color: #ccc; line-height: 1.6;">${projectScope}</p>
-        </div>
-      `
+      react: AdminIntakeEmail({
+        name,
+        email,
+        socials: [socialFacebook, socialTiktok].filter(Boolean).join(' | '),
+        existingWebsite: website,
+        projectScope,
+      })
     });
 
     // 3. Fire the auto-responder to the applicant

@@ -21,13 +21,11 @@ export default function SectorZeroApplicationPage() {
         setStatus('success');
         formRef.current?.reset();
       } else {
-        // CHANGED: This will now show the actual error message from the server!
         alert("Server Error: " + (res?.error || "Unknown error"));
         setStatus('idle');
       }
     } catch (err) {
       setStatus('idle');
-      // CHANGED: This will show you exactly where it crashed
       console.error("Submission Crash:", err);
       alert("System Crash: " + (err instanceof Error ? err.message : "Check console"));
     }
@@ -65,7 +63,7 @@ export default function SectorZeroApplicationPage() {
                 <h3 className="text-2xl font-black uppercase tracking-widest text-white mb-2">Application Received</h3>
                 <p className="text-slate-400 font-light">Your project details have been transmitted to my terminal. I will review the scope and reach out within 72 hours.</p>
               </div>
-              <Link href="/" className="mt-4 px-8 py-3 bg-white/5 border border-white/10 rounded-xl font-bold uppercase tracking-widest hover:bg-white/10 transition-colors text-sm">
+              <Link href="/sector-zero" className="mt-4 px-8 py-3 bg-white/5 border border-white/10 rounded-xl font-bold uppercase tracking-widest hover:bg-white/10 transition-colors text-sm">
                 Return to Grid
               </Link>
             </div>
