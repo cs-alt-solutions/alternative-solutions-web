@@ -3,12 +3,12 @@ export const SECTOR_ZERO = {
     TAG: "SECTOR ZERO // THE GROUND LEVEL",
     TITLE_1: "WELCOME TO",
     TITLE_2: "SECTOR ZERO.",
-    DESC: "You do the hard work. Getting it online shouldn't be another hurdle. Stop fighting bloated templates and fragmented tools. Sector Zero is the ground level. We build you a clean, custom, professional storefront on solid code, for a flat-rate setup and $5/mo."
+    DESC: "" // Removed to eliminate redundancy
   },
   THE_PLEDGE: {
     TITLE_1: "No Agency Bloat.",
     TITLE_2: "Zero Friction.",
-    DESC: "You believe in yourself enough to build this, and I believe in you enough to engineer the foundation. Let's establish your business in the digital world professionally. I review every application to ensure this framework actually fits your needs. There is no 'let's talk it out and see how much I can charge you'—you pay a simple, flat-rate build fee to get the engine running, and a flat $5/month for the infrastructure. You provide the vision; I handle the code."
+    DESC: "You do the hard work. Getting it online shouldn't be another hurdle. Stop fighting bloated DIY templates and fragmented tools. Let's establish your business in the digital world professionally. There is no 'let's talk it out and see how much I can charge you'—you pay a simple, flat-rate build fee to get the custom engine running, and a flat $5/month for the enterprise infrastructure. You believe in yourself enough to build this, and I believe in you enough to engineer the foundation. You provide the vision; I handle the code."
   },
   REWARDS: {
     TITLE: "The Specifications",

@@ -1,17 +1,17 @@
 export const PUBLIC_SITE = {
   HOME: {
     HERO: {
-      TAG: "SYSTEM ONLINE",
-      TITLE_1: "BUILDING A",
-      TITLE_2: "STRONGER FOUNDATION.",
-      SUBHEAD_LEAD: "Professional digital storefronts built for everyday businesses.",
-      SUBHEAD_BODY: "Skip the expensive agency retainers and the fragile DIY website builders. I charge a simple, flat-rate build fee and just $5 a month to keep the lights on and everything running fast. You run your business; I handle the code.",
-      CTA_PRIMARY: "Start Your Build",
-      CTA_PRIMARY_LINK: "/sector-zero",
-      CTA_SECONDARY: "View The Architecture",
-      CTA_SECONDARY_LINK: "/founder",
-      MICRO_COPY: "No Bloated Templates. Just Clean, Hand-Coded Foundations." 
-    },
+        TAG: "SYSTEM ONLINE",
+        TITLE_1: "BUILDING A",
+        TITLE_2: "STRONGER FOUNDATION.",
+        SUBHEAD_LEAD: "I build professional digital storefronts for everyday businesses.",
+        SUBHEAD_BODY: "Skip the expensive agency retainers and the fragile DIY website builders. I charge a simple, flat-rate build fee and just $5 a month to keep the lights on and everything running fast. You run your business; I handle the code.",
+        CTA_PRIMARY: "Start Your Build",
+        CTA_PRIMARY_LINK: "/sector-zero",
+        CTA_SECONDARY: "View The Architecture",
+        CTA_SECONDARY_LINK: "/founder",
+        MICRO_COPY: "No Bloated Templates. Just Clean, Hand-Coded Foundations." 
+      },
     METHODOLOGY: {
       TAG: "THE ARCHITECT'S APPROACH",
       TITLE: "HOW I BUILD",

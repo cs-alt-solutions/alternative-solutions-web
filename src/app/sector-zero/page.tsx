@@ -17,21 +17,18 @@ export default function SectorZeroPage() {
 
       <div className="relative max-w-7xl mx-auto px-6">
         
-        {/* HEADER */}
-        <section className="text-center mb-16 animate-in fade-in slide-in-from-bottom-8 duration-1000">
+        {/* HEADER - Tightened spacing and removed redundant description */}
+        <section className="text-center mb-8 animate-in fade-in slide-in-from-bottom-8 duration-1000">
           <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-brand-primary/30 bg-brand-primary/10 text-[10px] font-mono text-brand-primary uppercase tracking-[0.3em] mb-8 shadow-[0_0_15px_rgba(6,182,212,0.15)]">
             <TerminalSquare size={14} className="animate-pulse" />
             {copy.HEADER.TAG}
           </div>
-          <h1 className="text-6xl md:text-8xl font-black tracking-tighter mb-6 leading-none uppercase drop-shadow-[0_0_20px_rgba(255,255,255,0.1)]">
+          <h1 className="text-6xl md:text-8xl font-black tracking-tighter mb-4 leading-none uppercase drop-shadow-[0_0_20px_rgba(255,255,255,0.1)]">
             {copy.HEADER.TITLE_1} <br />
             <span className="text-transparent bg-clip-text bg-linear-to-r from-brand-primary via-fuchsia-400 to-brand-primary animate-text-gradient">
               {copy.HEADER.TITLE_2}
             </span>
           </h1>
-          <p className="text-lg md:text-xl text-slate-300 font-light max-w-3xl mx-auto leading-relaxed">
-            {copy.HEADER.DESC}
-          </p>
         </section>
 
         {/* SECTION 1: THE INTERACTIVE PLEDGE & PERKS */}
