@@ -30,14 +30,18 @@ export default function HomeHero() {
              <div className="w-1.5 h-1.5 bg-brand-primary rounded-full animate-pulse" />
              {HERO.TAG}
           </div>
+          
           <h1 className="text-white text-6xl md:text-[5.5rem] font-black tracking-tighter mb-6 leading-none uppercase drop-shadow-[0_0_20px_rgba(255,255,255,0.2)]">
             {HERO.TITLE_1} <br />
             <span className="text-transparent bg-clip-text bg-linear-to-r from-brand-primary via-fuchsia-400 to-brand-primary animate-text-gradient">
               {HERO.TITLE_2}
             </span>
           </h1>
+          
+          {/* UPDATED: Broken into a bold lead and a muted body for better scanning */}
           <p className="text-xl text-text-muted font-light max-w-2xl leading-relaxed mx-auto lg:mx-0 mb-10">
-            {HERO.SUBHEAD}
+            <span className="text-white font-medium block mb-2">{HERO.SUBHEAD_LEAD}</span>
+            {HERO.SUBHEAD_BODY}
           </p>
           
           <div className="flex flex-col sm:flex-row items-center gap-6 justify-center lg:justify-start">
@@ -53,6 +57,12 @@ export default function HomeHero() {
             >
               {HERO.CTA_SECONDARY}
             </Link>
+          </div>
+
+          {/* ADDED: Mechanical Micro-copy to anchor the bottom */}
+          <div className="mt-6 text-[10px] font-mono text-white/30 uppercase tracking-widest flex items-center justify-center lg:justify-start gap-2">
+             <div className="w-1 h-1 bg-brand-primary rounded-full"></div>
+             {HERO.MICRO_COPY}
           </div>
         </div>
 

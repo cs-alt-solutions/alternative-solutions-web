@@ -1,42 +1,18 @@
-/* src/app/sector-zero/page.tsx */
-import React from 'react';
+import React, { Suspense } from 'react';
 import Link from 'next/link';
-import { createClient } from '@/utils/supabase/server';
 import { WEBSITE_COPY } from '@/utils/glossary';
-import { ShieldCheck, Wrench, Hammer, Users, MessageSquare, TerminalSquare, Zap, Coffee, HeartHandshake, ArrowRight, Flame, Briefcase } from 'lucide-react';
+import SectorZeroPledge from '@/components/sector-zero/SectorZeroPledge';
+import LiveRoster from '@/components/sector-zero/LiveRoster';
+import { TerminalSquare, HeartHandshake, ArrowRight, Loader2 } from 'lucide-react';
 
-export const revalidate = 0; // Ensures the roster is always live
+export const dynamic = 'force-dynamic';
 
-export default async function SectorZeroPage() {
-  // Pulling from the newly created SECTOR_ZERO object
+export default function SectorZeroPage() {
   const copy = WEBSITE_COPY.SECTOR_ZERO;
-
-  const supabase = await createClient();
-
-  // Fetch real backers for The Grid
-  const { data: backersData } = await supabase
-    .from('supporters')
-    .select('*')
-    .gt('amount', 0)
-    .eq('status', 'ACTIVE')
-    .order('created_at', { ascending: false })
-    .limit(12);
-
-  const liveBackers = backersData || [];
-
-  const getTierIcon = (tier: string) => {
-    switch(tier) {
-      case 'BUILDER': return { icon: <Zap size={16} />, style: 'bg-brand-primary/20 text-brand-primary' };
-      case 'BACKER': return { icon: <Coffee size={16} />, style: 'bg-fuchsia-500/20 text-fuchsia-400' };
-      case 'BOOST': return { icon: <Flame size={16} />, style: 'bg-orange-500/20 text-orange-400' };
-      case 'CLIENT': return { icon: <Briefcase size={16} />, style: 'bg-emerald-500/20 text-emerald-400' };
-      default: return { icon: <HeartHandshake size={16} />, style: 'bg-white/10 text-white/50' };
-    }
-  };
 
   return (
     <main className="min-h-screen bg-bg-app text-white relative overflow-x-hidden pt-32 pb-24 font-sans">
-      <div className="absolute inset-0 bg-[url('/grid.svg')] bg-center [mask-image:linear-gradient(180deg,white,rgba(255,255,255,0))] opacity-10 pointer-events-none"></div>
+      <div className="absolute inset-0 bg-[linear-gradient(to_right,#ffffff0a_1px,transparent_1px),linear-gradient(to_bottom,#ffffff0a_1px,transparent_1px)] bg-size-[24px_24px] mask-[linear-gradient(180deg,white,rgba(255,255,255,0))] pointer-events-none"></div>
       <div className="absolute top-0 left-1/2 -translate-x-1/2 w-150 h-150 bg-brand-primary/10 rounded-full blur-[120px] pointer-events-none" />
 
       <div className="relative max-w-7xl mx-auto px-6">
@@ -58,46 +34,8 @@ export default async function SectorZeroPage() {
           </p>
         </section>
 
-        {/* SECTION 1: THE PLEDGE & PERKS (Top Row) */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-24">
-          <div className="bg-emerald-950/20 border border-emerald-500/20 rounded-3xl p-8 md:p-10 backdrop-blur-md relative overflow-hidden group shadow-[0_0_30px_rgba(52,211,153,0.05)] h-full">
-             <div className="absolute -right-10 -bottom-10 w-64 h-64 bg-emerald-500/10 rounded-full blur-[80px] pointer-events-none" />
-             <div className="relative z-10">
-               <div className="w-12 h-12 rounded-2xl bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center text-emerald-400 mb-6 shadow-[0_0_20px_rgba(52,211,153,0.2)]">
-                 <ShieldCheck size={24} />
-               </div>
-               <h2 className="text-3xl font-black uppercase tracking-tight mb-4 text-white">
-                 {copy.THE_PLEDGE.TITLE_1} <br/>
-                 <span className="text-emerald-400">{copy.THE_PLEDGE.TITLE_2}</span>
-               </h2>
-               <p className="text-emerald-100/70 font-light leading-relaxed">
-                 {copy.THE_PLEDGE.DESC}
-               </p>
-             </div>
-          </div>
-
-          <div className="bg-black/40 border border-white/10 rounded-3xl p-8 md:p-10 backdrop-blur-md h-full flex flex-col justify-center">
-             <h3 className="text-brand-primary font-mono text-xs tracking-[0.3em] uppercase mb-6 flex items-center gap-2">
-               <Hammer size={14} /> {copy.REWARDS.TITLE}
-             </h3>
-             <div className="space-y-6">
-               {copy.REWARDS.RANKS.map((rank: any, idx: number) => {
-                 const colors = ["text-brand-primary", "text-fuchsia-400", "text-amber-400"];
-                 return (
-                   <div key={idx} className="flex items-start gap-4">
-                     <div className={`mt-1 shrink-0 ${colors[idx % 3]}`}>
-                       {idx === 0 ? <Wrench size={18} /> : idx === 1 ? <Users size={18} /> : <TerminalSquare size={18} />}
-                     </div>
-                     <div>
-                       <h4 className="text-white font-bold uppercase text-sm mb-1">{rank.title}</h4>
-                       <p className="text-xs text-slate-400 font-light leading-relaxed">{rank.desc}</p>
-                     </div>
-                   </div>
-                 );
-               })}
-             </div>
-          </div>
-        </div>
+        {/* SECTION 1: THE INTERACTIVE PLEDGE & PERKS */}
+        <SectorZeroPledge />
 
         {/* SECTION 2: THE 2 FUNDING PATHS */}
         <section className="mb-24 scroll-mt-32" id="funding-options">
@@ -111,8 +49,7 @@ export default async function SectorZeroPage() {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-5xl mx-auto">
-            
-            {/* PATH 1: THE BASELINE BUILD (Now points to /sector-zero/apply) */}
+            {/* PATH 1: THE BASELINE BUILD */}
             <div className="bg-black/60 border border-brand-primary/30 hover:border-brand-primary/50 rounded-3xl p-8 backdrop-blur-xl shadow-[0_0_50px_rgba(6,182,212,0.1)] transition-all duration-500 relative flex flex-col h-full group">
               <div className="absolute top-0 left-0 w-full h-1 bg-linear-to-r from-transparent via-brand-primary to-transparent opacity-50" />
               <div className="inline-block px-3 py-1 bg-brand-primary/10 border border-brand-primary/30 rounded-full text-[9px] font-mono text-brand-primary uppercase tracking-widest mb-6 w-max">
@@ -138,7 +75,6 @@ export default async function SectorZeroPage() {
               </div>
 
               <div className="mt-auto">
-                {/* THE NEW APPLY LINK */}
                 <Link href="/sector-zero/apply" className="flex items-center justify-center gap-2 w-full py-4 text-xs font-bold font-mono uppercase tracking-widest rounded-xl bg-brand-primary/10 text-brand-primary border border-brand-primary/30 hover:bg-brand-primary hover:text-black hover:shadow-[0_0_20px_rgba(6,182,212,0.4)] transition-all">
                   {copy.FUNDING_PATHS.PATH_1.BTN_TEXT} <ArrowRight size={14} className="group-hover:translate-x-1 transition-transform" />
                 </Link>
@@ -166,7 +102,6 @@ export default async function SectorZeroPage() {
                 </Link>
               </div>
             </div>
-
           </div>
         </section>
 
@@ -184,40 +119,17 @@ export default async function SectorZeroPage() {
              </p>
            </div>
 
-           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 max-w-5xl mx-auto">
-             {liveBackers.length === 0 ? (
-               <div className="col-span-1 sm:col-span-2 md:col-span-3 text-center py-12 border border-dashed border-white/10 rounded-xl text-white/30 font-mono text-xs uppercase tracking-widest">
-                 {copy.ROSTER.EMPTY_STATE}
+           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 max-w-5xl mx-auto min-h-50">
+             {/* THE SUSPENSE BOUNDARY FIX */}
+             <Suspense fallback={
+               <div className="col-span-1 sm:col-span-2 md:col-span-3 flex items-center justify-center py-12">
+                 <Loader2 className="animate-spin text-brand-primary" size={32} />
                </div>
-             ) : (
-               liveBackers.map((backer) => {
-                 const details = getTierIcon(backer.tier);
-                 return (
-                   <div key={backer.id} className="bg-white/5 border border-white/10 rounded-xl p-5 flex items-center gap-4 hover:bg-white/10 transition-colors">
-                     <div className={`w-10 h-10 rounded-full flex items-center justify-center shrink-0 ${details.style}`}>
-                       {details.icon}
-                     </div>
-                     <div className="flex-1 min-w-0">
-                       <div className="text-sm font-bold text-white truncate">
-                         {backer.display_name || backer.name || 'Anonymous Builder'}
-                       </div>
-                       <div className="flex items-center gap-2 mt-1">
-                         <span className="text-[10px] font-mono text-white/40 uppercase">
-                           {new Date(backer.created_at).toLocaleDateString()}
-                         </span>
-                         <span className="text-white/20">•</span>
-                         <span className={`text-[10px] font-mono uppercase tracking-widest ${details.style.replace('bg-', 'text-').split(' ')[1]}`}>
-                           {backer.tier}
-                         </span>
-                       </div>
-                     </div>
-                   </div>
-                 );
-               })
-             )}
+             }>
+               <LiveRoster />
+             </Suspense>
            </div>
         </section>
-
       </div>
     </main>
   );

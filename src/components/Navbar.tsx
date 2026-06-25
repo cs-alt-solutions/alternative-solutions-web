@@ -1,11 +1,10 @@
 /* src/components/Navbar.tsx */
 'use client';
-
 import React, { useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { WEBSITE_COPY } from '@/utils/glossary';
-import { Menu, X, Lock } from 'lucide-react';
+import { Menu, X, User } from 'lucide-react'; // Swapped Lock for User
 
 export default function Navbar() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -57,16 +56,18 @@ export default function Navbar() {
           <div className="w-px h-6 bg-white/10" />
 
           {/* PORTAL & LAB BUTTONS */}
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-5">
+            {/* DIMMED PORTAL LOGIN */}
             <Link 
               href="/login" 
-              className="flex items-center gap-2 text-xs font-bold text-cyan-400 hover:text-cyan-300 transition-all uppercase tracking-widest"
+              className="flex items-center gap-2 text-xs font-bold text-slate-400 hover:text-white transition-all uppercase tracking-widest"
             >
-              <Lock size={14} /> Portal Login
+              <User size={14} /> Portal
             </Link>
 
+            {/* PRIMARY CTA */}
             <Link 
-              href="/sector-zero" // <-- REWIRED FROM /blueprint
+              href="/sector-zero" 
               className="text-xs font-bold text-emerald-400 border border-emerald-500/50 hover:bg-emerald-400 hover:text-black px-5 py-2.5 rounded-lg transition-all shadow-[0_0_20px_rgba(52,211,153,0.15)] hover:shadow-[0_0_30px_rgba(52,211,153,0.4)] uppercase tracking-widest"
             >
               {WEBSITE_COPY.NAV.BETA_CENTER}
@@ -75,13 +76,14 @@ export default function Navbar() {
         </div>
 
         {/* MOBILE MENU BUTTON & CTA */}
-        <div className="flex md:hidden items-center gap-4 relative z-50">
+        <div className="flex md:hidden items-center gap-5 relative z-50">
+          {/* DIMMED MOBILE PORTAL LOGIN */}
           <Link 
             href="/login" 
             onClick={closeMenu}
-            className="text-[10px] font-bold text-cyan-400 flex items-center gap-1 uppercase tracking-widest"
+            className="text-[10px] font-bold text-slate-400 hover:text-white transition-colors flex items-center gap-1 uppercase tracking-widest"
           >
-            <Lock size={12} /> Portal
+            <User size={12} /> Portal
           </Link>
           
           <button 
@@ -120,7 +122,7 @@ export default function Navbar() {
           <div className="w-8 h-px bg-white/10" />
 
           <Link 
-            href="/sector-zero" // <-- REWIRED FROM /blueprint
+            href="/sector-zero" 
             onClick={closeMenu}
             className="text-sm font-bold text-emerald-400 border border-emerald-500/50 px-6 py-3 rounded-lg uppercase tracking-widest w-full text-center"
           >
