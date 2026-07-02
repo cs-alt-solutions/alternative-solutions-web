@@ -199,9 +199,15 @@ export const DASHBOARD_COPY = {
 
   INFRASTRUCTURE_HUB: { TITLE: "Under the Hood", DESC: "Quick links to your hosting, database, and billing.", CATEGORIES: { CORE: "Core Tech", FINANCE: "Money & Billing", CODE: "Codebase" } },
   PROJECT_BOARD: { NOT_FOUND: "Project Not Found", ADD_TASK: "Add Task", COLUMNS: { TODO: "To Do", IN_PROGRESS: "Doing", REVIEW: "Review", DONE: "Done" } }, 
-  OVERVIEW: { 
-    TITLE: "Home", 
-    DIRECTIVE: { TITLE: "Up Next", SUBTITLE: "Your priority tasks", EMPTY: "You're all caught up.", TYPES: { LEAD: "New Message", TASK: "Task" }, ACTIONS: { PROCESS: "View", EXECUTE: "Do It" } }, 
+  OVERVIEW: {
+      TITLE: "Home",
+      DIRECTIVE: { 
+        TITLE: "Project Intake", 
+        SUBTITLE: "Applications awaiting your authorization", 
+        EMPTY: "Pipeline clear. No pending applications.", 
+        TYPES: { LEAD: "Sector Zero App", TASK: "Task" }, 
+        ACTIONS: { PROCESS: "Review Dossier", EXECUTE: "Do It" } 
+      }, 
     LIVE_FEED: { TITLE: "Recent Activity", NEW_BETA: "Checking..." }, 
     INFRASTRUCTURE: { TITLE: "Tech Status", SUBTITLE: "Are we online?", PLATFORMS: { GITHUB: "GitHub", VERCEL: "Vercel", SUPABASE: "Supabase" } }, 
     PANELS: { ACTION_REQD: "Needs Attention", ENGINEERING: "Development" }, 

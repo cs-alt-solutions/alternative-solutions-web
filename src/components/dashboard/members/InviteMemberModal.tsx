@@ -1,4 +1,3 @@
-/* src/components/dashboard/members/InviteMemberModal.tsx */
 'use client';
 import React, { useState } from 'react';
 import { X, Mail, Shield, Briefcase, Loader2, Send, UserPlus } from 'lucide-react';
@@ -7,7 +6,7 @@ interface InviteMemberModalProps {
   isOpen: boolean;
   onClose: () => void;
   onSuccess?: (newProfile: any) => void;
-  workspaces: any[]; // <-- NEW: Array of live workspaces
+  workspaces: any[]; 
 }
 
 export default function InviteMemberModal({ isOpen, onClose, onSuccess, workspaces = [] }: InviteMemberModalProps) {
@@ -40,18 +39,19 @@ export default function InviteMemberModal({ isOpen, onClose, onSuccess, workspac
         throw new Error(data.error || 'Failed to send invite');
       }
 
-      // 1. Build the optimistic profile object
+      // THE FIX: Provide both name mapping variants to guarantee instant UI rendering
       const newProfile = {
         id: data.user?.id || crypto.randomUUID(), 
         email: email,
+        name: fullName, 
         full_name: fullName,
         role: role,
         workspace_id: workspace === 'NONE' ? null : workspace,
-        status: 'INVITED', // They haven't clicked the link yet
+        status: 'INVITED', 
         created_at: new Date().toISOString()
       };
 
-      // 2. Fire it up to the parent table immediately
+      // Fire it up to the parent table immediately
       if (onSuccess) {
         onSuccess(newProfile);
       }

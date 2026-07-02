@@ -7,20 +7,23 @@ import { supabase } from '@/utils/supabase';
 
 export default function PortalHeader({ clientId }: { clientId: string }) {
   const [workspaceName, setWorkspaceName] = useState('Loading...');
+  const [contactName, setContactName] = useState('Initializing...');
 
-  // Fetch the human-readable name from the database using the UUID
+  // Fetch the human-readable name and contact from the 'clients' table
   useEffect(() => {
     const fetchName = async () => {
       const { data } = await supabase
-        .from('projects')
-        .select('title, name')
+        .from('clients')
+        .select('name, primary_contact')
         .eq('id', clientId)
         .single();
-      
+        
       if (data) {
-        setWorkspaceName(data.title || data.name || 'Workspace');
+        setWorkspaceName(data.name || 'Workspace');
+        setContactName(data.primary_contact || 'Client');
       } else {
         setWorkspaceName('Workspace');
+        setContactName('Client');
       }
     };
     fetchName();
@@ -43,7 +46,8 @@ export default function PortalHeader({ clientId }: { clientId: string }) {
           <div className="w-8 h-8 rounded-full bg-slate-800 flex items-center justify-center border border-slate-700">
             <User className="w-4 h-4 text-slate-400" />
           </div>
-          <span className="text-sm font-medium text-slate-300">Beta Tester</span>
+          {/* CHANGED: Dynamically pulling their contact name instead of Beta Tester */}
+          <span className="text-sm font-medium text-slate-300">{contactName}</span>
         </div>
       </div>
     </header>

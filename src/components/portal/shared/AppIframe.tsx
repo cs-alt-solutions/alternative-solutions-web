@@ -1,5 +1,6 @@
 /* src/components/portal/shared/AppIframe.tsx */
 'use client';
+
 import React, { useState } from 'react';
 import { Loader2, ExternalLink } from 'lucide-react';
 
@@ -7,7 +8,8 @@ export default function AppIframe({ url, title }: { url: string, title?: string 
   const [isLoading, setIsLoading] = useState(true);
 
   return (
-    <div className="relative w-full h-full min-h-[75vh] bg-black/40 border border-white/5 rounded-2xl overflow-hidden flex flex-col group shadow-2xl">
+    // CHANGED: Added max-w-6xl and mx-auto to constrain the width and center it elegantly
+    <div className="relative w-full h-full min-h-[75vh] max-w-6xl mx-auto bg-black/40 border border-white/5 rounded-2xl overflow-hidden flex flex-col group shadow-2xl">
       
       {/* Synthetic Application Header */}
       <div className="h-10 bg-slate-900/80 border-b border-slate-800 flex items-center justify-between px-4 shrink-0 backdrop-blur-md">

@@ -1,61 +1,67 @@
-/* src/app/dashboard/page.tsx */
 import React from 'react';
-import { supabase } from '@/utils/supabase';
-import { WEBSITE_COPY, STRATEGIC_GOALS } from '@/utils/glossary';
-import DailyDirectivePanel from '@/components/workspace/DailyDirectivePanel';
+import { createClient } from '@/utils/supabase/server';
+import { WEBSITE_COPY } from '@/utils/glossary';
+
+// Import your existing dashboard components
+import DailyDirectivePanel, { DirectiveItem } from '@/components/workspace/DailyDirectivePanel';
 import NetworkPulse from '@/components/workspace/NetworkPulse';
 import PriorityQueuePanel from '@/components/workspace/PriorityQueuePanel';
 import EngineeringPanel from '@/components/workspace/EngineeringPanel';
 import PlatformTrackerPanel from '@/components/workspace/PlatformTrackerPanel';
-import TelemetryPanel from '@/components/workspace/TelemetryPanel';
+
+export const dynamic = 'force-dynamic';
 
 export default async function DashboardOverview() {
+  const supabase = await createClient();
   const copy = WEBSITE_COPY.DASHBOARD.OVERVIEW;
-  const commonCopy = WEBSITE_COPY.DASHBOARD.COMMON;
 
-  // Unified Parallel Fetch
-  const [
-    { data: directives },
-    { data: projects },
-    { data: pulse },
-    { data: queue }
-  ] = await Promise.all([
-    supabase.from('ideas_ledger').select('*').eq('status', 'IN_PROGRESS').limit(5),
-    supabase.from('projects').select('*').limit(3),
-    supabase.from('pulse_log').select('*').order('timestamp', { ascending: false }).limit(10),
-    supabase.from('waitlist').select('*').eq('status', 'PENDING').order('created_at', { ascending: false })
-  ]);
+  // 1. FETCH THE SECTOR ZERO LEADS
+  // Note: Ensure 'leads' matches the exact table name your server action writes to!
+  let recentLeads: DirectiveItem[] = [];
+  
+  try {
+    const { data: leads, error } = await supabase
+      .from('sector_zero_leads') // <-- Verify this table name in your database
+      .select('*')
+      .eq('status', 'PENDING') // Only grab new/unprocessed ones
+      .order('created_at', { ascending: false })
+      .limit(5);
 
-  const mappedDirectives = (directives || []).map(d => ({
-    ...d,
-    type: d.classification || 'TASK',
-    subtitle: STRATEGIC_GOALS[d.goal_id as keyof typeof STRATEGIC_GOALS]?.label || 'System',
-    link: '/dashboard/tasks'
-  }));
+    if (!error && leads) {
+      // Map the database rows into the format the Up Next panel expects
+      recentLeads = leads.map((lead) => ({
+        id: lead.id,
+        type: 'LEAD',
+        title: lead.name || 'New Sector Zero Applicant',
+        subtitle: lead.email,
+        link: `/dashboard/clients?lead=${lead.id}` // We'll route this to Client HQ later
+      }));
+    }
+  } catch (err) {
+    console.error("Failed to fetch leads:", err);
+  }
 
   return (
-    <div className="p-8 space-y-8 animate-in fade-in duration-700">
+    <div className="p-8 max-w-7xl mx-auto space-y-8 animate-in fade-in duration-500">
+      
+      {/* TOP ROW: Up Next (Leads) & Recent Activity */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         <div className="lg:col-span-2">
-          <DailyDirectivePanel copy={copy.DIRECTIVE} items={mappedDirectives} />
+          {/* Inject the mapped leads directly into the panel */}
+          <DailyDirectivePanel items={recentLeads} copy={copy.DIRECTIVE} />
         </div>
         <div className="lg:col-span-1">
-          <NetworkPulse copy={copy.LIVE_FEED} feed={pulse || []} />
+          <NetworkPulse copy={copy.LIVE_FEED} feed={[]} />
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
-        <div className="lg:col-span-1">
-          <PriorityQueuePanel copy={copy.PANELS.ACTION_REQD} commonCopy={commonCopy} queue={queue || []} />
-        </div>
-        <div className="lg:col-span-2">
-          <EngineeringPanel copy={copy.PANELS.ENGINEERING} projects={projects || []} />
-        </div>
-        <div className="lg:col-span-1">
-          <PlatformTrackerPanel copy={copy.INFRASTRUCTURE} />
-        </div>
+      {/* BOTTOM ROW: Queue, Engineering, Tech Status */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <PriorityQueuePanel queue={[]} copy={WEBSITE_COPY.DASHBOARD.BETA_COMMAND} commonCopy={WEBSITE_COPY.DASHBOARD.COMMON} />
+        <EngineeringPanel projects={[]} copy={copy} />
+        <PlatformTrackerPanel copy={copy.INFRASTRUCTURE} />
       </div>
-      <TelemetryPanel copy={copy.TELEMETRY} />
+      
     </div>
   );
 }

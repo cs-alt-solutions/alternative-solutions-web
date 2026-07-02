@@ -5,11 +5,12 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { supabase } from '@/utils/supabase';
-import { SANDBOX_CLIENTS } from '@/utils/glossary';
 import { 
   ArrowLeft, ExternalLink, Settings, Save, ShieldCheck, 
-  Activity, Layers, Copy, CheckCircle2, AlertTriangle, Loader2
+  Layers, Copy, CheckCircle2, AlertTriangle, Loader2
 } from 'lucide-react';
+// BRINGING IN OUR NEW MODULE!
+import ClientAccessModule from '@/components/dashboard/client-hq/ClientAccessModule';
 
 export default function ClientAdminProfilePage() {
   const params = useParams();
@@ -17,7 +18,6 @@ export default function ClientAdminProfilePage() {
   const clientId = params.clientId as string;
   
   const [dbClient, setDbClient] = useState<any>(null);
-  const [localConfig, setLocalConfig] = useState<any>(null);
   
   const [dbPin, setDbPin] = useState('');
   const [dbWorkspaceCode, setDbWorkspaceCode] = useState('');
@@ -29,21 +29,13 @@ export default function ClientAdminProfilePage() {
 
   useEffect(() => {
     const fetchClientData = async () => {
-      // 1. Fetch from Supabase via UUID
+      // Fetching purely from Supabase via UUID
       const { data } = await supabase.from('clients').select('*').eq('id', clientId).single();
       
       if (data) {
         setDbClient(data);
         setDbPin(data.master_pin?.toString() || '');
         setDbWorkspaceCode(data.workspace_code || '');
-
-        // 2. The Bridge: Match local config case-insensitively
-        const dbName = data.name?.toLowerCase().trim();
-        const matchedConfig = Object.values(SANDBOX_CLIENTS).find(
-           (config: any) => config.name?.toLowerCase().trim() === dbName || 
-                            config.agencyName?.toLowerCase().trim() === dbName
-        );
-        setLocalConfig(matchedConfig || null);
       }
       setIsLoading(false);
     };
@@ -92,9 +84,8 @@ export default function ClientAdminProfilePage() {
   }
 
   const handleCopyLink = () => {
-    // 1. Route to the local config ID if we matched it, otherwise fallback to DB ID
-    const targetUrlId = localConfig ? localConfig.id : clientId;
-    const url = `${window.location.origin}/sandbox/${targetUrlId}`;
+    // Dynamically generates the new portal route
+    const url = `${window.location.origin}/portal/${clientId}`;
     navigator.clipboard.writeText(url);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
@@ -141,19 +132,19 @@ export default function ClientAdminProfilePage() {
             {copied ? 'Copied!' : 'Copy Portal Link'}
           </button>
           
-          {/* 2. Route Launch Sandbox to the Local ID */}
           <Link 
-            href={`/sandbox/${localConfig ? localConfig.id : clientId}`} 
+            href={`/portal/${clientId}`} 
             target="_blank"
             className="flex items-center justify-center gap-2 px-6 py-3 rounded-xl bg-brand-primary text-slate-900 hover:bg-cyan-400 hover:shadow-[0_0_20px_rgba(34,211,238,0.4)] transition-all text-xs font-black uppercase tracking-widest"
           >
-            Launch Sandbox <ExternalLink size={16} />
+            Launch Portal <ExternalLink size={16} />
           </Link>
         </div>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         
+        {/* LEFT COLUMN */}
         <div className="lg:col-span-2 space-y-6">
           <div className="bg-bg-surface-100 border border-white/5 rounded-3xl p-6 lg:p-8">
             <div className="flex items-center justify-between border-b border-white/5 pb-6 mb-6">
@@ -212,41 +203,23 @@ export default function ClientAdminProfilePage() {
                 </button>
               </div>
             </form>
-
           </div>
         </div>
 
+        {/* RIGHT COLUMN */}
         <div className="space-y-6">
+          
+          {/* HERE IS THE NEW ACCESS MODULE WE BUILT */}
+          <ClientAccessModule clientId={dbClient.id} clientName={dbClient.name} />
+
           <div className="bg-bg-surface-100 border border-white/5 rounded-3xl p-6">
             <h2 className="text-sm font-black text-white uppercase tracking-widest mb-6 border-b border-white/5 pb-4 flex items-center gap-2">
               <Layers size={16} className="text-slate-400" /> Provisioned Modules
             </h2>
-            
-            <div className="space-y-3">
-              {localConfig ? (
-                localConfig.apps?.map((app: any) => (
-                  <div key={app.id} className="bg-bg-surface-200 border border-white/5 rounded-xl p-4 flex items-center justify-between group">
-                    <div className="flex items-center gap-3">
-                      <div className="bg-brand-primary/10 p-2 rounded-lg">
-                        <Activity size={14} className="text-brand-primary" />
-                      </div>
-                      <div>
-                        <h4 className="text-xs font-bold text-white tracking-wide">{app.name}</h4>
-                        <p className="text-[9px] font-mono text-slate-500 uppercase tracking-widest">{app.category || 'Module'}</p>
-                      </div>
-                    </div>
-                    <span className={`text-[8px] font-black uppercase tracking-widest px-2 py-1 rounded border ${app.status === 'live' || app.status === 'production' ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' : 'bg-amber-500/10 text-amber-400 border-amber-500/20'}`}>
-                      {app.status || 'Dev'}
-                    </span>
-                  </div>
-                ))
-              ) : (
-                <div className="bg-amber-500/5 border border-amber-500/20 p-4 rounded-xl text-center">
-                   <p className="text-[10px] font-mono text-amber-500/80 uppercase tracking-widest leading-relaxed">
-                     No local framework mapped. Ensure the local config name matches the database name exactly.
-                   </p>
-                </div>
-              )}
+            <div className="bg-bg-surface-200 border border-white/5 p-6 rounded-xl text-center">
+               <p className="text-[10px] font-mono text-cyan-500/80 uppercase tracking-widest leading-relaxed">
+                 System detached from hardcoded local config. Deploy modules directly from the active Ecosystem manager.
+               </p>
             </div>
           </div>
         </div>

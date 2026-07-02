@@ -1,4 +1,3 @@
-/* src/components/emails/AdminIntakeEmail.tsx */
 import React from 'react';
 import { Html, Head, Body, Container, Section, Text, Heading, Hr, Tailwind } from '@react-email/components';
 
@@ -21,72 +20,75 @@ export default function AdminIntakeEmail({
 }: AdminIntakeEmailProps) {
   return (
     <Html>
-      <Head />
       <Tailwind>
-        <Body className="bg-black font-sans my-auto mx-auto px-2 py-8">
-          <Container className="border border-cyan-900/50 rounded-xl p-8 bg-zinc-950 max-w-2xl mx-auto shadow-2xl">
+        <Head />
+        <Body className="bg-black font-sans my-auto mx-auto p-4 text-white">
+          
+          <Container width={600} className="mx-auto my-8 bg-black rounded-xl overflow-hidden border border-white/10 shadow-2xl">
             
-            {/* System Header */}
-            <Section className="mb-8">
-              <Text className="text-cyan-400 font-mono text-[10px] uppercase tracking-widest mb-2">
-                /// SYSTEM TRANSMISSION
-              </Text>
-              <Heading className="text-white text-2xl font-black uppercase tracking-tight m-0">
-                New Sector Zero Applicant
+            {/* The Blueprint Header */}
+            <Section className="bg-slate-900 text-center pt-10 pb-8 border-b-2 border-[#00D1FF]">
+              <Heading className="text-[#00D1FF] text-2xl md:text-3xl font-bold uppercase tracking-widest m-0 mb-3">
+                New Project Application
               </Heading>
+              <Text className="text-slate-400 font-mono text-[10px] uppercase tracking-widest m-0">
+                Sector Zero Foundation
+              </Text>
+            </Section>
+            
+            <Section className="px-8 pt-8 pb-4">
+              <Text className="text-white text-base m-0 mb-4">
+                System Alert,
+              </Text>
+              <Text className="text-slate-300 text-sm leading-relaxed m-0">
+                A new project application has been submitted to the queue. Review the dossier below and authorize the build inside the command center when ready.
+              </Text>
             </Section>
 
-            <Hr className="border border-white/10 my-6" />
-
-            {/* Applicant Identity */}
-            <Section className="mb-6">
-              <Text className="text-slate-500 font-mono text-[10px] uppercase tracking-widest m-0 mb-1">
-                Identity Data
-              </Text>
-              <Text className="text-white text-base font-bold m-0 mb-1">
-                {name}
-              </Text>
-              <Text className="text-cyan-400 text-sm m-0 mb-1">
-                {email}
-              </Text>
-              {phone && (
-                <Text className="text-slate-300 text-sm m-0">
-                  Phone: {phone}
+            <Section className="px-8 pb-8">
+              
+              {/* Data Box 1: Identity (Cyan Left Border) */}
+              <Section className="mb-6 bg-slate-900 rounded-lg border-l-4 border-l-[#00D1FF] p-6">
+                <Text className="text-white font-bold text-xs uppercase tracking-widest m-0 mb-4">
+                  Identity & Footprint:
                 </Text>
-              )}
+                
+                <Text className="text-slate-300 text-sm m-0 mb-2">
+                  <strong className="text-white">Name:</strong> {name}
+                </Text>
+                <Text className="text-slate-300 text-sm m-0 mb-2">
+                  <strong className="text-white">Email:</strong> {email}
+                </Text>
+                {phone && (
+                  <Text className="text-slate-300 text-sm m-0 mb-2">
+                    <strong className="text-white">Phone:</strong> {phone}
+                  </Text>
+                )}
+                <Text className="text-slate-300 text-sm m-0 mb-2 mt-4">
+                  <strong className="text-white">Socials:</strong> {socials || 'None provided'}
+                </Text>
+                <Text className="text-slate-300 text-sm m-0">
+                  <strong className="text-white">Existing URL:</strong> {existingWebsite || 'None provided'}
+                </Text>
+              </Section>
+
+              {/* Data Box 2: Scope (Fuchsia Left Border) */}
+              <Section className="mb-4 bg-slate-900 rounded-lg border-l-4 border-l-[#D946EF] p-6">
+                <Text className="text-[#D946EF] font-bold text-xs uppercase tracking-widest m-0 mb-4">
+                  Project Scope:
+                </Text>
+                <Text className="text-slate-300 text-sm leading-relaxed m-0 italic">
+                  "{projectScope}"
+                </Text>
+              </Section>
+
             </Section>
 
-            {/* Digital Footprint */}
-            <Section className="mb-6 p-4 bg-black/50 border border-white/5 rounded-lg">
-              <Text className="text-slate-500 font-mono text-[10px] uppercase tracking-widest m-0 mb-3">
-                Digital Footprint
-              </Text>
-              
-              <Text className="text-slate-300 text-sm m-0 mb-2 font-mono">
-                <span className="text-white font-bold">SOCIALS:</span> {socials || 'N/A'}
-              </Text>
-              
-              <Text className="text-slate-300 text-sm m-0 font-mono">
-                <span className="text-white font-bold">EXISTING URL:</span> {existingWebsite || 'N/A'}
-              </Text>
-            </Section>
+            <Hr className="border-white/10 m-0" />
 
-            {/* Vision & Scope */}
-            <Section className="mb-8">
-              <Text className="text-slate-500 font-mono text-[10px] uppercase tracking-widest m-0 mb-2">
-                Project Scope & Vision
-              </Text>
-              <Text className="text-slate-300 text-sm leading-relaxed m-0 border-l-2 border-cyan-500/50 pl-4 py-1">
-                "{projectScope}"
-              </Text>
-            </Section>
-
-            <Hr className="border border-white/10 my-6" />
-
-            {/* Footer */}
-            <Section>
-              <Text className="text-slate-600 font-mono text-[10px] uppercase tracking-widest m-0 text-center">
-                Alternative Solutions I/O LLC • Command Center
+            <Section className="px-8 py-6 bg-black text-center">
+              <Text className="text-slate-500 font-mono text-[10px] uppercase tracking-widest m-0">
+                Alternative Solutions I/O LLC // Admin Telemetry
               </Text>
             </Section>
 
