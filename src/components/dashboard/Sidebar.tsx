@@ -15,7 +15,8 @@ import {
   Briefcase,
   TestTube,
   CheckSquare,
-  Server
+  Server,
+  Store // <-- Added the Store icon here
 } from 'lucide-react';
 import { DASHBOARD_COPY } from '@/config/dashboard';
 
@@ -33,6 +34,8 @@ export default function Sidebar() {
       items: [
         { name: copy.FOUNDATION || 'FOUNDATION', href: '/dashboard/foundation', icon: Construction },
         { name: copy.ECOSYSTEM_MANAGER || 'ECOSYSTEM', href: '/dashboard/ecosystem', icon: Box },
+        // 🚨 ADDED STOREFRONTS HERE 🚨
+        { name: copy.STOREFRONTS || 'STOREFRONTS', href: '/dashboard/storefronts', icon: Store },
         { name: copy.BROADCAST || 'BROADCAST', href: '/dashboard/broadcast', icon: Radio },
       ]
     },
@@ -103,7 +106,7 @@ export default function Sidebar() {
         {/* MAPPED GROUPS */}
         {navGroups.map((group) => (
           <div key={group.label} className="mb-2">
-            {/* The New Sharp Architect Header */}
+            {/* The Sharp Architect Header */}
             <div className="mb-3 border-l-[3px] border-brand-primary/60 bg-linear-to-r from-brand-primary/10 to-transparent px-5 py-1.5">
               <h3 className="text-[10px] font-mono font-black text-brand-primary uppercase tracking-[0.2em]">
                 {group.label}

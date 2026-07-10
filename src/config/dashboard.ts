@@ -5,6 +5,7 @@ export const DASHBOARD_COPY = {
     GROUPS: { WORKSPACE: "My Workspace", HUMAN_MANAGEMENT: "Human Management", LOGISTICS: "Life & Logistics", SYSTEM: "System Admin" }, 
     OVERVIEW: "Home", 
     FOUNDATION: "The Drafting Table",
+    STOREFRONTS: "Storefronts", // <-- ADDED THIS LINE HERE
     LEDGER: "The Ledger",
     ECOSYSTEM_MANAGER: "My Products",
     BETA_COMMAND: "Beta Command",
@@ -17,7 +18,7 @@ export const DASHBOARD_COPY = {
     EXIT: "← Back to Website" 
   }, 
 
-  // ADDED: Dedicated section for Client Portals to maintain Single Source of Truth
+  // Dedicated section for Client Portals to maintain Single Source of Truth
   CLIENT_PORTAL: {
     WELCOME_TITLE: "Welcome to your Workspace",
     WELCOME_DESC: "This is your dedicated secure command center. Use this portal to securely transfer assets, review active prototypes, and manage your infrastructure with Alternative Solutions.",
