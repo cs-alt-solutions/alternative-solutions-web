@@ -1,4 +1,3 @@
-// src/components/dashboard/storefronts/editor/DesignTab.tsx
 'use client';
 
 import React, { useState } from 'react';
@@ -7,7 +6,6 @@ import { Save, Loader2 } from 'lucide-react';
 import { supabase } from '@/utils/supabase';
 import VisualArchitecture from './core/VisualArchitecture';
 
-// CHANGED: Added the onReload prop
 export default function DesignTab({ store, onReload }: { store: any, onReload?: () => void }) {
   const router = useRouter();
   const [isSaving, setIsSaving] = useState(false);

@@ -1,4 +1,3 @@
-// src/components/dashboard/storefronts/editor/StorefrontEditor.tsx
 'use client';
 
 import React, { useState } from 'react';
@@ -71,7 +70,6 @@ export default function StorefrontEditor({ store, onClose }: { store: any, onClo
           </div>
 
           <div className="flex-1 overflow-y-auto custom-scrollbar bg-zinc-950">
-            {/* CHANGED: Passing the onReload prop down to the tabs so they can trigger the refresh! */}
             {activeTab === 'content' && <CoreTab store={store} onReload={reloadCanvas} />}
             {activeTab === 'design' && <DesignTab store={store} onReload={reloadCanvas} />}
             {activeTab === 'media' && <MediaTab storefront={store} />}
@@ -104,7 +102,6 @@ export default function StorefrontEditor({ store, onClose }: { store: any, onClo
 
           <div className="flex-1 w-full h-full relative p-0 sm:p-4 bg-zinc-950">
             <div className="w-full h-full rounded-none sm:rounded-xl overflow-hidden border-0 sm:border border-zinc-800 shadow-2xl bg-white relative">
-              {/* ADDED: ?t=${refreshKey} immediately after the slug to bust the browser cache! */}
               <iframe key={refreshKey} src={`${PREVIEW_BASE_URL}/${store.slug}?t=${refreshKey}`} className="absolute inset-0 w-full h-full border-none" title="Live Canvas" />
             </div>
           </div>
