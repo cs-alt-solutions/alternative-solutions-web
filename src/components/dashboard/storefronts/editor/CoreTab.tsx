@@ -10,7 +10,8 @@ import HeroContent from './core/HeroContent';
 import StoryAbout from './core/StoryAbout';
 import CustomHeadings from './core/CustomHeadings';
 
-export default function CoreTab({ store }: { store: any }) {
+// CHANGED: Added the onReload prop
+export default function CoreTab({ store, onReload }: { store: any, onReload?: () => void }) {
   const router = useRouter();
   const [isSaving, setIsSaving] = useState(false);
   const [saveMessage, setSaveMessage] = useState('');
@@ -18,7 +19,7 @@ export default function CoreTab({ store }: { store: any }) {
   const [formData, setFormData] = useState({
     business_name: store?.business_name || '',
     slug: store?.slug || '',
-    is_template: store?.is_template || false, // <-- Tracks prototype status
+    is_template: store?.is_template || false, 
     contact_email: store?.contact_email || '',
     social_links: store?.social_links || {},
     tagline: store?.tagline || '',
@@ -44,6 +45,10 @@ export default function CoreTab({ store }: { store: any }) {
       
       setSaveMessage('Content saved successfully!');
       router.refresh();
+
+      // THE MAGIC BULLET: Automatically force the iframe to refresh!
+      if (onReload) onReload(); 
+
       setTimeout(() => setSaveMessage(''), 3000);
     } catch (err) {
       console.error("Save error:", err);
@@ -55,7 +60,6 @@ export default function CoreTab({ store }: { store: any }) {
 
   return (
     <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500 pb-12 p-2">
-      {/* We pass setFormData so the toggle switch works */}
       <BrandIdentity formData={formData} handleChange={handleChange} setFormData={setFormData} />
       <HeroContent formData={formData} handleChange={handleChange} />
       <StoryAbout formData={formData} handleChange={handleChange} setFormData={setFormData} />

@@ -14,17 +14,17 @@ export default function StorefrontEditor({ store, onClose }: { store: any, onClo
   const [mobileView, setMobileView] = useState<'editor' | 'preview'>('editor');
   const [refreshKey, setRefreshKey] = useState(Date.now());
 
+  // This is the function that forces the iframe to reload
   const reloadCanvas = () => setRefreshKey(Date.now());
 
-  // 🚨 THE NEW 4-TAB ARCHITECTURE
   const tabs = [
     { id: 'content', label: 'Content & Story', icon: PenTool },
     { id: 'design', label: 'Architecture & Vibe', icon: Palette },
     { id: 'media', label: 'Media Ecosystem', icon: ImageIcon },
-    { id: 'services', label: 'Services', icon: Layers }, // ID remains 'services'
+    { id: 'services', label: 'Services', icon: Layers }, 
   ];
 
-  const PREVIEW_BASE_URL = 'http://localhost:3000';
+  const PREVIEW_BASE_URL = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
 
   return (
     <div className="fixed inset-0 z-50 bg-zinc-950 flex flex-col overflow-hidden animate-in slide-in-from-bottom-10 fade-in duration-300">
@@ -62,7 +62,6 @@ export default function StorefrontEditor({ store, onClose }: { store: any, onClo
         {/* LEFT PANE: CONTROLS */}
         <div className={`w-full lg:w-112.5 xl:w-137.5 flex flex-col border-r border-zinc-800 bg-bg-app relative z-10 ${mobileView === 'preview' ? 'hidden lg:flex' : 'flex'}`}>
           
-          {/* 🚨 THE FIX: Changed to flex-wrap so tabs drop to a second line instead of hiding */}
           <div className="flex flex-wrap gap-2 p-3 border-b border-zinc-800 shrink-0 bg-zinc-900">
             {tabs.map(tab => (
               <button key={tab.id} onClick={() => setActiveTab(tab.id)} className={`flex items-center gap-2 px-4 py-2.5 rounded-lg text-[10px] font-bold tracking-widest uppercase transition-all whitespace-nowrap ${activeTab === tab.id ? 'bg-zinc-800 text-white border border-zinc-700 shadow-sm' : 'text-zinc-500 hover:text-zinc-300 hover:bg-zinc-800/50 border border-transparent'}`}>
@@ -72,9 +71,9 @@ export default function StorefrontEditor({ store, onClose }: { store: any, onClo
           </div>
 
           <div className="flex-1 overflow-y-auto custom-scrollbar bg-zinc-950">
-            {/* 🚨 DYNAMIC TAB ROUTING (Ensured ID matches tab array) */}
-            {activeTab === 'content' && <CoreTab store={store} />}
-            {activeTab === 'design' && <DesignTab store={store} />}
+            {/* CHANGED: Passing the onReload prop down to the tabs so they can trigger the refresh! */}
+            {activeTab === 'content' && <CoreTab store={store} onReload={reloadCanvas} />}
+            {activeTab === 'design' && <DesignTab store={store} onReload={reloadCanvas} />}
             {activeTab === 'media' && <MediaTab storefront={store} />}
             {activeTab === 'services' && <CapabilitiesTab storefront={store} />}
           </div>
@@ -82,7 +81,6 @@ export default function StorefrontEditor({ store, onClose }: { store: any, onClo
 
         {/* RIGHT PANE: LIVE CANVAS */}
         <div className={`flex-1 bg-[#050505] relative flex flex-col ${mobileView === 'editor' ? 'hidden lg:flex' : 'flex'}`}>
-          
           <div className="bg-zinc-900 border-b border-zinc-800 px-4 py-2 flex items-center gap-4 shrink-0 shadow-sm">
             <div className="hidden sm:flex gap-1.5 ml-2">
               <div className="w-3 h-3 rounded-full bg-zinc-700"></div>
@@ -106,10 +104,12 @@ export default function StorefrontEditor({ store, onClose }: { store: any, onClo
 
           <div className="flex-1 w-full h-full relative p-0 sm:p-4 bg-zinc-950">
             <div className="w-full h-full rounded-none sm:rounded-xl overflow-hidden border-0 sm:border border-zinc-800 shadow-2xl bg-white relative">
-              <iframe key={refreshKey} src={`${PREVIEW_BASE_URL}/${store.slug}`} className="absolute inset-0 w-full h-full border-none" title="Live Canvas" />
+              {/* ADDED: ?t=${refreshKey} immediately after the slug to bust the browser cache! */}
+              <iframe key={refreshKey} src={`${PREVIEW_BASE_URL}/${store.slug}?t=${refreshKey}`} className="absolute inset-0 w-full h-full border-none" title="Live Canvas" />
             </div>
           </div>
         </div>
+
       </div>
     </div>
   );
