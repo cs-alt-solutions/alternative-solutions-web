@@ -3,40 +3,18 @@
 import React from 'react';
 import { WEBSITE_COPY } from '@/utils/glossary';
 import { Settings2, Server, Globe, Sparkles } from 'lucide-react';
-import AutoAccordion, { AccordionItem } from '@/components/core/AutoAccordion';
 
 export default function SectorZeroPledge() {
   const copy = WEBSITE_COPY.SECTOR_ZERO;
 
-  // Map our glossary text to the new AutoAccordion prop structure
-  const accordionItems: AccordionItem[] = copy.REWARDS.RANKS.map((rank: any, index: number) => {
-    let theme, icon;
-    
+  const getTheme = (index: number) => {
     switch (index) {
-      case 0: 
-        theme = { color: 'text-brand-primary', bg: 'bg-brand-primary/10', border: 'border-brand-primary/50', glow: 'shadow-[0_0_30px_rgba(6,182,212,0.3)]' };
-        icon = <Settings2 size={24} />;
-        break;
-      case 1: 
-        theme = { color: 'text-fuchsia-400', bg: 'bg-fuchsia-500/10', border: 'border-fuchsia-500/50', glow: 'shadow-[0_0_30px_rgba(232,121,249,0.3)]' };
-        icon = <Server size={24} />;
-        break;
-      case 2: 
-        theme = { color: 'text-emerald-400', bg: 'bg-emerald-500/10', border: 'border-emerald-500/50', glow: 'shadow-[0_0_30px_rgba(52,211,153,0.3)]' };
-        icon = <Globe size={24} />;
-        break;
-      default: 
-        theme = { color: 'text-brand-primary', bg: 'bg-brand-primary/10', border: 'border-brand-primary/50', glow: 'shadow-[0_0_30px_rgba(6,182,212,0.3)]' };
-        icon = <Settings2 size={24} />;
+      case 0: return { color: 'text-brand-primary', bg: 'bg-brand-primary/10', border: 'border-brand-primary/50', icon: <Settings2 size={24} /> };
+      case 1: return { color: 'text-fuchsia-400', bg: 'bg-fuchsia-500/10', border: 'border-fuchsia-500/50', icon: <Server size={24} /> };
+      case 2: return { color: 'text-emerald-400', bg: 'bg-emerald-500/10', border: 'border-emerald-500/50', icon: <Globe size={24} /> };
+      default: return { color: 'text-brand-primary', bg: 'bg-brand-primary/10', border: 'border-brand-primary/50', icon: <Settings2 size={24} /> };
     }
-
-    return {
-      title: rank.title,
-      desc: rank.desc,
-      icon,
-      theme
-    };
-  });
+  };
 
   return (
     <section className="mb-24 animate-in fade-in slide-in-from-bottom-8 duration-1000 delay-200 scroll-mt-32 relative">
@@ -70,13 +48,26 @@ export default function SectorZeroPledge() {
           </div>
         </div>
 
-        {/* BOTTOM HALF: The Specifications (Driven by our new Core Component) */}
+        {/* BOTTOM HALF: Static 3-Column Grid (No more Accordions) */}
         <div className="relative">
           <h3 className="text-sm font-mono text-white/50 uppercase tracking-[0.3em] mb-8 flex items-center gap-3">
             <Sparkles size={16} className="text-brand-primary" /> {copy.REWARDS.TITLE}
           </h3>
           
-          <AutoAccordion items={accordionItems} />
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {copy.REWARDS.RANKS.map((rank: any, index: number) => {
+              const theme = getTheme(index);
+              return (
+                <div key={index} className="bg-zinc-900/50 border border-zinc-800 rounded-2xl p-6 hover:border-brand-primary/50 transition-colors flex flex-col h-full">
+                  <div className={`w-12 h-12 rounded-xl mb-6 flex items-center justify-center ${theme.bg} ${theme.color} border ${theme.border}`}>
+                    {theme.icon}
+                  </div>
+                  <h4 className="text-xl font-bold text-white mb-3">{rank.title}</h4>
+                  <p className="text-sm text-slate-400 leading-relaxed flex-1">{rank.desc}</p>
+                </div>
+              );
+            })}
+          </div>
           
         </div>
       </div>

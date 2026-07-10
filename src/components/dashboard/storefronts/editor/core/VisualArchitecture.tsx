@@ -70,7 +70,7 @@ export default function VisualArchitecture({ formData, handleVisualSelect, setFo
             <button key={theme.value} type="button" onClick={() => handleThemeSwitch(theme.value)}
               className={`relative p-4 h-24 border-2 transition-all flex flex-col items-center justify-center rounded-lg ${currentTheme === theme.value ? 'border-emerald-500 ring-2 ring-emerald-500/20 z-10' : 'border-zinc-800 hover:border-zinc-600'} ${theme.vibe}`}>
               {/* 🚨 Fixed Text Wrapping */}
-              <span className="text-center drop-shadow-sm px-1 text-xs md:text-sm leading-tight break-words whitespace-normal w-full">{theme.label}</span>
+              <span className="text-center drop-shadow-sm px-1 text-xs md:text-sm leading-tight wrap-break-word whitespace-normal w-full">{theme.label}</span>
               {currentTheme === theme.value && (
                 <div className="absolute -top-2 -right-2 w-4 h-4 bg-emerald-500 rounded-full border-2 border-zinc-900 shadow-[0_0_10px_rgba(16,185,129,0.5)]" />
               )}

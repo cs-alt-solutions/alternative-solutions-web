@@ -5,7 +5,6 @@ import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Save, Loader2 } from 'lucide-react';
 import { supabase } from '@/utils/supabase';
-
 import BrandIdentity from './core/BrandIdentity';
 import HeroContent from './core/HeroContent';
 import StoryAbout from './core/StoryAbout';
@@ -15,10 +14,11 @@ export default function CoreTab({ store }: { store: any }) {
   const router = useRouter();
   const [isSaving, setIsSaving] = useState(false);
   const [saveMessage, setSaveMessage] = useState('');
-  
+
   const [formData, setFormData] = useState({
     business_name: store?.business_name || '',
     slug: store?.slug || '',
+    is_template: store?.is_template || false, // <-- Tracks prototype status
     contact_email: store?.contact_email || '',
     social_links: store?.social_links || {},
     tagline: store?.tagline || '',
@@ -41,6 +41,7 @@ export default function CoreTab({ store }: { store: any }) {
     try {
       const { error } = await supabase.from('storefronts').update(formData).eq('id', store.id);
       if (error) throw error;
+      
       setSaveMessage('Content saved successfully!');
       router.refresh();
       setTimeout(() => setSaveMessage(''), 3000);
@@ -54,13 +55,12 @@ export default function CoreTab({ store }: { store: any }) {
 
   return (
     <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500 pb-12 p-2">
-      
-      <BrandIdentity formData={formData} handleChange={handleChange} />
+      {/* We pass setFormData so the toggle switch works */}
+      <BrandIdentity formData={formData} handleChange={handleChange} setFormData={setFormData} />
       <HeroContent formData={formData} handleChange={handleChange} />
       <StoryAbout formData={formData} handleChange={handleChange} setFormData={setFormData} />
       <CustomHeadings formData={formData} handleChange={handleChange} />
 
-      {/* SAVE BAR */}
       <div className="flex flex-col md:flex-row items-center justify-between gap-4 pt-6">
         <p className="text-emerald-400 text-sm font-mono font-bold tracking-widest uppercase animate-pulse min-h-5">
           {saveMessage}
