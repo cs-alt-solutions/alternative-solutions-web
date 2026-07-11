@@ -42,7 +42,7 @@ export default async function DashboardOverview() {
   }
 
   return (
-    <div className="p-8 max-w-7xl mx-auto space-y-8 animate-in fade-in duration-500">
+    <div className="p-0 md:p-8 max-w-7xl mx-auto space-y-4 md:space-y-8 animate-in fade-in duration-500">
       
       {/* TOP ROW: Up Next (Leads) & Recent Activity */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
