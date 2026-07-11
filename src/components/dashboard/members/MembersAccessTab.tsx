@@ -1,24 +1,36 @@
-/* src/components/dashboard/members/MembersAccessTab.tsx */
 'use client';
 import React, { useState, useEffect } from 'react';
 import { supabase } from '@/utils/supabase'; 
-import { Search, UserCircle, Mail, Calendar, BadgeCheck, ChevronDown, ChevronUp, ShieldAlert, Loader2, Save, UserPlus, RefreshCw, Users, Shield, Beaker } from 'lucide-react';
+import { Search, UserCircle, Mail, Calendar, BadgeCheck, ShieldAlert, Loader2, Save, UserPlus, RefreshCw, Users, Shield, Beaker } from 'lucide-react';
 import InviteMemberModal from './InviteMemberModal';
 import { WEBSITE_COPY } from '@/utils/glossary';
+import ResponsiveTable from '@/components/core/ResponsiveTable';
 
 type FilterTab = 'ALL' | 'STAFF' | 'CLIENT' | 'BETA';
 
+const Badge = ({ status }: { status: string }) => {
+  const isActive = status === 'ACTIVE';
+  const isPending = status === 'PENDING';
+  
+  return (
+    <span className={`px-2 py-1 rounded-full text-[9px] font-black uppercase tracking-widest border ${
+      isActive ? 'bg-cyan-500/10 text-cyan-400 border-cyan-500/20' : 
+      isPending ? 'bg-amber-500/10 text-amber-400 border-amber-500/20' : 
+      'bg-slate-800 text-slate-400 border-slate-700'
+    }`}>
+      {status}
+    </span>
+  );
+};
+
 export default function MembersAccessTab({ initialProfiles }: { initialProfiles: any[] }) {
   const [profiles, setProfiles] = useState<any[]>(initialProfiles);
-  const [workspaces, setWorkspaces] = useState<any[]>([]); // NEW: Live Workspace Data
-  const [expandedRow, setExpandedRow] = useState<string | null>(null);
+  const [workspaces, setWorkspaces] = useState<any[]>([]);
   const [isInviteModalOpen, setIsInviteModalOpen] = useState(false);
   const [activeTab, setActiveTab] = useState<FilterTab>('ALL');
 
   useEffect(() => {
     setProfiles(initialProfiles);
-    
-    // NEW: Fetch all available workspaces from the database
     const fetchWorkspaces = async () => {
       const { data } = await supabase.from('projects').select('id, name, title, type');
       if (data) setWorkspaces(data);
@@ -26,53 +38,39 @@ export default function MembersAccessTab({ initialProfiles }: { initialProfiles:
     fetchWorkspaces();
   }, [initialProfiles]);
 
-  const [editingRole, setEditingRole] = useState<{ [key: string]: string }>({});
-  const [editingWorkspace, setEditingWorkspace] = useState<{ [key: string]: string }>({});
-  const [isSaving, setIsSaving] = useState<string | null>(null);
-  const [isResending, setIsResending] = useState<string | null>(null);
-
   const copy = WEBSITE_COPY.DASHBOARD?.HUMAN_MANAGEMENT?.ACCESS_TAB || {
     STATUS_ACTIVE: "Active", STATUS_PENDING: "Pending", BTN_RESEND: "Resend Invite", BTN_RESENDING: "Sending..."
   };
 
-  const handleUpdateAccess = async (userId: string) => {
-    setIsSaving(userId);
-    const updates: any = {};
-    if (editingRole[userId]) updates.role = editingRole[userId];
-    if (editingWorkspace[userId]) updates.workspace_id = editingWorkspace[userId] === 'NONE' ? null : editingWorkspace[userId];
-    
-    const { error } = await supabase.from('profiles').update(updates).eq('id', userId);
-    
-    if (!error) {
-      setProfiles(prev => prev.map(p => p.id === userId ? { ...p, ...updates } : p));
-      setEditingRole(prev => ({ ...prev, [userId]: '' }));
-      setEditingWorkspace(prev => ({ ...prev, [userId]: '' }));
+  // Define columns for the ResponsiveTable component
+  const columns = [
+    { 
+      header: 'Member', 
+      accessor: (u: any) => (
+        <div className="flex items-center gap-3">
+          <div className="w-8 h-8 rounded-lg bg-black/50 border border-white/5 flex items-center justify-center">
+            <UserCircle size={18} className="text-slate-400" />
+          </div>
+          <div>
+            <div className="font-bold text-white text-sm">{u.full_name || u.email.split('@')[0]}</div>
+            <div className="text-[10px] font-mono text-slate-500">{u.email}</div>
+          </div>
+        </div>
+      ) 
+    },
+    { 
+      header: 'Role', 
+      accessor: (u: any) => (
+        <span className="px-2 py-1 rounded text-[10px] font-black uppercase tracking-widest border border-white/10 bg-white/5">
+          {u.role}
+        </span>
+      ) 
+    },
+    { 
+      header: 'Status', 
+      accessor: (u: any) => <Badge status={u.status} /> 
     }
-    setIsSaving(null);
-  };
-
-  const handleResendInvite = async (userId: string, email: string) => {
-    setIsResending(userId);
-    try {
-      const response = await fetch('/api/invites/resend', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email })
-      });
-      if (!response.ok) throw new Error('Failed to resend');
-      alert("Transmission successful: New magic link sent.");
-      
-    } catch (error) {
-      console.error("Resend failed:", error);
-      alert("Failed to resend magic link. Check console.");
-    } finally {
-      setIsResending(null);
-    }
-  };
-
-  const toggleRow = (id: string) => {
-    setExpandedRow(expandedRow === id ? null : id);
-  };
+  ];
 
   const filteredProfiles = profiles.filter(user => {
     if (activeTab === 'STAFF') return user.role === 'ADMIN' || user.role === 'STAFF';
@@ -83,238 +81,32 @@ export default function MembersAccessTab({ initialProfiles }: { initialProfiles:
 
   return (
     <div className="space-y-6 animate-in fade-in duration-500">
-      
-      {/* Dynamic Tab Navigation */}
+      {/* Tab Navigation */}
       <div className="flex flex-wrap gap-2 mb-4">
-        <button onClick={() => setActiveTab('ALL')} className={`px-4 py-2 rounded-full text-xs font-black uppercase tracking-widest transition-all ${activeTab === 'ALL' ? 'bg-cyan-500 text-zinc-950 shadow-[0_0_15px_rgba(34,211,238,0.3)]' : 'bg-zinc-900 text-zinc-500 hover:text-zinc-300 border border-zinc-800'}`}>
-          All Directory
-        </button>
-        <button onClick={() => setActiveTab('STAFF')} className={`flex items-center gap-2 px-4 py-2 rounded-full text-xs font-black uppercase tracking-widest transition-all ${activeTab === 'STAFF' ? 'bg-amber-500 text-zinc-950 shadow-[0_0_15px_rgba(245,158,11,0.3)]' : 'bg-zinc-900 text-zinc-500 hover:text-zinc-300 border border-zinc-800'}`}>
-          <Shield size={14} /> Internal Staff
-        </button>
-        <button onClick={() => setActiveTab('CLIENT')} className={`flex items-center gap-2 px-4 py-2 rounded-full text-xs font-black uppercase tracking-widest transition-all ${activeTab === 'CLIENT' ? 'bg-emerald-500 text-zinc-950 shadow-[0_0_15px_rgba(16,185,129,0.3)]' : 'bg-zinc-900 text-zinc-500 hover:text-zinc-300 border border-zinc-800'}`}>
-          <Users size={14} /> Clients
-        </button>
-        <button onClick={() => setActiveTab('BETA')} className={`flex items-center gap-2 px-4 py-2 rounded-full text-xs font-black uppercase tracking-widest transition-all ${activeTab === 'BETA' ? 'bg-purple-500 text-zinc-950 shadow-[0_0_15px_rgba(168,85,247,0.3)]' : 'bg-zinc-900 text-zinc-500 hover:text-zinc-300 border border-zinc-800'}`}>
-          <Beaker size={14} /> Beta Ops
-        </button>
+        <button onClick={() => setActiveTab('ALL')} className={`px-4 py-2 rounded-full text-xs font-black uppercase tracking-widest transition-all ${activeTab === 'ALL' ? 'bg-cyan-500 text-zinc-950' : 'bg-zinc-900 text-zinc-500 border border-zinc-800'}`}>All</button>
+        <button onClick={() => setActiveTab('STAFF')} className={`flex items-center gap-2 px-4 py-2 rounded-full text-xs font-black uppercase tracking-widest transition-all ${activeTab === 'STAFF' ? 'bg-amber-500 text-zinc-950' : 'bg-zinc-900 text-zinc-500 border border-zinc-800'}`}><Shield size={14} /> Staff</button>
+        <button onClick={() => setActiveTab('CLIENT')} className={`flex items-center gap-2 px-4 py-2 rounded-full text-xs font-black uppercase tracking-widest transition-all ${activeTab === 'CLIENT' ? 'bg-emerald-500 text-zinc-950' : 'bg-zinc-900 text-zinc-500 border border-zinc-800'}`}><Users size={14} /> Clients</button>
+        <button onClick={() => setActiveTab('BETA')} className={`flex items-center gap-2 px-4 py-2 rounded-full text-xs font-black uppercase tracking-widest transition-all ${activeTab === 'BETA' ? 'bg-purple-500 text-zinc-950' : 'bg-zinc-900 text-zinc-500 border border-zinc-800'}`}><Beaker size={14} /> Beta</button>
       </div>
 
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between bg-black/40 border border-white/5 p-4 rounded-xl gap-4">
-        <div className="relative w-full max-w-md">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-cyan-400/50" size={16} />
-          <input 
-            type="text" 
-            placeholder={`Search ${activeTab === 'ALL' ? 'all members' : activeTab.toLowerCase()}...`}
-            className="w-full bg-black/50 border border-white/10 rounded-lg pl-10 pr-4 py-2 text-xs font-mono text-white focus:outline-none focus:border-cyan-400/50 transition-colors"
-          />
-        </div>
-        
+      <div className="flex items-center justify-end">
         <button 
           onClick={() => setIsInviteModalOpen(true)}
-          className="flex items-center gap-2 bg-brand-primary text-slate-900 hover:bg-cyan-400 font-black uppercase tracking-widest text-[10px] px-4 py-2 rounded-lg transition-all shadow-[0_0_15px_rgba(34,211,238,0.2)] shrink-0"
+          className="flex items-center gap-2 bg-brand-primary text-slate-900 hover:bg-cyan-400 font-black uppercase tracking-widest text-[10px] px-4 py-2 rounded-lg transition-all"
         >
           <UserPlus size={14} /> Invite Member
         </button>
       </div>
 
-      {/* NEW: Passing live workspaces down to the modal */}
       <InviteMemberModal 
         isOpen={isInviteModalOpen} 
         onClose={() => setIsInviteModalOpen(false)} 
-        onSuccess={(newProfile) => {
-          setProfiles(prev => [newProfile, ...prev]);
-        }}
+        onSuccess={(newProfile) => setProfiles(prev => [newProfile, ...prev])}
         workspaces={workspaces}
       />
 
-      <div className="bg-bg-surface-200/30 border border-white/5 rounded-2xl overflow-hidden shadow-2xl">
-        
-        <div className="hidden md:grid grid-cols-12 gap-4 p-4 border-b border-white/5 bg-white/5 text-[10px] font-mono text-white/40 uppercase tracking-widest">
-          <div className="col-span-1">ID</div>
-          <div className="col-span-5">Member</div>
-          <div className="col-span-4">Access Level</div>
-          <div className="col-span-2 text-right">Status</div>
-        </div>
-
-        {filteredProfiles.length === 0 && (
-          <div className="p-12 text-center text-slate-500 font-mono text-xs uppercase tracking-widest flex flex-col items-center">
-             <ShieldAlert size={32} className="mb-3 opacity-50" />
-             No {activeTab === 'ALL' ? 'members' : activeTab.toLowerCase()} found in this sector.
-          </div>
-        )}
-
-        <div className="divide-y divide-white/5">
-          {filteredProfiles.map((user, index) => {
-            const isExpanded = expandedRow === user.id;
-            const isAdmin = user.role === 'ADMIN';
-            
-            const isInvited = user.status === 'INVITED';
-            const isPending = user.status === 'PENDING';
-            const isActive = user.status === 'ACTIVE' || (!isInvited && !isPending);
-            
-            let statusText = 'Active';
-            let statusDotColor = 'bg-cyan-400 shadow-[0_0_8px_rgba(34,211,238,0.8)]';
-            
-            if (isInvited) {
-              statusText = 'Invited';
-              statusDotColor = 'bg-slate-600';
-            } else if (isPending) {
-              statusText = 'Pending Setup';
-              statusDotColor = 'bg-amber-400 shadow-[0_0_8px_rgba(251,191,36,0.8)]';
-            }
-
-            const roleColor = isAdmin ? 'text-amber-400 border-amber-500/30 bg-amber-500/10' : 
-                              user.role === 'CLIENT_OWNER' ? 'text-emerald-400 border-emerald-500/30 bg-emerald-500/10' : 
-                              user.role === 'BETA' ? 'text-purple-400 border-purple-500/30 bg-purple-500/10' : 
-                              'text-cyan-400 border-cyan-500/30 bg-cyan-500/10';
-
-            const displayName = user.full_name || user.email.split('@')[0];
-
-            return (
-              <div key={user.id} className="flex flex-col">
-                <div onClick={() => toggleRow(user.id)} className={`grid grid-cols-1 md:grid-cols-12 gap-4 p-4 items-center cursor-pointer transition-colors group ${isExpanded ? 'bg-white/5' : 'hover:bg-white/5'}`}>
-                  
-                  <div className="col-span-1 flex items-center gap-2">
-                    <span className="text-sm font-mono text-slate-500 font-bold">#{index + 1}</span>
-                  </div>
-                  
-                  <div className="col-span-1 md:col-span-5 flex items-center gap-3">
-                    <div className={`w-8 h-8 rounded-lg bg-black/50 border flex items-center justify-center shrink-0 ${isAdmin ? 'text-amber-400 border-amber-500/30' : !isActive ? 'text-slate-600 border-white/10 border-dashed' : 'text-slate-400 border-white/10'}`}>
-                      <UserCircle size={18} />
-                    </div>
-                    <div className="flex flex-col gap-0.5">
-                       <span className="text-sm font-bold text-slate-200 flex items-center gap-2">
-                          {displayName}
-                          {isAdmin && <BadgeCheck size={14} className="text-amber-400 drop-shadow-[0_0_8px_rgba(251,191,36,0.5)]" />}
-                       </span>
-                       <div className="flex items-center gap-2">
-                         <span className="text-[10px] font-mono text-slate-500">{user.email}</span>
-                       </div>
-                    </div>
-                  </div>
-                  
-                  <div className="col-span-1 md:col-span-4 flex items-center gap-2 flex-wrap">
-                    <span className={`px-2 py-1 rounded text-[9px] font-black tracking-widest uppercase border ${roleColor}`}>
-                      {user.role === 'CLIENT_OWNER' ? 'Client' : user.role || 'Observer'}
-                    </span>
-                    {/* NEW: Displays Human Readable Workspace Name */}
-                    {user.workspace_id && (
-                      <span className="text-[9px] font-mono text-white/40 bg-white/5 px-2 py-1 rounded border border-white/10 uppercase">
-                         {workspaces.find(w => w.id === user.workspace_id)?.title || workspaces.find(w => w.id === user.workspace_id)?.name || user.workspace_id}
-                      </span>
-                    )}
-                  </div>
-                  
-                  <div className="col-span-1 md:col-span-2 flex items-center justify-between md:justify-end gap-4 mt-2 md:mt-0">
-                    <div className="flex items-center gap-2">
-                      <div className={`w-1.5 h-1.5 rounded-full ${statusDotColor}`} />
-                      <span className="text-[10px] font-mono text-slate-400 uppercase">
-                        {statusText}
-                      </span>
-                    </div>
-                    <div className="text-white/20 group-hover:text-cyan-400 transition-colors">
-                      {isExpanded ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
-                    </div>
-                  </div>
-                </div>
-
-                <div className={`overflow-hidden transition-all duration-300 ease-in-out bg-black/40 border-t border-white/5 ${isExpanded ? 'max-h-125 opacity-100' : 'max-h-0 opacity-0'}`}>
-                  <div className="p-6 grid grid-cols-1 md:grid-cols-2 gap-8">
-                    
-                    <div className="space-y-4">
-                      <h4 className="text-[10px] font-mono text-cyan-400 uppercase tracking-widest">User Details</h4>
-                      <div className="bg-black/50 border border-white/5 rounded-xl p-5 space-y-3 shadow-inner h-full">
-                        <div className="text-lg font-black text-white flex items-center gap-3">
-                          {displayName}
-                        </div>
-                        <div className="flex flex-col gap-3 pt-3 border-t border-white/5">
-                          <div className="flex items-center gap-3 text-xs font-mono text-slate-400"><Mail size={12} className="text-brand-primary" /> {user.email}</div>
-                          <div className="flex items-center gap-3 text-xs font-mono text-slate-400"><Calendar size={12} className="text-brand-primary" /> Added: {new Date(user.created_at).toLocaleDateString()}</div>
-                          
-                          {!isActive && (
-                            <div className="pt-2">
-                              <button 
-                                onClick={() => handleResendInvite(user.id, user.email)}
-                                disabled={isResending === user.id}
-                                className="flex items-center gap-2 bg-slate-800 border border-white/10 hover:bg-slate-700 hover:text-white text-slate-400 px-3 py-1.5 rounded-lg text-[9px] font-black uppercase tracking-widest transition-all w-fit"
-                              >
-                                {isResending === user.id ? <Loader2 size={12} className="animate-spin" /> : <RefreshCw size={12} />}
-                                {isResending === user.id ? copy.BTN_RESENDING : copy.BTN_RESEND}
-                              </button>
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                    </div>
-
-                    <div className="space-y-4">
-                      <h4 className="text-[10px] font-mono text-cyan-400 uppercase tracking-widest">Edit Access & Role</h4>
-                      <div className="bg-black/50 border border-white/5 rounded-xl p-5 shadow-inner flex flex-col gap-4">
-                        
-                        <div className="space-y-2">
-                           <label className="text-[9px] font-bold uppercase tracking-widest text-slate-500">System Role</label>
-                           <select 
-                             value={editingRole[user.id] !== undefined ? editingRole[user.id] : user.role}
-                             onChange={(e) => setEditingRole(prev => ({ ...prev, [user.id]: e.target.value }))}
-                             className="w-full bg-zinc-900 border border-white/10 rounded-lg px-3 py-2 text-xs font-mono text-slate-200 focus:outline-none focus:border-cyan-500"
-                           >
-                             <option value="CLIENT_OWNER">Client Owner</option>
-                             <option value="BETA">Beta Tester</option>
-                             <option value="STAFF">Internal Staff</option>
-                             <option value="ADMIN">Super Admin</option>
-                           </select>
-                        </div>
-
-                        {/* DYNAMIC WORKSPACE ASSIGNMENT MENU */}
-                        <div className="space-y-2">
-                           <label className="text-[9px] font-bold uppercase tracking-widest text-slate-500">Assign to Workspace</label>
-                           <select 
-                             value={editingWorkspace[user.id] !== undefined ? editingWorkspace[user.id] : (user.workspace_id || 'NONE')}
-                             onChange={(e) => setEditingWorkspace(prev => ({ ...prev, [user.id]: e.target.value }))}
-                             className="w-full bg-zinc-900 border border-white/10 rounded-lg px-3 py-2 text-xs font-mono text-slate-200 focus:outline-none focus:border-cyan-500 uppercase"
-                           >
-                             <option value="NONE">Unassigned (Waiting Room)</option>
-                             
-                             <optgroup label="Active Client Portals" className="bg-slate-800 text-emerald-400 font-bold">
-                               {workspaces.filter(w => w.type === 'CLIENT').map(w => (
-                                 <option key={w.id} value={w.id} className="text-slate-200 bg-zinc-900">{w.title || w.name}</option>
-                               ))}
-                             </optgroup>
-
-                             <optgroup label="Beta Test Labs" className="bg-slate-800 text-purple-400 font-bold">
-                               {workspaces.filter(w => w.type === 'PROTOTYPE').map(w => (
-                                 <option key={w.id} value={w.id} className="text-slate-200 bg-zinc-900">{w.title || w.name}</option>
-                               ))}
-                             </optgroup>
-
-                             <optgroup label="Internal Staff" className="bg-slate-800 text-amber-400 font-bold">
-                               {workspaces.filter(w => w.type === 'INTERNAL').map(w => (
-                                 <option key={w.id} value={w.id} className="text-slate-200 bg-zinc-900">{w.title || w.name}</option>
-                               ))}
-                             </optgroup>
-                           </select>
-                        </div>
-
-                        {(editingRole[user.id] || editingWorkspace[user.id]) && (
-                           <button 
-                             onClick={() => handleUpdateAccess(user.id)}
-                             disabled={isSaving === user.id}
-                             className="mt-2 w-full flex items-center justify-center gap-2 bg-cyan-500/10 border border-cyan-500/30 hover:bg-cyan-500 hover:text-slate-900 text-cyan-400 px-4 py-2.5 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all"
-                           >
-                             {isSaving === user.id ? <Loader2 size={14} className="animate-spin" /> : <Save size={14} />}
-                              Save Changes
-                           </button>
-                        )}
-                      </div>
-                    </div>
-
-                  </div>
-                </div>
-              </div>
-            );
-          })}
-        </div>
+      <div className="bg-bg-surface-200/30 border border-white/5 rounded-2xl p-4">
+        <ResponsiveTable data={filteredProfiles} columns={columns} />
       </div>
     </div>
   );
