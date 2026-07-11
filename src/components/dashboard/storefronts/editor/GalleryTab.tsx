@@ -1,32 +1,21 @@
 // src/components/dashboard/storefronts/editor/GalleryTab.tsx
 'use client';
-import React, { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
-import { UploadCloud, X, CheckCircle, Trash2, Save } from 'lucide-react';
+import React, { useState } from 'react';
+import { UploadCloud, X, CheckCircle, Trash2 } from 'lucide-react';
 import { updateStorefrontGallery, removeImageFromGallery } from '@/app/actions';
-import { supabase } from '@/utils/supabase';
 
-export default function GalleryTab({ storefront }: { storefront: any }) {
-  const router = useRouter();
+export default function GalleryTab({ formData, setFormData }: { formData: any, setFormData: any }) {
   const [files, setFiles] = useState<File[]>([]);
   const [isUploading, setIsUploading] = useState(false);
   const [isDeleting, setIsDeleting] = useState<string | null>(null);
-  const [isSavingMeta, setIsSavingMeta] = useState(false);
 
-  // 🚨 State for managing live objects and metadata
-  const [liveGallery, setLiveGallery] = useState<any[]>([]);
-
-  // Parse incoming data safely into objects
-  useEffect(() => {
-    const raw = storefront.gallery_items || [];
-    const formatted = raw.map((item: any, i: number) => {
-      if (typeof item === 'string') {
-        return { id: `gal-${Date.now()}-${i}`, imageUrl: item, title: '', category: '' };
-      }
-      return item;
-    });
-    setLiveGallery(formatted);
-  }, [storefront.gallery_items]);
+  // Parse incoming data safely into objects directly from the Master State
+  const liveGallery = (formData.gallery_items || []).map((item: any, i: number) => {
+    if (typeof item === 'string') {
+      return { id: `gal-${i}`, imageUrl: item, title: '', category: '' };
+    }
+    return item;
+  });
 
   const handleDrop = (e: React.DragEvent) => {
     e.preventDefault();
@@ -36,13 +25,16 @@ export default function GalleryTab({ storefront }: { storefront: any }) {
 
   async function handleUpload() {
     setIsUploading(true);
-    const formData = new FormData();
-    files.forEach(file => formData.append('images', file));
+    const uploadData = new FormData();
+    files.forEach(file => uploadData.append('images', file));
     
     try {
-      await updateStorefrontGallery(storefront.id, storefront.slug, formData);
-      setFiles([]); // Clear the staging area
-      router.refresh(); 
+      // 1. Send the physical files to the Supabase Bucket
+      await updateStorefrontGallery(formData.id, formData.slug, uploadData);
+      setFiles([]); 
+      
+      // 2. Hard reload to fetch the new URLs into our Master State checkpoint
+      window.location.reload(); 
     } catch (e) {
       alert("Sync failed.");
     } finally {
@@ -54,41 +46,29 @@ export default function GalleryTab({ storefront }: { storefront: any }) {
     setFiles(files.filter((_, i) => i !== index));
   }
 
-  // 🚨 Handle Local Metadata Changes
+  // 🚨 Sync Local Metadata Changes to Master State
   const handleMetaChange = (index: number, field: string, value: string) => {
     const updated = [...liveGallery];
     updated[index] = { ...updated[index], [field]: value };
-    setLiveGallery(updated);
+    setFormData((prev: any) => ({ ...prev, gallery_items: updated }));
   };
 
-  // 🚨 Save Metadata Directly to Supabase
-  async function handleSaveMetadata() {
-    setIsSavingMeta(true);
-    try {
-      const { error } = await supabase
-        .from('storefronts')
-        .update({ gallery_items: liveGallery })
-        .eq('id', storefront.id);
-        
-      if (error) throw error;
-      router.refresh();
-    } catch (e) {
-      console.error(e);
-      alert("Failed to save gallery metadata.");
-    } finally {
-      setIsSavingMeta(false);
-    }
-  }
-
-  // 🚨 Handle Image Deletion
+  // 🚨 Handle Image Deletion AND Master State Sync
   async function handleDeleteLiveImage(imageUrlToRemove: string) {
     if (!window.confirm("Are you sure you want to remove this image from the live gallery?")) return;
 
     setIsDeleting(imageUrlToRemove);
     try {
-      await removeImageFromGallery(storefront.id, imageUrlToRemove);
-      setLiveGallery(prev => prev.filter(img => img.imageUrl !== imageUrlToRemove));
-      router.refresh();
+      // 1. Remove from bucket/DB via server action
+      await removeImageFromGallery(formData.id, imageUrlToRemove);
+      
+      // 2. Remove from master state so "Save All" doesn't accidentally bring it back
+      setFormData((prev: any) => ({
+        ...prev,
+        gallery_items: prev.gallery_items.filter((img: any) => 
+          (typeof img === 'string' ? img : img.imageUrl) !== imageUrlToRemove
+        )
+      }));
     } catch (e) {
       alert("Failed to remove image.");
       console.error(e);
@@ -98,7 +78,7 @@ export default function GalleryTab({ storefront }: { storefront: any }) {
   }
 
   return (
-    <div className="space-y-8 max-w-4xl pb-10">
+    <div className="space-y-8 max-w-4xl pb-10 pt-6">
 
       {/* 🚨 DISPLAY LIVE IMAGES & METADATA EDITOR */}
       {liveGallery.length > 0 && (
@@ -110,15 +90,7 @@ export default function GalleryTab({ storefront }: { storefront: any }) {
               </h3>
               <p className="text-xs text-zinc-500 mt-1">Add dish names and categories to enable the hover effect.</p>
             </div>
-            
-            <button 
-              onClick={handleSaveMetadata} 
-              disabled={isSavingMeta}
-              className="bg-cyan-600 hover:bg-cyan-500 text-zinc-950 text-xs font-black uppercase tracking-widest px-6 py-2.5 rounded-lg flex items-center gap-2 transition-all disabled:opacity-50"
-            >
-              <Save className="w-4 h-4" />
-              {isSavingMeta ? 'Saving...' : 'Save Details'}
-            </button>
+            {/* The individual Save button was removed. Handled by the Master Command Bar now. */}
           </div>
           
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -149,7 +121,7 @@ export default function GalleryTab({ storefront }: { storefront: any }) {
                   </div>
                 </div>
 
-                {/* Metadata Inputs */}
+                {/* Metadata Inputs - Now syncing instantly to master state */}
                 <div className="space-y-2">
                   <input 
                     type="text"

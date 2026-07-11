@@ -1,32 +1,23 @@
 // src/components/dashboard/storefronts/editor/MediaTab.tsx
 'use client';
 
-import React, { useState, useRef, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
-import { UploadCloud, Image as ImageIcon, X, CheckCircle, Trash2, Save, LayoutGrid } from 'lucide-react';
+import React, { useState, useRef } from 'react';
+import { UploadCloud, Image as ImageIcon, X, LayoutGrid, Trash2 } from 'lucide-react';
 import { updateStorefrontMedia, updateStorefrontGallery, removeImageFromGallery } from '@/app/actions';
-import { supabase } from '@/utils/supabase';
 
-export default function MediaTab({ storefront }: { storefront: any }) {
-  const router = useRouter();
-
+export default function MediaTab({ formData, setFormData }: { formData: any, setFormData: any }) {
   // --- SECTION 1: GALLERY ECOSYSTEM ---
   const [files, setFiles] = useState<File[]>([]);
   const [isUploadingGallery, setIsUploadingGallery] = useState(false);
   const [isDeleting, setIsDeleting] = useState<string | null>(null);
-  const [isSavingMeta, setIsSavingMeta] = useState(false);
-  const [liveGallery, setLiveGallery] = useState<any[]>([]);
 
-  useEffect(() => {
-    const raw = storefront.gallery_items || [];
-    const formatted = raw.map((item: any, i: number) => {
-      if (typeof item === 'string') {
-        return { id: `gal-${Date.now()}-${i}`, imageUrl: item, title: '', description: '' };
-      }
-      return item;
-    });
-    setLiveGallery(formatted);
-  }, [storefront.gallery_items]);
+  // Safely parse live gallery from master state
+  const liveGallery = (formData.gallery_items || []).map((item: any, i: number) => {
+    if (typeof item === 'string') {
+      return { id: `gal-${i}`, imageUrl: item, title: '', description: '' };
+    }
+    return item;
+  });
 
   const handleDrop = (e: React.DragEvent) => {
     e.preventDefault();
@@ -36,13 +27,15 @@ export default function MediaTab({ storefront }: { storefront: any }) {
 
   async function handleUploadGallery() {
     setIsUploadingGallery(true);
-    const formData = new FormData();
-    files.forEach(file => formData.append('images', file));
+    const uploadData = new FormData();
+    files.forEach(file => uploadData.append('images', file));
 
     try {
-      await updateStorefrontGallery(storefront.id, storefront.slug, formData);
+      // 1. Send files to Supabase Bucket
+      await updateStorefrontGallery(formData.id, formData.slug, uploadData);
       setFiles([]);
-      router.refresh();
+      // 2. Force reload to fetch new URLs into master state
+      window.location.reload();
     } catch (e) {
       alert("Gallery sync failed.");
     } finally {
@@ -54,32 +47,25 @@ export default function MediaTab({ storefront }: { storefront: any }) {
     setFiles(files.filter((_, i) => i !== index));
   }
 
+  // 🚨 Sync Local Metadata to Master State
   const handleMetaChange = (index: number, field: string, value: string) => {
     const updated = [...liveGallery];
     updated[index] = { ...updated[index], [field]: value };
-    setLiveGallery(updated);
+    setFormData((prev: any) => ({ ...prev, gallery_items: updated }));
   };
 
-  async function handleSaveMetadata() {
-    setIsSavingMeta(true);
-    try {
-      const { error } = await supabase.from('storefronts').update({ gallery_items: liveGallery }).eq('id', storefront.id);
-      if (error) throw error;
-      router.refresh();
-    } catch (e) {
-      alert("Failed to save metadata.");
-    } finally {
-      setIsSavingMeta(false);
-    }
-  }
-
+  // 🚨 Handle Deletion & Sync Master State
   async function handleDeleteLiveImage(imageUrlToRemove: string) {
     if (!window.confirm("Remove this image from live gallery?")) return;
     setIsDeleting(imageUrlToRemove);
     try {
-      await removeImageFromGallery(storefront.id, imageUrlToRemove);
-      setLiveGallery(prev => prev.filter(img => img.imageUrl !== imageUrlToRemove));
-      router.refresh();
+      await removeImageFromGallery(formData.id, imageUrlToRemove);
+      setFormData((prev: any) => ({
+        ...prev,
+        gallery_items: prev.gallery_items.filter((img: any) => 
+          (typeof img === 'string' ? img : img.imageUrl) !== imageUrlToRemove
+        )
+      }));
     } catch (e) {
       alert("Failed to remove image.");
     } finally {
@@ -103,13 +89,13 @@ export default function MediaTab({ storefront }: { storefront: any }) {
     if (file) setAboutPreview(URL.createObjectURL(file));
   };
 
-  async function handleSaveCore(formData: FormData) {
+  async function handleSaveCore(uploadData: FormData) {
     setIsUploadingCore(true);
     try {
-      await updateStorefrontMedia(storefront.id, storefront.slug, formData);
-      alert("Core media assets updated!");
+      await updateStorefrontMedia(formData.id, formData.slug, uploadData);
       if (coreFormRef.current) coreFormRef.current.reset();
-      router.refresh();
+      // Force reload to sync new hero/about URLs into master state
+      window.location.reload();
     } catch (e) {
       alert("Upload failed. Check storage permissions.");
     } finally {
@@ -118,7 +104,7 @@ export default function MediaTab({ storefront }: { storefront: any }) {
   }
 
   return (
-    <div className="space-y-12 animate-in fade-in slide-in-from-bottom-4 duration-500 pb-12 p-2">
+    <div className="space-y-12 animate-in fade-in slide-in-from-bottom-4 duration-500 pb-12 p-2 pt-6">
 
       {/* BLOCK 1: GALLERY ECOSYSTEM */}
       <div className="space-y-6">
@@ -130,11 +116,6 @@ export default function MediaTab({ storefront }: { storefront: any }) {
               <p className="text-xs text-zinc-500 font-mono mt-1">Manage masonry layout and dynamic hover states.</p>
             </div>
           </div>
-          {liveGallery.length > 0 && (
-            <button onClick={handleSaveMetadata} disabled={isSavingMeta} className="bg-emerald-600 hover:bg-emerald-500 text-zinc-950 text-[10px] font-black uppercase tracking-widest px-6 py-2.5 rounded-lg flex items-center gap-2 transition-all disabled:opacity-50 shadow-[0_0_15px_rgba(16,185,129,0.3)]">
-              <Save className="w-3 h-3" /> {isSavingMeta ? 'SAVING...' : 'SAVE METADATA'}
-            </button>
-          )}
         </div>
 
         <div className="space-y-4">
@@ -205,7 +186,7 @@ export default function MediaTab({ storefront }: { storefront: any }) {
             </label>
             <div className="flex flex-col md:flex-row md:items-center gap-6">
               <div className="w-48 h-32 rounded-lg overflow-hidden border-2 border-zinc-800 shrink-0 bg-zinc-950">
-                <img src={heroPreview || storefront.hero_image || 'https://via.placeholder.com/1920x1080/000000/333333?text=NO+IMAGE'} alt="Hero" className="w-full h-full object-cover" />
+                <img src={heroPreview || formData.hero_image || 'https://via.placeholder.com/1920x1080/000000/333333?text=NO+IMAGE'} alt="Hero" className="w-full h-full object-cover" />
               </div>
               <div className="flex-1">
                 <input type="file" accept="image/*" name="hero_file" onChange={handleHeroSelect} className="w-full text-sm text-zinc-400 file:mr-4 file:py-2.5 file:px-4 file:rounded-lg file:border-0 file:text-xs file:font-bold file:bg-zinc-800 file:text-white hover:file:bg-zinc-700 cursor-pointer transition-colors" />
@@ -220,7 +201,7 @@ export default function MediaTab({ storefront }: { storefront: any }) {
             </label>
             <div className="flex flex-col md:flex-row md:items-center gap-6">
               <div className="w-32 h-32 rounded-lg overflow-hidden border-2 border-zinc-800 shrink-0 bg-zinc-950">
-                <img src={aboutPreview || storefront.about_image || 'https://via.placeholder.com/800x800/000000/333333?text=NO+IMAGE'} alt="About" className="w-full h-full object-cover" />
+                <img src={aboutPreview || formData.about_image || 'https://via.placeholder.com/800x800/000000/333333?text=NO+IMAGE'} alt="About" className="w-full h-full object-cover" />
               </div>
               <div className="flex-1">
                 <input type="file" accept="image/*" name="about_file" onChange={handleAboutSelect} className="w-full text-sm text-zinc-400 file:mr-4 file:py-2.5 file:px-4 file:rounded-lg file:border-0 file:text-xs file:font-bold file:bg-zinc-800 file:text-white hover:file:bg-zinc-700 cursor-pointer transition-colors" />

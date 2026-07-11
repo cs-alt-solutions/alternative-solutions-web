@@ -77,7 +77,7 @@ export default async function LivePrototypes() {
               <div key={site.id} className="flex flex-col group relative bg-black/20 rounded-3xl p-4 border border-white/5 hover:border-brand-primary/30 transition-colors">
                 
                 {/* 1. The Iframe Engine (Now sitting inside the card like a screen) */}
-                <div className="w-full aspect-[16/10] rounded-xl bg-zinc-900 border border-zinc-800 overflow-hidden mb-5 relative shadow-[0_10px_30px_rgba(0,0,0,0.5)]">
+                <div className="w-full aspect-16/10 rounded-xl bg-zinc-900 border border-zinc-800 overflow-hidden mb-5 relative shadow-[0_10px_30px_rgba(0,0,0,0.5)]">
                   
                   {/* Fake Browser Chrome */}
                   <div className="h-6 bg-zinc-950 border-b border-zinc-800 flex items-center px-3 gap-1.5 shrink-0 z-20 absolute top-0 w-full">

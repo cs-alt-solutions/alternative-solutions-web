@@ -1,68 +1,74 @@
 // src/components/dashboard/storefronts/editor/CapabilitiesTab.tsx
 'use client';
 
-import React, { useState } from 'react';
-import { Save, Plus, Trash2, Layers, X } from 'lucide-react';
-import { updateStorefrontCapabilities } from '@/app/actions';
+import React from 'react';
+import { Plus, Trash2, Layers, X } from 'lucide-react';
 
 interface Capability {
   title: string;
   description: string;
-  bullets?: string[]; // 🚨 NEW: The dynamic bullet array
+  bullets?: string[];
 }
 
-export default function CapabilitiesTab({ storefront }: { storefront: any }) {
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [capabilities, setCapabilities] = useState<Capability[]>(storefront.capabilities || []);
+export default function CapabilitiesTab({ formData, setFormData }: { formData: any, setFormData: any }) {
+  
+  // Connect to the master state
+  const capabilities: Capability[] = formData.capabilities || [];
 
   const handleAdd = () => {
-    setCapabilities([...capabilities, { title: '', description: '', bullets: [] }]);
+    setFormData((prev: any) => ({
+      ...prev,
+      capabilities: [...(prev.capabilities || []), { title: '', description: '', bullets: [] }]
+    }));
   };
 
   const handleRemove = (index: number) => {
-    setCapabilities(capabilities.filter((_, i) => i !== index));
+    setFormData((prev: any) => ({
+      ...prev,
+      capabilities: (prev.capabilities || []).filter((_: any, i: number) => i !== index)
+    }));
   };
 
   const handleChange = (index: number, field: keyof Capability, value: string) => {
-    const updated = [...capabilities];
-    updated[index] = { ...updated[index], [field]: value };
-    setCapabilities(updated);
+    setFormData((prev: any) => {
+      const updated = [...(prev.capabilities || [])];
+      updated[index] = { ...updated[index], [field]: value };
+      return { ...prev, capabilities: updated };
+    });
   };
 
   // 🚨 BULLET POINT LOGIC
   const handleAddBullet = (index: number) => {
-    const updated = [...capabilities];
-    if (!updated[index].bullets) updated[index].bullets = [];
-    updated[index].bullets!.push('');
-    setCapabilities(updated);
+    setFormData((prev: any) => {
+      const updated = [...(prev.capabilities || [])];
+      if (!updated[index].bullets) updated[index].bullets = [];
+      updated[index].bullets.push('');
+      return { ...prev, capabilities: updated };
+    });
   };
 
   const handleBulletChange = (capIndex: number, bulletIndex: number, value: string) => {
-    const updated = [...capabilities];
-    updated[capIndex].bullets![bulletIndex] = value;
-    setCapabilities(updated);
+    setFormData((prev: any) => {
+      const updated = [...(prev.capabilities || [])];
+      if (updated[capIndex].bullets) {
+        updated[capIndex].bullets[bulletIndex] = value;
+      }
+      return { ...prev, capabilities: updated };
+    });
   };
 
   const handleRemoveBullet = (capIndex: number, bulletIndex: number) => {
-    const updated = [...capabilities];
-    updated[capIndex].bullets!.splice(bulletIndex, 1);
-    setCapabilities(updated);
+    setFormData((prev: any) => {
+      const updated = [...(prev.capabilities || [])];
+      if (updated[capIndex].bullets) {
+        updated[capIndex].bullets.splice(bulletIndex, 1);
+      }
+      return { ...prev, capabilities: updated };
+    });
   };
 
-  async function handleSave() {
-    setIsSubmitting(true);
-    try {
-      await updateStorefrontCapabilities(storefront.id, capabilities);
-      alert("Services synced successfully!");
-    } catch (e) {
-      alert("Failed to sync services.");
-    } finally {
-      setIsSubmitting(false);
-    }
-  }
-
   return (
-    <div className="space-y-8 max-w-4xl pb-10">
+    <div className="space-y-8 max-w-4xl pb-10 pt-6">
       
       <div className="flex items-center justify-between border-b border-zinc-800 pb-4">
         <div>
@@ -147,17 +153,6 @@ export default function CapabilitiesTab({ storefront }: { storefront: any }) {
           ))
         )}
       </div>
-
-      <div className="pt-6">
-        <button 
-          onClick={handleSave} 
-          disabled={isSubmitting} 
-          className="w-full md:w-auto flex items-center justify-center gap-2 bg-cyan-600 hover:bg-cyan-500 text-zinc-950 font-black tracking-widest px-8 py-4 rounded-lg transition-all shadow-[0_0_20px_rgba(8,145,178,0.4)] disabled:opacity-50"
-        >
-          <Save className="w-4 h-4" /> {isSubmitting ? 'SYNCING DATA...' : 'SAVE ITEMS'}
-        </button>
-      </div>
-
     </div>
   );
 }

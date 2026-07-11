@@ -1,7 +1,9 @@
 'use client';
 
 import React, { useState } from 'react';
-import { X, PenTool, Palette, Image as ImageIcon, Layers, MonitorSmartphone, SlidersHorizontal, RefreshCw } from 'lucide-react';
+import { useRouter } from 'next/navigation';
+import { supabase } from '@/utils/supabase';
+import { X, PenTool, Palette, Image as ImageIcon, Layers, MonitorSmartphone, SlidersHorizontal, RefreshCw, Save, Loader2 } from 'lucide-react';
 
 import CoreTab from './CoreTab';
 import DesignTab from './DesignTab';
@@ -9,12 +11,39 @@ import MediaTab from './MediaTab';
 import CapabilitiesTab from './CapabilitiesTab';
 
 export default function StorefrontEditor({ store, onClose }: { store: any, onClose: () => void }) {
+  const router = useRouter();
   const [activeTab, setActiveTab] = useState('content');
   const [mobileView, setMobileView] = useState<'editor' | 'preview'>('editor');
   const [refreshKey, setRefreshKey] = useState(Date.now());
 
-  // This is the function that forces the iframe to reload
+  // --- THE MASTER STATE (SINGLE SOURCE OF TRUTH) ---
+  const [formData, setFormData] = useState(store);
+  const [isSaving, setIsSaving] = useState(false);
+  const [saveMessage, setSaveMessage] = useState('');
+
+  // The function that forces the iframe to reload
   const reloadCanvas = () => setRefreshKey(Date.now());
+
+  // --- THE GLOBAL SAVE PROTOCOL ---
+  const handleMasterSave = async () => {
+    setIsSaving(true);
+    setSaveMessage('');
+    try {
+      const { error } = await supabase.from('storefronts').update(formData).eq('id', store.id);
+      if (error) throw error;
+      
+      setSaveMessage('SYSTEM SAVED');
+      router.refresh();
+      reloadCanvas();
+      
+      setTimeout(() => setSaveMessage(''), 3000);
+    } catch (err) {
+      console.error("Save error:", err);
+      setSaveMessage('SAVE ERROR');
+    } finally {
+      setIsSaving(false);
+    }
+  };
 
   const tabs = [
     { id: 'content', label: 'Content & Story', icon: PenTool },
@@ -28,7 +57,7 @@ export default function StorefrontEditor({ store, onClose }: { store: any, onClo
   return (
     <div className="fixed inset-0 z-50 bg-zinc-950 flex flex-col overflow-hidden animate-in slide-in-from-bottom-10 fade-in duration-300">
       
-      {/* 1. TOP COMMAND BAR */}
+      {/* 1. TOP HEADER BAR */}
       <div className="flex items-center justify-between bg-zinc-950 border-b border-zinc-800 px-4 md:px-6 py-4 shrink-0 shadow-sm z-10">
         <div className="flex items-center gap-4">
           <div>
@@ -61,19 +90,50 @@ export default function StorefrontEditor({ store, onClose }: { store: any, onClo
         {/* LEFT PANE: CONTROLS */}
         <div className={`w-full lg:w-112.5 xl:w-137.5 flex flex-col border-r border-zinc-800 bg-bg-app relative z-10 ${mobileView === 'preview' ? 'hidden lg:flex' : 'flex'}`}>
           
-          <div className="flex flex-wrap gap-2 p-3 border-b border-zinc-800 shrink-0 bg-zinc-900">
-            {tabs.map(tab => (
-              <button key={tab.id} onClick={() => setActiveTab(tab.id)} className={`flex items-center gap-2 px-4 py-2.5 rounded-lg text-[10px] font-bold tracking-widest uppercase transition-all whitespace-nowrap ${activeTab === tab.id ? 'bg-zinc-800 text-white border border-zinc-700 shadow-sm' : 'text-zinc-500 hover:text-zinc-300 hover:bg-zinc-800/50 border border-transparent'}`}>
-                <tab.icon className="w-3.5 h-3.5" /> {tab.label}
+          {/* --- NEW: SLEEK UNIFIED TAB & ACTION BAR --- */}
+          <div className="flex flex-col xl:flex-row xl:items-center justify-between gap-4 p-3 border-b border-zinc-800 bg-zinc-950 shrink-0 sticky top-0 z-20 shadow-sm">
+            
+            {/* TABS */}
+            <div className="flex flex-wrap gap-1 flex-1">
+              {tabs.map(tab => (
+                <button key={tab.id} onClick={() => setActiveTab(tab.id)} className={`flex items-center gap-1.5 px-3 py-2.5 rounded-md text-[10px] font-bold tracking-widest uppercase transition-all whitespace-nowrap ${activeTab === tab.id ? 'bg-zinc-800 text-white border border-zinc-700 shadow-sm' : 'text-zinc-500 hover:text-zinc-300 hover:bg-zinc-800/50 border border-transparent'}`}>
+                  <tab.icon className="w-3.5 h-3.5" /> {tab.label}
+                </button>
+              ))}
+            </div>
+
+            {/* COMPACT MASTER SAVE */}
+            <div className="flex flex-col items-end justify-center shrink-0">
+              <button 
+                onClick={handleMasterSave} 
+                disabled={isSaving}
+                className={`flex items-center gap-2 px-6 py-2.5 text-[10px] font-black uppercase tracking-widest rounded-md transition-all ${
+                  isSaving 
+                    ? 'bg-zinc-700 text-zinc-500 cursor-not-allowed' 
+                    : 'bg-cyan-600 hover:bg-cyan-500 text-zinc-950 shadow-[0_0_10px_rgba(8,145,178,0.3)]'
+                }`}
+              >
+                {isSaving ? <Loader2 className="animate-spin w-3.5 h-3.5" /> : <Save className="w-3.5 h-3.5" />}
+                {isSaving ? 'SYNCING...' : 'SAVE ALL'}
               </button>
-            ))}
+              {/* Subtle Message Underneath */}
+              <div className="h-3 mt-1 flex items-center justify-end w-full">
+                 {saveMessage && (
+                   <span className="text-emerald-400 text-[8.5px] font-mono font-bold tracking-widest uppercase animate-pulse">
+                     {saveMessage}
+                   </span>
+                 )}
+              </div>
+            </div>
           </div>
+          {/* --- END SLEEK BAR --- */}
 
           <div className="flex-1 overflow-y-auto custom-scrollbar bg-zinc-950">
-            {activeTab === 'content' && <CoreTab store={store} onReload={reloadCanvas} />}
-            {activeTab === 'design' && <DesignTab store={store} onReload={reloadCanvas} />}
-            {activeTab === 'media' && <MediaTab storefront={store} />}
-            {activeTab === 'services' && <CapabilitiesTab storefront={store} />}
+            {/* PASSING MASTER STATE DOWN TO TABS */}
+            {activeTab === 'content' && <CoreTab formData={formData} setFormData={setFormData} />}
+            {activeTab === 'design' && <DesignTab formData={formData} setFormData={setFormData} />}
+            {activeTab === 'media' && <MediaTab formData={formData} setFormData={setFormData} />}
+            {activeTab === 'services' && <CapabilitiesTab formData={formData} setFormData={setFormData} />}
           </div>
         </div>
 
