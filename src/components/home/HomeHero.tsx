@@ -3,7 +3,7 @@
 
 import React from 'react';
 import Link from 'next/link';
-import { WEBSITE_COPY } from '@/utils/glossary';
+import { WEBSITE_COPY, ROUTES } from '@/utils/glossary';
 import { ArrowRight, Database, Triangle, CreditCard, Github, Code2, Layers, Aperture } from 'lucide-react';
 
 export default function HomeHero() {
@@ -38,7 +38,6 @@ export default function HomeHero() {
             </span>
           </h1>
           
-          {/* UPDATED: Broken into a bold lead and a muted body for better scanning */}
           <p className="text-xl text-text-muted font-light max-w-2xl leading-relaxed mx-auto lg:mx-0 mb-10">
             <span className="text-white font-medium block mb-2">{HERO.SUBHEAD_LEAD}</span>
             {HERO.SUBHEAD_BODY}
@@ -46,27 +45,28 @@ export default function HomeHero() {
           
           <div className="flex flex-col sm:flex-row items-center gap-6 justify-center lg:justify-start">
             <Link 
-              href={HERO.CTA_PRIMARY_LINK} 
+              href={ROUTES.PUBLIC.STOREFRONTS.APPLY} 
               className="btn-brand flex items-center justify-center gap-3 w-full sm:w-auto px-10 py-4 text-xs shadow-[0_0_30px_rgba(6,182,212,0.4)]"
             >
               {HERO.CTA_PRIMARY} <ArrowRight size={16} className="group-hover:translate-x-1 transition-transform" />
             </Link>
+            
             <Link 
-              href={HERO.CTA_SECONDARY_LINK} 
+              href={ROUTES.PUBLIC.PRODUCTS.ROOT} 
               className="px-8 py-3.5 rounded-full border border-white/20 text-white font-bold text-xs uppercase tracking-wider hover:bg-white/10 hover:border-white/40 transition-all w-full sm:w-auto text-center"
             >
               {HERO.CTA_SECONDARY}
             </Link>
           </div>
 
-          {/* ADDED: Mechanical Micro-copy to anchor the bottom */}
+          {/* Mechanical Micro-copy */}
           <div className="mt-6 text-[10px] font-mono text-white/30 uppercase tracking-widest flex items-center justify-center lg:justify-start gap-2">
              <div className="w-1 h-1 bg-brand-primary rounded-full"></div>
              {HERO.MICRO_COPY}
           </div>
         </div>
 
-        {/* RIGHT COLUMN: THE ADAPTIVE IDENTITY PEDESTAL (Waiting for Luckystrike) */}
+        {/* RIGHT COLUMN: THE ADAPTIVE IDENTITY PEDESTAL */}
         <div className="w-full lg:w-2/5 relative flex justify-center lg:justify-end">
           <div className="w-full aspect-square max-w-sm rounded-full flex items-center justify-center relative group">
             
@@ -76,21 +76,17 @@ export default function HomeHero() {
             
             {/* The Inner Sanctum */}
             <div className="absolute inset-2 bg-zinc-950/80 backdrop-blur-xl rounded-full flex flex-col items-center justify-center border border-white/5 shadow-[inset_0_0_50px_rgba(0,0,0,0.8)] overflow-hidden">
-              
               {/* Core Pulse */}
               <div className="absolute w-40 h-40 bg-brand-primary/20 rounded-full blur-3xl animate-pulse" />
-              
               <Aperture size={80} className="text-brand-primary/40 mb-6 animate-[spin_30s_linear_infinite] relative z-10" strokeWidth={1} />
-              
               <div className="relative z-10 text-center">
                  <p className="text-[12px] font-black text-white uppercase tracking-[0.3em] mb-1">Adaptive</p>
                  <p className="text-[9px] font-mono text-brand-primary uppercase tracking-widest bg-brand-primary/10 px-3 py-1 rounded-full border border-brand-primary/20 inline-block">Awaiting Identity</p>
               </div>
-
             </div>
+
           </div>
         </div>
-
       </div>
 
       {/* AUTHORITY BANNER */}
@@ -107,7 +103,7 @@ export default function HomeHero() {
                  case 'STRIPE': return 'hover:text-indigo-400 hover:drop-shadow-[0_0_12px_rgba(129,140,248,0.7)]';
                  case 'VS CODE': return 'hover:text-sky-400 hover:drop-shadow-[0_0_12px_rgba(56,189,248,0.7)]';
                  case 'VERCEL': case 'GITHUB': case 'NEXT.JS': default: 
-                   return 'hover:text-white hover:drop-shadow-[0_0_12px_rgba(255,255,255,0.7)]';
+                    return 'hover:text-white hover:drop-shadow-[0_0_12px_rgba(255,255,255,0.7)]';
                }
              };
              
@@ -119,6 +115,7 @@ export default function HomeHero() {
                     {getTechIcon(tech.name)}
                   </div>
                   <span>{tech.name}</span>
+                  
                   <div className="absolute bottom-full mb-4 left-1/2 -translate-x-1/2 w-48 p-3 bg-black/95 border border-brand-primary/30 rounded-xl text-center opacity-0 group-hover:opacity-100 group-hover:-translate-y-1 transition-all duration-300 pointer-events-none z-50 shadow-2xl backdrop-blur-xl">
                     <p className="text-[11px] font-sans font-light text-slate-300 normal-case tracking-normal leading-snug">
                       {tech.desc}
