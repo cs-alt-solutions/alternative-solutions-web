@@ -1,6 +1,6 @@
 /* src/components/storefronts/LivePrototypes.tsx */
 import React from 'react';
-import { ExternalLink, TerminalSquare, Palette, LayoutTemplate } from 'lucide-react';
+import { ExternalLink, TerminalSquare, LayoutTemplate, Layers } from 'lucide-react';
 import { createClient } from '@/utils/supabase/server';
 
 // --- HUMANIZED DICTIONARIES ---
@@ -20,6 +20,14 @@ const HOOK_NAMES: Record<string, string> = {
   'split-left': "Bold Left Split",
   'split-right': "Bold Right Split",
   'cinematic': "Full Cinematic"
+};
+
+const JOURNEY_NAMES: Record<string, string> = {
+  'classic': "Smooth Stack",
+  'bento': "Bento Grid",
+  'sticky': "Sticky Scroll",
+  'editorial': "Hover Stack",
+  'accordion': "Accordion Flow"
 };
 
 export default async function LivePrototypes() {
@@ -93,22 +101,22 @@ export default async function LivePrototypes() {
                   </div>
                 </div>
 
-                {/* 2. Content Info */}
+                {/* 2. Content Info (Vibe is now the primary hook) */}
                 <div className="px-1 flex flex-col flex-1">
                   <h3 className="text-lg font-black text-white uppercase tracking-tight mb-4 flex items-center justify-between group-hover:text-cyan-400 transition-colors">
-                    <span className="truncate pr-2">{site.business_name}</span>
+                    <span className="truncate pr-2">{VIBE_NAMES[site.theme_style] || 'Custom Vibe'}</span>
                     <ExternalLink size={16} className="opacity-0 group-hover:opacity-100 transition-opacity shrink-0" />
                   </h3>
 
                   {/* 3. Tech Stack HUD */}
                   <div className="space-y-2 mt-auto">
                     <div className="flex items-center gap-2 text-[9px] uppercase tracking-widest text-zinc-500 font-bold">
-                       <Palette size={10} className="text-cyan-500 shrink-0" />
-                       <span className="truncate">{VIBE_NAMES[site.theme_style] || 'Custom Engineered'}</span>
+                       <LayoutTemplate size={10} className="text-teal-500 shrink-0" />
+                       <span className="truncate">Hero: {HOOK_NAMES[site.hero_layout] || 'Standard Flow'}</span>
                     </div>
                     <div className="flex items-center gap-2 text-[9px] uppercase tracking-widest text-zinc-500 font-bold">
-                       <LayoutTemplate size={10} className="text-teal-500 shrink-0" />
-                       <span className="truncate">{HOOK_NAMES[site.hero_layout] || 'Standard Flow'}</span>
+                       <Layers size={10} className="text-fuchsia-500 shrink-0" />
+                       <span className="truncate">Flow: {JOURNEY_NAMES[site.content_layout] || 'Standard Stack'}</span>
                     </div>
                   </div>
                 </div>
