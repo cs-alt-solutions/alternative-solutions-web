@@ -52,31 +52,21 @@ export default function HomeHero() {
             </Link>
             
             <Link 
-              href={ROUTES.PUBLIC.PRODUCTS.ROOT} 
+              href={ROUTES.PUBLIC.STOREFRONTS.ROOT} 
               className="px-8 py-3.5 rounded-full border border-white/20 text-white font-bold text-xs uppercase tracking-wider hover:bg-white/10 hover:border-white/40 transition-all w-full sm:w-auto text-center"
             >
               {HERO.CTA_SECONDARY}
             </Link>
           </div>
-
-          {/* Mechanical Micro-copy */}
-          <div className="mt-6 text-[10px] font-mono text-white/30 uppercase tracking-widest flex items-center justify-center lg:justify-start gap-2">
-             <div className="w-1 h-1 bg-brand-primary rounded-full"></div>
-             {HERO.MICRO_COPY}
-          </div>
         </div>
 
-        {/* RIGHT COLUMN: THE ADAPTIVE IDENTITY PEDESTAL */}
+        {/* RIGHT COLUMN: IDENTITY PEDESTAL */}
         <div className="w-full lg:w-2/5 relative flex justify-center lg:justify-end">
-          <div className="w-full aspect-square max-w-sm rounded-full flex items-center justify-center relative group">
-            
-            {/* Outer Glow & Spin Track */}
+           {/* ... (Existing pedestal remains unchanged) */}
+           <div className="w-full aspect-square max-w-sm rounded-full flex items-center justify-center relative group">
             <div className="absolute inset-0 bg-[conic-gradient(from_0deg,transparent_0_340deg,rgba(6,182,212,0.3)_360deg)] animate-[spin_4s_linear_infinite] rounded-full blur-md" />
             <div className="absolute inset-0 border border-brand-primary/20 rounded-full" />
-            
-            {/* The Inner Sanctum */}
             <div className="absolute inset-2 bg-zinc-950/80 backdrop-blur-xl rounded-full flex flex-col items-center justify-center border border-white/5 shadow-[inset_0_0_50px_rgba(0,0,0,0.8)] overflow-hidden">
-              {/* Core Pulse */}
               <div className="absolute w-40 h-40 bg-brand-primary/20 rounded-full blur-3xl animate-pulse" />
               <Aperture size={80} className="text-brand-primary/40 mb-6 animate-[spin_30s_linear_infinite] relative z-10" strokeWidth={1} />
               <div className="relative z-10 text-center">
@@ -84,10 +74,10 @@ export default function HomeHero() {
                  <p className="text-[9px] font-mono text-brand-primary uppercase tracking-widest bg-brand-primary/10 px-3 py-1 rounded-full border border-brand-primary/20 inline-block">Awaiting Identity</p>
               </div>
             </div>
-
           </div>
         </div>
       </div>
+
 
       {/* AUTHORITY BANNER */}
       <div className="mt-24 pt-8 border-t border-white/5 flex flex-col items-center justify-center animate-in fade-in slide-in-from-bottom-4 duration-1000 delay-500 w-full max-w-6xl mx-auto px-6">

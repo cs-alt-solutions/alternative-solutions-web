@@ -52,7 +52,9 @@ export default function StorefrontEditor({ store, onClose }: { store: any, onClo
     { id: 'services', label: 'Services', icon: Layers }, 
   ];
 
-  const PREVIEW_BASE_URL = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
+  // --- BULLETPROOF URL RESOLUTION ---
+  // Checks multiple env variables, then falls back strictly to production.
+  const PREVIEW_BASE_URL = process.env.NEXT_PUBLIC_SITE_URL || process.env.NEXT_PUBLIC_BASE_URL || 'https://alternativesolutions.io';
 
   return (
     <div className="fixed inset-0 z-50 bg-zinc-950 flex flex-col overflow-hidden animate-in slide-in-from-bottom-10 fade-in duration-300">
@@ -90,7 +92,7 @@ export default function StorefrontEditor({ store, onClose }: { store: any, onClo
         {/* LEFT PANE: CONTROLS */}
         <div className={`w-full lg:w-112.5 xl:w-137.5 flex flex-col border-r border-zinc-800 bg-bg-app relative z-10 ${mobileView === 'preview' ? 'hidden lg:flex' : 'flex'}`}>
           
-          {/* --- NEW: SLEEK UNIFIED TAB & ACTION BAR --- */}
+          {/* --- SLEEK UNIFIED TAB & ACTION BAR --- */}
           <div className="flex flex-col xl:flex-row xl:items-center justify-between gap-4 p-3 border-b border-zinc-800 bg-zinc-950 shrink-0 sticky top-0 z-20 shadow-sm">
             
             {/* TABS */}
@@ -126,7 +128,6 @@ export default function StorefrontEditor({ store, onClose }: { store: any, onClo
               </div>
             </div>
           </div>
-          {/* --- END SLEEK BAR --- */}
 
           <div className="flex-1 overflow-y-auto custom-scrollbar bg-zinc-950">
             {/* PASSING MASTER STATE DOWN TO TABS */}
