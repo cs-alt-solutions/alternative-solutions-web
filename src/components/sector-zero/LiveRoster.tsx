@@ -15,7 +15,7 @@ const getTierIcon = (tier: string) => {
 
 export default async function LiveRoster() {
   const supabase = await createClient();
-  const copy = WEBSITE_COPY.SECTOR_ZERO.ROSTER;
+  const copy = WEBSITE_COPY.STOREFRONTS.ROSTER;
 
   let liveBackers = [];
   try {
