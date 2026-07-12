@@ -2,22 +2,40 @@
 'use client';
 
 import React, { useState } from 'react';
-import { ExternalLink, Pen, Plus, CreditCard, Globe } from 'lucide-react';
+import { ExternalLink, Pen, CreditCard, Globe, Trash2 } from 'lucide-react';
 import StorefrontEditor from './editor/StorefrontEditor';
+import NewStorefrontModal from './NewStorefrontModal';
+import { supabase } from '@/utils/supabase';
 
 export default function StorefrontsManager({ initialData }: { initialData: any[] }) {
   const [storefronts, setStorefronts] = useState(initialData || []);
   const [editingStoreId, setEditingStoreId] = useState<string | null>(null);
 
-  // THE FIX: Find the fresh store object dynamically based on the ID
+  // Find the fresh store object dynamically based on the ID
   const activeStore = editingStoreId ? storefronts.find(s => s.id === editingStoreId) : null;
+
+  // THE FIX: Hard delete function to clear routing slugs
+  const handleDeleteStorefront = async (id: string, name: string) => {
+    if (!window.confirm(`Are you sure you want to permanently delete "${name}"? This cannot be undone.`)) return;
+
+    try {
+      const { error } = await supabase.from('storefronts').delete().eq('id', id);
+      if (error) throw error;
+
+      // Update local state to remove the deleted row instantly
+      setStorefronts(prev => prev.filter(s => s.id !== id));
+    } catch (err: any) {
+      console.error("Delete failed:", err);
+      alert(`Failed to delete: ${err.message}`);
+    }
+  };
 
   if (activeStore) {
     return (
-      <StorefrontEditor 
-        store={activeStore} 
-        onClose={() => setEditingStoreId(null)} 
-      />
+      <StorefrontEditor
+         store={activeStore}
+         onClose={() => setEditingStoreId(null)}
+       />
     );
   }
 
@@ -28,10 +46,8 @@ export default function StorefrontsManager({ initialData }: { initialData: any[]
           <h1 className="text-3xl font-black text-white tracking-tight">STOREFRONT ENGINE</h1>
           <p className="text-zinc-500 mt-1">Manage tenants, domains, and billing status.</p>
         </div>
-        <button className="flex items-center gap-2 bg-cyan-600 hover:bg-cyan-500 text-zinc-950 font-bold px-5 py-2.5 rounded-md transition-all duration-300 transform hover:scale-105 shadow-[0_0_15px_rgba(8,145,178,0.4)]">
-          <Plus className="w-5 h-5" />
-          NEW STOREFRONT
-        </button>
+        {/* THE FIX: Replaced the static HTML button with the functional Component */}
+        <NewStorefrontModal />
       </div>
 
       <div className="bg-zinc-900 border border-zinc-800 rounded-xl overflow-hidden shadow-2xl">
@@ -99,22 +115,30 @@ export default function StorefrontsManager({ initialData }: { initialData: any[]
                     
                     <td className="px-6 py-4 text-right">
                       <div className="flex justify-end gap-4 opacity-50 group-hover:opacity-100 transition-opacity">
-                        <button 
-                          onClick={() => setEditingStoreId(store.id)}
-                          className="text-zinc-400 hover:text-cyan-400 transition-colors" 
-                          title="Edit Site Data"
+                        <button
+                           onClick={() => setEditingStoreId(store.id)}
+                          className="text-zinc-400 hover:text-cyan-400 transition-colors"
+                           title="Edit Site Data"
                         >
                           <Pen className="w-4 h-4" />
                         </button>
-                        <a 
-                          href={store.custom_domain ? `https://${store.custom_domain}` : `http://localhost:3000/${store.slug}`} 
-                          target="_blank" 
-                          rel="noopener noreferrer" 
-                          className="text-zinc-400 hover:text-fuchsia-400 transition-colors" 
-                          title="View Live Site"
+                        <a
+                           href={store.custom_domain ? `https://${store.custom_domain}` : `http://localhost:3000/${store.slug}`}
+                           target="_blank"
+                           rel="noopener noreferrer"
+                           className="text-zinc-400 hover:text-fuchsia-400 transition-colors"
+                           title="View Live Site"
                         >
                           <ExternalLink className="w-4 h-4" />
                         </a>
+                        {/* THE FIX: Actionable Delete Button */}
+                        <button
+                          onClick={() => handleDeleteStorefront(store.id, store.business_name)}
+                          className="text-zinc-400 hover:text-red-500 transition-colors"
+                          title="Delete Storefront"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
                       </div>
                     </td>
                   </tr>
