@@ -5,7 +5,7 @@ import { WEBSITE_COPY } from '@/utils/glossary';
 import { Settings2, Server, Globe, Sparkles } from 'lucide-react';
 
 export default function SectorZeroPledge() {
-  const copy = WEBSITE_COPY.SECTOR_ZERO;
+  const copy = WEBSITE_COPY.STOREFRONTS;
 
   const getTheme = (index: number) => {
     switch (index) {
