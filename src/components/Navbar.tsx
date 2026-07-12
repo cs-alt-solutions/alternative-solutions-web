@@ -4,7 +4,7 @@ import React, { useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { WEBSITE_COPY } from '@/utils/glossary';
-import { Menu, X, User } from 'lucide-react'; // Swapped Lock for User
+import { Menu, X, User } from 'lucide-react';
 
 export default function Navbar() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -65,19 +65,18 @@ export default function Navbar() {
               <User size={14} /> Portal
             </Link>
 
-            {/* PRIMARY CTA */}
+            {/* PRIMARY CTA - NOW POINTS TO STOREFRONTS */}
             <Link 
-              href="/sector-zero" 
+              href="/storefronts" 
               className="text-xs font-bold text-emerald-400 border border-emerald-500/50 hover:bg-emerald-400 hover:text-black px-5 py-2.5 rounded-lg transition-all shadow-[0_0_20px_rgba(52,211,153,0.15)] hover:shadow-[0_0_30px_rgba(52,211,153,0.4)] uppercase tracking-widest"
             >
-              {WEBSITE_COPY.NAV.BETA_CENTER}
+              {WEBSITE_COPY.NAV.STOREFRONTS || 'STOREFRONTS'}
             </Link>
           </div>
         </div>
 
         {/* MOBILE MENU BUTTON & CTA */}
         <div className="flex md:hidden items-center gap-5 relative z-50">
-          {/* DIMMED MOBILE PORTAL LOGIN */}
           <Link 
             href="/login" 
             onClick={closeMenu}
@@ -121,12 +120,13 @@ export default function Navbar() {
 
           <div className="w-8 h-px bg-white/10" />
 
+          {/* MOBILE PRIMARY CTA */}
           <Link 
-            href="/sector-zero" 
+            href="/storefronts" 
             onClick={closeMenu}
             className="text-sm font-bold text-emerald-400 border border-emerald-500/50 px-6 py-3 rounded-lg uppercase tracking-widest w-full text-center"
           >
-            {WEBSITE_COPY.NAV.BETA_CENTER}
+            {WEBSITE_COPY.NAV.STOREFRONTS || 'STOREFRONTS'}
           </Link>
         </div>
       </div>

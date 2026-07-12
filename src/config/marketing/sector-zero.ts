@@ -1,4 +1,4 @@
-export const SECTOR_ZERO = {
+export const STOREFRONTS = {
   HEADER: {
     TAG: "CUSTOM WEB BUILDS // ZERO FRICTION",
     TITLE_1: "PROFESSIONAL",
@@ -36,8 +36,8 @@ export const SECTOR_ZERO = {
     TIERS: [
       { price: "Setup + $5/mo", name: "The Standard", perk: "Full website build, hosting, maintenance, and a spot on The Grid." }
     ],
-    BTN_TEXT: "START YOUR APPLICATION",
-    LINK: "/sector-zero/apply" 
+    BTN_TEXT: "START YOUR APPLICATION", // Changed from "Start Application"
+    LINK: "/storefronts/apply" 
   },
   ROSTER: {
     TAG: "THE GRID • LIVE PORTFOLIOS",
@@ -45,5 +45,5 @@ export const SECTOR_ZERO = {
     DESC: "See who is running their business on the Alternative Solutions Grid. (Clients can choose to remain anonymous).",
     EMPTY_STATE: "The grid is waiting. Be the first to start your build."
   },
-  FOOTER: { TITLE: "Ready to launch your website?", CTA: "Start Your Application" }
+  FOOTER: { TITLE: "Ready to launch your website?", CTA: "Secure Your Storefront" }
 };

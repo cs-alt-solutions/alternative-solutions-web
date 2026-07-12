@@ -2,7 +2,7 @@ import { NAV, GLOBAL_FOOTER, GATEWAY } from './marketing/global';
 import { PUBLIC_SITE } from './marketing/home';
 import { ECOSYSTEM, GLITCHBOT_PAGE, PUBLIC_LOGS } from './marketing/ecosystem';
 import { FOUNDER } from './marketing/founder';
-import { SECTOR_ZERO } from './marketing/sector-zero';
+import { STOREFRONTS } from './marketing/sector-zero';
 import { SHIFT_STUDIO_PAGE } from './marketing/shift-studio';
 import { ACCESS_HOOK, JOIN_PAGE, SUPPORT_MODULE, FOUNDING_MEMBER } from './marketing/campaigns';
 
@@ -12,7 +12,7 @@ export const MARKETING_COPY = {
   PUBLIC_SITE,
   ECOSYSTEM,
   FOUNDER,
-  SECTOR_ZERO,
+  STOREFRONTS,
   SHIFT_STUDIO_PAGE,
   GLITCHBOT_PAGE,
   GATEWAY,

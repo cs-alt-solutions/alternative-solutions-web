@@ -1,24 +1,24 @@
+/* src/app/storefronts/page.tsx */
 import React from 'react';
 import Link from 'next/link';
 import { WEBSITE_COPY } from '@/utils/glossary';
-import SectorZeroPledge from '@/components/sector-zero/SectorZeroPledge';
 import LivePrototypes from '@/components/storefronts/LivePrototypes';
 import { TerminalSquare, ArrowRight } from 'lucide-react';
 
 export const dynamic = 'force-dynamic';
 
-export default function SectorZeroPage() {
-  const copy = WEBSITE_COPY.SECTOR_ZERO;
+export default function StorefrontsPage() {
+  // We officially renamed this in the glossary, so we must pull from STOREFRONTS now!
+  const copy = WEBSITE_COPY.STOREFRONTS;
 
   return (
     <main className="min-h-screen bg-bg-app text-white relative overflow-x-hidden pt-32 pb-24 font-sans">
-      {/* We removed the background grid div entirely */}
       <div className="absolute top-0 left-1/2 -translate-x-1/2 w-150 h-150 bg-brand-primary/10 rounded-full blur-[120px] pointer-events-none" />
 
       <div className="relative max-w-7xl mx-auto px-6">
         
         {/* HEADER */}
-        <section className="text-center mb-8 animate-in fade-in slide-in-from-bottom-8 duration-1000">
+        <section className="text-center mb-16 animate-in fade-in slide-in-from-bottom-8 duration-1000">
           <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-brand-primary/30 bg-brand-primary/10 text-[10px] font-mono text-brand-primary uppercase tracking-[0.3em] mb-8 shadow-[0_0_15px_rgba(6,182,212,0.15)]">
             <TerminalSquare size={14} className="animate-pulse" />
             {copy.HEADER.TAG}
@@ -31,10 +31,7 @@ export default function SectorZeroPage() {
           </h1>
         </section>
 
-        {/* SECTION 1: THE PLEDGE & PERKS */}
-        <SectorZeroPledge />
-
-        {/* SECTION 2: THE STOREFRONT OFFER */}
+        {/* SECTION 1: THE STOREFRONT OFFER */}
         <section className="mb-12 scroll-mt-32" id="funding-options">
           <div className="text-center mb-12">
              <h2 className="text-3xl md:text-5xl font-black uppercase tracking-tight text-white mb-4">
@@ -75,6 +72,7 @@ export default function SectorZeroPage() {
                 ))}
               </div>
 
+              {/* ACTION BUTTON */}
               <div className="mt-auto max-w-md mx-auto w-full">
                 <Link href={copy.STOREFRONT_OFFER.LINK} className="flex items-center justify-center gap-2 w-full py-4 text-sm font-bold font-mono uppercase tracking-widest rounded-xl bg-brand-primary/10 text-brand-primary border border-brand-primary/30 hover:bg-brand-primary hover:text-black hover:shadow-[0_0_20px_rgba(6,182,212,0.4)] transition-all">
                   {copy.STOREFRONT_OFFER.BTN_TEXT} <ArrowRight size={16} className="group-hover:translate-x-1 transition-transform" />
@@ -83,13 +81,13 @@ export default function SectorZeroPage() {
             </div>
           </div>
         </section>
+
+        {/* SECTION 2: THE VISUAL PROTOTYPES */}
+        <section className="animate-in fade-in duration-1000 delay-300">
+          <LivePrototypes />
+        </section>
+
       </div>
-
-      {/* SECTION 3: THE VISUAL PROTOTYPES */}
-      <section className="animate-in fade-in duration-1000 delay-300">
-        <LivePrototypes />
-      </section>
-
     </main>
   );
 }

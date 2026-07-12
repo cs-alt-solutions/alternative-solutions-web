@@ -4,6 +4,7 @@ export const NAV = {
   STORY: "The Architect",
   WORKSPACE: "Client Portal",
   BETA_CENTER: "Start Your Build",
+  STOREFRONTS: "Storefronts"
 };
 
 export const GLOBAL_FOOTER = {
