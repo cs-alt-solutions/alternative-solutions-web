@@ -1,3 +1,5 @@
+/* src/config/marketing/sector-zero.ts */
+
 export const STOREFRONTS = {
   HEADER: {
     TAG: "CUSTOM WEB BUILDS // ZERO FRICTION",
@@ -29,12 +31,31 @@ export const STOREFRONTS = {
   },
   STOREFRONT_OFFER: {
     TITLE: "LET'S BUILD IT.",
-    SUBTITLE: "Get your business online today without the DIY headache.", // Friendly, outcome-focused
+    SUBTITLE: "Get your business online today without the DIY headache.",
     TAG: "THE FOUNDATION",
     OFFER_TITLE: "THE MANAGED STOREFRONT",
-    DESC: "Stop fighting templates. You pay a one-time, flat-rate fee for the custom build, and a flat $5/month to keep the engine running smoothly on enterprise-grade hosting.", // Direct, no "sneaky" words
+    DESC: "Stop fighting templates. You pay a one-time, flat-rate fee for the custom build, and pick a simple monthly plan to keep the engine running smoothly on enterprise-grade hosting.",
     TIERS: [
-      { price: "Custom Build + $5/mo", name: "The Standard", perk: "Full website build, hosting, maintenance, and your spot on the live grid." }
+      { 
+        price: "$5/mo", 
+        name: "The Standard", 
+        perks: [
+          "Full custom website build & deployment.",
+          "Lightning-fast, enterprise-grade hosting.",
+          "Ongoing system maintenance & security.",
+          "Your spot on the Alternative Solutions live grid."
+        ] 
+      },
+      { 
+        price: "$15/mo", 
+        name: "The Professional", 
+        perks: [
+          "Everything included in The Standard plan.",
+          "Expert guidance on securing your custom .com domain.",
+          "I handle 100% of the technical DNS connection.",
+          "Full, ongoing management of your web architecture."
+        ] 
+      }
     ],
     BTN_TEXT: "START YOUR APPLICATION",
     LINK: "/storefronts/apply" 
@@ -45,5 +66,8 @@ export const STOREFRONTS = {
     DESC: "See who is running their business on the Alternative Solutions Grid. (Clients can choose to remain anonymous).",
     EMPTY_STATE: "The grid is waiting. Be the first to start your build."
   },
-  FOOTER: { TITLE: "Ready to launch your website?", CTA: "Secure Your Storefront" }
+  FOOTER: { 
+    TITLE: "Ready to launch your website?", 
+    CTA: "Start Your Application" 
+  }
 };
