@@ -3,7 +3,7 @@
 import React, { useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { WEBSITE_COPY } from '@/utils/glossary';
+import { WEBSITE_COPY, ROUTES } from '@/utils/glossary';
 import { Menu, X, User } from 'lucide-react';
 
 export default function Navbar() {
@@ -28,7 +28,7 @@ export default function Navbar() {
       <div className="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
         
         {/* THE BRAND (HOME) */}
-        <Link href="/" onClick={closeMenu} className="flex items-center gap-3 group shrink-0 relative z-50">
+        <Link href={ROUTES.PUBLIC.HOME} onClick={closeMenu} className="flex items-center gap-3 group shrink-0 relative z-50">
           <div className="w-3 h-3 bg-cyan-400 rounded-full shadow-[0_0_15px_rgba(34,211,238,0.5)] group-hover:bg-fuchsia-400 group-hover:shadow-[0_0_15px_rgba(232,121,249,0.5)] transition-all duration-500" />
           <span className="font-black text-lg md:text-xl tracking-widest text-white group-hover:text-cyan-400 transition-colors duration-300 uppercase">
             {WEBSITE_COPY.NAV.BRAND}
@@ -39,14 +39,14 @@ export default function Navbar() {
         <div className="hidden md:flex items-center gap-8">
           <div className="flex items-center gap-8 font-bold text-xs">
             <Link 
-              href="/products" 
+              href={ROUTES.PUBLIC.PRODUCTS.ROOT} 
               className="text-slate-300 hover:text-amber-400 hover:drop-shadow-[0_0_8px_rgba(245,158,11,0.8)] transition-all duration-300 uppercase tracking-widest"
             >
               {WEBSITE_COPY.NAV.ECOSYSTEM}
             </Link>
             
             <Link 
-              href="/founder" 
+              href={ROUTES.PUBLIC.FOUNDER} 
               className="text-slate-300 hover:text-fuchsia-400 hover:drop-shadow-[0_0_8px_rgba(232,121,249,0.8)] transition-all duration-300 uppercase tracking-widest"
             >
               {WEBSITE_COPY.NAV.STORY}
@@ -59,7 +59,7 @@ export default function Navbar() {
           <div className="flex items-center gap-5">
             {/* DIMMED PORTAL LOGIN */}
             <Link 
-              href="/login" 
+              href={ROUTES.PUBLIC.LOGIN} 
               className="flex items-center gap-2 text-xs font-bold text-slate-400 hover:text-white transition-all uppercase tracking-widest"
             >
               <User size={14} /> Portal
@@ -67,7 +67,7 @@ export default function Navbar() {
 
             {/* PRIMARY CTA - NOW POINTS TO STOREFRONTS */}
             <Link 
-              href="/storefronts" 
+              href={ROUTES.PUBLIC.STOREFRONTS.ROOT} 
               className="text-xs font-bold text-emerald-400 border border-emerald-500/50 hover:bg-emerald-400 hover:text-black px-5 py-2.5 rounded-lg transition-all shadow-[0_0_20px_rgba(52,211,153,0.15)] hover:shadow-[0_0_30px_rgba(52,211,153,0.4)] uppercase tracking-widest"
             >
               {WEBSITE_COPY.NAV.STOREFRONTS || 'STOREFRONTS'}
@@ -78,7 +78,7 @@ export default function Navbar() {
         {/* MOBILE MENU BUTTON & CTA */}
         <div className="flex md:hidden items-center gap-5 relative z-50">
           <Link 
-            href="/login" 
+            href={ROUTES.PUBLIC.LOGIN} 
             onClick={closeMenu}
             className="text-[10px] font-bold text-slate-400 hover:text-white transition-colors flex items-center gap-1 uppercase tracking-widest"
           >
@@ -103,7 +103,7 @@ export default function Navbar() {
       >
         <div className="flex flex-col items-center gap-8 px-6">
           <Link 
-            href="/products" 
+            href={ROUTES.PUBLIC.PRODUCTS.ROOT} 
             onClick={closeMenu}
             className="text-lg font-black text-slate-300 hover:text-amber-400 transition-all uppercase tracking-widest w-full text-center"
           >
@@ -111,7 +111,7 @@ export default function Navbar() {
           </Link>
           
           <Link 
-            href="/founder" 
+            href={ROUTES.PUBLIC.FOUNDER} 
             onClick={closeMenu}
             className="text-lg font-black text-slate-300 hover:text-fuchsia-400 transition-all uppercase tracking-widest w-full text-center"
           >
@@ -122,7 +122,7 @@ export default function Navbar() {
 
           {/* MOBILE PRIMARY CTA */}
           <Link 
-            href="/storefronts" 
+            href={ROUTES.PUBLIC.STOREFRONTS.ROOT} 
             onClick={closeMenu}
             className="text-sm font-bold text-emerald-400 border border-emerald-500/50 px-6 py-3 rounded-lg uppercase tracking-widest w-full text-center"
           >

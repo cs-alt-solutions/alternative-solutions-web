@@ -4,6 +4,8 @@
 import React, { useState, useEffect, use } from 'react';
 import Link from 'next/link';
 import { supabase } from '@/utils/supabase';
+// 1. IMPORT THE REGISTRY
+import { ROUTES } from '@/utils/glossary';
 import { ArrowLeft, Activity, Calendar, LayoutTemplate, Briefcase, Coins, CheckCircle2, Bug, Sparkles, MessageSquare, Plus, Globe, Repeat, Handshake } from 'lucide-react';
 
 export default function ProjectWorkspace({ params }: { params: Promise<{ id: string }> }) {
@@ -43,7 +45,8 @@ export default function ProjectWorkspace({ params }: { params: Promise<{ id: str
       {/* HEADER: GLOBAL METADATA */}
       <header className="h-24 border-b border-white/5 bg-bg-app/80 backdrop-blur-md px-8 flex items-center justify-between sticky top-0 z-20 shrink-0">
         <div className="flex items-center gap-6">
-          <Link href="/dashboard/foundation" className="w-10 h-10 flex items-center justify-center rounded-full bg-white/5 hover:bg-brand-primary/20 hover:text-brand-primary border border-white/10 hover:border-brand-primary/30 transition-all">
+          {/* 2. SWAPPED HARDCODED LINK FOR ROUTES.DASHBOARD.FOUNDATION */}
+          <Link href={ROUTES.DASHBOARD.FOUNDATION} className="w-10 h-10 flex items-center justify-center rounded-full bg-white/5 hover:bg-brand-primary/20 hover:text-brand-primary border border-white/10 hover:border-brand-primary/30 transition-all">
             <ArrowLeft size={18} />
           </Link>
           <div>

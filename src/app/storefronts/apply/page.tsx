@@ -3,6 +3,7 @@
 import React, { useRef, useState } from 'react';
 import Link from 'next/link';
 import { submitSectorZeroIntake } from '@/app/actions';
+import { ROUTES } from '@/utils/glossary';
 import { ArrowLeft, Send, Loader2, CheckCircle2, Store } from 'lucide-react';
 
 export default function StorefrontApplyPage() {
@@ -39,7 +40,7 @@ export default function StorefrontApplyPage() {
         
         {/* BACK NAVIGATION */}
         <Link 
-          href="/storefronts" 
+          href={ROUTES.PUBLIC.STOREFRONTS.ROOT} 
           className="inline-flex items-center gap-2 text-sm font-bold text-slate-400 hover:text-emerald-400 transition-colors mb-12 uppercase tracking-widest"
         >
           <ArrowLeft size={16} /> Back to Storefronts

@@ -2,6 +2,7 @@
 import { MARKETING_COPY } from '../config/marketing';
 import { DASHBOARD_COPY } from '../config/dashboard';
 
+export * from '../config/routes';
 export * from '../config/system';
 export * from '../config/sandbox';
 

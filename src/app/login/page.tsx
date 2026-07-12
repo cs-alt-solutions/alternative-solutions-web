@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { WEBSITE_COPY } from '@/utils/glossary';
+import { WEBSITE_COPY, ROUTES } from '@/utils/glossary';
 import { Globe, ArrowLeft, Mail, ArrowRight, Loader2, CheckCircle2 } from 'lucide-react';
 import Link from 'next/link';
 import { supabase } from '@/utils/supabase';
@@ -95,7 +95,7 @@ export default function GatewayPage() {
         </div>
 
         <div className="mt-8 text-center">
-          <Link href="/" className="text-[10px] font-black text-zinc-600 hover:text-white transition-colors uppercase tracking-widest flex items-center justify-center gap-2 bg-zinc-900/50 backdrop-blur-sm px-4 py-2 rounded-full border border-zinc-800">
+          <Link href={ROUTES.PUBLIC.HOME} className="text-[10px] font-black text-zinc-600 hover:text-white transition-colors uppercase tracking-widest flex items-center justify-center gap-2 bg-zinc-900/50 backdrop-blur-sm px-4 py-2 rounded-full border border-zinc-800">
             <ArrowLeft size={12} /> Return to Public Site
           </Link>
         </div>

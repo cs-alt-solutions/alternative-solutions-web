@@ -5,11 +5,12 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { supabase } from '@/utils/supabase';
+// BRINGING IN THE ROUTE REGISTRY!
+import { ROUTES } from '@/utils/glossary';
 import { 
   ArrowLeft, ExternalLink, Settings, Save, ShieldCheck, 
   Layers, Copy, CheckCircle2, AlertTriangle, Loader2
 } from 'lucide-react';
-// BRINGING IN OUR NEW MODULE!
 import ClientAccessModule from '@/components/dashboard/client-hq/ClientAccessModule';
 
 export default function ClientAdminProfilePage() {
@@ -76,7 +77,7 @@ export default function ClientAdminProfilePage() {
       <div className="p-8 h-full flex flex-col items-center justify-center text-slate-500">
         <AlertTriangle size={48} className="mb-4 text-orange-500/50" />
         <p className="uppercase tracking-widest font-bold">Client Record Not Found</p>
-        <Link href="/dashboard/clients" className="mt-4 text-brand-primary hover:underline text-sm font-mono">
+        <Link href={ROUTES.DASHBOARD.CLIENTS} className="mt-4 text-brand-primary hover:underline text-sm font-mono">
           Return to Client HQ
         </Link>
       </div>
@@ -84,8 +85,8 @@ export default function ClientAdminProfilePage() {
   }
 
   const handleCopyLink = () => {
-    // Dynamically generates the new portal route
-    const url = `${window.location.origin}/portal/${clientId}`;
+    // Dynamically generates the new portal route using the Registry
+    const url = `${window.location.origin}${ROUTES.PORTAL.OVERVIEW(clientId)}`;
     navigator.clipboard.writeText(url);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
@@ -95,7 +96,7 @@ export default function ClientAdminProfilePage() {
     <div className="p-6 lg:p-8 max-w-7xl mx-auto space-y-8 animate-in fade-in duration-500 h-full overflow-y-auto">
       
       <button 
-        onClick={() => router.push('/dashboard/clients')}
+        onClick={() => router.push(ROUTES.DASHBOARD.CLIENTS)}
         className="flex items-center gap-2 text-slate-400 hover:text-white transition-colors text-xs font-mono uppercase tracking-widest"
       >
         <ArrowLeft size={14} /> Back to Directory
@@ -133,7 +134,7 @@ export default function ClientAdminProfilePage() {
           </button>
           
           <Link 
-            href={`/portal/${clientId}`} 
+            href={ROUTES.PORTAL.OVERVIEW(clientId)} 
             target="_blank"
             className="flex items-center justify-center gap-2 px-6 py-3 rounded-xl bg-brand-primary text-slate-900 hover:bg-cyan-400 hover:shadow-[0_0_20px_rgba(34,211,238,0.4)] transition-all text-xs font-black uppercase tracking-widest"
           >

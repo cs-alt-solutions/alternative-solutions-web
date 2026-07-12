@@ -2,7 +2,7 @@
 import React from 'react';
 import Link from 'next/link';
 import { ArrowLeft, Users, DollarSign, Code, Send, CheckCircle2, Copy } from 'lucide-react';
-import { WEBSITE_COPY } from '@/utils/glossary';
+import { WEBSITE_COPY, ROUTES } from '@/utils/glossary';
 
 // MOCK DATA for visual layout
 const MOCK_CAMPAIGN = {
@@ -30,7 +30,7 @@ export default function CampaignManagePage({ params }: { params: { id: string } 
   return (
     <div className="p-8 animate-in fade-in duration-500 max-w-7xl mx-auto">
       {/* HEADER NAV */}
-      <Link href="/dashboard/foundation?tab=campaigns" className="inline-flex items-center gap-2 text-[10px] font-mono uppercase tracking-widest text-white/40 hover:text-brand-primary transition-colors mb-8">
+      <Link href={`${ROUTES.DASHBOARD.FOUNDATION}?tab=campaigns`} className="inline-flex items-center gap-2 text-[10px] font-mono uppercase tracking-widest text-white/40 hover:text-brand-primary transition-colors mb-8">
         <ArrowLeft size={14} /> {copy.BACK_BTN}
       </Link>
 

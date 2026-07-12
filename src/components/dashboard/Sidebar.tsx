@@ -1,3 +1,4 @@
+/* src/components/dashboard/Sidebar.tsx */
 'use client';
 
 import React, { useState, useEffect } from 'react';
@@ -21,6 +22,7 @@ import {
   X
 } from 'lucide-react';
 import { DASHBOARD_COPY } from '@/config/dashboard';
+import { ROUTES } from '@/utils/glossary';
 
 export default function Sidebar() {
   const pathname = usePathname();
@@ -38,46 +40,46 @@ export default function Sidebar() {
   }, [isOpen]);
 
   // TOP LEVEL (Anchor)
-  const topItem = { name: copy.OVERVIEW || 'HOME', href: '/dashboard', icon: LayoutDashboard };
+  const topItem = { name: copy.OVERVIEW || 'HOME', href: ROUTES.DASHBOARD.HOME, icon: LayoutDashboard };
 
   // CORE GROUPS
   const navGroups = [
     {
       label: copy.GROUPS?.WORKSPACE || 'MY WORKSPACE', 
       items: [
-        { name: copy.FOUNDATION || 'FOUNDATION', href: '/dashboard/foundation', icon: Construction },
-        { name: copy.ECOSYSTEM_MANAGER || 'ECOSYSTEM', href: '/dashboard/ecosystem', icon: Box },
-        { name: copy.STOREFRONTS || 'STOREFRONTS', href: '/dashboard/storefronts', icon: Store },
-        { name: copy.BROADCAST || 'BROADCAST', href: '/dashboard/broadcast', icon: Radio },
+        { name: copy.FOUNDATION || 'FOUNDATION', href: ROUTES.DASHBOARD.FOUNDATION, icon: Construction },
+        { name: copy.ECOSYSTEM_MANAGER || 'ECOSYSTEM', href: ROUTES.DASHBOARD.ECOSYSTEM, icon: Box },
+        { name: copy.STOREFRONTS || 'STOREFRONTS', href: ROUTES.DASHBOARD.STOREFRONTS, icon: Store },
+        { name: copy.BROADCAST || 'BROADCAST', href: ROUTES.DASHBOARD.BROADCAST, icon: Radio },
       ]
     },
     {
       label: copy.GROUPS?.HUMAN_MANAGEMENT || 'HUMAN MANAGEMENT', 
       items: [
-        { name: copy.MEMBERS || 'MEMBERS & ACCESS', href: '/dashboard/members', icon: Users },
-        { name: copy.CLIENTS || 'CLIENT HQ', href: '/dashboard/clients', icon: Briefcase },
-        { name: copy.BETA_COMMAND || 'BETA COMMAND', href: '/dashboard/beta-command', icon: TestTube },
+        { name: copy.MEMBERS || 'MEMBERS & ACCESS', href: ROUTES.DASHBOARD.DIRECTORY, icon: Users },
+        { name: copy.CLIENTS || 'CLIENT HQ', href: ROUTES.DASHBOARD.CLIENTS, icon: Briefcase },
+        { name: copy.BETA_COMMAND || 'BETA COMMAND', href: ROUTES.DASHBOARD.BETA_COMMAND, icon: TestTube },
       ]
     },
     {
       label: copy.GROUPS?.LOGISTICS || 'LIFE & LOGISTICS', 
       items: [
-        { name: copy.TASKS || 'TASKS', href: '/dashboard/tasks', icon: CheckSquare },
-        { name: copy.LEDGER || 'LEDGER', href: '/dashboard/ledger', icon: Wallet },
-        { name: copy.INFRASTRUCTURE || 'INFRASTRUCTURE', href: '/dashboard/infrastructure', icon: Server },
+        { name: copy.TASKS || 'TASKS', href: ROUTES.DASHBOARD.TASKS, icon: CheckSquare },
+        { name: copy.LEDGER || 'LEDGER', href: ROUTES.DASHBOARD.LEDGER, icon: Wallet },
+        { name: copy.INFRASTRUCTURE || 'INFRASTRUCTURE', href: ROUTES.DASHBOARD.INFRASTRUCTURE, icon: Server },
       ]
     }
   ];
 
   // SYSTEM ADMIN
   const adminItems = [
-    { name: copy.CONFIG || 'SETTINGS', href: '/dashboard/settings', icon: Settings },
+    { name: copy.CONFIG || 'SETTINGS', href: ROUTES.DASHBOARD.SETTINGS, icon: Settings },
   ];
 
   const renderLink = (item: any) => {
     // Exact match for home, startsWith for subpages
-    const isActive = item.href === '/dashboard' 
-      ? pathname === '/dashboard' 
+    const isActive = item.href === ROUTES.DASHBOARD.HOME 
+      ? pathname === ROUTES.DASHBOARD.HOME 
       : pathname === item.href || pathname.startsWith(`${item.href}/`);
       
     return (
@@ -167,7 +169,7 @@ export default function Sidebar() {
 
           <div className="px-4">
             <Link 
-              href="/" 
+              href={ROUTES.PUBLIC.HOME} 
               className="flex items-center gap-3 px-4 py-3 text-xs font-mono text-orange-500/70 hover:text-orange-400 hover:bg-orange-500/10 rounded-xl transition-colors border border-transparent hover:border-orange-500/20"
             >
               <LogOut size={18} /> {copy.EXIT || 'EXIT SYSTEM'}
