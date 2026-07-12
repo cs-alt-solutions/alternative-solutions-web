@@ -64,7 +64,7 @@ export default async function LivePrototypes() {
           </p>
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
           {prototypes?.map((site) => {
             const siteUrl = site.custom_domain 
               ? `https://${site.custom_domain}` 
@@ -73,19 +73,19 @@ export default async function LivePrototypes() {
             return (
               <div 
                 key={site.id} 
-                className="group relative bg-zinc-900/50 border border-white/10 rounded-3xl p-5 backdrop-blur-md 
-                           hover:border-cyan-500/50 hover:shadow-[0_20px_50px_-15px_rgba(34,211,238,0.2)] 
+                className="group relative bg-zinc-900/60 bg-linear-to-b from-emerald-500/5 to-transparent border border-emerald-500/10 rounded-3xl p-6 backdrop-blur-md 
+                           hover:border-emerald-500/40 hover:bg-emerald-900/20 hover:shadow-[0_20px_50px_-15px_rgba(16,185,129,0.25)] 
                            transition-all duration-500 ease-out hover:-translate-y-2"
               >
                 {/* 1. The Iframe Engine - Styled as a floating window */}
-                <div className="w-full aspect-[16/10] rounded-2xl bg-zinc-950 border border-zinc-800 overflow-hidden mb-6 relative shadow-inner">
+                <div className="w-full aspect-[4/3] rounded-2xl bg-zinc-950 border border-zinc-800 overflow-hidden mb-8 relative shadow-inner">
                   
                   {/* Browser Chrome - Dark/Minimal */}
-                  <div className="h-8 bg-zinc-900 flex items-center px-4 gap-2 border-b border-zinc-800">
-                    <div className="w-2.5 h-2.5 rounded-full bg-rose-500/50" />
-                    <div className="w-2.5 h-2.5 rounded-full bg-amber-500/50" />
-                    <div className="w-2.5 h-2.5 rounded-full bg-emerald-500/50" />
-                    <span className="ml-3 text-[9px] font-mono text-zinc-600 truncate">
+                  <div className="h-10 bg-zinc-900 flex items-center px-5 gap-2.5 border-b border-zinc-800">
+                    <div className="w-3 h-3 rounded-full bg-rose-500/50" />
+                    <div className="w-3 h-3 rounded-full bg-amber-500/50" />
+                    <div className="w-3 h-3 rounded-full bg-emerald-500/50" />
+                    <span className="ml-4 text-[10px] font-mono text-zinc-500 truncate">
                       {siteUrl.replace('https://', '').replace('http://', '')}
                     </span>
                   </div>
@@ -93,7 +93,8 @@ export default async function LivePrototypes() {
                   {/* The Preview */}
                   <div className="w-full h-full relative">
                     <a href={siteUrl} target="_blank" rel="noopener noreferrer" className="absolute inset-0 z-20 cursor-pointer" />
-                    <div className="absolute w-[400%] h-[400%] origin-top-left scale-25 mt-8">
+                    
+                    <div className="absolute w-[300%] h-[300%] origin-top-left scale-[0.333] mt-10">
                       <iframe 
                         src={siteUrl} 
                         className="w-full h-full border-none pointer-events-none" 
@@ -105,20 +106,20 @@ export default async function LivePrototypes() {
                 </div>
 
                 {/* 2. Content Info */}
-                <div className="px-2">
-                  <h3 className="text-xl font-black text-white uppercase tracking-tight mb-6 flex items-center justify-between group-hover:text-cyan-400 transition-colors">
+                <div className="px-4">
+                  <h3 className="text-2xl font-black text-white uppercase tracking-tight mb-6 flex items-center justify-between group-hover:text-emerald-400 transition-colors">
                     {site.business_name}
-                    <ExternalLink size={18} className="opacity-0 group-hover:opacity-100 transition-opacity" />
+                    <ExternalLink size={22} className="opacity-0 group-hover:opacity-100 transition-opacity" />
                   </h3>
 
                   {/* 3. Tech Stack HUD */}
-                  <div className="space-y-2">
-                    <div className="flex items-center gap-3 text-[10px] uppercase tracking-widest text-zinc-500 font-bold">
-                       <Palette size={12} className="text-cyan-500" />
+                  <div className="space-y-3">
+                    <div className="flex items-center gap-3 text-xs uppercase tracking-widest text-zinc-500 font-bold">
+                       <Palette size={14} className="text-emerald-500" />
                        {VIBE_NAMES[site.theme_style] || 'Custom Engineered'}
                     </div>
-                    <div className="flex items-center gap-3 text-[10px] uppercase tracking-widest text-zinc-500 font-bold">
-                       <LayoutTemplate size={12} className="text-teal-500" />
+                    <div className="flex items-center gap-3 text-xs uppercase tracking-widest text-zinc-500 font-bold">
+                       <LayoutTemplate size={14} className="text-emerald-500" />
                        {HOOK_NAMES[site.hero_layout] || 'Standard Flow'}
                     </div>
                   </div>

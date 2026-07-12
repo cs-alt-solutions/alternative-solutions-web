@@ -2,31 +2,36 @@
 'use client';
 
 import React, { useState } from 'react';
+import { useRouter } from 'next/navigation'; // <-- THE CACHE CLEARER
 import { ExternalLink, Pen, CreditCard, Globe, Trash2 } from 'lucide-react';
 import StorefrontEditor from './editor/StorefrontEditor';
 import NewStorefrontModal from './NewStorefrontModal';
-import { supabase } from '@/utils/supabase';
+import { deleteStorefront } from '@/app/actions'; // <-- THE ADMIN OVERRIDE
 
 export default function StorefrontsManager({ initialData }: { initialData: any[] }) {
+  const router = useRouter();
   const [storefronts, setStorefronts] = useState(initialData || []);
   const [editingStoreId, setEditingStoreId] = useState<string | null>(null);
 
-  // Find the fresh store object dynamically based on the ID
   const activeStore = editingStoreId ? storefronts.find(s => s.id === editingStoreId) : null;
 
-  // THE FIX: Hard delete function to clear routing slugs
+  // THE FIX: Server-side delete with cache purging
   const handleDeleteStorefront = async (id: string, name: string) => {
-    if (!window.confirm(`Are you sure you want to permanently delete "${name}"? This cannot be undone.`)) return;
+    if (!window.confirm(`Are you sure you want to permanently delete "${name}"? This will remove it from all public galleries.`)) return;
 
     try {
-      const { error } = await supabase.from('storefronts').delete().eq('id', id);
-      if (error) throw error;
+      // 1. Force the database to delete it via Server Action
+      await deleteStorefront(id);
 
-      // Update local state to remove the deleted row instantly
+      // 2. Remove it from the local screen instantly
       setStorefronts(prev => prev.filter(s => s.id !== id));
+
+      // 3. Purge the Next.js cache so it disappears from the Live Gallery
+      router.refresh();
+      
     } catch (err: any) {
       console.error("Delete failed:", err);
-      alert(`Failed to delete: ${err.message}`);
+      alert(err.message);
     }
   };
 
@@ -46,7 +51,6 @@ export default function StorefrontsManager({ initialData }: { initialData: any[]
           <h1 className="text-3xl font-black text-white tracking-tight">STOREFRONT ENGINE</h1>
           <p className="text-zinc-500 mt-1">Manage tenants, domains, and billing status.</p>
         </div>
-        {/* THE FIX: Replaced the static HTML button with the functional Component */}
         <NewStorefrontModal />
       </div>
 
@@ -65,9 +69,8 @@ export default function StorefrontsManager({ initialData }: { initialData: any[]
             <tbody className="divide-y divide-zinc-800">
               {storefronts.map((store) => {
                 
-                // Mocking Stripe data fallback until Webhooks are live
                 const planTier = store.plan_tier || 'Starter ($5/mo)';
-                const subStatus = store.subscription_status || 'active'; // 'active', 'past_due', 'canceled'
+                const subStatus = store.subscription_status || 'active';
                 const displayDomain = store.custom_domain || `/${store.slug}`;
 
                 return (
@@ -131,7 +134,6 @@ export default function StorefrontsManager({ initialData }: { initialData: any[]
                         >
                           <ExternalLink className="w-4 h-4" />
                         </a>
-                        {/* THE FIX: Actionable Delete Button */}
                         <button
                           onClick={() => handleDeleteStorefront(store.id, store.business_name)}
                           className="text-zinc-400 hover:text-red-500 transition-colors"

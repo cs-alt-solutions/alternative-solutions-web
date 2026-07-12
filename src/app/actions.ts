@@ -347,11 +347,16 @@ export async function createStorefront(formData: FormData) {
   const heroUrl = await uploadFile(heroFile, 'hero') || 'https://via.placeholder.com/1920x1080/000000/333333?text=NO+IMAGE';
   const aboutUrl = await uploadFile(aboutFile, 'about') || 'https://via.placeholder.com/800x800/000000/333333?text=NO+IMAGE';
 
+  // INCORPORATING THE NEW ARCHITECTURE DROPDOWNS
   const storefrontData = {
     business_name: formData.get('business_name'),
     slug: slug,
     tagline: formData.get('tagline'),
     brand_color: formData.get('brand_color'),
+    theme_style: formData.get('theme_style') || 'industrial',
+    hero_layout: formData.get('hero_layout') || 'center',
+    content_layout: formData.get('content_layout') || 'classic',
+    is_template: formData.get('is_template') === 'true',
     hero_image: heroUrl, 
     about_image: aboutUrl,
     subtext: 'Welcome to our new digital storefront.',
@@ -366,7 +371,9 @@ export async function createStorefront(formData: FormData) {
 
   const { error } = await supabase.from('storefronts').insert(storefrontData);
   if (error) throw new Error("Failed to create storefront.");
+  
   revalidatePath('/dashboard/storefronts');
+  revalidatePath('/'); // Flushes the public gallery index
 }
 
 // --- STOREFRONT EDITOR (UPDATE CORE) ---
@@ -380,7 +387,7 @@ export async function updateStorefrontCore(id: string, formData: FormData) {
     primary_cta: formData.get('primary_cta'),
     secondary_cta: formData.get('secondary_cta'),
     brand_color: formData.get('brand_color'),
-    theme_style: formData.get('theme_style'), // 🚨 ADD THIS LINE!
+    theme_style: formData.get('theme_style'),
     hero_layout: formData.get('hero_layout'),
     capabilities: formData.get('capabilities') ? JSON.parse(formData.get('capabilities') as string) : [],
   };
@@ -422,12 +429,14 @@ export async function updateStorefrontMedia(id: string, slug: string, formData: 
   }
   revalidatePath('/dashboard/storefronts');
 }
+
 export async function updateStorefrontCapabilities(id: string, capabilities: any[]) {
   const supabase = await createClient();
   const { error } = await supabase.from('storefronts').update({ capabilities }).eq('id', id);
   if (error) throw new Error(error.message);
   revalidatePath('/dashboard/storefronts');
 }
+
 export async function updateStorefrontGallery(id: string, slug: string, formData: FormData) {
   const supabase = await createClient();
   const files = formData.getAll('images') as File[];
@@ -458,8 +467,6 @@ export async function updateStorefrontGallery(id: string, slug: string, formData
   revalidatePath('/dashboard/storefronts');
 }
 
-// Add this to the bottom of src/app/actions.ts
-
 export async function removeImageFromGallery(storeId: string, imageUrlToRemove: string) {
   const supabase = await createClient();
 
@@ -489,6 +496,31 @@ export async function removeImageFromGallery(storeId: string, imageUrlToRemove: 
     console.error("Failed to update store gallery array:", updateError);
     throw new Error("Failed to delete image from gallery array.");
   }
+
+  return { success: true };
+}
+
+// --- STOREFRONT FACTORY (DELETE) ---
+export async function deleteStorefront(id: string) {
+  const supabase = await createClient(); 
+  
+  const { data, error } = await supabase
+    .from('storefronts')
+    .delete()
+    .eq('id', id)
+    .select(); // Using select to verify execution
+
+  if (error) {
+    throw new Error(`Failed to delete storefront: ${error.message}`);
+  }
+
+  if (!data || data.length === 0) {
+    throw new Error("Delete BLOCKED by Supabase RLS.");
+  }
+
+  revalidatePath('/dashboard/storefronts');
+  revalidatePath('/dashboard');
+  revalidatePath('/');
 
   return { success: true };
 }

@@ -2,8 +2,8 @@ import React from 'react';
 import { createClient } from '@/utils/supabase/server';
 import StorefrontsManager from '@/components/dashboard/storefronts/StorefrontsManager';
 
-// Ensures we always fetch fresh data when you hit the dashboard
-export const revalidate = 0; 
+// Modern Next.js architecture to force a live database fetch every time
+export const dynamic = 'force-dynamic';
 
 export default async function StorefrontsPage() {
   const supabase = await createClient();
