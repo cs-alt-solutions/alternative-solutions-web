@@ -28,15 +28,15 @@ export const STOREFRONTS = {
     ]
   },
   STOREFRONT_OFFER: {
-    TITLE: "START YOUR BUILD",
-    SUBTITLE: "Review the specifications and secure your spot on the grid.",
-    TAG: "THE BASELINE BUILD",
+    TITLE: "LET'S BUILD IT.",
+    SUBTITLE: "Get your business online today without the DIY headache.", // Friendly, outcome-focused
+    TAG: "THE FOUNDATION",
     OFFER_TITLE: "THE MANAGED STOREFRONT",
-    DESC: "Get your site built and deployed. A simple, transparent setup fee covers your initial custom build, and the $5/month subscription covers enterprise-grade hosting and continuous system maintenance.",
+    DESC: "Stop fighting templates. You pay a one-time, flat-rate fee for the custom build, and a flat $5/month to keep the engine running smoothly on enterprise-grade hosting.", // Direct, no "sneaky" words
     TIERS: [
-      { price: "Setup + $5/mo", name: "The Standard", perk: "Full website build, hosting, maintenance, and a spot on The Grid." }
+      { price: "Custom Build + $5/mo", name: "The Standard", perk: "Full website build, hosting, maintenance, and your spot on the live grid." }
     ],
-    BTN_TEXT: "START YOUR APPLICATION", // Changed from "Start Application"
+    BTN_TEXT: "START YOUR APPLICATION",
     LINK: "/storefronts/apply" 
   },
   ROSTER: {

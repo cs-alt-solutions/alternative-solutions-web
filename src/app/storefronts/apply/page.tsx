@@ -33,7 +33,7 @@ export default function StorefrontApplyPage() {
   return (
     <main className="min-h-screen bg-bg-app text-white relative overflow-hidden font-sans pt-24 pb-24">
       {/* BACKGROUND GLOW */}
-      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[800px] bg-emerald-500/10 rounded-full blur-[120px] pointer-events-none" />
+      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-200 h-200 bg-emerald-500/10 rounded-full blur-[120px] pointer-events-none" />
 
       <div className="relative max-w-3xl mx-auto px-6 z-10">
         
@@ -52,7 +52,7 @@ export default function StorefrontApplyPage() {
           </div>
           <h1 className="text-4xl md:text-6xl font-black tracking-tighter uppercase leading-none mb-4">
             Initialize Your <br className="hidden md:block" />
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 to-cyan-400 drop-shadow-[0_0_20px_rgba(52,211,153,0.2)]">
+            <span className="text-transparent bg-clip-text bg-linear-to-r from-emerald-400 to-cyan-400 drop-shadow-[0_0_20px_rgba(52,211,153,0.2)]">
               Digital Storefront.
             </span>
           </h1>
