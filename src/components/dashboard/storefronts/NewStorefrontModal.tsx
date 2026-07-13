@@ -30,7 +30,8 @@ const THEMES = [
   { name: 'Clean & Minimal', value: 'minimal' },
   { name: 'High Editorial', value: 'elegant' },
   { name: 'Earthy & Organic', value: 'organic' },
-  { name: 'Classic Editorial', value: 'editorial' }
+  { name: 'Classic Editorial', value: 'editorial' },
+  { name: 'Midnight Onyx', value: 'midnight' } // 🔮 ADDED HERE
 ];
 
 const HERO_LAYOUTS = [

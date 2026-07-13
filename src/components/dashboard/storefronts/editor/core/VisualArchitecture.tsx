@@ -8,7 +8,9 @@ const THEME_OPTIONS = [
   { value: 'minimal', label: 'Minimalist', vibe: 'bg-white border-zinc-200 text-zinc-900 font-sans tracking-tight' },
   { value: 'elegant', label: 'Elegant', vibe: 'bg-[#FAFAFA] border border-amber-700/30 text-amber-900 font-serif' },
   { value: 'organic', label: 'Organic', vibe: 'bg-[#F4F1EA] border border-[#2C3B2D] text-[#2C3B2D] font-serif rounded-tl-xl rounded-br-xl' },
-  { value: 'editorial', label: 'Editorial', vibe: 'bg-[#EAE8E3] border-y-2 border-black text-black font-serif font-bold uppercase tracking-widest' }
+  { value: 'editorial', label: 'Editorial', vibe: 'bg-[#EAE8E3] border-y-2 border-black text-black font-serif font-bold uppercase tracking-widest' },
+  // 🔮 ADDED MIDNIGHT ONYX HERE
+  { value: 'midnight', label: 'Midnight Onyx', vibe: 'bg-zinc-950 border-zinc-800 text-white font-sans tracking-tight shadow-[inset_0_0_20px_rgba(255,255,255,0.02)]' } 
 ];
 
 const BRAND_COLORS = [
@@ -29,7 +31,9 @@ const THEME_CONSTRAINTS: Record<string, { hero: string[], content: string[] }> =
   minimal: { hero: ['center', 'split-left', 'split-right'], content: ['classic', 'sticky', 'accordion'] },
   elegant: { hero: ['center', 'split-left', 'split-right'], content: ['classic', 'sticky', 'accordion', 'editorial'] },
   organic: { hero: ['center', 'split-left', 'split-right'], content: ['classic', 'bento', 'accordion'] },
-  editorial: { hero: ['center', 'split-left', 'split-right'], content: ['classic', 'editorial', 'accordion'] }
+  editorial: { hero: ['center', 'split-left', 'split-right'], content: ['classic', 'editorial', 'accordion'] },
+  // 🔮 ADDED CONSTRAINTS FOR MIDNIGHT ONYX
+  midnight: { hero: ['center', 'split-left', 'split-right', 'cinematic'], content: ['classic', 'bento', 'sticky', 'editorial', 'accordion'] } 
 };
 
 export default function VisualArchitecture({ formData, handleVisualSelect, setFormData }: { formData: any, handleVisualSelect: any, setFormData: any }) {
@@ -69,7 +73,6 @@ export default function VisualArchitecture({ formData, handleVisualSelect, setFo
           {THEME_OPTIONS.map((theme) => (
             <button key={theme.value} type="button" onClick={() => handleThemeSwitch(theme.value)}
               className={`relative p-4 h-24 border-2 transition-all flex flex-col items-center justify-center rounded-lg ${currentTheme === theme.value ? 'border-emerald-500 ring-2 ring-emerald-500/20 z-10' : 'border-zinc-800 hover:border-zinc-600'} ${theme.vibe}`}>
-              {/* 🚨 Fixed Text Wrapping */}
               <span className="text-center drop-shadow-sm px-1 text-xs md:text-sm leading-tight wrap-break-word whitespace-normal w-full">{theme.label}</span>
               {currentTheme === theme.value && (
                 <div className="absolute -top-2 -right-2 w-4 h-4 bg-emerald-500 rounded-full border-2 border-zinc-900 shadow-[0_0_10px_rgba(16,185,129,0.5)]" />

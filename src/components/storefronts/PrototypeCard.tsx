@@ -5,12 +5,31 @@ import React, { useState } from 'react';
 import { ExternalLink, Layers, LayoutTemplate, ArrowRight, Info, RotateCcw } from 'lucide-react';
 
 const VIBE_NAMES: Record<string, string> = {
-  industrial: "Raw & Industrial", neo: "Neo-Brutalist", cyberpunk: "Neon Tech",
-  minimal: "Clean & Minimal", elegant: "High Editorial", organic: "Earthy & Natural",
-  editorial: "Magazine Style", retropop: "Retro Pop"
+  industrial: "Raw & Industrial", 
+  neo: "Neo-Brutalist", 
+  cyberpunk: "Neon Tech",
+  minimal: "Clean & Minimal", 
+  elegant: "High Editorial", 
+  organic: "Earthy & Natural",
+  editorial: "Magazine Style", 
+  retropop: "Retro Pop",
+  midnight: "Midnight Onyx" // 🔮 ADDED HERE
 };
-const HOOK_NAMES: Record<string, string> = { 'center': "Centered Focus", 'split-left': "Bold Left Split", 'split-right': "Bold Right Split", 'cinematic': "Full Cinematic" };
-const JOURNEY_NAMES: Record<string, string> = { 'classic': "Smooth Stack", 'bento': "Bento Grid", 'sticky': "Sticky Scroll", 'editorial': "Hover Stack", 'accordion': "Accordion Flow" };
+
+const HOOK_NAMES: Record<string, string> = { 
+  'center': "Centered Focus", 
+  'split-left': "Bold Left Split", 
+  'split-right': "Bold Right Split", 
+  'cinematic': "Full Cinematic" 
+};
+
+const JOURNEY_NAMES: Record<string, string> = { 
+  'classic': "Smooth Stack", 
+  'bento': "Bento Grid", 
+  'sticky': "Sticky Scroll", 
+  'editorial': "Hover Stack", 
+  'accordion': "Accordion Flow" 
+};
 
 export default function PrototypeCard({ site }: { site: any }) {
   const [isFlipped, setIsFlipped] = useState(false);
@@ -66,6 +85,10 @@ export default function PrototypeCard({ site }: { site: any }) {
             <div className="border-l-2 border-fuchsia-500 pl-4">
                <p className="text-[8px] text-zinc-500 uppercase tracking-widest mb-1">The Flow</p>
                <p className="text-xs text-zinc-200 font-bold uppercase tracking-wide">{JOURNEY_NAMES[site.content_layout] || 'Standard Stack'}</p>
+            </div>
+            <div className="border-l-2 border-emerald-500 pl-4">
+               <p className="text-[8px] text-zinc-500 uppercase tracking-widest mb-1">Aesthetic</p>
+               <p className="text-xs text-zinc-200 font-bold uppercase tracking-wide">{VIBE_NAMES[site.theme_style] || 'Custom Engineered'}</p>
             </div>
           </div>
 
