@@ -137,29 +137,28 @@ export default function Step4Scope({
         )}
       </div>
 
-      {/* Priority Checkbox - Transparent */}
-      <div className={`p-6 rounded-2xl border transition-all duration-300 ${priorityQueue ? 'bg-pink-500/10 border-pink-500/50' : 'bg-black/20 border-white/5 hover:border-white/10'}`}>
-         <label className="flex items-start gap-4 cursor-pointer group">
-           <div className="relative flex items-center justify-center w-6 h-6 shrink-0 mt-1">
-             <input 
-               type="checkbox" 
-               checked={priorityQueue} 
-               onChange={(e) => setPriorityQueue(e.target.checked)} 
-               className="appearance-none w-6 h-6 border-2 border-white/20 rounded bg-transparent checked:bg-pink-500 checked:border-pink-500 cursor-pointer transition-colors" 
-             />
-             {priorityQueue && <CheckCircle2 className="absolute text-white w-4 h-4 pointer-events-none" />}
+      {/* Priority Checkbox - Now "Not Needed" */}
+        <div className="p-6 rounded-2xl border border-zinc-800 bg-zinc-950/50 opacity-60">
+           <div className="flex items-start gap-4">
+             <div className="relative flex items-center justify-center w-6 h-6 shrink-0 mt-1 border-2 border-zinc-700 rounded bg-zinc-900">
+               {/* No checkbox here, just a visual placeholder */}
+             </div>
+             <div className="relative">
+                <span className="font-bold text-zinc-500 text-lg flex items-center gap-2">
+                  <Zap className="w-5 h-5 text-zinc-600" />
+                  Fast-Track My Application
+                </span>
+                <p className="text-sm text-zinc-500 leading-relaxed mt-2">
+                  I hand-build these systems myself, and usually, there’s a waitlist. This feature is coming soon, but for now, you don't need to do anything extra. I’ll review your application as soon as it hits my desk.
+                </p>
+                
+                {/* The "NOT NEEDED" Stamp */}
+                <div className="absolute -top-4 -right-4 rotate-12 border-2 border-zinc-500 text-zinc-500 font-black text-xs px-2 py-1 rounded uppercase tracking-widest opacity-80 pointer-events-none">
+                  Not Needed
+                </div>
+             </div>
            </div>
-           <div>
-              <span className="font-bold text-white text-lg flex items-center gap-2 group-hover:text-pink-400 transition-colors">
-                <Zap className="w-5 h-5 text-pink-500" />
-                Fast-Track My Application ($1)
-              </span>
-              <p className="text-sm text-zinc-400 leading-relaxed mt-2">
-                Checking this box adds a $1 retainer to your application. It proves you're serious and bumps you straight to the front of my queue for review.
-              </p>
-           </div>
-         </label>
-      </div>
+        </div>
 
       <div className="space-y-6 pt-4">
         <div className="flex gap-4">
