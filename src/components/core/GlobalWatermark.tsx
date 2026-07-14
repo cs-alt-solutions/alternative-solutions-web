@@ -23,7 +23,7 @@ export default function GlobalWatermark() {
       {/* Increased opacity slightly to 15% so we can definitely see it. 
         Once you confirm it's visible, you can lower this back to opacity-5 or opacity-10 
       */}
-      <div className="relative w-[800px] h-[800px] md:w-[1200px] md:h-[1200px] opacity-15">
+      <div className="relative w-200 h-200 md:w-300 md:h-300 opacity-15">
         <img 
           src="/logo.png" 
           alt="Watermark" 

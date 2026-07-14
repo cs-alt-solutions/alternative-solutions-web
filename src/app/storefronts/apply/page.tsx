@@ -1,3 +1,4 @@
+/* src/app/storefronts/apply/page.tsx */
 'use client';
 
 import React, { useState, useEffect } from 'react';
@@ -8,6 +9,8 @@ import Step2Network from '@/components/storefronts/wizard/Step2Network';
 import Step3Vibe from '@/components/storefronts/wizard/Step3Vibe';
 import Step4Scope from '@/components/storefronts/wizard/Step4Scope';
 import { supabase } from '@/utils/supabase';
+// 1. IMPORT YOUR ACTION
+import { submitStorefrontApplication } from '@/app/actions/storefront_applications';
 
 export default function StorefrontApplicationPage() {
   const [step, setStep] = useState(1);
@@ -47,13 +50,33 @@ export default function StorefrontApplicationPage() {
   const handleNext = () => { window.scrollTo({ top: 0, behavior: 'smooth' }); setStep(step + 1); };
   const handlePrev = () => { window.scrollTo({ top: 0, behavior: 'smooth' }); setStep(step - 1); };
 
+  // 2. UPDATED SUBMIT HANDLER
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
-    setTimeout(() => { 
-      setIsSubmitting(false); 
-      alert(priorityQueue ? "Routing to $1 Priority Stripe Checkout..." : "Application logged. I'll be in touch."); 
-    }, 1500);
+
+    // Package the form data for the Server Action
+    const data = new FormData();
+    data.append('name', formData.name);
+    data.append('email', formData.email);
+    data.append('phone', formData.phone);
+    data.append('projectName', formData.projectName);
+    data.append('description', formData.description);
+    data.append('selectedPlan', selectedPlan);
+    data.append('priorityQueue', priorityQueue.toString());
+
+    try {
+      const result = await submitStorefrontApplication(data);
+      if (result.success) {
+        alert("Application logged. I'll be in touch.");
+      } else {
+        throw new Error(result.error);
+      }
+    } catch (err: any) {
+      alert("Submission error: " + err.message);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -71,43 +94,47 @@ export default function StorefrontApplicationPage() {
         </div>
       </div>
 
-      <div className="flex-1 w-full max-w-2xl mx-auto px-6 py-12 flex flex-col items-center">
+      <div className="flex-1 w-full max-w-3xl mx-auto px-6 py-12 flex flex-col items-center relative z-10">
         {vibes.length === 0 ? (
           <div className="text-zinc-500 animate-pulse mt-20">Syncing with the engine...</div>
         ) : (
-          <form onSubmit={handleSubmit} className="w-full">
-            {step === 1 && (
-              <Step1Basics 
-                formData={formData} setFormData={setFormData} 
-                onNext={handleNext} 
-                isValid={formData.name.length > 0 && formData.email.length > 0 && formData.phone.length > 0 && formData.projectName.length > 0 && formData.description.length > 0} 
-              />
-            )}
-            {step === 2 && (
-              <Step2Network 
-                activeSocials={activeSocials} socialHandles={socialHandles} 
-                toggleSocial={toggleSocial} handleSocialInputChange={handleSocialInputChange} 
-                onNext={handleNext} onPrev={handlePrev} 
-              />
-            )}
-            {step === 3 && (
-              <Step3Vibe 
-                selectedVibe={selectedVibe} setSelectedVibe={setSelectedVibe} 
-                vibes={vibes} 
-                onNext={handleNext} onPrev={handlePrev} 
-              />
-            )}
-            {step === 4 && (
-              <Step4Scope 
-                plans={plans} selectedPlan={selectedPlan} setSelectedPlan={setSelectedPlan} 
-                expandedPlan={expandedPlan} setExpandedPlan={setExpandedPlan} 
-                wantsCustom={wantsCustom} setWantsCustom={setWantsCustom} 
-                existingDomain={existingDomain} setExistingDomain={setExistingDomain} 
-                priorityQueue={priorityQueue} setPriorityQueue={setPriorityQueue} 
-                isSubmitting={isSubmitting} onPrev={handlePrev} onSubmit={handleSubmit} 
-              />
-            )}
-          </form>
+          <div className="w-full bg-zinc-950/30 backdrop-blur-3xl border border-white/10 p-6 md:p-12 rounded-3xl shadow-[0_0_50px_rgba(0,0,0,0.3)] relative overflow-hidden">
+            <div className="absolute inset-0 bg-gradient-to-br from-white/5 to-transparent pointer-events-none" />
+            
+            <form onSubmit={handleSubmit} className="relative z-10 w-full">
+              {step === 1 && (
+                <Step1Basics 
+                  formData={formData} setFormData={setFormData} 
+                  onNext={handleNext} 
+                  isValid={formData.name.length > 0 && formData.email.length > 0 && formData.phone.length > 0 && formData.projectName.length > 0 && formData.description.length > 0} 
+                />
+              )}
+              {step === 2 && (
+                <Step2Network 
+                  activeSocials={activeSocials} socialHandles={socialHandles} 
+                  toggleSocial={toggleSocial} handleSocialInputChange={handleSocialInputChange} 
+                  onNext={handleNext} onPrev={handlePrev} 
+                />
+              )}
+              {step === 3 && (
+                <Step3Vibe 
+                  selectedVibe={selectedVibe} setSelectedVibe={setSelectedVibe} 
+                  vibes={vibes} 
+                  onNext={handleNext} onPrev={handlePrev} 
+                />
+              )}
+              {step === 4 && (
+                <Step4Scope 
+                  plans={plans} selectedPlan={selectedPlan} setSelectedPlan={setSelectedPlan} 
+                  expandedPlan={expandedPlan} setExpandedPlan={setExpandedPlan} 
+                  wantsCustom={wantsCustom} setWantsCustom={setWantsCustom} 
+                  existingDomain={existingDomain} setExistingDomain={setExistingDomain} 
+                  priorityQueue={priorityQueue} setPriorityQueue={setPriorityQueue} 
+                  isSubmitting={isSubmitting} onPrev={handlePrev} onSubmit={handleSubmit} 
+                />
+              )}
+            </form>
+          </div>
         )}
       </div>
     </div>
