@@ -21,11 +21,12 @@ export default function HomeHero() {
   };
 
   return (
-    <section className="mb-24 pt-10 md:pt-16 animate-in fade-in slide-in-from-bottom-8 duration-1000">
-      <div className="flex flex-col lg:flex-row items-center justify-between gap-16 px-6">
+    <section className="relative mb-24 pt-10 md:pt-16 animate-in fade-in slide-in-from-bottom-8 duration-1000">
+      
+      <div className="flex flex-col lg:flex-row items-center justify-between gap-16 px-6 relative z-10">
         
         {/* LEFT COLUMN: THE VISION */}
-        <div className="w-full lg:w-3/5 text-center lg:text-left relative z-10">
+        <div className="w-full lg:w-3/5 text-center lg:text-left">
           <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded bg-white/5 text-[10px] font-mono font-bold text-white/40 uppercase tracking-widest mb-8 border border-white/10 shadow-inner">
              <div className="w-1.5 h-1.5 bg-brand-primary rounded-full animate-pulse" />
              {HERO.TAG}
@@ -60,9 +61,8 @@ export default function HomeHero() {
           </div>
         </div>
 
-        {/* RIGHT COLUMN: IDENTITY PEDESTAL */}
+        {/* RIGHT COLUMN: REVERTED IDENTITY PEDESTAL */}
         <div className="w-full lg:w-2/5 relative flex justify-center lg:justify-end">
-           {/* ... (Existing pedestal remains unchanged) */}
            <div className="w-full aspect-square max-w-sm rounded-full flex items-center justify-center relative group">
             <div className="absolute inset-0 bg-[conic-gradient(from_0deg,transparent_0_340deg,rgba(6,182,212,0.3)_360deg)] animate-[spin_4s_linear_infinite] rounded-full blur-md" />
             <div className="absolute inset-0 border border-brand-primary/20 rounded-full" />
@@ -78,9 +78,8 @@ export default function HomeHero() {
         </div>
       </div>
 
-
       {/* AUTHORITY BANNER */}
-      <div className="mt-24 pt-8 border-t border-white/5 flex flex-col items-center justify-center animate-in fade-in slide-in-from-bottom-4 duration-1000 delay-500 w-full max-w-6xl mx-auto px-6">
+      <div className="relative mt-24 pt-8 border-t border-white/5 flex flex-col items-center justify-center animate-in fade-in slide-in-from-bottom-4 duration-1000 delay-500 w-full max-w-6xl mx-auto px-6 z-10">
          <p className="text-[10px] font-mono text-white/30 uppercase tracking-[0.3em] mb-12 text-center">
            {AUTHORITY_BANNER.TEXT}
          </p>

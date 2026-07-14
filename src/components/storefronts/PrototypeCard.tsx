@@ -36,13 +36,13 @@ export default function PrototypeCard({ site }: { site: any }) {
   const siteUrl = site.custom_domain ? `https://${site.custom_domain}` : `${process.env.NEXT_PUBLIC_BASE_URL || 'https://storefronts.alternativesolutions.io'}/${site.slug}`;
 
   return (
-    <div className="relative w-full aspect-[16/10] [perspective:1000px] group">
+    <div className="relative w-full aspect-16/10 perspective-[1000px] group">
       <div 
-        className={`w-full h-full transition-all duration-700 [transform-style:preserve-3d] ${isFlipped ? '[transform:rotateY(180deg)]' : ''}`}
+        className={`w-full h-full transition-all duration-700 transform-3d ${isFlipped ? 'transform-[rotateY(180deg)]' : ''}`}
       >
         
         {/* FRONT FACE */}
-        <div className="absolute inset-0 [backface-visibility:hidden] bg-zinc-950 border border-zinc-800 rounded-2xl overflow-hidden shadow-lg group-hover:border-zinc-700 transition-colors">
+        <div className="absolute inset-0 backface-hidden bg-zinc-950 border border-zinc-800 rounded-2xl overflow-hidden shadow-lg group-hover:border-zinc-700 transition-colors">
           <div className="w-full h-full relative">
             {/* Full-bleed website preview */}
             <div className="w-full h-full overflow-hidden relative">
@@ -68,7 +68,7 @@ export default function PrototypeCard({ site }: { site: any }) {
         </div>
 
         {/* BACK FACE */}
-        <div className="absolute inset-0 [backface-visibility:hidden] [transform:rotateY(180deg)] bg-zinc-900 border border-zinc-800 rounded-2xl p-6 flex flex-col shadow-2xl overflow-hidden">
+        <div className="absolute inset-0 backface-hidden transform-[rotateY(180deg)] bg-zinc-900 border border-zinc-800 rounded-2xl p-6 flex flex-col shadow-2xl overflow-hidden">
           <div className="flex justify-between items-start mb-6">
              <h3 className="text-xl font-black text-white uppercase tracking-tight">Vibe Check</h3>
              <button onClick={() => setIsFlipped(false)} className="bg-zinc-950 p-1.5 rounded-full border border-zinc-800 text-zinc-400 hover:text-white transition-all">
@@ -77,7 +77,7 @@ export default function PrototypeCard({ site }: { site: any }) {
           </div>
           
           {/* Use flex-grow to push the launch button to the bottom */}
-          <div className="flex-grow space-y-6">
+          <div className="grow space-y-6">
             <div className="border-l-2 border-cyan-500 pl-4">
                <p className="text-[8px] text-zinc-500 uppercase tracking-widest mb-1">The Hook</p>
                <p className="text-xs text-zinc-200 font-bold uppercase tracking-wide">{HOOK_NAMES[site.hero_layout] || 'Standard Flow'}</p>

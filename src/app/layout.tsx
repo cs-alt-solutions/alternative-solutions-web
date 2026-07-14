@@ -6,6 +6,7 @@ import "./globals.css";
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import ConditionalUI from '@/components/core/ConditionalUI';
+import GlobalWatermark from '@/components/core/GlobalWatermark';
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
 const jetbrains = JetBrains_Mono({ subsets: ["latin"], variable: "--font-jetbrains" });
@@ -45,6 +46,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       data-scroll-behavior="smooth"
     > 
       <body className="antialiased bg-bg-app text-white">
+        
+        {/* THE GLOBAL WATERMARK COMPONENT ADDED HERE */}
+        <GlobalWatermark />
+
         {/* WE PASS THE SERVER COMPONENTS THROUGH SLOTS */}
         <ConditionalUI navbar={<Navbar />} footer={<Footer />}>
           {children}

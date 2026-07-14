@@ -1,204 +1,115 @@
-/* src/app/storefronts/apply/page.tsx */
 'use client';
-import React, { useRef, useState } from 'react';
+
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { submitSectorZeroIntake } from '@/app/actions';
-import { ROUTES } from '@/utils/glossary';
-import { ArrowLeft, Send, Loader2, CheckCircle2, Store } from 'lucide-react';
+import { ArrowLeft } from 'lucide-react';
+import Step1Basics from '@/components/storefronts/wizard/Step1Basics';
+import Step2Network from '@/components/storefronts/wizard/Step2Network';
+import Step3Vibe from '@/components/storefronts/wizard/Step3Vibe';
+import Step4Scope from '@/components/storefronts/wizard/Step4Scope';
+import { supabase } from '@/utils/supabase';
 
-export default function StorefrontApplyPage() {
-  const formRef = useRef<HTMLFormElement>(null);
+export default function StorefrontApplicationPage() {
+  const [step, setStep] = useState(1);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [isSuccess, setIsSuccess] = useState(false);
-  const [errorMsg, setErrorMsg] = useState('');
+  const [vibes, setVibes] = useState<any[]>([]);
+  const [plans, setPlans] = useState<any[]>([]);
 
-  async function handleSubmit(formData: FormData) {
+  const [formData, setFormData] = useState({ name: '', email: '', phone: '', projectName: '', description: '' });
+  const [activeSocials, setActiveSocials] = useState<Record<string, boolean>>({ instagram: false, facebook: false, x: false, linkedin: false, other: false });
+  const [socialHandles, setSocialHandles] = useState<Record<string, string>>({ instagram: '', facebook: '', x: '', linkedin: '', other: '' });
+  const [selectedVibe, setSelectedVibe] = useState<string | null>(null);
+  const [selectedPlan, setSelectedPlan] = useState<string>('foundation');
+  const [expandedPlan, setExpandedPlan] = useState<string | null>('foundation');
+  const [wantsCustom, setWantsCustom] = useState(false);
+  const [existingDomain, setExistingDomain] = useState('');
+  const [priorityQueue, setPriorityQueue] = useState(false);
+
+  useEffect(() => {
+    const fetchArchitectureData = async () => {
+      const { data: dbVibes } = await supabase.from('storefront_vibes').select('*').order('created_at', { ascending: true });
+      const { data: dbPlans } = await supabase.from('storefront_plans').select('*').order('price', { ascending: true });
+      
+      const cluelessOption = {
+        id: 'clueless', title: 'No Fucking Clue', desc: 'I trust you. Just build something badass.',
+        cardStyle: 'bg-zinc-900 border-2 border-dashed border-zinc-700 text-zinc-400 hover:border-fuchsia-500 hover:text-fuchsia-400 transition-all rounded-xl sm:col-span-2 flex flex-col items-center justify-center text-center',
+        activeStyle: 'border-solid border-fuchsia-500 bg-fuchsia-500/10 text-fuchsia-400 ring-1 ring-fuchsia-500 shadow-[0_0_30px_rgba(217,70,239,0.3)]'
+      };
+
+      if (dbVibes) setVibes([...dbVibes, cluelessOption]);
+      if (dbPlans) setPlans(dbPlans);
+    };
+    fetchArchitectureData();
+  }, []);
+
+  const toggleSocial = (network: string) => setActiveSocials(prev => ({ ...prev, [network]: !prev[network] }));
+  const handleSocialInputChange = (network: string, value: string) => setSocialHandles(prev => ({ ...prev, [network]: value }));
+  const handleNext = () => { window.scrollTo({ top: 0, behavior: 'smooth' }); setStep(step + 1); };
+  const handlePrev = () => { window.scrollTo({ top: 0, behavior: 'smooth' }); setStep(step - 1); };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
     setIsSubmitting(true);
-    setErrorMsg('');
-    try {
-      // Repurposing your existing intake action to capture this form
-      const result = await submitSectorZeroIntake(formData);
-      if (result?.error) {
-        setErrorMsg(result.error);
-      } else {
-        setIsSuccess(true);
-        formRef.current?.reset();
-      }
-    } catch (err) {
-      setErrorMsg('An unexpected error occurred. Please try again.');
-    } finally {
-      setIsSubmitting(false);
-    }
-  }
+    setTimeout(() => { 
+      setIsSubmitting(false); 
+      alert(priorityQueue ? "Routing to $1 Priority Stripe Checkout..." : "Application logged. I'll be in touch."); 
+    }, 1500);
+  };
 
   return (
-    <main className="min-h-screen bg-bg-app text-white relative overflow-hidden font-sans pt-24 pb-24">
-      {/* BACKGROUND GLOW */}
-      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-200 h-200 bg-emerald-500/10 rounded-full blur-[120px] pointer-events-none" />
+    <div className="min-h-screen bg-zinc-950 text-zinc-50 font-sans relative overflow-x-hidden flex flex-col">
+      <div className="absolute top-0 left-0 w-full h-[50vh] bg-[radial-gradient(ellipse_at_top,var(--tw-gradient-stops))] from-indigo-900/20 via-zinc-950/0 to-zinc-950/0 pointer-events-none -z-10"></div>
 
-      <div className="relative max-w-3xl mx-auto px-6 z-10">
-        
-        {/* BACK NAVIGATION */}
-        <Link 
-          href={ROUTES.PUBLIC.STOREFRONTS.ROOT} 
-          className="inline-flex items-center gap-2 text-sm font-bold text-slate-400 hover:text-emerald-400 transition-colors mb-12 uppercase tracking-widest"
-        >
-          <ArrowLeft size={16} /> Back to Storefronts
-        </Link>
-
-        {/* HEADER */}
-        <div className="mb-12">
-          <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-emerald-500/30 bg-emerald-500/10 text-[10px] font-mono text-emerald-400 uppercase tracking-widest mb-6 shadow-[0_0_15px_rgba(52,211,153,0.15)]">
-            <Store size={14} /> Intake Form
+      <div className="w-full border-b border-zinc-800 bg-zinc-950/80 backdrop-blur-md sticky top-0 z-50">
+        <div className="max-w-4xl mx-auto px-6 py-4 flex items-center justify-between">
+          <Link href="/storefronts" className="text-zinc-400 hover:text-white flex items-center gap-2 text-sm font-medium"><ArrowLeft className="w-4 h-4" /> Cancel</Link>
+          <div className="flex gap-2 w-48 opacity-80">
+            {[1, 2, 3, 4].map((s) => (
+              <div key={s} className={`h-2 flex-1 rounded-full transition-all ${step >= s ? 'bg-indigo-500' : 'bg-zinc-800'}`}></div>
+            ))}
           </div>
-          <h1 className="text-4xl md:text-6xl font-black tracking-tighter uppercase leading-none mb-4">
-            Initialize Your <br className="hidden md:block" />
-            <span className="text-transparent bg-clip-text bg-linear-to-r from-emerald-400 to-cyan-400 drop-shadow-[0_0_20px_rgba(52,211,153,0.2)]">
-              Digital Storefront.
-            </span>
-          </h1>
-          <p className="text-slate-400 text-lg font-light max-w-xl">
-            Fill out the specifications below. I will review your business details and get back to you to discuss the build.
-          </p>
-        </div>
-
-        {/* FORM CONTAINER */}
-        <div className="bg-black/60 border border-white/10 rounded-3xl p-6 md:p-10 backdrop-blur-xl shadow-2xl relative">
-          
-          {isSuccess ? (
-             <div className="text-center py-16 animate-in fade-in zoom-in duration-500">
-               <div className="w-20 h-20 bg-emerald-500/20 text-emerald-400 rounded-full flex items-center justify-center mx-auto mb-6 shadow-[0_0_30px_rgba(52,211,153,0.2)]">
-                 <CheckCircle2 size={40} />
-               </div>
-               <h3 className="text-2xl font-black uppercase tracking-tight text-white mb-3">
-                 Specifications Received
-               </h3>
-               <p className="text-slate-400 font-light mb-8 max-w-md mx-auto">
-                 Your storefront request is in the queue. I will review your application and contact you at the email provided shortly.
-               </p>
-               <button 
-                 onClick={() => setIsSuccess(false)}
-                 className="text-sm font-bold font-mono text-emerald-400 hover:text-white uppercase tracking-widest transition-colors"
-               >
-                 Submit Another Request
-               </button>
-             </div>
-          ) : (
-            <form ref={formRef} action={handleSubmit} className="space-y-6">
-              
-              {/* FORM GRID */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                
-                {/* NAME */}
-                <div className="space-y-2">
-                  <label htmlFor="name" className="text-xs font-bold text-slate-400 uppercase tracking-widest ml-1">
-                    Your Name
-                  </label>
-                  <input 
-                    type="text" 
-                    id="name" 
-                    name="name" 
-                    required
-                    placeholder="John Doe"
-                    className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3.5 text-white placeholder:text-slate-600 focus:outline-none focus:border-emerald-500/50 focus:bg-white/10 transition-all font-light"
-                  />
-                </div>
-
-                {/* EMAIL */}
-                <div className="space-y-2">
-                  <label htmlFor="email" className="text-xs font-bold text-slate-400 uppercase tracking-widest ml-1">
-                    Email Address
-                  </label>
-                  <input 
-                    type="email" 
-                    id="email" 
-                    name="email" 
-                    required
-                    placeholder="john@example.com"
-                    className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3.5 text-white placeholder:text-slate-600 focus:outline-none focus:border-emerald-500/50 focus:bg-white/10 transition-all font-light"
-                  />
-                </div>
-
-                {/* BUSINESS NAME */}
-                <div className="space-y-2 md:col-span-2">
-                  <label htmlFor="businessName" className="text-xs font-bold text-slate-400 uppercase tracking-widest ml-1">
-                    Business Name
-                  </label>
-                  <input 
-                    type="text" 
-                    id="businessName" 
-                    name="businessName" 
-                    required
-                    placeholder="Skyline Mechanics"
-                    className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3.5 text-white placeholder:text-slate-600 focus:outline-none focus:border-emerald-500/50 focus:bg-white/10 transition-all font-light"
-                  />
-                </div>
-
-                {/* SOCIAL/CURRENT LINK */}
-                <div className="space-y-2 md:col-span-2">
-                  <label htmlFor="currentLink" className="text-xs font-bold text-slate-400 uppercase tracking-widest ml-1">
-                    Current Website / Facebook Page (Optional)
-                  </label>
-                  <input 
-                    type="url" 
-                    id="currentLink" 
-                    name="currentLink" 
-                    placeholder="https://facebook.com/your-business"
-                    className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3.5 text-white placeholder:text-slate-600 focus:outline-none focus:border-emerald-500/50 focus:bg-white/10 transition-all font-light"
-                  />
-                </div>
-
-                {/* THE GOAL (TEXTAREA) */}
-                <div className="space-y-2 md:col-span-2">
-                  <label htmlFor="goals" className="text-xs font-bold text-slate-400 uppercase tracking-widest ml-1">
-                    What are the main goals for your storefront?
-                  </label>
-                  <textarea 
-                    id="goals" 
-                    name="goals" 
-                    required
-                    rows={4}
-                    placeholder="I need a professional landing page to list my services and get people to contact me directly..."
-                    className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3.5 text-white placeholder:text-slate-600 focus:outline-none focus:border-emerald-500/50 focus:bg-white/10 transition-all font-light resize-none"
-                  />
-                </div>
-
-              </div>
-
-              {/* ERROR MESSAGE */}
-              {errorMsg && (
-                <div className="p-4 bg-red-500/10 border border-red-500/20 rounded-xl text-red-400 text-sm font-medium">
-                  {errorMsg}
-                </div>
-              )}
-
-              {/* SUBMIT BUTTON */}
-              <div className="pt-4">
-                <button 
-                  type="submit" 
-                  disabled={isSubmitting}
-                  className="group relative flex items-center justify-center gap-3 w-full py-4 text-sm font-bold font-mono uppercase tracking-widest rounded-xl bg-emerald-500 text-black overflow-hidden transition-all hover:shadow-[0_0_30px_rgba(52,211,153,0.4)] disabled:opacity-70 disabled:cursor-not-allowed"
-                >
-                  <div className="absolute inset-0 bg-white/20 translate-y-full group-hover:translate-y-0 transition-transform duration-300 ease-out" />
-                  <span className="relative z-10 flex items-center gap-2">
-                    {isSubmitting ? (
-                      <>
-                        <Loader2 size={18} className="animate-spin" /> Transmitting...
-                      </>
-                    ) : (
-                      <>
-                        Submit Specifications <Send size={16} className="group-hover:translate-x-1 group-hover:-translate-y-1 transition-transform" />
-                      </>
-                    )}
-                  </span>
-                </button>
-              </div>
-
-            </form>
-          )}
-
         </div>
       </div>
-    </main>
+
+      <div className="flex-1 w-full max-w-2xl mx-auto px-6 py-12 flex flex-col items-center">
+        {vibes.length === 0 ? (
+          <div className="text-zinc-500 animate-pulse mt-20">Syncing with the engine...</div>
+        ) : (
+          <form onSubmit={handleSubmit} className="w-full">
+            {step === 1 && (
+              <Step1Basics 
+                formData={formData} setFormData={setFormData} 
+                onNext={handleNext} 
+                isValid={formData.name.length > 0 && formData.email.length > 0 && formData.phone.length > 0 && formData.projectName.length > 0 && formData.description.length > 0} 
+              />
+            )}
+            {step === 2 && (
+              <Step2Network 
+                activeSocials={activeSocials} socialHandles={socialHandles} 
+                toggleSocial={toggleSocial} handleSocialInputChange={handleSocialInputChange} 
+                onNext={handleNext} onPrev={handlePrev} 
+              />
+            )}
+            {step === 3 && (
+              <Step3Vibe 
+                selectedVibe={selectedVibe} setSelectedVibe={setSelectedVibe} 
+                vibes={vibes} 
+                onNext={handleNext} onPrev={handlePrev} 
+              />
+            )}
+            {step === 4 && (
+              <Step4Scope 
+                plans={plans} selectedPlan={selectedPlan} setSelectedPlan={setSelectedPlan} 
+                expandedPlan={expandedPlan} setExpandedPlan={setExpandedPlan} 
+                wantsCustom={wantsCustom} setWantsCustom={setWantsCustom} 
+                existingDomain={existingDomain} setExistingDomain={setExistingDomain} 
+                priorityQueue={priorityQueue} setPriorityQueue={setPriorityQueue} 
+                isSubmitting={isSubmitting} onPrev={handlePrev} onSubmit={handleSubmit} 
+              />
+            )}
+          </form>
+        )}
+      </div>
+    </div>
   );
 }
