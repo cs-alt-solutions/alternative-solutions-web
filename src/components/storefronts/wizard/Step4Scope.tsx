@@ -137,26 +137,29 @@ export default function Step4Scope({
         )}
       </div>
 
-      {/* Priority Checkbox - Now "Not Needed" */}
-        <div className="p-6 rounded-2xl border border-zinc-800 bg-zinc-950/50 opacity-60">
-           <div className="flex items-start gap-4">
-             <div className="relative flex items-center justify-center w-6 h-6 shrink-0 mt-1 border-2 border-zinc-700 rounded bg-zinc-900">
-               {/* No checkbox here, just a visual placeholder */}
+      {/* Priority Status - Shaded out with a clean "No Wait" stamp */}
+        <div className="p-6 rounded-2xl border border-zinc-800 bg-zinc-950/50 relative overflow-hidden">
+           {/* The Shaded Out Layer */}
+           <div className="filter grayscale opacity-50">
+             <div className="flex items-start gap-4">
+               <div className="relative flex items-center justify-center w-6 h-6 shrink-0 mt-1">
+                  <div className="w-5 h-5 rounded-full border border-zinc-700 bg-zinc-900"></div>
+               </div>
+               <div>
+                  <span className="font-bold text-zinc-400 text-lg flex items-center gap-2">
+                    <Zap className="w-5 h-5 text-zinc-700" />
+                    Priority Build Lane
+                  </span>
+                  <p className="text-sm text-zinc-500 leading-relaxed mt-2">
+                    I hand-build these systems myself, so I keep a strict cap on active projects. I’ll review your application and let you know when I have a slot open to get you into the queue.
+                  </p>
+               </div>
              </div>
-             <div className="relative">
-                <span className="font-bold text-zinc-500 text-lg flex items-center gap-2">
-                  <Zap className="w-5 h-5 text-zinc-600" />
-                  Fast-Track My Application
-                </span>
-                <p className="text-sm text-zinc-500 leading-relaxed mt-2">
-                  I hand-build these systems myself, and usually, there’s a waitlist. This feature is coming soon, but for now, you don't need to do anything extra. I’ll review your application as soon as it hits my desk.
-                </p>
-                
-                {/* The "NOT NEEDED" Stamp */}
-                <div className="absolute -top-4 -right-4 rotate-12 border-2 border-zinc-500 text-zinc-500 font-black text-xs px-2 py-1 rounded uppercase tracking-widest opacity-80 pointer-events-none">
-                  Not Needed
-                </div>
-             </div>
+           </div>
+           
+           {/* The "NO WAIT" Stamp - Full color, rotated, punchy */}
+           <div className="absolute top-1/2 right-6 -translate-y-1/2 rotate-[-15deg] border-2 border-cyan-500 text-cyan-500 font-black text-sm px-4 py-1.5 rounded uppercase tracking-widest shadow-[0_0_15px_rgba(6,182,212,0.4)] pointer-events-none">
+             No Wait
            </div>
         </div>
 
