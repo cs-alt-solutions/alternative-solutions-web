@@ -1,9 +1,8 @@
-/* src/proxy.ts */
+/* src/middleware.ts */
 import { NextResponse, type NextRequest } from 'next/server';
 import { createServerClient, type CookieOptions } from '@supabase/ssr';
 
-// CHANGED: We renamed this function from 'middleware' to 'proxy'
-export async function proxy(request: NextRequest) {
+export async function middleware(request: NextRequest) {
   let supabaseResponse = NextResponse.next({
     request: {
       headers: request.headers,
@@ -39,6 +38,12 @@ export async function proxy(request: NextRequest) {
   // Check if they are logged in
   const { data: { user } } = await supabase.auth.getUser();
 
+  // 🛑 LOCAL DEVELOPMENT BYPASS 🛑
+  // If we are running locally (localhost:3000), bypass the security check and let you straight in.
+  if (process.env.NODE_ENV === 'development') {
+    return supabaseResponse;
+  }
+
   // If they are trying to access /dashboard and are NOT logged in, kick them to /login
   if (request.nextUrl.pathname.startsWith('/dashboard') && !user) {
     const url = request.nextUrl.clone();
@@ -49,7 +54,7 @@ export async function proxy(request: NextRequest) {
   return supabaseResponse;
 }
 
-// Tell Next.js which paths the proxy should actually run on
+// Tell Next.js which paths the middleware should actually run on
 export const config = {
   matcher: [
     '/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
