@@ -1,8 +1,8 @@
-/* src/middleware.ts */
+/* src/proxy.ts */
 import { NextResponse, type NextRequest } from 'next/server';
 import { createServerClient, type CookieOptions } from '@supabase/ssr';
 
-export async function middleware(request: NextRequest) {
+export async function proxy(request: NextRequest) {
   let supabaseResponse = NextResponse.next({
     request: {
       headers: request.headers,
@@ -38,8 +38,9 @@ export async function middleware(request: NextRequest) {
   // Check if they are logged in
   const { data: { user } } = await supabase.auth.getUser();
 
-  // 🛑 LOCAL DEVELOPMENT BYPASS 🛑
-  // If we are running locally (localhost:3000), bypass the security check and let you straight in.
+  // LOCAL DEVELOPMENT BYPASS
+  // If we are running locally (localhost:3000), bypass the security check.
+  // NOTE: If you want to test the lockout on your machine, comment out this IF statement.
   if (process.env.NODE_ENV === 'development') {
     return supabaseResponse;
   }
@@ -54,7 +55,7 @@ export async function middleware(request: NextRequest) {
   return supabaseResponse;
 }
 
-// Tell Next.js which paths the middleware should actually run on
+// Tell Next.js which paths the proxy should actually run on
 export const config = {
   matcher: [
     '/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
