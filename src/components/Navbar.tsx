@@ -1,5 +1,6 @@
 /* src/components/Navbar.tsx */
 'use client';
+
 import React, { useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
@@ -21,28 +22,18 @@ export default function Navbar() {
     <nav className="fixed top-0 w-full z-50 backdrop-blur-xl border-b border-white/5 bg-bg-app/80 font-sans transition-all">
       <div className="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
         
-        {/* THE BRAND (HOME) - BORDERLESS PILL */}
+        {/* THE BRAND (HOME) */}
         <Link href={ROUTES.PUBLIC.HOME} onClick={closeMenu} className="flex items-center group shrink-0 relative z-50">
-          {/* Removed border classes, kept hover background and shadow */}
           <div className="flex items-center bg-white/5 rounded-full pr-5 hover:bg-white/10 transition-all duration-500 shadow-sm hover:shadow-[0_0_20px_rgba(34,211,238,0.15)]">
-            
-            {/* Logo Container - Removed borders, added perfect overflow hiding */}
             <div className="relative w-12 h-12 rounded-full overflow-hidden shadow-[0_0_15px_rgba(34,211,238,0.3)] group-hover:shadow-[0_0_15px_rgba(34,211,238,0.6)] transition-all duration-500 z-10">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img 
-                src="/logo.png" 
-                alt="Alternative Solutions Logo" 
-                className="absolute top-0 left-0 w-full h-full object-cover scale-[1.8]" 
-              />
+              <img src="/logo.png" alt="Alternative Solutions Logo" className="absolute top-0 left-0 w-full h-full object-cover scale-[1.8]" />
             </div>
-            
             <span className="font-black text-lg md:text-xl tracking-widest text-white group-hover:text-cyan-400 transition-colors duration-300 uppercase ml-3">
               {WEBSITE_COPY.NAV.BRAND}
             </span>
           </div>
         </Link>
 
-        {/* ... Rest of Nav remains exactly the same ... */}
         {/* DESKTOP NAVIGATION */}
         <div className="hidden md:flex items-center gap-8">
           <div className="flex items-center gap-8 font-bold text-xs">
@@ -57,9 +48,6 @@ export default function Navbar() {
           <div className="flex items-center gap-5">
             <Link href={ROUTES.PUBLIC.LOGIN} className="flex items-center gap-2 text-xs font-bold text-slate-400 hover:text-white transition-all uppercase tracking-widest">
               <User size={14} /> Portal
-            </Link>
-            <Link href={ROUTES.PUBLIC.STOREFRONTS.ROOT} className="text-xs font-bold text-emerald-400 border border-emerald-500/50 hover:bg-emerald-400 hover:text-black px-5 py-2.5 rounded-lg transition-all shadow-[0_0_20px_rgba(52,211,153,0.15)] hover:shadow-[0_0_30px_rgba(52,211,153,0.4)] uppercase tracking-widest">
-              {WEBSITE_COPY.NAV.STOREFRONTS || 'STOREFRONTS'}
             </Link>
           </div>
         </div>
@@ -83,10 +71,6 @@ export default function Navbar() {
           </Link>
           <Link href={ROUTES.PUBLIC.FOUNDER} onClick={closeMenu} className="text-lg font-black text-slate-300 hover:text-fuchsia-400 transition-all uppercase tracking-widest w-full text-center">
             {WEBSITE_COPY.NAV.STORY}
-          </Link>
-          <div className="w-8 h-px bg-white/10" />
-          <Link href={ROUTES.PUBLIC.STOREFRONTS.ROOT} onClick={closeMenu} className="text-sm font-bold text-emerald-400 border border-emerald-500/50 px-6 py-3 rounded-lg uppercase tracking-widest w-full text-center">
-            {WEBSITE_COPY.NAV.STOREFRONTS || 'STOREFRONTS'}
           </Link>
         </div>
       </div>

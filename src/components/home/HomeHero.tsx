@@ -2,9 +2,8 @@
 'use client';
 
 import React from 'react';
-import Link from 'next/link';
-import { WEBSITE_COPY, ROUTES } from '@/utils/glossary';
-import { ArrowRight, Database, Triangle, CreditCard, Github, Code2, Layers, Aperture } from 'lucide-react';
+import { WEBSITE_COPY } from '@/utils/glossary';
+import { Database, Triangle, CreditCard, Github, Code2, Layers, Aperture } from 'lucide-react';
 
 export default function HomeHero() {
   const { HERO, AUTHORITY_BANNER } = WEBSITE_COPY.PUBLIC_SITE.HOME;
@@ -43,22 +42,6 @@ export default function HomeHero() {
             <span className="text-white font-medium block mb-2">{HERO.SUBHEAD_LEAD}</span>
             {HERO.SUBHEAD_BODY}
           </p>
-          
-          <div className="flex flex-col sm:flex-row items-center gap-6 justify-center lg:justify-start">
-            <Link 
-              href={ROUTES.PUBLIC.STOREFRONTS.APPLY} 
-              className="btn-brand flex items-center justify-center gap-3 w-full sm:w-auto px-10 py-4 text-xs shadow-[0_0_30px_rgba(6,182,212,0.4)]"
-            >
-              {HERO.CTA_PRIMARY} <ArrowRight size={16} className="group-hover:translate-x-1 transition-transform" />
-            </Link>
-            
-            <Link 
-              href={ROUTES.PUBLIC.STOREFRONTS.ROOT} 
-              className="px-8 py-3.5 rounded-full border border-white/20 text-white font-bold text-xs uppercase tracking-wider hover:bg-white/10 hover:border-white/40 transition-all w-full sm:w-auto text-center"
-            >
-              {HERO.CTA_SECONDARY}
-            </Link>
-          </div>
         </div>
 
         {/* RIGHT COLUMN: REVERTED IDENTITY PEDESTAL */}
@@ -91,8 +74,8 @@ export default function HomeHero() {
                  case 'SUPABASE': return 'hover:text-emerald-400 hover:drop-shadow-[0_0_12px_rgba(52,211,153,0.7)]';
                  case 'STRIPE': return 'hover:text-indigo-400 hover:drop-shadow-[0_0_12px_rgba(129,140,248,0.7)]';
                  case 'VS CODE': return 'hover:text-sky-400 hover:drop-shadow-[0_0_12px_rgba(56,189,248,0.7)]';
-                 case 'VERCEL': case 'GITHUB': case 'NEXT.JS': default: 
-                    return 'hover:text-white hover:drop-shadow-[0_0_12px_rgba(255,255,255,0.7)]';
+                 case 'VERCEL': case 'GITHUB': case 'NEXT.JS': default:
+                     return 'hover:text-white hover:drop-shadow-[0_0_12px_rgba(255,255,255,0.7)]';
                }
              };
              
