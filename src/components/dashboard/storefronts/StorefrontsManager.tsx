@@ -1,34 +1,42 @@
-// src/components/dashboard/storefronts/StorefrontsManager.tsx
 'use client';
 
-import React, { useState } from 'react';
-import { useRouter } from 'next/navigation'; // <-- THE CACHE CLEARER
+import React, { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import { ExternalLink, Pen, CreditCard, Globe, Trash2 } from 'lucide-react';
 import StorefrontEditor from './editor/StorefrontEditor';
 import NewStorefrontModal from './NewStorefrontModal';
-import { deleteStorefront } from '@/app/actions'; // <-- THE ADMIN OVERRIDE
+import { deleteStorefront } from '@/app/actions';
 
 export default function StorefrontsManager({ initialData }: { initialData: any[] }) {
   const router = useRouter();
   const [storefronts, setStorefronts] = useState(initialData || []);
   const [editingStoreId, setEditingStoreId] = useState<string | null>(null);
 
+  useEffect(() => {
+    setStorefronts(initialData || []);
+  }, [initialData]);
+
   const activeStore = editingStoreId ? storefronts.find(s => s.id === editingStoreId) : null;
 
-  // THE FIX: Server-side delete with cache purging
+  // 1. Dynamic Status Helper
+  const getStatusBadge = (status: string) => {
+    switch (status?.toUpperCase()) {
+      case 'BUILDING': return <span className="inline-flex items-center gap-2 px-2.5 py-1 rounded-md bg-amber-500/10 border border-amber-500/20 text-[10px] font-black text-amber-400 uppercase tracking-widest"><span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse" />BUILDING</span>;
+      case 'LIVE': return <span className="inline-flex items-center gap-2 px-2.5 py-1 rounded-md bg-emerald-500/10 border border-emerald-500/20 text-[10px] font-black text-emerald-400 uppercase tracking-widest"><span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />LIVE</span>;
+      case 'SUSPENDED': return <span className="inline-flex items-center gap-2 px-2.5 py-1 rounded-md bg-orange-500/10 border border-orange-500/20 text-[10px] font-black text-orange-400 uppercase tracking-widest"><span className="w-1.5 h-1.5 rounded-full bg-orange-500" />SUSPENDED</span>;
+      case 'CANCELED': return <span className="inline-flex items-center gap-2 px-2.5 py-1 rounded-md bg-red-500/10 border border-red-500/20 text-[10px] font-black text-red-400 uppercase tracking-widest"><span className="w-1.5 h-1.5 rounded-full bg-red-500" />CANCELED</span>;
+      case 'PENDING': return <span className="inline-flex items-center gap-2 px-2.5 py-1 rounded-md bg-cyan-500/10 border border-cyan-500/20 text-[10px] font-black text-cyan-400 uppercase tracking-widest"><span className="w-1.5 h-1.5 rounded-full bg-cyan-500" />PENDING</span>;
+      default: return <span className="inline-flex items-center gap-2 px-2.5 py-1 rounded-md bg-zinc-800 border border-zinc-700 text-[10px] font-black text-zinc-400 uppercase tracking-widest">UNKNOWN</span>;
+    }
+  };
+
   const handleDeleteStorefront = async (id: string, name: string) => {
     if (!window.confirm(`Are you sure you want to permanently delete "${name}"? This will remove it from all public galleries.`)) return;
 
     try {
-      // 1. Force the database to delete it via Server Action
       await deleteStorefront(id);
-
-      // 2. Remove it from the local screen instantly
       setStorefronts(prev => prev.filter(s => s.id !== id));
-
-      // 3. Purge the Next.js cache so it disappears from the Live Gallery
       router.refresh();
-      
     } catch (err: any) {
       console.error("Delete failed:", err);
       alert(err.message);
@@ -68,9 +76,7 @@ export default function StorefrontsManager({ initialData }: { initialData: any[]
             </thead>
             <tbody className="divide-y divide-zinc-800">
               {storefronts.map((store) => {
-                
                 const planTier = store.plan_tier || 'Starter ($5/mo)';
-                const subStatus = store.subscription_status || 'active';
                 const displayDomain = store.custom_domain || `/${store.slug}`;
 
                 return (
@@ -78,7 +84,6 @@ export default function StorefrontsManager({ initialData }: { initialData: any[]
                     <td className="px-6 py-4 font-bold text-white flex items-center gap-3">
                       <div className="w-8 h-8 rounded-full overflow-hidden border border-zinc-700 bg-zinc-950 shrink-0">
                         {store.hero_image ? (
-                          /* eslint-disable-next-line @next/next/no-img-element */
                           <img src={store.hero_image} alt="Hero" className="w-full h-full object-cover" />
                         ) : (
                           <div className="w-full h-full bg-zinc-800" />
@@ -86,35 +91,11 @@ export default function StorefrontsManager({ initialData }: { initialData: any[]
                       </div>
                       {store.business_name}
                     </td>
+                    <td className="px-6 py-4 font-mono text-cyan-400 text-xs">{displayDomain}</td>
+                    <td className="px-6 py-4 font-mono text-zinc-400 text-xs">{planTier}</td>
                     
-                    <td className="px-6 py-4 font-mono text-cyan-400 text-xs">
-                      {displayDomain}
-                    </td>
-                    
-                    <td className="px-6 py-4 font-mono text-zinc-400 text-xs">
-                      {planTier}
-                    </td>
-                    
-                    <td className="px-6 py-4">
-                      {subStatus === 'active' && (
-                        <span className="inline-flex items-center gap-2 px-2.5 py-1 rounded-md bg-emerald-500/10 border border-emerald-500/20 text-[10px] font-black tracking-widest text-emerald-400 uppercase">
-                          <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                          Active
-                        </span>
-                      )}
-                      {subStatus === 'past_due' && (
-                        <span className="inline-flex items-center gap-2 px-2.5 py-1 rounded-md bg-amber-500/10 border border-amber-500/20 text-[10px] font-black tracking-widest text-amber-400 uppercase">
-                          <span className="w-1.5 h-1.5 rounded-full bg-amber-500" />
-                          Past Due
-                        </span>
-                      )}
-                      {subStatus === 'canceled' && (
-                        <span className="inline-flex items-center gap-2 px-2.5 py-1 rounded-md bg-red-500/10 border border-red-500/20 text-[10px] font-black tracking-widest text-red-400 uppercase">
-                          <span className="w-1.5 h-1.5 rounded-full bg-red-500" />
-                          Canceled
-                        </span>
-                      )}
-                    </td>
+                    {/* 2. DYNAMIC STATUS RENDERER */}
+                    <td className="px-6 py-4">{getStatusBadge(store.status)}</td>
                     
                     <td className="px-6 py-4 text-right">
                       <div className="flex justify-end gap-4 opacity-50 group-hover:opacity-100 transition-opacity">

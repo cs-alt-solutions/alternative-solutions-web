@@ -1,11 +1,12 @@
-/* src/config/dashboard.ts */
+// src/config/dashboard.ts
+
 export const DASHBOARD_COPY = {
   COMMON: { BRAND_VERSION: "Alternative Solutions Workspace", STATUS_ONLINE: "All Systems Go", ACTION_REVIEW: "Review" }, 
   SIDEBAR: { 
     GROUPS: { WORKSPACE: "My Workspace", HUMAN_MANAGEMENT: "Human Management", LOGISTICS: "Life & Logistics", SYSTEM: "System Admin" }, 
     OVERVIEW: "Home", 
     FOUNDATION: "The Drafting Table",
-    STOREFRONTS: "Storefronts", // <-- ADDED THIS LINE HERE
+    STOREFRONTS: "Storefronts", // <-- Successfully Added!
     LEDGER: "The Ledger",
     ECOSYSTEM_MANAGER: "My Products",
     BETA_COMMAND: "Beta Command",
@@ -200,20 +201,22 @@ export const DASHBOARD_COPY = {
 
   INFRASTRUCTURE_HUB: { TITLE: "Under the Hood", DESC: "Quick links to your hosting, database, and billing.", CATEGORIES: { CORE: "Core Tech", FINANCE: "Money & Billing", CODE: "Codebase" } },
   PROJECT_BOARD: { NOT_FOUND: "Project Not Found", ADD_TASK: "Add Task", COLUMNS: { TODO: "To Do", IN_PROGRESS: "Doing", REVIEW: "Review", DONE: "Done" } }, 
+  
   OVERVIEW: {
-      TITLE: "Home",
+      TITLE: "Command Center", // Updated Title!
       DIRECTIVE: { 
-        TITLE: "Project Intake", 
-        SUBTITLE: "Applications awaiting your authorization", 
+        TITLE: "Pending Applications", // Updated from Project Intake!
+        SUBTITLE: "New requests awaiting your review", 
         EMPTY: "Pipeline clear. No pending applications.", 
-        TYPES: { LEAD: "Sector Zero App", TASK: "Task" }, 
-        ACTIONS: { PROCESS: "Review Dossier", EXECUTE: "Do It" } 
+        TYPES: { LEAD: "Storefront App", TASK: "Task" }, 
+        ACTIONS: { PROCESS: "Review Application", EXECUTE: "Initialize" } // Killed Dossier!
       }, 
     LIVE_FEED: { TITLE: "Recent Activity", NEW_BETA: "Checking..." }, 
     INFRASTRUCTURE: { TITLE: "Tech Status", SUBTITLE: "Are we online?", PLATFORMS: { GITHUB: "GitHub", VERCEL: "Vercel", SUPABASE: "Supabase" } }, 
     PANELS: { ACTION_REQD: "Needs Attention", ENGINEERING: "Development" }, 
     TELEMETRY: { TITLE: "Traffic & Stats", CHART_LABEL: "Page Views", METRICS: { TRAFFIC: "Current Visitors", CONVERSION: "Signups" } } 
   }, 
+  
   MEDIA_HUB: { 
     TITLE: "Emails & Updates", 
     SUBTITLE: "Talk to your people.", 

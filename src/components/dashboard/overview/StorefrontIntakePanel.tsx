@@ -1,3 +1,5 @@
+'use client';
+
 import React from 'react';
 import Link from 'next/link';
 import { ArrowRight, Clock, Store, CheckCircle2 } from 'lucide-react';
@@ -8,6 +10,7 @@ export interface ApplicationItem {
   title: string;
   subtitle: string;
   link: string;
+  created_at: string; // Added this to support timestamping
 }
 
 interface StorefrontIntakePanelProps {
@@ -51,14 +54,20 @@ export default function StorefrontIntakePanel({ items, copy }: StorefrontIntakeP
               <div className="absolute inset-0 bg-linear-to-r from-cyan-500/0 via-cyan-500/0 to-cyan-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
 
               <div className="flex items-center gap-4 relative z-10">
-                <div className="w-2 h-2 rounded-full bg-amber-500 animate-pulse" />
+                <div className="w-10 h-10 rounded-full bg-zinc-800 flex items-center justify-center font-black text-cyan-400 border border-zinc-700">
+                  {item.title.charAt(0)}
+                </div>
                 <div>
                   <h3 className="text-sm font-bold text-zinc-200 group-hover:text-cyan-400 transition-colors">
                     {item.title}
                   </h3>
-                  <div className="flex items-center gap-2 mt-1">
-                    <Clock className="w-3 h-3 text-zinc-500" />
-                    <span className="text-xs text-zinc-500">{item.subtitle}</span>
+                  <div className="flex items-center gap-4 mt-1">
+                    <span className="flex items-center gap-1.5 text-[10px] text-zinc-500 uppercase tracking-widest">
+                       <Clock className="w-3 h-3" /> {item.subtitle}
+                    </span>
+                    <span className="text-[10px] text-zinc-600 font-mono">
+                       {new Date(item.created_at).toLocaleDateString()}
+                    </span>
                   </div>
                 </div>
               </div>
