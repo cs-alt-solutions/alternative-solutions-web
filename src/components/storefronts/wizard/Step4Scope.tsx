@@ -1,8 +1,7 @@
-/* src/components/storefronts/wizard/Step4Scope.tsx */
 'use client';
+
 import React from 'react';
-import { ArrowLeft, CheckCircle2, ChevronDown, ChevronUp, Globe, Zap } from 'lucide-react';
-import { submitStorefrontApplication } from '@/app/actions/storefront_applications';
+import { ArrowLeft, CheckCircle2, ChevronDown, ChevronUp, Globe, Zap, Loader2 } from 'lucide-react';
 
 interface Step4Props {
   plans: any[];
@@ -22,10 +21,25 @@ interface Step4Props {
 }
 
 export default function Step4Scope({
-  plans, selectedPlan, setSelectedPlan, expandedPlan, setExpandedPlan,
-  wantsCustom, setWantsCustom, existingDomain, setExistingDomain,
-  priorityQueue, setPriorityQueue, isSubmitting, onPrev, onSubmit
+  plans,
+  selectedPlan,
+  setSelectedPlan,
+  expandedPlan,
+  setExpandedPlan,
+  wantsCustom,
+  setWantsCustom,
+  existingDomain,
+  setExistingDomain,
+  priorityQueue,
+  setPriorityQueue,
+  isSubmitting,
+  onPrev,
+  onSubmit
 }: Step4Props) {
+
+  // Safety check: Don't allow submission if they checked "Custom Domain" but left the input empty
+  const isSubmissionDisabled = isSubmitting || (wantsCustom && !existingDomain.trim());
+
   return (
     <div className="animate-in fade-in duration-500 space-y-12">
       <div className="text-center space-y-4">
@@ -37,151 +51,158 @@ export default function Step4Scope({
         </p>
       </div>
 
-      {/* Plans Container - No outer background, fully transparent */}
       <div className="space-y-4">
-        {plans.map((plan) => (
-          <div 
-            key={plan.id}
-            onClick={() => {
-              setSelectedPlan(plan.id);
-              setExpandedPlan(plan.id);
-            }}
-            className={`border-2 rounded-2xl transition-all duration-300 overflow-hidden ${selectedPlan === plan.id ? 'bg-fuchsia-500/10 border-fuchsia-500' : 'bg-black/20 border-white/5 hover:border-white/10'}`}
-          >
-            <div className="p-6 flex items-center cursor-pointer">
-              <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center mr-5 shrink-0 ${selectedPlan === plan.id ? 'border-fuchsia-500' : 'border-white/20'}`}>
-                {selectedPlan === plan.id && <div className="w-3 h-3 bg-fuchsia-500 rounded-full"></div>}
-              </div>
-              <div className="flex-1">
-                <h4 className="font-bold text-white text-xl">{plan.title}</h4>
-              </div>
-              <div className="text-right ml-4 mr-5">
-                <span className="font-bold text-2xl text-white">{plan.price}</span>
-                <span className="text-sm text-zinc-500">{plan.interval}</span>
-              </div>
-              <button 
-                type="button"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setExpandedPlan(expandedPlan === plan.id ? null : plan.id);
-                }}
-                className="p-2 text-zinc-400 hover:text-white transition-colors bg-white/5 rounded-full"
-              >
-                {expandedPlan === plan.id ? <ChevronUp className="w-5 h-5" /> : <ChevronDown className="w-5 h-5" />}
-              </button>
-            </div>
-            
-            {expandedPlan === plan.id && (
-              <div className="px-6 pb-6 pt-2 border-t border-white/5 ml-15">
-                <p className="text-base text-zinc-300 mb-4">{plan.desc}</p>
-                <ul className="space-y-3">
-                  {plan.features.map((feature: string, idx: number) => (
-                    <li key={idx} className="flex items-start text-base text-zinc-400">
-                      <CheckCircle2 className="w-5 h-5 text-fuchsia-500 mr-3 shrink-0 mt-0.5" />
-                      {feature}
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            )}
+        {(!plans || plans.length === 0) ? (
+          <div className="text-center text-zinc-500 py-8 border-2 border-dashed border-zinc-800 rounded-3xl">
+            No active plans found in the database.
           </div>
-        ))}
+        ) : (
+          plans.map((plan) => (
+            <div
+              key={plan.id}
+              onClick={() => setSelectedPlan(plan.id)}
+              className={`relative p-6 rounded-3xl border-2 transition-all cursor-pointer overflow-hidden ${
+                selectedPlan === plan.id
+                  ? 'border-fuchsia-500 bg-fuchsia-500/5'
+                  : 'border-white/5 bg-zinc-900/50 hover:border-white/10 hover:bg-zinc-900'
+              }`}
+            >
+              {selectedPlan === plan.id && (
+                <div className="absolute top-6 right-6">
+                  <CheckCircle2 className="w-6 h-6 text-fuchsia-400" />
+                </div>
+              )}
+
+              <div className="pr-12">
+                <div className="flex items-center gap-3 mb-2">
+                  <h3 className="text-xl font-bold text-white">{plan.name}</h3>
+                  {/* PRICING RESTORED HERE */}
+                  {(plan.price !== undefined && plan.price !== null) && (
+                    <span className="px-3 py-1 rounded-full bg-fuchsia-500/10 text-fuchsia-400 border border-fuchsia-500/20 text-sm font-bold tracking-wide">
+                      ${plan.price}/mo
+                    </span>
+                  )}
+                </div>
+                
+                {/* FALLBACK ADDED IN CASE DB DESCRIPTION IS EMPTY */}
+                <p className="text-zinc-400 text-sm mb-4">
+                  {plan.description || "Solid foundation for your brand architecture."}
+                </p>
+                
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setExpandedPlan(expandedPlan === plan.id ? null : plan.id);
+                  }}
+                  className="text-xs font-bold tracking-wider text-zinc-500 hover:text-white uppercase flex items-center gap-1 transition-colors"
+                >
+                  {expandedPlan === plan.id ? 'Hide Details' : 'View Scope'}
+                  {expandedPlan === plan.id ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
+                </button>
+              </div>
+
+              {expandedPlan === plan.id && (
+                <div className="mt-6 pt-6 border-t border-white/5 space-y-3 animate-in slide-in-from-top-2">
+                  {(plan.features || []).map((feature: string, idx: number) => (
+                    <div key={idx} className="flex items-start gap-3">
+                      <CheckCircle2 className="w-4 h-4 text-fuchsia-500/70 shrink-0 mt-0.5" />
+                      <span className="text-sm text-zinc-300">{feature}</span>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          ))
+        )}
       </div>
 
-      <div className="border-t border-white/10"></div>
-
-      {/* Custom Request - Transparent background */}
-      <div className="p-6 bg-black/20 border border-white/5 rounded-2xl">
-        <label className="flex items-center gap-4 cursor-pointer group">
-          <div className="relative flex items-center justify-center w-6 h-6 shrink-0">
-            <input 
-              type="checkbox" 
-              checked={wantsCustom} 
-              onChange={(e) => setWantsCustom(e.target.checked)} 
-              className="appearance-none w-6 h-6 border-2 border-white/20 rounded bg-transparent checked:bg-fuchsia-500 checked:border-fuchsia-500 cursor-pointer transition-colors" 
-            />
-            {wantsCustom && <CheckCircle2 className="absolute text-white w-4 h-4 pointer-events-none" />}
-          </div>
-          <div>
-            <span className="font-bold text-white text-lg block group-hover:text-fuchsia-400 transition-colors">I need a Custom Build</span>
-            <span className="text-sm text-zinc-500">E-commerce, booking systems, integrations, or specific tools.</span>
-          </div>
-        </label>
+      {/* Domain Connection Toggle */}
+      <div className="p-6 rounded-3xl bg-zinc-900/50 border border-white/5 space-y-4 transition-all">
+        <div className="flex items-center gap-3 mb-4">
+          <Globe className="w-5 h-5 text-zinc-400" />
+          <h3 className="font-bold text-white">Domain Connection</h3>
+        </div>
         
+        <label className="flex items-center gap-3 p-4 rounded-2xl bg-zinc-950 border border-white/5 cursor-pointer hover:border-white/10 transition-colors">
+          <input
+            type="checkbox"
+            checked={wantsCustom}
+            onChange={(e) => {
+              setWantsCustom(e.target.checked);
+              if (!e.target.checked) setExistingDomain(''); // Clear input if unchecked
+            }}
+            className="w-5 h-5 rounded border-zinc-800 bg-zinc-900 text-fuchsia-500 focus:ring-fuchsia-500 focus:ring-offset-zinc-950"
+          />
+          <span className="text-sm text-zinc-300 font-medium">I already have a custom domain</span>
+        </label>
+
         {wantsCustom && (
-          <div className="mt-6 pl-10 border-l-2 border-white/10 ml-3 space-y-4">
-            {selectedPlan === 'foundation' ? (
-              <div className="animate-in fade-in slide-in-from-top-2 duration-300">
-                <p className="text-sm text-zinc-400 mb-3">
-                  Custom builds require a dedicated domain. Provide your existing professional domain URL below.
-                </p>
-                <div className="relative">
-                  <Globe className="absolute left-4 top-4 w-5 h-5 text-zinc-500" />
-                  <input 
-                    type="url" 
-                    placeholder="https://yourwebsite.com" 
-                    value={existingDomain}
-                    onChange={(e) => setExistingDomain(e.target.value)}
-                    required={wantsCustom && selectedPlan === 'foundation'}
-                    className="w-full bg-black/40 border border-white/10 rounded-xl py-4 pl-12 pr-4 text-white focus:outline-none focus:border-fuchsia-500 transition-all text-lg" 
-                  />
-                </div>
-              </div>
-            ) : (
-              <div className="animate-in fade-in slide-in-from-top-2 duration-300 flex items-start gap-3 text-base text-fuchsia-300 bg-fuchsia-500/10 p-5 rounded-xl border border-fuchsia-500/20">
-                <CheckCircle2 className="w-6 h-6 shrink-0" />
-                <p>Professional Tier selected. You're set up for a custom build. I'll draft a specific quote for you inside your portal.</p>
-              </div>
-            )}
+          <div className="animate-in slide-in-from-top-2 pt-2">
+            <input
+              type="text"
+              placeholder="e.g., myawesomebrand.com"
+              value={existingDomain}
+              onChange={(e) => setExistingDomain(e.target.value)}
+              className="w-full bg-zinc-950 border border-white/10 rounded-xl px-4 py-3 text-white placeholder:text-zinc-600 focus:outline-hidden focus:border-fuchsia-500 transition-colors"
+            />
           </div>
         )}
       </div>
 
-      {/* Priority Status - Shaded out with a clean "No Wait" stamp */}
-        <div className="p-6 rounded-2xl border border-zinc-800 bg-zinc-950/50 relative overflow-hidden">
-           {/* The Shaded Out Layer */}
-           <div className="filter grayscale opacity-50">
-             <div className="flex items-start gap-4">
-               <div className="relative flex items-center justify-center w-6 h-6 shrink-0 mt-1">
-                  <div className="w-5 h-5 rounded-full border border-zinc-700 bg-zinc-900"></div>
-               </div>
-               <div>
-                  <span className="font-bold text-zinc-400 text-lg flex items-center gap-2">
-                    <Zap className="w-5 h-5 text-zinc-700" />
-                    Priority Build Lane
-                  </span>
-                  <p className="text-sm text-zinc-500 leading-relaxed mt-2">
-                    I hand-build these systems myself, so I keep a strict cap on active projects. I’ll review your application and let you know when I have a slot open to get you into the queue.
-                  </p>
-               </div>
-             </div>
-           </div>
-           
-           {/* The "NO WAIT" Stamp - Full color, rotated, punchy */}
-           <div className="absolute top-1/2 right-6 -translate-y-1/2 rotate-[-15deg] border-2 border-cyan-500 text-cyan-500 font-black text-sm px-4 py-1.5 rounded uppercase tracking-widest shadow-[0_0_15px_rgba(6,182,212,0.4)] pointer-events-none">
-             No Wait
-           </div>
+      {/* DISABLED PRIORITY QUEUE */}
+      <div className="relative flex items-start gap-4 p-6 rounded-3xl bg-zinc-950/50 border border-white/5 opacity-50 cursor-not-allowed transition-all">
+        {/* Not Needed Badge */}
+        <div className="absolute top-4 right-6 bg-zinc-800/80 text-zinc-400 text-[10px] font-bold px-2 py-1 rounded uppercase tracking-widest border border-white/5">
+          Not Needed
         </div>
 
-      <div className="space-y-6 pt-4">
+        <input
+          type="checkbox"
+          checked={false} // Forced off
+          disabled // Locked
+          onChange={() => {}}
+          className="w-5 h-5 mt-1 rounded border-zinc-800 bg-zinc-900 text-zinc-500 cursor-not-allowed"
+        />
+        <div className="pr-20">
+          <div className="flex items-center gap-2 mb-1">
+            <h3 className="font-bold text-zinc-400">Priority Build Queue</h3>
+            <Zap className="w-4 h-4 text-zinc-600" />
+          </div>
+          <p className="text-sm text-zinc-500">Fast-track your setup for just $1. We will jump your file to the front of the line.</p>
+        </div>
+      </div>
+
+      <div className="space-y-6 pt-4 border-t border-white/5">
         <div className="flex gap-4">
-          <button 
-            type="button" 
+          <button
+            type="button"
             onClick={onPrev}
-            className="px-6 py-5 rounded-2xl font-bold tracking-wide flex items-center justify-center gap-2 bg-white/5 border border-white/5 text-white hover:bg-white/10 transition-all"
+            disabled={isSubmitting}
+            className="px-6 py-5 rounded-2xl font-bold tracking-wide flex items-center justify-center gap-2 bg-white/5 border border-white/5 text-white hover:bg-white/10 transition-all disabled:opacity-50"
           >
             <ArrowLeft className="w-5 h-5" />
           </button>
-          <button 
-            type="submit" 
-            disabled={isSubmitting || (wantsCustom && selectedPlan === 'foundation' && !existingDomain)}
-            className={`relative flex-1 overflow-hidden py-5 rounded-2xl font-bold tracking-wide flex items-center justify-center gap-3 transition-all ${isSubmitting || (wantsCustom && selectedPlan === 'foundation' && !existingDomain) ? 'bg-zinc-900 border border-white/5 text-zinc-600 cursor-not-allowed' : 'text-white hover:scale-[1.02] shadow-[0_0_30px_rgba(236,72,153,0.3)]'}`}
+          
+          <button
+            type="button"
+            onClick={onSubmit}
+            disabled={isSubmissionDisabled}
+            className={`relative flex-1 overflow-hidden py-5 rounded-2xl font-bold tracking-wide flex items-center justify-center gap-3 transition-all ${
+              isSubmissionDisabled
+                ? 'bg-zinc-900 border border-white/5 text-zinc-600 cursor-not-allowed' 
+                : 'text-white hover:scale-[1.02] shadow-[0_0_30px_rgba(236,72,153,0.3)]'
+            }`}
           >
-            {!(isSubmitting || (wantsCustom && selectedPlan === 'foundation' && !existingDomain)) && (
+            {!isSubmissionDisabled && (
               <div className="absolute left-0 top-0 h-full w-full bg-linear-to-r from-blue-500 via-purple-500 to-pink-500 opacity-90 transition-all"></div>
             )}
             <span className="relative z-10 flex items-center gap-2">
-              {isSubmitting ? 'Sending...' : priorityQueue ? 'Fast-Track This Build ($1) ⚡' : 'Send It 🚀'}
+              {isSubmitting ? (
+                <><Loader2 className="w-5 h-5 animate-spin" /> Transmitting...</>
+              ) : (
+                'Send It'
+              )}
             </span>
           </button>
         </div>

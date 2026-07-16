@@ -1,97 +1,89 @@
 'use server';
 
 import { createClient } from '@/utils/supabase/server';
-import { Resend } from 'resend';
-import StorefrontConfirmationEmail from '@/components/emails/StorefrontConfirmationEmail';
 import { revalidatePath } from 'next/cache';
-
-const resend = new Resend(process.env.RESEND_API_KEY);
 
 export async function submitStorefrontApplication(formData: FormData) {
   const supabase = await createClient();
 
-  const businessName = formData.get('projectName')?.toString() || '';
-  const email = formData.get('email')?.toString() || '';
-  const applicantName = formData.get('name')?.toString() || '';
-
-  const payload = {
-    business_name: businessName,
-    contact_email: email,
-    status: 'PENDING',
-    application_data: {
-      applicant_name: applicantName,
-      applicant_phone: formData.get('phone')?.toString() || '',
-      business_description: formData.get('description')?.toString() || '',
-      selected_plan: formData.get('selectedPlan')?.toString() || 'foundation',
-      is_priority: formData.get('priorityQueue') === 'true',
-    }
-  };
-
   try {
-    const { error } = await supabase
-      .from('storefront_applications') 
-      .insert([payload]);
-
-    if (error) throw error;
-
-    await resend.emails.send({
-      from: 'Alternative Solutions <hello@alternativesolutions.io>',
-      to: [email],
-      subject: 'Application Received // Alternative Solutions',
-      react: StorefrontConfirmationEmail({ name: applicantName, projectName: businessName }),
-    });
-
-    revalidatePath('/dashboard');
-    return { success: true };
-  } catch (error) {
-    console.error('Submission error:', error);
-    return { success: false, error: 'Transmission failed' };
-  }
-}
-
-export async function updateApplicationStatus(id: string, status: 'BUILDING' | 'CANCELED') {
-  const supabase = await createClient();
-  
-  try {
-    // 1. Fetch the application details
-    const { data: app, error: fetchError } = await supabase
-      .from('storefront_applications')
-      .select('*')
-      .eq('id', id)
-      .single();
-
-    if (fetchError) throw fetchError;
-
-    // 2. If approved, promote to 'storefronts' table
-    if (status === 'BUILDING') {
-      const { error: insertError } = await supabase
-        .from('storefronts')
-        .insert([{
-          business_name: app.business_name,
-          contact_email: app.contact_email,
-          status: 'BUILDING',
-          slug: app.business_name.toLowerCase().replace(/[^a-z0-9]+/g, '-'), 
-          plan_tier: app.application_data?.selected_plan || 'Starter ($5/mo)'
-        }]);
-
-      if (insertError) {
-        console.error("Promotion Insert Error:", insertError);
-        throw insertError;
+    const payload = {
+      business_name: formData.get('projectName')?.toString() || 'Unnamed Project',
+      
+      // THE FIX: We are now sending the email to BOTH columns just to be safe 
+      // and satisfy the database's strict "NOT NULL" rule.
+      applicant_email: formData.get('email')?.toString() || '', 
+      contact_email: formData.get('email')?.toString() || '',   
+      
+      status: 'PENDING',
+      application_data: {
+        applicant_name: formData.get('name')?.toString() || '',
+        applicant_phone: formData.get('phone')?.toString() || '',
+        business_description: formData.get('description')?.toString() || '',
+        selected_plan: formData.get('selectedPlan')?.toString() || 'foundation',
+        selected_vibe: formData.get('selectedVibe')?.toString() || 'clueless',
+        wants_custom_domain: formData.get('wantsCustom') === 'true',
+        existing_domain: formData.get('existingDomain')?.toString() || '',
+        is_priority: formData.get('priorityQueue') === 'true',
+        socials: JSON.parse(formData.get('socials')?.toString() || '{}')
       }
-    }
+    };
 
-    // 3. Update the intake application status to 'DONE' (or 'PROMOTED')
-    const { error: updateError } = await supabase
-      .from('storefront_applications')
-      .update({ status: 'DONE' })
-      .eq('id', id);
-
-    if (updateError) throw updateError;
+    const { error } = await supabase.from('storefront_applications').insert([payload]);
+    if (error) throw error;
 
     revalidatePath('/dashboard/storefronts');
     return { success: true };
-  } catch (error) {
-    console.error('Promotion error:', error);
-    return { success: false, error: 'Failed to promote application' };
+  } catch (error: any) {
+    console.error('CRITICAL SUBMISSION ERROR:', error);
+    return { success: false, error: error.message || 'Transmission failed: Database or Auth Error' };
+  }
+}
+
+export async function updateApplicationStatus(id: string, newStatus: 'BUILDING' | 'CANCELED') {
+  const supabase = await createClient();
+  
+  try {
+    // 1. Update the application status
+    const { data: app, error: updateError } = await supabase
+      .from('storefront_applications')
+      .update({ status: newStatus })
+      .eq('id', id)
+      .select()
+      .single();
+
+    if (updateError) throw updateError;
+
+    // 2. If approved (BUILDING), automatically initialize the storefront
+    if (newStatus === 'BUILDING' && app) {
+      let baseSlug = (app.business_name || 'store').toLowerCase().replace(/[^a-z0-9]+/g, '-');
+      let finalSlug = baseSlug;
+
+      // Ensure slug uniqueness
+      const { data: existing } = await supabase.from('storefronts').select('slug').eq('slug', finalSlug);
+      if (existing && existing.length > 0) {
+        finalSlug = `${baseSlug}-${Math.random().toString(36).substring(2, 6)}`;
+      }
+
+      // Insert into the active storefronts table
+      const { error: insertError } = await supabase.from('storefronts').insert([{
+        business_name: app.business_name,
+        contact_email: app.contact_email,
+        status: 'BUILDING',
+        slug: finalSlug, 
+        plan_tier: app.application_data?.selected_plan || 'foundation'
+      }]);
+      
+      if (insertError) {
+        console.error('Failed to initialize storefront:', insertError);
+        // We log the error but don't fail the whole action so the status still updates
+      }
+    }
+
+    revalidatePath('/dashboard/storefronts');
+    return { success: true };
+  } catch (error: any) {
+    console.error('STATUS UPDATE ERROR:', error);
+    return { success: false, error: error.message || 'Failed to update status' };
   }
 }
