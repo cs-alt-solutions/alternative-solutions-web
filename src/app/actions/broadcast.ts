@@ -81,3 +81,5 @@ export async function publishAudioLog(formData: FormData) {
   revalidatePath('/dashboard/broadcast');
   return { success: true };
 }
+
+export { logPulse };
