@@ -2,6 +2,7 @@
 
 import React from 'react';
 import { ArrowLeft, CheckCircle2, HelpCircle } from 'lucide-react';
+import { WIZARD_COPY } from '@/utils/glossary';
 
 interface Step3Props {
   selectedVibe: string | null;
@@ -12,7 +13,8 @@ interface Step3Props {
 }
 
 export default function Step3Vibe({ selectedVibe, setSelectedVibe, vibes, onNext, onPrev }: Step3Props) {
-  // Helper to re-apply your specific "Vibe" styles
+  const copy = WIZARD_COPY.STEP_3;
+
   const getVibeStyles = (id: string) => {
     switch(id) {
       case 'brutalist': return 'bg-[#E6FF00] border-4 border-black text-black font-black uppercase rounded-none transition-all';
@@ -26,17 +28,15 @@ export default function Step3Vibe({ selectedVibe, setSelectedVibe, vibes, onNext
 
   return (
     <div className="animate-in fade-in slide-in-from-bottom-8 duration-500 space-y-12">
-      {/* Centered narrative that lives above the inputs */}
       <div className="text-center space-y-4">
         <h1 className="text-4xl md:text-5xl font-black tracking-tight text-white capitalize">
-          Set the <span className="text-transparent bg-clip-text bg-linear-to-r from-purple-400 to-fuchsia-400">Vibe.</span>
+          {copy.TITLE_MAIN}<span className="text-transparent bg-clip-text bg-linear-to-r from-purple-400 to-fuchsia-400">{copy.TITLE_HIGHLIGHT}</span>
         </h1>
         <p className="text-lg text-zinc-400 max-w-xl mx-auto leading-relaxed">
-          This is where you tell me what kind of energy your brand gives off. Pick the style that speaks to you, and I’ll take care of the rest.
+          {copy.SUBTITLE}
         </p>
       </div>
       
-      {/* The centered Vibe Grid */}
       <div className="space-y-6">
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 relative">
           {vibes.map((vibe) => (
@@ -59,15 +59,14 @@ export default function Step3Vibe({ selectedVibe, setSelectedVibe, vibes, onNext
 
         {selectedVibe === 'clueless' && (
           <div className="animate-in slide-in-from-top-4 fade-in duration-300 bg-fuchsia-500/10 border border-fuchsia-500/30 p-6 rounded-2xl text-center">
-            <p className="text-fuchsia-300 font-bold text-lg mb-2">Fuck yeah. I'll engineer a custom look that fits you perfectly.</p>
+            <p className="text-fuchsia-300 font-bold text-lg mb-2">{copy.CLUELESS.HEADER}</p>
             <p className="text-sm text-fuchsia-400/70">
-              (If you're paralyzed by choices, don't sweat it. Pick this, and I'll handle the design.)
+              {copy.CLUELESS.SUBTEXT}
             </p>
           </div>
         )}
       </div>
 
-      {/* Navigation Buttons */}
       <div className="flex gap-4 pt-4">
         <button 
           type="button" 
@@ -85,7 +84,7 @@ export default function Step3Vibe({ selectedVibe, setSelectedVibe, vibes, onNext
           {selectedVibe && (
             <div className="absolute left-0 top-0 h-full w-[75%] bg-linear-to-r from-blue-500 via-purple-500 to-fuchsia-500 opacity-60 transition-all duration-700 ease-out"></div>
           )}
-          <span className="relative z-10">Dope. Let's talk scope 🚀</span>
+          <span className="relative z-10">{copy.ACTIONS.NEXT}</span>
         </button>
       </div>
     </div>

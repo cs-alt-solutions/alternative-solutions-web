@@ -1,9 +1,8 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { ArrowLeft, CheckCircle2 } from 'lucide-react';
+import { CheckCircle2 } from 'lucide-react';
 import Step1Basics from '@/components/storefronts/wizard/Step1Basics';
 import Step2Network from '@/components/storefronts/wizard/Step2Network';
 import Step3Vibe from '@/components/storefronts/wizard/Step3Vibe';
@@ -79,7 +78,6 @@ export default function StorefrontApplicationPage() {
       const result = await submitStorefrontApplication(data);
       if (result.success) {
         setShowSuccess(true);
-        // Extended timer so they can read it, and it feels less jarring
         setTimeout(() => {
           router.push('/');
         }, 6000);
@@ -96,28 +94,23 @@ export default function StorefrontApplicationPage() {
     <div className="min-h-screen bg-zinc-950 text-zinc-50 font-sans relative overflow-x-hidden flex flex-col">
       <div className="absolute top-0 left-0 w-full h-[50vh] bg-[radial-gradient(ellipse_at_top,var(--tw-gradient-stops))] from-indigo-900/20 via-zinc-950/0 to-zinc-950/0 pointer-events-none -z-10"></div>
 
-      <div className="w-full border-b border-zinc-800 bg-zinc-950/80 backdrop-blur-md sticky top-0 z-50">
-        <div className="max-w-4xl mx-auto px-6 py-4 flex items-center justify-between">
-          <Link href="/" className="text-zinc-400 hover:text-white flex items-center gap-2 text-sm font-medium">
-            <ArrowLeft className="w-4 h-4" /> Cancel
-          </Link>
-          <div className="flex gap-2 w-48 opacity-80">
-            {[1, 2, 3, 4].map((s) => (
-              <div key={s} className={`h-2 flex-1 rounded-full transition-all ${
-                showSuccess ? 'bg-fuchsia-500' : (step >= s ? 'bg-indigo-500' : 'bg-zinc-800')
-              }`}></div>
-            ))}
-          </div>
-        </div>
-      </div>
-
       <div className="flex-1 w-full max-w-3xl mx-auto px-6 py-12 flex flex-col items-center relative z-10">
         {!isLoaded ? (
           <div className="text-zinc-500 animate-pulse mt-20 font-mono tracking-widest text-sm uppercase">Syncing Architecture...</div>
         ) : (
-          <div className="w-full bg-zinc-950/30 backdrop-blur-3xl border border-white/10 p-6 md:p-12 rounded-3xl shadow-[0_0_50px_rgba(0,0,0,0.3)] relative overflow-hidden transition-all duration-500">
-            <div className="absolute inset-0 bg-gradient-to-br from-white/5 to-transparent pointer-events-none" />
+          <div className="w-full bg-zinc-950/30 backdrop-blur-3xl border border-white/10 p-6 md:p-12 rounded-3xl shadow-[0_0_50px_rgba(0,0,0,0.3)] relative overflow-hidden transition-all duration-500 mt-8">
+            <div className="absolute inset-0 bg-linear-to-br from-white/5 to-transparent pointer-events-none" />
             
+            {!showSuccess && (
+              <div className="relative z-10 flex gap-2 w-full max-w-xs mx-auto mb-10 opacity-80">
+                {[1, 2, 3, 4].map((s) => (
+                  <div key={s} className={`h-1.5 flex-1 rounded-full transition-all ${
+                    step >= s ? 'bg-indigo-500 shadow-[0_0_10px_rgba(99,102,241,0.5)]' : 'bg-zinc-800'
+                  }`}></div>
+                ))}
+              </div>
+            )}
+
             {showSuccess ? (
               // IN-PAGE SUCCESS STATE
               <div className="relative z-10 flex flex-col items-center justify-center py-12 text-center space-y-6 animate-in fade-in zoom-in-95 duration-500">
