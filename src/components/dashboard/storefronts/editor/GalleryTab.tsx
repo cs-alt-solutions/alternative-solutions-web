@@ -36,7 +36,7 @@ export default function GalleryTab({ formData, setFormData }: { formData: any, s
       setFiles([]); 
       window.location.reload(); 
     } catch (e) {
-      alert(copy.ALERTS_SYNC_FAILED || "Sync failed.");
+      alert((copy as Record<string, string>).ALERTS_SYNC_FAILED);
     } finally {
       setIsUploading(false);
     }
