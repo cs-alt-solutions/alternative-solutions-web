@@ -1,9 +1,9 @@
-/* src/components/dashboard/client-hq/NewClientForm.tsx */
 'use client';
 
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { createNewClient } from '@/app/actions';
+// --- NEW IMPORT PATH ---
+import { createNewClient } from '@/app/actions/planner';
 import { Plus, Loader2, Rocket } from 'lucide-react';
 
 export default function NewClientForm() {

@@ -1,9 +1,9 @@
-/* src/components/workspace/AudioCommandPanel.tsx */
 'use client';
 
 import React, { useRef, useState } from 'react';
 import { WEBSITE_COPY } from '@/utils/glossary';
-import { publishAudioLog } from '@/app/actions'; // Now matches the new action
+// --- NEW IMPORT PATH ---
+import { publishAudioLog } from '@/app/actions/broadcast';
 import { Mic2, Radio, CheckCircle2, AlertTriangle, UploadCloud, X, FileAudio, Globe, LayoutDashboard } from 'lucide-react';
 
 export default function AudioCommandPanel() {

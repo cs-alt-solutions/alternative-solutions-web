@@ -5,12 +5,16 @@ import { useRouter } from 'next/navigation';
 import { ExternalLink, Pen, CreditCard, Globe, Trash2 } from 'lucide-react';
 import StorefrontEditor from './editor/StorefrontEditor';
 import NewStorefrontModal from './NewStorefrontModal';
-import { deleteStorefront } from '@/app/actions';
+import { deleteStorefront } from '@/app/actions/storefronts';
+import { WEBSITE_COPY } from '@/utils/glossary';
 
 export default function StorefrontsManager({ initialData }: { initialData: any[] }) {
   const router = useRouter();
   const [storefronts, setStorefronts] = useState(initialData || []);
   const [editingStoreId, setEditingStoreId] = useState<string | null>(null);
+
+  // We map to the single 'STOREFRONT' key defined in your config/dashboard.ts
+  const copy = WEBSITE_COPY.DASHBOARD.STOREFRONT;
 
   useEffect(() => {
     setStorefronts(initialData || []);
@@ -18,15 +22,18 @@ export default function StorefrontsManager({ initialData }: { initialData: any[]
 
   const activeStore = editingStoreId ? storefronts.find(s => s.id === editingStoreId) : null;
 
-  // 1. Dynamic Status Helper
+  // Local helper to avoid TypeScript errors regarding missing config keys
   const getStatusBadge = (status: string) => {
-    switch (status?.toUpperCase()) {
-      case 'BUILDING': return <span className="inline-flex items-center gap-2 px-2.5 py-1 rounded-md bg-amber-500/10 border border-amber-500/20 text-[10px] font-black text-amber-400 uppercase tracking-widest"><span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse" />BUILDING</span>;
-      case 'LIVE': return <span className="inline-flex items-center gap-2 px-2.5 py-1 rounded-md bg-emerald-500/10 border border-emerald-500/20 text-[10px] font-black text-emerald-400 uppercase tracking-widest"><span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />LIVE</span>;
-      case 'SUSPENDED': return <span className="inline-flex items-center gap-2 px-2.5 py-1 rounded-md bg-orange-500/10 border border-orange-500/20 text-[10px] font-black text-orange-400 uppercase tracking-widest"><span className="w-1.5 h-1.5 rounded-full bg-orange-500" />SUSPENDED</span>;
-      case 'CANCELED': return <span className="inline-flex items-center gap-2 px-2.5 py-1 rounded-md bg-red-500/10 border border-red-500/20 text-[10px] font-black text-red-400 uppercase tracking-widest"><span className="w-1.5 h-1.5 rounded-full bg-red-500" />CANCELED</span>;
-      case 'PENDING': return <span className="inline-flex items-center gap-2 px-2.5 py-1 rounded-md bg-cyan-500/10 border border-cyan-500/20 text-[10px] font-black text-cyan-400 uppercase tracking-widest"><span className="w-1.5 h-1.5 rounded-full bg-cyan-500" />PENDING</span>;
-      default: return <span className="inline-flex items-center gap-2 px-2.5 py-1 rounded-md bg-zinc-800 border border-zinc-700 text-[10px] font-black text-zinc-400 uppercase tracking-widest">UNKNOWN</span>;
+    const s = status?.toUpperCase();
+    const baseClass = "inline-flex items-center gap-2 px-2.5 py-1 rounded-md text-[10px] font-black uppercase tracking-widest border";
+    
+    switch (s) {
+      case 'BUILDING': return <span className={`${baseClass} bg-amber-500/10 border-amber-500/20 text-amber-400`}><span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse" />BUILDING</span>;
+      case 'LIVE': return <span className={`${baseClass} bg-emerald-500/10 border-emerald-500/20 text-emerald-400`}><span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />LIVE</span>;
+      case 'SUSPENDED': return <span className={`${baseClass} bg-orange-500/10 border-orange-500/20 text-orange-400`}><span className="w-1.5 h-1.5 rounded-full bg-orange-500" />SUSPENDED</span>;
+      case 'CANCELED': return <span className={`${baseClass} bg-red-500/10 border-red-500/20 text-red-400`}><span className="w-1.5 h-1.5 rounded-full bg-red-500" />CANCELED</span>;
+      case 'PENDING': return <span className={`${baseClass} bg-cyan-500/10 border-cyan-500/20 text-cyan-400`}><span className="w-1.5 h-1.5 rounded-full bg-cyan-500" />PENDING</span>;
+      default: return <span className={`${baseClass} bg-zinc-800 border-zinc-700 text-zinc-400`}>UNKNOWN</span>;
     }
   };
 
@@ -93,10 +100,7 @@ export default function StorefrontsManager({ initialData }: { initialData: any[]
                     </td>
                     <td className="px-6 py-4 font-mono text-cyan-400 text-xs">{displayDomain}</td>
                     <td className="px-6 py-4 font-mono text-zinc-400 text-xs">{planTier}</td>
-                    
-                    {/* 2. DYNAMIC STATUS RENDERER */}
                     <td className="px-6 py-4">{getStatusBadge(store.status)}</td>
-                    
                     <td className="px-6 py-4 text-right">
                       <div className="flex justify-end gap-4 opacity-50 group-hover:opacity-100 transition-opacity">
                         <button

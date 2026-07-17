@@ -3,7 +3,7 @@
 
 import React, { useState, useRef } from 'react';
 import { UploadCloud, Image as ImageIcon, X, LayoutGrid, Trash2 } from 'lucide-react';
-import { updateStorefrontMedia, updateStorefrontGallery, removeImageFromGallery } from '@/app/actions';
+import { updateStorefrontMedia, updateStorefrontGallery, removeImageFromGallery } from '@/app/actions/storefronts';
 
 export default function MediaTab({ formData, setFormData }: { formData: any, setFormData: any }) {
   // --- SECTION 1: GALLERY ECOSYSTEM ---

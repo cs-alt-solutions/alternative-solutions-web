@@ -1,9 +1,10 @@
 'use client';
+
 import React, { useEffect, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { X, CheckCircle2, XCircle, Loader2, AlertTriangle } from 'lucide-react';
 import { supabase } from '@/utils/supabase';
-// Import these actions (ensure you have these defined in your actions file)
+// --- VERIFIED IMPORT PATH ---
 import { updateApplicationStatus } from '@/app/actions/storefront_applications'; 
 
 export default function ApplicationReviewModal() {

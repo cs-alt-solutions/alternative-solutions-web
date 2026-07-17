@@ -1,8 +1,9 @@
-/* src/components/JoinForm.tsx */
 'use client';
 import React, { useRef, useState, useEffect } from 'react';
 import { WEBSITE_COPY } from '@/utils/glossary';
-import { joinWaitlist, submitSectorZeroIntake } from '@/app/actions';
+// --- NEW IMPORT PATHS ---
+import { joinWaitlist } from '@/app/actions/foundation';
+import { submitSectorZeroIntake } from '@/app/actions/sector_zero';
 import { ArrowRight, CheckCircle2, Loader2, RefreshCw } from 'lucide-react';
 
 export default function JoinForm({ source }: { source: string }) {

@@ -1,10 +1,10 @@
-/* src/components/dashboard/foundation/FoundationRow.tsx */
 'use client';
 
 import React, { useState } from 'react';
 import { WEBSITE_COPY } from '@/utils/glossary';
 import { MoreVertical, Mail, UserCheck, ShieldAlert, Zap, Coffee, Flame, ArrowRight, Briefcase, Ghost } from 'lucide-react';
-import { toggleAnonymity } from '@/app/actions';
+// --- NEW IMPORT PATH ---
+import { toggleAnonymity } from '@/app/actions/foundation';
 
 export interface Supporter {
   id: string;

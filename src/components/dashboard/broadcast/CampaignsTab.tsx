@@ -1,10 +1,10 @@
-/* src/components/dashboard/broadcast/CampaignsTab.tsx */
 'use client';
 
 import React, { useState } from 'react';
 import { WEBSITE_COPY } from '@/utils/glossary';
 import { Mail, Send, Users, Sparkles, Eye, Edit3, Clock, LayoutList, Loader2, CheckCircle2, AlertTriangle } from 'lucide-react';
-import { sendCampaignBlast } from '@/app/actions';
+// --- NEW IMPORT PATH ---
+import { sendCampaignBlast } from '@/app/actions/broadcast';
 
 export default function CampaignsTab() {
   const copy = WEBSITE_COPY.DASHBOARD.MEDIA_HUB.CAMPAIGNS;

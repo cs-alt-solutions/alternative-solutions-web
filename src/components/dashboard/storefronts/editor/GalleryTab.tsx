@@ -1,15 +1,18 @@
-// src/components/dashboard/storefronts/editor/GalleryTab.tsx
 'use client';
 import React, { useState } from 'react';
 import { UploadCloud, X, CheckCircle, Trash2 } from 'lucide-react';
-import { updateStorefrontGallery, removeImageFromGallery } from '@/app/actions';
+// --- NEW IMPORT PATH ---
+import { updateStorefrontGallery, removeImageFromGallery } from '@/app/actions/storefronts';
+import { WEBSITE_COPY } from '@/utils/glossary';
 
 export default function GalleryTab({ formData, setFormData }: { formData: any, setFormData: any }) {
   const [files, setFiles] = useState<File[]>([]);
   const [isUploading, setIsUploading] = useState(false);
   const [isDeleting, setIsDeleting] = useState<string | null>(null);
+  
+  // --- ALIGNED TO EXISTING 'STOREFRONT' TYPE ---
+  const copy = WEBSITE_COPY.DASHBOARD.STOREFRONT;
 
-  // Parse incoming data safely into objects directly from the Master State
   const liveGallery = (formData.gallery_items || []).map((item: any, i: number) => {
     if (typeof item === 'string') {
       return { id: `gal-${i}`, imageUrl: item, title: '', category: '' };
@@ -29,14 +32,11 @@ export default function GalleryTab({ formData, setFormData }: { formData: any, s
     files.forEach(file => uploadData.append('images', file));
     
     try {
-      // 1. Send the physical files to the Supabase Bucket
       await updateStorefrontGallery(formData.id, formData.slug, uploadData);
       setFiles([]); 
-      
-      // 2. Hard reload to fetch the new URLs into our Master State checkpoint
       window.location.reload(); 
     } catch (e) {
-      alert("Sync failed.");
+      alert(copy.ALERTS_SYNC_FAILED || "Sync failed.");
     } finally {
       setIsUploading(false);
     }
@@ -46,23 +46,18 @@ export default function GalleryTab({ formData, setFormData }: { formData: any, s
     setFiles(files.filter((_, i) => i !== index));
   }
 
-  // 🚨 Sync Local Metadata Changes to Master State
   const handleMetaChange = (index: number, field: string, value: string) => {
     const updated = [...liveGallery];
     updated[index] = { ...updated[index], [field]: value };
     setFormData((prev: any) => ({ ...prev, gallery_items: updated }));
   };
 
-  // 🚨 Handle Image Deletion AND Master State Sync
   async function handleDeleteLiveImage(imageUrlToRemove: string) {
-    if (!window.confirm("Are you sure you want to remove this image from the live gallery?")) return;
+    if (!window.confirm(copy.ALERTS_DELETE_IMAGE || "Are you sure you want to remove this image?")) return;
 
     setIsDeleting(imageUrlToRemove);
     try {
-      // 1. Remove from bucket/DB via server action
       await removeImageFromGallery(formData.id, imageUrlToRemove);
-      
-      // 2. Remove from master state so "Save All" doesn't accidentally bring it back
       setFormData((prev: any) => ({
         ...prev,
         gallery_items: prev.gallery_items.filter((img: any) => 
@@ -70,7 +65,7 @@ export default function GalleryTab({ formData, setFormData }: { formData: any, s
         )
       }));
     } catch (e) {
-      alert("Failed to remove image.");
+      alert(copy.ALERTS_DELETE_FAILED || "Failed to remove image.");
       console.error(e);
     } finally {
       setIsDeleting(null);
@@ -79,25 +74,20 @@ export default function GalleryTab({ formData, setFormData }: { formData: any, s
 
   return (
     <div className="space-y-8 max-w-4xl pb-10 pt-6">
-
-      {/* 🚨 DISPLAY LIVE IMAGES & METADATA EDITOR */}
       {liveGallery.length > 0 && (
         <div className="space-y-4">
           <div className="flex items-center justify-between border-b border-zinc-800 pb-4">
             <div>
               <h3 className="text-sm font-bold text-white uppercase tracking-widest flex items-center gap-2">
-                <CheckCircle className="w-4 h-4 text-cyan-500" /> Active Masonry Grid
+                <CheckCircle className="w-4 h-4 text-cyan-500" /> {copy.GALLERY_TITLE || "Active Masonry Grid"}
               </h3>
-              <p className="text-xs text-zinc-500 mt-1">Add dish names and categories to enable the hover effect.</p>
+              <p className="text-xs text-zinc-500 mt-1">{copy.GALLERY_SUBTITLE || "Add dish names and categories."}</p>
             </div>
-            {/* The individual Save button was removed. Handled by the Master Command Bar now. */}
           </div>
           
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {liveGallery.map((item: any, i: number) => (
               <div key={item.id || i} className="bg-zinc-900 border border-zinc-800 p-3 rounded-xl flex flex-col gap-3 shadow-lg">
-                
-                {/* Image Container */}
                 <div className="relative aspect-video bg-black rounded-lg overflow-hidden border border-zinc-800 group">
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img 
@@ -105,8 +95,6 @@ export default function GalleryTab({ formData, setFormData }: { formData: any, s
                     alt={item.title || `Gallery ${i}`} 
                     className={`w-full h-full object-cover transition-all ${isDeleting === item.imageUrl ? 'opacity-30 blur-sm' : ''}`} 
                   />
-                  
-                  {/* Delete Overlay */}
                   <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center backdrop-blur-sm">
                     <button 
                       onClick={() => handleDeleteLiveImage(item.imageUrl)}
@@ -115,24 +103,23 @@ export default function GalleryTab({ formData, setFormData }: { formData: any, s
                     >
                       <Trash2 className="w-6 h-6" />
                       <span className="text-[10px] font-black uppercase tracking-widest">
-                        {isDeleting === item.imageUrl ? 'Removing...' : 'Delete'}
+                        {isDeleting === item.imageUrl ? "Removing..." : "Delete"}
                       </span>
                     </button>
                   </div>
                 </div>
 
-                {/* Metadata Inputs - Now syncing instantly to master state */}
                 <div className="space-y-2">
                   <input 
                     type="text"
-                    placeholder="Dish Title (e.g., Pan Seared Foie Gras)"
+                    placeholder="Title"
                     value={item.title || ''}
                     onChange={(e) => handleMetaChange(i, 'title', e.target.value)}
                     className="w-full bg-zinc-950 border border-zinc-800 rounded p-2.5 text-xs text-white focus:border-cyan-500 outline-none transition-colors"
                   />
                   <input 
                     type="text"
-                    placeholder="Category (e.g., High Protein)"
+                    placeholder="Category"
                     value={item.category || ''}
                     onChange={(e) => handleMetaChange(i, 'category', e.target.value)}
                     className="w-full bg-zinc-950 border border-zinc-800 rounded p-2.5 text-xs text-white focus:border-cyan-500 outline-none transition-colors"
@@ -144,7 +131,6 @@ export default function GalleryTab({ formData, setFormData }: { formData: any, s
         </div>
       )}
 
-      {/* DROPZONE */}
       <div className="space-y-4 pt-4 border-t border-zinc-800/50">
         <label className="text-xs font-bold text-zinc-400 uppercase tracking-widest flex items-center gap-2">
           <UploadCloud className="w-4 h-4 text-zinc-500"/> Upload New Media
@@ -160,7 +146,6 @@ export default function GalleryTab({ formData, setFormData }: { formData: any, s
         </div>
       </div>
 
-      {/* STAGED PREVIEW */}
       {files.length > 0 && (
         <div className="space-y-4 pt-4 border-t border-zinc-800/50">
           <h4 className="text-xs font-bold text-zinc-500 uppercase tracking-widest">Ready to Sync ({files.length})</h4>

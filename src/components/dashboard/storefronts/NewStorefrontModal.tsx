@@ -1,9 +1,9 @@
-// src/components/dashboard/storefronts/NewStorefrontModal.tsx
 'use client';
 
 import React, { useState, useRef } from 'react';
 import { X, Plus, Store, Link as LinkIcon, Palette, Sparkles, UploadCloud, LayoutTemplate, Columns, MonitorPlay, Check } from 'lucide-react';
-import { createStorefront } from '@/app/actions';
+// --- NEW IMPORT PATH ---
+import { createStorefront } from '@/app/actions/storefronts';
 
 const BRAND_COLORS = [
   { name: 'Slate Gray', value: 'slate-500' },
@@ -31,7 +31,7 @@ const THEMES = [
   { name: 'High Editorial', value: 'elegant' },
   { name: 'Earthy & Organic', value: 'organic' },
   { name: 'Classic Editorial', value: 'editorial' },
-  { name: 'Midnight Onyx', value: 'midnight' } // 🔮 ADDED HERE
+  { name: 'Midnight Onyx', value: 'midnight' } 
 ];
 
 const HERO_LAYOUTS = [

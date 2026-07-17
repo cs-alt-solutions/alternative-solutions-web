@@ -1,10 +1,9 @@
-/* src/components/planner/LogDirectiveModal.tsx */
 'use client';
 
 import React, { useState } from 'react';
 import { WEBSITE_COPY } from '@/utils/glossary';
 import { X, Lightbulb, ListChecks, Trash2 } from 'lucide-react';
-import { logDirective } from '@/app/actions';
+import { logDirective } from '@/app/actions/planner';
 
 interface LogDirectiveModalProps {
   isOpen: boolean;
@@ -12,7 +11,6 @@ interface LogDirectiveModalProps {
 }
 
 export default function LogDirectiveModal({ isOpen, onClose }: LogDirectiveModalProps) {
-  // Single Source of Truth
   const copy = WEBSITE_COPY.DASHBOARD.STRATEGIC_PLANNER;
   const modalCopy = copy.MODAL; 
   
@@ -57,7 +55,8 @@ export default function LogDirectiveModal({ isOpen, onClose }: LogDirectiveModal
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/90 backdrop-blur-md animate-in fade-in duration-300">
-      <div className="bg-[#0A0A0A] border border-white/10 w-full max-w-xl rounded-3xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
+      {/* 🚨 FIX: Removed hardcoded hex bg-[#0A0A0A] 🚨 */}
+      <div className="bg-zinc-950 border border-white/10 w-full max-w-xl rounded-3xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
         <header className="p-6 border-b border-white/5 flex items-center justify-between bg-white/2">
           <div className="flex items-center gap-3">
             <div className="p-2 rounded-xl bg-brand-primary/10 text-brand-primary"><Lightbulb size={20} /></div>
