@@ -1,7 +1,7 @@
 'use client';
+
 import React, { useState } from 'react';
 import { UploadCloud, X, CheckCircle, Trash2 } from 'lucide-react';
-// --- NEW IMPORT PATH ---
 import { updateStorefrontGallery, removeImageFromGallery } from '@/app/actions/storefronts';
 import { WEBSITE_COPY } from '@/utils/glossary';
 
@@ -53,7 +53,7 @@ export default function GalleryTab({ formData, setFormData }: { formData: any, s
   };
 
   async function handleDeleteLiveImage(imageUrlToRemove: string) {
-    if (!window.confirm(copy.ALERTS_DELETE_IMAGE || "Are you sure you want to remove this image?")) return;
+    if (!window.confirm((copy as Record<string, string>).ALERTS_DELETE_IMAGE)) return;
 
     setIsDeleting(imageUrlToRemove);
     try {
@@ -65,7 +65,7 @@ export default function GalleryTab({ formData, setFormData }: { formData: any, s
         )
       }));
     } catch (e) {
-      alert(copy.ALERTS_DELETE_FAILED || "Failed to remove image.");
+      alert((copy as Record<string, string>).ALERTS_DELETE_FAILED);
       console.error(e);
     } finally {
       setIsDeleting(null);
@@ -79,9 +79,9 @@ export default function GalleryTab({ formData, setFormData }: { formData: any, s
           <div className="flex items-center justify-between border-b border-zinc-800 pb-4">
             <div>
               <h3 className="text-sm font-bold text-white uppercase tracking-widest flex items-center gap-2">
-                <CheckCircle className="w-4 h-4 text-cyan-500" /> {copy.GALLERY_TITLE || "Active Masonry Grid"}
+                <CheckCircle className="w-4 h-4 text-cyan-500" /> {(copy as Record<string, string>).GALLERY_TITLE}
               </h3>
-              <p className="text-xs text-zinc-500 mt-1">{copy.GALLERY_SUBTITLE || "Add dish names and categories."}</p>
+              <p className="text-xs text-zinc-500 mt-1">{(copy as Record<string, string>).GALLERY_SUBTITLE}</p>
             </div>
           </div>
           
