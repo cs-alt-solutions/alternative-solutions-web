@@ -2,10 +2,11 @@
 
 import React from 'react';
 import { ArrowLeft, CheckSquare, Square, ChevronDown, ChevronUp, Globe, Zap, Loader2 } from 'lucide-react';
-import { WIZARD_COPY } from '@/utils/glossary';
+// WE ARE IMPORTING THE PLANS DIRECTLY FROM THE GLOSSARY NOW
+import { WIZARD_COPY, SUBSCRIPTION_PLANS } from '@/utils/glossary';
 
 interface Step4Props {
-  plans: any[];
+  // Removed `plans: any[];` - we don't need the parent to pass this anymore!
   selectedPlan: string;
   setSelectedPlan: (plan: string) => void;
   expandedPlan: string | null;
@@ -22,7 +23,6 @@ interface Step4Props {
 }
 
 export default function Step4Scope({
-  plans,
   selectedPlan,
   setSelectedPlan,
   expandedPlan,
@@ -41,14 +41,14 @@ export default function Step4Scope({
   const copy = WIZARD_COPY.STEP_4;
   const isSubmissionDisabled = isSubmitting || (wantsCustom && !existingDomain.trim());
 
-  // FIXED: Intercept and auto-sort the plans. Strip all non-numeric chars before parsing.
-  const sortedPlans = plans ? [...plans].sort((a, b) => {
+  // Intercept and auto-sort the globally imported plans. Strip all non-numeric chars before parsing.
+  const sortedPlans = SUBSCRIPTION_PLANS ? [...SUBSCRIPTION_PLANS].sort((a, b) => {
     const priceA = parseFloat(String(a.price || '0').replace(/[^0-9.]/g, '')) || 0;
     const priceB = parseFloat(String(b.price || '0').replace(/[^0-9.]/g, '')) || 0;
     return priceA - priceB;
   }) : [];
 
-  // Helper to ensure we don't get double $$ if the database already includes it
+  // Helper to ensure we don't get double $$
   const formatPrice = (price: any) => {
     if (price === null || price === undefined || price === '') return null;
     const cleanPrice = String(price).replace('$', '');
