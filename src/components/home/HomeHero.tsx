@@ -20,7 +20,7 @@ export default function HomeHero() {
   };
 
   return (
-    <section className="relative mb-24 pt-10 md:pt-16 animate-in fade-in slide-in-from-bottom-8 duration-1000">
+    <section className="relative mb-24 pt-24 md:pt-32 lg:pt-40 animate-in fade-in slide-in-from-bottom-8 duration-1000">
       
       <div className="flex flex-col lg:flex-row items-center justify-between gap-16 px-6 relative z-10">
         
