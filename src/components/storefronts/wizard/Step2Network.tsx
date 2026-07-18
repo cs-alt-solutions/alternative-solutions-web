@@ -28,7 +28,7 @@ export default function Step2Network({ activeSocials, socialHandles, toggleSocia
       
       <div className="space-y-4">
         <h1 className="text-4xl md:text-5xl font-black tracking-tight text-white capitalize">
-          {copy.TITLE_MAIN}<span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 to-purple-400">{copy.TITLE_HIGHLIGHT}</span>
+          {copy.TITLE_MAIN}<span className="text-transparent bg-clip-text bg-linear-to-r from-indigo-400 to-purple-400">{copy.TITLE_HIGHLIGHT}</span>
         </h1>
         <p className="text-lg text-zinc-400 leading-relaxed">
           {copy.SUBTITLE}

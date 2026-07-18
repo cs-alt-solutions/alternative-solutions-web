@@ -9,14 +9,52 @@ import Step3Vibe from '@/components/storefronts/wizard/Step3Vibe';
 import Step4Scope from '@/components/storefronts/wizard/Step4Scope';
 import { supabase } from '@/utils/supabase';
 import { submitStorefrontApplication } from '@/app/actions/storefront_applications';
+import { WIZARD_COPY } from '@/utils/glossary';
 
+// ----------------------------------------------------------------------
+// SUB-COMPONENT: SuccessView
+// ----------------------------------------------------------------------
+const SuccessView = ({ onRedirect }: { onRedirect: () => void }) => {
+  const copy = WIZARD_COPY.SUCCESS;
+  
+  return (
+    <div className="relative z-10 flex flex-col items-center justify-center py-12 text-center space-y-6 animate-in fade-in zoom-in-95 duration-500">
+      <div className="w-20 h-20 bg-zinc-900 border-2 border-fuchsia-500 rounded-2xl flex items-center justify-center mx-auto mb-2 shadow-inner-fuchsia">
+        <CheckCircle2 className="w-10 h-10 text-fuchsia-400" />
+      </div>
+      
+      <h1 className="text-3xl md:text-4xl font-black tracking-tight text-white uppercase">
+        {copy.TITLE_START}<span className="text-fuchsia-400">{copy.TITLE_HIGHLIGHT}</span>
+      </h1>
+      
+      <p className="text-zinc-400 text-base md:text-lg leading-relaxed max-w-md mx-auto">
+        {copy.DESCRIPTION}
+      </p>
+      
+      <div className="pt-8 w-full max-w-xs mx-auto">
+        <button
+          onClick={onRedirect}
+          className="w-full py-4 rounded-2xl font-bold tracking-wide flex items-center justify-center gap-3 text-white bg-zinc-900 border border-white/10 hover:border-fuchsia-500/50 hover:bg-zinc-800 transition-all"
+        >
+          {copy.BUTTON}
+        </button>
+        <div className="mt-4 text-[10px] text-zinc-600 font-mono uppercase tracking-widest animate-pulse">
+          {copy.REDIRECT}
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// ----------------------------------------------------------------------
+// MAIN COMPONENT
+// ----------------------------------------------------------------------
 export default function StorefrontApplicationPage() {
   const router = useRouter();
   const [step, setStep] = useState(1);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
   const [vibes, setVibes] = useState<any[]>([]);
-  const [plans, setPlans] = useState<any[]>([]);
   const [isLoaded, setIsLoaded] = useState(false);
 
   const [formData, setFormData] = useState({ name: '', email: '', phone: '', projectName: '', description: '' });
@@ -32,19 +70,33 @@ export default function StorefrontApplicationPage() {
   useEffect(() => {
     const fetchArchitectureData = async () => {
       try {
-        const { data: dbVibes } = await supabase.from('storefront_vibes').select('*').order('created_at', { ascending: true });
-        const { data: dbPlans } = await supabase.from('storefront_plans').select('*').order('price', { ascending: true });
+        // Explicitly extract the 'error' object from the Supabase response
+        const { data: dbVibes, error } = await supabase
+          .from('storefront_vibes')
+          .select('*')
+          .order('created_at', { ascending: true });
+        
+        // Throw it manually if it exists so our failsafe activates
+        if (error) throw error;
         
         const cluelessOption = {
-          id: 'clueless', title: 'No Fucking Clue', desc: 'I trust you. Just build something badass.',
-          cardStyle: 'bg-zinc-900 border-2 border-dashed border-zinc-700 text-zinc-400 hover:border-fuchsia-500 hover:text-fuchsia-400 transition-all rounded-xl sm:col-span-2 flex flex-col items-center justify-center text-center',
-          activeStyle: 'border-solid border-fuchsia-500 bg-fuchsia-500/10 text-fuchsia-400 ring-1 ring-fuchsia-500 shadow-[0_0_30px_rgba(217,70,239,0.3)]'
+          id: WIZARD_COPY.VIBES.CLUELESS_ID, 
+          title: WIZARD_COPY.VIBES.CLUELESS_TITLE, 
+          desc: WIZARD_COPY.VIBES.CLUELESS_DESC
+          // Removed hardcoded styles. Step3Vibe handles this natively now.
         };
 
         setVibes(dbVibes ? [...dbVibes, cluelessOption] : [cluelessOption]);
-        setPlans(dbPlans || []);
+        
       } catch (err) {
         console.error("Database fetch error:", err);
+        
+        // FAILSAFE: Trigger the fallback option if the database query fails.
+        setVibes([{
+          id: WIZARD_COPY.VIBES.CLUELESS_ID, 
+          title: WIZARD_COPY.VIBES.CLUELESS_TITLE, 
+          desc: WIZARD_COPY.VIBES.CLUELESS_DESC
+        }]);
       } finally {
         setIsLoaded(true);
       }
@@ -68,11 +120,14 @@ export default function StorefrontApplicationPage() {
     data.append('projectName', formData.projectName);
     data.append('description', formData.description);
     data.append('selectedPlan', selectedPlan);
-    data.append('selectedVibe', selectedVibe || 'clueless');
+    data.append('selectedVibe', selectedVibe || WIZARD_COPY.VIBES.CLUELESS_ID);
     data.append('wantsCustom', wantsCustom.toString());
     data.append('existingDomain', existingDomain);
     data.append('priorityQueue', priorityQueue.toString());
     data.append('socials', JSON.stringify(socialHandles));
+
+    // DIAGNOSTIC PAYLOAD TRACKER ADDED HERE
+    console.log("Wizard Output Payload:", Object.fromEntries(data.entries()));
 
     try {
       const result = await submitStorefrontApplication(data);
@@ -105,41 +160,15 @@ export default function StorefrontApplicationPage() {
               <div className="relative z-10 flex gap-2 w-full max-w-xs mx-auto mb-10 opacity-80">
                 {[1, 2, 3, 4].map((s) => (
                   <div key={s} className={`h-1.5 flex-1 rounded-full transition-all ${
-                    step >= s ? 'bg-indigo-500 shadow-[0_0_10px_rgba(99,102,241,0.5)]' : 'bg-zinc-800'
+                    step >= s ? 'bg-indigo-500 shadow-glow-indigo' : 'bg-zinc-800'
                   }`}></div>
                 ))}
               </div>
             )}
 
             {showSuccess ? (
-              // IN-PAGE SUCCESS STATE
-              <div className="relative z-10 flex flex-col items-center justify-center py-12 text-center space-y-6 animate-in fade-in zoom-in-95 duration-500">
-                <div className="w-20 h-20 bg-zinc-900 border-2 border-fuchsia-500 rounded-2xl flex items-center justify-center mx-auto mb-2 shadow-[inset_0_0_20px_rgba(217,70,239,0.3)]">
-                  <CheckCircle2 className="w-10 h-10 text-fuchsia-400" />
-                </div>
-                
-                <h1 className="text-3xl md:text-4xl font-black tracking-tight text-white uppercase">
-                  All right, cool. <span className="text-fuchsia-400">Locked in.</span>
-                </h1>
-                
-                <p className="text-zinc-400 text-base md:text-lg leading-relaxed max-w-md mx-auto">
-                  I've got your details and I'm taking over the heavy lifting. No sweat, hang back while we prep your file.
-                </p>
-                
-                <div className="pt-8 w-full max-w-xs mx-auto">
-                  <button
-                    onClick={() => router.push('/')}
-                    className="w-full py-4 rounded-2xl font-bold tracking-wide flex items-center justify-center gap-3 text-white bg-zinc-900 border border-white/10 hover:border-fuchsia-500/50 hover:bg-zinc-800 transition-all"
-                  >
-                    Go to Homepage Now
-                  </button>
-                  <div className="mt-4 text-[10px] text-zinc-600 font-mono uppercase tracking-widest animate-pulse">
-                    Auto-redirecting shortly...
-                  </div>
-                </div>
-              </div>
+              <SuccessView onRedirect={() => router.push('/')} />
             ) : (
-              // STANDARD FORM
               <form onSubmit={handleSubmit} className="relative z-10 w-full animate-in fade-in duration-500">
                 {step === 1 && (
                   <Step1Basics 
@@ -164,7 +193,7 @@ export default function StorefrontApplicationPage() {
                 )}
                 {step === 4 && (
                   <Step4Scope 
-                    plans={plans} selectedPlan={selectedPlan} setSelectedPlan={setSelectedPlan} 
+                    selectedPlan={selectedPlan} setSelectedPlan={setSelectedPlan} 
                     expandedPlan={expandedPlan} setExpandedPlan={setExpandedPlan} 
                     wantsCustom={wantsCustom} setWantsCustom={setWantsCustom} 
                     existingDomain={existingDomain} setExistingDomain={setExistingDomain} 

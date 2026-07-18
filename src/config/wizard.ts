@@ -4,7 +4,7 @@ export const WIZARD_COPY = {
   STEP_1: {
     TITLE_MAIN: "Let's Build",
     TITLE_PUNCT: ".",
-    SUBTITLE: "Hey, what's up guys? If you're ready for a custom website, you're in the right place. Let's get the boring stuff out of the way first so we can get to the fun stuff.",
+    SUBTITLE: "Hey, what's up guys? If you're ready for a custom website, you're in the right place. Let me get the boring stuff out of the way first so I can get to the fun stuff.",
     LABELS: {
       NAME: "Who am I talking to?",
       BUSINESS: "What is your business name?",
@@ -28,7 +28,7 @@ export const WIZARD_COPY = {
     },
     ACTIONS: {
       CANCEL: "Cancel Application",
-      NEXT: "Got it. Let's link up 🔗"
+      NEXT: "Got it. Ready to link up 🔗"
     }
   },
   STEP_2: {
@@ -43,7 +43,7 @@ export const WIZARD_COPY = {
       OTHER: "https://yourlink.com"
     },
     COMMUNICATION: {
-      TITLE: "How we communicate",
+      TITLE: "How I communicate",
       BODY: "I will route all project updates and credential links straight to your email. This keeps everything in one searchable place."
     },
     ACTIONS: {
@@ -59,7 +59,7 @@ export const WIZARD_COPY = {
       SUBTEXT: "(If you're paralyzed by choices, don't sweat it. Pick this, and I'll handle the design.)"
     },
     ACTIONS: {
-      NEXT: "Dope. Let's talk scope 🚀"
+      NEXT: "Dope. Time to talk scope 🚀"
     }
   },
   STEP_4: {
@@ -67,12 +67,15 @@ export const WIZARD_COPY = {
     TITLE_HIGHLIGHT: "Scope.",
     SUBTITLE_START: "Last step! Choose the package that fits your setup. ",
     SUBTITLE_HIGHLIGHT: "Put your wallet away—you aren't paying a single dime today.",
-    SUBTITLE_END: " We just need to get the specs lined up.",
+    SUBTITLE_END: " I just need to get the specs lined up.",
     EMPTY_PLANS: "No active plans found in the database.",
     PLAN: {
-      FALLBACK_DESC: "Solid foundation for your brand architecture.",
-      HIDE_DETAILS: "Hide Details",
-      VIEW_SCOPE: "View Scope"
+      FALLBACK_NAME: "Plan Option",
+      FALLBACK_DESC: "Standard plan tier.",
+      CURRENCY_SYMBOL: "$",
+      MONTHLY_SUFFIX: "/mo",
+      VIEW_SCOPE: "View Scope",
+      HIDE_DETAILS: "Hide Details"
     },
     DOMAIN: {
       TITLE: "Domain Connection",
@@ -82,11 +85,23 @@ export const WIZARD_COPY = {
     PRIORITY: {
       BADGE: "Not Needed",
       TITLE: "Priority Build Queue",
-      DESC: "Fast-track your setup for just $1. We will jump your file to the front of the line."
+      DESC: "Fast-track your setup for just $1. I will jump your file to the front of the line."
     },
     ACTIONS: {
       SUBMIT_LOADING: "Transmitting...",
       SUBMIT: "Send It"
     }
+  },
+  VIBES: {
+    CLUELESS_ID: 'clueless',
+    CLUELESS_TITLE: 'No Fucking Clue',
+    CLUELESS_DESC: 'I trust you. Just build something badass.'
+  },
+  SUCCESS: {
+    TITLE_START: "All right, cool. ",
+    TITLE_HIGHLIGHT: "Locked in.",
+    DESCRIPTION: "I've got your details and I'm taking over the heavy lifting. No sweat, hang back while I prep your file.",
+    BUTTON: "Go to Homepage Now",
+    REDIRECT: "Auto-redirecting shortly..."
   }
 };

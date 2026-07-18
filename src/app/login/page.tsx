@@ -4,7 +4,6 @@ import React, { useState } from 'react';
 import { WEBSITE_COPY, ROUTES } from '@/utils/glossary';
 import { Globe, ArrowLeft, Mail, ArrowRight, Loader2, CheckCircle2 } from 'lucide-react';
 import Link from 'next/link';
-import { supabase } from '@/utils/supabase';
 
 export default function GatewayPage() {
   const [email, setEmail] = useState('');
@@ -19,19 +18,26 @@ export default function GatewayPage() {
     setErrorMsg('');
     setIsLoggingIn(true);
 
-    const { error } = await supabase.auth.signInWithOtp({
-      email: email.trim(),
-      options: {
-        shouldCreateUser: false, // <-- KILLS OPEN REGISTRATION
-        emailRedirectTo: `${window.location.origin}/api/auth/callback`,
-      },
-    });
+    try {
+      // Hijack the auth flow: route through our custom API to trigger the Resend template
+      const response = await fetch('/api/auth/magic-link', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email: email.trim() }),
+      });
 
-    if (error) {
-      setErrorMsg(error.message);
-      setIsLoggingIn(false);
-    } else {
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || 'System failed to dispatch secure link');
+      }
+
       setIsSuccess(true);
+    } catch (error: any) {
+      setErrorMsg(error.message || 'An unexpected error occurred.');
+    } finally {
       setIsLoggingIn(false);
     }
   };

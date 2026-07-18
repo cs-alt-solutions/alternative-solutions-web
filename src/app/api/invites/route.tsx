@@ -1,7 +1,9 @@
+// app/api/invites/route.tsx
 import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { Resend } from 'resend';
 import PortalInviteEmail from '@/components/emails/PortalInviteEmail';
+import { EMAIL_COPY, GLOSSARY } from '@/utils/glossary';
 
 const resend = new Resend(process.env.RESEND_API_KEY!);
 
@@ -16,19 +18,22 @@ export async function POST(request: Request) {
     const { email, fullName, role, workspace } = body;
 
     if (!email) {
-      return NextResponse.json({ error: 'Email is required' }, { status: 400 });
+      return NextResponse.json({ error: GLOSSARY?.ERRORS?.MISSING_EMAIL || 'Email is required' }, { status: 400 });
     }
 
     const origin = request.headers.get('origin') || process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000';
 
-    let workspaceName = 'Your Workspace';
+    // Single Source of Truth for defaults
+    let workspaceName = GLOSSARY?.DEFAULT_WORKSPACE_NAME || 'Workspace'; 
+    
     if (workspace && workspace !== 'NONE') {
       const { data: clientData } = await supabaseAdmin.from('clients').select('name').eq('id', workspace).single();
       if (clientData) workspaceName = clientData.name;
     }
 
-    // THE FIX: Explicitly type these variables so TypeScript doesn't collapse them into 'never'
-    let linkData: any, linkError: any;
+    // Strict typing instead of 'any'
+    let linkData: Record<string, any> | null = null;
+    let linkError: Error | null = null;
 
     // ATTEMPT 1: Try to generate a fresh invite link
     const inviteResponse = await supabaseAdmin.auth.admin.generateLink({
@@ -40,7 +45,7 @@ export async function POST(request: Request) {
       }
     });
 
-    // ATTEMPT 2: If they already exist in the system, pivot to generating a Magic Link instead!
+    // ATTEMPT 2: If they already exist in the system, pivot to generating a Magic Link instead
     if (inviteResponse.error?.message?.includes('already been registered')) {
       const magicLinkResponse = await supabaseAdmin.auth.admin.generateLink({
          type: 'magiclink',
@@ -69,15 +74,16 @@ export async function POST(request: Request) {
 
     // Blast out the custom React Email
     const { error: emailError } = await resend.emails.send({
-      from: 'Alternative Solutions <system@alternativesolutions.io>', 
+      from: process.env.EMAIL_FROM_ADDRESS || 'Alternative Solutions <system@alternativesolutions.io>', 
       to: email,
-      subject: 'Access Granted: Secure Workspace',
+      subject: EMAIL_COPY?.INVITE_SUBJECT || 'Access Granted: Secure Workspace',
       react: (
         <PortalInviteEmail 
-          operatorName={fullName || 'Operator'}
+          operatorName={fullName || GLOSSARY?.ROLES?.DEFAULT_OPERATOR || 'Operator'}
           workspaceName={workspaceName}
-          magicLink={linkData?.properties?.action_link || `${origin}/login`}
-          role={role === 'CLIENT_OWNER' ? 'Client Owner' : role}
+          // Fixed: Changed property name to 'inviteLink' to match PortalInviteEmail component props
+          inviteLink={linkData?.properties?.action_link || `${origin}/login`}
+          role={role === 'CLIENT_OWNER' ? GLOSSARY?.ROLES?.CLIENT_OWNER || 'Client Owner' : role}
         />
       )
     });

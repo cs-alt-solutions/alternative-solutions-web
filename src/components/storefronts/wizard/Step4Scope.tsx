@@ -2,11 +2,98 @@
 
 import React from 'react';
 import { ArrowLeft, CheckSquare, Square, ChevronDown, ChevronUp, Globe, Zap, Loader2 } from 'lucide-react';
-// WE ARE IMPORTING THE PLANS DIRECTLY FROM THE GLOSSARY NOW
 import { WIZARD_COPY, SUBSCRIPTION_PLANS } from '@/utils/glossary';
 
+// ----------------------------------------------------------------------
+// SUB-COMPONENT: PlanCard 
+// Breaking this out keeps our main component highly readable and modular.
+// ----------------------------------------------------------------------
+const PlanCard = ({ plan, idx, isSelected, isExpanded, onSelect, onToggleExpand, copy }: any) => {
+  // Use Glossary for all text/symbols
+  const formatPrice = (price: any) => {
+    if (price === null || price === undefined || price === '') return null;
+    const cleanPrice = String(price).replace(copy.PLAN.CURRENCY_SYMBOL, '');
+    return `${copy.PLAN.CURRENCY_SYMBOL}${cleanPrice}`;
+  };
+
+  const displayPrice = formatPrice(plan.price);
+  const displayName = plan.name || `${copy.PLAN.FALLBACK_NAME} ${idx + 1}`;
+
+  return (
+    <div
+      onClick={() => onSelect(plan.id)}
+      className={`relative p-6 rounded-xl border-2 transition-all cursor-pointer overflow-hidden ${
+        isSelected
+          ? 'border-teal-500 bg-zinc-900 shadow-brutal-teal' // Using global.css class
+          : 'border-zinc-800 bg-zinc-950 hover:border-zinc-600 hover:bg-zinc-900'
+      }`}
+    >
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        
+        {/* Left Side: Checkbox & Name */}
+        <div className="flex items-start sm:items-center gap-4">
+          <div className="mt-1 sm:mt-0 shrink-0">
+            {isSelected ? (
+              <CheckSquare className="w-6 h-6 text-teal-400" />
+            ) : (
+              <Square className="w-6 h-6 text-zinc-600" />
+            )}
+          </div>
+          <div>
+            <h3 className="text-xl md:text-2xl font-black text-white uppercase tracking-wider">
+              {displayName}
+            </h3>
+            <p className="text-zinc-400 text-sm mt-1 max-w-md">
+              {plan.description || copy.PLAN.FALLBACK_DESC}
+            </p>
+          </div>
+        </div>
+
+        {/* Right Side: Price */}
+        {displayPrice && (
+          <div className="pl-10 sm:pl-0 text-left sm:text-right shrink-0">
+            <div className="text-3xl font-black text-white">
+              {displayPrice}
+              <span className="text-lg text-zinc-500 font-medium">{copy.PLAN.MONTHLY_SUFFIX}</span>
+            </div>
+          </div>
+        )}
+      </div>
+
+      <div className="pl-10 mt-4 flex items-center justify-between border-t border-zinc-800/50 pt-4">
+        <button
+          type="button"
+          onClick={(e) => {
+            e.stopPropagation();
+            onToggleExpand(plan.id);
+          }}
+          className={`text-xs font-bold tracking-wider uppercase flex items-center gap-1 transition-colors ${
+            isSelected ? 'text-teal-400 hover:text-teal-300' : 'text-zinc-500 hover:text-white'
+          }`}
+        >
+          {isExpanded ? copy.PLAN.HIDE_DETAILS : copy.PLAN.VIEW_SCOPE}
+          {isExpanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+        </button>
+      </div>
+
+      {isExpanded && (
+        <div className="mt-6 ml-10 p-4 bg-zinc-950 border border-zinc-800 rounded-lg space-y-3 animate-in slide-in-from-top-2">
+          {(plan.features || []).map((feature: string, fIdx: number) => (
+            <div key={fIdx} className="flex items-start gap-3">
+              <div className="w-1.5 h-1.5 rounded-full bg-teal-500 shrink-0 mt-1.5" />
+              <span className="text-sm text-zinc-300">{feature}</span>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+};
+
+// ----------------------------------------------------------------------
+// MAIN COMPONENT
+// ----------------------------------------------------------------------
 interface Step4Props {
-  // Removed `plans: any[];` - we don't need the parent to pass this anymore!
   selectedPlan: string;
   setSelectedPlan: (plan: string) => void;
   expandedPlan: string | null;
@@ -37,7 +124,7 @@ export default function Step4Scope({
   onPrev,
   onSubmit
 }: Step4Props) {
-
+  
   const copy = WIZARD_COPY.STEP_4;
   const isSubmissionDisabled = isSubmitting || (wantsCustom && !existingDomain.trim());
 
@@ -47,13 +134,6 @@ export default function Step4Scope({
     const priceB = parseFloat(String(b.price || '0').replace(/[^0-9.]/g, '')) || 0;
     return priceA - priceB;
   }) : [];
-
-  // Helper to ensure we don't get double $$
-  const formatPrice = (price: any) => {
-    if (price === null || price === undefined || price === '') return null;
-    const cleanPrice = String(price).replace('$', '');
-    return `$${cleanPrice}`;
-  };
 
   return (
     <div className="animate-in fade-in duration-500 space-y-12">
@@ -72,80 +152,18 @@ export default function Step4Scope({
             {copy.EMPTY_PLANS}
           </div>
         ) : (
-          sortedPlans.map((plan, idx) => {
-            const isSelected = selectedPlan === plan.id;
-            const isExpanded = expandedPlan === plan.id;
-            const displayPrice = formatPrice(plan.price);
-            const displayName = plan.name || `Plan Option ${idx + 1}`;
-
-            return (
-              <div
-                key={plan.id}
-                onClick={() => setSelectedPlan(plan.id)}
-                className={`relative p-6 rounded-xl border-2 transition-all cursor-pointer overflow-hidden ${
-                  isSelected
-                    ? 'border-teal-500 bg-zinc-900 shadow-[4px_4px_0px_0px_rgba(20,184,166,1)]'
-                    : 'border-zinc-800 bg-zinc-950 hover:border-zinc-600 hover:bg-zinc-900'
-                }`}
-              >
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                  
-                  {/* Left Side: Checkbox & Name */}
-                  <div className="flex items-start sm:items-center gap-4">
-                    <div className="mt-1 sm:mt-0 shrink-0">
-                      {isSelected ? (
-                        <CheckSquare className="w-6 h-6 text-teal-400" />
-                      ) : (
-                        <Square className="w-6 h-6 text-zinc-600" />
-                      )}
-                    </div>
-                    <div>
-                      <h3 className="text-xl md:text-2xl font-black text-white uppercase tracking-wider">
-                        {displayName}
-                      </h3>
-                      <p className="text-zinc-400 text-sm mt-1 max-w-md">
-                        {plan.description || copy.PLAN.FALLBACK_DESC}
-                      </p>
-                    </div>
-                  </div>
-
-                  {/* Right Side: Price */}
-                  {displayPrice && (
-                    <div className="pl-10 sm:pl-0 text-left sm:text-right shrink-0">
-                      <div className="text-3xl font-black text-white">
-                        {displayPrice}<span className="text-lg text-zinc-500 font-medium">/mo</span>
-                      </div>
-                    </div>
-                  )}
-                </div>
-
-                <div className="pl-10 mt-4 flex items-center justify-between border-t border-zinc-800/50 pt-4">
-                  <button
-                    type="button"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setExpandedPlan(isExpanded ? null : plan.id);
-                    }}
-                    className={`text-xs font-bold tracking-wider uppercase flex items-center gap-1 transition-colors ${isSelected ? 'text-teal-400 hover:text-teal-300' : 'text-zinc-500 hover:text-white'}`}
-                  >
-                    {isExpanded ? copy.PLAN.HIDE_DETAILS : copy.PLAN.VIEW_SCOPE}
-                    {isExpanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
-                  </button>
-                </div>
-
-                {isExpanded && (
-                  <div className="mt-6 ml-10 p-4 bg-zinc-950 border border-zinc-800 rounded-lg space-y-3 animate-in slide-in-from-top-2">
-                    {(plan.features || []).map((feature: string, fIdx: number) => (
-                      <div key={fIdx} className="flex items-start gap-3">
-                        <div className="w-1.5 h-1.5 rounded-full bg-teal-500 shrink-0 mt-1.5" />
-                        <span className="text-sm text-zinc-300">{feature}</span>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-            );
-          })
+          sortedPlans.map((plan, idx) => (
+            <PlanCard
+              key={plan.id}
+              plan={plan}
+              idx={idx}
+              isSelected={selectedPlan === plan.id}
+              isExpanded={expandedPlan === plan.id}
+              onSelect={setSelectedPlan}
+              onToggleExpand={(id: string) => setExpandedPlan(expandedPlan === id ? null : id)}
+              copy={copy}
+            />
+          ))
         )}
       </div>
 
@@ -220,7 +238,7 @@ export default function Step4Scope({
             className={`relative flex-1 overflow-hidden py-5 rounded-xl font-bold tracking-wide uppercase flex items-center justify-center gap-3 transition-all border-2 ${
               isSubmissionDisabled
                 ? 'bg-zinc-950 border-zinc-800 text-zinc-600 cursor-not-allowed' 
-                : 'bg-zinc-900 border-teal-500 text-white hover:bg-zinc-800 shadow-[4px_4px_0px_0px_rgba(20,184,166,1)] active:translate-y-1 active:translate-x-1 active:shadow-none'
+                : 'bg-zinc-900 border-teal-500 text-white hover:bg-zinc-800 shadow-brutal-teal active:translate-y-1 active:translate-x-1 active:shadow-none'
             }`}
           >
             <span className="relative z-10 flex items-center gap-2">
