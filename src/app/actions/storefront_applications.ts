@@ -53,8 +53,6 @@ export async function submitStorefrontApplication(formData: FormData) {
       }
     } catch (emailDispatchError) {
       console.error('CRITICAL EMAIL DISPATCH FAILED:', emailDispatchError);
-      // We intentionally do not throw here. The user's application was saved to the database.
-      // We don't want to show them an error screen just because an email bounced.
     }
 
     // 4. REVALIDATE AND RETURN
@@ -80,7 +78,7 @@ export async function updateApplicationStatus(id: string, newStatus: 'BUILDING' 
 
     if (updateError) throw updateError;
 
-    // 2. If approved (BUILDING), automatically initialize the storefront
+    // 2. If approved (BUILDING), automatically initialize the storefront WITH DEFAULT DATA
     if (newStatus === 'BUILDING' && app) {
       let baseSlug = (app.business_name || 'store').toLowerCase().replace(/[^a-z0-9]+/g, '-');
       let finalSlug = baseSlug;
@@ -91,22 +89,38 @@ export async function updateApplicationStatus(id: string, newStatus: 'BUILDING' 
         finalSlug = `${baseSlug}-${Math.random().toString(36).substring(2, 6)}`;
       }
 
-      // Insert into the active storefronts table
+      // THE FIX: Provide the full default template so the UI doesn't crash from missing data
       const { error: insertError } = await supabase.from('storefronts').insert([{
         business_name: app.business_name,
         contact_email: app.contact_email || app.applicant_email, 
         status: 'BUILDING',
         slug: finalSlug, 
-        plan_tier: app.selected_plan || 'foundation' 
+        plan_tier: app.selected_plan || 'foundation',
+        
+        // --- INJECTING DEFAULT CONTENT SKELETON ---
+        theme_style: app.selected_vibe || 'industrial',
+        tagline: app.business_description ? app.business_description.substring(0, 50) + '...' : 'Welcome to our new digital storefront.',
+        subtext: app.business_description || 'We are getting our operations online. Stay tuned.',
+        hero_layout: 'center',
+        content_layout: 'classic',
+        is_template: false,
+        hero_image: 'https://via.placeholder.com/1920x1080/000000/333333?text=NO+IMAGE',
+        about_image: 'https://via.placeholder.com/800x800/000000/333333?text=NO+IMAGE',
+        primary_cta: 'Get Started',
+        secondary_cta: 'Learn More',
+        about_heading: 'About Us',
+        about_bio: 'We are a local business dedicated to providing top-tier services and products to our community. Check out our gallery to see our recent work!',
+        social_url: 'https://facebook.com',
+        gallery_items: []
       }]);
       
       if (insertError) {
         console.error('Failed to initialize storefront:', insertError);
-        // We log the error but don't fail the whole action so the status still updates
       }
     }
 
     revalidatePath('/dashboard/storefronts');
+    revalidatePath('/dashboard'); // Ensure homepage refreshes
     return { success: true };
   } catch (error: any) {
     console.error('STATUS UPDATE ERROR:', error);

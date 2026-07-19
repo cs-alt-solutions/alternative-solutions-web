@@ -8,7 +8,8 @@
   
   --color-bg-app: #09090b;          /* Deepest Black */
   --color-bg-surface-100: #121214;  /* Panel Surface */
-  --color-bg-surface-200: #1a1a1e; /* Elevated Card */
+  --color-bg-surface-200: #1a1a1e;  /* Elevated Card */
+  --color-stardust: #0a0a0c;        /* Deep Space Black */
   
   --color-border-subtle: #27272a;   /* Stealth Border */
   --color-text-main: #f4f4f5;       /* High Contrast White */
@@ -23,8 +24,9 @@ body {
 }
 
 @layer components {
-  /* NEW: STARDUST BACKGROUND (Standardized Texture) */
+  /* NEW: STARDUST BACKGROUND (Standardized Texture + Base Color) */
   .bg-stardust {
+    background-color: var(--color-stardust);
     background-image: radial-gradient(rgba(255, 255, 255, 0.05) 1px, transparent 1px);
     background-size: 32px 32px;
   }

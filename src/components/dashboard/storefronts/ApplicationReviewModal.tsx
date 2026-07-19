@@ -4,7 +4,6 @@ import React, { useEffect, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { X, CheckCircle2, XCircle, Loader2, AlertTriangle } from 'lucide-react';
 import { supabase } from '@/utils/supabase';
-// --- VERIFIED IMPORT PATH ---
 import { updateApplicationStatus } from '@/app/actions/storefront_applications'; 
 
 export default function ApplicationReviewModal() {
@@ -45,8 +44,9 @@ export default function ApplicationReviewModal() {
     const result = await updateApplicationStatus(app.id, newStatus);
     
     if (result.success) {
-      router.push('/dashboard/storefronts'); // Redirect back to list
-      router.refresh(); // Refresh the data
+      // THE FIX: Route back to the main homepage!
+      router.push('/dashboard'); 
+      router.refresh(); 
     } else {
       setErrorMsg(result.error || "Failed to update status");
       setIsProcessing(false);
@@ -69,7 +69,7 @@ export default function ApplicationReviewModal() {
             <AlertTriangle className="text-red-500 w-10 h-10 mb-2" />
             <h3 className="text-white font-bold uppercase tracking-widest">Access Denied</h3>
             <p className="text-xs text-zinc-500">{errorMsg || "Application record not found."}</p>
-            <button onClick={() => router.push('/dashboard/storefronts')} className="mt-4 px-6 py-2 bg-zinc-900 hover:bg-zinc-800 text-white text-xs font-bold uppercase tracking-widest rounded-lg border border-zinc-700 transition">
+            <button onClick={() => router.push('/dashboard')} className="mt-4 px-6 py-2 bg-zinc-900 hover:bg-zinc-800 text-white text-xs font-bold uppercase tracking-widest rounded-lg border border-zinc-700 transition">
               Close
             </button>
           </div>
@@ -80,7 +80,8 @@ export default function ApplicationReviewModal() {
                 <h2 className="text-xl font-black text-white uppercase tracking-wider">{app.business_name}</h2>
                 <p className="text-xs text-zinc-500 uppercase tracking-widest mt-1">Application Dossier</p>
               </div>
-              <button onClick={() => router.push('/dashboard/storefronts')} className="text-zinc-500 hover:text-white transition bg-zinc-900 p-2 rounded-lg border border-zinc-800">
+              {/* THE FIX: Close button returns to homepage */}
+              <button onClick={() => router.push('/dashboard')} className="text-zinc-500 hover:text-white transition bg-zinc-900 p-2 rounded-lg border border-zinc-800">
                 <X size={16} />
               </button>
             </div>

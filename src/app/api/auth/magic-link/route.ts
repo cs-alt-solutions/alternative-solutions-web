@@ -5,17 +5,18 @@ import { createClient } from '@supabase/supabase-js';
 // UPDATED: Pointing to the correct components directory
 import MagicLinkEmail from '@/components/emails/MagicLinkEmail'; 
 
-// Initialize Resend
-const resend = new Resend(process.env.RESEND_API_KEY);
-
-// We MUST use the Supabase Service Role Key here to bypass row-level security
-// and generate an admin auth link without triggering Supabase's default email.
-const supabaseAdmin = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-);
-
 export async function POST(request: Request) {
+  // 1. INITIALIZE CLIENTS INSIDE THE HANDLER
+  // This prevents Vercel from crashing during the static build phase
+  const resend = new Resend(process.env.RESEND_API_KEY);
+
+  // We MUST use the Supabase Service Role Key here to bypass row-level security
+  // and generate an admin auth link without triggering Supabase's default email.
+  const supabaseAdmin = createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!
+  );
+
   try {
     const { email } = await request.json();
 
@@ -23,7 +24,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Email is required' }, { status: 400 });
     }
 
-    // 1. Generate the raw magic link silently via Supabase Admin
+    // 2. Generate the raw magic link silently via Supabase Admin
     const { data, error } = await supabaseAdmin.auth.admin.generateLink({
       type: 'magiclink',
       email: email,
@@ -34,7 +35,7 @@ export async function POST(request: Request) {
       throw error;
     }
 
-    // 2. Fire our custom React Email via Resend using the generated link
+    // 3. Fire our custom React Email via Resend using the generated link
     const { data: resendData, error: resendError } = await resend.emails.send({
       from: 'Courtney <hello@alternativesolutions.io>', // Matches your verified Resend domain
       to: [email],
