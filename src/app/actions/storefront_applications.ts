@@ -6,14 +6,12 @@ import { Resend } from 'resend';
 import StorefrontConfirmationEmail from '@/components/emails/StorefrontConfirmationEmail';
 
 // Initialize Resend
-// IMPORTANT: Ensure you have RESEND_API_KEY in your .env.local file
 const resend = new Resend(process.env.RESEND_API_KEY);
 
 export async function submitStorefrontApplication(formData: FormData) {
   const supabase = await createClient();
 
   try {
-    // 1. Map the data strictly to your SQL schema's top-level columns
     const payload = {
       applicant_name: formData.get('name')?.toString() || '',
       applicant_email: formData.get('email')?.toString() || '',
@@ -30,14 +28,12 @@ export async function submitStorefrontApplication(formData: FormData) {
       contact_email: formData.get('email')?.toString() || ''
     };
 
-    // 2. SAVE TO DATABASE (Your confirmed working step)
     const { error } = await supabase.from('storefront_applications').insert([payload]);
     if (error) throw error;
 
-    // 3. THE IGNITION: DISPATCH THE EMAIL
     try {
-      const { data, error: emailError } = await resend.emails.send({
-        from: 'Courtney <hello@alternativesolutions.io>', // Update this to your verified sending domain
+      const { error: emailError } = await resend.emails.send({
+        from: 'Courtney <hello@alternativesolutions.io>', 
         to: payload.applicant_email,
         subject: `Application received: ${payload.business_name}`,
         react: StorefrontConfirmationEmail({ 
@@ -46,16 +42,11 @@ export async function submitStorefrontApplication(formData: FormData) {
         })
       });
 
-      if (emailError) {
-        console.error('Resend API Error:', emailError);
-      } else {
-        console.log(`Success: Application confirmation dispatched to ${payload.applicant_email}`);
-      }
+      if (emailError) console.error('Resend API Error:', emailError);
     } catch (emailDispatchError) {
       console.error('CRITICAL EMAIL DISPATCH FAILED:', emailDispatchError);
     }
 
-    // 4. REVALIDATE AND RETURN
     revalidatePath('/dashboard/storefronts');
     return { success: true };
   } catch (error: any) {
@@ -68,7 +59,6 @@ export async function updateApplicationStatus(id: string, newStatus: 'BUILDING' 
   const supabase = await createClient();
   
   try {
-    // 1. Update the application status
     const { data: app, error: updateError } = await supabase
       .from('storefront_applications')
       .update({ status: newStatus })
@@ -78,31 +68,28 @@ export async function updateApplicationStatus(id: string, newStatus: 'BUILDING' 
 
     if (updateError) throw updateError;
 
-    // 2. If approved (BUILDING), automatically initialize the storefront WITH DEFAULT DATA
     if (newStatus === 'BUILDING' && app) {
       let baseSlug = (app.business_name || 'store').toLowerCase().replace(/[^a-z0-9]+/g, '-');
       let finalSlug = baseSlug;
 
-      // Ensure slug uniqueness
       const { data: existing } = await supabase.from('storefronts').select('slug').eq('slug', finalSlug);
       if (existing && existing.length > 0) {
         finalSlug = `${baseSlug}-${Math.random().toString(36).substring(2, 6)}`;
       }
 
-      // THE FIX: Provide the full default template so the UI doesn't crash from missing data
+      // 🚨 THE FIX: Providing ALL layout defaults so Supabase never saves a null column
       const { error: insertError } = await supabase.from('storefronts').insert([{
         business_name: app.business_name,
         contact_email: app.contact_email || app.applicant_email, 
         status: 'BUILDING',
         slug: finalSlug, 
         plan_tier: app.selected_plan || 'foundation',
-        
-        // --- INJECTING DEFAULT CONTENT SKELETON ---
         theme_style: app.selected_vibe || 'industrial',
         tagline: app.business_description ? app.business_description.substring(0, 50) + '...' : 'Welcome to our new digital storefront.',
         subtext: app.business_description || 'We are getting our operations online. Stay tuned.',
         hero_layout: 'center',
         content_layout: 'classic',
+        about_layout: 'split', // <--- FIXED: Initializing to split instead of null!
         is_template: false,
         hero_image: 'https://via.placeholder.com/1920x1080/000000/333333?text=NO+IMAGE',
         about_image: 'https://via.placeholder.com/800x800/000000/333333?text=NO+IMAGE',
@@ -114,13 +101,11 @@ export async function updateApplicationStatus(id: string, newStatus: 'BUILDING' 
         gallery_items: []
       }]);
       
-      if (insertError) {
-        console.error('Failed to initialize storefront:', insertError);
-      }
+      if (insertError) console.error('Failed to initialize storefront:', insertError);
     }
 
     revalidatePath('/dashboard/storefronts');
-    revalidatePath('/dashboard'); // Ensure homepage refreshes
+    revalidatePath('/dashboard'); 
     return { success: true };
   } catch (error: any) {
     console.error('STATUS UPDATE ERROR:', error);

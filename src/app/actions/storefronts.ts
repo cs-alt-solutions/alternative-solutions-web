@@ -36,6 +36,7 @@ export async function createStorefront(formData: FormData) {
     theme_style: formData.get('theme_style') || 'industrial',
     hero_layout: formData.get('hero_layout') || 'center',
     content_layout: formData.get('content_layout') || 'classic',
+    about_layout: formData.get('about_layout') || 'split', // 🚨 ADDED
     is_template: formData.get('is_template') === 'true',
     hero_image: heroUrl, 
     about_image: aboutUrl,
@@ -58,6 +59,8 @@ export async function createStorefront(formData: FormData) {
 
 export async function updateStorefrontCore(id: string, formData: FormData) {
   const supabase = await createClient();
+  
+  // 🚨 THE FIX: Added all missing column names to the update payload
   const updateData = {
     business_name: formData.get('business_name'),
     slug: formData.get('slug'),
@@ -68,6 +71,13 @@ export async function updateStorefrontCore(id: string, formData: FormData) {
     brand_color: formData.get('brand_color'),
     theme_style: formData.get('theme_style'),
     hero_layout: formData.get('hero_layout'),
+    content_layout: formData.get('content_layout'), // 🚨 ADDED
+    about_layout: formData.get('about_layout'), // 🚨 ADDED
+    about_heading: formData.get('about_heading'), // 🚨 ADDED
+    about_bio: formData.get('about_bio'), // 🚨 ADDED
+    capabilities_heading: formData.get('capabilities_heading'), // 🚨 ADDED
+    gallery_heading: formData.get('gallery_heading'), // 🚨 ADDED
+    contact_email: formData.get('contact_email'), // 🚨 ADDED
     capabilities: formData.get('capabilities') ? JSON.parse(formData.get('capabilities') as string) : [],
   };
 

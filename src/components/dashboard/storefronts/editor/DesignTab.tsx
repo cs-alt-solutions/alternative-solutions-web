@@ -1,4 +1,3 @@
-// src/components/dashboard/storefronts/editor/DesignTab.tsx
 'use client';
 
 import React from 'react';
@@ -6,9 +5,13 @@ import VisualArchitecture from './core/VisualArchitecture';
 
 export default function DesignTab({ formData, setFormData }: { formData: any, setFormData: any }) {
   
-  // We keep the local handler, but it now updates the MASTER state in the parent
-  const handleVisualSelect = (key: string, value: string) => {
-    setFormData((prev: any) => ({ ...prev, [key]: value }));
+  // 🚨 THE FIX: Use an explicit mapping to ensure the database 
+  // column name (left) always matches the UI selection (right).
+  const handleVisualSelect = (dbColumn: string, value: string) => {
+    setFormData((prev: any) => ({ 
+      ...prev, 
+      [dbColumn]: value 
+    }));
   };
 
   return (
