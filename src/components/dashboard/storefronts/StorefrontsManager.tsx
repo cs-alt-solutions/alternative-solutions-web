@@ -1,10 +1,12 @@
+// src/components/dashboard/storefronts/StorefrontsManager.tsx
 'use client';
 
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { ExternalLink, Pen, CreditCard, Globe, Trash2 } from 'lucide-react';
+import { ExternalLink, Pen, CreditCard, Globe, Trash2, ClipboardList } from 'lucide-react';
 import StorefrontEditor from './editor/StorefrontEditor';
 import NewStorefrontModal from './NewStorefrontModal';
+import ApplicationReviewModal from './ApplicationReviewModal';
 import { deleteStorefront } from '@/app/actions/storefronts';
 import { WEBSITE_COPY } from '@/utils/glossary';
 
@@ -12,8 +14,10 @@ export default function StorefrontsManager({ initialData }: { initialData: any[]
   const router = useRouter();
   const [storefronts, setStorefronts] = useState(initialData || []);
   const [editingStoreId, setEditingStoreId] = useState<string | null>(null);
+  
+  // State to hold the specific application we are reviewing
+  const [reviewingApp, setReviewingApp] = useState<any | null>(null);
 
-  // We map to the single 'STOREFRONT' key defined in your config/dashboard.ts
   const copy = WEBSITE_COPY.DASHBOARD.STOREFRONT;
 
   useEffect(() => {
@@ -22,7 +26,6 @@ export default function StorefrontsManager({ initialData }: { initialData: any[]
 
   const activeStore = editingStoreId ? storefronts.find(s => s.id === editingStoreId) : null;
 
-  // Local helper to avoid TypeScript errors regarding missing config keys
   const getStatusBadge = (status: string) => {
     const s = status?.toUpperCase();
     const baseClass = "inline-flex items-center gap-2 px-2.5 py-1 rounded-md text-[10px] font-black uppercase tracking-widest border";
@@ -60,7 +63,7 @@ export default function StorefrontsManager({ initialData }: { initialData: any[]
   }
 
   return (
-    <div className="space-y-6 w-full max-w-7xl mx-auto p-6">
+    <div className="space-y-6 w-full max-w-7xl mx-auto p-6 relative">
       <div className="flex justify-between items-center border-b border-zinc-800 pb-4">
         <div>
           <h1 className="text-3xl font-black text-white tracking-tight">STOREFRONT ENGINE</h1>
@@ -83,17 +86,20 @@ export default function StorefrontsManager({ initialData }: { initialData: any[]
             </thead>
             <tbody className="divide-y divide-zinc-800">
               {storefronts.map((store) => {
-                const planTier = store.plan_tier || 'Starter ($5/mo)';
-                const displayDomain = store.custom_domain || `/${store.slug}`;
+                const planTier = store.plan_tier || store.selected_plan || 'Starter ($5/mo)';
+                const displayDomain = store.custom_domain || store.existing_domain || `/${store.slug || 'pending'}`;
 
                 return (
                   <tr key={store.id} className="hover:bg-zinc-800/50 transition-colors group">
                     <td className="px-6 py-4 font-bold text-white flex items-center gap-3">
                       <div className="w-8 h-8 rounded-full overflow-hidden border border-zinc-700 bg-zinc-950 shrink-0">
                         {store.hero_image ? (
+                          // eslint-disable-next-line @next/next/no-img-element
                           <img src={store.hero_image} alt="Hero" className="w-full h-full object-cover" />
                         ) : (
-                          <div className="w-full h-full bg-zinc-800" />
+                          <div className="w-full h-full bg-zinc-800 flex items-center justify-center text-zinc-600 text-xs">
+                             {store.business_name?.charAt(0).toUpperCase()}
+                          </div>
                         )}
                       </div>
                       {store.business_name}
@@ -102,31 +108,49 @@ export default function StorefrontsManager({ initialData }: { initialData: any[]
                     <td className="px-6 py-4 font-mono text-zinc-400 text-xs">{planTier}</td>
                     <td className="px-6 py-4">{getStatusBadge(store.status)}</td>
                     <td className="px-6 py-4 text-right">
-                      <div className="flex justify-end gap-4 opacity-50 group-hover:opacity-100 transition-opacity">
+                      
+                      {store.status === 'PENDING' ? (
                         <button
-                           onClick={() => setEditingStoreId(store.id)}
-                          className="text-zinc-400 hover:text-cyan-400 transition-colors"
-                           title="Edit Site Data"
+                          onClick={() => setReviewingApp({
+                            ...store,
+                            selected_plan: store.selected_plan || store.plan_tier,
+                            selected_vibe: store.selected_vibe || store.theme_style,
+                            business_description: store.business_description || store.subtext || store.tagline,
+                            applicant_name: store.applicant_name || store.primary_contact || 'Pending',
+                            applicant_email: store.applicant_email || store.contact_email || 'Pending'
+                          })}
+                          className="flex items-center justify-end gap-2 text-cyan-400 hover:text-cyan-300 font-bold text-xs uppercase tracking-widest transition-colors ml-auto bg-cyan-500/10 px-3 py-1.5 rounded-md border border-cyan-500/20"
                         >
-                          <Pen className="w-4 h-4" />
+                          <ClipboardList className="w-3 h-3" /> Review
                         </button>
-                        <a
-                           href={store.custom_domain ? `https://${store.custom_domain}` : `http://localhost:3000/${store.slug}`}
-                           target="_blank"
-                           rel="noopener noreferrer"
-                           className="text-zinc-400 hover:text-fuchsia-400 transition-colors"
-                           title="View Live Site"
-                        >
-                          <ExternalLink className="w-4 h-4" />
-                        </a>
-                        <button
-                          onClick={() => handleDeleteStorefront(store.id, store.business_name)}
-                          className="text-zinc-400 hover:text-red-500 transition-colors"
-                          title="Delete Storefront"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </button>
-                      </div>
+                      ) : (
+                        <div className="flex justify-end gap-4 opacity-50 group-hover:opacity-100 transition-opacity">
+                          <button
+                            onClick={() => setEditingStoreId(store.id)}
+                            className="text-zinc-400 hover:text-cyan-400 transition-colors"
+                            title="Edit Site Data"
+                          >
+                            <Pen className="w-4 h-4" />
+                          </button>
+                          <a
+                            href={store.custom_domain ? `https://${store.custom_domain}` : `http://localhost:3000/${store.slug}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-zinc-400 hover:text-fuchsia-400 transition-colors"
+                            title="View Live Site"
+                          >
+                            <ExternalLink className="w-4 h-4" />
+                          </a>
+                          <button
+                            onClick={() => handleDeleteStorefront(store.id, store.business_name)}
+                            className="text-zinc-400 hover:text-red-500 transition-colors"
+                            title="Delete Storefront"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        </div>
+                      )}
+
                     </td>
                   </tr>
                 );
@@ -135,6 +159,14 @@ export default function StorefrontsManager({ initialData }: { initialData: any[]
           </table>
         </div>
       </div>
+
+      {/* Render block for the modal using standard closure matching its props contract */}
+      {reviewingApp && (
+        <ApplicationReviewModal
+          app={reviewingApp}
+          onClose={() => setReviewingApp(null)}
+        />
+      )}
     </div>
   );
 }

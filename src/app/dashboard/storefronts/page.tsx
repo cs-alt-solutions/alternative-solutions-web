@@ -7,11 +7,18 @@ import ApplicationReviewModal from '@/components/dashboard/storefronts/Applicati
 
 export const dynamic = 'force-dynamic';
 
-export default async function StorefrontsPage() {
+export default async function StorefrontsPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ application?: string }>;
+}) {
   const supabase = await createClient();
+  
+  // 1. Unwrap the Promise to intercept the URL parameter safely
+  const resolvedSearchParams = await searchParams;
+  const applicationId = resolvedSearchParams?.application;
 
-  // THE FIX: We use an '.or()' statement so we don't accidentally hide 
-  // your older storefronts that have a blank (null) status!
+  // 2. Fetch your established storefronts for the main dashboard view
   const { data: storefronts, error } = await supabase
     .from('storefronts')
     .select('*')
@@ -22,13 +29,32 @@ export default async function StorefrontsPage() {
     console.error("Failed to fetch active storefronts:", error);
   }
 
+  // 3. If an application ID is in the URL, fetch its exact data from the intake schema
+  let applicationToReview = null;
+  if (applicationId) {
+    const { data: appData, error: appError } = await supabase
+      .from('storefront_applications')
+      .select('*')
+      .eq('id', applicationId)
+      .single();
+
+    if (appData && !appError) {
+      applicationToReview = appData;
+    } else {
+      console.error("Failed to fetch specific application from URL:", appError);
+    }
+  }
+
   return (
     <main className="w-full">
       <StorefrontsManager initialData={storefronts || []} />
       
-      <Suspense fallback={null}>
-        <ApplicationReviewModal />
-      </Suspense>
+      {/* 4. Only mount the modal if the database successfully returned the application data */}
+      {applicationToReview && (
+        <Suspense fallback={null}>
+          <ApplicationReviewModal app={applicationToReview} />
+        </Suspense>
+      )}
     </main>
   );
 }

@@ -4,6 +4,7 @@ import { createClient } from '@/utils/supabase/server';
 import { revalidatePath } from 'next/cache';
 import { Resend } from 'resend';
 import StorefrontConfirmationEmail from '@/components/emails/StorefrontConfirmationEmail';
+import AdminIntakeEmail from '@/components/emails/AdminIntakeEmail';
 
 // Initialize Resend
 const resend = new Resend(process.env.RESEND_API_KEY);
@@ -28,12 +29,15 @@ export async function submitStorefrontApplication(formData: FormData) {
       contact_email: formData.get('email')?.toString() || ''
     };
 
+    // 1. Save to Database
     const { error } = await supabase.from('storefront_applications').insert([payload]);
     if (error) throw error;
 
+    // 2. Dispatch Emails
     try {
-      const { error: emailError } = await resend.emails.send({
-        from: 'Courtney <hello@alternativesolutions.io>', 
+      // 📧 DISPATCH A: Send Confirmation to the Client
+      const { error: clientEmailError } = await resend.emails.send({
+        from: 'Courtney <hello@alternativesolutions.io>', // Update if unverified
         to: payload.applicant_email,
         subject: `Application received: ${payload.business_name}`,
         react: StorefrontConfirmationEmail({ 
@@ -42,7 +46,30 @@ export async function submitStorefrontApplication(formData: FormData) {
         })
       });
 
-      if (emailError) console.error('Resend API Error:', emailError);
+      if (clientEmailError) console.error('Resend API Error (Client):', clientEmailError);
+
+      // 📧 DISPATCH B: Send Intake Alert to YOU
+      const { error: adminEmailError } = await resend.emails.send({
+        from: 'System <system@alternativesolutions.io>', // Update if unverified
+        to: 'YOUR_ACTUAL_EMAIL@gmail.com', // ⚠️ CHANGE THIS TO YOUR EMAIL
+        subject: `🚨 NEW LEAD: ${payload.business_name}`,
+        react: AdminIntakeEmail({
+          name: payload.applicant_name,
+          email: payload.applicant_email,
+          phone: payload.applicant_phone,
+          socials: formData.get('socials')?.toString() || '',
+          existingWebsite: payload.existing_domain,
+          projectScope: payload.business_description,
+          businessName: payload.business_name,
+          selectedPlan: payload.selected_plan,
+          selectedVibe: payload.selected_vibe,
+          wantsCustom: payload.wants_custom,
+          isPriority: payload.is_priority
+        })
+      });
+
+      if (adminEmailError) console.error('Resend API Error (Admin):', adminEmailError);
+
     } catch (emailDispatchError) {
       console.error('CRITICAL EMAIL DISPATCH FAILED:', emailDispatchError);
     }
@@ -77,7 +104,7 @@ export async function updateApplicationStatus(id: string, newStatus: 'BUILDING' 
         finalSlug = `${baseSlug}-${Math.random().toString(36).substring(2, 6)}`;
       }
 
-      // 🚨 THE FIX: Providing ALL layout defaults so Supabase never saves a null column
+      // 🚨 PROVISION A: Initialize the storefront canvas
       const { error: insertError } = await supabase.from('storefronts').insert([{
         business_name: app.business_name,
         contact_email: app.contact_email || app.applicant_email, 
@@ -89,7 +116,7 @@ export async function updateApplicationStatus(id: string, newStatus: 'BUILDING' 
         subtext: app.business_description || 'We are getting our operations online. Stay tuned.',
         hero_layout: 'center',
         content_layout: 'classic',
-        about_layout: 'split', // <--- FIXED: Initializing to split instead of null!
+        about_layout: 'split',
         is_template: false,
         hero_image: 'https://via.placeholder.com/1920x1080/000000/333333?text=NO+IMAGE',
         about_image: 'https://via.placeholder.com/800x800/000000/333333?text=NO+IMAGE',
@@ -102,9 +129,21 @@ export async function updateApplicationStatus(id: string, newStatus: 'BUILDING' 
       }]);
       
       if (insertError) console.error('Failed to initialize storefront:', insertError);
+
+      // 🚨 PROVISION B: Initialize the secure Client Portal hub
+      const { error: clientError } = await supabase.from('clients').insert([{
+        id: finalSlug, // We bind the portal to the exact same slug as the storefront
+        name: app.business_name,
+        primary_contact: app.applicant_name,
+        email: app.contact_email || app.applicant_email,
+        status: 'active'
+      }]);
+
+      if (clientError) console.error('Failed to initialize client portal:', clientError);
     }
 
     revalidatePath('/dashboard/storefronts');
+    revalidatePath('/dashboard/clients'); // Force a refresh of the clients directory
     revalidatePath('/dashboard'); 
     return { success: true };
   } catch (error: any) {

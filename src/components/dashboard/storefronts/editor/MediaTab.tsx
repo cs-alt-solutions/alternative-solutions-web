@@ -2,7 +2,7 @@
 'use client';
 
 import React, { useState, useRef } from 'react';
-import { UploadCloud, Image as ImageIcon, X, LayoutGrid, Trash2 } from 'lucide-react';
+import { UploadCloud, Image as ImageIcon, X, LayoutGrid, Trash2, Layers } from 'lucide-react';
 import { updateStorefrontMedia, updateStorefrontGallery, removeImageFromGallery } from '@/app/actions/storefronts';
 
 export default function MediaTab({ formData, setFormData }: { formData: any, setFormData: any }) {
@@ -14,7 +14,7 @@ export default function MediaTab({ formData, setFormData }: { formData: any, set
   // Safely parse live gallery from master state
   const liveGallery = (formData.gallery_items || []).map((item: any, i: number) => {
     if (typeof item === 'string') {
-      return { id: `gal-${i}`, imageUrl: item, title: '', description: '' };
+      return { id: `gal-${i}`, imageUrl: item, title: '', description: '', category: '' };
     }
     return item;
   });
@@ -47,14 +47,14 @@ export default function MediaTab({ formData, setFormData }: { formData: any, set
     setFiles(files.filter((_, i) => i !== index));
   }
 
-  // 🚨 Sync Local Metadata to Master State
+  // Sync Local Metadata to Master State
   const handleMetaChange = (index: number, field: string, value: string) => {
     const updated = [...liveGallery];
     updated[index] = { ...updated[index], [field]: value };
     setFormData((prev: any) => ({ ...prev, gallery_items: updated }));
   };
 
-  // 🚨 Handle Deletion & Sync Master State
+  // Handle Deletion & Sync Master State
   async function handleDeleteLiveImage(imageUrlToRemove: string) {
     if (!window.confirm("Remove this image from live gallery?")) return;
     setIsDeleting(imageUrlToRemove);
@@ -159,8 +159,31 @@ export default function MediaTab({ formData, setFormData }: { formData: any, set
                     </button>
                   </div>
                 </div>
+                
                 <div className="space-y-2">
                   <input type="text" placeholder="Title (e.g. Pan Seared Foie Gras)" value={item.title || ''} onChange={(e) => handleMetaChange(i, 'title', e.target.value)} className="w-full bg-zinc-950 border border-zinc-800 rounded p-2.5 text-xs text-white focus:border-emerald-500 outline-none transition-colors font-bold" />
+                  
+                  {/* 🚨 THE DYNAMIC SERVICE BRIDGE DROPDOWN 🚨 */}
+                  <div className="relative">
+                    <Layers className="w-3.5 h-3.5 text-emerald-500 absolute left-2.5 top-3 pointer-events-none" />
+                    <select
+                      value={item.category || ''}
+                      onChange={(e) => handleMetaChange(i, 'category', e.target.value)}
+                      className="w-full bg-zinc-950 border border-zinc-800 rounded pl-8 pr-3 py-2.5 text-xs text-zinc-300 focus:border-emerald-500 outline-none transition-colors appearance-none cursor-pointer"
+                    >
+                      <option value="">-- General Portfolio (Bottom) --</option>
+                      {(formData.capabilities || []).map((cap: any, idx: number) => {
+                        const serviceTitle = typeof cap === 'string' ? cap : cap.title;
+                        if (!serviceTitle) return null;
+                        return (
+                          <option key={idx} value={serviceTitle}>
+                            Attach to: {serviceTitle}
+                          </option>
+                        );
+                      })}
+                    </select>
+                  </div>
+
                   <textarea placeholder="Description (e.g. Served with truffle butter...)" value={item.description || ''} onChange={(e) => handleMetaChange(i, 'description', e.target.value)} rows={2} className="w-full bg-zinc-950 border border-zinc-800 rounded p-2.5 text-xs text-white focus:border-emerald-500 outline-none transition-colors resize-none" />
                 </div>
               </div>
