@@ -66,6 +66,29 @@ export const STOREFRONTS = {
     DESC: "See who is running their business on the Alternative Solutions Grid. (Clients can choose to remain anonymous).",
     EMPTY_STATE: "The grid is waiting. Be the first to start your build."
   },
+  // 🚀 SINGLE SOURCE OF TRUTH: All 3D Reel & Gallery copywriting and categories
+  GALLERY: {
+    TITLE_1: "Live Website",
+    TITLE_2: "Vibes",
+    PITCH_BOLD: "Real code. Real engines. Fictional brands.",
+    PITCH_REST: "These interactive production sandboxes showcase how our architecture scales across distinct aesthetics. Select a vibe below or hover over the deck to test-drive our builds.",
+    EMPTY_TITLE: "No Active Prototypes",
+    EMPTY_DESC: "Engine standing by for deployment.",
+    SECTOR_EMPTY_PRE: "No prototypes deployed in the",
+    SECTOR_EMPTY_POST: "sector yet.",
+    // Your exact 8 Foundational Vibes (plus the "All Vibes" reset selector)
+    VIBES: [
+      "All Vibes",
+      "Industrial",
+      "Neo-Brutalist",
+      "Cyberpunk",
+      "Minimalist",
+      "Elegant",
+      "Organtic",
+      "Editorial",
+      "Midnight Onyx"
+    ]
+  },
   FOOTER: { 
     TITLE: "Ready to launch your website?", 
     CTA: "Start Your Application" 
