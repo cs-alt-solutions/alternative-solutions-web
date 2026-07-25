@@ -90,3 +90,9 @@ body {
   scrollbar-width: none; /* Firefox */
   -ms-overflow-style: none; /* IE 10+ and Edge */
 }
+/* Continuous linear translation for the Ticker Tape Vibe Reel */
+@keyframes marquee {
+  0% { transform: translateX(0%); }
+  /* Moving exactly -25% shifts precisely 1 of the 4 duplicated list sets, creating an invisible, infinite loop! */
+  100% { transform: translateX(-25%); }
+}
