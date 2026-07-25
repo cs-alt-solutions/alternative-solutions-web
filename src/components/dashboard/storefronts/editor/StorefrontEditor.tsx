@@ -1,16 +1,27 @@
+// src/components/dashboard/storefronts/editor/StorefrontEditor.tsx
 'use client';
 
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { supabase } from '@/utils/supabase';
-import { X, PenTool, Palette, Image as ImageIcon, Layers, MonitorSmartphone, SlidersHorizontal, RefreshCw, Save, Loader2 } from 'lucide-react';
+import { X, PenTool, Palette, Image as ImageIcon, Layers, CreditCard, MonitorSmartphone, SlidersHorizontal, RefreshCw, Save, Loader2 } from 'lucide-react';
 
 import CoreTab from './CoreTab';
 import DesignTab from './DesignTab';
 import MediaTab from './MediaTab';
 import CapabilitiesTab from './CapabilitiesTab';
+import BillingTab from './BillingTab';
+import DangerZoneCard from './DangerZoneCard'; // 🚀 Added modular danger zone import
 
-export default function StorefrontEditor({ store, onClose }: { store: any, onClose: () => void }) {
+export default function StorefrontEditor({ 
+  store, 
+  onClose, 
+  onDelete 
+}: { 
+  store: any; 
+  onClose: () => void; 
+  onDelete?: () => void; 
+}) {
   const router = useRouter();
   const [activeTab, setActiveTab] = useState('content');
   const [mobileView, setMobileView] = useState<'editor' | 'preview'>('editor');
@@ -50,10 +61,10 @@ export default function StorefrontEditor({ store, onClose }: { store: any, onClo
     { id: 'design', label: 'Architecture & Vibe', icon: Palette },
     { id: 'media', label: 'Media Ecosystem', icon: ImageIcon },
     { id: 'services', label: 'Services', icon: Layers }, 
+    { id: 'billing', label: 'Billing & Plan', icon: CreditCard },
   ];
 
   // --- BULLETPROOF URL RESOLUTION ---
-  // Checks multiple env variables, then falls back strictly to production.
   const PREVIEW_BASE_URL = process.env.NEXT_PUBLIC_SITE_URL || process.env.NEXT_PUBLIC_BASE_URL || 'https://alternativesolutions.io';
 
   return (
@@ -118,7 +129,6 @@ export default function StorefrontEditor({ store, onClose }: { store: any, onClo
                 {isSaving ? <Loader2 className="animate-spin w-3.5 h-3.5" /> : <Save className="w-3.5 h-3.5" />}
                 {isSaving ? 'SYNCING...' : 'SAVE ALL'}
               </button>
-              {/* Subtle Message Underneath */}
               <div className="h-3 mt-1 flex items-center justify-end w-full">
                  {saveMessage && (
                    <span className="text-emerald-400 text-[8.5px] font-mono font-bold tracking-widest uppercase animate-pulse">
@@ -130,11 +140,14 @@ export default function StorefrontEditor({ store, onClose }: { store: any, onClo
           </div>
 
           <div className="flex-1 overflow-y-auto custom-scrollbar bg-zinc-950">
-            {/* PASSING MASTER STATE DOWN TO TABS */}
             {activeTab === 'content' && <CoreTab formData={formData} setFormData={setFormData} />}
             {activeTab === 'design' && <DesignTab formData={formData} setFormData={setFormData} />}
             {activeTab === 'media' && <MediaTab formData={formData} setFormData={setFormData} />}
             {activeTab === 'services' && <CapabilitiesTab formData={formData} setFormData={setFormData} />}
+            {activeTab === 'billing' && <BillingTab formData={formData} setFormData={setFormData} />}
+            
+            {/* 🚀 THE INTENTIONAL DANGER ZONE RENDERED AT BOTTOM OF WORKSPACE */}
+            <DangerZoneCard businessName={store.business_name} onDelete={onDelete} />
           </div>
         </div>
 

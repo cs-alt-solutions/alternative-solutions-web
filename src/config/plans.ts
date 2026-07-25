@@ -1,10 +1,20 @@
 /* src/config/plans.ts */
 
-export const SUBSCRIPTION_PLANS = [
+export interface SubscriptionPlan {
+  id: string;
+  name: string;
+  price: string;
+  stripeLink: string;
+  description: string;
+  features: string[];
+}
+
+export const SUBSCRIPTION_PLANS: SubscriptionPlan[] = [
   {
     id: 'standard',
     name: 'The Standard',
     price: '5',
+    stripeLink: 'https://support.alternativesolutions.io/b/standard_5',
     description: 'Get your business online today without the DIY headache.',
     features: [
       'Full custom website build & deployment.',
@@ -17,6 +27,7 @@ export const SUBSCRIPTION_PLANS = [
     id: 'professional',
     name: 'The Professional',
     price: '15',
+    stripeLink: 'https://support.alternativesolutions.io/b/professional_15',
     description: 'Advanced setup with direct connection to your own custom web address.',
     features: [
       'Everything included in The Standard plan.',
