@@ -1,17 +1,7 @@
 // src/components/dashboard/storefronts/editor/core/StoryAbout.tsx
 import React, { useEffect } from 'react';
 import { BookOpen, Instagram, Facebook, Twitter, Linkedin, Send, Youtube, Sparkles, RefreshCw } from 'lucide-react';
-
-// 🚀 SINGLE SOURCE OF TRUTH: Your Alternative Solutions HQ Routing
-// (If your exact URL paths differ slightly, just tweak these strings and the whole system obeys!)
-const ALT_SOLUTIONS_SOCIALS: Record<string, string> = {
-  instagram: 'https://instagram.com/altsolutionsio',
-  facebook: 'https://facebook.com/M0mmaB3ar13',
-  twitter: 'https://x.com/altsolutionsio',
-  linkedin: 'https://linkedin.com/company/altsolutionsio',
-  youtube: 'https://youtube.com/@altsolutionsio',
-  telegram: 'https://t.me/Mommabear22',
-};
+import { ALT_SOLUTIONS_HQ } from '@/config/agency';
 
 const SOCIAL_PLATFORMS = [
   { id: 'instagram', icon: Instagram, placeholder: 'instagram handle' },
@@ -32,7 +22,7 @@ export default function StoryAbout({ formData, handleChange, setFormData }: { fo
         const currentSocials = prev.social_links || {};
         
         // Check if any HQ link is missing from the current state
-        const needsInjection = Object.entries(ALT_SOLUTIONS_SOCIALS).some(
+        const needsInjection = Object.entries(ALT_SOLUTIONS_HQ).some(
           ([key, val]) => !currentSocials[key] || currentSocials[key] === ''
         );
 
@@ -40,7 +30,7 @@ export default function StoryAbout({ formData, handleChange, setFormData }: { fo
           return {
             ...prev,
             social_links: {
-              ...ALT_SOLUTIONS_SOCIALS,
+              ...ALT_SOLUTIONS_HQ,
               ...currentSocials, // Preserves custom typed links, but fills all empties with HQ!
             }
           };
@@ -63,7 +53,7 @@ export default function StoryAbout({ formData, handleChange, setFormData }: { fo
       ...prev,
       social_links: {
         ...(prev.social_links || {}),
-        ...ALT_SOLUTIONS_SOCIALS
+        ...ALT_SOLUTIONS_HQ
       }
     }));
   };
@@ -126,7 +116,7 @@ export default function StoryAbout({ formData, handleChange, setFormData }: { fo
         <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
           {SOCIAL_PLATFORMS.map((p) => {
             const val = formData.social_links?.[p.id] || '';
-            const isHQLink = val && Object.values(ALT_SOLUTIONS_SOCIALS).includes(val);
+            const isHQLink = val && Object.values(ALT_SOLUTIONS_HQ).includes(val);
 
             return (
               <div 

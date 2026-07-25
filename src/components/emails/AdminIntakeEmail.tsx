@@ -3,34 +3,40 @@ import { Section, Text, Heading, Hr } from '@react-email/components';
 import BaseEmailLayout from '@/components/emails/BaseEmailLayout';
 import { EMAIL_COPY } from '@/config/emails';
 
-interface AdminIntakeEmailProps {
+// 🚀 BULLETPROOF INTERFACE: Made secondary fields optional so builds never fail
+export interface AdminIntakeEmailProps {
   name: string;
   email: string;
   phone?: string;
-  socials: string;
+  socials?: string;
   existingWebsite?: string;
-  projectScope: string;
-  businessName: string;
-  selectedPlan: string;
-  selectedVibe: string;
-  wantsCustom: boolean;
-  isPriority: boolean;
+  projectScope?: string;
+  businessName?: string;
+  selectedPlan?: string;
+  selectedVibe?: string;
+  wantsCustom?: boolean;
+  isPriority?: boolean;
 }
 
 export default function AdminIntakeEmail({
   name,
   email,
   phone,
-  socials,
-  existingWebsite,
-  projectScope,
+  socials = 'None provided',
+  existingWebsite = 'None provided',
+  projectScope = 'No scope provided',
   businessName,
-  selectedPlan,
-  selectedVibe,
-  wantsCustom,
-  isPriority
+  selectedPlan = 'Standard Tier',
+  selectedVibe = 'Midnight Standard',
+  wantsCustom = false,
+  isPriority = false
 }: AdminIntakeEmailProps) {
   const copy = EMAIL_COPY.ADMIN_INTAKE;
+
+  // Safe display resolvers to prevent any .toUpperCase() runtime exceptions
+  const displayBusiness = businessName || name || 'Unnamed Project';
+  const displayPlan = (selectedPlan || 'Standard Tier').toUpperCase();
+  const displayVibe = (selectedVibe || 'Midnight Standard').toUpperCase();
 
   return (
     <BaseEmailLayout>
@@ -39,7 +45,7 @@ export default function AdminIntakeEmail({
           🚨 NEW STOREFRONT APPLICATION
         </Heading>
         <Text className="text-slate-400 font-mono text-[10px] uppercase tracking-widest m-0">
-          Target: {businessName}
+          Target: {displayBusiness}
         </Text>
       </Section>
       
@@ -62,20 +68,20 @@ export default function AdminIntakeEmail({
         <Text className="text-white font-bold text-xs uppercase tracking-widest m-0 mb-4">
           Identity & Footprint
         </Text>
-        <Text className="text-zinc-300 text-sm m-0 mb-2"><strong className="text-white">Business Name:</strong> {businessName}</Text>
+        <Text className="text-zinc-300 text-sm m-0 mb-2"><strong className="text-white">Business Name:</strong> {displayBusiness}</Text>
         <Text className="text-zinc-300 text-sm m-0 mb-2"><strong className="text-white">Point of Contact:</strong> {name}</Text>
         <Text className="text-zinc-300 text-sm m-0 mb-2"><strong className="text-white">Email:</strong> {email}</Text>
         {phone && <Text className="text-zinc-300 text-sm m-0 mb-2"><strong className="text-white">Phone:</strong> {phone}</Text>}
-        <Text className="text-zinc-300 text-sm m-0 mb-2 mt-4"><strong className="text-white">Socials:</strong> {socials || 'None provided'}</Text>
-        <Text className="text-zinc-300 text-sm m-0"><strong className="text-white">Existing URL:</strong> {existingWebsite || 'None provided'}</Text>
+        <Text className="text-zinc-300 text-sm m-0 mb-2 mt-4"><strong className="text-white">Socials:</strong> {socials}</Text>
+        <Text className="text-zinc-300 text-sm m-0"><strong className="text-white">Existing URL:</strong> {existingWebsite}</Text>
       </Section>
 
       <Section className="mb-8 bg-zinc-950/50 rounded-lg border-l-4 border-l-emerald-400 p-6">
         <Text className="text-emerald-400 font-bold text-xs uppercase tracking-widest m-0 mb-4">
           Project Architecture
         </Text>
-        <Text className="text-zinc-300 text-sm m-0 mb-2"><strong className="text-white">Plan Tier:</strong> {selectedPlan.toUpperCase()}</Text>
-        <Text className="text-zinc-300 text-sm m-0 mb-2"><strong className="text-white">Base Vibe:</strong> {selectedVibe.toUpperCase()}</Text>
+        <Text className="text-zinc-300 text-sm m-0 mb-2"><strong className="text-white">Plan Tier:</strong> {displayPlan}</Text>
+        <Text className="text-zinc-300 text-sm m-0 mb-2"><strong className="text-white">Base Vibe:</strong> {displayVibe}</Text>
         <Text className="text-zinc-300 text-sm m-0 mb-4"><strong className="text-white">Wants Custom Code?:</strong> {wantsCustom ? 'YES' : 'NO'}</Text>
         
         <Text className="text-white font-bold text-xs uppercase tracking-widest m-0 mb-2 mt-4">

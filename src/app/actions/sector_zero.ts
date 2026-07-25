@@ -17,6 +17,13 @@ export async function submitSectorZeroIntake(formData: FormData) {
   const website = formData.get('website') as string;
   const projectScope = formData.get('projectScope') as string;
 
+  // 🚀 EXTRACTION & DEFENSIVE FALLBACKS FOR TELEMETRY CONTRACT
+  const phone = (formData.get('phone') as string) || '';
+  const selectedPlan = (formData.get('selectedPlan') as string) || (formData.get('plan') as string) || 'Standard Tier ($5/mo)';
+  const selectedVibe = (formData.get('selectedVibe') as string) || (formData.get('vibe') as string) || 'Midnight Standard';
+  const wantsCustom = formData.get('wantsCustom') === 'true' || formData.get('customCode') === 'true';
+  const isPriority = formData.get('isPriority') === 'true' || formData.get('priority') === 'true';
+
   try {
     const supabase = await createClient();
     
@@ -42,16 +49,23 @@ export async function submitSectorZeroIntake(formData: FormData) {
       return { success: false, error: "Database error. Please try again." };
     }
 
+    // 🚀 FULLY SATISFIED TYPESCRIPT CONTRACT
     await resend.emails.send({
       from: `Alternative Solutions <${fromEmail}>`, 
       to: ['courtney@alternativesolutions.io'], 
       subject: `🚨 INTAKE [${appId}]: ${businessName || name}`,
       react: AdminIntakeEmail({
-        name,
-        email,
-        socials: [socialFacebook, socialTiktok].filter(Boolean).join(' | '),
-        existingWebsite: website,
-        projectScope,
+        name: name || 'N/A',
+        email: email || 'N/A',
+        phone: phone || undefined,
+        socials: [socialFacebook, socialTiktok].filter(Boolean).join(' | ') || 'None provided',
+        existingWebsite: website || 'None provided',
+        projectScope: projectScope || 'No scope provided',
+        businessName: businessName || name || 'Unnamed Project',
+        selectedPlan: selectedPlan,
+        selectedVibe: selectedVibe,
+        wantsCustom: wantsCustom,
+        isPriority: isPriority,
       })
     });
 
@@ -77,7 +91,7 @@ export async function submitSectorZeroIntake(formData: FormData) {
               <p>Because of that, my standard turnaround time is <strong style="color: #06b6d4;">3 business days (72 business hours)</strong>. (So, if you're sending this on a Friday, Monday counts as Day 1!). I really appreciate you bearing with me while I get through the queue and process your details.</p>
               <div style="background-color: #111827; padding: 25px; border-radius: 8px; margin: 30px 0; border-left: 4px solid #d946ef;">
                 <h4 style="margin-top: 0; color: #f8fafc; text-transform: uppercase; font-size: 12px; letter-spacing: 1px;">What you sent over:</h4>
-                <p style="margin: 8px 0; color: #cbd5e1;"><strong>Business:</strong> ${businessName}</p>
+                <p style="margin: 8px 0; color: #cbd5e1;"><strong>Business:</strong> ${businessName || name}</p>
                 <p style="margin: 8px 0; color: #cbd5e1;"><strong>Scope:</strong><br/> <span style="color: #94a3b8;">${projectScope}</span></p>
               </div>
               <p>If you realize you forgot a detail or need to update a link, no sweat—just reply directly to this email and include your Application ID.</p>
