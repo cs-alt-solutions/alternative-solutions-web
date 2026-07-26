@@ -23,7 +23,11 @@ export default async function LivePrototypes() {
     <div className="w-full mt-20 mb-32 relative z-10">
       <div className="max-w-screen-2xl mx-auto px-6 text-center mb-12">
         <h2 className="text-4xl md:text-6xl font-black uppercase tracking-tighter text-white mb-4">
-          {GALLERY.TITLE_1} <span className="text-cyan-400">{GALLERY.TITLE_2}</span>
+          {GALLERY.TITLE_1}{" "}
+          {/* 🚀 ANIMATED NEON TEXT GRADIENT: Dynamic color transition with subtle neon glow */}
+          <span className="text-transparent bg-clip-text bg-linear-to-r from-cyan-400 via-fuchsia-400 to-cyan-300 animate-text-gradient drop-shadow-[0_0_20px_rgba(34,211,238,0.4)]">
+            {GALLERY.TITLE_2}
+          </span>
         </h2>
         
         <p className="text-zinc-300 font-normal max-w-3xl mx-auto text-base md:text-lg leading-relaxed">

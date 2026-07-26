@@ -6,7 +6,6 @@ import { Resend } from 'resend';
 import StorefrontConfirmationEmail from '@/components/emails/StorefrontConfirmationEmail';
 import AdminIntakeEmail from '@/components/emails/AdminIntakeEmail';
 
-// Initialize Resend
 const resend = new Resend(process.env.RESEND_API_KEY);
 
 export async function submitStorefrontApplication(formData: FormData) {
@@ -29,15 +28,12 @@ export async function submitStorefrontApplication(formData: FormData) {
       contact_email: formData.get('email')?.toString() || ''
     };
 
-    // 1. Save to Database
     const { error } = await supabase.from('storefront_applications').insert([payload]);
     if (error) throw error;
 
-    // 2. Dispatch Emails
     try {
-      // 📧 DISPATCH A: Send Confirmation to the Client
       const { error: clientEmailError } = await resend.emails.send({
-        from: 'Courtney <hello@alternativesolutions.io>', // Update if unverified
+        from: 'Courtney <hello@alternativesolutions.io>',
         to: payload.applicant_email,
         subject: `Application received: ${payload.business_name}`,
         react: StorefrontConfirmationEmail({ 
@@ -48,10 +44,9 @@ export async function submitStorefrontApplication(formData: FormData) {
 
       if (clientEmailError) console.error('Resend API Error (Client):', clientEmailError);
 
-      // 📧 DISPATCH B: Send Intake Alert to YOU
       const { error: adminEmailError } = await resend.emails.send({
-        from: 'System <system@alternativesolutions.io>', // Update if unverified
-        to: 'YOUR_ACTUAL_EMAIL@gmail.com', // ⚠️ CHANGE THIS TO YOUR EMAIL
+        from: 'System <system@alternativesolutions.io>',
+        to: process.env.ADMIN_EMAIL || 'hello@alternativesolutions.io',
         subject: `🚨 NEW LEAD: ${payload.business_name}`,
         react: AdminIntakeEmail({
           name: payload.applicant_name,
@@ -104,7 +99,6 @@ export async function updateApplicationStatus(id: string, newStatus: 'BUILDING' 
         finalSlug = `${baseSlug}-${Math.random().toString(36).substring(2, 6)}`;
       }
 
-      // 🚨 PROVISION A: Initialize the storefront canvas
       const { error: insertError } = await supabase.from('storefronts').insert([{
         business_name: app.business_name,
         contact_email: app.contact_email || app.applicant_email, 
@@ -112,8 +106,8 @@ export async function updateApplicationStatus(id: string, newStatus: 'BUILDING' 
         slug: finalSlug, 
         plan_tier: app.selected_plan || 'foundation',
         theme_style: app.selected_vibe || 'industrial',
-        tagline: app.business_description ? app.business_description.substring(0, 50) + '...' : 'Welcome to our new digital storefront.',
-        subtext: app.business_description || 'We are getting our operations online. Stay tuned.',
+        tagline: app.business_description ? app.business_description.substring(0, 50) + '...' : 'Welcome to your new digital storefront.',
+        subtext: app.business_description || 'Getting operations online. Stay tuned.',
         hero_layout: 'center',
         content_layout: 'classic',
         about_layout: 'split',
@@ -123,16 +117,15 @@ export async function updateApplicationStatus(id: string, newStatus: 'BUILDING' 
         primary_cta: 'Get Started',
         secondary_cta: 'Learn More',
         about_heading: 'About Us',
-        about_bio: 'We are a local business dedicated to providing top-tier services and products to our community. Check out our gallery to see our recent work!',
+        about_bio: 'Dedicated to providing top-tier services and products to the community. Check out the gallery to see recent work!',
         social_url: 'https://facebook.com',
         gallery_items: []
       }]);
       
       if (insertError) console.error('Failed to initialize storefront:', insertError);
 
-      // 🚨 PROVISION B: Initialize the secure Client Portal hub
       const { error: clientError } = await supabase.from('clients').insert([{
-        id: finalSlug, // We bind the portal to the exact same slug as the storefront
+        id: finalSlug,
         name: app.business_name,
         primary_contact: app.applicant_name,
         email: app.contact_email || app.applicant_email,
@@ -143,7 +136,7 @@ export async function updateApplicationStatus(id: string, newStatus: 'BUILDING' 
     }
 
     revalidatePath('/dashboard/storefronts');
-    revalidatePath('/dashboard/clients'); // Force a refresh of the clients directory
+    revalidatePath('/dashboard/clients');
     revalidatePath('/dashboard'); 
     return { success: true };
   } catch (error: any) {

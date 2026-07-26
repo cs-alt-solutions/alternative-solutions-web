@@ -1,98 +1,124 @@
 'use client';
 
-import React from 'react';
-import { ArrowLeft, CheckCircle2, HelpCircle } from 'lucide-react';
+import React, { useState } from 'react';
+import { ArrowLeft } from 'lucide-react';
 import { WIZARD_COPY } from '@/utils/glossary';
+import VibeGrid from './step3/VibeGrid';
+import ColorSwatches from './step3/ColorSwatches';
+import LayoutArchitecture from './step3/LayoutArchitecture';
 
 interface Step3Props {
   selectedVibe: string | null;
   setSelectedVibe: (vibe: string) => void;
-  vibes: any[]; // <-- Restored our database pipeline!
   onNext: () => void;
   onPrev: () => void;
+  brandColor?: string;
+  onBrandColorChange?: (val: string) => void;
+  heroStructure?: string;
+  onHeroStructureChange?: (val: string) => void;
+  storyStructure?: string;
+  onStoryStructureChange?: (val: string) => void;
+  contentFlow?: string;
+  onContentFlowChange?: (val: string) => void;
+  formData?: any;
+  setFormData?: (data: any) => void;
 }
 
-export default function Step3Vibe({ selectedVibe, setSelectedVibe, vibes, onNext, onPrev }: Step3Props) {
+export default function Step3Vibe({ 
+  selectedVibe, 
+  setSelectedVibe, 
+  onNext, 
+  onPrev,
+  brandColor,
+  onBrandColorChange,
+  heroStructure,
+  onHeroStructureChange,
+  storyStructure,
+  onStoryStructureChange,
+  contentFlow,
+  onContentFlowChange,
+  formData,
+  setFormData
+}: Step3Props) {
   const copy = WIZARD_COPY.STEP_3;
-  const cluelessId = WIZARD_COPY.VIBES?.CLUELESS_ID || 'clueless';
 
-  // We keep the styles mapped dynamically by ID, but using strict Tailwind classes (No inline hex!)
-  const getVibeStyles = (id: string) => {
-    switch(id) {
-      case 'brutalist': return 'bg-yellow-400 border-4 border-black text-black font-black uppercase rounded-none transition-all';
-      case 'neon': return 'bg-zinc-950 border border-fuchsia-500 text-cyan-400 font-mono rounded-lg transition-all';
-      case 'minimal': return 'bg-white border border-gray-200 text-gray-900 font-sans rounded-xl transition-all';
-      case 'organic': return 'bg-stone-100 border-stone-300 text-stone-700 font-serif rounded-[2rem] transition-all';
-      case 'clueless': return 'bg-zinc-900 border-2 border-dashed border-zinc-700 text-zinc-400 rounded-xl transition-all mt-4 sm:col-span-2';
-      default: return 'bg-zinc-900 border border-zinc-800 text-zinc-400 rounded-xl';
-    }
+  // 🚀 LOCAL REACT STATE FALLBACKS: Guarantees clicks update instantly even if parent props aren't wired up yet!
+  const [localColor, setLocalColor] = useState(() => brandColor ?? formData?.brandColor ?? 'cyan');
+  const [localHero, setLocalHero] = useState(() => heroStructure ?? formData?.heroStructure ?? 'centered');
+  const [localStory, setLocalStory] = useState(() => storyStructure ?? formData?.storyStructure ?? 'classic-split');
+  const [localFlow, setLocalFlow] = useState(() => contentFlow ?? formData?.contentFlow ?? 'stacked');
+
+  const handleColorUpdate = (val: string) => {
+    setLocalColor(val);
+    if (onBrandColorChange) onBrandColorChange(val);
+    else if (setFormData && formData) setFormData({ ...formData, brandColor: val });
+  };
+
+  const handleHeroUpdate = (val: string) => {
+    setLocalHero(val);
+    if (onHeroStructureChange) onHeroStructureChange(val);
+    else if (setFormData && formData) setFormData({ ...formData, heroStructure: val });
+  };
+
+  const handleStoryUpdate = (val: string) => {
+    setLocalStory(val);
+    if (onStoryStructureChange) onStoryStructureChange(val);
+    else if (setFormData && formData) setFormData({ ...formData, storyStructure: val });
+  };
+
+  const handleFlowUpdate = (val: string) => {
+    setLocalFlow(val);
+    if (onContentFlowChange) onContentFlowChange(val);
+    else if (setFormData && formData) setFormData({ ...formData, contentFlow: val });
   };
 
   return (
     <div className="animate-in fade-in slide-in-from-bottom-8 duration-500 space-y-12">
-      <div className="text-center space-y-4">
-        <h1 className="text-4xl md:text-5xl font-black tracking-tight text-white capitalize">
-          {copy.TITLE_MAIN}<span className="text-transparent bg-clip-text bg-linear-to-r from-purple-400 to-fuchsia-400">{copy.TITLE_HIGHLIGHT}</span>
+      
+      {/* HEADER */}
+      <div className="space-y-2 mb-2">
+        <h1 className="text-4xl md:text-6xl font-black tracking-tight text-white uppercase leading-none drop-shadow-md">
+          {copy.TITLE_MAIN}<span className="text-transparent bg-clip-text bg-linear-to-r from-purple-400 via-fuchsia-400 to-pink-500 animate-text-gradient">{copy.TITLE_HIGHLIGHT}</span>
         </h1>
-        <p className="text-lg text-zinc-400 max-w-xl mx-auto leading-relaxed">
+        <p className="text-sm md:text-base text-zinc-400 max-w-xl leading-relaxed font-normal">
           {copy.SUBTITLE}
         </p>
       </div>
       
-      <div className="space-y-6">
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 relative">
-          {vibes && vibes.length > 0 ? (
-            vibes.map((vibe) => (
-              <div 
-                key={vibe.id}
-                onClick={() => setSelectedVibe(vibe.id)}
-                className={`relative p-8 cursor-pointer opacity-90 hover:opacity-100 ${getVibeStyles(vibe.id)} ${selectedVibe === vibe.id ? 'ring-4 ring-cyan-500' : ''}`}
-              >
-                {selectedVibe === vibe.id && vibe.id !== cluelessId && (
-                  <div className="absolute top-4 right-4 text-current opacity-50">
-                    <CheckCircle2 className="w-8 h-8" />
-                  </div>
-                )}
-                {vibe.id === cluelessId && <HelpCircle className="w-10 h-10 mb-4 opacity-50 mx-auto" />}
-                <h4 className="text-2xl mb-2 tracking-wide font-bold">{vibe.title}</h4>
-                <p className="opacity-80 text-base">{vibe.desc}</p>
-              </div>
-            ))
-          ) : (
-             <div className="sm:col-span-2 text-center text-zinc-500 py-8 border-2 border-dashed border-zinc-800 bg-zinc-900/50 rounded-xl font-mono uppercase tracking-widest text-sm">
-                Awaiting Database Connection...
-             </div>
-          )}
-        </div>
-
-        {selectedVibe === cluelessId && (
-          <div className="animate-in slide-in-from-top-4 fade-in duration-300 bg-fuchsia-500/10 border border-fuchsia-500/30 p-6 rounded-2xl text-center">
-            <p className="text-fuchsia-300 font-bold text-lg mb-2">{copy.CLUELESS.HEADER}</p>
-            <p className="text-sm text-fuchsia-400/70">
-              {copy.CLUELESS.SUBTEXT}
-            </p>
-          </div>
-        )}
+      <div className="space-y-10">
+        <VibeGrid selectedVibe={selectedVibe} onSelect={setSelectedVibe} />
+        
+        {/* Now uses localColor so swatches toggle seamlessly! */}
+        <ColorSwatches currentColor={localColor} onSelectColor={handleColorUpdate} />
+        
+        {/* Now uses local layout states! */}
+        <LayoutArchitecture
+          currentHero={localHero}
+          currentStory={localStory}
+          currentFlow={localFlow}
+          onHeroUpdate={handleHeroUpdate}
+          onStoryUpdate={handleStoryUpdate}
+          onFlowUpdate={handleFlowUpdate}
+        />
       </div>
 
-      <div className="flex gap-4 pt-4">
+      {/* FOOTER ACTIONS */}
+      <div className="flex flex-col-reverse md:flex-row justify-between items-center pt-4 border-t border-zinc-800/60 gap-4">
         <button 
           type="button" 
           onClick={onPrev}
-          className="px-6 py-5 rounded-2xl font-bold tracking-wide flex items-center justify-center gap-2 bg-zinc-900 border border-zinc-800 text-white hover:bg-zinc-800 transition-all"
+          className="text-xs font-semibold text-zinc-500 hover:text-zinc-300 transition-colors flex items-center gap-2 group cursor-pointer"
         >
-          <ArrowLeft className="w-5 h-5" /> 
+          <ArrowLeft className="w-3.5 h-3.5 group-hover:-translate-x-1 transition-transform" />
+          <span>Back to Step 2</span>
         </button>
         <button 
           type="button" 
           onClick={onNext}
           disabled={!selectedVibe}
-          className={`relative flex-1 overflow-hidden py-5 rounded-2xl font-bold tracking-wide flex items-center justify-center gap-3 transition-all ${selectedVibe ? 'text-white border border-fuchsia-500/50 hover:border-fuchsia-400 shadow-glow-fuchsia hover:scale-[1.02]' : 'bg-zinc-900 border border-zinc-800 text-zinc-600 cursor-not-allowed'}`}
+          className={`w-full md:w-auto px-8 py-4 rounded-xl font-bold text-sm tracking-wide flex items-center justify-center gap-2 transition-all cursor-pointer ${selectedVibe ? 'text-zinc-950 bg-fuchsia-400 hover:bg-fuchsia-300 shadow-[0_0_20px_rgba(232,121,249,0.3)] hover:scale-[1.01]' : 'bg-zinc-900 border border-zinc-800 text-zinc-600 cursor-not-allowed'}`}
         >
-          {selectedVibe && (
-            <div className="absolute left-0 top-0 h-full w-[75%] bg-linear-to-r from-blue-500 via-purple-500 to-fuchsia-500 opacity-60 transition-all duration-700 ease-out"></div>
-          )}
-          <span className="relative z-10">{copy.ACTIONS.NEXT}</span>
+          <span>{copy.ACTIONS.NEXT}</span>
         </button>
       </div>
     </div>

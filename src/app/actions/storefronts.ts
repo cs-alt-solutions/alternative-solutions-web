@@ -2,6 +2,10 @@
 
 import { revalidatePath } from 'next/cache';
 import { createClient } from '@/utils/supabase/server'; 
+import { Resend } from 'resend';
+import StagingReviewEmail from '@/components/emails/StagingReviewEmail';
+
+const resend = new Resend(process.env.RESEND_API_KEY);
 
 export async function createStorefront(formData: FormData) {
   const supabase = await createClient(); 
@@ -36,7 +40,7 @@ export async function createStorefront(formData: FormData) {
     theme_style: formData.get('theme_style') || 'industrial',
     hero_layout: formData.get('hero_layout') || 'center',
     content_layout: formData.get('content_layout') || 'classic',
-    about_layout: formData.get('about_layout') || 'split', // 🚨 ADDED
+    about_layout: formData.get('about_layout') || 'split',
     is_template: formData.get('is_template') === 'true',
     hero_image: heroUrl, 
     about_image: aboutUrl,
@@ -60,7 +64,6 @@ export async function createStorefront(formData: FormData) {
 export async function updateStorefrontCore(id: string, formData: FormData) {
   const supabase = await createClient();
   
-  // 🚨 THE FIX: Added all missing column names to the update payload
   const updateData = {
     business_name: formData.get('business_name'),
     slug: formData.get('slug'),
@@ -71,13 +74,13 @@ export async function updateStorefrontCore(id: string, formData: FormData) {
     brand_color: formData.get('brand_color'),
     theme_style: formData.get('theme_style'),
     hero_layout: formData.get('hero_layout'),
-    content_layout: formData.get('content_layout'), // 🚨 ADDED
-    about_layout: formData.get('about_layout'), // 🚨 ADDED
-    about_heading: formData.get('about_heading'), // 🚨 ADDED
-    about_bio: formData.get('about_bio'), // 🚨 ADDED
-    capabilities_heading: formData.get('capabilities_heading'), // 🚨 ADDED
-    gallery_heading: formData.get('gallery_heading'), // 🚨 ADDED
-    contact_email: formData.get('contact_email'), // 🚨 ADDED
+    content_layout: formData.get('content_layout'),
+    about_layout: formData.get('about_layout'),
+    about_heading: formData.get('about_heading'),
+    about_bio: formData.get('about_bio'),
+    capabilities_heading: formData.get('capabilities_heading'),
+    gallery_heading: formData.get('gallery_heading'),
+    contact_email: formData.get('contact_email'),
     capabilities: formData.get('capabilities') ? JSON.parse(formData.get('capabilities') as string) : [],
   };
 
@@ -199,5 +202,51 @@ export async function deleteStorefront(id: string) {
   revalidatePath('/dashboard');
   revalidatePath('/');
 
+  return { success: true };
+}
+
+// 🚀 STAGING REVIEW DISPATCH ENGINE
+export async function dispatchStagingReview(id: string, slug: string, businessName: string, contactEmail: string, planTier: string) {
+  const supabase = await createClient();
+
+  // 1. Flip database status to IN_REVIEW
+  const { error: dbError } = await supabase
+    .from('storefronts')
+    .update({ status: 'IN_REVIEW' })
+    .eq('id', id);
+
+  if (dbError) {
+    throw new Error(`Database update failed: ${dbError.message}`);
+  }
+
+  // 2. Resolve dynamic staging URL
+  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || process.env.NEXT_PUBLIC_BASE_URL || 'https://alternativesolutions.io';
+  const previewUrl = `${baseUrl}/${slug}`;
+
+  // 3. Dispatch personal architectural handoff letter
+  try {
+    const { error: emailError } = await resend.emails.send({
+      from: 'Courtney <hello@alternativesolutions.io>',
+      to: contactEmail,
+      subject: `Staging Ready • Review Your Blueprint: ${businessName}`,
+      react: StagingReviewEmail({
+        name: businessName,
+        businessName: businessName,
+        previewUrl: previewUrl,
+        planTier: planTier || 'Standard Starter'
+      })
+    });
+
+    if (emailError) {
+      console.error('Resend dispatch error:', emailError);
+      throw new Error('Email failed to transmit through Resend.');
+    }
+  } catch (err: any) {
+    console.error('CRITICAL EMAIL ERROR:', err);
+    throw new Error(err.message || 'Failed to dispatch review email.');
+  }
+
+  revalidatePath('/dashboard/storefronts');
+  revalidatePath('/dashboard');
   return { success: true };
 }

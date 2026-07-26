@@ -2,7 +2,7 @@
 
 export const STOREFRONTS = {
   HEADER: {
-    TAG: "CUSTOM WEB BUILDS // ZERO FRICTION",
+    TAG: "CUSTOM WEB BUILDS • ZERO FRICTION", // 🚀 PURGED FORWARD SLASHES
     TITLE_1: "PROFESSIONAL",
     TITLE_2: "STOREFRONTS.",
     DESC: "" 
@@ -10,7 +10,7 @@ export const STOREFRONTS = {
   THE_PLEDGE: {
     TITLE_1: "No Agency Bloat.",
     TITLE_2: "Zero Friction.",
-    DESC: "You do the hard work. Getting it online shouldn't be another hurdle. Stop fighting bloated DIY templates and fragmented tools. Let's establish your business in the digital world professionally. There is no 'let's talk it out and see how much I can charge you'—you pay a simple, flat-rate build fee to get the custom engine running, and a flat $5/month for the enterprise infrastructure. You provide the vision; I handle the code."
+    DESC: "You do the hard work. Getting it online shouldn't be another hurdle. Stop fighting bloated DIY templates and fragmented tools. Let's establish your business in the digital world professionally. There is no 'let's talk it out and see how much I can charge you'—you pay a simple, flat-rate build fee to get the custom engine running, and a flat $5 a month for the enterprise infrastructure. You provide the vision; I handle the code."
   },
   REWARDS: {
     TITLE: "The Specifications",
@@ -37,7 +37,7 @@ export const STOREFRONTS = {
     DESC: "Stop fighting templates. You pay a one-time, flat-rate fee for the custom build, and pick a simple monthly plan to keep the engine running smoothly on enterprise-grade hosting.",
     TIERS: [
       { 
-        price: "$5/mo", 
+        price: "$5 a month", // 🚀 CLEAN HUMAN FORMATTING
         name: "The Standard", 
         perks: [
           "Full custom website build & deployment.",
@@ -47,7 +47,7 @@ export const STOREFRONTS = {
         ] 
       },
       { 
-        price: "$15/mo", 
+        price: "$15 a month", // 🚀 CLEAN HUMAN FORMATTING
         name: "The Professional", 
         perks: [
           "Everything included in The Standard plan.",
@@ -76,7 +76,6 @@ export const STOREFRONTS = {
     EMPTY_DESC: "Engine standing by for deployment.",
     SECTOR_EMPTY_PRE: "No prototypes deployed in the",
     SECTOR_EMPTY_POST: "sector yet.",
-    // Your exact 8 Foundational Vibes (plus the "All Vibes" reset selector)
     VIBES: [
       "All Vibes",
       "Industrial",
@@ -87,7 +86,19 @@ export const STOREFRONTS = {
       "Organtic",
       "Editorial",
       "Midnight Onyx"
-    ]
+    ],
+    // 🚀 ULTRA-PUNCHY 1-LINERS: Zero verbosity, zero slashes, pure visual punch
+    VIBE_DESCRIPTIONS: {
+      "All Vibes": "The complete amphitheater of interactive production sandboxes.",
+      "Industrial": "Exposed steel, heavy typography, and zero fluff.",
+      "Neo-Brutalist": "Loud, unapologetic, and deliberately rebellious design.",
+      "Cyberpunk": "Neon-drenched telemetry engineered for high-velocity brands.",
+      "Minimalist": "Clean whitespace, crisp typography, and zero distractions.",
+      "Elegant": "Muted palettes and effortless luxury for high-ticket positioning.",
+      "Organtic": "Earthy tones and fluid structures grounded in real-world connection.",
+      "Editorial": "Magazine-grade storytelling built to turn casual visitors into readers.",
+      "Midnight Onyx": "Deep monochrome shadows for undeniable stealth-mode authority."
+    }
   },
   FOOTER: { 
     TITLE: "Ready to launch your website?", 
