@@ -1,4 +1,4 @@
-/* src/app/storefronts/page.tsx */
+// src/app/storefronts/page.tsx
 import React from 'react';
 import Link from 'next/link';
 import { WEBSITE_COPY } from '@/utils/glossary';
@@ -20,7 +20,7 @@ export default function StorefrontsPage() {
         {/* HEADER */}
         <section className="text-center mb-16 animate-in fade-in slide-in-from-bottom-8 duration-1000">
           <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-cyan-400/30 bg-cyan-400/10 text-[10px] font-mono text-cyan-400 uppercase tracking-[0.3em] mb-8 shadow-[0_0_15px_rgba(34,211,238,0.15)]">
-            <Store size={14} className="animate-pulse" />
+            <Store size={14} className="animate-pulse shrink-0" />
             {copy.HEADER.TAG}
           </div>
           <h1 className="text-6xl md:text-8xl font-black tracking-tighter mb-4 leading-none uppercase drop-shadow-[0_0_20px_rgba(255,255,255,0.1)]">
@@ -34,12 +34,12 @@ export default function StorefrontsPage() {
         {/* SECTION 1: THE STOREFRONT OFFER */}
         <section className="mb-20 scroll-mt-32" id="funding-options">
           <div className="text-center mb-12">
-             <h2 className="text-3xl md:text-5xl font-black uppercase tracking-tight text-white mb-4">
-               {copy.STOREFRONT_OFFER.TITLE}
-             </h2>
-             <p className="text-slate-400 font-light max-w-xl mx-auto text-lg">
-               {copy.STOREFRONT_OFFER.SUBTITLE}
-             </p>
+            <h2 className="text-3xl md:text-5xl font-black uppercase tracking-tight text-white mb-4">
+              {copy.STOREFRONT_OFFER.TITLE}
+            </h2>
+            <p className="text-slate-400 font-light max-w-xl mx-auto text-lg">
+              {copy.STOREFRONT_OFFER.SUBTITLE}
+            </p>
           </div>
 
           <div className="max-w-4xl mx-auto">
@@ -61,7 +61,7 @@ export default function StorefrontsPage() {
                 </p>
               </div>
               
-              {/* THE TIERS (NOW SIDE-BY-SIDE WITH BULLETS) */}
+              {/* THE TIERS */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-10">
                 {copy.STOREFRONT_OFFER.TIERS.map((tier: any, idx: number) => (
                   <div key={idx} className="bg-white/5 border border-white/10 hover:border-cyan-400/30 rounded-2xl p-6 md:p-8 flex flex-col text-left transition-colors duration-300">
@@ -88,7 +88,7 @@ export default function StorefrontsPage() {
               {/* ACTION BUTTON */}
               <div className="mt-auto max-w-md mx-auto w-full">
                 <Link href={copy.STOREFRONT_OFFER.LINK} className="flex items-center justify-center gap-3 w-full py-5 text-sm font-black font-mono uppercase tracking-widest rounded-xl bg-linear-to-r from-cyan-400 to-teal-400 text-black shadow-[0_0_20px_rgba(34,211,238,0.3)] hover:shadow-[0_0_40px_rgba(34,211,238,0.6)] hover:scale-[1.02] transition-all duration-300">
-                  {copy.STOREFRONT_OFFER.BTN_TEXT} <ArrowRight size={18} className="group-hover:translate-x-1 transition-transform" />
+                  {copy.STOREFRONT_OFFER.BTN_TEXT} <ArrowRight size={18} className="group-hover:translate-x-1 transition-transform shrink-0" />
                 </Link>
               </div>
             </div>
