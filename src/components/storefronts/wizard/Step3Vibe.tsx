@@ -12,6 +12,7 @@ interface Step3Props {
   setSelectedVibe: (vibe: string) => void;
   onNext: () => void;
   onPrev: () => void;
+  vibes?: any[]; // 🚀 ADDED: Satisfies Vercel's strict TypeScript check
   brandColor?: string;
   onBrandColorChange?: (val: string) => void;
   heroStructure?: string;
@@ -29,6 +30,7 @@ export default function Step3Vibe({
   setSelectedVibe, 
   onNext, 
   onPrev,
+  vibes,
   brandColor,
   onBrandColorChange,
   heroStructure,
