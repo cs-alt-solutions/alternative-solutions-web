@@ -67,7 +67,7 @@ export async function POST(req: Request) {
     };
 
     // Define sender and admin target addresses from environment variables
-    const fromEmail = process.env.RESEND_FROM_EMAIL || "notifications@yourdomain.com";
+    const fromEmail = process.env.RESEND_FROM_EMAIL || "staging@alternativesolutions.io";
     const adminEmail = process.env.ADMIN_EMAIL || fromEmail;
 
     // 4. Dual-Dispatch: Fire both emails simultaneously via Promise.all
