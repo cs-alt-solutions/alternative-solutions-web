@@ -11,8 +11,6 @@ interface Capability {
 }
 
 export default function CapabilitiesTab({ formData, setFormData }: { formData: any, setFormData: any }) {
-  
-  // Connect to the master state
   const capabilities: Capability[] = formData.capabilities || [];
 
   const handleAdd = () => {
@@ -37,12 +35,12 @@ export default function CapabilitiesTab({ formData, setFormData }: { formData: a
     });
   };
 
-  // 🚨 BULLET POINT LOGIC
+  // 🚀 BUG FIXED: Deep cloning the arrays to prevent React state mutation ghosting
   const handleAddBullet = (index: number) => {
     setFormData((prev: any) => {
       const updated = [...(prev.capabilities || [])];
-      if (!updated[index].bullets) updated[index].bullets = [];
-      updated[index].bullets.push('');
+      const currentBullets = [...(updated[index].bullets || [])];
+      updated[index] = { ...updated[index], bullets: [...currentBullets, ''] };
       return { ...prev, capabilities: updated };
     });
   };
@@ -50,9 +48,9 @@ export default function CapabilitiesTab({ formData, setFormData }: { formData: a
   const handleBulletChange = (capIndex: number, bulletIndex: number, value: string) => {
     setFormData((prev: any) => {
       const updated = [...(prev.capabilities || [])];
-      if (updated[capIndex].bullets) {
-        updated[capIndex].bullets[bulletIndex] = value;
-      }
+      const currentBullets = [...(updated[capIndex].bullets || [])];
+      currentBullets[bulletIndex] = value;
+      updated[capIndex] = { ...updated[capIndex], bullets: currentBullets };
       return { ...prev, capabilities: updated };
     });
   };
@@ -60,95 +58,102 @@ export default function CapabilitiesTab({ formData, setFormData }: { formData: a
   const handleRemoveBullet = (capIndex: number, bulletIndex: number) => {
     setFormData((prev: any) => {
       const updated = [...(prev.capabilities || [])];
-      if (updated[capIndex].bullets) {
-        updated[capIndex].bullets.splice(bulletIndex, 1);
-      }
+      const currentBullets = [...(updated[capIndex].bullets || [])];
+      updated[capIndex] = {
+        ...updated[capIndex],
+        bullets: currentBullets.filter((_, i) => i !== bulletIndex)
+      };
       return { ...prev, capabilities: updated };
     });
   };
 
   return (
-    <div className="space-y-8 max-w-4xl pb-10 pt-6">
+    <div className="space-y-6 pb-10">
       
       <div className="flex items-center justify-between border-b border-zinc-800 pb-4">
         <div>
-          <h3 className="text-lg font-black text-white flex items-center gap-2">
-            <Layers className="w-5 h-5 text-cyan-500" /> Services & Features
+          <h3 className="text-sm font-black text-white flex items-center gap-2 uppercase tracking-widest">
+            <Layers className="w-4 h-4 text-cyan-500" /> Services & Features
           </h3>
-          <p className="text-zinc-500 text-sm mt-1">Define core offerings and feature checklists.</p>
         </div>
         <button 
           type="button" 
           onClick={handleAdd}
-          className="flex items-center gap-2 bg-zinc-800 hover:bg-zinc-700 text-white text-xs font-bold uppercase tracking-widest px-4 py-2 rounded transition-colors"
+          className="flex items-center gap-2 bg-cyan-600 hover:bg-cyan-500 text-zinc-950 text-[10px] font-black uppercase tracking-widest px-3 py-1.5 rounded transition-colors shadow-sm"
         >
-          <Plus className="w-4 h-4" /> Add Item
+          <Plus className="w-3 h-3" /> Add Item
         </button>
       </div>
 
-      <div className="space-y-4">
+      <div className="space-y-6">
         {capabilities.length === 0 ? (
-          <div className="text-center p-12 border-2 border-dashed border-zinc-800 rounded-xl text-zinc-600 font-mono text-sm">
-            No items defined yet. Click "Add Item" to start building.
+          <div className="text-center p-8 border border-dashed border-zinc-800 bg-zinc-900/30 rounded-xl text-zinc-500 font-mono text-xs uppercase tracking-widest">
+            No services defined.
           </div>
         ) : (
           capabilities.map((cap, index) => (
-            <div key={index} className="flex items-start gap-4 p-4 bg-zinc-900/50 border border-zinc-800 rounded-xl relative group">
-              <div className="flex-1 space-y-4">
+            <div key={index} className="flex flex-col gap-3 p-4 bg-zinc-900/60 border border-zinc-800 rounded-xl relative group shadow-sm">
+              
+              <div className="flex items-start justify-between gap-4">
                 <input 
                   type="text" 
-                  placeholder="Title (e.g., Weekly Meal Prep)" 
+                  placeholder="Service Title (e.g., Shadow Work)" 
                   value={cap.title}
                   onChange={(e) => handleChange(index, 'title', e.target.value)}
-                  className="w-full bg-transparent border-b border-zinc-800 focus:border-cyan-500 px-2 py-2 text-white outline-none transition-colors font-bold"
+                  className="w-full bg-black/40 border border-zinc-800 focus:border-cyan-500 rounded-lg px-3 py-2 text-white outline-none transition-colors font-bold text-sm"
                 />
-                <textarea 
-                  placeholder="Description (Optional) - A brief intro to the service." 
-                  value={cap.description}
-                  onChange={(e) => handleChange(index, 'description', e.target.value)}
-                  rows={2}
-                  className="w-full bg-zinc-950 border border-zinc-800 focus:border-cyan-500 rounded px-3 py-2 text-zinc-300 outline-none transition-colors text-sm resize-none"
-                />
-                
-                {/* 🚨 BULLET POINT EDITOR */}
-                <div className="pl-3 border-l-2 border-zinc-800 space-y-2 mt-4">
-                  {cap.bullets?.map((bullet, bIndex) => (
-                    <div key={bIndex} className="flex items-center gap-3">
-                      <div className="w-1.5 h-1.5 rounded-full bg-zinc-600 shrink-0" />
-                      <input 
-                        type="text"
-                        placeholder="e.g., Plan your menu based on preferences..."
-                        value={bullet}
-                        onChange={(e) => handleBulletChange(index, bIndex, e.target.value)}
-                        className="w-full bg-transparent border-b border-zinc-800/50 focus:border-cyan-500 py-1.5 text-zinc-300 outline-none transition-colors text-sm"
-                      />
-                      <button 
-                        type="button" 
-                        onClick={() => handleRemoveBullet(index, bIndex)}
-                        className="text-zinc-600 hover:text-red-500 transition-colors p-1"
-                      >
-                        <X size={14} />
-                      </button>
-                    </div>
-                  ))}
+                <button 
+                  type="button" 
+                  onClick={() => handleRemove(index)}
+                  className="p-2 text-zinc-500 hover:text-red-400 bg-zinc-950 hover:bg-red-500/10 border border-zinc-800 hover:border-red-500/30 rounded-lg transition-colors shrink-0"
+                  title="Remove Service"
+                >
+                  <Trash2 className="w-4 h-4" />
+                </button>
+              </div>
+
+              <textarea 
+                placeholder="Brief description of this offering..." 
+                value={cap.description}
+                onChange={(e) => handleChange(index, 'description', e.target.value)}
+                rows={2}
+                className="w-full bg-black/40 border border-zinc-800 focus:border-cyan-500 rounded-lg px-3 py-2 text-zinc-300 outline-none transition-colors text-xs resize-none"
+              />
+              
+              {/* BULLET POINT EDITOR */}
+              <div className="bg-zinc-950/50 border border-zinc-800/80 rounded-lg p-3 space-y-2">
+                <div className="text-[9px] font-bold text-zinc-500 uppercase tracking-widest mb-2 flex items-center justify-between">
+                  <span>Feature Checklist</span>
                   <button 
                     type="button" 
                     onClick={() => handleAddBullet(index)}
-                    className="text-[10px] font-bold uppercase tracking-widest text-cyan-500 hover:text-cyan-400 flex items-center gap-1 pt-2 transition-colors"
+                    className="text-cyan-500 hover:text-cyan-400 flex items-center gap-1 transition-colors"
                   >
-                    <Plus size={12} /> Add Bullet Point
+                    <Plus size={10} /> Add Bullet
                   </button>
                 </div>
+                
+                {cap.bullets?.map((bullet, bIndex) => (
+                  <div key={bIndex} className="flex items-center gap-2">
+                    <div className="w-1.5 h-1.5 rounded-full bg-cyan-500/50 shrink-0" />
+                    <input 
+                      type="text"
+                      placeholder="Detail point..."
+                      value={bullet}
+                      onChange={(e) => handleBulletChange(index, bIndex, e.target.value)}
+                      className="w-full bg-transparent border-b border-zinc-800 focus:border-cyan-500 py-1 text-zinc-300 outline-none transition-colors text-xs"
+                    />
+                    <button 
+                      type="button" 
+                      onClick={() => handleRemoveBullet(index, bIndex)}
+                      className="text-zinc-600 hover:text-red-400 transition-colors p-1"
+                    >
+                      <X size={14} />
+                    </button>
+                  </div>
+                ))}
               </div>
 
-              <button 
-                type="button" 
-                onClick={() => handleRemove(index)}
-                className="p-2 text-zinc-600 hover:text-red-500 hover:bg-red-500/10 rounded transition-colors mt-2"
-                title="Remove Item"
-              >
-                <Trash2 className="w-5 h-5" />
-              </button>
             </div>
           ))
         )}

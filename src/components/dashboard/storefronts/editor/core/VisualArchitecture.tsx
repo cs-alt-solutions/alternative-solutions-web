@@ -1,3 +1,4 @@
+// src/components/dashboard/storefronts/editor/core/VisualArchitecture.tsx
 import React from 'react';
 import { LayoutTemplate, Palette, Columns, BookOpen } from 'lucide-react';
 
@@ -9,7 +10,7 @@ const THEME_OPTIONS = [
   { value: 'elegant', label: 'Elegant', vibe: 'bg-[#FAFAFA] border border-amber-700/30 text-amber-900 font-serif' },
   { value: 'organic', label: 'Organic', vibe: 'bg-[#F4F1EA] border border-[#2C3B2D] text-[#2C3B2D] font-serif rounded-tl-xl rounded-br-xl' },
   { value: 'editorial', label: 'Editorial', vibe: 'bg-[#EAE8E3] border-y-2 border-black text-black font-serif font-bold uppercase tracking-widest' },
-  { value: 'midnight', label: 'Midnight Onyx', vibe: 'bg-zinc-950 border-zinc-800 text-white font-sans tracking-tight shadow-[inset_0_0_20px_rgba(255,255,255,0.02)]' } 
+  { value: 'midnight', label: 'Midnight Onyx', vibe: 'bg-zinc-950 border-zinc-800 text-white font-sans tracking-tight shadow-[inset_0_0_20px_rgba(255,255,255,0.02)]' }
 ];
 
 const BRAND_COLORS = [
@@ -22,7 +23,6 @@ const BRAND_COLORS = [
   { name: 'Zinc', value: 'zinc-500', twBg: 'bg-zinc-500' }
 ];
 
-// 🚨 THE MASTER CONSTRAINT MATRIX (UNLOCKED)
 const ALL_HEROS = ['center', 'split-left', 'split-right', 'cinematic', 'glass'];
 const ALL_CONTENTS = ['classic', 'bento', 'sticky', 'accordion', 'editorial'];
 const ALL_ABOUTS = ['split', 'editorial', 'minimal', 'card'];
@@ -35,15 +35,22 @@ const THEME_CONSTRAINTS: Record<string, { hero: string[], content: string[], abo
   elegant: { hero: ALL_HEROS, content: ALL_CONTENTS, about: ALL_ABOUTS },
   organic: { hero: ALL_HEROS, content: ALL_CONTENTS, about: ALL_ABOUTS },
   editorial: { hero: ALL_HEROS, content: ALL_CONTENTS, about: ALL_ABOUTS },
-  midnight: { hero: ALL_HEROS, content: ALL_CONTENTS, about: ALL_ABOUTS } 
+  midnight: { hero: ALL_HEROS, content: ALL_CONTENTS, about: ALL_ABOUTS }
 };
 
-export default function VisualArchitecture({ formData, handleVisualSelect, setFormData }: { formData: any, handleVisualSelect: any, setFormData: any }) {
-  
+// 🚀 REMOVED handleVisualSelect FROM PROPS
+export default function VisualArchitecture({ formData, setFormData }: { formData: any, setFormData: any }) {
   const currentTheme = formData.theme_style || 'industrial';
   const allowedLayouts = THEME_CONSTRAINTS[currentTheme] || THEME_CONSTRAINTS['industrial'];
 
-  // Smart Theme Switcher
+  // 🚀 THE EXPLICIT DB MAPPING MOVED HERE
+  const handleVisualSelect = (dbColumn: string, value: string) => {
+    setFormData((prev: any) => ({ 
+      ...prev, 
+      [dbColumn]: value 
+    }));
+  };
+
   const handleThemeSwitch = (newTheme: string) => {
     const constraints = THEME_CONSTRAINTS[newTheme];
     let newHero = formData.hero_layout;
@@ -54,33 +61,33 @@ export default function VisualArchitecture({ formData, handleVisualSelect, setFo
     if (!constraints.content.includes(newContent)) newContent = constraints.content[0];
     if (!constraints.about.includes(newAbout)) newAbout = constraints.about[0];
 
-    setFormData((prev: any) => ({ 
-      ...prev, 
-      theme_style: newTheme, 
-      hero_layout: newHero, 
+    setFormData((prev: any) => ({
+      ...prev,
+      theme_style: newTheme,
+      hero_layout: newHero,
       content_layout: newContent,
       about_layout: newAbout
     }));
   };
 
   return (
-    <div className="bg-zinc-900 border border-zinc-800 p-6 rounded-xl space-y-8 shadow-lg">
-      <div className="mb-4 border-l-[3px] border-fuchsia-500/60 bg-linear-to-r from-fuchsia-500/10 to-transparent px-5 py-2">
+    <div className="bg-zinc-900/60 border border-zinc-800 p-5 rounded-xl space-y-8 shadow-sm">
+      <div className="mb-2 border-l-[3px] border-fuchsia-500/60 bg-linear-to-r from-fuchsia-500/10 to-transparent px-4 py-2">
         <h3 className="text-[10px] font-mono font-black text-fuchsia-400 uppercase tracking-[0.2em] flex items-center gap-2">
           <LayoutTemplate className="w-3 h-3" /> Architecture & Vibe
         </h3>
       </div>
       
       {/* 1. DESIGN VIBE */}
-      <div className="space-y-3 pt-2">
-        <label className="text-[10px] font-mono font-bold text-zinc-400 uppercase tracking-widest">1. Set the Foundation Vibe</label>
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+      <div className="space-y-3">
+        <label className="text-[9px] font-bold text-zinc-500 uppercase tracking-widest">1. Foundation Vibe</label>
+        <div className="grid grid-cols-2 gap-3">
           {THEME_OPTIONS.map((theme) => (
             <button key={theme.value} type="button" onClick={() => handleThemeSwitch(theme.value)}
-              className={`relative p-4 h-24 border-2 transition-all flex flex-col items-center justify-center rounded-lg ${currentTheme === theme.value ? 'border-emerald-500 ring-2 ring-emerald-500/20 z-10' : 'border-zinc-800 hover:border-zinc-600'} ${theme.vibe}`}>
-              <span className="text-center drop-shadow-sm px-1 text-xs md:text-sm leading-tight wrap-break-word whitespace-normal w-full">{theme.label}</span>
+              className={`relative p-3 h-20 border-2 transition-all flex flex-col items-center justify-center rounded-lg ${currentTheme === theme.value ? 'border-emerald-500 ring-2 ring-emerald-500/20 z-10' : 'border-zinc-800 hover:border-zinc-600'} ${theme.vibe}`}>
+              <span className="text-center drop-shadow-sm px-1 text-[11px] leading-tight wrap-break-word whitespace-normal w-full">{theme.label}</span>
               {currentTheme === theme.value && (
-                <div className="absolute -top-2 -right-2 w-4 h-4 bg-emerald-500 rounded-full border-2 border-zinc-900 shadow-[0_0_10px_rgba(16,185,129,0.5)]" />
+                <div className="absolute -top-1.5 -right-1.5 w-3 h-3 bg-emerald-500 rounded-full border-2 border-zinc-900 shadow-[0_0_10px_rgba(16,185,129,0.5)]" />
               )}
             </button>
           ))}
@@ -88,197 +95,170 @@ export default function VisualArchitecture({ formData, handleVisualSelect, setFo
       </div>
 
       {/* 2. HERO STRUCTURE */}
-      <div className="space-y-3 pt-6 border-t border-zinc-800/50">
-        <label className="text-[10px] font-mono font-bold text-zinc-400 uppercase tracking-widest">2. Hero Structure</label>
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
-          
-          <button disabled={!allowedLayouts.hero.includes('center')} onClick={() => handleVisualSelect('hero_layout', 'center')} className={`flex flex-col items-center justify-center p-4 border-2 rounded-xl transition-all disabled:opacity-20 disabled:cursor-not-allowed ${formData.hero_layout === 'center' || !formData.hero_layout ? 'border-fuchsia-500 bg-fuchsia-500/10' : 'border-zinc-800 bg-zinc-950 hover:border-zinc-700'}`}>
-            <div className="w-full h-12 border border-zinc-700 bg-zinc-900 mb-3 flex flex-col items-center justify-center gap-1.5 p-2 rounded">
-              <div className="w-1/2 h-1 bg-zinc-600 rounded" />
-              <div className="w-3/4 h-2 bg-zinc-400 rounded" />
-              <div className="w-1/4 h-1.5 bg-fuchsia-500 rounded mt-1" />
+      <div className="space-y-3 pt-6 border-t border-zinc-800/60">
+        <label className="text-[9px] font-bold text-zinc-500 uppercase tracking-widest">2. Hero Layout</label>
+        <div className="grid grid-cols-2 gap-3">
+          <button disabled={!allowedLayouts.hero.includes('center')} onClick={() => handleVisualSelect('hero_layout', 'center')} className={`flex flex-col items-center justify-center p-3 border-2 rounded-xl transition-all disabled:opacity-20 disabled:cursor-not-allowed ${formData.hero_layout === 'center' || !formData.hero_layout ? 'border-fuchsia-500 bg-fuchsia-500/10' : 'border-zinc-800 bg-zinc-950 hover:border-zinc-700'}`}>
+            <div className="w-full h-10 border border-zinc-700 bg-zinc-900 mb-2 flex flex-col items-center justify-center gap-1 p-1 rounded">
+              <div className="w-1/2 h-0.5 bg-zinc-600 rounded" />
+              <div className="w-3/4 h-1 bg-zinc-400 rounded" />
+              <div className="w-1/4 h-1 bg-fuchsia-500 rounded mt-0.5" />
             </div>
-            <span className={`text-[10px] font-bold uppercase tracking-wider ${formData.hero_layout === 'center' || !formData.hero_layout ? 'text-fuchsia-400' : 'text-zinc-500'}`}>Centered</span>
+            <span className={`text-[9px] font-bold uppercase tracking-wider ${formData.hero_layout === 'center' || !formData.hero_layout ? 'text-fuchsia-400' : 'text-zinc-500'}`}>Centered</span>
           </button>
 
-          <button disabled={!allowedLayouts.hero.includes('split-left')} onClick={() => handleVisualSelect('hero_layout', 'split-left')} className={`flex flex-col items-center justify-center p-4 border-2 rounded-xl transition-all disabled:opacity-20 disabled:cursor-not-allowed ${formData.hero_layout === 'split-left' ? 'border-fuchsia-500 bg-fuchsia-500/10' : 'border-zinc-800 bg-zinc-950 hover:border-zinc-700'}`}>
-            <div className="w-full h-12 border border-zinc-700 bg-zinc-900 mb-3 flex items-center p-1.5 gap-2 rounded">
-              <div className="w-1/2 h-full flex flex-col justify-center gap-1 pl-1">
-                 <div className="w-full h-1.5 bg-zinc-400 rounded" />
-                 <div className="w-2/3 h-1 bg-zinc-600 rounded" />
-                 <div className="w-1/2 h-1.5 bg-fuchsia-500 rounded mt-0.5" />
+          <button disabled={!allowedLayouts.hero.includes('split-left')} onClick={() => handleVisualSelect('hero_layout', 'split-left')} className={`flex flex-col items-center justify-center p-3 border-2 rounded-xl transition-all disabled:opacity-20 disabled:cursor-not-allowed ${formData.hero_layout === 'split-left' ? 'border-fuchsia-500 bg-fuchsia-500/10' : 'border-zinc-800 bg-zinc-950 hover:border-zinc-700'}`}>
+            <div className="w-full h-10 border border-zinc-700 bg-zinc-900 mb-2 flex items-center p-1 gap-1.5 rounded">
+              <div className="w-1/2 h-full flex flex-col justify-center gap-0.5 pl-0.5">
+                 <div className="w-full h-1 bg-zinc-400 rounded" />
+                 <div className="w-2/3 h-0.5 bg-zinc-600 rounded" />
+                 <div className="w-1/2 h-1 bg-fuchsia-500 rounded mt-0.5" />
               </div>
               <div className="w-1/2 h-full bg-zinc-700 rounded-sm" />
             </div>
-            <span className={`text-[10px] font-bold uppercase tracking-wider ${formData.hero_layout === 'split-left' ? 'text-fuchsia-400' : 'text-zinc-500'}`}>Split Left</span>
+            <span className={`text-[9px] font-bold uppercase tracking-wider ${formData.hero_layout === 'split-left' ? 'text-fuchsia-400' : 'text-zinc-500'}`}>Split Left</span>
           </button>
 
-          <button disabled={!allowedLayouts.hero.includes('split-right')} onClick={() => handleVisualSelect('hero_layout', 'split-right')} className={`flex flex-col items-center justify-center p-4 border-2 rounded-xl transition-all disabled:opacity-20 disabled:cursor-not-allowed ${formData.hero_layout === 'split-right' ? 'border-fuchsia-500 bg-fuchsia-500/10' : 'border-zinc-800 bg-zinc-950 hover:border-zinc-700'}`}>
-            <div className="w-full h-12 border border-zinc-700 bg-zinc-900 mb-3 flex items-center p-1.5 gap-2 rounded">
+          <button disabled={!allowedLayouts.hero.includes('split-right')} onClick={() => handleVisualSelect('hero_layout', 'split-right')} className={`flex flex-col items-center justify-center p-3 border-2 rounded-xl transition-all disabled:opacity-20 disabled:cursor-not-allowed ${formData.hero_layout === 'split-right' ? 'border-fuchsia-500 bg-fuchsia-500/10' : 'border-zinc-800 bg-zinc-950 hover:border-zinc-700'}`}>
+            <div className="w-full h-10 border border-zinc-700 bg-zinc-900 mb-2 flex items-center p-1 gap-1.5 rounded">
               <div className="w-1/2 h-full bg-zinc-700 rounded-sm" />
-              <div className="w-1/2 h-full flex flex-col justify-center gap-1 pr-1">
-                 <div className="w-full h-1.5 bg-zinc-400 rounded" />
-                 <div className="w-2/3 h-1 bg-zinc-600 rounded" />
-                 <div className="w-1/2 h-1.5 bg-fuchsia-500 rounded mt-0.5" />
+              <div className="w-1/2 h-full flex flex-col justify-center gap-0.5 pr-0.5">
+                 <div className="w-full h-1 bg-zinc-400 rounded" />
+                 <div className="w-2/3 h-0.5 bg-zinc-600 rounded" />
+                 <div className="w-1/2 h-1 bg-fuchsia-500 rounded mt-0.5" />
               </div>
             </div>
-            <span className={`text-[10px] font-bold uppercase tracking-wider ${formData.hero_layout === 'split-right' ? 'text-fuchsia-400' : 'text-zinc-500'}`}>Split Right</span>
+            <span className={`text-[9px] font-bold uppercase tracking-wider ${formData.hero_layout === 'split-right' ? 'text-fuchsia-400' : 'text-zinc-500'}`}>Split Right</span>
           </button>
 
-          <button disabled={!allowedLayouts.hero.includes('cinematic')} onClick={() => handleVisualSelect('hero_layout', 'cinematic')} className={`flex flex-col items-center justify-center p-4 border-2 rounded-xl transition-all disabled:opacity-20 disabled:cursor-not-allowed ${formData.hero_layout === 'cinematic' ? 'border-fuchsia-500 bg-fuchsia-500/10' : 'border-zinc-800 bg-zinc-950 hover:border-zinc-700'}`}>
-            <div className="w-full h-12 border border-zinc-700 bg-zinc-700 mb-3 flex items-end p-2 relative overflow-hidden rounded">
+          <button disabled={!allowedLayouts.hero.includes('cinematic')} onClick={() => handleVisualSelect('hero_layout', 'cinematic')} className={`flex flex-col items-center justify-center p-3 border-2 rounded-xl transition-all disabled:opacity-20 disabled:cursor-not-allowed ${formData.hero_layout === 'cinematic' ? 'border-fuchsia-500 bg-fuchsia-500/10' : 'border-zinc-800 bg-zinc-950 hover:border-zinc-700'}`}>
+            <div className="w-full h-10 border border-zinc-700 bg-zinc-700 mb-2 flex items-end p-1.5 relative overflow-hidden rounded">
               <div className="absolute inset-0 bg-linear-to-t from-zinc-950 to-transparent" />
-              <div className="relative z-10 w-full flex flex-col gap-1 pr-4">
-                 <div className="w-full h-1.5 bg-white rounded" />
-                 <div className="w-1/2 h-1.5 bg-fuchsia-500 rounded" />
+              <div className="relative z-10 w-full flex flex-col gap-0.5 pr-2">
+                 <div className="w-full h-1 bg-white rounded" />
+                 <div className="w-1/2 h-1 bg-fuchsia-500 rounded" />
               </div>
             </div>
-            <span className={`text-[10px] font-bold uppercase tracking-wider ${formData.hero_layout === 'cinematic' ? 'text-fuchsia-400' : 'text-zinc-500'}`}>Cinematic</span>
+            <span className={`text-[9px] font-bold uppercase tracking-wider ${formData.hero_layout === 'cinematic' ? 'text-fuchsia-400' : 'text-zinc-500'}`}>Cinematic</span>
           </button>
-
-          <button disabled={!allowedLayouts.hero.includes('glass')} onClick={() => handleVisualSelect('hero_layout', 'glass')} className={`flex flex-col items-center justify-center p-4 border-2 rounded-xl transition-all disabled:opacity-20 disabled:cursor-not-allowed ${formData.hero_layout === 'glass' ? 'border-fuchsia-500 bg-fuchsia-500/10' : 'border-zinc-800 bg-zinc-950 hover:border-zinc-700'}`}>
-            <div className="w-full h-12 border border-zinc-700 bg-zinc-800 mb-3 flex items-center justify-center p-1.5 rounded relative overflow-hidden">
-               <div className="absolute inset-0 bg-zinc-600" />
-               <div className="relative z-10 w-4/5 h-4/5 bg-zinc-950/60 border border-white/20 rounded flex flex-col items-center justify-center gap-1">
-                  <div className="w-1/2 h-1 bg-white rounded" />
-                  <div className="w-1/3 h-1 bg-fuchsia-500 rounded" />
-               </div>
-            </div>
-            <span className={`text-[10px] font-bold uppercase tracking-wider ${formData.hero_layout === 'glass' ? 'text-fuchsia-400' : 'text-zinc-500'}`}>Glass Center</span>
-          </button>
-
         </div>
       </div>
 
-      {/* 3. NEW: STORY & ABOUT LAYOUT */}
-      <div className="space-y-3 pt-6 border-t border-zinc-800/50">
-        <label className="text-[10px] font-mono font-bold text-zinc-400 uppercase tracking-widest flex items-center gap-2">
-          <BookOpen size={12} /> 3. Story & About Layout
+      {/* 3. STORY & ABOUT LAYOUT */}
+      <div className="space-y-3 pt-6 border-t border-zinc-800/60">
+        <label className="text-[9px] font-bold text-zinc-500 uppercase tracking-widest flex items-center gap-1.5">
+          <BookOpen size={10} /> 3. About Section
         </label>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          
-          <button disabled={!allowedLayouts.about.includes('split')} onClick={() => handleVisualSelect('about_layout', 'split')} className={`flex flex-col items-center justify-center p-4 border-2 rounded-xl transition-all disabled:opacity-20 disabled:cursor-not-allowed ${formData.about_layout === 'split' || !formData.about_layout ? 'border-fuchsia-500 bg-fuchsia-500/10' : 'border-zinc-800 bg-zinc-950 hover:border-zinc-700'}`}>
-            <div className="w-full h-12 border border-zinc-700 bg-zinc-900 mb-3 flex items-center p-1.5 gap-2 rounded">
+        <div className="grid grid-cols-2 gap-3">
+          <button disabled={!allowedLayouts.about.includes('split')} onClick={() => handleVisualSelect('about_layout', 'split')} className={`flex flex-col items-center justify-center p-3 border-2 rounded-xl transition-all disabled:opacity-20 disabled:cursor-not-allowed ${formData.about_layout === 'split' || !formData.about_layout ? 'border-fuchsia-500 bg-fuchsia-500/10' : 'border-zinc-800 bg-zinc-950 hover:border-zinc-700'}`}>
+            <div className="w-full h-10 border border-zinc-700 bg-zinc-900 mb-2 flex items-center p-1 gap-1.5 rounded">
                <div className="w-1/2 h-full bg-zinc-700 rounded-sm" />
                <div className="w-1/2 h-full flex flex-col gap-1 justify-center">
-                  <div className="w-3/4 h-1.5 bg-zinc-400 rounded" />
-                  <div className="w-full h-1 bg-zinc-600 rounded" />
-                  <div className="w-5/6 h-1 bg-zinc-600 rounded" />
+                  <div className="w-3/4 h-1 bg-zinc-400 rounded" />
+                  <div className="w-full h-0.5 bg-zinc-600 rounded" />
+                  <div className="w-5/6 h-0.5 bg-zinc-600 rounded" />
                </div>
             </div>
-            <span className={`text-[10px] font-bold uppercase tracking-wider ${formData.about_layout === 'split' || !formData.about_layout ? 'text-fuchsia-400' : 'text-zinc-500'}`}>Classic Split</span>
+            <span className={`text-[9px] font-bold uppercase tracking-wider ${formData.about_layout === 'split' || !formData.about_layout ? 'text-fuchsia-400' : 'text-zinc-500'}`}>Classic Split</span>
           </button>
 
-          <button disabled={!allowedLayouts.about.includes('editorial')} onClick={() => handleVisualSelect('about_layout', 'editorial')} className={`flex flex-col items-center justify-center p-4 border-2 rounded-xl transition-all disabled:opacity-20 disabled:cursor-not-allowed ${formData.about_layout === 'editorial' ? 'border-fuchsia-500 bg-fuchsia-500/10' : 'border-zinc-800 bg-zinc-950 hover:border-zinc-700'}`}>
-            <div className="w-full h-12 border border-zinc-700 bg-zinc-900 mb-3 flex items-center justify-center p-1.5 rounded relative">
-               <div className="absolute left-2 top-2 w-1/2 h-8 bg-zinc-700 rounded-sm z-0" />
-               <div className="absolute right-2 bottom-2 w-2/3 h-6 bg-zinc-800 border border-zinc-600 rounded-sm z-10 flex flex-col gap-1 p-1">
-                  <div className="w-full h-1 bg-zinc-400 rounded" />
-                  <div className="w-3/4 h-0.5 bg-zinc-500 rounded" />
+          <button disabled={!allowedLayouts.about.includes('editorial')} onClick={() => handleVisualSelect('about_layout', 'editorial')} className={`flex flex-col items-center justify-center p-3 border-2 rounded-xl transition-all disabled:opacity-20 disabled:cursor-not-allowed ${formData.about_layout === 'editorial' ? 'border-fuchsia-500 bg-fuchsia-500/10' : 'border-zinc-800 bg-zinc-950 hover:border-zinc-700'}`}>
+            <div className="w-full h-10 border border-zinc-700 bg-zinc-900 mb-2 flex items-center justify-center p-1 rounded relative">
+               <div className="absolute left-1.5 top-1.5 w-1/2 h-6 bg-zinc-700 rounded-sm z-0" />
+               <div className="absolute right-1.5 bottom-1.5 w-2/3 h-5 bg-zinc-800 border border-zinc-600 rounded-sm z-10 flex flex-col gap-0.5 p-1">
+                  <div className="w-full h-0.5 bg-zinc-400 rounded" />
+                  <div className="w-3/4 h-px bg-zinc-500 rounded" />
                </div>
             </div>
-            <span className={`text-[10px] font-bold uppercase tracking-wider ${formData.about_layout === 'editorial' ? 'text-fuchsia-400' : 'text-zinc-500'}`}>Editorial</span>
+            <span className={`text-[9px] font-bold uppercase tracking-wider ${formData.about_layout === 'editorial' ? 'text-fuchsia-400' : 'text-zinc-500'}`}>Editorial</span>
           </button>
 
-          <button disabled={!allowedLayouts.about.includes('minimal')} onClick={() => handleVisualSelect('about_layout', 'minimal')} className={`flex flex-col items-center justify-center p-4 border-2 rounded-xl transition-all disabled:opacity-20 disabled:cursor-not-allowed ${formData.about_layout === 'minimal' ? 'border-fuchsia-500 bg-fuchsia-500/10' : 'border-zinc-800 bg-zinc-950 hover:border-zinc-700'}`}>
-            <div className="w-full h-12 border border-zinc-700 bg-zinc-900 mb-3 flex flex-col items-center justify-center gap-1.5 rounded">
-               <div className="w-4 h-4 rounded-full bg-zinc-700" />
-               <div className="w-1/2 h-1 bg-zinc-400 rounded" />
-               <div className="w-3/4 h-0.5 bg-zinc-600 rounded" />
+          <button disabled={!allowedLayouts.about.includes('minimal')} onClick={() => handleVisualSelect('about_layout', 'minimal')} className={`flex flex-col items-center justify-center p-3 border-2 rounded-xl transition-all disabled:opacity-20 disabled:cursor-not-allowed ${formData.about_layout === 'minimal' ? 'border-fuchsia-500 bg-fuchsia-500/10' : 'border-zinc-800 bg-zinc-950 hover:border-zinc-700'}`}>
+            <div className="w-full h-10 border border-zinc-700 bg-zinc-900 mb-2 flex flex-col items-center justify-center gap-1 rounded">
+               <div className="w-3 h-3 rounded-full bg-zinc-700" />
+               <div className="w-1/2 h-0.5 bg-zinc-400 rounded" />
+               <div className="w-3/4 h-px bg-zinc-600 rounded" />
             </div>
-            <span className={`text-[10px] font-bold uppercase tracking-wider ${formData.about_layout === 'minimal' ? 'text-fuchsia-400' : 'text-zinc-500'}`}>Minimal Center</span>
+            <span className={`text-[9px] font-bold uppercase tracking-wider ${formData.about_layout === 'minimal' ? 'text-fuchsia-400' : 'text-zinc-500'}`}>Minimal</span>
           </button>
 
-          <button disabled={!allowedLayouts.about.includes('card')} onClick={() => handleVisualSelect('about_layout', 'card')} className={`flex flex-col items-center justify-center p-4 border-2 rounded-xl transition-all disabled:opacity-20 disabled:cursor-not-allowed ${formData.about_layout === 'card' ? 'border-fuchsia-500 bg-fuchsia-500/10' : 'border-zinc-800 bg-zinc-950 hover:border-zinc-700'}`}>
-            <div className="w-full h-12 border border-zinc-700 bg-zinc-800 mb-3 flex items-center justify-center p-1.5 rounded relative overflow-hidden">
+          <button disabled={!allowedLayouts.about.includes('card')} onClick={() => handleVisualSelect('about_layout', 'card')} className={`flex flex-col items-center justify-center p-3 border-2 rounded-xl transition-all disabled:opacity-20 disabled:cursor-not-allowed ${formData.about_layout === 'card' ? 'border-fuchsia-500 bg-fuchsia-500/10' : 'border-zinc-800 bg-zinc-950 hover:border-zinc-700'}`}>
+            <div className="w-full h-10 border border-zinc-700 bg-zinc-800 mb-2 flex items-center justify-center p-1 rounded relative overflow-hidden">
                <div className="absolute inset-0 bg-zinc-600" />
                <div className="relative z-10 w-5/6 h-5/6 bg-zinc-950/60 border border-white/20 rounded-sm flex items-center p-1 gap-1">
                   <div className="w-1/3 h-full bg-zinc-500/50 rounded-sm" />
                   <div className="w-2/3 flex flex-col gap-0.5">
-                      <div className="w-full h-1 bg-zinc-300 rounded" />
-                      <div className="w-2/3 h-0.5 bg-zinc-500 rounded" />
+                      <div className="w-full h-0.5 bg-zinc-300 rounded" />
+                      <div className="w-2/3 h-px bg-zinc-500 rounded" />
                   </div>
                </div>
             </div>
-            <span className={`text-[10px] font-bold uppercase tracking-wider ${formData.about_layout === 'card' ? 'text-fuchsia-400' : 'text-zinc-500'}`}>Glass Card</span>
+            <span className={`text-[9px] font-bold uppercase tracking-wider ${formData.about_layout === 'card' ? 'text-fuchsia-400' : 'text-zinc-500'}`}>Glass Card</span>
           </button>
-
         </div>
       </div>
 
       {/* 4. CONTENT FLOW */}
-      <div className="space-y-3 pt-6 border-t border-zinc-800/50">
-        <label className="text-[10px] font-mono font-bold text-zinc-400 uppercase tracking-widest flex items-center gap-2">
-          <Columns size={12} /> 4. Content Flow (Services & Gallery)
+      <div className="space-y-3 pt-6 border-t border-zinc-800/60">
+        <label className="text-[9px] font-bold text-zinc-500 uppercase tracking-widest flex items-center gap-1.5">
+          <Columns size={10} /> 4. Content Flow
         </label>
-        <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
-          
-          <button disabled={!allowedLayouts.content.includes('classic')} onClick={() => handleVisualSelect('content_layout', 'classic')} className={`flex flex-col items-center justify-center p-4 border-2 rounded-xl transition-all disabled:opacity-20 disabled:cursor-not-allowed ${formData.content_layout === 'classic' || !formData.content_layout ? 'border-fuchsia-500 bg-fuchsia-500/10' : 'border-zinc-800 bg-zinc-950 hover:border-zinc-700'}`}>
-             <div className="w-full h-12 border border-zinc-700 bg-zinc-900 mb-3 flex flex-col p-1.5 gap-1.5 rounded">
-                <div className="w-full h-3 bg-zinc-600 rounded-sm" />
-                <div className="w-full h-3 bg-zinc-600 rounded-sm" />
+        <div className="grid grid-cols-2 gap-3">
+          <button disabled={!allowedLayouts.content.includes('classic')} onClick={() => handleVisualSelect('content_layout', 'classic')} className={`flex flex-col items-center justify-center p-3 border-2 rounded-xl transition-all disabled:opacity-20 disabled:cursor-not-allowed ${formData.content_layout === 'classic' || !formData.content_layout ? 'border-fuchsia-500 bg-fuchsia-500/10' : 'border-zinc-800 bg-zinc-950 hover:border-zinc-700'}`}>
+             <div className="w-full h-10 border border-zinc-700 bg-zinc-900 mb-2 flex flex-col p-1 gap-1 rounded">
+                <div className="w-full h-2.5 bg-zinc-600 rounded-sm" />
+                <div className="w-full h-2.5 bg-zinc-600 rounded-sm" />
              </div>
-             <span className={`text-[10px] font-bold uppercase tracking-wider ${formData.content_layout === 'classic' || !formData.content_layout ? 'text-fuchsia-400' : 'text-zinc-500'}`}>Stacked</span>
+             <span className={`text-[9px] font-bold uppercase tracking-wider ${formData.content_layout === 'classic' || !formData.content_layout ? 'text-fuchsia-400' : 'text-zinc-500'}`}>Stacked</span>
           </button>
 
-          <button disabled={!allowedLayouts.content.includes('bento')} onClick={() => handleVisualSelect('content_layout', 'bento')} className={`flex flex-col items-center justify-center p-4 border-2 rounded-xl transition-all disabled:opacity-20 disabled:cursor-not-allowed ${formData.content_layout === 'bento' ? 'border-fuchsia-500 bg-fuchsia-500/10' : 'border-zinc-800 bg-zinc-950 hover:border-zinc-700'}`}>
-             <div className="w-full h-12 border border-zinc-700 bg-zinc-900 mb-3 grid grid-cols-2 gap-1 p-1.5 rounded">
+          <button disabled={!allowedLayouts.content.includes('bento')} onClick={() => handleVisualSelect('content_layout', 'bento')} className={`flex flex-col items-center justify-center p-3 border-2 rounded-xl transition-all disabled:opacity-20 disabled:cursor-not-allowed ${formData.content_layout === 'bento' ? 'border-fuchsia-500 bg-fuchsia-500/10' : 'border-zinc-800 bg-zinc-950 hover:border-zinc-700'}`}>
+             <div className="w-full h-10 border border-zinc-700 bg-zinc-900 mb-2 grid grid-cols-2 gap-1 p-1 rounded">
                 <div className="w-full h-full bg-fuchsia-500/50 rounded-sm" />
                 <div className="w-full h-full bg-zinc-600 rounded-sm" />
                 <div className="w-full h-full bg-zinc-600 rounded-sm" />
                 <div className="w-full h-full bg-fuchsia-500/50 rounded-sm" />
              </div>
-             <span className={`text-[10px] font-bold uppercase tracking-wider ${formData.content_layout === 'bento' ? 'text-fuchsia-400' : 'text-zinc-500'}`}>Bento Grid</span>
+             <span className={`text-[9px] font-bold uppercase tracking-wider ${formData.content_layout === 'bento' ? 'text-fuchsia-400' : 'text-zinc-500'}`}>Bento Grid</span>
           </button>
 
-          <button disabled={!allowedLayouts.content.includes('sticky')} onClick={() => handleVisualSelect('content_layout', 'sticky')} className={`flex flex-col items-center justify-center p-4 border-2 rounded-xl transition-all disabled:opacity-20 disabled:cursor-not-allowed ${formData.content_layout === 'sticky' ? 'border-fuchsia-500 bg-fuchsia-500/10' : 'border-zinc-800 bg-zinc-950 hover:border-zinc-700'}`}>
-             <div className="w-full h-12 border border-zinc-700 bg-zinc-900 mb-3 flex p-1.5 gap-1.5 rounded">
+          <button disabled={!allowedLayouts.content.includes('sticky')} onClick={() => handleVisualSelect('content_layout', 'sticky')} className={`flex flex-col items-center justify-center p-3 border-2 rounded-xl transition-all disabled:opacity-20 disabled:cursor-not-allowed ${formData.content_layout === 'sticky' ? 'border-fuchsia-500 bg-fuchsia-500/10' : 'border-zinc-800 bg-zinc-950 hover:border-zinc-700'}`}>
+             <div className="w-full h-10 border border-zinc-700 bg-zinc-900 mb-2 flex p-1 gap-1 rounded">
                 <div className="w-1/3 h-full bg-fuchsia-500/50 rounded-sm" />
-                <div className="w-2/3 h-full flex flex-col gap-1">
+                <div className="w-2/3 h-full flex flex-col gap-0.5">
                   <div className="w-full h-1/2 bg-zinc-600 rounded-sm" />
                   <div className="w-full h-1/2 bg-zinc-600 rounded-sm" />
                 </div>
              </div>
-             <span className={`text-[10px] font-bold uppercase tracking-wider ${formData.content_layout === 'sticky' ? 'text-fuchsia-400' : 'text-zinc-500'}`}>Sticky Scroll</span>
+             <span className={`text-[9px] font-bold uppercase tracking-wider ${formData.content_layout === 'sticky' ? 'text-fuchsia-400' : 'text-zinc-500'}`}>Sticky Scroll</span>
           </button>
 
-          <button disabled={!allowedLayouts.content.includes('editorial')} onClick={() => handleVisualSelect('content_layout', 'editorial')} className={`flex flex-col items-center justify-center p-4 border-2 rounded-xl transition-all disabled:opacity-20 disabled:cursor-not-allowed ${formData.content_layout === 'editorial' ? 'border-fuchsia-500 bg-fuchsia-500/10' : 'border-zinc-800 bg-zinc-950 hover:border-zinc-700'}`}>
-             <div className="w-full h-12 border border-zinc-700 bg-zinc-900 mb-3 flex flex-col items-center justify-center gap-1 rounded relative">
-                <div className="w-3/4 h-1.5 bg-fuchsia-500/80 rounded-sm z-10" />
-                <div className="w-1/2 h-1.5 bg-zinc-600 rounded-sm z-10" />
-                <div className="w-2/3 h-1.5 bg-zinc-600 rounded-sm z-10" />
+          <button disabled={!allowedLayouts.content.includes('editorial')} onClick={() => handleVisualSelect('content_layout', 'editorial')} className={`flex flex-col items-center justify-center p-3 border-2 rounded-xl transition-all disabled:opacity-20 disabled:cursor-not-allowed ${formData.content_layout === 'editorial' ? 'border-fuchsia-500 bg-fuchsia-500/10' : 'border-zinc-800 bg-zinc-950 hover:border-zinc-700'}`}>
+             <div className="w-full h-10 border border-zinc-700 bg-zinc-900 mb-2 flex flex-col items-center justify-center gap-1 rounded relative">
+                <div className="w-3/4 h-1 bg-fuchsia-500/80 rounded-sm z-10" />
+                <div className="w-1/2 h-1 bg-zinc-600 rounded-sm z-10" />
+                <div className="w-2/3 h-1 bg-zinc-600 rounded-sm z-10" />
              </div>
-             <span className={`text-[10px] font-bold uppercase tracking-wider ${formData.content_layout === 'editorial' ? 'text-fuchsia-400' : 'text-zinc-500'}`}>Editorial Hover</span>
+             <span className={`text-[9px] font-bold uppercase tracking-wider ${formData.content_layout === 'editorial' ? 'text-fuchsia-400' : 'text-zinc-500'}`}>Editorial</span>
           </button>
-
-          <button disabled={!allowedLayouts.content.includes('accordion')} onClick={() => handleVisualSelect('content_layout', 'accordion')} className={`flex flex-col items-center justify-center p-4 border-2 rounded-xl transition-all disabled:opacity-20 disabled:cursor-not-allowed ${formData.content_layout === 'accordion' ? 'border-fuchsia-500 bg-fuchsia-500/10' : 'border-zinc-800 bg-zinc-950 hover:border-zinc-700'}`}>
-             <div className="w-full h-12 border border-zinc-700 bg-zinc-900 mb-3 flex flex-col p-2 gap-1.5 rounded">
-                <div className="w-full h-2 bg-fuchsia-500/50 rounded-sm" />
-                <div className="w-full h-2 bg-zinc-600 rounded-sm" />
-                <div className="w-full h-2 bg-zinc-600 rounded-sm" />
-             </div>
-             <span className={`text-[10px] font-bold uppercase tracking-wider ${formData.content_layout === 'accordion' ? 'text-fuchsia-400' : 'text-zinc-500'}`}>Accordion</span>
-          </button>
-
         </div>
       </div>
 
       {/* 5. BRAND COLOR */}
-      <div className="space-y-3 pt-6 border-t border-zinc-800/50">
-        <div className="flex items-center gap-3">
-           <Palette className="w-4 h-4 text-emerald-400" />
-           <label className="text-[10px] font-mono font-bold text-zinc-400 uppercase tracking-widest">5. Brand Injection Color</label>
+      <div className="space-y-3 pt-6 border-t border-zinc-800/60">
+        <div className="flex items-center gap-2">
+           <Palette className="w-3 h-3 text-emerald-400" />
+           <label className="text-[9px] font-bold text-zinc-500 uppercase tracking-widest">5. Brand Color</label>
         </div>
-        <div className="flex gap-3">
+        <div className="flex flex-wrap gap-2">
           {BRAND_COLORS.map((c) => (
             <button key={c.value} type="button" onClick={() => setFormData((p: any) => ({...p, brand_color: c.value}))}
-              className={`w-10 h-10 rounded-full border-4 shadow-lg transition-all ${formData.brand_color === c.value ? 'border-white scale-110 shadow-white/20' : 'border-zinc-800/50 hover:scale-105'} ${c.twBg}`} 
+              className={`w-8 h-8 rounded-full border-2 shadow-md transition-all ${formData.brand_color === c.value ? 'border-white scale-110 shadow-white/20' : 'border-zinc-800/50 hover:scale-105'} ${c.twBg}`} 
               title={c.name}
             />
           ))}
         </div>
       </div>
-
     </div>
   );
 }

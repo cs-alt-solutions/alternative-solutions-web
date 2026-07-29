@@ -6,10 +6,14 @@ import { UploadCloud, Image as ImageIcon, X, LayoutGrid, Trash2, Layers } from '
 import { updateStorefrontMedia, updateStorefrontGallery, removeImageFromGallery } from '@/app/actions/storefronts';
 
 export default function MediaTab({ formData, setFormData }: { formData: any, setFormData: any }) {
-  // --- SECTION 1: GALLERY ECOSYSTEM ---
   const [files, setFiles] = useState<File[]>([]);
   const [isUploadingGallery, setIsUploadingGallery] = useState(false);
   const [isDeleting, setIsDeleting] = useState<string | null>(null);
+  const [isUploadingCore, setIsUploadingCore] = useState(false);
+  
+  const coreFormRef = useRef<HTMLFormElement>(null);
+  const [heroPreview, setHeroPreview] = useState<string | null>(null);
+  const [aboutPreview, setAboutPreview] = useState<string | null>(null);
 
   // Safely parse live gallery from master state
   const liveGallery = (formData.gallery_items || []).map((item: any, i: number) => {
@@ -18,6 +22,29 @@ export default function MediaTab({ formData, setFormData }: { formData: any, set
     }
     return item;
   });
+
+  const handleHeroSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) setHeroPreview(URL.createObjectURL(file));
+  };
+
+  const handleAboutSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) setAboutPreview(URL.createObjectURL(file));
+  };
+
+  async function handleSaveCore(uploadData: FormData) {
+    setIsUploadingCore(true);
+    try {
+      await updateStorefrontMedia(formData.id, formData.slug, uploadData);
+      if (coreFormRef.current) coreFormRef.current.reset();
+      window.location.reload();
+    } catch (e) {
+      alert("Upload failed. Check storage permissions.");
+    } finally {
+      setIsUploadingCore(false);
+    }
+  }
 
   const handleDrop = (e: React.DragEvent) => {
     e.preventDefault();
@@ -29,12 +56,9 @@ export default function MediaTab({ formData, setFormData }: { formData: any, set
     setIsUploadingGallery(true);
     const uploadData = new FormData();
     files.forEach(file => uploadData.append('images', file));
-
     try {
-      // 1. Send files to Supabase Bucket
       await updateStorefrontGallery(formData.id, formData.slug, uploadData);
       setFiles([]);
-      // 2. Force reload to fetch new URLs into master state
       window.location.reload();
     } catch (e) {
       alert("Gallery sync failed.");
@@ -47,14 +71,12 @@ export default function MediaTab({ formData, setFormData }: { formData: any, set
     setFiles(files.filter((_, i) => i !== index));
   }
 
-  // Sync Local Metadata to Master State
   const handleMetaChange = (index: number, field: string, value: string) => {
     const updated = [...liveGallery];
     updated[index] = { ...updated[index], [field]: value };
     setFormData((prev: any) => ({ ...prev, gallery_items: updated }));
   };
 
-  // Handle Deletion & Sync Master State
   async function handleDeleteLiveImage(imageUrlToRemove: string) {
     if (!window.confirm("Remove this image from live gallery?")) return;
     setIsDeleting(imageUrlToRemove);
@@ -73,174 +95,116 @@ export default function MediaTab({ formData, setFormData }: { formData: any, set
     }
   }
 
-  // --- SECTION 2: CORE IMAGES (HERO & ABOUT) ---
-  const [isUploadingCore, setIsUploadingCore] = useState(false);
-  const coreFormRef = useRef<HTMLFormElement>(null);
-  const [heroPreview, setHeroPreview] = useState<string | null>(null);
-  const [aboutPreview, setAboutPreview] = useState<string | null>(null);
-
-  const handleHeroSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) setHeroPreview(URL.createObjectURL(file));
-  };
-
-  const handleAboutSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) setAboutPreview(URL.createObjectURL(file));
-  };
-
-  async function handleSaveCore(uploadData: FormData) {
-    setIsUploadingCore(true);
-    try {
-      await updateStorefrontMedia(formData.id, formData.slug, uploadData);
-      if (coreFormRef.current) coreFormRef.current.reset();
-      // Force reload to sync new hero/about URLs into master state
-      window.location.reload();
-    } catch (e) {
-      alert("Upload failed. Check storage permissions.");
-    } finally {
-      setIsUploadingCore(false);
-    }
-  }
-
   return (
-    <div className="space-y-12 animate-in fade-in slide-in-from-bottom-4 duration-500 pb-12 p-2 pt-6">
-
-      {/* BLOCK 1: GALLERY ECOSYSTEM */}
-      <div className="space-y-6">
-        <div className="flex items-center justify-between border-b border-zinc-800 pb-4">
-          <div className="flex items-center gap-3">
-            <LayoutGrid className="w-5 h-5 text-emerald-500" />
-            <div>
-              <h2 className="text-lg font-black text-white uppercase tracking-widest">Gallery & Portfolio</h2>
-              <p className="text-xs text-zinc-500 font-mono mt-1">Manage masonry layout and dynamic hover states.</p>
+    <div className="space-y-10 pb-12">
+      
+      {/* 🚀 BLOCK 1: CORE IMAGES (MOVED TO TOP) */}
+      <div className="space-y-4">
+        <div className="flex items-center gap-2 border-b border-zinc-800 pb-3">
+          <ImageIcon className="w-4 h-4 text-cyan-500" />
+          <h2 className="text-sm font-black text-white uppercase tracking-widest">Core Imagery</h2>
+        </div>
+        
+        <form ref={coreFormRef} action={handleSaveCore} className="bg-zinc-900/60 border border-zinc-800 p-4 rounded-xl space-y-6 shadow-sm">
+          
+          <div className="space-y-2">
+            <label className="text-[9px] font-bold text-zinc-500 uppercase tracking-widest">Hero Background Image</label>
+            <div className="flex flex-col gap-3">
+              <div className="w-full aspect-video rounded-lg overflow-hidden border border-zinc-800 bg-black">
+                <img src={heroPreview || formData.hero_image || 'https://via.placeholder.com/1920x1080/000000/333333?text=NO+IMAGE'} alt="Hero" className="w-full h-full object-cover opacity-80 hover:opacity-100 transition-opacity" />
+              </div>
+              <input type="file" accept="image/*" name="hero_file" onChange={handleHeroSelect} className="w-full text-xs text-zinc-400 file:mr-3 file:py-1.5 file:px-3 file:rounded-md file:border-0 file:text-[10px] file:font-bold file:uppercase file:tracking-widest file:bg-zinc-800 file:text-white hover:file:bg-zinc-700 cursor-pointer transition-colors" />
             </div>
           </div>
-        </div>
 
-        <div className="space-y-4">
-          <label className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest flex items-center gap-2">
-            <UploadCloud className="w-4 h-4 text-emerald-500" /> Drop New Media
-          </label>
-          <div onDragOver={(e) => e.preventDefault()} onDrop={handleDrop} className="border-2 border-dashed border-zinc-800 p-12 rounded-2xl text-center hover:border-emerald-500/50 transition-colors bg-zinc-900/20">
-            <UploadCloud className="w-12 h-12 mx-auto text-zinc-600 mb-4" />
-            <p className="text-white font-bold text-sm">Drag & Drop Images Here</p>
-            <p className="text-zinc-500 text-xs mt-2 font-mono">Max resolution 2000px width</p>
+          <div className="space-y-2 pt-4 border-t border-zinc-800/60">
+            <label className="text-[9px] font-bold text-zinc-500 uppercase tracking-widest">About Section Image</label>
+            <div className="flex items-center gap-4">
+              <div className="w-20 h-20 rounded-lg overflow-hidden border border-zinc-800 bg-black shrink-0">
+                <img src={aboutPreview || formData.about_image || 'https://via.placeholder.com/800x800/000000/333333?text=NO+IMAGE'} alt="About" className="w-full h-full object-cover opacity-80 hover:opacity-100 transition-opacity" />
+              </div>
+              <input type="file" accept="image/*" name="about_file" onChange={handleAboutSelect} className="w-full text-xs text-zinc-400 file:mr-3 file:py-1.5 file:px-3 file:rounded-md file:border-0 file:text-[10px] file:font-bold file:uppercase file:tracking-widest file:bg-zinc-800 file:text-white hover:file:bg-zinc-700 cursor-pointer transition-colors" />
+            </div>
           </div>
+
+          <button type="submit" disabled={isUploadingCore} className="w-full flex items-center justify-center gap-2 bg-cyan-600 hover:bg-cyan-500 text-zinc-950 font-black tracking-widest text-[10px] uppercase py-3 rounded-lg transition-all shadow-[0_0_10px_rgba(8,145,178,0.2)] disabled:opacity-50 mt-2">
+            <UploadCloud className="w-3.5 h-3.5" /> {isUploadingCore ? 'UPLOADING...' : 'SAVE CORE MEDIA'}
+          </button>
+        </form>
+      </div>
+
+      {/* 🚀 BLOCK 2: GALLERY ECOSYSTEM */}
+      <div className="space-y-4 pt-4 border-t border-zinc-800">
+        <div className="flex items-center gap-2 border-b border-zinc-800 pb-3">
+          <LayoutGrid className="w-4 h-4 text-emerald-500" />
+          <h2 className="text-sm font-black text-white uppercase tracking-widest">Masonry Gallery</h2>
+        </div>
+        
+        <div onDragOver={(e) => e.preventDefault()} onDrop={handleDrop} className="border border-dashed border-zinc-700 p-8 rounded-xl text-center hover:border-emerald-500/50 hover:bg-emerald-500/5 transition-colors bg-zinc-900/40 cursor-pointer">
+          <UploadCloud className="w-8 h-8 mx-auto text-zinc-500 mb-2" />
+          <p className="text-zinc-300 font-bold text-xs uppercase tracking-widest">Drag & Drop Images</p>
         </div>
 
         {files.length > 0 && (
-          <div className="space-y-4 pt-4 border-t border-zinc-800/50">
-            <h4 className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">Ready to Sync ({files.length})</h4>
-            <div className="grid grid-cols-4 gap-4">
+          <div className="space-y-3 bg-zinc-900/80 border border-zinc-800 p-4 rounded-xl">
+            <h4 className="text-[9px] font-bold text-emerald-500 uppercase tracking-widest">Staging Queue ({files.length})</h4>
+            <div className="grid grid-cols-3 gap-2">
               {files.map((file, i) => (
-                <div key={i} className="relative aspect-square bg-zinc-900 rounded-lg flex items-center justify-center overflow-hidden border border-zinc-800">
-                  <span className="text-[10px] text-zinc-500 font-mono truncate px-2">{file.name}</span>
-                  <button onClick={() => handleRemoveStaged(i)} className="absolute top-1 right-1 bg-black/50 rounded-full p-1 hover:bg-red-500/50 transition-colors"><X className="w-3 h-3 text-white" /></button>
+                <div key={i} className="relative aspect-square bg-black rounded flex items-center justify-center overflow-hidden border border-zinc-800">
+                  <span className="text-[8px] text-zinc-500 font-mono truncate px-1">{file.name}</span>
+                  <button onClick={() => handleRemoveStaged(i)} className="absolute top-1 right-1 bg-black/80 rounded p-1 hover:bg-red-500 transition-colors"><X className="w-3 h-3 text-white" /></button>
                 </div>
               ))}
             </div>
-            <button onClick={handleUploadGallery} disabled={isUploadingGallery} className="w-full bg-emerald-600 hover:bg-emerald-500 transition-colors py-4 font-black tracking-widest text-zinc-950 rounded-lg shadow-[0_0_15px_rgba(16,185,129,0.4)] disabled:opacity-50 mt-4">
-              {isUploadingGallery ? 'SYNCING TO CLOUD...' : `SYNC ${files.length} ITEMS TO MASONRY GRID`}
+            <button onClick={handleUploadGallery} disabled={isUploadingGallery} className="w-full bg-emerald-600 hover:bg-emerald-500 transition-colors py-2.5 font-black tracking-widest text-[10px] text-zinc-950 uppercase rounded-lg shadow-[0_0_10px_rgba(16,185,129,0.2)] disabled:opacity-50">
+              {isUploadingGallery ? 'SYNCING TO CLOUD...' : 'PUSH TO GALLERY'}
             </button>
           </div>
         )}
 
         {liveGallery.length > 0 && (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 pt-6 border-t border-zinc-800/50">
+          <div className="space-y-4 pt-4">
             {liveGallery.map((item: any, i: number) => (
-              <div key={item.id || i} className="bg-zinc-900 border border-zinc-800 p-3 rounded-xl flex flex-col gap-3 shadow-lg">
+              <div key={item.id || i} className="bg-zinc-900/60 border border-zinc-800 p-3 rounded-xl flex flex-col gap-3 shadow-sm">
+                
                 <div className="relative aspect-video bg-black rounded-lg overflow-hidden border border-zinc-800 group">
                   <img src={item.imageUrl} alt={item.title || `Gallery ${i}`} className={`w-full h-full object-cover transition-all ${isDeleting === item.imageUrl ? 'opacity-30 blur-sm' : ''}`} />
-                  <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center backdrop-blur-sm">
-                    <button onClick={() => handleDeleteLiveImage(item.imageUrl)} disabled={isDeleting === item.imageUrl} className="flex flex-col items-center gap-1 text-red-400 hover:text-red-300 transition-colors">
-                      <Trash2 className="w-6 h-6" />
-                      <span className="text-[10px] font-black uppercase tracking-widest">{isDeleting === item.imageUrl ? 'Removing...' : 'Delete'}</span>
+                  <div className="absolute inset-0 bg-black/70 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center backdrop-blur-sm">
+                    <button onClick={() => handleDeleteLiveImage(item.imageUrl)} disabled={isDeleting === item.imageUrl} className="flex items-center gap-2 text-red-400 hover:text-red-300 bg-red-950/50 px-3 py-1.5 rounded-lg border border-red-500/20 transition-colors">
+                      <Trash2 className="w-4 h-4" />
+                      <span className="text-[10px] font-black uppercase tracking-widest">{isDeleting === item.imageUrl ? 'TRASHING...' : 'DELETE'}</span>
                     </button>
                   </div>
                 </div>
                 
                 <div className="space-y-2">
-                  <input type="text" placeholder="Title (e.g. Pan Seared Foie Gras)" value={item.title || ''} onChange={(e) => handleMetaChange(i, 'title', e.target.value)} className="w-full bg-zinc-950 border border-zinc-800 rounded p-2.5 text-xs text-white focus:border-emerald-500 outline-none transition-colors font-bold" />
+                  <input type="text" placeholder="Title/Name" value={item.title || ''} onChange={(e) => handleMetaChange(i, 'title', e.target.value)} className="w-full bg-black/40 border border-zinc-800 rounded-lg p-2 text-xs text-white focus:border-emerald-500 outline-none transition-colors font-bold" />
                   
-                  {/* 🚨 THE DYNAMIC SERVICE BRIDGE DROPDOWN 🚨 */}
                   <div className="relative">
-                    <Layers className="w-3.5 h-3.5 text-emerald-500 absolute left-2.5 top-3 pointer-events-none" />
+                    <Layers className="w-3 h-3 text-emerald-500 absolute left-2.5 top-2 pointer-events-none" />
                     <select
                       value={item.category || ''}
                       onChange={(e) => handleMetaChange(i, 'category', e.target.value)}
-                      className="w-full bg-zinc-950 border border-zinc-800 rounded pl-8 pr-3 py-2.5 text-xs text-zinc-300 focus:border-emerald-500 outline-none transition-colors appearance-none cursor-pointer"
+                      className="w-full bg-black/40 border border-zinc-800 rounded-lg pl-7 pr-2 py-2 text-[10px] uppercase tracking-widest font-bold text-zinc-400 focus:border-emerald-500 outline-none transition-colors appearance-none cursor-pointer"
                     >
-                      <option value="">-- General Portfolio (Bottom) --</option>
+                      <option value="">-- Main Portfolio --</option>
                       {(formData.capabilities || []).map((cap: any, idx: number) => {
                         const serviceTitle = typeof cap === 'string' ? cap : cap.title;
                         if (!serviceTitle) return null;
                         return (
-                          <option key={idx} value={serviceTitle}>
-                            Attach to: {serviceTitle}
-                          </option>
+                          <option key={idx} value={serviceTitle}>Link: {serviceTitle}</option>
                         );
                       })}
                     </select>
                   </div>
-
-                  <textarea placeholder="Description (e.g. Served with truffle butter...)" value={item.description || ''} onChange={(e) => handleMetaChange(i, 'description', e.target.value)} rows={2} className="w-full bg-zinc-950 border border-zinc-800 rounded p-2.5 text-xs text-white focus:border-emerald-500 outline-none transition-colors resize-none" />
+                  
+                  <textarea placeholder="Description overlay text..." value={item.description || ''} onChange={(e) => handleMetaChange(i, 'description', e.target.value)} rows={2} className="w-full bg-black/40 border border-zinc-800 rounded-lg p-2 text-[11px] text-zinc-300 focus:border-emerald-500 outline-none transition-colors resize-none" />
                 </div>
               </div>
             ))}
           </div>
         )}
       </div>
-
-      {/* BLOCK 2: CORE IMAGES */}
-      <div className="space-y-6 pt-8 border-t border-zinc-800">
-        <div className="flex items-center gap-3 border-b border-zinc-800 pb-4">
-          <ImageIcon className="w-5 h-5 text-cyan-500" />
-          <div>
-            <h2 className="text-lg font-black text-white uppercase tracking-widest">Core Images</h2>
-            <p className="text-xs text-zinc-500 font-mono mt-1">Foundation visuals for Hero and About sections.</p>
-          </div>
-        </div>
-
-        <form ref={coreFormRef} action={handleSaveCore} className="space-y-6">
-          <div className="bg-zinc-900 border border-zinc-800 p-6 rounded-xl space-y-4 shadow-lg">
-            <label className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest flex items-center gap-2">
-              Hero Background Image
-            </label>
-            <div className="flex flex-col md:flex-row md:items-center gap-6">
-              <div className="w-48 h-32 rounded-lg overflow-hidden border-2 border-zinc-800 shrink-0 bg-zinc-950">
-                <img src={heroPreview || formData.hero_image || 'https://via.placeholder.com/1920x1080/000000/333333?text=NO+IMAGE'} alt="Hero" className="w-full h-full object-cover" />
-              </div>
-              <div className="flex-1">
-                <input type="file" accept="image/*" name="hero_file" onChange={handleHeroSelect} className="w-full text-sm text-zinc-400 file:mr-4 file:py-2.5 file:px-4 file:rounded-lg file:border-0 file:text-xs file:font-bold file:bg-zinc-800 file:text-white hover:file:bg-zinc-700 cursor-pointer transition-colors" />
-                <p className="text-[10px] font-mono text-zinc-500 mt-2 uppercase">1920x1080 recommended.</p>
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-zinc-900 border border-zinc-800 p-6 rounded-xl space-y-4 shadow-lg">
-            <label className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest flex items-center gap-2">
-              About Section Image
-            </label>
-            <div className="flex flex-col md:flex-row md:items-center gap-6">
-              <div className="w-32 h-32 rounded-lg overflow-hidden border-2 border-zinc-800 shrink-0 bg-zinc-950">
-                <img src={aboutPreview || formData.about_image || 'https://via.placeholder.com/800x800/000000/333333?text=NO+IMAGE'} alt="About" className="w-full h-full object-cover" />
-              </div>
-              <div className="flex-1">
-                <input type="file" accept="image/*" name="about_file" onChange={handleAboutSelect} className="w-full text-sm text-zinc-400 file:mr-4 file:py-2.5 file:px-4 file:rounded-lg file:border-0 file:text-xs file:font-bold file:bg-zinc-800 file:text-white hover:file:bg-zinc-700 cursor-pointer transition-colors" />
-                <p className="text-[10px] font-mono text-zinc-500 mt-2 uppercase">Square (800x800) recommended.</p>
-              </div>
-            </div>
-          </div>
-
-          <div className="flex justify-end pt-2">
-            <button type="submit" disabled={isUploadingCore} className="flex items-center gap-2 bg-cyan-600 hover:bg-cyan-500 text-zinc-950 font-bold px-6 py-3 rounded-md transition-all shadow-[0_0_15px_rgba(8,145,178,0.4)] disabled:opacity-50">
-              <UploadCloud className="w-4 h-4" /> {isUploadingCore ? 'UPLOADING...' : 'SAVE CORE MEDIA'}
-            </button>
-          </div>
-        </form>
-      </div>
-
     </div>
   );
 }

@@ -4,7 +4,6 @@
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { ExternalLink, Pen, CreditCard, Globe, Trash2, ClipboardList, MonitorPlay, Building2, Layers } from 'lucide-react';
-import StorefrontEditor from './editor/StorefrontEditor';
 import NewStorefrontModal from './NewStorefrontModal';
 import ApplicationReviewModal from './ApplicationReviewModal';
 import { deleteStorefront } from '@/app/actions/storefronts';
@@ -13,7 +12,6 @@ import { WEBSITE_COPY } from '@/utils/glossary';
 export default function StorefrontsManager({ initialData }: { initialData: any[] }) {
   const router = useRouter();
   const [storefronts, setStorefronts] = useState(initialData || []);
-  const [editingStoreId, setEditingStoreId] = useState<string | null>(null);
   
   // State to hold the specific application we are reviewing
   const [reviewingApp, setReviewingApp] = useState<any | null>(null);
@@ -26,8 +24,6 @@ export default function StorefrontsManager({ initialData }: { initialData: any[]
   useEffect(() => {
     setStorefronts(initialData || []);
   }, [initialData]);
-
-  const activeStore = editingStoreId ? storefronts.find(s => s.id === editingStoreId) : null;
 
   // 🚀 FILTER LOGIC USING YOUR EXISTING 'is_template' KEY
   const filteredStorefronts = storefronts.filter(store => {
@@ -63,16 +59,6 @@ export default function StorefrontsManager({ initialData }: { initialData: any[]
       alert(err.message);
     }
   };
-
-  if (activeStore) {
-    return (
-      <StorefrontEditor
-         store={activeStore}
-         onClose={() => setEditingStoreId(null)}
-         onDelete={() => handleDeleteStorefront(activeStore.id, activeStore.business_name)}
-       />
-    );
-  }
 
   return (
     <div className="space-y-6 w-full max-w-7xl mx-auto p-6 relative">
@@ -203,12 +189,12 @@ export default function StorefrontsManager({ initialData }: { initialData: any[]
                             <ClipboardList className="w-3 h-3" /> Review
                           </button>
                         ) : (
-                          /* 🚀 ARMOR INTRODUCED: DELETE BUTTON REMOVED FROM QUICK ACTIONS */
+                          /* 🚀 ROUTING UPDATED: Now points straight to the new Tenant Hub! */
                           <div className="flex justify-end gap-4 opacity-50 group-hover:opacity-100 transition-opacity">
                             <button
-                              onClick={() => setEditingStoreId(store.id)}
+                              onClick={() => router.push(`/dashboard/storefronts/${store.id}`)}
                               className="text-zinc-400 hover:text-cyan-400 transition-colors"
-                              title="Edit Site Data"
+                              title="Enter Tenant Hub"
                             >
                               <Pen className="w-4 h-4" />
                             </button>

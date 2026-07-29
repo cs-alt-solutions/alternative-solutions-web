@@ -1,6 +1,6 @@
 // src/components/dashboard/storefronts/editor/core/BrandIdentity.tsx
 import React from 'react';
-import { Store, Link as LinkIcon, Mail, MonitorPlay } from 'lucide-react';
+import { Store, Link as LinkIcon, Mail } from 'lucide-react';
 
 export default function BrandIdentity({ formData, handleChange, setFormData }: { formData: any, handleChange: any, setFormData: any }) {
   return (
@@ -10,21 +10,6 @@ export default function BrandIdentity({ formData, handleChange, setFormData }: {
         <div className="flex items-center gap-3 text-cyan-400">
           <Store size={18} />
           <h3 className="text-xs font-black uppercase tracking-[0.2em]">Brand Identity</h3>
-        </div>
-        
-        {/* THE NEW PROTOTYPE TOGGLE */}
-        <div className="flex items-center gap-3 bg-black/40 border border-white/5 px-4 py-2 rounded-lg w-fit">
-          <label className="text-[9px] font-bold text-zinc-400 uppercase tracking-widest cursor-pointer flex items-center gap-2">
-            <MonitorPlay size={12} className={formData.is_template ? "text-fuchsia-400" : "text-zinc-600"} />
-            Display as Public Prototype
-          </label>
-          <button 
-            type="button"
-            onClick={() => setFormData((prev: any) => ({ ...prev, is_template: !prev.is_template }))}
-            className={`w-10 h-5 rounded-full relative transition-colors duration-300 ${formData.is_template ? 'bg-fuchsia-500' : 'bg-zinc-700'}`}
-          >
-            <div className={`absolute top-0.5 w-4 h-4 rounded-full bg-white transition-transform duration-300 ${formData.is_template ? 'left-5.5' : 'left-0.5'}`} />
-          </button>
         </div>
       </div>
 
