@@ -1,25 +1,22 @@
 // src/config/dashboard.ts
-
 export const DASHBOARD_COPY = {
-  COMMON: { BRAND_VERSION: "Alternative Solutions Workspace", STATUS_ONLINE: "All Systems Go", ACTION_REVIEW: "Review" }, 
-  SIDEBAR: { 
-    GROUPS: { WORKSPACE: "My Workspace", HUMAN_MANAGEMENT: "Human Management", LOGISTICS: "Life & Logistics", SYSTEM: "System Admin" }, 
-    OVERVIEW: "Home", 
+  COMMON: { BRAND_VERSION: "Alternative Solutions Workspace", STATUS_ONLINE: "All Systems Go", ACTION_REVIEW: "Review" },
+  SIDEBAR: {
+    GROUPS: { WORKSPACE: "My Workspace", HUMAN_MANAGEMENT: "Human Management", LOGISTICS: "Life & Logistics", SYSTEM: "System Admin" },
+    OVERVIEW: "Home",
     FOUNDATION: "The Drafting Table",
-    STOREFRONTS: "Storefronts", // <-- Successfully Added!
+    STOREFRONTS: "Storefronts",
     LEDGER: "The Ledger",
     ECOSYSTEM_MANAGER: "My Products",
     BETA_COMMAND: "Beta Command",
-    BROADCAST: "Emails & Updates", 
+    BROADCAST: "Emails & Updates",
     MEMBERS: "Members & Access",
     CLIENTS: "Client HQ",
     TASKS: "Tasks",
     INFRASTRUCTURE: "Infrastructure",
-    CONFIG: "Settings", 
-    EXIT: "← Back to Website" 
-  }, 
-
-  // Dedicated section for Client Portals to maintain Single Source of Truth
+    CONFIG: "Settings",
+    EXIT: "  Back to Website"
+  },
   CLIENT_PORTAL: {
     WELCOME_TITLE: "Welcome to your Workspace",
     WELCOME_DESC: "This is your dedicated secure command center. Use this portal to securely transfer assets, review active prototypes, and manage your infrastructure with Alternative Solutions.",
@@ -32,9 +29,8 @@ export const DASHBOARD_COPY = {
       PROTOTYPES_DESC: "View your deployed test environments."
     }
   },
-  
-  FOUNDATION: { 
-    TITLE: "The Drafting Table", 
+  FOUNDATION: {
+    TITLE: "The Drafting Table",
     SUBTITLE: "Where ideas get funded and built.",
     STATS_TITLE: "Revenue & Support",
     ROSTER_TITLE: "Recent Supporters",
@@ -52,7 +48,7 @@ export const DASHBOARD_COPY = {
         BACKERS: "Supporters",
         BTN_WIDGET: "Get Embed Code",
         BTN_MANAGE: "Manage Project",
-        BTN_PROMOTE: "Deploy to Ecosystem" 
+        BTN_PROMOTE: "Deploy to Ecosystem"
       }
     },
     NEW_BUILD_MODAL: {
@@ -107,7 +103,6 @@ export const DASHBOARD_COPY = {
     COLUMNS: { NAME: "Name", Contact: "Contact", TIER: "Support Level", STATUS: "Status", AMOUNT: "Amount", ACTIONS: "Actions" },
     ROW_ACTIONS: { INVITE: "Give Access", UPGRADE: "Change Level", QUARANTINE: "Remove", TOGGLE_ANON: "Hide Name" }
   },
-  
   ECOSYSTEM_MANAGER: {
     TITLE: "My Products",
     SUBTITLE: "Manage everything live on your website.",
@@ -123,16 +118,15 @@ export const DASHBOARD_COPY = {
       TABS: { CORE: "Basic Info", MARKETING: "Website Text", DEPLOY: "Publishing" },
       CORE: { FIELD_NAME: "Product Name", FIELD_TAGLINE: "Tagline", FIELD_DESC: "Short Description", FIELD_ICON: "Icon Name" },
       MARKETING: { FIELD_PUBLIC_TITLE: "Headline", FIELD_PUBLIC_DESC: "Full Description", FIELD_FEATURES: "Features (Comma separated)", FIELD_CTA: "Button Text" },
-      DEPLOY: { 
+      DEPLOY: {
         FIELD_STATUS: "Ecosystem Placement",
-        TOGGLE_PUBLIC: "Show on Public Website", 
-        TOGGLE_DESC: "Turn this on to instantly route this app to the selected tab on your /products page." 
+        TOGGLE_PUBLIC: "Show on Public Website",
+        TOGGLE_DESC: "Turn this on to instantly route this app to the selected tab on your /products page."
       },
       BTN_SAVE: "Save Product",
       BTN_CANCEL: "Cancel"
     }
   },
-
   BETA_COMMAND: {
     TITLE: 'Beta Command',
     SUBTITLE: 'Experimental features and community feedback.',
@@ -167,7 +161,6 @@ export const DASHBOARD_COPY = {
       }
     }
   },
-
   HUMAN_MANAGEMENT: {
     INVITE_MODAL: {
       TITLE: "Authorize New Human",
@@ -183,7 +176,6 @@ export const DASHBOARD_COPY = {
       BTN_RESENDING: "Transmitting...",
     }
   },
-
   ONBOARDING: {
     UPDATE_PASSWORD: {
       TITLE: "Initialize Account",
@@ -198,29 +190,26 @@ export const DASHBOARD_COPY = {
       }
     }
   },
-
   INFRASTRUCTURE_HUB: { TITLE: "Under the Hood", DESC: "Quick links to your hosting, database, and billing.", CATEGORIES: { CORE: "Core Tech", FINANCE: "Money & Billing", CODE: "Codebase" } },
-  PROJECT_BOARD: { NOT_FOUND: "Project Not Found", ADD_TASK: "Add Task", COLUMNS: { TODO: "To Do", IN_PROGRESS: "Doing", REVIEW: "Review", DONE: "Done" } }, 
-  
+  PROJECT_BOARD: { NOT_FOUND: "Project Not Found", ADD_TASK: "Add Task", COLUMNS: { TODO: "To Do", IN_PROGRESS: "Doing", REVIEW: "Review", DONE: "Done" } },
   OVERVIEW: {
-      TITLE: "Command Center", // Updated Title!
-      DIRECTIVE: { 
-        TITLE: "Pending Applications", // Updated from Project Intake!
-        SUBTITLE: "New requests awaiting your review", 
-        EMPTY: "Pipeline clear. No pending applications.", 
-        TYPES: { LEAD: "Storefront App", TASK: "Task" }, 
-        ACTIONS: { PROCESS: "Review Application", EXECUTE: "Initialize" } // Killed Dossier!
-      }, 
-    LIVE_FEED: { TITLE: "Recent Activity", NEW_BETA: "Checking..." }, 
-    INFRASTRUCTURE: { TITLE: "Tech Status", SUBTITLE: "Are we online?", PLATFORMS: { GITHUB: "GitHub", VERCEL: "Vercel", SUPABASE: "Supabase" } }, 
-    PANELS: { ACTION_REQD: "Needs Attention", ENGINEERING: "Development" }, 
-    TELEMETRY: { TITLE: "Traffic & Stats", CHART_LABEL: "Page Views", METRICS: { TRAFFIC: "Current Visitors", CONVERSION: "Signups" } } 
-  }, 
-  
-  MEDIA_HUB: { 
-    TITLE: "Emails & Updates", 
-    SUBTITLE: "Talk to your people.", 
-    TABS: { AUDIO: "Voice Notes", SOCIAL: "Social", CAMPAIGNS: "Emails" }, 
+    TITLE: "Command Center",
+    DIRECTIVE: {
+      TITLE: "Pending Applications",
+      SUBTITLE: "New requests awaiting your review",
+      EMPTY: "Pipeline clear. No pending applications.",
+      TYPES: { LEAD: "Storefront App", TASK: "Task" },
+      ACTIONS: { PROCESS: "Review Application", EXECUTE: "Initialize" }
+    },
+    LIVE_FEED: { TITLE: "Recent Activity", NEW_BETA: "Checking..." },
+    INFRASTRUCTURE: { TITLE: "Tech Status", SUBTITLE: "Are we online?", PLATFORMS: { GITHUB: "GitHub", VERCEL: "Vercel", SUPABASE: "Supabase" } },
+    PANELS: { ACTION_REQD: "Needs Attention", ENGINEERING: "Development" },
+    TELEMETRY: { TITLE: "Traffic & Stats", CHART_LABEL: "Page Views", METRICS: { TRAFFIC: "Current Visitors", CONVERSION: "Signups" } }
+  },
+  MEDIA_HUB: {
+    TITLE: "Emails & Updates",
+    SUBTITLE: "Talk to your people.",
+    TABS: { AUDIO: "Voice Notes", SOCIAL: "Social", CAMPAIGNS: "Emails" },
     STUDIO: { TITLE: "Record a Note", NO_NOTES: "No notes yet.", BTN_PUBLISH: "Publish" },
     CAMPAIGNS: {
       TITLE: "Write an Email",
@@ -233,12 +222,11 @@ export const DASHBOARD_COPY = {
       SIDEBAR: { STATS_TITLE: "Mailing List", STATS_SYNC: "API Check", STATS_DESC: "Connect your email provider to send live emails.", RECENT_TITLE: "Past Emails", EMPTY_RECENT: "You haven't sent any emails yet." }
     }
   },
-  STRATEGIC_PLANNER: { 
-    BTN_ADD: "Add Task", 
-    ACTIONS: { AUDIO: "Record Voice Memo", AUTHORIZE: "Save Task" }, 
-    MODAL: { TARGET_LABEL: "Where does this go?", TARGET_LEDGER: "Idea List", TARGET_FLOW: "Active Sprint", DATE_LABEL: "Due Date", TITLE_LABEL: "What needs to happen?", TITLE_PLACEHOLDER: "Type it out...", CLASS_LABEL: "Category", INTENSITY_LABEL: "Effort", PHASES_LABEL: "Steps", PHASE_ADD: "Add Step", PHASE_PLACEHOLDER: "First step...", STATUS_SUBMITTING: "Saving...", TYPES: { FEATURE: "New Feature", INFRA: "Under the Hood", BUG: "Fix a Bug" }, PRIORITIES: { LOW: "Low", MEDIUM: "Medium", HIGH: "High", CRITICAL: "Drop Everything" } } 
+  STRATEGIC_PLANNER: {
+    BTN_ADD: "Add Task",
+    ACTIONS: { AUDIO: "Record Voice Memo", AUTHORIZE: "Save Task" },
+    MODAL: { TARGET_LABEL: "Where does this go?", TARGET_LEDGER: "Idea List", TARGET_FLOW: "Active Sprint", DATE_LABEL: "Due Date", TITLE_LABEL: "What needs to happen?", TITLE_PLACEHOLDER: "Type it out...", CLASS_LABEL: "Category", INTENSITY_LABEL: "Effort", PHASES_LABEL: "Steps", PHASE_ADD: "Add Step", PHASE_PLACEHOLDER: "First step...", STATUS_SUBMITTING: "Saving...", TYPES: { FEATURE: "New Feature", INFRA: "Under the Hood", BUG: "Fix a Bug" }, PRIORITIES: { LOW: "Low", MEDIUM: "Medium", HIGH: "High", CRITICAL: "Drop Everything" } }
   },
-
   STOREFRONT: {
     topShelf: "Top Shelf",
     featured: "Featured",
@@ -247,5 +235,23 @@ export const DASHBOARD_COPY = {
     startingAt: "Starting At",
     options: "Options",
     unnamed: "Unnamed Item"
+  },
+  // --- THE NEW STAGING GLOSSARY BLOCK ---
+  STAGING: {
+    TITLE: "Interactive Staging",
+    DESC: "Dispatch the interactive review layer to the client for final sign-off.",
+    ROUTING_LABEL: "Target Routing",
+    STATUS_LABEL: "Current Status",
+    MISSING_EMAIL: "Missing Email",
+    BTN_DISPATCH: "Dispatch Review Link",
+    BTN_DISPATCHING: "Transmitting...",
+    BTN_COPY: "Copy Manual Link",
+    BTN_COPIED: "Copied to Clipboard",
+    LOGS_TITLE: "Transmission Logs",
+    LOGS_EMPTY: "No staging history recorded.",
+    LOG_SUCCESS_MSG: "Review link successfully sent to",
+    AUDIT_TITLE: "Incoming Audits",
+    AUDIT_DESC: "Client feedback and structural approvals drop directly into this ledger.",
+    AUDIT_EMPTY: "Awaiting client review..."
   }
 };

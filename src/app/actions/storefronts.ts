@@ -29,8 +29,8 @@ export async function createStorefront(formData: FormData) {
   const heroFile = formData.get('hero_file') as File;
   const aboutFile = formData.get('about_file') as File;
 
-  const heroUrl = await uploadFile(heroFile, 'hero') || 'https://via.placeholder.com/1920x1080/000000/333333?text=NO+IMAGE';
-  const aboutUrl = await uploadFile(aboutFile, 'about') || 'https://via.placeholder.com/800x800/000000/333333?text=NO+IMAGE';
+  const heroUrl = await uploadFile(heroFile, 'hero') || 'https://placehold.co/1920x1080/18181b/a1a1aa?text=NO+HERO+IMAGE';
+  const aboutUrl = await uploadFile(aboutFile, 'about') || 'https://placehold.co/800x800/18181b/a1a1aa?text=NO+ABOUT+IMAGE';
 
   const storefrontData = {
     business_name: formData.get('business_name'),
@@ -209,10 +209,10 @@ export async function deleteStorefront(id: string) {
 export async function dispatchStagingReview(id: string, slug: string, businessName: string, contactEmail: string, planTier: string) {
   const supabase = await createClient();
 
-  // 1. Flip database status to IN_REVIEW
+  // 1. Flip database status to IN REVIEW (Fixed constraint format)
   const { error: dbError } = await supabase
     .from('storefronts')
-    .update({ status: 'IN_REVIEW' })
+    .update({ status: 'IN REVIEW' })
     .eq('id', id);
 
   if (dbError) {

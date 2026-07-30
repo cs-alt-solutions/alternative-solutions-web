@@ -3,6 +3,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import { ExternalLink, Pen, CreditCard, Globe, Trash2, ClipboardList, MonitorPlay, Building2, Layers } from 'lucide-react';
 import NewStorefrontModal from './NewStorefrontModal';
 import ApplicationReviewModal from './ApplicationReviewModal';
@@ -191,13 +192,13 @@ export default function StorefrontsManager({ initialData }: { initialData: any[]
                         ) : (
                           /* 🚀 ROUTING UPDATED: Now points straight to the new Tenant Hub! */
                           <div className="flex justify-end gap-4 opacity-50 group-hover:opacity-100 transition-opacity">
-                            <button
-                              onClick={() => router.push(`/dashboard/storefronts/${store.id}`)}
+                            <Link
+                              href={`/dashboard/storefronts/${store.id}`}
                               className="text-zinc-400 hover:text-cyan-400 transition-colors"
                               title="Enter Tenant Hub"
                             >
                               <Pen className="w-4 h-4" />
-                            </button>
+                            </Link>
                             <a
                               href={store.custom_domain ? `https://${store.custom_domain}` : `http://localhost:3000/${store.slug}`}
                               target="_blank"

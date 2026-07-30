@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
+import Link from 'next/link';
 import { supabase } from '@/utils/supabase';
 import { 
   Layout, 
@@ -18,7 +19,9 @@ import {
   Image as ImageIcon,
   Layers,
   Save,
-  ArrowLeft
+  ArrowLeft,
+  PanelLeftClose,
+  PanelLeftOpen
 } from 'lucide-react';
 
 import CoreTab from '@/components/dashboard/storefronts/editor/CoreTab';
@@ -26,6 +29,7 @@ import VisualArchitecture from '@/components/dashboard/storefronts/editor/core/V
 import MediaTab from '@/components/dashboard/storefronts/editor/MediaTab';
 import CapabilitiesTab from '@/components/dashboard/storefronts/editor/CapabilitiesTab';
 import DangerZoneCard from '@/components/dashboard/storefronts/editor/DangerZoneCard';
+import StagingTab from '@/components/dashboard/storefronts/editor/staging/StagingTab';
 import { deleteStorefront } from '@/app/actions/storefronts';
 
 export default function TenantCommandHub() {
@@ -35,6 +39,7 @@ export default function TenantCommandHub() {
   const [formData, setFormData] = useState<any>(null);
   const [activeTab, setActiveTab] = useState<'canvas' | 'staging' | 'grid'>('canvas');
   const [editorTab, setEditorTab] = useState<'content' | 'design' | 'media' | 'services'>('content');
+  const [controlsExpanded, setControlsExpanded] = useState(true);
   
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
@@ -110,13 +115,13 @@ export default function TenantCommandHub() {
       {/* HUB HEADER */}
       <header className="border-b border-white/5 bg-zinc-950 px-4 md:px-6 py-4 flex items-center justify-between shrink-0">
         <div className="flex items-center gap-4">
-          <button 
-            onClick={() => router.push('/dashboard/storefronts')}
+          <Link 
+            href="/dashboard/storefronts"
             className="p-2 -ml-2 rounded-lg text-zinc-500 hover:text-white hover:bg-zinc-900 transition-all cursor-pointer"
             title="Return to Storefronts"
           >
             <ArrowLeft className="w-5 h-5 md:w-6 md:h-6" />
-          </button>
+          </Link>
           
           <div>
             <div className="flex items-center gap-3 mb-1">
@@ -186,43 +191,51 @@ export default function TenantCommandHub() {
         {/* ========================================= */}
         {activeTab === 'canvas' && (
           <div className="flex w-full h-full">
-            {/* LEFT PANE: CONTROLS */}
-            <div className="w-full lg:w-96 xl:w-md flex flex-col border-r border-zinc-800 bg-zinc-950 z-10 shrink-0">
-              <div className="flex items-center gap-1 p-2 border-b border-zinc-800 bg-zinc-900/50">
-                <button onClick={() => setEditorTab('content')} className={`flex-1 flex items-center justify-center gap-1.5 py-2 rounded-md text-[9px] md:text-[10px] font-bold tracking-widest uppercase transition-all cursor-pointer ${editorTab === 'content' ? 'bg-zinc-800 text-white shadow-sm' : 'text-zinc-500 hover:text-zinc-300 hover:bg-zinc-800/50'}`}>
-                  <PenTool className="w-3.5 h-3.5 hidden sm:block" /> Content
-                </button>
-                <button onClick={() => setEditorTab('design')} className={`flex-1 flex items-center justify-center gap-1.5 py-2 rounded-md text-[9px] md:text-[10px] font-bold tracking-widest uppercase transition-all cursor-pointer ${editorTab === 'design' ? 'bg-zinc-800 text-white shadow-sm' : 'text-zinc-500 hover:text-zinc-300 hover:bg-zinc-800/50'}`}>
-                  <Palette className="w-3.5 h-3.5 hidden sm:block" /> Design
-                </button>
-                <button onClick={() => setEditorTab('media')} className={`flex-1 flex items-center justify-center gap-1.5 py-2 rounded-md text-[9px] md:text-[10px] font-bold tracking-widest uppercase transition-all cursor-pointer ${editorTab === 'media' ? 'bg-zinc-800 text-white shadow-sm' : 'text-zinc-500 hover:text-zinc-300 hover:bg-zinc-800/50'}`}>
-                  <ImageIcon className="w-3.5 h-3.5 hidden sm:block" /> Media
-                </button>
-                <button onClick={() => setEditorTab('services')} className={`flex-1 flex items-center justify-center gap-1.5 py-2 rounded-md text-[9px] md:text-[10px] font-bold tracking-widest uppercase transition-all cursor-pointer ${editorTab === 'services' ? 'bg-zinc-800 text-white shadow-sm' : 'text-zinc-500 hover:text-zinc-300 hover:bg-zinc-800/50'}`}>
-                  <Layers className="w-3.5 h-3.5 hidden sm:block" /> Services
-                </button>
-              </div>
+            
+            {/* LEFT PANE: CONTROLS (COLLAPSIBLE) */}
+            {controlsExpanded && (
+              <div className="w-full lg:w-96 xl:w-md flex flex-col border-r border-zinc-800 bg-zinc-950 z-10 shrink-0 animate-in slide-in-from-left-4 duration-300">
+                <div className="flex items-center gap-1 p-2 border-b border-zinc-800 bg-zinc-900/50">
+                  <button onClick={() => setEditorTab('content')} className={`flex-1 flex items-center justify-center gap-1.5 py-2 rounded-md text-[9px] md:text-[10px] font-bold tracking-widest uppercase transition-all cursor-pointer ${editorTab === 'content' ? 'bg-zinc-800 text-white shadow-sm' : 'text-zinc-500 hover:text-zinc-300 hover:bg-zinc-800/50'}`}>
+                    <PenTool className="w-3.5 h-3.5 hidden sm:block" /> Content
+                  </button>
+                  <button onClick={() => setEditorTab('design')} className={`flex-1 flex items-center justify-center gap-1.5 py-2 rounded-md text-[9px] md:text-[10px] font-bold tracking-widest uppercase transition-all cursor-pointer ${editorTab === 'design' ? 'bg-zinc-800 text-white shadow-sm' : 'text-zinc-500 hover:text-zinc-300 hover:bg-zinc-800/50'}`}>
+                    <Palette className="w-3.5 h-3.5 hidden sm:block" /> Design
+                  </button>
+                  <button onClick={() => setEditorTab('media')} className={`flex-1 flex items-center justify-center gap-1.5 py-2 rounded-md text-[9px] md:text-[10px] font-bold tracking-widest uppercase transition-all cursor-pointer ${editorTab === 'media' ? 'bg-zinc-800 text-white shadow-sm' : 'text-zinc-500 hover:text-zinc-300 hover:bg-zinc-800/50'}`}>
+                    <ImageIcon className="w-3.5 h-3.5 hidden sm:block" /> Media
+                  </button>
+                  <button onClick={() => setEditorTab('services')} className={`flex-1 flex items-center justify-center gap-1.5 py-2 rounded-md text-[9px] md:text-[10px] font-bold tracking-widest uppercase transition-all cursor-pointer ${editorTab === 'services' ? 'bg-zinc-800 text-white shadow-sm' : 'text-zinc-500 hover:text-zinc-300 hover:bg-zinc-800/50'}`}>
+                    <Layers className="w-3.5 h-3.5 hidden sm:block" /> Services
+                  </button>
+                </div>
 
-              <div className="flex-1 overflow-y-auto custom-scrollbar p-4">
-                {editorTab === 'content' && <CoreTab formData={formData} setFormData={setFormData} />}
-                {/* 🚀 THE FIX: Render VisualArchitecture directly with the correct padding wrapper */}
-                {editorTab === 'design' && (
-                  <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500 pb-12 p-2 pt-6 relative">
-                    <VisualArchitecture formData={formData} setFormData={setFormData} />
-                  </div>
-                )}
-                {editorTab === 'media' && <MediaTab formData={formData} setFormData={setFormData} />}
-                {editorTab === 'services' && <CapabilitiesTab formData={formData} setFormData={setFormData} />}
+                <div className="flex-1 overflow-y-auto custom-scrollbar p-4">
+                  {editorTab === 'content' && <CoreTab formData={formData} setFormData={setFormData} />}
+                  {editorTab === 'design' && (
+                    <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500 pb-12 p-2 pt-6 relative">
+                      <VisualArchitecture formData={formData} setFormData={setFormData} />
+                    </div>
+                  )}
+                  {editorTab === 'media' && <MediaTab formData={formData} setFormData={setFormData} />}
+                  {editorTab === 'services' && <CapabilitiesTab formData={formData} setFormData={setFormData} />}
+                </div>
               </div>
-            </div>
+            )}
 
             {/* RIGHT PANE: IFRAME */}
-            <div className="hidden lg:flex flex-1 bg-black relative flex-col">
+            <div className="hidden lg:flex flex-1 bg-black relative flex-col transition-all duration-300">
               <div className="bg-zinc-900 border-b border-zinc-800 px-4 py-2 flex items-center gap-4 shrink-0 shadow-sm">
-                <div className="hidden sm:flex gap-1.5 ml-2">
-                  <div className="w-3 h-3 rounded-full bg-zinc-700"></div>
-                  <div className="w-3 h-3 rounded-full bg-zinc-700"></div>
-                  <div className="w-3 h-3 rounded-full bg-zinc-700"></div>
+                
+                {/* TOGGLE BUTTON */}
+                <div className="hidden sm:flex gap-1.5 ml-2 items-center">
+                  <button 
+                    onClick={() => setControlsExpanded(!controlsExpanded)} 
+                    className="p-1.5 bg-zinc-950 border border-zinc-800 hover:border-cyan-500/50 rounded-lg text-zinc-400 hover:text-cyan-400 transition-colors cursor-pointer"
+                    title={controlsExpanded ? "Collapse Controls" : "Expand Controls"}
+                  >
+                    {controlsExpanded ? <PanelLeftClose className="w-4 h-4" /> : <PanelLeftOpen className="w-4 h-4" />}
+                  </button>
                 </div>
                 
                 <div className="flex-1 max-w-md mx-auto bg-zinc-950 border border-zinc-800 rounded-md py-1.5 px-3 flex items-center justify-between shadow-inner">
@@ -257,17 +270,8 @@ export default function TenantCommandHub() {
         {/* TAB 2: STAGING & SCOPE                    */}
         {/* ========================================= */}
         {activeTab === 'staging' && (
-          <div className="w-full h-full overflow-y-auto p-4 md:p-8 custom-scrollbar">
-            <div className="max-w-4xl mx-auto space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-300">
-               <div className="bg-zinc-900/50 border border-zinc-800 rounded-2xl p-6 md:p-8 shadow-xl">
-                  <h2 className="text-xl font-black text-white uppercase tracking-wider mb-2">Scope Defense & Sign-Offs</h2>
-                  <p className="text-zinc-400 text-sm mb-6 font-light">Manage client review checkpoints and dispatch staging links.</p>
-                  
-                  <div className="border border-dashed border-zinc-700 bg-zinc-950 rounded-xl p-8 text-center">
-                    <span className="text-zinc-600 font-mono text-xs uppercase tracking-widest">Staging Review Dispatcher Mounting Slot</span>
-                  </div>
-               </div>
-            </div>
+          <div className="w-full h-full relative bg-zinc-950">
+            <StagingTab formData={formData} setFormData={setFormData} />
           </div>
         )}
 
