@@ -22,30 +22,31 @@ export default function HomeHero() {
   return (
     <section className="relative mb-24 pt-24 md:pt-32 lg:pt-40 animate-in fade-in slide-in-from-bottom-8 duration-1000">
       
-      <div className="flex flex-col lg:flex-row items-center justify-between gap-16 px-6 relative z-10">
+      {/* Clean, uncrowded layout container */}
+      <div className="flex flex-col lg:flex-row items-center justify-between gap-12 px-6 max-w-7xl mx-auto relative z-10">
         
         {/* LEFT COLUMN: THE VISION */}
-        <div className="w-full lg:w-3/5 text-center lg:text-left">
+        <div className="w-full lg:w-7/12 text-center lg:text-left">
           <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded bg-white/5 text-[10px] font-mono font-bold text-white/40 uppercase tracking-widest mb-8 border border-white/10 shadow-inner">
              <div className="w-1.5 h-1.5 bg-brand-primary rounded-full animate-pulse" />
              {HERO.TAG}
           </div>
-          
-          <h1 className="text-white text-6xl md:text-[5.5rem] font-black tracking-tighter mb-6 leading-none uppercase drop-shadow-[0_0_20px_rgba(255,255,255,0.2)]">
+
+          <h1 className="text-white text-5xl sm:text-6xl lg:text-7xl font-black tracking-tighter mb-6 leading-[1.05] uppercase drop-shadow-[0_0_20px_rgba(255,255,255,0.2)]">
             {HERO.TITLE_1} <br />
             <span className="text-transparent bg-clip-text bg-linear-to-r from-brand-primary via-fuchsia-400 to-brand-primary animate-text-gradient">
               {HERO.TITLE_2}
             </span>
           </h1>
-          
-          <p className="text-xl text-text-muted font-light max-w-2xl leading-relaxed mx-auto lg:mx-0 mb-10">
+
+          <p className="text-lg md:text-xl text-text-muted font-light max-w-3xl leading-relaxed mx-auto lg:mx-0">
             <span className="text-white font-medium block mb-2">{HERO.SUBHEAD_LEAD}</span>
             {HERO.SUBHEAD_BODY}
           </p>
         </div>
 
-        {/* RIGHT COLUMN: REVERTED IDENTITY PEDESTAL */}
-        <div className="w-full lg:w-2/5 relative flex justify-center lg:justify-end">
+        {/* RIGHT COLUMN: IDENTITY PEDESTAL */}
+        <div className="w-full lg:w-5/12 relative flex justify-center lg:justify-end">
            <div className="w-full aspect-square max-w-sm rounded-full flex items-center justify-center relative group">
             <div className="absolute inset-0 bg-[conic-gradient(from_0deg,transparent_0_340deg,rgba(6,182,212,0.3)_360deg)] animate-[spin_4s_linear_infinite] rounded-full blur-md" />
             <div className="absolute inset-0 border border-brand-primary/20 rounded-full" />
@@ -59,6 +60,7 @@ export default function HomeHero() {
             </div>
           </div>
         </div>
+
       </div>
 
       {/* AUTHORITY BANNER */}
@@ -80,7 +82,6 @@ export default function HomeHero() {
              };
              
              const dynamicClasses = getTechStyling(tech.name);
-
              return (
                <div key={idx} className={`relative flex items-center justify-center gap-3 text-sm md:text-lg font-black uppercase tracking-widest cursor-default group transition-all duration-300 text-white/50 hover:scale-105 ${dynamicClasses}`}>
                   <div className="group-hover:drop-shadow-[0_0_10px_rgba(6,182,212,0.8)] transition-all">

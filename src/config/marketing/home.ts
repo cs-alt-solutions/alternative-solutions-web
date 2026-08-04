@@ -2,10 +2,10 @@ export const PUBLIC_SITE = {
   HOME: {
     HERO: {
         TAG: "SYSTEM ONLINE",
-        TITLE_1: "BUILDING A",
-        TITLE_2: "STRONGER FOUNDATION.",
-        SUBHEAD_LEAD: "I build professional digital storefronts for everyday businesses.",
-        SUBHEAD_BODY: "Skip the expensive agency retainers and the fragile DIY website builders. I charge a simple, flat-rate build fee and just $5 a month to keep the lights on and everything running fast. You run your business; I handle the code.",
+        TITLE_1: "REAL DIGITAL STOREFRONTS.",
+        TITLE_2: "BUILT FOR INDEPENDENT BUSINESS.",
+        SUBHEAD_LEAD: "Stop fighting fragile do-it-yourself builders and bloated monthly subscription traps.",
+        SUBHEAD_BODY: "I engineer professional digital storefronts for independent operators with a simple, flat-rate build fee and just $5 a month to keep everything running fast. You focus on your business; I handle the code.",
         CTA_PRIMARY: "Start Your Build",
         CTA_PRIMARY_LINK: "/sector-zero",
         CTA_SECONDARY: "View The Architecture",
@@ -16,7 +16,7 @@ export const PUBLIC_SITE = {
       TAG: "THE ARCHITECT'S APPROACH",
       TITLE: "HOW I BUILD",
       STEPS: [
-        { title: "Discovery", desc: "We map out your business needs and identify the biggest points of friction." },
+        { title: "Discovery", desc: "I map out your business needs and identify the biggest points of friction." },
         { title: "Architecture", desc: "I wire up a high-performance system using enterprise-grade tech." },
         { title: "Deployment", desc: "Your engine goes live, lightning-fast and ready to scale." }
       ]
@@ -62,7 +62,7 @@ export const PUBLIC_SITE = {
       BETA: { 
         TAG: "SECTOR ZERO", 
         TITLE: "START YOUR BUILD.", 
-        DESC: "Skip the expensive agency retainers and the fragile DIY templates. Get a clean, professional digital storefront built for you for a flat-rate setup and just $5/mo. You run the business; I handle the code.", 
+        DESC: "Stop fighting fragile DIY templates and subscription traps. Get a clean, professional digital storefront built for you for a flat-rate setup and just $5/mo. You run the business; I handle the code.", 
         CTA: "Start Your Build", 
         LINK: "/sector-zero" 
       },

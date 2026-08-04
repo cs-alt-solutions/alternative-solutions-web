@@ -34,9 +34,20 @@ export default function Navbar() {
           </div>
         </Link>
 
-        {/* DESKTOP NAVIGATION */}
+        {/* DESKTOP NAVIGATION - STOREFRONTS LEADING THE CHARGE */}
         <div className="hidden md:flex items-center gap-8">
           <div className="flex items-center gap-8 font-bold text-xs">
+            {/* Primary Revenue Driver */}
+            <Link 
+              href="https://storefronts.alternativesolutions.io" 
+              target="_blank" 
+              rel="noopener noreferrer" 
+              className="px-4 py-1.5 rounded-full border border-cyan-500/30 bg-cyan-500/10 text-cyan-400 hover:bg-cyan-500/20 hover:border-cyan-400 hover:drop-shadow-[0_0_12px_rgba(34,211,238,0.8)] transition-all duration-300 uppercase tracking-widest"
+            >
+              {WEBSITE_COPY.NAV.STOREFRONTS}
+            </Link>
+
+            {/* Ecosystem & Architect Supporting */}
             <Link href={ROUTES.PUBLIC.PRODUCTS.ROOT} className="text-slate-300 hover:text-amber-400 hover:drop-shadow-[0_0_8px_rgba(245,158,11,0.8)] transition-all duration-300 uppercase tracking-widest">
               {WEBSITE_COPY.NAV.ECOSYSTEM}
             </Link>
@@ -64,8 +75,17 @@ export default function Navbar() {
       </div>
 
       {/* MOBILE MENU DROPDOWN */}
-      <div className={`md:hidden absolute top-20 left-0 w-full bg-black/95 backdrop-blur-2xl border-b border-white/10 transition-all duration-300 overflow-hidden ${isMobileMenuOpen ? 'max-h-100 py-6 opacity-100' : 'max-h-0 py-0 opacity-0 pointer-events-none'}`}>
-        <div className="flex flex-col items-center gap-8 px-6">
+      <div className={`md:hidden absolute top-20 left-0 w-full bg-black/95 backdrop-blur-2xl border-b border-white/10 transition-all duration-300 overflow-hidden ${isMobileMenuOpen ? 'max-h-125 py-6 opacity-100' : 'max-h-0 py-0 opacity-0 pointer-events-none'}`}>
+        <div className="flex flex-col items-center gap-6 px-6">
+          <Link 
+            href="https://storefronts.alternativesolutions.io" 
+            target="_blank" 
+            rel="noopener noreferrer" 
+            onClick={closeMenu} 
+            className="px-6 py-2 rounded-full border border-cyan-500/30 bg-cyan-500/10 text-cyan-400 text-lg font-black transition-all uppercase tracking-widest w-full text-center"
+          >
+            {WEBSITE_COPY.NAV.STOREFRONTS}
+          </Link>
           <Link href={ROUTES.PUBLIC.PRODUCTS.ROOT} onClick={closeMenu} className="text-lg font-black text-slate-300 hover:text-amber-400 transition-all uppercase tracking-widest w-full text-center">
             {WEBSITE_COPY.NAV.ECOSYSTEM}
           </Link>

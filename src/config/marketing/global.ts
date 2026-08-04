@@ -2,9 +2,9 @@ export const NAV = {
   BRAND: "Alternative Solutions",
   ECOSYSTEM: "The Ecosystem",
   STORY: "The Architect",
+  STOREFRONTS: "Storefronts",
   WORKSPACE: "Client Portal",
-  BETA_CENTER: "Start Your Build",
-  STOREFRONTS: "Storefronts"
+  BETA_CENTER: "Start Your Build"
 };
 
 export const GLOBAL_FOOTER = {
