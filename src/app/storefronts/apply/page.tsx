@@ -57,10 +57,19 @@ export default function StorefrontApplicationPage() {
   const [vibes, setVibes] = useState<any[]>([]);
   const [isLoaded, setIsLoaded] = useState(false);
 
+  // STEP 1 & 2 STATE
   const [formData, setFormData] = useState({ name: '', email: '', phone: '', projectName: '', description: '' });
   const [activeSocials, setActiveSocials] = useState<Record<string, boolean>>({ instagram: false, facebook: false, x: false, linkedin: false, other: false });
   const [socialHandles, setSocialHandles] = useState<Record<string, string>>({ instagram: '', facebook: '', x: '', linkedin: '', other: '' });
+  
+  // STEP 3 STATE (Fully Wired!)
   const [selectedVibe, setSelectedVibe] = useState<string | null>(null);
+  const [brandColor, setBrandColor] = useState<string>('cyan');
+  const [heroStructure, setHeroStructure] = useState<string>('centered');
+  const [storyStructure, setStoryStructure] = useState<string>('classic-split');
+  const [contentFlow, setContentFlow] = useState<string>('stacked');
+
+  // STEP 4 STATE
   const [selectedPlan, setSelectedPlan] = useState<string>('foundation');
   const [expandedPlan, setExpandedPlan] = useState<string | null>('foundation');
   const [wantsCustom, setWantsCustom] = useState(false);
@@ -70,28 +79,23 @@ export default function StorefrontApplicationPage() {
   useEffect(() => {
     const fetchArchitectureData = async () => {
       try {
-        // Explicitly extract the 'error' object from the Supabase response
         const { data: dbVibes, error } = await supabase
           .from('storefront_vibes')
           .select('*')
           .order('created_at', { ascending: true });
         
-        // Throw it manually if it exists so our failsafe activates
         if (error) throw error;
         
         const cluelessOption = {
           id: WIZARD_COPY.VIBES.CLUELESS_ID, 
           title: WIZARD_COPY.VIBES.CLUELESS_TITLE, 
           desc: WIZARD_COPY.VIBES.CLUELESS_DESC
-          // Removed hardcoded styles. Step3Vibe handles this natively now.
         };
 
         setVibes(dbVibes ? [...dbVibes, cluelessOption] : [cluelessOption]);
         
       } catch (err) {
         console.error("Database fetch error:", err);
-        
-        // FAILSAFE: Trigger the fallback option if the database query fails.
         setVibes([{
           id: WIZARD_COPY.VIBES.CLUELESS_ID, 
           title: WIZARD_COPY.VIBES.CLUELESS_TITLE, 
@@ -118,15 +122,25 @@ export default function StorefrontApplicationPage() {
     data.append('email', formData.email);
     data.append('phone', formData.phone);
     data.append('projectName', formData.projectName);
-    data.append('description', formData.description);
-    data.append('selectedPlan', selectedPlan);
+    data.append('description', formData.description); // The step 4 notes
+
+    // Step 2
+    data.append('socials', JSON.stringify(socialHandles));
+
+    // Step 3: Architecture & Vibe
     data.append('selectedVibe', selectedVibe || WIZARD_COPY.VIBES.CLUELESS_ID);
+    data.append('brandColor', brandColor);
+    data.append('heroStructure', heroStructure);
+    data.append('storyStructure', storyStructure);
+    data.append('contentFlow', contentFlow);
+
+    // Step 4: Scope
+    data.append('selectedPlan', selectedPlan);
     data.append('wantsCustom', wantsCustom.toString());
     data.append('existingDomain', existingDomain);
     data.append('priorityQueue', priorityQueue.toString());
-    data.append('socials', JSON.stringify(socialHandles));
 
-    // DIAGNOSTIC PAYLOAD TRACKER ADDED HERE
+    // DIAGNOSTIC PAYLOAD TRACKER
     console.log("Wizard Output Payload:", Object.fromEntries(data.entries()));
 
     try {
@@ -187,7 +201,11 @@ export default function StorefrontApplicationPage() {
                 {step === 3 && (
                   <Step3Vibe 
                     selectedVibe={selectedVibe} setSelectedVibe={setSelectedVibe} 
-                    vibes={vibes} 
+                    vibes={vibes}
+                    brandColor={brandColor} onBrandColorChange={setBrandColor}
+                    heroStructure={heroStructure} onHeroStructureChange={setHeroStructure}
+                    storyStructure={storyStructure} onStoryStructureChange={setStoryStructure}
+                    contentFlow={contentFlow} onContentFlowChange={setContentFlow}
                     onNext={handleNext} onPrev={handlePrev} 
                   />
                 )}
@@ -199,6 +217,7 @@ export default function StorefrontApplicationPage() {
                     existingDomain={existingDomain} setExistingDomain={setExistingDomain} 
                     priorityQueue={priorityQueue} setPriorityQueue={setPriorityQueue} 
                     isSubmitting={isSubmitting} onPrev={handlePrev} onSubmit={handleSubmit} 
+                    description={formData.description} setDescription={(val) => setFormData({...formData, description: val})}
                   />
                 )}
               </form>

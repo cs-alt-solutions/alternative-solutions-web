@@ -1,11 +1,9 @@
+// src/app/actions/storefronts.ts
 'use server';
 
 import { revalidatePath } from 'next/cache';
 import { createClient } from '@/utils/supabase/server'; 
-import { Resend } from 'resend';
-import StagingReviewEmail from '@/components/emails/StagingReviewEmail';
-
-const resend = new Resend(process.env.RESEND_API_KEY);
+import { dispatchSystemEmail } from '@/app/actions/emails';
 
 export async function createStorefront(formData: FormData) {
   const supabase = await createClient(); 
@@ -205,11 +203,9 @@ export async function deleteStorefront(id: string) {
   return { success: true };
 }
 
-// 🚀 STAGING REVIEW DISPATCH ENGINE
 export async function dispatchStagingReview(id: string, slug: string, businessName: string, contactEmail: string, planTier: string) {
   const supabase = await createClient();
 
-  // 1. Flip database status to IN REVIEW (Fixed constraint format)
   const { error: dbError } = await supabase
     .from('storefronts')
     .update({ status: 'IN REVIEW' })
@@ -219,34 +215,157 @@ export async function dispatchStagingReview(id: string, slug: string, businessNa
     throw new Error(`Database update failed: ${dbError.message}`);
   }
 
-  // 2. Resolve dynamic staging URL
   const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || process.env.NEXT_PUBLIC_BASE_URL || 'https://alternativesolutions.io';
   const previewUrl = `${baseUrl}/${slug}`;
 
-  // 3. Dispatch personal architectural handoff letter
-  try {
-    const { error: emailError } = await resend.emails.send({
-      from: 'Courtney <hello@alternativesolutions.io>',
-      to: contactEmail,
-      subject: `Staging Ready • Review Your Blueprint: ${businessName}`,
-      react: StagingReviewEmail({
-        name: businessName,
-        businessName: businessName,
-        previewUrl: previewUrl,
-        planTier: planTier || 'Standard Starter'
-      })
-    });
-
-    if (emailError) {
-      console.error('Resend dispatch error:', emailError);
-      throw new Error('Email failed to transmit through Resend.');
+  const emailResult = await dispatchSystemEmail({
+    to: contactEmail,
+    subject: `Staging Ready • Review Your Blueprint: ${businessName}`,
+    type: 'STAGING_REVIEW',
+    data: {
+      name: businessName,
+      businessName: businessName,
+      previewUrl: previewUrl,
+      planTier: planTier || 'Standard Starter'
     }
-  } catch (err: any) {
-    console.error('CRITICAL EMAIL ERROR:', err);
-    throw new Error(err.message || 'Failed to dispatch review email.');
+  });
+
+  if (!emailResult.success) {
+    throw new Error(emailResult.error || 'Failed to dispatch review email.');
   }
 
   revalidatePath('/dashboard/storefronts');
   revalidatePath('/dashboard');
   return { success: true };
+}
+
+export async function submitStorefrontApplication(formData: FormData) {
+  const supabase = await createClient();
+
+  try {
+    const payload = {
+      applicant_name: formData.get('name')?.toString() || '',
+      applicant_email: formData.get('email')?.toString() || '',
+      applicant_phone: formData.get('phone')?.toString() || '',
+      business_name: formData.get('projectName')?.toString() || 'Unnamed Project',
+      business_description: formData.get('description')?.toString() || '',
+      social_handles: JSON.parse(formData.get('socials')?.toString() || '{}'),
+      selected_vibe: formData.get('selectedVibe')?.toString() || 'clueless',
+      selected_plan: formData.get('selectedPlan')?.toString() || 'foundation',
+      wants_custom: formData.get('wantsCustom') === 'true',
+      existing_domain: formData.get('existingDomain')?.toString() || '',
+      is_priority: formData.get('priorityQueue') === 'true',
+      status: 'PENDING',
+      contact_email: formData.get('email')?.toString() || ''
+    };
+
+    const { error } = await supabase.from('storefront_applications').insert([payload]);
+    if (error) throw error;
+
+    await dispatchSystemEmail({
+      to: payload.applicant_email,
+      subject: `Application received: ${payload.business_name}`,
+      type: 'STOREFRONT_CONFIRMATION',
+      data: { 
+        name: payload.applicant_name, 
+        projectName: payload.business_name,
+        selectedPlan: payload.selected_plan,
+        selectedVibe: payload.selected_vibe,
+        originStory: payload.business_description
+      }
+    });
+
+    await dispatchSystemEmail({
+      to: process.env.ADMIN_EMAIL || 'hello@alternativesolutions.io',
+      subject: `🚨 NEW LEAD: ${payload.business_name}`,
+      type: 'ADMIN_INTAKE',
+      data: {
+        name: payload.applicant_name,
+        email: payload.applicant_email,
+        phone: payload.applicant_phone,
+        socials: formData.get('socials')?.toString() || '',
+        existingWebsite: payload.existing_domain,
+        projectScope: payload.business_description,
+        businessName: payload.business_name,
+        selectedPlan: payload.selected_plan,
+        selectedVibe: payload.selected_vibe,
+        wantsCustom: payload.wants_custom,
+        isPriority: payload.is_priority
+      }
+    });
+
+    revalidatePath('/dashboard/storefronts');
+    return { success: true };
+  } catch (error: any) {
+    console.error('CRITICAL SUBMISSION ERROR:', error);
+    return { success: false, error: error.message || 'Transmission failed: Database or Auth Error' };
+  }
+}
+
+export async function updateApplicationStatus(id: string, newStatus: 'BUILDING' | 'CANCELED') {
+  const supabase = await createClient();
+  
+  try {
+    const { data: app, error: updateError } = await supabase
+      .from('storefront_applications')
+      .update({ status: newStatus })
+      .eq('id', id)
+      .select()
+      .single();
+
+    if (updateError) throw updateError;
+
+    if (newStatus === 'BUILDING' && app) {
+      let baseSlug = (app.business_name || 'store').toLowerCase().replace(/[^a-z0-9]+/g, '-');
+      let finalSlug = baseSlug;
+
+      const { data: existing } = await supabase.from('storefronts').select('slug').eq('slug', finalSlug);
+      if (existing && existing.length > 0) {
+        finalSlug = `${baseSlug}-${Math.random().toString(36).substring(2, 6)}`;
+      }
+
+      const { error: insertError } = await supabase.from('storefronts').insert([{
+        business_name: app.business_name,
+        contact_email: app.contact_email || app.applicant_email, 
+        status: 'BUILDING',
+        slug: finalSlug, 
+        plan_tier: app.selected_plan || 'foundation',
+        theme_style: app.selected_vibe || 'industrial',
+        tagline: app.business_description ? app.business_description.substring(0, 50) + '...' : 'Welcome to your new digital storefront.',
+        subtext: app.business_description || 'Getting operations online. Stay tuned.',
+        hero_layout: 'center',
+        content_layout: 'classic',
+        about_layout: 'split',
+        is_template: false,
+        hero_image: 'https://via.placeholder.com/1920x1080/000000/333333?text=NO+IMAGE',
+        about_image: 'https://via.placeholder.com/800x800/000000/333333?text=NO+IMAGE',
+        primary_cta: 'Get Started',
+        secondary_cta: 'Learn More',
+        about_heading: 'About Us',
+        about_bio: 'Dedicated to providing top-tier services and products to the community. Check out the gallery to see recent work!',
+        social_url: 'https://facebook.com',
+        gallery_items: []
+      }]);
+      
+      if (insertError) console.error('Failed to initialize storefront:', insertError);
+
+      const { error: clientError } = await supabase.from('clients').insert([{
+        id: finalSlug,
+        name: app.business_name,
+        primary_contact: app.applicant_name,
+        email: app.contact_email || app.applicant_email,
+        status: 'active'
+      }]);
+
+      if (clientError) console.error('Failed to initialize client portal:', clientError);
+    }
+
+    revalidatePath('/dashboard/storefronts');
+    revalidatePath('/dashboard/clients');
+    revalidatePath('/dashboard'); 
+    return { success: true };
+  } catch (error: any) {
+    console.error('STATUS UPDATE ERROR:', error);
+    return { success: false, error: error.message || 'Failed to update status' };
+  }
 }

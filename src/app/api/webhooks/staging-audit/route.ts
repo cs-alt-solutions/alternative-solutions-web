@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { Resend } from "resend";
+import * as React from "react"; // 🚨 CRITICAL: Required for compiling React Email templates in a .ts API route
 import StagingAuditReceiptEmail, { 
   StagingAuditReceiptEmailProps 
 } from "@/components/emails/StagingAuditReceiptEmail";
@@ -77,7 +78,8 @@ export async function POST(req: Request) {
         from: fromEmail,
         to: [record.client_email],
         subject: `Staging Review Receipt: ${projectLabel} (${statusLabel})`,
-        react: StagingAuditReceiptEmail({
+        // 🚨 ARCHITECTURE FIX: Securely create the React element to prevent compiler crashes
+        react: React.createElement(StagingAuditReceiptEmail, {
           ...sharedEmailProps,
           recipientType: "client",
         }),
@@ -87,8 +89,9 @@ export async function POST(req: Request) {
       resend.emails.send({
         from: fromEmail,
         to: [adminEmail],
-        subject: `[ADMIN ALERt] Staging Review: ${projectLabel} (${statusLabel})`,
-        react: StagingAuditReceiptEmail({
+        subject: `[ADMIN ALERT] Staging Review: ${projectLabel} (${statusLabel})`,
+        // 🚨 ARCHITECTURE FIX: Securely create the React element to prevent compiler crashes
+        react: React.createElement(StagingAuditReceiptEmail, {
           ...sharedEmailProps,
           recipientType: "admin",
         }),

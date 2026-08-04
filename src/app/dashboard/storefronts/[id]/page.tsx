@@ -10,8 +10,6 @@ import {
   Server, 
   ExternalLink, 
   Loader2, 
-  CreditCard, 
-  Globe, 
   MonitorSmartphone, 
   RefreshCw,
   PenTool,
@@ -28,8 +26,8 @@ import CoreTab from '@/components/dashboard/storefronts/editor/CoreTab';
 import VisualArchitecture from '@/components/dashboard/storefronts/editor/core/VisualArchitecture';
 import MediaTab from '@/components/dashboard/storefronts/editor/MediaTab';
 import CapabilitiesTab from '@/components/dashboard/storefronts/editor/CapabilitiesTab';
-import DangerZoneCard from '@/components/dashboard/storefronts/editor/DangerZoneCard';
 import StagingTab from '@/components/dashboard/storefronts/editor/staging/StagingTab';
+import GridTab from '@/components/dashboard/storefronts/editor/GridTab'; // <-- NEW IMPORT
 import { deleteStorefront } from '@/app/actions/storefronts';
 
 export default function TenantCommandHub() {
@@ -186,13 +184,9 @@ export default function TenantCommandHub() {
       {/* DYNAMIC WORKSPACE */}
       <div className="flex-1 flex overflow-hidden">
         
-        {/* ========================================= */}
-        {/* TAB 1: THE CANVAS                         */}
-        {/* ========================================= */}
+        {/* TAB 1: THE CANVAS */}
         {activeTab === 'canvas' && (
           <div className="flex w-full h-full">
-            
-            {/* LEFT PANE: CONTROLS (COLLAPSIBLE) */}
             {controlsExpanded && (
               <div className="w-full lg:w-96 xl:w-md flex flex-col border-r border-zinc-800 bg-zinc-950 z-10 shrink-0 animate-in slide-in-from-left-4 duration-300">
                 <div className="flex items-center gap-1 p-2 border-b border-zinc-800 bg-zinc-900/50">
@@ -223,11 +217,8 @@ export default function TenantCommandHub() {
               </div>
             )}
 
-            {/* RIGHT PANE: IFRAME */}
             <div className="hidden lg:flex flex-1 bg-black relative flex-col transition-all duration-300">
               <div className="bg-zinc-900 border-b border-zinc-800 px-4 py-2 flex items-center gap-4 shrink-0 shadow-sm">
-                
-                {/* TOGGLE BUTTON */}
                 <div className="hidden sm:flex gap-1.5 ml-2 items-center">
                   <button 
                     onClick={() => setControlsExpanded(!controlsExpanded)} 
@@ -266,98 +257,16 @@ export default function TenantCommandHub() {
           </div>
         )}
 
-        {/* ========================================= */}
-        {/* TAB 2: STAGING & SCOPE                    */}
-        {/* ========================================= */}
+        {/* TAB 2: STAGING & SCOPE */}
         {activeTab === 'staging' && (
           <div className="w-full h-full relative bg-zinc-950">
             <StagingTab formData={formData} setFormData={setFormData} />
           </div>
         )}
 
-        {/* ========================================= */}
-        {/* TAB 3: THE GRID                           */}
-        {/* ========================================= */}
+        {/* TAB 3: THE GRID */}
         {activeTab === 'grid' && (
-          <div className="w-full h-full overflow-y-auto p-4 md:p-8 custom-scrollbar">
-            <div className="max-w-5xl mx-auto flex flex-col gap-12 pt-4 animate-in fade-in slide-in-from-bottom-4 duration-300 pb-12">
-              
-              {/* Row 1: Billing & Plan */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-8 lg:gap-12 items-center">
-                <div className="bg-zinc-900/40 border border-zinc-800 rounded-3xl p-8 flex flex-col items-center justify-center min-h-62.5 shadow-lg">
-                  <CreditCard size={48} className="text-emerald-400 mb-6" />
-                  <span className="px-4 py-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 font-bold uppercase tracking-widest text-xs shadow-inner">
-                    {formData.billing_status || 'Pending Checkout'}
-                  </span>
-                </div>
-                <div className="space-y-4">
-                  <h3 className="text-2xl font-black text-white uppercase tracking-tight">Financial Engine</h3>
-                  <p className="text-zinc-400 leading-relaxed font-light">
-                    Active recurring plan and payment status. This directly ties into your Stripe infrastructure.
-                  </p>
-                  <div className="bg-black border border-zinc-800 rounded-xl p-4 shadow-inner">
-                    <span className="block text-[10px] font-mono text-zinc-500 uppercase tracking-widest mb-1">Plan Tier</span>
-                    <span className="text-white font-bold uppercase tracking-wider">{formData.plan_tier || formData.selected_plan || 'Unassigned'}</span>
-                  </div>
-                </div>
-              </div>
-
-              {/* Row 2: Custom DNS */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-8 lg:gap-12 items-center">
-                <div className="space-y-4 md:order-1 order-2">
-                  <h3 className="text-2xl font-black text-white uppercase tracking-tight">Domain Routing</h3>
-                  <p className="text-zinc-400 leading-relaxed font-light">
-                    Wire up their professional .com address directly into the edge network.
-                  </p>
-                  <div className="bg-black border border-zinc-800 rounded-xl p-4 shadow-inner">
-                    <span className="block text-[10px] font-mono text-zinc-500 uppercase tracking-widest mb-1">Target Address</span>
-                    <span className="text-cyan-400 font-mono font-bold tracking-wider truncate block">
-                      {formData.custom_domain ? `https://${formData.custom_domain}` : 'Awaiting DNS Assignment'}
-                    </span>
-                  </div>
-                </div>
-                <div className="bg-zinc-900/40 border border-zinc-800 rounded-3xl p-8 flex flex-col items-center justify-center min-h-62.5 shadow-lg md:order-2 order-1">
-                  <Globe size={48} className="text-cyan-400 mb-6" />
-                  <button className="bg-cyan-500 hover:bg-cyan-400 text-black px-8 py-4 rounded-xl text-xs font-black uppercase tracking-widest transition-all shadow-[0_0_20px_rgba(6,182,212,0.3)] hover:scale-105 cursor-pointer">
-                    Configure DNS
-                  </button>
-                </div>
-              </div>
-
-              {/* Row 3: System Classification */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-8 lg:gap-12 items-center">
-                <div className="bg-zinc-900/40 border border-zinc-800 rounded-3xl p-8 flex flex-col items-center justify-center min-h-62.5 shadow-lg">
-                  <label className="flex flex-col items-center gap-4 cursor-pointer group">
-                    <div className="relative">
-                      <input
-                        type="checkbox"
-                        className="sr-only"
-                        checked={formData.is_template || false}
-                        onChange={(e) => setFormData({ ...formData, is_template: e.target.checked })}
-                      />
-                      <div className={`block w-16 h-8 rounded-full transition-colors ${formData.is_template ? 'bg-fuchsia-500' : 'bg-zinc-800 border border-zinc-700'}`}></div>
-                      <div className={`absolute left-1 top-1 bg-white w-6 h-6 rounded-full transition-transform ${formData.is_template ? 'translate-x-8' : ''}`}></div>
-                    </div>
-                    <span className="text-white font-black uppercase tracking-widest text-xs group-hover:text-cyan-400 transition-colors">
-                      {formData.is_template ? 'Public Prototype' : 'Private Tenant'}
-                    </span>
-                  </label>
-                </div>
-                <div className="space-y-4">
-                  <h3 className="text-2xl font-black text-white uppercase tracking-tight">System Classification</h3>
-                  <p className="text-zinc-400 leading-relaxed font-light">
-                    Toggle this setting to designate whether this build is a live customer tenant or a public prototype template intended for the main gallery.
-                  </p>
-                </div>
-              </div>
-              
-              {/* Z-PATTERN AWARENESS: Keeping layout consistent with the grid's zigzag flow */}
-              <div className="border-t border-zinc-800/80 pt-12 mt-4">
-                <DangerZoneCard businessName={formData.business_name} onDelete={handleStorefrontTermination} />
-              </div>
-
-            </div>
-          </div>
+           <GridTab formData={formData} setFormData={setFormData} onTerminate={handleStorefrontTermination} />
         )}
 
       </div>

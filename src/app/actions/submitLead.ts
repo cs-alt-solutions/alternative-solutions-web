@@ -1,7 +1,7 @@
-// src/actions/submitLead.ts
+// src/app/actions/submitLead.ts
 'use server';
 
-import { supabase } from '@/utils/supabase';
+import { createClient } from '@/utils/supabase/server';
 import { Resend } from 'resend';
 
 const resend = new Resend(process.env.RESEND_API_KEY);
@@ -17,8 +17,9 @@ export interface LeadPayload {
 }
 
 export async function submitStorefrontLead(payload: LeadPayload) {
+  const supabase = await createClient();
+
   try {
-    // 1. DUAL-WRITE STEP A: Store in Supabase
     const { error: dbError } = await supabase
       .from('storefront_leads')
       .insert([
@@ -37,7 +38,6 @@ export async function submitStorefrontLead(payload: LeadPayload) {
       throw new Error('Failed to record inquiry in system ledger.');
     }
 
-    // 2. DUAL-WRITE STEP B: Dispatch Notification via Centralized Domain
     const recipientEmail = payload.contactEmail || process.env.FALLBACK_LEADS_EMAIL || 'support@alternativesolutions.io';
 
     const { error: mailError } = await resend.emails.send({

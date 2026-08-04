@@ -12,6 +12,7 @@ export default function StagingTab({ formData, setFormData }: { formData: any, s
             <DispatchCannon formData={formData} setFormData={setFormData} />
           </div>
           <div className="h-full">
+            {/* FIXED: Prop name updated to match AuditLedger's expected interface */}
             <AuditLedger formData={formData} />
           </div>
         </div>

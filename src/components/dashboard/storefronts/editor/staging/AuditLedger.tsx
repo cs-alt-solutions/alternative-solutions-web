@@ -1,189 +1,187 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
-import { ClipboardCheck, Search, Loader2, CheckCircle2, Wrench, MessageSquare, Clock, ChevronDown, ChevronUp, CheckCircle, Circle } from 'lucide-react';
-import { DASHBOARD_COPY } from '@/config/dashboard';
 import { supabase } from '@/utils/supabase';
+import { 
+  ClipboardCheck, 
+  Loader2, 
+  CheckCircle2, 
+  AlertCircle, 
+  Send, 
+  Check,
+  CreditCard,
+  ArrowUpCircle,
+  ReceiptText
+} from 'lucide-react';
 
-// Local source of truth for the 4 review steps
 const CHECKPOINT_TITLES: Record<string, string> = {
   '0': 'First Impression & Hero',
   '1': 'Your Story & Background',
   '2': 'Services & Offerings',
-  '3': 'Final Review & Next Steps'
+  '3': 'Lead Routing Verification'
 };
 
 export default function AuditLedger({ formData }: { formData: any }) {
-  const copy = DASHBOARD_COPY.STAGING;
   const [auditLogs, setAuditLogs] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [expandedCards, setExpandedCards] = useState<Record<string, boolean>>({});
-
-  const toggleExpand = (id: string) => {
-    setExpandedCards(prev => ({ ...prev, [id]: !prev[id] }));
-  };
+  const [isResolving, setIsResolving] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchAudits = async () => {
-      if (!formData?.slug) {
-        setIsLoading(false);
-        return;
-      }
-      
-      const { data, error } = await supabase
+      if (!formData?.slug) return;
+      const { data } = await supabase
         .from('storefront_audits')
         .select('*')
         .eq('storefront_slug', formData.slug)
-        .order('id', { ascending: false });
-
+        .order('created_at', { ascending: false });
+        
       if (data) setAuditLogs(data);
-      if (error) console.error("Ledger Sync Error:", error);
       setIsLoading(false);
     };
-
     fetchAudits();
-
-    const channel = supabase.channel('audit-ledger-sync')
-      .on(
-        'postgres_changes', 
-        { 
-          event: 'INSERT', 
-          schema: 'public', 
-          table: 'storefront_audits', 
-          filter: `storefront_slug=eq.${formData?.slug}` 
-        }, 
-        (payload) => {
-           setAuditLogs(prev => [payload.new, ...prev]);
-        }
-      )
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(channel);
-    };
   }, [formData?.slug]);
 
-  return (
-    <div className="bg-zinc-900/40 border border-zinc-800/60 rounded-3xl p-6 md:p-8 shadow-xl flex flex-col h-full">
+  const handleResolve = async (auditId: string) => {
+    if (!window.confirm("Mark these revisions as complete?")) return;
+    setIsResolving(auditId);
+    
+    try {
+      // 1. Mark specific log as resolved
+      const { error: auditError } = await supabase
+        .from('storefront_audits')
+        .update({ status: 'RESOLVED' })
+        .eq('id', auditId);
+      if (auditError) throw auditError;
+
+      // 2. Clear the master storefront flag back to In Review
+      const { error: storeError } = await supabase
+        .from('storefronts')
+        .update({ status: 'IN REVIEW' })
+        .eq('id', formData.id);
+      if (storeError) throw storeError;
+
+      setAuditLogs(prev => prev.map(log => log.id === auditId ? { ...log, status: 'RESOLVED' } : log));
+      alert('Updates logged! Next up: Transmit the updated link to the client.');
       
-      {/* HEADER */}
-      <div className="flex items-center gap-4 border-b border-zinc-800/80 pb-6 shrink-0">
+    } catch (err) {
+      console.error(err);
+      alert('Failed to resolve log.');
+    } finally {
+      setIsResolving(null);
+    }
+  };
+
+  // Helper to determine the visual styling of the ledger entry
+  const getLedgerConfig = (status: string) => {
+    switch(status) {
+      case 'APPROVED':
+      case 'APPROVED_PENDING_BILLING':
+        return { bg: 'bg-emerald-500/10', border: 'border-emerald-500/20', text: 'text-emerald-400', icon: CheckCircle2, label: 'Sign-Off Complete' };
+      case 'RESOLVED':
+        return { bg: 'bg-zinc-800', border: 'border-zinc-700', text: 'text-zinc-400', icon: Check, label: 'Fixed & Resolved' };
+      case 'CHANGES_REQUESTED':
+        return { bg: 'bg-amber-500/10', border: 'border-amber-500/20', text: 'text-amber-400', icon: AlertCircle, label: 'Tweaks Requested' };
+      case 'SUBSCRIPTION_STARTED':
+        return { bg: 'bg-cyan-500/10', border: 'border-cyan-500/30', text: 'text-cyan-400', icon: CreditCard, label: 'Hosting Activated ($5)' };
+      case 'SUBSCRIPTION_UPGRADED':
+        return { bg: 'bg-fuchsia-500/10', border: 'border-fuchsia-500/30', text: 'text-fuchsia-400', icon: ArrowUpCircle, label: 'Tier Upgraded ($15)' };
+      case 'PAYMENT_SUCCESS':
+        return { bg: 'bg-emerald-500/10', border: 'border-emerald-500/30', text: 'text-emerald-400', icon: ReceiptText, label: 'Payment Receipt' };
+      default:
+        return { bg: 'bg-zinc-800', border: 'border-zinc-700', text: 'text-zinc-400', icon: AlertCircle, label: status };
+    }
+  };
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center h-64 border border-dashed border-zinc-800 rounded-2xl">
+        <Loader2 className="w-6 h-6 animate-spin text-cyan-500" />
+      </div>
+    );
+  }
+
+  return (
+    <div className="bg-zinc-900/40 border border-zinc-800/60 rounded-3xl p-8 shadow-xl h-full flex flex-col">
+      <div className="flex items-center gap-4 border-b border-zinc-800/80 pb-6 mb-6">
         <div className="p-4 rounded-2xl bg-cyan-500/10 border border-cyan-500/30 text-cyan-400">
-          <ClipboardCheck size={24} />
+          <ClipboardCheck size={28} />
         </div>
         <div>
-          <h2 className="text-xl font-black text-white uppercase tracking-tight">{copy.AUDIT_TITLE}</h2>
-          <p className="text-zinc-400 text-sm font-light mt-1">{copy.AUDIT_DESC}</p>
+          <h2 className="text-2xl font-black text-white uppercase tracking-tight">Telemetry Ledger</h2>
+          <p className="text-zinc-400 text-sm font-light mt-1">Lifecycle tracking: Audits, approvals, and financial receipts.</p>
         </div>
       </div>
 
-      <div className="flex-1 flex flex-col pt-6 overflow-hidden">
-        {isLoading ? (
-          <div className="flex-1 flex flex-col items-center justify-center border border-dashed border-zinc-800 bg-zinc-950/30 rounded-xl p-8 text-center h-full min-h-64">
-            <Loader2 size={32} className="text-cyan-400 animate-spin mb-4" />
-            <span className="text-zinc-500 font-mono text-xs uppercase tracking-widest">
-              Syncing Ledger...
-            </span>
-          </div>
-        ) : auditLogs.length === 0 ? (
-          <div className="flex-1 flex flex-col items-center justify-center border border-dashed border-zinc-800 bg-zinc-950/30 rounded-xl p-8 text-center h-full min-h-64">
-            <Search size={32} className="text-zinc-600 mb-4" />
-            <span className="text-zinc-500 font-mono text-xs uppercase tracking-widest">
-              {copy.AUDIT_EMPTY}
-            </span>
+      <div className="flex-1 overflow-y-auto space-y-4 pr-2 custom-scrollbar">
+        {auditLogs.length === 0 ? (
+          <div className="text-center p-8 border border-zinc-800 bg-zinc-950/50 rounded-xl text-zinc-600 font-mono text-xs uppercase tracking-widest">
+            No telemetry logged yet.
           </div>
         ) : (
-          <div className="flex-1 overflow-y-auto custom-scrollbar space-y-4 pr-2">
-            {auditLogs.map((log) => {
-              let parsedNotes: any = {};
-              try {
-                parsedNotes = typeof log.audit_notes === 'string' ? JSON.parse(log.audit_notes) : log.audit_notes;
-              } catch (e) {
-                console.error("Failed to parse audit JSON", e);
-              }
+          auditLogs.map((log) => {
+            const config = getLedgerConfig(log.status);
+            const isFinancial = ['SUBSCRIPTION_STARTED', 'SUBSCRIPTION_UPGRADED', 'PAYMENT_SUCCESS'].includes(log.status);
+            const isResolved = log.status === 'RESOLVED';
+            
+            const parsedNotes = typeof log.audit_notes === 'string' ? JSON.parse(log.audit_notes) : log.audit_notes || {};
+            const clientNotes = parsedNotes.client_notes || {};
+            const hasActionableNotes = Object.keys(clientNotes).length > 0;
 
-              const isApproved = log.status === 'APPROVED_PENDING_BILLING' || log.status === 'APPROVED';
-              const clientNotes = parsedNotes.client_notes || {};
-              const verifiedCheckpoints = parsedNotes.verified_checkpoints || [];
-              const isExpanded = !!expandedCards[log.id];
-
-              return (
-                <div key={log.id} className="bg-zinc-950 border border-zinc-800/80 rounded-xl p-5 flex flex-col gap-4 shadow-sm relative overflow-hidden transition-all">
+            return (
+              <div key={log.id} className={`p-5 rounded-2xl border transition-all ${isResolved ? 'bg-zinc-950 border-zinc-800/50 opacity-60' : 'bg-zinc-900 border-zinc-700 shadow-lg'}`}>
+                <div className="flex justify-between items-start mb-4">
+                  <div>
+                    <span className={`px-2.5 py-1 rounded text-[10px] font-black uppercase tracking-widest flex items-center gap-1.5 w-fit ${config.bg} ${config.border} ${config.text}`}>
+                      <config.icon size={12} />
+                      {config.label}
+                    </span>
+                    <p className="text-[10px] text-zinc-500 font-mono mt-2">
+                      {new Date(log.created_at).toLocaleString()}
+                    </p>
+                  </div>
                   
-                  {/* TICKET STATUS HEADER & ACCORDION TOGGLE */}
-                  <div className="flex flex-wrap items-center justify-between gap-2">
-                    <span className={`px-2.5 py-1 rounded-md text-[10px] font-black uppercase tracking-widest flex items-center gap-1.5 border ${
-                      isApproved ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-400' : 'bg-fuchsia-500/10 border-fuchsia-500/20 text-fuchsia-400'
-                    }`}>
-                      {isApproved ? <CheckCircle2 size={12} /> : <Wrench size={12} />}
-                      {isApproved ? 'Approved & Locked' : 'Adjustments Requested'}
-                    </span>
-                    
-                    <div className="flex items-center gap-3">
-                      <span className="text-[10px] font-mono text-zinc-500 flex items-center gap-1">
-                        <Clock size={10} />
-                        {parsedNotes.logged_at ? new Date(parsedNotes.logged_at).toLocaleString() : new Date(log.created_at).toLocaleString()}
-                      </span>
-                      <button
-                        onClick={() => toggleExpand(log.id)}
-                        className="p-1 rounded-lg bg-zinc-900 border border-zinc-800 text-zinc-400 hover:text-white transition-colors cursor-pointer flex items-center gap-1 text-[10px] font-mono uppercase tracking-wider px-2"
-                      >
-                        <span>{isExpanded ? 'Collapse' : 'Inspect Log'}</span>
-                        {isExpanded ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
-                      </button>
-                    </div>
-                  </div>
-
-                  {/* SUMMARY PREVIEW */}
-                  <div className="text-xs text-zinc-300 font-light flex items-center justify-between px-1">
-                    <span>Signoff: <strong className="text-white">{parsedNotes.contact_name || log.client_email}</strong></span>
-                    <span className="text-cyan-400 font-mono text-[10px]">
-                      {parsedNotes.total_sections_verified || `${verifiedCheckpoints.length} Sections Verified`}
-                    </span>
-                  </div>
-
-                  {/* EXPANDABLE ACCORDION CONTENT */}
-                  {isExpanded && (
-                    <div className="space-y-4 pt-3 border-t border-zinc-800/80 animate-in fade-in duration-200">
-                      
-                      {/* ROADMAP CHECKPOINT BREAKDOWN */}
-                      <div className="space-y-3 bg-zinc-900/50 p-3.5 rounded-xl border border-zinc-800">
-                        <span className="text-[9px] font-mono font-bold text-zinc-400 uppercase tracking-widest block">
-                          Roadmap Checkpoint Verification
-                        </span>
-                        
-                        {Object.entries(CHECKPOINT_TITLES).map(([sIdxStr, stepTitle]) => {
-                          const sIdx = Number(sIdxStr);
-                          const isStepChecked = verifiedCheckpoints.includes(sIdx);
-                          return (
-                            <div key={sIdx} className="space-y-1.5 pt-2 first:pt-0 border-t border-zinc-800/40 first:border-0">
-                              <div className="flex items-center gap-2">
-                                {isStepChecked ? (
-                                  <CheckCircle size={14} className="text-emerald-400 shrink-0" />
-                                ) : (
-                                  <Circle size={14} className="text-zinc-600 shrink-0" />
-                                )}
-                                <span className="text-xs font-bold text-white uppercase tracking-wider">{stepTitle}</span>
-                              </div>
-                              
-                              {clientNotes[sIdx] && (
-                                <div className="ml-6 bg-black/40 border border-zinc-800 p-2.5 rounded-lg">
-                                  <span className="text-[9px] font-mono text-cyan-400 uppercase tracking-widest block mb-1">Client Notes:</span>
-                                  <p className="text-xs text-zinc-300 font-light italic">&ldquo;{clientNotes[sIdx]}&rdquo;</p>
-                                </div>
-                              )}
-                            </div>
-                          );
-                        })}
-                      </div>
-
-                    </div>
+                  {/* Action Button for Unresolved Audit Notes */}
+                  {log.status === 'CHANGES_REQUESTED' && (
+                    <button 
+                      onClick={() => handleResolve(log.id)}
+                      disabled={isResolving === log.id}
+                      className="flex items-center gap-2 bg-amber-500 hover:bg-amber-400 text-black px-4 py-2 rounded-lg text-[10px] font-black uppercase tracking-widest transition-colors disabled:opacity-50"
+                    >
+                      {isResolving === log.id ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Send className="w-3.5 h-3.5" />}
+                      Resolve & Ping
+                    </button>
                   )}
-
                 </div>
-              );
-            })}
-          </div>
+
+                {/* Content Block: Financial Receipt OR Audit Notes */}
+                {isFinancial ? (
+                  <div className="mt-4 border-t border-zinc-800 pt-4">
+                    <div className="bg-black/40 border border-zinc-800/80 rounded-lg p-3">
+                      <span className="text-[9px] font-black text-zinc-500 uppercase tracking-widest block mb-1">
+                        System Payload
+                      </span>
+                      <p className="text-sm text-zinc-300 font-mono">
+                        {log.audit_notes || 'Transaction verified via Stripe.'}
+                      </p>
+                    </div>
+                  </div>
+                ) : hasActionableNotes ? (
+                  <div className="space-y-3 mt-4 border-t border-zinc-800 pt-4">
+                    {Object.entries(clientNotes).map(([stepIdx, text]) => (
+                      <div key={stepIdx} className="bg-black/40 border border-zinc-800/80 rounded-lg p-3">
+                        <span className="text-[9px] font-black text-cyan-400 uppercase tracking-widest block mb-1">
+                          Section: {CHECKPOINT_TITLES[stepIdx] || 'General'}
+                        </span>
+                        <p className={`text-sm leading-relaxed ${isResolved ? 'text-zinc-500 line-through' : 'text-zinc-300'}`}>
+                          &ldquo;{String(text)}&rdquo;
+                        </p>
+                      </div>
+                    ))}
+                  </div>
+                ) : null}
+              </div>
+            );
+          })
         )}
       </div>
     </div>

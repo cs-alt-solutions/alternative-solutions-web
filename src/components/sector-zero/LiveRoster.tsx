@@ -1,5 +1,6 @@
 /* src/components/sector-zero/LiveRoster.tsx */
 import React from 'react';
+import Link from 'next/link';
 import { createClient } from '@/utils/supabase/server';
 import { WEBSITE_COPY } from '@/utils/glossary';
 import { Zap, Coffee, Flame, Briefcase, HeartHandshake, ChevronRight } from 'lucide-react';
@@ -31,16 +32,18 @@ export default async function LiveRoster() {
 
   return (
     <section className="py-24 relative overflow-hidden">
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-150 h-150 bg-teal-500/5 rounded-full blur-[120px] pointer-events-none" />
+      {/* Warm Ambient Glow for the Showroom Vibe */}
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-150 h-150 bg-indigo-500/5 rounded-full blur-[120px] pointer-events-none mix-blend-screen" />
+      <div className="absolute top-1/4 right-1/4 w-96 h-96 bg-fuchsia-500/5 rounded-full blur-[100px] pointer-events-none mix-blend-screen" />
 
       <div className="max-w-7xl mx-auto px-6 relative z-10">
         
         {/* HEADER */}
         <div className="text-center mb-16">
-          <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-cyan-500/30 bg-cyan-500/10 text-[10px] font-mono text-cyan-400 uppercase tracking-widest mb-6">
-            <Zap size={14} className="text-cyan-400" /> {copy.TAG}
+          <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-cyan-500/30 bg-cyan-500/10 text-[10px] font-mono text-cyan-400 uppercase tracking-widest mb-6 shadow-[0_0_15px_rgba(34,211,238,0.15)]">
+            <Zap size={14} className="text-cyan-400 animate-pulse" /> {copy.TAG}
           </div>
-          <h2 className="text-4xl md:text-5xl font-black tracking-tighter uppercase text-white mb-4">
+          <h2 className="text-4xl md:text-5xl font-black tracking-tighter uppercase text-white mb-4 drop-shadow-md">
             {copy.TITLE}
           </h2>
           <p className="text-slate-400 font-light max-w-xl mx-auto">
@@ -50,7 +53,7 @@ export default async function LiveRoster() {
 
         {/* ROSTER GRID */}
         {liveSites.length === 0 ? (
-          <div className="text-center py-20 border border-white/5 rounded-3xl bg-black/40 backdrop-blur-xl">
+          <div className="text-center py-20 border border-white/5 rounded-3xl bg-black/40 backdrop-blur-xl shadow-inner">
              <p className="text-slate-500 font-mono text-sm uppercase tracking-widest">{copy.EMPTY_STATE}</p>
           </div>
         ) : (
@@ -58,26 +61,36 @@ export default async function LiveRoster() {
             {liveSites.map((site: any, idx: number) => {
               const styleData = getTierIcon(site.theme_style);
               
+              // Determine routing based on domain setup
+              const targetUrl = site.custom_domain 
+                ? `https://${site.custom_domain}` 
+                : `https://store.alternativesolutions.io/${site.slug}`;
+              
               return (
-                <div 
+                <Link 
                   key={site.id || idx} 
-                  className="group relative flex items-center gap-5 bg-black/50 border border-white/5 p-6 rounded-2xl backdrop-blur-xl hover:border-cyan-400/40 hover:-translate-y-1 hover:shadow-[0_15px_30px_-10px_rgba(34,211,238,0.2)] transition-all duration-300"
+                  href={targetUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="group relative flex items-center gap-5 bg-black/50 border border-white/5 p-6 rounded-2xl backdrop-blur-xl hover:border-fuchsia-500/30 hover:-translate-y-1 hover:shadow-[0_15px_40px_-10px_rgba(217,70,239,0.15)] transition-all duration-500 cursor-pointer"
                 >
-                  <div className={`p-4 rounded-xl ring-1 flex shrink-0 transition-all duration-300 group-hover:scale-110 ${styleData.style}`}>
+                  <div className={`p-4 rounded-xl ring-1 flex shrink-0 transition-all duration-300 group-hover:scale-110 ${styleData.style} group-hover:shadow-[0_0_20px_rgba(var(--brand-primary-rgb),0.2)]`}>
                     {styleData.icon}
                   </div>
                   <div className="flex-1 min-w-0">
-                    <h4 className="text-white font-bold truncate group-hover:text-cyan-300 transition-colors">
+                    <h4 className="text-white font-bold truncate group-hover:text-fuchsia-300 transition-colors">
                       {site.business_name}
                     </h4>
                     <div className="flex items-center gap-2 mt-1">
                       <span className="text-xs text-slate-400 capitalize">{site.theme_style || 'Standard'}</span>
                       <span className="w-1 h-1 rounded-full bg-slate-700" />
-                      <span className="text-[10px] font-mono text-emerald-400 uppercase tracking-widest">Live</span>
+                      <span className="text-[10px] font-mono text-emerald-400 uppercase tracking-widest flex items-center gap-1">
+                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" /> Live
+                      </span>
                     </div>
                   </div>
-                  <ChevronRight size={18} className="text-slate-600 opacity-0 -translate-x-2 group-hover:opacity-100 group-hover:translate-x-0 group-hover:text-cyan-400 transition-all duration-300" />
-                </div>
+                  <ChevronRight size={18} className="text-slate-600 opacity-0 -translate-x-2 group-hover:opacity-100 group-hover:translate-x-0 group-hover:text-fuchsia-400 transition-all duration-300" />
+                </Link>
               )
             })}
           </div>
