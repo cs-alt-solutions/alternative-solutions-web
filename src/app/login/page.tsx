@@ -7,6 +7,17 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { supabase } from '@/utils/supabase'; // Using your direct client
 
+// ==========================================
+// THE NUCLEAR EMAIL SANITIZER
+// Strips invisible mobile spaces and forces lowercase
+// ==========================================
+const sanitizeEmail = (rawEmail: string) => {
+  return rawEmail
+    .replace(/[\u200B-\u200D\uFEFF]/g, '') // Destroys zero-width characters
+    .replace(/\s+/g, '')                   // Destroys ALL spaces (including non-breaking)
+    .toLowerCase();                        // Forces lowercase to fix auto-caps
+};
+
 export default function GatewayPage() {
   const [email, setEmail] = useState('');
   const [otp, setOtp] = useState('');
@@ -22,12 +33,15 @@ export default function GatewayPage() {
     setErrorMsg('');
     setIsProcessing(true);
 
+    // Scrub the email before it ever touches Supabase
+    const cleanEmail = sanitizeEmail(email);
+
     try {
       // 1. PRE-VERIFICATION: Check if the user actually exists in your system
       const { data: profileCheck, error: profileError } = await supabase
         .from('profiles')
         .select('id')
-        .eq('email', email.trim())
+        .eq('email', cleanEmail)
         .maybeSingle(); 
 
       // If the database returns null, that email isn't in your system.
@@ -37,7 +51,7 @@ export default function GatewayPage() {
 
       // 2. DISPATCH: If they do exist, proceed with sending the secure code
       const { error } = await supabase.auth.signInWithOtp({
-        email: email.trim(),
+        email: cleanEmail,
         options: {
           emailRedirectTo: `${window.location.origin}/api/auth/callback`
         }
@@ -57,10 +71,13 @@ export default function GatewayPage() {
     setErrorMsg('');
     setIsProcessing(true);
 
+    // Scrub the email here too, just in case they modified it while waiting for the OTP
+    const cleanEmail = sanitizeEmail(email);
+
     try {
       // Verify the 6-digit code typed in by the user
       const { data, error } = await supabase.auth.verifyOtp({
-        email: email.trim(),
+        email: cleanEmail,
         token: otp.trim(),
         type: 'email',
       });
