@@ -27,7 +27,7 @@ import VisualArchitecture from '@/components/dashboard/storefronts/editor/core/V
 import MediaTab from '@/components/dashboard/storefronts/editor/MediaTab';
 import CapabilitiesTab from '@/components/dashboard/storefronts/editor/CapabilitiesTab';
 import StagingTab from '@/components/dashboard/storefronts/editor/staging/StagingTab';
-import GridTab from '@/components/dashboard/storefronts/editor/GridTab'; // <-- NEW IMPORT
+import GridTab from '@/components/dashboard/storefronts/editor/GridTab';
 import { deleteStorefront } from '@/app/actions/storefronts';
 
 export default function TenantCommandHub() {
@@ -39,6 +39,9 @@ export default function TenantCommandHub() {
   const [editorTab, setEditorTab] = useState<'content' | 'design' | 'media' | 'services'>('content');
   const [controlsExpanded, setControlsExpanded] = useState(true);
   
+  // Track sidebar collapse state to adjust the left offset dynamically
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
+  
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [saveMessage, setSaveMessage] = useState('');
@@ -47,6 +50,10 @@ export default function TenantCommandHub() {
   const PREVIEW_BASE_URL = process.env.NEXT_PUBLIC_SITE_URL || process.env.NEXT_PUBLIC_BASE_URL || 'https://alternativesolutions.io';
 
   useEffect(() => {
+    // Listen for sidebar collapse events
+    const handleCollapse = (e: any) => setIsSidebarCollapsed(e.detail.isCollapsed);
+    window.addEventListener('sidebar-collapse', handleCollapse);
+
     const fetchTenant = async () => {
       const { data, error } = await supabase
         .from('storefronts')
@@ -60,6 +67,10 @@ export default function TenantCommandHub() {
     };
     
     fetchTenant();
+
+    return () => {
+      window.removeEventListener('sidebar-collapse', handleCollapse);
+    };
   }, [id]);
 
   const reloadCanvas = () => setRefreshKey(Date.now());
@@ -98,17 +109,17 @@ export default function TenantCommandHub() {
 
   if (isLoading) {
     return (
-      <div className="fixed top-0 right-0 bottom-0 left-0 md:left-64 z-40 flex flex-col items-center justify-center bg-black">
+      <div className={`fixed top-0 right-0 bottom-0 left-0 transition-all duration-300 ${isSidebarCollapsed ? 'md:left-20' : 'md:left-64'} z-40 flex flex-col items-center justify-center bg-black`}>
         <Loader2 className="w-8 h-8 text-cyan-400 animate-spin mb-4" />
         <span className="font-mono text-xs text-zinc-500 uppercase tracking-widest">Initializing Hub...</span>
       </div>
     );
   }
 
-  if (!formData) return <div className="fixed top-0 right-0 bottom-0 left-0 md:left-64 z-40 p-8 text-white bg-black">Tenant not found.</div>;
+  if (!formData) return <div className={`fixed top-0 right-0 bottom-0 left-0 transition-all duration-300 ${isSidebarCollapsed ? 'md:left-20' : 'md:left-64'} z-40 p-8 text-white bg-black`}>Tenant not found.</div>;
 
   return (
-    <div className="fixed top-0 right-0 bottom-0 left-0 md:left-64 z-40 bg-black flex flex-col overflow-hidden animate-in fade-in duration-300">
+    <div className={`fixed top-0 right-0 bottom-0 left-0 transition-all duration-300 ${isSidebarCollapsed ? 'md:left-20' : 'md:left-64'} z-40 bg-black flex flex-col overflow-hidden animate-in fade-in duration-300`}>
       
       {/* HUB HEADER */}
       <header className="border-b border-white/5 bg-zinc-950 px-4 md:px-6 py-4 flex items-center justify-between shrink-0">
@@ -182,7 +193,7 @@ export default function TenantCommandHub() {
       </nav>
 
       {/* DYNAMIC WORKSPACE */}
-      <div className="flex-1 flex overflow-hidden">
+      <div className="flex-1 flex overflow-hidden w-full">
         
         {/* TAB 1: THE CANVAS */}
         {activeTab === 'canvas' && (
@@ -217,7 +228,7 @@ export default function TenantCommandHub() {
               </div>
             )}
 
-            <div className="hidden lg:flex flex-1 bg-black relative flex-col transition-all duration-300">
+            <div className="hidden lg:flex flex-1 bg-black relative flex-col transition-all duration-300 w-full">
               <div className="bg-zinc-900 border-b border-zinc-800 px-4 py-2 flex items-center gap-4 shrink-0 shadow-sm">
                 <div className="hidden sm:flex gap-1.5 ml-2 items-center">
                   <button 

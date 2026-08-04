@@ -1,3 +1,4 @@
+/* src/components/dashboard/storefronts/editor/GridTab.tsx */
 'use client';
 
 import React from 'react';
@@ -8,11 +9,11 @@ export default function GridTab({ formData, setFormData, onTerminate }: { formDa
   const isCustomPlan = formData.plan_tier === 'CUSTOM' || formData.selected_plan === 'CUSTOM';
 
   return (
-    <div className="w-full h-full overflow-y-auto p-4 md:p-8 custom-scrollbar bg-black">
-      <div className="max-w-5xl mx-auto flex flex-col gap-12 pt-4 animate-in fade-in slide-in-from-bottom-4 duration-300 pb-12">
+    <div className="w-full h-full overflow-y-auto p-6 md:p-10 custom-scrollbar bg-black">
+      <div className="w-full flex flex-col gap-12 pt-4 animate-in fade-in slide-in-from-bottom-4 duration-300 pb-12">
         
         {/* Row 1: Billing & Plan */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 lg:gap-12 items-center">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12 items-center">
           <div className="bg-zinc-900/40 border border-zinc-800 rounded-3xl p-8 flex flex-col items-center justify-center min-h-[250px] shadow-lg">
             <CreditCard size={48} className="text-emerald-400 mb-6" />
             <span className="px-4 py-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 font-bold uppercase tracking-widest text-xs shadow-inner">
@@ -37,7 +38,7 @@ export default function GridTab({ formData, setFormData, onTerminate }: { formDa
                   <option value="CUSTOM">High-Ticket Custom</option>
                 </select>
               </div>
-              
+
               {/* CONDITIONAL STRIPE LINK */}
               {isCustomPlan && (
                 <div className="mt-4 animate-in fade-in slide-in-from-top-2">
@@ -56,8 +57,8 @@ export default function GridTab({ formData, setFormData, onTerminate }: { formDa
         </div>
 
         {/* Row 2: Custom DNS */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 lg:gap-12 items-center mt-4">
-          <div className="space-y-4 md:order-1 order-2">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12 items-center mt-4">
+          <div className="space-y-4 lg:order-1 order-2">
             <h3 className="text-2xl font-black text-white uppercase tracking-tight">Domain Routing</h3>
             <p className="text-zinc-400 leading-relaxed font-light">
               Wire up their professional .com address directly into the edge network.
@@ -80,7 +81,7 @@ export default function GridTab({ formData, setFormData, onTerminate }: { formDa
               </div>
             </div>
           </div>
-          <div className="bg-zinc-900/40 border border-zinc-800 rounded-3xl p-8 flex flex-col items-center justify-center min-h-[250px] shadow-lg md:order-2 order-1">
+          <div className="bg-zinc-900/40 border border-zinc-800 rounded-3xl p-8 flex flex-col items-center justify-center min-h-[250px] shadow-lg lg:order-2 order-1">
             <Globe size={48} className="text-cyan-400 mb-6" />
             <button className="bg-cyan-500 hover:bg-cyan-400 text-zinc-950 px-8 py-4 rounded-xl text-xs font-black uppercase tracking-widest transition-all shadow-[0_0_20px_rgba(6,182,212,0.3)] hover:scale-105 cursor-pointer">
               Configure DNS
@@ -89,7 +90,7 @@ export default function GridTab({ formData, setFormData, onTerminate }: { formDa
         </div>
 
         {/* Row 3: System Classification */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 lg:gap-12 items-center mt-4">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12 items-center mt-4">
           <div className="bg-zinc-900/40 border border-zinc-800 rounded-3xl p-8 flex flex-col items-center justify-center min-h-[250px] shadow-lg">
             <label className="flex flex-col items-center gap-4 cursor-pointer group">
               <div className="relative">
@@ -114,7 +115,7 @@ export default function GridTab({ formData, setFormData, onTerminate }: { formDa
             </p>
           </div>
         </div>
-        
+
         {/* Danger Zone */}
         <div className="border-t border-zinc-800/80 pt-12 mt-4">
           <DangerZoneCard businessName={formData.business_name} onDelete={onTerminate} />

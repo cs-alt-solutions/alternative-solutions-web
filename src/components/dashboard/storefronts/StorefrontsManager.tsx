@@ -13,25 +13,19 @@ import { WEBSITE_COPY } from '@/utils/glossary';
 export default function StorefrontsManager({ initialData }: { initialData: any[] }) {
   const router = useRouter();
   const [storefronts, setStorefronts] = useState(initialData || []);
-  
-  // State to hold the specific application we are reviewing
   const [reviewingApp, setReviewingApp] = useState<any | null>(null);
-
-  // 🚀 THE MASTER VIEW FILTER STATE
   const [viewMode, setViewMode] = useState<'tenants' | 'prototypes' | 'all'>('tenants');
-
   const copy = WEBSITE_COPY.DASHBOARD.STOREFRONT;
 
   useEffect(() => {
     setStorefronts(initialData || []);
   }, [initialData]);
 
-  // 🚀 FILTER LOGIC USING YOUR EXISTING 'is_template' KEY
   const filteredStorefronts = storefronts.filter(store => {
     const isProto = store.is_template || false;
     if (viewMode === 'tenants') return !isProto;
     if (viewMode === 'prototypes') return isProto;
-    return true; // 'all' view
+    return true;
   });
 
   const getStatusBadge = (status: string) => {
@@ -48,21 +42,8 @@ export default function StorefrontsManager({ initialData }: { initialData: any[]
     }
   };
 
-  const handleDeleteStorefront = async (id: string, name: string) => {
-    if (!window.confirm(`Are you sure you want to permanently delete "${name}"? This will remove it from all public galleries.`)) return;
-
-    try {
-      await deleteStorefront(id);
-      setStorefronts(prev => prev.filter(s => s.id !== id));
-      router.refresh();
-    } catch (err: any) {
-      console.error("Delete failed:", err);
-      alert(err.message);
-    }
-  };
-
   return (
-    <div className="space-y-6 w-full max-w-7xl mx-auto p-6 relative">
+    <div className="space-y-6 w-full px-6 md:px-8 py-6 relative">
       <div className="flex justify-between items-center border-b border-zinc-800 pb-4">
         <div>
           <h1 className="text-3xl font-black text-white tracking-tight">STOREFRONT ENGINE</h1>
@@ -71,11 +52,9 @@ export default function StorefrontsManager({ initialData }: { initialData: any[]
         <NewStorefrontModal />
       </div>
 
-      {/* 🚀 SLEEK INDUSTRIAL ROUTING TABS */}
+      {/* ROUTING TABS */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-zinc-950 p-2.5 rounded-xl border border-zinc-800/80 shadow-inner">
         <div className="flex items-center gap-1.5 bg-zinc-900/90 p-1 rounded-lg border border-zinc-800 overflow-x-auto custom-scrollbar">
-          
-          {/* ACTIVE TENANTS TAB */}
           <button
             onClick={() => setViewMode('tenants')}
             className={`flex items-center gap-2 px-4 py-2 rounded-md text-[11px] font-black tracking-widest uppercase transition-all whitespace-nowrap ${
@@ -91,7 +70,6 @@ export default function StorefrontsManager({ initialData }: { initialData: any[]
             </span>
           </button>
 
-          {/* PUBLIC PROTOTYPES TAB */}
           <button
             onClick={() => setViewMode('prototypes')}
             className={`flex items-center gap-2 px-4 py-2 rounded-md text-[11px] font-black tracking-widest uppercase transition-all whitespace-nowrap ${
@@ -106,10 +84,8 @@ export default function StorefrontsManager({ initialData }: { initialData: any[]
               {storefronts.filter(s => s.is_template).length}
             </span>
           </button>
-
         </div>
 
-        {/* VIEW ALL TOGGLE */}
         <button
           onClick={() => setViewMode('all')}
           className={`flex items-center justify-center gap-1.5 px-3.5 py-2 rounded-lg text-[10px] font-bold tracking-widest uppercase transition-all shrink-0 ${
@@ -136,7 +112,6 @@ export default function StorefrontsManager({ initialData }: { initialData: any[]
               </tr>
             </thead>
             <tbody className="divide-y divide-zinc-800">
-              
               {filteredStorefronts.length === 0 ? (
                 <tr>
                   <td colSpan={5} className="px-6 py-12 text-center text-zinc-500 font-mono text-xs uppercase tracking-widest">
@@ -147,7 +122,6 @@ export default function StorefrontsManager({ initialData }: { initialData: any[]
                 filteredStorefronts.map((store) => {
                   const planTier = store.plan_tier || store.selected_plan || 'Starter ($5/mo)';
                   const displayDomain = store.custom_domain || store.existing_domain || `/${store.slug || 'pending'}`;
-
                   return (
                     <tr key={store.id} className="hover:bg-zinc-800/50 transition-colors group">
                       <td className="px-6 py-4 font-bold text-white flex items-center gap-3">
@@ -157,7 +131,7 @@ export default function StorefrontsManager({ initialData }: { initialData: any[]
                             <img src={store.hero_image} alt="Hero" className="w-full h-full object-cover" />
                           ) : (
                             <div className="w-full h-full bg-zinc-800 flex items-center justify-center text-zinc-600 text-xs">
-                               {store.business_name?.charAt(0).toUpperCase()}
+                              {store.business_name?.charAt(0).toUpperCase()}
                             </div>
                           )}
                         </div>
@@ -174,7 +148,6 @@ export default function StorefrontsManager({ initialData }: { initialData: any[]
                       <td className="px-6 py-4 font-mono text-zinc-400 text-xs">{planTier}</td>
                       <td className="px-6 py-4">{getStatusBadge(store.status)}</td>
                       <td className="px-6 py-4 text-right">
-                        
                         {store.status === 'PENDING' ? (
                           <button
                             onClick={() => setReviewingApp({
@@ -190,7 +163,6 @@ export default function StorefrontsManager({ initialData }: { initialData: any[]
                             <ClipboardList className="w-3 h-3" /> Review
                           </button>
                         ) : (
-                          /* 🚀 ROUTING UPDATED: Now points straight to the new Tenant Hub! */
                           <div className="flex justify-end gap-4 opacity-50 group-hover:opacity-100 transition-opacity">
                             <Link
                               href={`/dashboard/storefronts/${store.id}`}
@@ -210,19 +182,16 @@ export default function StorefrontsManager({ initialData }: { initialData: any[]
                             </a>
                           </div>
                         )}
-
                       </td>
                     </tr>
                   );
                 })
               )}
-
             </tbody>
           </table>
         </div>
       </div>
 
-      {/* 🚀 TYPESCRIPT ERROR 2322 FIXED WITH SAFELY CAST ATTRIBUTES */}
       {reviewingApp && (
         <ApplicationReviewModal
           app={reviewingApp}
