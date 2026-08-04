@@ -37,19 +37,19 @@ export default function GatewayPage() {
     const cleanEmail = sanitizeEmail(email);
 
     try {
-      // 1. PRE-VERIFICATION: Check if the user actually exists in your system
-      const { data: profileCheck, error: profileError } = await supabase
-        .from('profiles')
-        .select('id')
-        .eq('email', cleanEmail)
-        .maybeSingle(); 
+      // 1. PRE-VERIFICATION: Securely ask our database bouncer if the email exists
+      const { data: profileExists, error: profileError } = await supabase.rpc('check_profile_exists', {
+        lookup_email: cleanEmail
+      });
 
-      // If the database returns null, that email isn't in your system.
-      if (!profileCheck) {
+      if (profileError) throw profileError;
+
+      // If the RPC returns false, the email is not in the system.
+      if (!profileExists) {
         throw new Error("Unrecognized email. Please check for typos or contact an administrator.");
       }
 
-      // 2. DISPATCH: If they do exist, proceed with sending the secure code
+      // 2. DISPATCH: Proceed with sending the secure code
       const { error } = await supabase.auth.signInWithOtp({
         email: cleanEmail,
         options: {
