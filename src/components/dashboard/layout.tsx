@@ -15,7 +15,9 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
   return (
     <div className="flex h-screen overflow-hidden bg-bg-app w-screen">
-      <Sidebar />
+      <Sidebar isOpen={false} closeMenu={function (): void {
+              throw new Error('Function not implemented.');
+          } } />
       <main className="flex-1 h-full overflow-y-auto w-full transition-all duration-300 bg-black">
         {children}
       </main>

@@ -18,18 +18,20 @@ import {
   CheckSquare,
   Server,
   Store,
-  Menu,
-  X,
   ChevronLeft,
   ChevronRight
 } from 'lucide-react';
 import { DASHBOARD_COPY } from '@/config/dashboard';
 import { ROUTES } from '@/utils/glossary';
 
-export default function Sidebar() {
+interface SidebarProps {
+  isOpen: boolean;
+  closeMenu: () => void;
+}
+
+export default function Sidebar({ isOpen, closeMenu }: SidebarProps) {
   const pathname = usePathname();
-  const [isOpen, setIsOpen] = useState(false); // Mobile drawer state
-  const [isCollapsed, setIsCollapsed] = useState(false); // Desktop minimize state
+  const [isCollapsed, setIsCollapsed] = useState(false);
   const copy = DASHBOARD_COPY.SIDEBAR;
 
   // Prevent scrolling when mobile menu is open
@@ -95,7 +97,7 @@ export default function Sidebar() {
       <Link
         key={item.name}
         href={item.href}
-        onClick={() => setIsOpen(false)} // Auto-close on mobile when clicked
+        onClick={closeMenu} // Auto-close on mobile when clicked
         title={isCollapsed ? item.name : undefined}
         className={`flex items-center gap-3 px-4 py-3 rounded-xl text-xs font-mono uppercase tracking-widest transition-all group ${
           isCollapsed ? 'justify-center px-2' : ''
@@ -113,19 +115,11 @@ export default function Sidebar() {
 
   return (
     <>
-      {/* MOBILE TOGGLE BUTTON */}
-      <button
-        onClick={() => setIsOpen(!isOpen)}
-        className="md:hidden fixed top-4 right-4 z-50 p-2 bg-zinc-900 border border-white/10 rounded-xl text-white shadow-xl backdrop-blur-md"
-      >
-        {isOpen ? <X size={20} /> : <Menu size={20} className="text-brand-primary" />}
-      </button>
-
       {/* MOBILE OVERLAY */}
       {isOpen && (
         <div 
           className="md:hidden fixed inset-0 bg-black/80 backdrop-blur-sm z-40"
-          onClick={() => setIsOpen(false)}
+          onClick={closeMenu}
         />
       )}
 
@@ -133,7 +127,7 @@ export default function Sidebar() {
       <aside className={`
         fixed md:static inset-y-0 left-0 z-50
         bg-bg-surface-100 border-r border-white/5 h-screen flex flex-col
-        transition-all duration-300 ease-in-out
+        transition-transform duration-300 ease-in-out
         ${isOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'}
         ${isCollapsed ? 'md:w-20' : 'md:w-64'}
         w-64

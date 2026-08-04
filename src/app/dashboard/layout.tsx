@@ -1,25 +1,32 @@
-import React from 'react';
+/* src/app/dashboard/layout.tsx */
+'use client';
+
+import React, { useState, useEffect } from 'react';
 import Sidebar from '@/components/dashboard/Sidebar';
+import DashboardMobileHeader from '@/components/dashboard/DashboardMobileHeader';
 
-export default function DashboardLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+export default function DashboardLayout({ children }: { children: React.ReactNode }) {
+  const [isCollapsed, setIsCollapsed] = useState(false);
+  const [isMobileOpen, setIsMobileOpen] = useState(false);
+
+  useEffect(() => {
+    const handleCollapse = (e: any) => setIsCollapsed(e.detail.isCollapsed);
+    window.addEventListener('sidebar-collapse', handleCollapse);
+    return () => window.removeEventListener('sidebar-collapse', handleCollapse);
+  }, []);
+
+  const toggleMobileMenu = () => setIsMobileOpen(!isMobileOpen);
+  const closeMobileMenu = () => setIsMobileOpen(false);
+
   return (
-    <div className="flex h-screen bg-bg-app overflow-hidden">
-      {/* 1. THE NAVIGATION ENGINE */}
-      <Sidebar />
-
-      {/* 2. THE MAIN VIEWPORT */}
-      {/* ADDED: pt-16 on mobile so content clears the hamburger button */}
-      <main className="flex-1 relative overflow-y-auto bg-stardust p-4 pt-16 md:p-8 md:pt-8">
+    <div className="flex h-screen overflow-hidden bg-bg-app w-screen">
+      {/* Explicitly passing props to satisfy SidebarProps */}
+      <Sidebar isOpen={isMobileOpen} closeMenu={closeMobileMenu} />
+      
+      <main className="flex-1 h-full overflow-hidden w-full transition-all duration-300 bg-black flex flex-col">
+        <DashboardMobileHeader isOpen={isMobileOpen} toggleMenu={toggleMobileMenu} />
         
-        {/* THE ENERGY GLOW */}
-        <div className="fixed top-0 left-1/4 w-full h-full bg-brand-primary/5 rounded-full blur-[150px] pointer-events-none -z-10" />
-        
-        {/* CONTENT CONTAINER */}
-        <div className="max-w-7xl mx-auto w-full">
+        <div className="flex-1 overflow-y-auto">
           {children}
         </div>
       </main>

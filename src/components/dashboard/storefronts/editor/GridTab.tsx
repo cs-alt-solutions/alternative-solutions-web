@@ -14,7 +14,7 @@ export default function GridTab({ formData, setFormData, onTerminate }: { formDa
         
         {/* Row 1: Billing & Plan */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12 items-center">
-          <div className="bg-zinc-900/40 border border-zinc-800 rounded-3xl p-8 flex flex-col items-center justify-center min-h-[250px] shadow-lg">
+          <div className="bg-zinc-900/40 border border-zinc-800 rounded-3xl p-8 flex flex-col items-center justify-center min-h-62.5 shadow-lg">
             <CreditCard size={48} className="text-emerald-400 mb-6" />
             <span className="px-4 py-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 font-bold uppercase tracking-widest text-xs shadow-inner">
               {formData.status === 'LIVE' ? 'Subscription Active' : 'Pending Checkout'}
@@ -81,7 +81,7 @@ export default function GridTab({ formData, setFormData, onTerminate }: { formDa
               </div>
             </div>
           </div>
-          <div className="bg-zinc-900/40 border border-zinc-800 rounded-3xl p-8 flex flex-col items-center justify-center min-h-[250px] shadow-lg lg:order-2 order-1">
+          <div className="bg-zinc-900/40 border border-zinc-800 rounded-3xl p-8 flex flex-col items-center justify-center min-h-62.5 shadow-lg lg:order-2 order-1">
             <Globe size={48} className="text-cyan-400 mb-6" />
             <button className="bg-cyan-500 hover:bg-cyan-400 text-zinc-950 px-8 py-4 rounded-xl text-xs font-black uppercase tracking-widest transition-all shadow-[0_0_20px_rgba(6,182,212,0.3)] hover:scale-105 cursor-pointer">
               Configure DNS
@@ -91,7 +91,7 @@ export default function GridTab({ formData, setFormData, onTerminate }: { formDa
 
         {/* Row 3: System Classification */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12 items-center mt-4">
-          <div className="bg-zinc-900/40 border border-zinc-800 rounded-3xl p-8 flex flex-col items-center justify-center min-h-[250px] shadow-lg">
+          <div className="bg-zinc-900/40 border border-zinc-800 rounded-3xl p-8 flex flex-col items-center justify-center min-h-62.5 shadow-lg">
             <label className="flex flex-col items-center gap-4 cursor-pointer group">
               <div className="relative">
                 <input
