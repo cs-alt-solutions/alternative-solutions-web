@@ -10,12 +10,12 @@ export default function MediaTab({ formData, setFormData }: { formData: any, set
   const [isUploadingGallery, setIsUploadingGallery] = useState(false);
   const [isDeleting, setIsDeleting] = useState<string | null>(null);
   const [isUploadingCore, setIsUploadingCore] = useState(false);
-  
   const coreFormRef = useRef<HTMLFormElement>(null);
+  
   const [heroPreview, setHeroPreview] = useState<string | null>(null);
   const [aboutPreview, setAboutPreview] = useState<string | null>(null);
+  const [logoPreview, setLogoPreview] = useState<string | null>(null);
 
-  // Safely parse live gallery from master state
   const liveGallery = (formData.gallery_items || []).map((item: any, i: number) => {
     if (typeof item === 'string') {
       return { id: `gal-${i}`, imageUrl: item, title: '', description: '', category: '' };
@@ -31,6 +31,11 @@ export default function MediaTab({ formData, setFormData }: { formData: any, set
   const handleAboutSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) setAboutPreview(URL.createObjectURL(file));
+  };
+
+  const handleLogoSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) setLogoPreview(URL.createObjectURL(file));
   };
 
   async function handleSaveCore(uploadData: FormData) {
@@ -56,6 +61,7 @@ export default function MediaTab({ formData, setFormData }: { formData: any, set
     setIsUploadingGallery(true);
     const uploadData = new FormData();
     files.forEach(file => uploadData.append('images', file));
+
     try {
       await updateStorefrontGallery(formData.id, formData.slug, uploadData);
       setFiles([]);
@@ -98,7 +104,7 @@ export default function MediaTab({ formData, setFormData }: { formData: any, set
   return (
     <div className="space-y-10 pb-12">
       
-      {/* 🚀 BLOCK 1: CORE IMAGES (MOVED TO TOP) */}
+      {/* BLOCK 1: CORE IMAGES */}
       <div className="space-y-4">
         <div className="flex items-center gap-2 border-b border-zinc-800 pb-3">
           <ImageIcon className="w-4 h-4 text-cyan-500" />
@@ -110,10 +116,20 @@ export default function MediaTab({ formData, setFormData }: { formData: any, set
           <div className="space-y-2">
             <label className="text-[9px] font-bold text-zinc-500 uppercase tracking-widest">Hero Background Image</label>
             <div className="flex flex-col gap-3">
-              <div className="w-full aspect-video rounded-lg overflow-hidden border border-zinc-800 bg-black">
+              <div className="w-full aspect-video rounded-lg overflow-hidden border border-zinc-800 bg-black relative">
                 <img src={heroPreview || formData.hero_image || 'https://via.placeholder.com/1920x1080/000000/333333?text=NO+IMAGE'} alt="Hero" className="w-full h-full object-cover opacity-80 hover:opacity-100 transition-opacity" />
               </div>
               <input type="file" accept="image/*" name="hero_file" onChange={handleHeroSelect} className="w-full text-xs text-zinc-400 file:mr-3 file:py-1.5 file:px-3 file:rounded-md file:border-0 file:text-[10px] file:font-bold file:uppercase file:tracking-widest file:bg-zinc-800 file:text-white hover:file:bg-zinc-700 cursor-pointer transition-colors" />
+            </div>
+          </div>
+
+          <div className="space-y-2 pt-4 border-t border-zinc-800/60">
+            <label className="text-[9px] font-bold text-zinc-500 uppercase tracking-widest">Brand Logo (Optional)</label>
+            <div className="flex items-center gap-4">
+              <div className="w-20 h-20 rounded-lg overflow-hidden border border-zinc-800 bg-zinc-950 shrink-0 flex items-center justify-center p-2">
+                <img src={logoPreview || formData.brand_logo || 'https://via.placeholder.com/800x800/000000/333333?text=NO+LOGO'} alt="Logo" className="w-full h-full object-contain opacity-80 hover:opacity-100 transition-opacity" />
+              </div>
+              <input type="file" accept="image/*" name="logo_file" onChange={handleLogoSelect} className="w-full text-xs text-zinc-400 file:mr-3 file:py-1.5 file:px-3 file:rounded-md file:border-0 file:text-[10px] file:font-bold file:uppercase file:tracking-widest file:bg-zinc-800 file:text-white hover:file:bg-zinc-700 cursor-pointer transition-colors" />
             </div>
           </div>
 
@@ -133,7 +149,7 @@ export default function MediaTab({ formData, setFormData }: { formData: any, set
         </form>
       </div>
 
-      {/* 🚀 BLOCK 2: GALLERY ECOSYSTEM */}
+      {/* BLOCK 2: GALLERY ECOSYSTEM */}
       <div className="space-y-4 pt-4 border-t border-zinc-800">
         <div className="flex items-center gap-2 border-b border-zinc-800 pb-3">
           <LayoutGrid className="w-4 h-4 text-emerald-500" />
@@ -200,11 +216,13 @@ export default function MediaTab({ formData, setFormData }: { formData: any, set
                   
                   <textarea placeholder="Description overlay text..." value={item.description || ''} onChange={(e) => handleMetaChange(i, 'description', e.target.value)} rows={2} className="w-full bg-black/40 border border-zinc-800 rounded-lg p-2 text-[11px] text-zinc-300 focus:border-emerald-500 outline-none transition-colors resize-none" />
                 </div>
+
               </div>
             ))}
           </div>
         )}
       </div>
+
     </div>
   );
 }

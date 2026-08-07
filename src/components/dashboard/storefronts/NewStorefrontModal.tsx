@@ -1,8 +1,8 @@
+// src/components/dashboard/storefronts/NewStorefrontModal.tsx
 'use client';
 
 import React, { useState, useRef } from 'react';
 import { X, Plus, Store, Link as LinkIcon, Palette, Sparkles, UploadCloud, LayoutTemplate, Columns, MonitorPlay, Check } from 'lucide-react';
-// --- NEW IMPORT PATH ---
 import { createStorefront } from '@/app/actions/storefronts';
 
 const BRAND_COLORS = [
@@ -24,14 +24,17 @@ const BRAND_COLORS = [
 ];
 
 const THEMES = [
-  { name: 'Raw & Industrial', value: 'industrial' },
-  { name: 'Neo-Brutalist', value: 'neo' },
-  { name: 'Neon Cyberpunk', value: 'cyberpunk' },
+  { name: 'Raw & Industrial (Dark)', value: 'industrial' },
+  { name: 'Clinical Industrial (Light)', value: 'industrial-light' },
+  { name: 'Neo-Brutalist (Light)', value: 'neo' },
+  { name: 'Neo-Brutalist (Dark)', value: 'neo-dark' },
+  { name: 'Neon Cyberpunk (Dark)', value: 'cyberpunk' },
+  { name: 'Tech Docs (Cyberpunk Light)', value: 'cyberpunk-light' },
   { name: 'Clean & Minimal', value: 'minimal' },
   { name: 'High Editorial', value: 'elegant' },
   { name: 'Earthy & Organic', value: 'organic' },
   { name: 'Classic Editorial', value: 'editorial' },
-  { name: 'Midnight Onyx', value: 'midnight' } 
+  { name: 'Midnight Onyx', value: 'midnight' }
 ];
 
 const HERO_LAYOUTS = [
@@ -129,7 +132,6 @@ export default function NewStorefrontModal() {
                     placeholder="e.g. BB's Bodega"
                   />
                 </div>
-
                 <div className="space-y-2">
                   <label className="text-xs font-bold text-zinc-400 uppercase tracking-widest flex items-center gap-2">
                     <LinkIcon className="w-3 h-3" /> URL Routing Slug

@@ -47,10 +47,17 @@ export default function TenantCommandHub() {
   const [saveMessage, setSaveMessage] = useState('');
   const [refreshKey, setRefreshKey] = useState(Date.now());
 
-  const PREVIEW_BASE_URL = process.env.NEXT_PUBLIC_SITE_URL || process.env.NEXT_PUBLIC_BASE_URL || 'https://alternativesolutions.io';
+  // FIXED: Hardcoded routing to force the canvas to use the live edge network telemetry
+  const PREVIEW_BASE_URL = 'https://storefronts.alternativesolutions.io';
 
   useEffect(() => {
-    // Listen for sidebar collapse events
+    // 1. INSTANT SYNC: Check local storage on mount so the layout perfectly matches the global sidebar
+    const storedState = localStorage.getItem('sidebar-collapsed') || localStorage.getItem('isCollapsed');
+    if (storedState === 'true') {
+      setIsSidebarCollapsed(true);
+    }
+
+    // 2. Listen for future sidebar collapse events
     const handleCollapse = (e: any) => setIsSidebarCollapsed(e.detail.isCollapsed);
     window.addEventListener('sidebar-collapse', handleCollapse);
 

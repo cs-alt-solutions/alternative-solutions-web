@@ -104,13 +104,16 @@ export async function updateStorefrontMedia(id: string, slug: string, formData: 
 
   const heroFile = formData.get('hero_file') as File;
   const aboutFile = formData.get('about_file') as File;
+  const logoFile = formData.get('logo_file') as File;
 
   const heroUrl = await uploadFile(heroFile, 'hero');
   const aboutUrl = await uploadFile(aboutFile, 'about');
+  const logoUrl = await uploadFile(logoFile, 'logo');
 
   const updateData: any = {};
   if (heroUrl) updateData.hero_image = heroUrl;
   if (aboutUrl) updateData.about_image = aboutUrl;
+  if (logoUrl) updateData.brand_logo = logoUrl;
 
   if (Object.keys(updateData).length > 0) {
     const { error } = await supabase.from('storefronts').update(updateData).eq('id', id);
