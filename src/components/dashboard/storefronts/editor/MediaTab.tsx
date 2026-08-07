@@ -2,10 +2,9 @@
 'use client';
 
 import React, { useState, useRef } from 'react';
-import { UploadCloud, Image as ImageIcon, X, LayoutGrid, Trash2, Layers } from 'lucide-react';
+import { UploadCloud, Image as ImageIcon, X, LayoutGrid, Trash2, Layers, Move } from 'lucide-react';
 import { updateStorefrontMedia, updateStorefrontGallery, removeImageFromGallery } from '@/app/actions/storefronts';
 
-// THE FIX: Accept onReload as a prop so we can gracefully reload the iframe
 export default function MediaTab({ formData, setFormData, onReload }: { formData: any, setFormData: any, onReload?: () => void }) {
   
   const [files, setFiles] = useState<File[]>([]);
@@ -41,6 +40,7 @@ export default function MediaTab({ formData, setFormData, onReload }: { formData
   async function handleSaveCore(uploadData: FormData) {
     setIsUploadingCore(true);
     uploadData.set('logo_size', formData.logo_size || 'large');
+    uploadData.set('hero_position', formData.hero_position || 'center'); // Catch new position state
     
     try {
       await updateStorefrontMedia(formData.id, formData.slug, uploadData);
@@ -52,7 +52,6 @@ export default function MediaTab({ formData, setFormData, onReload }: { formData
         });
       }
       
-      // THE FIX: Smoothly reload the iframe without shifting the user's screen
       if (onReload) onReload(); 
     } catch (e) {
       alert("Upload failed. Check storage permissions.");
@@ -111,6 +110,17 @@ export default function MediaTab({ formData, setFormData, onReload }: { formData
     }
   }
 
+  // Visual helper to preview the crop directly in the dashboard
+  const positionClassMap: Record<string, string> = {
+    'top': 'object-top',
+    'center': 'object-center',
+    'bottom': 'object-bottom',
+    'left': 'object-left',
+    'right': 'object-right',
+  };
+
+  const activePosition = positionClassMap[formData.hero_position || 'center'];
+
   return (
     <div className="space-y-10 pb-12">
       
@@ -121,11 +131,10 @@ export default function MediaTab({ formData, setFormData, onReload }: { formData
           <h2 className="text-sm font-black text-white uppercase tracking-widest">Core Imagery</h2>
         </div>
         
-        {/* THE FIX: Replaced `<form action={...}>` with an explicit onSubmit interceptor */}
         <form 
           ref={coreFormRef} 
           onSubmit={async (e) => {
-            e.preventDefault(); // NEVER reload the page
+            e.preventDefault();
             const uploadData = new FormData(e.currentTarget);
             await handleSaveCore(uploadData);
           }} 
@@ -133,13 +142,40 @@ export default function MediaTab({ formData, setFormData, onReload }: { formData
         >
           
           <div className="space-y-2">
-            <label className="text-[9px] font-bold text-zinc-500 uppercase tracking-widest">Hero Background Image</label>
+            <label className="text-[9px] font-bold text-zinc-500 uppercase tracking-widest flex items-center justify-between">
+              <span>Hero Background Image</span>
+            </label>
             <div className="flex flex-col gap-3">
               <div className="w-full aspect-video rounded-lg overflow-hidden border border-zinc-800 bg-black relative">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src={heroPreview || formData.hero_image || 'https://via.placeholder.com/1920x1080/000000/333333?text=NO+IMAGE'} alt="Hero" className="w-full h-full object-cover opacity-80 hover:opacity-100 transition-opacity" />
+                <img 
+                  src={heroPreview || formData.hero_image || 'https://via.placeholder.com/1920x1080/000000/333333?text=NO+IMAGE'} 
+                  alt="Hero" 
+                  className={`w-full h-full object-cover opacity-80 hover:opacity-100 transition-opacity ${activePosition}`} 
+                />
               </div>
-              <input type="file" accept="image/*" name="hero_file" onChange={handleHeroSelect} className="w-full text-xs text-zinc-400 file:mr-3 file:py-1.5 file:px-3 file:rounded-md file:border-0 file:text-[10px] file:font-bold file:uppercase file:tracking-widest file:bg-zinc-800 file:text-white hover:file:bg-zinc-700 cursor-pointer transition-colors" />
+              
+              <div className="flex flex-col sm:flex-row gap-2 w-full">
+                <input type="file" accept="image/*" name="hero_file" onChange={handleHeroSelect} className="flex-1 text-xs text-zinc-400 file:mr-3 file:py-1.5 file:px-3 file:rounded-md file:border-0 file:text-[10px] file:font-bold file:uppercase file:tracking-widest file:bg-zinc-800 file:text-white hover:file:bg-zinc-700 cursor-pointer transition-colors" />
+                
+                {/* NEW: FOCAL POINT CONTROLLER */}
+                <div className="relative shrink-0 w-full sm:w-40">
+                  <Move className="w-3 h-3 text-cyan-500 absolute left-2.5 top-2.5 pointer-events-none" />
+                  <select
+                    name="hero_position"
+                    value={formData.hero_position || 'center'}
+                    onChange={(e) => setFormData((prev: any) => ({ ...prev, hero_position: e.target.value }))}
+                    className="w-full bg-black border border-zinc-800 rounded-md pl-7 pr-2 py-1.5 text-[10px] font-bold text-zinc-300 outline-none focus:border-cyan-500 transition-colors uppercase tracking-wider appearance-none cursor-pointer"
+                  >
+                    <option value="center">Center</option>
+                    <option value="top">Top (Headroom)</option>
+                    <option value="bottom">Bottom (Floor)</option>
+                    <option value="left">Left Aligned</option>
+                    <option value="right">Right Aligned</option>
+                  </select>
+                </div>
+              </div>
+
             </div>
           </div>
 
@@ -157,7 +193,7 @@ export default function MediaTab({ formData, setFormData, onReload }: { formData
                   name="logo_size"
                   value={formData.logo_size || 'large'}
                   onChange={(e) => setFormData((prev: any) => ({ ...prev, logo_size: e.target.value }))}
-                  className="w-full bg-black border border-zinc-800 rounded-md px-3 py-2 text-xs font-bold text-zinc-300 outline-none focus:border-cyan-500 transition-colors uppercase tracking-wider"
+                  className="w-full bg-black border border-zinc-800 rounded-md px-3 py-2 text-xs font-bold text-zinc-300 outline-none focus:border-cyan-500 transition-colors uppercase tracking-wider cursor-pointer"
                 >
                   <option value="small">Small & Subtle</option>
                   <option value="medium">Medium</option>
