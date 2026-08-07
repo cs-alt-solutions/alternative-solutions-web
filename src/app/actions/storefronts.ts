@@ -49,42 +49,50 @@ export async function createStorefront(formData: FormData) {
     about_heading: 'About Us',
     about_bio: 'We are a local business dedicated to providing top-tier services and products to our community. Check out our gallery to see our recent work!',
     social_url: 'https://facebook.com',
-    gallery_items: [] 
+    gallery_items: [],
+    logo_size: 'large' // Ensures new deployments always have a default size
   };
 
   const { error } = await supabase.from('storefronts').insert(storefrontData);
   if (error) throw new Error("Failed to create storefront.");
   
-  revalidatePath('/dashboard/storefronts');
-  revalidatePath('/'); 
+  // THE FIX: 'layout' forces a deep purge of this path and all its children
+  revalidatePath('/dashboard/storefronts', 'layout');
+  revalidatePath('/', 'layout'); 
 }
 
 export async function updateStorefrontCore(id: string, formData: FormData) {
   const supabase = await createClient();
   
-  const updateData = {
-    business_name: formData.get('business_name'),
-    slug: formData.get('slug'),
-    tagline: formData.get('tagline'),
-    subtext: formData.get('subtext'),
-    primary_cta: formData.get('primary_cta'),
-    secondary_cta: formData.get('secondary_cta'),
-    brand_color: formData.get('brand_color'),
-    theme_style: formData.get('theme_style'),
-    hero_layout: formData.get('hero_layout'),
-    content_layout: formData.get('content_layout'),
-    about_layout: formData.get('about_layout'),
-    about_heading: formData.get('about_heading'),
-    about_bio: formData.get('about_bio'),
-    capabilities_heading: formData.get('capabilities_heading'),
-    gallery_heading: formData.get('gallery_heading'),
-    contact_email: formData.get('contact_email'),
-    capabilities: formData.get('capabilities') ? JSON.parse(formData.get('capabilities') as string) : [],
-  };
+  // THE FIX: We dynamically build the update payload. 
+  // If a field is not in the form (like logo_size when saving the Design tab), 
+  // it is ignored, preventing the "Null Wipeout" bug.
+  const updateData: any = {};
 
-  const { error } = await supabase.from('storefronts').update(updateData).eq('id', id);
-  if (error) throw new Error(error.message);
-  revalidatePath('/dashboard/storefronts');
+  const fields = [
+    'business_name', 'slug', 'tagline', 'subtext', 'primary_cta', 'secondary_cta',
+    'brand_color', 'theme_style', 'hero_layout', 'content_layout', 'about_layout',
+    'about_heading', 'about_bio', 'capabilities_heading', 'gallery_heading', 'contact_email',
+    'logo_size' // Catch it gracefully if it is passed
+  ];
+
+  fields.forEach(field => {
+    if (formData.has(field)) {
+      updateData[field] = formData.get(field);
+    }
+  });
+
+  if (formData.has('capabilities')) {
+    updateData.capabilities = JSON.parse(formData.get('capabilities') as string);
+  }
+
+  if (Object.keys(updateData).length > 0) {
+    const { error } = await supabase.from('storefronts').update(updateData).eq('id', id);
+    if (error) throw new Error(error.message);
+  }
+
+  // THE FIX: Deep Cache Purge
+  revalidatePath('/dashboard/storefronts', 'layout');
 }
 
 export async function updateStorefrontMedia(id: string, slug: string, formData: FormData) {
@@ -105,6 +113,8 @@ export async function updateStorefrontMedia(id: string, slug: string, formData: 
   const heroFile = formData.get('hero_file') as File;
   const aboutFile = formData.get('about_file') as File;
   const logoFile = formData.get('logo_file') as File;
+  
+  const logoSize = formData.get('logo_size') as string;
 
   const heroUrl = await uploadFile(heroFile, 'hero');
   const aboutUrl = await uploadFile(aboutFile, 'about');
@@ -114,19 +124,25 @@ export async function updateStorefrontMedia(id: string, slug: string, formData: 
   if (heroUrl) updateData.hero_image = heroUrl;
   if (aboutUrl) updateData.about_image = aboutUrl;
   if (logoUrl) updateData.brand_logo = logoUrl;
+  
+  // Bind the logo size to the update payload
+  if (logoSize) updateData.logo_size = logoSize;
 
   if (Object.keys(updateData).length > 0) {
     const { error } = await supabase.from('storefronts').update(updateData).eq('id', id);
     if (error) throw new Error(error.message);
   }
-  revalidatePath('/dashboard/storefronts');
+
+  // THE FIX: Deep Cache Purge to prevent the "Reverting to Small" trap
+  revalidatePath('/dashboard/storefronts', 'layout');
 }
 
 export async function updateStorefrontCapabilities(id: string, capabilities: any[]) {
   const supabase = await createClient();
   const { error } = await supabase.from('storefronts').update({ capabilities }).eq('id', id);
   if (error) throw new Error(error.message);
-  revalidatePath('/dashboard/storefronts');
+  
+  revalidatePath('/dashboard/storefronts', 'layout');
 }
 
 export async function updateStorefrontGallery(id: string, slug: string, formData: FormData) {
@@ -155,7 +171,8 @@ export async function updateStorefrontGallery(id: string, slug: string, formData
     .eq('id', id);
 
   if (updateError) throw new Error("Database sync failed");
-  revalidatePath('/dashboard/storefronts');
+
+  revalidatePath('/dashboard/storefronts', 'layout');
 }
 
 export async function removeImageFromGallery(storeId: string, imageUrlToRemove: string) {
@@ -179,6 +196,7 @@ export async function removeImageFromGallery(storeId: string, imageUrlToRemove: 
 
   if (updateError) throw new Error("Failed to delete image from gallery array.");
 
+  revalidatePath('/dashboard/storefronts', 'layout');
   return { success: true };
 }
 
@@ -199,9 +217,9 @@ export async function deleteStorefront(id: string) {
     throw new Error("Delete BLOCKED by Supabase RLS.");
   }
 
-  revalidatePath('/dashboard/storefronts');
-  revalidatePath('/dashboard');
-  revalidatePath('/');
+  revalidatePath('/dashboard/storefronts', 'layout');
+  revalidatePath('/dashboard', 'layout');
+  revalidatePath('/', 'layout');
 
   return { success: true };
 }
@@ -237,8 +255,8 @@ export async function dispatchStagingReview(id: string, slug: string, businessNa
     throw new Error(emailResult.error || 'Failed to dispatch review email.');
   }
 
-  revalidatePath('/dashboard/storefronts');
-  revalidatePath('/dashboard');
+  revalidatePath('/dashboard/storefronts', 'layout');
+  revalidatePath('/dashboard', 'layout');
   return { success: true };
 }
 
@@ -297,7 +315,7 @@ export async function submitStorefrontApplication(formData: FormData) {
       }
     });
 
-    revalidatePath('/dashboard/storefronts');
+    revalidatePath('/dashboard/storefronts', 'layout');
     return { success: true };
   } catch (error: any) {
     console.error('CRITICAL SUBMISSION ERROR:', error);
@@ -363,9 +381,9 @@ export async function updateApplicationStatus(id: string, newStatus: 'BUILDING' 
       if (clientError) console.error('Failed to initialize client portal:', clientError);
     }
 
-    revalidatePath('/dashboard/storefronts');
-    revalidatePath('/dashboard/clients');
-    revalidatePath('/dashboard'); 
+    revalidatePath('/dashboard/storefronts', 'layout');
+    revalidatePath('/dashboard/clients', 'layout');
+    revalidatePath('/dashboard', 'layout'); 
     return { success: true };
   } catch (error: any) {
     console.error('STATUS UPDATE ERROR:', error);

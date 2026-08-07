@@ -5,13 +5,15 @@ import React, { useState, useRef } from 'react';
 import { UploadCloud, Image as ImageIcon, X, LayoutGrid, Trash2, Layers } from 'lucide-react';
 import { updateStorefrontMedia, updateStorefrontGallery, removeImageFromGallery } from '@/app/actions/storefronts';
 
-export default function MediaTab({ formData, setFormData }: { formData: any, setFormData: any }) {
+// THE FIX: Accept onReload as a prop so we can gracefully reload the iframe
+export default function MediaTab({ formData, setFormData, onReload }: { formData: any, setFormData: any, onReload?: () => void }) {
+  
   const [files, setFiles] = useState<File[]>([]);
   const [isUploadingGallery, setIsUploadingGallery] = useState(false);
   const [isDeleting, setIsDeleting] = useState<string | null>(null);
   const [isUploadingCore, setIsUploadingCore] = useState(false);
   const coreFormRef = useRef<HTMLFormElement>(null);
-  
+
   const [heroPreview, setHeroPreview] = useState<string | null>(null);
   const [aboutPreview, setAboutPreview] = useState<string | null>(null);
   const [logoPreview, setLogoPreview] = useState<string | null>(null);
@@ -27,12 +29,10 @@ export default function MediaTab({ formData, setFormData }: { formData: any, set
     const file = e.target.files?.[0];
     if (file) setHeroPreview(URL.createObjectURL(file));
   };
-
   const handleAboutSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) setAboutPreview(URL.createObjectURL(file));
   };
-
   const handleLogoSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) setLogoPreview(URL.createObjectURL(file));
@@ -40,10 +40,20 @@ export default function MediaTab({ formData, setFormData }: { formData: any, set
 
   async function handleSaveCore(uploadData: FormData) {
     setIsUploadingCore(true);
+    uploadData.set('logo_size', formData.logo_size || 'large');
+    
     try {
       await updateStorefrontMedia(formData.id, formData.slug, uploadData);
-      if (coreFormRef.current) coreFormRef.current.reset();
-      window.location.reload();
+      
+      if (coreFormRef.current) {
+        const fileInputs = coreFormRef.current.querySelectorAll('input[type="file"]');
+        fileInputs.forEach((input) => {
+          (input as HTMLInputElement).value = '';
+        });
+      }
+      
+      // THE FIX: Smoothly reload the iframe without shifting the user's screen
+      if (onReload) onReload(); 
     } catch (e) {
       alert("Upload failed. Check storage permissions.");
     } finally {
@@ -61,11 +71,10 @@ export default function MediaTab({ formData, setFormData }: { formData: any, set
     setIsUploadingGallery(true);
     const uploadData = new FormData();
     files.forEach(file => uploadData.append('images', file));
-
     try {
       await updateStorefrontGallery(formData.id, formData.slug, uploadData);
       setFiles([]);
-      window.location.reload();
+      if (onReload) onReload(); 
     } catch (e) {
       alert("Gallery sync failed.");
     } finally {
@@ -94,6 +103,7 @@ export default function MediaTab({ formData, setFormData }: { formData: any, set
           (typeof img === 'string' ? img : img.imageUrl) !== imageUrlToRemove
         )
       }));
+      if (onReload) onReload(); 
     } catch (e) {
       alert("Failed to remove image.");
     } finally {
@@ -111,12 +121,22 @@ export default function MediaTab({ formData, setFormData }: { formData: any, set
           <h2 className="text-sm font-black text-white uppercase tracking-widest">Core Imagery</h2>
         </div>
         
-        <form ref={coreFormRef} action={handleSaveCore} className="bg-zinc-900/60 border border-zinc-800 p-4 rounded-xl space-y-6 shadow-sm">
+        {/* THE FIX: Replaced `<form action={...}>` with an explicit onSubmit interceptor */}
+        <form 
+          ref={coreFormRef} 
+          onSubmit={async (e) => {
+            e.preventDefault(); // NEVER reload the page
+            const uploadData = new FormData(e.currentTarget);
+            await handleSaveCore(uploadData);
+          }} 
+          className="bg-zinc-900/60 border border-zinc-800 p-4 rounded-xl space-y-6 shadow-sm"
+        >
           
           <div className="space-y-2">
             <label className="text-[9px] font-bold text-zinc-500 uppercase tracking-widest">Hero Background Image</label>
             <div className="flex flex-col gap-3">
               <div className="w-full aspect-video rounded-lg overflow-hidden border border-zinc-800 bg-black relative">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img src={heroPreview || formData.hero_image || 'https://via.placeholder.com/1920x1080/000000/333333?text=NO+IMAGE'} alt="Hero" className="w-full h-full object-cover opacity-80 hover:opacity-100 transition-opacity" />
               </div>
               <input type="file" accept="image/*" name="hero_file" onChange={handleHeroSelect} className="w-full text-xs text-zinc-400 file:mr-3 file:py-1.5 file:px-3 file:rounded-md file:border-0 file:text-[10px] file:font-bold file:uppercase file:tracking-widest file:bg-zinc-800 file:text-white hover:file:bg-zinc-700 cursor-pointer transition-colors" />
@@ -124,12 +144,27 @@ export default function MediaTab({ formData, setFormData }: { formData: any, set
           </div>
 
           <div className="space-y-2 pt-4 border-t border-zinc-800/60">
-            <label className="text-[9px] font-bold text-zinc-500 uppercase tracking-widest">Brand Logo (Optional)</label>
+            <label className="text-[9px] font-bold text-zinc-500 uppercase tracking-widest block mb-2">Brand Logo Configuration</label>
             <div className="flex items-center gap-4">
               <div className="w-20 h-20 rounded-lg overflow-hidden border border-zinc-800 bg-zinc-950 shrink-0 flex items-center justify-center p-2">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img src={logoPreview || formData.brand_logo || 'https://via.placeholder.com/800x800/000000/333333?text=NO+LOGO'} alt="Logo" className="w-full h-full object-contain opacity-80 hover:opacity-100 transition-opacity" />
               </div>
-              <input type="file" accept="image/*" name="logo_file" onChange={handleLogoSelect} className="w-full text-xs text-zinc-400 file:mr-3 file:py-1.5 file:px-3 file:rounded-md file:border-0 file:text-[10px] file:font-bold file:uppercase file:tracking-widest file:bg-zinc-800 file:text-white hover:file:bg-zinc-700 cursor-pointer transition-colors" />
+              <div className="flex flex-col gap-2 w-full">
+                <input type="file" accept="image/*" name="logo_file" onChange={handleLogoSelect} className="w-full text-xs text-zinc-400 file:mr-3 file:py-1.5 file:px-3 file:rounded-md file:border-0 file:text-[10px] file:font-bold file:uppercase file:tracking-widest file:bg-zinc-800 file:text-white hover:file:bg-zinc-700 cursor-pointer transition-colors" />
+                
+                <select
+                  name="logo_size"
+                  value={formData.logo_size || 'large'}
+                  onChange={(e) => setFormData((prev: any) => ({ ...prev, logo_size: e.target.value }))}
+                  className="w-full bg-black border border-zinc-800 rounded-md px-3 py-2 text-xs font-bold text-zinc-300 outline-none focus:border-cyan-500 transition-colors uppercase tracking-wider"
+                >
+                  <option value="small">Small & Subtle</option>
+                  <option value="medium">Medium</option>
+                  <option value="large">Large & Bold</option>
+                  <option value="massive">Massive (Heroic)</option>
+                </select>
+              </div>
             </div>
           </div>
 
@@ -137,6 +172,7 @@ export default function MediaTab({ formData, setFormData }: { formData: any, set
             <label className="text-[9px] font-bold text-zinc-500 uppercase tracking-widest">About Section Image</label>
             <div className="flex items-center gap-4">
               <div className="w-20 h-20 rounded-lg overflow-hidden border border-zinc-800 bg-black shrink-0">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img src={aboutPreview || formData.about_image || 'https://via.placeholder.com/800x800/000000/333333?text=NO+IMAGE'} alt="About" className="w-full h-full object-cover opacity-80 hover:opacity-100 transition-opacity" />
               </div>
               <input type="file" accept="image/*" name="about_file" onChange={handleAboutSelect} className="w-full text-xs text-zinc-400 file:mr-3 file:py-1.5 file:px-3 file:rounded-md file:border-0 file:text-[10px] file:font-bold file:uppercase file:tracking-widest file:bg-zinc-800 file:text-white hover:file:bg-zinc-700 cursor-pointer transition-colors" />
@@ -168,7 +204,7 @@ export default function MediaTab({ formData, setFormData }: { formData: any, set
               {files.map((file, i) => (
                 <div key={i} className="relative aspect-square bg-black rounded flex items-center justify-center overflow-hidden border border-zinc-800">
                   <span className="text-[8px] text-zinc-500 font-mono truncate px-1">{file.name}</span>
-                  <button onClick={() => handleRemoveStaged(i)} className="absolute top-1 right-1 bg-black/80 rounded p-1 hover:bg-red-500 transition-colors"><X className="w-3 h-3 text-white" /></button>
+                  <button type="button" onClick={() => handleRemoveStaged(i)} className="absolute top-1 right-1 bg-black/80 rounded p-1 hover:bg-red-500 transition-colors"><X className="w-3 h-3 text-white" /></button>
                 </div>
               ))}
             </div>
@@ -184,6 +220,7 @@ export default function MediaTab({ formData, setFormData }: { formData: any, set
               <div key={item.id || i} className="bg-zinc-900/60 border border-zinc-800 p-3 rounded-xl flex flex-col gap-3 shadow-sm">
                 
                 <div className="relative aspect-video bg-black rounded-lg overflow-hidden border border-zinc-800 group">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img src={item.imageUrl} alt={item.title || `Gallery ${i}`} className={`w-full h-full object-cover transition-all ${isDeleting === item.imageUrl ? 'opacity-30 blur-sm' : ''}`} />
                   <div className="absolute inset-0 bg-black/70 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center backdrop-blur-sm">
                     <button onClick={() => handleDeleteLiveImage(item.imageUrl)} disabled={isDeleting === item.imageUrl} className="flex items-center gap-2 text-red-400 hover:text-red-300 bg-red-950/50 px-3 py-1.5 rounded-lg border border-red-500/20 transition-colors">
@@ -216,13 +253,11 @@ export default function MediaTab({ formData, setFormData }: { formData: any, set
                   
                   <textarea placeholder="Description overlay text..." value={item.description || ''} onChange={(e) => handleMetaChange(i, 'description', e.target.value)} rows={2} className="w-full bg-black/40 border border-zinc-800 rounded-lg p-2 text-[11px] text-zinc-300 focus:border-emerald-500 outline-none transition-colors resize-none" />
                 </div>
-
               </div>
             ))}
           </div>
         )}
       </div>
-
     </div>
   );
 }

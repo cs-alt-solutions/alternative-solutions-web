@@ -1,163 +1,137 @@
 // src/components/dashboard/storefronts/editor/CapabilitiesTab.tsx
 'use client';
 
-import React from 'react';
-import { Plus, Trash2, Layers, X } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Plus, X, GripVertical, Save, Loader2, Layers } from 'lucide-react';
+import { useRouter } from 'next/navigation';
+import { updateStorefrontCapabilities } from '@/app/actions/storefronts';
 
-interface Capability {
-  title: string;
-  description: string;
-  bullets?: string[];
-}
+// THE FIX: Added onReload to the parameters and the TypeScript interface
+export default function CapabilitiesTab({ 
+  formData, 
+  setFormData,
+  onReload
+}: { 
+  formData: any; 
+  setFormData: any;
+  onReload?: () => void;
+}) {
+  const router = useRouter();
+  const [localCaps, setLocalCaps] = useState<any[]>([]);
+  const [isSaving, setIsSaving] = useState(false);
 
-export default function CapabilitiesTab({ formData, setFormData }: { formData: any, setFormData: any }) {
-  const capabilities: Capability[] = formData.capabilities || [];
+  useEffect(() => {
+    if (formData.capabilities) {
+      const normalized = formData.capabilities.map((c: any) => 
+        typeof c === 'string' ? { title: c, description: '' } : c
+      );
+      setLocalCaps(normalized);
+    }
+  }, [formData.capabilities]);
 
-  const handleAdd = () => {
-    setFormData((prev: any) => ({
-      ...prev,
-      capabilities: [...(prev.capabilities || []), { title: '', description: '', bullets: [] }]
-    }));
+  const addCapability = () => setLocalCaps([...localCaps, { title: '', description: '' }]);
+
+  const updateCap = (index: number, field: string, value: string) => {
+    const updated = [...localCaps];
+    updated[index][field] = value;
+    setLocalCaps(updated);
   };
 
-  const handleRemove = (index: number) => {
-    setFormData((prev: any) => ({
-      ...prev,
-      capabilities: (prev.capabilities || []).filter((_: any, i: number) => i !== index)
-    }));
+  const removeCap = (index: number) => {
+    setLocalCaps(localCaps.filter((_, i) => i !== index));
   };
 
-  const handleChange = (index: number, field: keyof Capability, value: string) => {
-    setFormData((prev: any) => {
-      const updated = [...(prev.capabilities || [])];
-      updated[index] = { ...updated[index], [field]: value };
-      return { ...prev, capabilities: updated };
-    });
+  const moveUp = (index: number) => {
+    if (index === 0) return;
+    const updated = [...localCaps];
+    const temp = updated[index - 1];
+    updated[index - 1] = updated[index];
+    updated[index] = temp;
+    setLocalCaps(updated);
   };
 
-  // 🚀 BUG FIXED: Deep cloning the arrays to prevent React state mutation ghosting
-  const handleAddBullet = (index: number) => {
-    setFormData((prev: any) => {
-      const updated = [...(prev.capabilities || [])];
-      const currentBullets = [...(updated[index].bullets || [])];
-      updated[index] = { ...updated[index], bullets: [...currentBullets, ''] };
-      return { ...prev, capabilities: updated };
-    });
+  const moveDown = (index: number) => {
+    if (index === localCaps.length - 1) return;
+    const updated = [...localCaps];
+    const temp = updated[index + 1];
+    updated[index + 1] = updated[index];
+    updated[index] = temp;
+    setLocalCaps(updated);
   };
 
-  const handleBulletChange = (capIndex: number, bulletIndex: number, value: string) => {
-    setFormData((prev: any) => {
-      const updated = [...(prev.capabilities || [])];
-      const currentBullets = [...(updated[capIndex].bullets || [])];
-      currentBullets[bulletIndex] = value;
-      updated[capIndex] = { ...updated[capIndex], bullets: currentBullets };
-      return { ...prev, capabilities: updated };
-    });
-  };
-
-  const handleRemoveBullet = (capIndex: number, bulletIndex: number) => {
-    setFormData((prev: any) => {
-      const updated = [...(prev.capabilities || [])];
-      const currentBullets = [...(updated[capIndex].bullets || [])];
-      updated[capIndex] = {
-        ...updated[capIndex],
-        bullets: currentBullets.filter((_, i) => i !== bulletIndex)
-      };
-      return { ...prev, capabilities: updated };
-    });
+  const handleSave = async () => {
+    setIsSaving(true);
+    try {
+      await updateStorefrontCapabilities(formData.id, localCaps);
+      setFormData((prev: any) => ({ ...prev, capabilities: localCaps }));
+      router.refresh();
+      
+      // THE FIX: Fire the canvas reload so the iframe instantly updates
+      if (onReload) onReload();
+    } catch (err) {
+      alert("Failed to save services.");
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   return (
-    <div className="space-y-6 pb-10">
+    <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500 pb-12 pt-6">
       
-      <div className="flex items-center justify-between border-b border-zinc-800 pb-4">
-        <div>
-          <h3 className="text-sm font-black text-white flex items-center gap-2 uppercase tracking-widest">
-            <Layers className="w-4 h-4 text-cyan-500" /> Services & Features
-          </h3>
+      <div className="flex items-center justify-between border-b border-zinc-800 pb-3">
+        <div className="flex items-center gap-2">
+          <Layers className="w-4 h-4 text-fuchsia-500" />
+          <h2 className="text-sm font-black text-white uppercase tracking-widest">Service Matrix</h2>
         </div>
-        <button 
-          type="button" 
-          onClick={handleAdd}
-          className="flex items-center gap-2 bg-cyan-600 hover:bg-cyan-500 text-zinc-950 text-[10px] font-black uppercase tracking-widest px-3 py-1.5 rounded transition-colors shadow-sm"
-        >
-          <Plus className="w-3 h-3" /> Add Item
+        <button onClick={addCapability} className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-widest text-fuchsia-400 hover:text-fuchsia-300 transition-colors">
+          <Plus className="w-3 h-3" /> Add Service
         </button>
       </div>
 
-      <div className="space-y-6">
-        {capabilities.length === 0 ? (
-          <div className="text-center p-8 border border-dashed border-zinc-800 bg-zinc-900/30 rounded-xl text-zinc-500 font-mono text-xs uppercase tracking-widest">
-            No services defined.
+      <div className="space-y-4">
+        {localCaps.length === 0 ? (
+          <div className="text-center py-10 border border-dashed border-zinc-800 rounded-xl bg-zinc-900/30">
+            <p className="text-xs text-zinc-500 font-mono tracking-widest uppercase">No services defined.</p>
           </div>
         ) : (
-          capabilities.map((cap, index) => (
-            <div key={index} className="flex flex-col gap-3 p-4 bg-zinc-900/60 border border-zinc-800 rounded-xl relative group shadow-sm">
-              
-              <div className="flex items-start justify-between gap-4">
+          localCaps.map((cap, index) => (
+            <div key={index} className="flex gap-3 bg-zinc-900/60 border border-zinc-800 p-3 rounded-xl group relative shadow-sm">
+              <div className="flex flex-col gap-1 items-center justify-center shrink-0 w-6 opacity-30 hover:opacity-100 transition-opacity cursor-pointer">
+                <button type="button" onClick={() => moveUp(index)} disabled={index === 0} className="hover:text-cyan-400 disabled:opacity-0"><GripVertical className="w-4 h-4" /></button>
+              </div>
+              <div className="flex-1 space-y-3">
                 <input 
                   type="text" 
-                  placeholder="Service Title (e.g., Shadow Work)" 
-                  value={cap.title}
-                  onChange={(e) => handleChange(index, 'title', e.target.value)}
-                  className="w-full bg-black/40 border border-zinc-800 focus:border-cyan-500 rounded-lg px-3 py-2 text-white outline-none transition-colors font-bold text-sm"
+                  value={cap.title} 
+                  onChange={(e) => updateCap(index, 'title', e.target.value)} 
+                  placeholder="Service Name (e.g., Commercial Photography)" 
+                  className="w-full bg-black/50 border border-zinc-800 rounded-lg px-3 py-2 text-sm text-white font-bold outline-none focus:border-fuchsia-500 transition-colors"
                 />
-                <button 
-                  type="button" 
-                  onClick={() => handleRemove(index)}
-                  className="p-2 text-zinc-500 hover:text-red-400 bg-zinc-950 hover:bg-red-500/10 border border-zinc-800 hover:border-red-500/30 rounded-lg transition-colors shrink-0"
-                  title="Remove Service"
-                >
-                  <Trash2 className="w-4 h-4" />
-                </button>
+                <textarea 
+                  value={cap.description} 
+                  onChange={(e) => updateCap(index, 'description', e.target.value)} 
+                  placeholder="Short description of this capability..." 
+                  rows={2}
+                  className="w-full bg-black/50 border border-zinc-800 rounded-lg px-3 py-2 text-xs text-zinc-300 outline-none focus:border-fuchsia-500 transition-colors resize-none"
+                />
               </div>
-
-              <textarea 
-                placeholder="Brief description of this offering..." 
-                value={cap.description}
-                onChange={(e) => handleChange(index, 'description', e.target.value)}
-                rows={2}
-                className="w-full bg-black/40 border border-zinc-800 focus:border-cyan-500 rounded-lg px-3 py-2 text-zinc-300 outline-none transition-colors text-xs resize-none"
-              />
-              
-              {/* BULLET POINT EDITOR */}
-              <div className="bg-zinc-950/50 border border-zinc-800/80 rounded-lg p-3 space-y-2">
-                <div className="text-[9px] font-bold text-zinc-500 uppercase tracking-widest mb-2 flex items-center justify-between">
-                  <span>Feature Checklist</span>
-                  <button 
-                    type="button" 
-                    onClick={() => handleAddBullet(index)}
-                    className="text-cyan-500 hover:text-cyan-400 flex items-center gap-1 transition-colors"
-                  >
-                    <Plus size={10} /> Add Bullet
-                  </button>
-                </div>
-                
-                {cap.bullets?.map((bullet, bIndex) => (
-                  <div key={bIndex} className="flex items-center gap-2">
-                    <div className="w-1.5 h-1.5 rounded-full bg-cyan-500/50 shrink-0" />
-                    <input 
-                      type="text"
-                      placeholder="Detail point..."
-                      value={bullet}
-                      onChange={(e) => handleBulletChange(index, bIndex, e.target.value)}
-                      className="w-full bg-transparent border-b border-zinc-800 focus:border-cyan-500 py-1 text-zinc-300 outline-none transition-colors text-xs"
-                    />
-                    <button 
-                      type="button" 
-                      onClick={() => handleRemoveBullet(index, bIndex)}
-                      className="text-zinc-600 hover:text-red-400 transition-colors p-1"
-                    >
-                      <X size={14} />
-                    </button>
-                  </div>
-                ))}
-              </div>
-
+              <button onClick={() => removeCap(index)} className="shrink-0 p-2 text-zinc-600 hover:text-red-400 transition-colors self-start">
+                <X className="w-4 h-4" />
+              </button>
             </div>
           ))
         )}
       </div>
+
+      <button 
+        onClick={handleSave} 
+        disabled={isSaving} 
+        className="w-full flex items-center justify-center gap-2 bg-fuchsia-600 hover:bg-fuchsia-500 text-white font-black tracking-widest text-[10px] uppercase py-3 rounded-lg transition-all shadow-[0_0_10px_rgba(192,38,211,0.2)] disabled:opacity-50 mt-4"
+      >
+        {isSaving ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Save className="w-3.5 h-3.5" />} 
+        {isSaving ? 'SYNCING MATRIX...' : 'SAVE SERVICES LIST'}
+      </button>
+
     </div>
   );
 }

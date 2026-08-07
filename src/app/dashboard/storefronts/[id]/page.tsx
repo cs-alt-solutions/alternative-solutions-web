@@ -1,3 +1,4 @@
+// src/app/dashboard/storefronts/[id]/page.tsx
 'use client';
 
 import React, { useState, useEffect } from 'react';
@@ -39,25 +40,20 @@ export default function TenantCommandHub() {
   const [editorTab, setEditorTab] = useState<'content' | 'design' | 'media' | 'services'>('content');
   const [controlsExpanded, setControlsExpanded] = useState(true);
   
-  // Track sidebar collapse state to adjust the left offset dynamically
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
-  
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [saveMessage, setSaveMessage] = useState('');
   const [refreshKey, setRefreshKey] = useState(Date.now());
 
-  // FIXED: Hardcoded routing to force the canvas to use the live edge network telemetry
   const PREVIEW_BASE_URL = 'https://storefronts.alternativesolutions.io';
 
   useEffect(() => {
-    // 1. INSTANT SYNC: Check local storage on mount so the layout perfectly matches the global sidebar
     const storedState = localStorage.getItem('sidebar-collapsed') || localStorage.getItem('isCollapsed');
     if (storedState === 'true') {
       setIsSidebarCollapsed(true);
     }
 
-    // 2. Listen for future sidebar collapse events
     const handleCollapse = (e: any) => setIsSidebarCollapsed(e.detail.isCollapsed);
     window.addEventListener('sidebar-collapse', handleCollapse);
 
@@ -223,14 +219,15 @@ export default function TenantCommandHub() {
                 </div>
 
                 <div className="flex-1 overflow-y-auto custom-scrollbar p-4">
-                  {editorTab === 'content' && <CoreTab formData={formData} setFormData={setFormData} />}
+                  {/* THE FIX: Added onReload={reloadCanvas} to ALL tabs so they can trigger the iframe safely */}
+                  {editorTab === 'content' && <CoreTab formData={formData} setFormData={setFormData} onReload={reloadCanvas} />}
                   {editorTab === 'design' && (
                     <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500 pb-12 p-2 pt-6 relative">
                       <VisualArchitecture formData={formData} setFormData={setFormData} />
                     </div>
                   )}
-                  {editorTab === 'media' && <MediaTab formData={formData} setFormData={setFormData} />}
-                  {editorTab === 'services' && <CapabilitiesTab formData={formData} setFormData={setFormData} />}
+                  {editorTab === 'media' && <MediaTab formData={formData} setFormData={setFormData} onReload={reloadCanvas} />}
+                  {editorTab === 'services' && <CapabilitiesTab formData={formData} setFormData={setFormData} onReload={reloadCanvas} />}
                 </div>
               </div>
             )}
