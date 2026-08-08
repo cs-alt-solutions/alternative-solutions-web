@@ -1,3 +1,4 @@
+/* src/app/storefronts/apply/page.tsx */
 'use client';
 
 import React, { useState, useEffect } from 'react';
@@ -57,12 +58,18 @@ export default function StorefrontApplicationPage() {
   const [vibes, setVibes] = useState<any[]>([]);
   const [isLoaded, setIsLoaded] = useState(false);
 
-  // STEP 1 & 2 STATE
-  const [formData, setFormData] = useState({ name: '', email: '', phone: '', projectName: '', description: '' });
+  // STEP 1 & 2 STATE (Now holding image files)
+  const [formData, setFormData] = useState<{
+    name: string; email: string; phone: string; projectName: string; description: string; tagline?: string; subtext?: string;
+    logoFile: File | null; bgFile: File | null; aboutFile: File | null;
+  }>({ 
+    name: '', email: '', phone: '', projectName: '', description: '',
+    logoFile: null, bgFile: null, aboutFile: null 
+  });
   const [activeSocials, setActiveSocials] = useState<Record<string, boolean>>({ instagram: false, facebook: false, x: false, linkedin: false, other: false });
   const [socialHandles, setSocialHandles] = useState<Record<string, string>>({ instagram: '', facebook: '', x: '', linkedin: '', other: '' });
   
-  // STEP 3 STATE (Fully Wired!)
+  // STEP 3 STATE
   const [selectedVibe, setSelectedVibe] = useState<string | null>(null);
   const [brandColor, setBrandColor] = useState<string>('cyan');
   const [heroStructure, setHeroStructure] = useState<string>('centered');
@@ -93,13 +100,10 @@ export default function StorefrontApplicationPage() {
         };
 
         setVibes(dbVibes ? [...dbVibes, cluelessOption] : [cluelessOption]);
-        
       } catch (err) {
         console.error("Database fetch error:", err);
         setVibes([{
-          id: WIZARD_COPY.VIBES.CLUELESS_ID, 
-          title: WIZARD_COPY.VIBES.CLUELESS_TITLE, 
-          desc: WIZARD_COPY.VIBES.CLUELESS_DESC
+          id: WIZARD_COPY.VIBES.CLUELESS_ID, title: WIZARD_COPY.VIBES.CLUELESS_TITLE, desc: WIZARD_COPY.VIBES.CLUELESS_DESC
         }]);
       } finally {
         setIsLoaded(true);
@@ -122,7 +126,13 @@ export default function StorefrontApplicationPage() {
     data.append('email', formData.email);
     data.append('phone', formData.phone);
     data.append('projectName', formData.projectName);
-    data.append('description', formData.description); // The step 4 notes
+    data.append('description', formData.description); 
+    if (formData.tagline) data.append('tagline', formData.tagline);
+
+    // Append Files
+    if (formData.logoFile) data.append('logo_file', formData.logoFile);
+    if (formData.bgFile) data.append('bg_file', formData.bgFile);
+    if (formData.aboutFile) data.append('about_file', formData.aboutFile);
 
     // Step 2
     data.append('socials', JSON.stringify(socialHandles));
@@ -139,9 +149,6 @@ export default function StorefrontApplicationPage() {
     data.append('wantsCustom', wantsCustom.toString());
     data.append('existingDomain', existingDomain);
     data.append('priorityQueue', priorityQueue.toString());
-
-    // DIAGNOSTIC PAYLOAD TRACKER
-    console.log("Wizard Output Payload:", Object.fromEntries(data.entries()));
 
     try {
       const result = await submitStorefrontApplication(data);
@@ -188,7 +195,7 @@ export default function StorefrontApplicationPage() {
                   <Step1Basics 
                     formData={formData} setFormData={setFormData} 
                     onNext={handleNext} 
-                    isValid={formData.name.length > 0 && formData.email.length > 0 && formData.phone.length > 0 && formData.projectName.length > 0 && formData.description.length > 0} 
+                    isValid={formData.name.length > 0 && formData.email.length > 0 && formData.phone.length > 0 && formData.projectName.length > 0} 
                   />
                 )}
                 {step === 2 && (

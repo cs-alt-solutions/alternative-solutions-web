@@ -1,8 +1,9 @@
+/* src/components/storefronts/wizard/Step1Basics.tsx */
 'use client';
 
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { User, Briefcase, Mail, Phone, ArrowLeft, CheckCircle2, Wand2, Sparkles } from 'lucide-react';
+import { User, Briefcase, Mail, Phone, ArrowLeft, CheckCircle2, Wand2, Sparkles, Image as ImageIcon, UploadCloud, FileImage } from 'lucide-react';
 import { WIZARD_COPY } from '@/utils/glossary';
 
 interface Step1Props {
@@ -34,13 +35,18 @@ export default function Step1Basics({ formData, setFormData, onNext }: Step1Prop
     setFormData({ ...formData, phone: formatted });
   };
 
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>, fieldName: string) => {
+    if (e.target.files && e.target.files[0]) {
+      setFormData({ ...formData, [fieldName]: e.target.files[0] });
+    }
+  };
+
   const currentEmail = formData?.email || '';
   const currentPhone = formData?.phone || '';
 
   const isEmailValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(currentEmail);
   const isPhoneValid = currentPhone.length === 14; 
 
-  // 🚀 CRASH-PROOF VALIDATION: Never throws TypeError on undefined fields!
   const isLocalValid = 
     (formData?.name || '').trim() !== '' && 
     (formData?.projectName || '').trim() !== '' && 
@@ -58,6 +64,42 @@ export default function Step1Basics({ formData, setFormData, onNext }: Step1Prop
     if (formData?.tagline === 'ARCHITECT_DELEGATED') {
       setFormData({ ...formData, tagline: '', subtext: '' });
     }
+  };
+
+  // Reusable File Dropzone Component
+  const UploadZone = ({ title, field, icon, description }: { title: string, field: string, icon: React.ReactNode, description: string }) => {
+    const file = formData[field] as File | null;
+    const previewUrl = file ? URL.createObjectURL(file) : null;
+
+    return (
+      <div className="relative group rounded-2xl border border-zinc-800/80 bg-zinc-950/40 p-4 hover:border-cyan-500/50 transition-all cursor-pointer overflow-hidden flex flex-col h-32 justify-center items-center text-center">
+        <input 
+          type="file" 
+          accept="image/*" 
+          onChange={(e) => handleFileChange(e, field)}
+          className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
+        />
+        {previewUrl ? (
+          <>
+            <div className="absolute inset-0 bg-black/60 z-0"></div>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src={previewUrl} alt={title} className="absolute inset-0 w-full h-full object-cover opacity-50 pointer-events-none" />
+            <div className="relative z-0 flex flex-col items-center gap-2 text-emerald-400">
+              <CheckCircle2 size={24} />
+              <span className="text-[10px] font-bold uppercase tracking-widest bg-black/50 px-2 py-1 rounded">Asset Secured</span>
+            </div>
+          </>
+        ) : (
+          <div className="relative z-0 flex flex-col items-center gap-2 text-zinc-500 group-hover:text-cyan-400 transition-colors">
+            {icon}
+            <div>
+              <span className="block text-xs font-bold text-zinc-300">{title}</span>
+              <span className="block text-[10px] uppercase tracking-wider opacity-60 mt-0.5">{description}</span>
+            </div>
+          </div>
+        )}
+      </div>
+    );
   };
 
   return (
@@ -84,9 +126,7 @@ export default function Step1Basics({ formData, setFormData, onNext }: Step1Prop
               <div className="relative">
                 <User className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-500 group-focus-within:text-cyan-400 transition-colors" />
                 <input 
-                  type="text" 
-                  required 
-                  value={formData?.name || ''}
+                  type="text" required value={formData?.name || ''}
                   onChange={(e) => setFormData({...formData, name: e.target.value})}
                   className="w-full bg-zinc-950/60 border border-zinc-800/80 rounded-xl py-3.5 pl-12 pr-4 text-zinc-100 focus:outline-none focus:border-cyan-500/50 transition-all text-sm placeholder:text-zinc-600 font-normal shadow-inner" 
                   placeholder={copy.PLACEHOLDERS.NAME} 
@@ -99,9 +139,7 @@ export default function Step1Basics({ formData, setFormData, onNext }: Step1Prop
               <div className="relative">
                 <Briefcase className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-500 group-focus-within:text-cyan-400 transition-colors" />
                 <input 
-                  type="text" 
-                  required 
-                  value={formData?.projectName || ''}
+                  type="text" required value={formData?.projectName || ''}
                   onChange={(e) => setFormData({...formData, projectName: e.target.value})}
                   className="w-full bg-zinc-950/60 border border-zinc-800/80 rounded-xl py-3.5 pl-12 pr-4 text-zinc-100 focus:outline-none focus:border-cyan-500/50 transition-all text-sm placeholder:text-zinc-600 font-normal shadow-inner" 
                   placeholder={copy.PLACEHOLDERS.BUSINESS} 
@@ -119,9 +157,7 @@ export default function Step1Basics({ formData, setFormData, onNext }: Step1Prop
               <div className="relative">
                 <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-500 group-focus-within:text-cyan-400 transition-colors" />
                 <input 
-                  type="email" 
-                  required 
-                  value={currentEmail}
+                  type="email" required value={currentEmail}
                   onChange={(e) => setFormData({...formData, email: e.target.value})}
                   className={`w-full bg-zinc-950/60 border rounded-xl py-3.5 pl-12 pr-4 text-zinc-100 focus:outline-none transition-all text-sm placeholder:text-zinc-600 font-normal shadow-inner ${currentEmail.length > 0 && !isEmailValid ? 'border-red-500/50 focus:border-red-500' : 'border-zinc-800/80 focus:border-cyan-500/50'}`}
                   placeholder={copy.PLACEHOLDERS.EMAIL} 
@@ -139,9 +175,7 @@ export default function Step1Basics({ formData, setFormData, onNext }: Step1Prop
               <div className="relative">
                 <Phone className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-500 group-focus-within:text-cyan-400 transition-colors" />
                 <input 
-                  type="tel" 
-                  required 
-                  value={currentPhone}
+                  type="tel" required value={currentPhone}
                   onChange={handlePhoneChange}
                   className={`w-full bg-zinc-950/60 border rounded-xl py-3.5 pl-12 pr-4 text-zinc-100 focus:outline-none transition-all text-sm placeholder:text-zinc-600 font-normal shadow-inner ${currentPhone.length > 0 && !isPhoneValid ? 'border-red-500/50 focus:border-red-500' : 'border-zinc-800/80 focus:border-cyan-500/50'}`}
                   placeholder={copy.PLACEHOLDERS.PHONE} 
@@ -152,7 +186,37 @@ export default function Step1Basics({ formData, setFormData, onNext }: Step1Prop
           </div>
         </div>
 
-        {/* CARD 2: THE CATCHY HEADLINE TOGGLE */}
+        {/* CARD 2: THE ASSET INGESTION ZONE */}
+        <div className="bg-zinc-900/30 border border-white/5 rounded-2xl p-6 md:p-8 shadow-xl space-y-6">
+          <div>
+            <h3 className="text-base md:text-lg font-bold text-white flex items-center gap-2">
+              <ImageIcon className="w-4 h-4 text-cyan-400" />
+              <span>Visual Architecture (Optional)</span>
+            </h3>
+            <p className="text-xs md:text-sm text-zinc-400 mt-1 font-normal max-w-xl">
+              Do you already have a logo, a specific background image, or a photo of yourself for the "About" section? Drop them here so we can architect your layout around them.
+            </p>
+          </div>
+          
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <UploadZone 
+              title="Brand Logo" field="logoFile" description="PNG or SVG preferred" 
+              icon={<UploadCloud size={24} />} 
+            />
+            {/* FIXED: No more slashes */}
+            <UploadZone 
+              title="Hero Background" field="bgFile" description="High-res imagery" 
+              icon={<FileImage size={24} />} 
+            />
+            {/* FIXED: No more slashes */}
+            <UploadZone 
+              title="Founder Portrait" field="aboutFile" description="Show your face" 
+              icon={<User size={24} />} 
+            />
+          </div>
+        </div>
+
+        {/* CARD 3: THE CATCHY HEADLINE TOGGLE */}
         <div className="bg-zinc-900/30 border border-white/5 rounded-2xl p-6 md:p-8 shadow-xl space-y-6">
           <div>
             <h3 className="text-base md:text-lg font-bold text-white flex items-center gap-2">
@@ -215,19 +279,16 @@ export default function Step1Basics({ formData, setFormData, onNext }: Step1Prop
 
           {hookMode === 'type' && (
             <div className="space-y-6 pt-4 border-t border-zinc-800/60 animate-in fade-in slide-in-from-top-2 duration-300">
-              
               <div className="space-y-1.5">
                 <label className="text-xs font-semibold text-zinc-200 block pl-1">
                   {copy.LABELS.TAGLINE}
                 </label>
                 <textarea 
-                  rows={2}
-                  value={formData?.tagline || ''}
+                  rows={2} value={formData?.tagline || ''}
                   onChange={(e) => setFormData({...formData, tagline: e.target.value})}
                   className="w-full bg-zinc-950/60 border border-zinc-800/80 rounded-xl p-3.5 text-zinc-100 focus:outline-none focus:border-cyan-500/50 text-sm font-normal placeholder:text-zinc-600 transition-all shadow-inner resize-none"
                   placeholder={copy.PLACEHOLDERS.TAGLINE}
                 />
-                <span className="text-[11px] text-zinc-500 block pl-1 font-normal">{copy.LABELS.TAGLINE_HELPER}</span>
               </div>
 
               <div className="space-y-1.5">
@@ -235,15 +296,12 @@ export default function Step1Basics({ formData, setFormData, onNext }: Step1Prop
                   {copy.LABELS.SUBTEXT}
                 </label>
                 <textarea 
-                  rows={3}
-                  value={formData?.subtext || ''}
+                  rows={3} value={formData?.subtext || ''}
                   onChange={(e) => setFormData({...formData, subtext: e.target.value})}
                   className="w-full bg-zinc-950/60 border border-zinc-800/80 rounded-xl p-3.5 text-zinc-100 focus:outline-none focus:border-cyan-500/50 text-sm font-normal placeholder:text-zinc-600 transition-all shadow-inner resize-none"
                   placeholder={copy.PLACEHOLDERS.SUBTEXT}
                 />
-                <span className="text-[11px] text-zinc-500 block pl-1 font-normal">{copy.LABELS.SUBTEXT_HELPER}</span>
               </div>
-
             </div>
           )}
         </div>
@@ -252,18 +310,12 @@ export default function Step1Basics({ formData, setFormData, onNext }: Step1Prop
 
       {/* FOOTER ACTIONS */}
       <div className="flex flex-col-reverse md:flex-row justify-between items-center pt-4 border-t border-zinc-800/60 gap-4">
-        <button
-          type="button"
-          onClick={() => router.push('/')}
-          className="text-xs font-semibold text-zinc-500 hover:text-zinc-300 transition-colors flex items-center gap-2 group"
-        >
+        <button type="button" onClick={() => router.push('/')} className="text-xs font-semibold text-zinc-500 hover:text-zinc-300 transition-colors flex items-center gap-2 group">
           <ArrowLeft className="w-3.5 h-3.5 group-hover:-translate-x-1 transition-transform" />
           {copy.ACTIONS.CANCEL}
         </button>
         <button 
-          type="button" 
-          onClick={onNext}
-          disabled={!isLocalValid}
+          type="button" onClick={onNext} disabled={!isLocalValid}
           className={`w-full md:w-auto px-8 py-4 rounded-xl font-bold text-sm tracking-wide flex items-center justify-center gap-2 transition-all ${isLocalValid ? 'text-zinc-950 bg-cyan-400 hover:bg-cyan-300 shadow-[0_0_20px_rgba(34,211,238,0.3)] hover:scale-[1.01]' : 'bg-zinc-900 border border-zinc-800 text-zinc-600 cursor-not-allowed'}`}
         >
           <span>{copy.ACTIONS.NEXT}</span>

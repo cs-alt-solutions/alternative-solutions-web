@@ -1,3 +1,4 @@
+/* src/app/actions/storefront_applications.ts */
 'use server';
 
 import { createClient } from '@/utils/supabase/server';
@@ -8,15 +9,48 @@ import AdminIntakeEmail from '@/components/emails/AdminIntakeEmail';
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 
+async function uploadApplicationAsset(file: File | null, pathPrefix: string): Promise<string | null> {
+  if (!file || file.size === 0) return null;
+  try {
+    const supabase = await createClient();
+    const fileExt = file.name.split('.').pop();
+    const fileName = `${pathPrefix}-${Math.random().toString(36).substring(2, 8)}.${fileExt}`;
+    const filePath = `applications/${fileName}`;
+    
+    const { error } = await supabase.storage.from('storefront-assets').upload(filePath, file);
+    if (error) {
+      console.error("Storage upload error:", error);
+      return null;
+    }
+    
+    const { data: publicUrlData } = supabase.storage.from('storefront-assets').getPublicUrl(filePath);
+    return publicUrlData.publicUrl;
+  } catch (err) {
+    console.error("Failed to process asset:", err);
+    return null;
+  }
+}
+
 export async function submitStorefrontApplication(formData: FormData) {
   const supabase = await createClient();
 
   try {
+    const businessName = formData.get('projectName')?.toString() || 'Unnamed Project';
+    const safeProjectPrefix = businessName.replace(/[^a-z0-9]/gi, '-').toLowerCase();
+
+    const logoFile = formData.get('logo_file') as File | null;
+    const bgFile = formData.get('bg_file') as File | null;
+    const aboutFile = formData.get('about_file') as File | null;
+
+    const logoUrl = await uploadApplicationAsset(logoFile, `${safeProjectPrefix}-logo`);
+    const bgUrl = await uploadApplicationAsset(bgFile, `${safeProjectPrefix}-hero`);
+    const aboutUrl = await uploadApplicationAsset(aboutFile, `${safeProjectPrefix}-about`);
+
     const payload = {
       applicant_name: formData.get('name')?.toString() || '',
       applicant_email: formData.get('email')?.toString() || '',
       applicant_phone: formData.get('phone')?.toString() || '',
-      business_name: formData.get('projectName')?.toString() || 'Unnamed Project',
+      business_name: businessName,
       business_description: formData.get('description')?.toString() || '',
       social_handles: JSON.parse(formData.get('socials')?.toString() || '{}'),
       selected_vibe: formData.get('selectedVibe')?.toString() || 'clueless',
@@ -25,48 +59,48 @@ export async function submitStorefrontApplication(formData: FormData) {
       existing_domain: formData.get('existingDomain')?.toString() || '',
       is_priority: formData.get('priorityQueue') === 'true',
       status: 'PENDING',
-      contact_email: formData.get('email')?.toString() || ''
+      contact_email: formData.get('email')?.toString() || '',
+      logo_url: logoUrl,
+      hero_image_url: bgUrl,
+      about_image_url: aboutUrl
     };
 
     const { error } = await supabase.from('storefront_applications').insert([payload]);
     if (error) throw error;
 
     try {
-      const { error: clientEmailError } = await resend.emails.send({
-        from: 'Courtney <hello@alternativesolutions.io>',
-        to: payload.applicant_email,
-        subject: `Application received: ${payload.business_name}`,
-        react: StorefrontConfirmationEmail({ 
-          name: payload.applicant_name, 
-          projectName: payload.business_name 
-        })
-      });
+      if (process.env.RESEND_API_KEY) {
+        await resend.emails.send({
+          from: 'Courtney <hello@alternativesolutions.io>',
+          to: payload.applicant_email,
+          subject: `Application received: ${payload.business_name}`,
+          react: StorefrontConfirmationEmail({ 
+            name: payload.applicant_name, 
+            projectName: payload.business_name 
+          })
+        });
 
-      if (clientEmailError) console.error('Resend API Error (Client):', clientEmailError);
-
-      const { error: adminEmailError } = await resend.emails.send({
-        from: 'System <system@alternativesolutions.io>',
-        to: process.env.ADMIN_EMAIL || 'hello@alternativesolutions.io',
-        subject: `🚨 NEW LEAD: ${payload.business_name}`,
-        react: AdminIntakeEmail({
-          name: payload.applicant_name,
-          email: payload.applicant_email,
-          phone: payload.applicant_phone,
-          socials: formData.get('socials')?.toString() || '',
-          existingWebsite: payload.existing_domain,
-          projectScope: payload.business_description,
-          businessName: payload.business_name,
-          selectedPlan: payload.selected_plan,
-          selectedVibe: payload.selected_vibe,
-          wantsCustom: payload.wants_custom,
-          isPriority: payload.is_priority
-        })
-      });
-
-      if (adminEmailError) console.error('Resend API Error (Admin):', adminEmailError);
-
+        await resend.emails.send({
+          from: 'System <system@alternativesolutions.io>',
+          to: process.env.ADMIN_EMAIL || 'hello@alternativesolutions.io',
+          subject: `🚨 NEW LEAD: ${payload.business_name}`,
+          react: AdminIntakeEmail({
+            name: payload.applicant_name,
+            email: payload.applicant_email,
+            phone: payload.applicant_phone,
+            socials: formData.get('socials')?.toString() || '',
+            existingWebsite: payload.existing_domain,
+            projectScope: payload.business_description,
+            businessName: payload.business_name,
+            selectedPlan: payload.selected_plan,
+            selectedVibe: payload.selected_vibe,
+            wantsCustom: payload.wants_custom,
+            isPriority: payload.is_priority
+          })
+        });
+      }
     } catch (emailDispatchError) {
-      console.error('CRITICAL EMAIL DISPATCH FAILED:', emailDispatchError);
+      console.error('EMAIL DISPATCH FAILED:', emailDispatchError);
     }
 
     revalidatePath('/dashboard/storefronts');
@@ -77,13 +111,18 @@ export async function submitStorefrontApplication(formData: FormData) {
   }
 }
 
-export async function updateApplicationStatus(id: string, newStatus: 'BUILDING' | 'CANCELED') {
+// THE FIX: Added `overrides` parameter to accept your "Pre-Dump" dropdown selections
+export async function updateApplicationStatus(id: string, newStatus: 'BUILDING' | 'CANCELED', overrides?: any) {
   const supabase = await createClient();
   
   try {
     const { data: app, error: updateError } = await supabase
       .from('storefront_applications')
-      .update({ status: newStatus })
+      .update({ 
+        status: newStatus,
+        ...(overrides?.plan && { selected_plan: overrides.plan }),
+        ...(overrides?.vibe && { selected_vibe: overrides.vibe })
+      })
       .eq('id', id)
       .select()
       .single();
@@ -99,30 +138,41 @@ export async function updateApplicationStatus(id: string, newStatus: 'BUILDING' 
         finalSlug = `${baseSlug}-${Math.random().toString(36).substring(2, 6)}`;
       }
 
+      // Read overrides from your UI, or fall back to their original choices
+      const finalVibe = overrides?.vibe || app.selected_vibe || 'industrial';
+      const finalColor = overrides?.brandColor || app.brand_color || 'cyan';
+      const finalHero = overrides?.hero || app.hero_structure || 'centered';
+      const finalStory = overrides?.story || app.story_structure || 'split';
+      const finalFlow = overrides?.flow || app.content_flow || 'classic';
+      const finalPlan = overrides?.plan || app.selected_plan || 'foundation';
+
       const { error: insertError } = await supabase.from('storefronts').insert([{
         business_name: app.business_name,
         contact_email: app.contact_email || app.applicant_email, 
         status: 'BUILDING',
         slug: finalSlug, 
-        plan_tier: app.selected_plan || 'foundation',
-        theme_style: app.selected_vibe || 'industrial',
-        tagline: app.business_description ? app.business_description.substring(0, 50) + '...' : 'Welcome to your new digital storefront.',
+        plan_tier: finalPlan,
+        theme_style: finalVibe,
+        brand_color: finalColor,
+        hero_layout: finalHero,
+        content_layout: finalFlow,
+        about_layout: finalStory,
+        tagline: app.tagline && app.tagline !== 'ARCHITECT_DELEGATED' ? app.tagline : 'Welcome to your new digital storefront.',
         subtext: app.business_description || 'Getting operations online. Stay tuned.',
-        hero_layout: 'center',
-        content_layout: 'classic',
-        about_layout: 'split',
         is_template: false,
-        hero_image: 'https://via.placeholder.com/1920x1080/000000/333333?text=NO+IMAGE',
-        about_image: 'https://via.placeholder.com/800x800/000000/333333?text=NO+IMAGE',
+        hero_image: app.hero_image_url || 'https://via.placeholder.com/1920x1080/000000/333333?text=NO+IMAGE',
+        about_image: app.about_image_url || 'https://via.placeholder.com/800x800/000000/333333?text=NO+IMAGE',
+        logo_url: app.logo_url || null,
         primary_cta: 'Get Started',
         secondary_cta: 'Learn More',
         about_heading: 'About Us',
-        about_bio: 'Dedicated to providing top-tier services and products to the community. Check out the gallery to see recent work!',
-        social_url: 'https://facebook.com',
+        about_bio: app.business_description || 'Dedicated to providing top-tier services and products to the community. Check out the gallery to see recent work!',
+        social_url: app.existing_domain || '',
         gallery_items: []
       }]);
       
-      if (insertError) console.error('Failed to initialize storefront:', insertError);
+      // THE FIX: Throw an explicit error if the Storefront Engine injection fails so we know WHY
+      if (insertError) throw new Error("Storefront Creation Blocked by Database: " + insertError.message);
 
       const { error: clientError } = await supabase.from('clients').insert([{
         id: finalSlug,
