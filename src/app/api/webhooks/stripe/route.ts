@@ -1,7 +1,7 @@
 /* src/app/api/webhooks/stripe/route.ts */
 import { headers } from 'next/headers';
 import { NextResponse } from 'next/server';
-import { supabase } from '@/utils/supabase';
+import { createClient } from '@supabase/supabase-js'; // We need the raw client for Admin access
 import Stripe from 'stripe';
 
 export async function POST(req: Request) {
@@ -11,9 +11,16 @@ export async function POST(req: Request) {
     return new NextResponse('Configuration Error', { status: 500 });
   }
 
+  // 1. Initialize Stripe
   const stripe = new Stripe(secretKey, {
     apiVersion: '2026-02-25.clover',
   });
+
+  // 2. Initialize a secure Supabase Admin connection (Bypasses RLS to write background updates)
+  const supabaseAdmin = createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL as string,
+    process.env.SUPABASE_SERVICE_ROLE_KEY as string 
+  );
 
   const body = await req.text();
   const headersList = await headers();
@@ -26,6 +33,7 @@ export async function POST(req: Request) {
       throw new Error('Missing Stripe signature or webhook secret.');
     }
     
+    // Cryptographically verify this actually came from Stripe
     event = stripe.webhooks.constructEvent(
       body,
       signature,
@@ -36,14 +44,71 @@ export async function POST(req: Request) {
     return new NextResponse(`Webhook Error: ${error.message}`, { status: 400 });
   }
 
+  // 3. IDEMPOTENCY CHECK: Prevent duplicate processing
+  const { data: existingWebhook } = await supabaseAdmin
+    .from('processed_webhooks')
+    .select('id')
+    .eq('id', event.id)
+    .single();
+
+  if (existingWebhook) {
+    console.log(`Duplicate webhook ignored: ${event.id}`);
+    return NextResponse.json({ received: true }); 
+  }
+
+  // Log the new webhook to lock it down
+  await supabaseAdmin.from('processed_webhooks').insert([
+    { id: event.id, event_type: event.type }
+  ]);
+
+
+  // 4. THE TRAFFIC DIRECTOR
   if (event.type === 'checkout.session.completed') {
     const session = event.data.object as Stripe.Checkout.Session;
+    
+    // Attempt to find the hidden Storefront ID (either directly on the session or on the nested subscription)
+    let storefrontId = session.metadata?.storefront_id;
+    
+    if (!storefrontId && session.subscription) {
+       // If nested during the handshake, we fetch the actual subscription object to find it
+       const subscription = await stripe.subscriptions.retrieve(session.subscription as string);
+       storefrontId = subscription.metadata?.storefront_id;
+    }
+
+    // ====================================================================
+    // PATH A: THE STOREFRONT SAAS ENGINE
+    // ====================================================================
+    if (storefrontId) {
+      console.log(`Processing SaaS Storefront Payment for ID: ${storefrontId}`);
+      
+      const { error } = await supabaseAdmin
+        .from('storefronts')
+        .update({ 
+          subscription_status: 'active',
+          stripe_customer_id: session.customer as string,
+          stripe_subscription_id: session.subscription as string,
+        })
+        .eq('id', storefrontId);
+
+      if (error) {
+        console.error("Storefront Database Update Failed:", error);
+        return new NextResponse('Database Error', { status: 500 });
+      } else {
+        console.log(`Storefront ${storefrontId} successfully activated!`);
+      }
+      
+      return NextResponse.json({ received: true }); // Done processing!
+    }
+
+    // ====================================================================
+    // PATH B: GRASSROOTS FOUNDATION SUPPORTERS (Your Original Logic)
+    // ====================================================================
+    console.log(`Processing General Supporter Payment.`);
     
     // Extract Custom Fields
     const projectField = session.custom_fields?.find(f => f.key === 'project_name');
     const projectName = projectField?.text?.value || 'Organic';
     
-    // THE FIX: Added '?.' to safely check custom labels without crashing
     const displayField = session.custom_fields?.find(f => 
       f.label.custom?.toLowerCase().includes('display') || 
       f.label.custom?.toLowerCase().includes('anonymous')
@@ -55,7 +120,6 @@ export async function POST(req: Request) {
     const amountTotal = (session.amount_total || 0) / 100;
     const isSubscription = session.mode === 'subscription';
 
-    // Figure out what to call them publicly
     let finalDisplayName = 'Anonymous Builder';
     if (customDisplayName && customDisplayName.toLowerCase() !== 'anonymous') {
       finalDisplayName = customDisplayName;
@@ -72,15 +136,15 @@ export async function POST(req: Request) {
         tier = 'CLIENT'; 
       }
 
-      // 2. Fetch existing user to see if they have an origin_tier
-      const { data: existingUser } = await supabase
+      // 2. Fetch existing user 
+      const { data: existingUser } = await supabaseAdmin
         .from('supporters')
         .select('origin_tier')
         .eq('email', customerEmail)
         .single();
 
       // 3. Upsert with Promotion Logic
-      const { error } = await supabase
+      const { error } = await supabaseAdmin
         .from('supporters')
         .upsert({
           email: customerEmail,
@@ -94,7 +158,7 @@ export async function POST(req: Request) {
         }, { onConflict: 'email' });
 
       if (error) {
-        console.error('Error logging to Supabase:', error);
+        console.error('Error logging to Supabase supporters:', error);
         return new NextResponse('Database Error', { status: 500 });
       }
     }

@@ -206,7 +206,7 @@ export default function ApplicationReviewModal({
                 </div>
               </div>
 
-              <div className="h-px w-full bg-gradient-to-r from-zinc-800/80 via-zinc-800/20 to-transparent" />
+              <div className="h-px w-full bg-linear-to-r from-zinc-800/80 via-zinc-800/20 to-transparent" />
 
               {/* The Ask / Elevator Pitch */}
               <div>

@@ -2,8 +2,9 @@
 'use client';
 
 import React from 'react';
-import { CreditCard, Globe, Server, Activity, ArrowUpRight, CheckCircle2 } from 'lucide-react';
+import { CreditCard, Globe, Server, Activity, CheckCircle2 } from 'lucide-react';
 import DangerZoneCard from './DangerZoneCard';
+import CheckoutButton from './CheckoutButton';
 
 export default function GridTab({ formData, setFormData, onTerminate }: { formData: any, setFormData: any, onTerminate: () => void }) {
   const isCustomPlan = formData.plan_tier === 'CUSTOM' || formData.selected_plan === 'CUSTOM';
@@ -42,7 +43,7 @@ export default function GridTab({ formData, setFormData, onTerminate }: { formDa
               </div>
               <div>
                 <span className="block text-[9px] font-mono text-zinc-500 uppercase tracking-widest mb-0.5">Assigned Domain</span>
-                <span className="text-sm font-bold text-white tracking-wide truncate max-w-[150px] block">
+                <span className="text-sm font-bold text-white tracking-wide truncate max-w-37.5 block">
                   {formData.custom_domain || 'Awaiting DNS'}
                 </span>
               </div>
@@ -69,7 +70,7 @@ export default function GridTab({ formData, setFormData, onTerminate }: { formDa
                 checked={formData.is_template || false}
                 onChange={(e) => setFormData({ ...formData, is_template: e.target.checked })}
               />
-              <div className="w-11 h-6 bg-zinc-800 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-fuchsia-500"></div>
+              <div className="w-11 h-6 bg-zinc-800 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-0.5 after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-fuchsia-500"></div>
             </label>
           </div>
         </div>
@@ -117,11 +118,12 @@ export default function GridTab({ formData, setFormData, onTerminate }: { formDa
                 </div>
               )}
 
+              {/* THE CHECKOUT BUTTON UPGRADE */}
               <div className="pt-4 border-t border-zinc-800/80 flex flex-col sm:flex-row gap-3">
-                <button className="flex-1 bg-emerald-500 hover:bg-emerald-400 text-zinc-950 px-4 py-3 rounded-xl text-xs font-black uppercase tracking-widest transition-all flex items-center justify-center gap-2 shadow-[0_0_15px_rgba(16,185,129,0.3)]">
-                  Email Subscription Link
-                  <ArrowUpRight size={14} />
-                </button>
+                <CheckoutButton 
+                  storefrontId={formData.id} 
+                  clientEmail={formData.contact_email} 
+                />
               </div>
 
             </div>
