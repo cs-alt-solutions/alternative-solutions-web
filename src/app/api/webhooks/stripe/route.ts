@@ -1,7 +1,6 @@
-/* src/app/api/webhooks/stripe/route.ts */
 import { headers } from 'next/headers';
 import { NextResponse } from 'next/server';
-import { createClient } from '@supabase/supabase-js'; // We need the raw client for Admin access
+import { createClient } from '@supabase/supabase-js'; 
 import Stripe from 'stripe';
 
 export async function POST(req: Request) {
@@ -13,10 +12,10 @@ export async function POST(req: Request) {
 
   // 1. Initialize Stripe
   const stripe = new Stripe(secretKey, {
-    apiVersion: '2026-02-25.clover',
+    apiVersion: '2026-02-25.clover', // Update this if your Stripe version differs
   });
 
-  // 2. Initialize a secure Supabase Admin connection (Bypasses RLS to write background updates)
+  // 2. Initialize a secure Supabase Admin connection (Bypasses RLS)
   const supabaseAdmin = createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL as string,
     process.env.SUPABASE_SERVICE_ROLE_KEY as string 
@@ -61,51 +60,50 @@ export async function POST(req: Request) {
     { id: event.id, event_type: event.type }
   ]);
 
-
-  // 4. THE TRAFFIC DIRECTOR
+  // ====================================================================
+  // THE TRAFFIC DIRECTOR
+  // ====================================================================
   if (event.type === 'checkout.session.completed') {
     const session = event.data.object as Stripe.Checkout.Session;
     
-    // Attempt to find the hidden Storefront ID (either directly on the session or on the nested subscription)
-    let storefrontId = session.metadata?.storefront_id;
+    // THE GOLD STANDARD: Look for the Storefront Slug in the URL reference
+    let targetSlug = session.client_reference_id || session.metadata?.storefront_id;
     
-    if (!storefrontId && session.subscription) {
-       // If nested during the handshake, we fetch the actual subscription object to find it
+    if (!targetSlug && session.subscription) {
        const subscription = await stripe.subscriptions.retrieve(session.subscription as string);
-       storefrontId = subscription.metadata?.storefront_id;
+       targetSlug = subscription.metadata?.storefront_id;
     }
 
-    // ====================================================================
-    // PATH A: THE STOREFRONT SAAS ENGINE
-    // ====================================================================
-    if (storefrontId) {
-      console.log(`Processing SaaS Storefront Payment for ID: ${storefrontId}`);
+    // ------------------------------------------------------------------
+    // PATH A: THE STOREFRONT SAAS ENGINE 
+    // ------------------------------------------------------------------
+    if (targetSlug) {
+      console.log(`💳 Processing SaaS Payment for Storefront Slug: ${targetSlug}`);
       
-      const { error } = await supabaseAdmin
+      // Activate the Storefront Application directly
+      const { error: storeError } = await supabaseAdmin
         .from('storefronts')
         .update({ 
-          subscription_status: 'active',
+          status: 'ACTIVE', 
           stripe_customer_id: session.customer as string,
           stripe_subscription_id: session.subscription as string,
         })
-        .eq('id', storefrontId);
+        .eq('slug', targetSlug); 
 
-      if (error) {
-        console.error("Storefront Database Update Failed:", error);
+      if (storeError) {
+        console.error("Storefront Database Update Failed:", storeError);
         return new NextResponse('Database Error', { status: 500 });
-      } else {
-        console.log(`Storefront ${storefrontId} successfully activated!`);
-      }
+      } 
       
-      return NextResponse.json({ received: true }); // Done processing!
+      console.log(`✅ Storefront [${targetSlug}] successfully activated!`);
+      return NextResponse.json({ received: true });
     }
 
-    // ====================================================================
-    // PATH B: GRASSROOTS FOUNDATION SUPPORTERS (Your Original Logic)
-    // ====================================================================
-    console.log(`Processing General Supporter Payment.`);
+    // ------------------------------------------------------------------
+    // PATH B: GRASSROOTS FOUNDATION SUPPORTERS 
+    // ------------------------------------------------------------------
+    console.log(`🌱 Processing General Supporter Payment (No Storefront Slug found).`);
     
-    // Extract Custom Fields
     const projectField = session.custom_fields?.find(f => f.key === 'project_name');
     const projectName = projectField?.text?.value || 'Organic';
     
@@ -113,8 +111,8 @@ export async function POST(req: Request) {
       f.label.custom?.toLowerCase().includes('display') || 
       f.label.custom?.toLowerCase().includes('anonymous')
     );
+    
     const customDisplayName = displayField?.text?.value;
-
     const customerEmail = session.customer_details?.email?.toLowerCase().trim();
     const customerName = session.customer_details?.name;
     const amountTotal = (session.amount_total || 0) / 100;
@@ -130,20 +128,17 @@ export async function POST(req: Request) {
     }
 
     if (customerEmail) {
-      // 1. Determine the New Tier
       let tier = isSubscription ? (amountTotal === 5 ? 'BUILDER' : 'BACKER') : 'BOOST';
       if (!isSubscription && projectField) {
         tier = 'CLIENT'; 
       }
 
-      // 2. Fetch existing user 
       const { data: existingUser } = await supabaseAdmin
         .from('supporters')
         .select('origin_tier')
         .eq('email', customerEmail)
         .single();
 
-      // 3. Upsert with Promotion Logic
       const { error } = await supabaseAdmin
         .from('supporters')
         .upsert({
@@ -161,6 +156,7 @@ export async function POST(req: Request) {
         console.error('Error logging to Supabase supporters:', error);
         return new NextResponse('Database Error', { status: 500 });
       }
+      console.log(`✅ Supporter ${customerEmail} logged successfully!`);
     }
   }
 
