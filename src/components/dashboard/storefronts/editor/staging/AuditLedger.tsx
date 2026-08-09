@@ -11,7 +11,8 @@ import {
   Check,
   CreditCard,
   ArrowUpCircle,
-  ReceiptText
+  ReceiptText,
+  Clock
 } from 'lucide-react';
 
 const CHECKPOINT_TITLES: Record<string, string> = {
@@ -71,55 +72,65 @@ export default function AuditLedger({ formData }: { formData: any }) {
     }
   };
 
-  // Helper to determine the visual styling of the ledger entry
-  const getLedgerConfig = (status: string) => {
+  // Clean, modern text colors based on the event status
+  const getLedgerTheme = (status: string) => {
     switch(status) {
       case 'APPROVED':
       case 'APPROVED_PENDING_BILLING':
-        return { bg: 'bg-emerald-500/10', border: 'border-emerald-500/20', text: 'text-emerald-400', icon: CheckCircle2, label: 'Sign-Off Complete' };
+        return { text: 'text-emerald-400', icon: CheckCircle2, label: 'Client Approved' };
       case 'RESOLVED':
-        return { bg: 'bg-zinc-800', border: 'border-zinc-700', text: 'text-zinc-400', icon: Check, label: 'Fixed & Resolved' };
+        return { text: 'text-zinc-500', icon: Check, label: 'Revisions Completed' };
       case 'CHANGES_REQUESTED':
-        return { bg: 'bg-amber-500/10', border: 'border-amber-500/20', text: 'text-amber-400', icon: AlertCircle, label: 'Tweaks Requested' };
+        return { text: 'text-amber-400', icon: AlertCircle, label: 'Revisions Requested' };
       case 'SUBSCRIPTION_STARTED':
-        return { bg: 'bg-cyan-500/10', border: 'border-cyan-500/30', text: 'text-cyan-400', icon: CreditCard, label: 'Hosting Activated ($5)' };
+        return { text: 'text-cyan-400', icon: CreditCard, label: 'Foundation Plan Activated' };
       case 'SUBSCRIPTION_UPGRADED':
-        return { bg: 'bg-fuchsia-500/10', border: 'border-fuchsia-500/30', text: 'text-fuchsia-400', icon: ArrowUpCircle, label: 'Tier Upgraded ($15)' };
+        return { text: 'text-fuchsia-400', icon: ArrowUpCircle, label: 'Plan Upgraded' };
       case 'PAYMENT_SUCCESS':
-        return { bg: 'bg-emerald-500/10', border: 'border-emerald-500/30', text: 'text-emerald-400', icon: ReceiptText, label: 'Payment Receipt' };
+        return { text: 'text-emerald-400', icon: ReceiptText, label: 'Payment Received' };
       default:
-        return { bg: 'bg-zinc-800', border: 'border-zinc-700', text: 'text-zinc-400', icon: AlertCircle, label: status };
+        return { text: 'text-zinc-400', icon: Clock, label: status };
     }
+  };
+
+  // Format date to a clean, readable format (e.g., "Aug 14, 2:30 PM")
+  const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleDateString('en-US', {
+      month: 'short',
+      day: 'numeric',
+      hour: 'numeric',
+      minute: '2-digit'
+    });
   };
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center h-64 border border-dashed border-zinc-800 rounded-2xl">
-        <Loader2 className="w-6 h-6 animate-spin text-cyan-500" />
+      <div className="bg-zinc-900/60 border border-zinc-800 rounded-xl flex items-center justify-center h-64">
+        <Loader2 className="w-6 h-6 animate-spin text-zinc-500" />
       </div>
     );
   }
 
   return (
-    <div className="bg-zinc-900/40 border border-zinc-800/60 rounded-3xl p-8 shadow-xl h-full flex flex-col">
-      <div className="flex items-center gap-4 border-b border-zinc-800/80 pb-6 mb-6">
-        <div className="p-4 rounded-2xl bg-cyan-500/10 border border-cyan-500/30 text-cyan-400">
-          <ClipboardCheck size={28} />
+    <div className="bg-zinc-900/60 border border-zinc-800 rounded-xl overflow-hidden shadow-2xl backdrop-blur-md flex flex-col max-h-150">
+      
+      {/* HEADER: Matches the Lifecycle Panel style */}
+      <div className="border-b border-zinc-800 bg-black/40 p-4 flex items-center gap-3 shrink-0">
+        <div className="p-1.5 bg-zinc-800 rounded-md border border-zinc-700 shadow-inner">
+           <ClipboardCheck size={14} className="text-zinc-400" />
         </div>
-        <div>
-          <h2 className="text-2xl font-black text-white uppercase tracking-tight">Telemetry Ledger</h2>
-          <p className="text-zinc-400 text-sm font-light mt-1">Lifecycle tracking: Audits, approvals, and financial receipts.</p>
-        </div>
+        <h3 className="text-[11px] font-black text-white uppercase tracking-[0.2em]">Project Timeline</h3>
       </div>
 
-      <div className="flex-1 overflow-y-auto space-y-4 pr-2 custom-scrollbar">
+      {/* BODY: Clean, readable log stream */}
+      <div className="p-5 flex-1 overflow-y-auto space-y-3 custom-scrollbar">
         {auditLogs.length === 0 ? (
-          <div className="text-center p-8 border border-zinc-800 bg-zinc-950/50 rounded-xl text-zinc-600 font-mono text-xs uppercase tracking-widest">
-            No telemetry logged yet.
+          <div className="text-center p-8 bg-black/30 border border-zinc-800/80 rounded-lg text-zinc-500 text-sm">
+            No events logged yet.
           </div>
         ) : (
           auditLogs.map((log) => {
-            const config = getLedgerConfig(log.status);
+            const theme = getLedgerTheme(log.status);
             const isFinancial = ['SUBSCRIPTION_STARTED', 'SUBSCRIPTION_UPGRADED', 'PAYMENT_SUCCESS'].includes(log.status);
             const isResolved = log.status === 'RESOLVED';
             
@@ -128,57 +139,54 @@ export default function AuditLedger({ formData }: { formData: any }) {
             const hasActionableNotes = Object.keys(clientNotes).length > 0;
 
             return (
-              <div key={log.id} className={`p-5 rounded-2xl border transition-all ${isResolved ? 'bg-zinc-950 border-zinc-800/50 opacity-60' : 'bg-zinc-900 border-zinc-700 shadow-lg'}`}>
-                <div className="flex justify-between items-start mb-4">
-                  <div>
-                    <span className={`px-2.5 py-1 rounded text-[10px] font-black uppercase tracking-widest flex items-center gap-1.5 w-fit ${config.bg} ${config.border} ${config.text}`}>
-                      <config.icon size={12} />
-                      {config.label}
+              <div 
+                key={log.id} 
+                className={`bg-black/50 border rounded-lg p-4 transition-all ${isResolved ? 'border-zinc-800/40 opacity-60' : 'border-zinc-800/80'}`}
+              >
+                {/* Event Title & Timestamp */}
+                <div className="flex justify-between items-start mb-3">
+                  <div className="flex items-center gap-2">
+                    <theme.icon size={16} className={theme.text} />
+                    <span className={`text-sm font-bold ${theme.text}`}>
+                      {theme.label}
                     </span>
-                    <p className="text-[10px] text-zinc-500 font-mono mt-2">
-                      {new Date(log.created_at).toLocaleString()}
-                    </p>
                   </div>
-                  
-                  {/* Action Button for Unresolved Audit Notes */}
-                  {log.status === 'CHANGES_REQUESTED' && (
-                    <button 
-                      onClick={() => handleResolve(log.id)}
-                      disabled={isResolving === log.id}
-                      className="flex items-center gap-2 bg-amber-500 hover:bg-amber-400 text-black px-4 py-2 rounded-lg text-[10px] font-black uppercase tracking-widest transition-colors disabled:opacity-50"
-                    >
-                      {isResolving === log.id ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Send className="w-3.5 h-3.5" />}
-                      Resolve & Ping
-                    </button>
-                  )}
+                  <span className="text-[11px] text-zinc-500 font-medium">
+                    {formatDate(log.created_at)}
+                  </span>
                 </div>
 
-                {/* Content Block: Financial Receipt OR Audit Notes */}
+                {/* Event Details */}
                 {isFinancial ? (
-                  <div className="mt-4 border-t border-zinc-800 pt-4">
-                    <div className="bg-black/40 border border-zinc-800/80 rounded-lg p-3">
-                      <span className="text-[9px] font-black text-zinc-500 uppercase tracking-widest block mb-1">
-                        System Payload
-                      </span>
-                      <p className="text-sm text-zinc-300 font-mono">
-                        {log.audit_notes || 'Transaction verified via Stripe.'}
-                      </p>
-                    </div>
-                  </div>
+                  <p className="text-sm text-zinc-300">
+                    {log.audit_notes || 'Transaction processed securely via Stripe.'}
+                  </p>
                 ) : hasActionableNotes ? (
-                  <div className="space-y-3 mt-4 border-t border-zinc-800 pt-4">
+                  <div className="space-y-2 mt-1">
                     {Object.entries(clientNotes).map(([stepIdx, text]) => (
-                      <div key={stepIdx} className="bg-black/40 border border-zinc-800/80 rounded-lg p-3">
-                        <span className="text-[9px] font-black text-cyan-400 uppercase tracking-widest block mb-1">
-                          Section: {CHECKPOINT_TITLES[stepIdx] || 'General'}
+                      <div key={stepIdx} className="bg-zinc-900/50 rounded-md p-3 border border-zinc-800/50">
+                        <span className="text-[10px] font-bold text-zinc-500 uppercase block mb-1">
+                          {CHECKPOINT_TITLES[stepIdx] || 'General Note'}
                         </span>
-                        <p className={`text-sm leading-relaxed ${isResolved ? 'text-zinc-500 line-through' : 'text-zinc-300'}`}>
-                          &ldquo;{String(text)}&rdquo;
+                        <p className={`text-sm ${isResolved ? 'text-zinc-500 line-through' : 'text-zinc-200'}`}>
+                          "{String(text)}"
                         </p>
                       </div>
                     ))}
                   </div>
                 ) : null}
+
+                {/* Resolve Button (Only shows if changes are requested) */}
+                {log.status === 'CHANGES_REQUESTED' && (
+                  <button 
+                    onClick={() => handleResolve(log.id)}
+                    disabled={isResolving === log.id}
+                    className="mt-4 w-full flex items-center justify-center gap-2 bg-zinc-900 hover:bg-zinc-800 text-amber-400 border border-amber-500/20 py-2.5 rounded-md text-[11px] font-bold uppercase tracking-wider transition-colors disabled:opacity-50"
+                  >
+                    {isResolving === log.id ? <Loader2 className="w-4 h-4 animate-spin" /> : <CheckCircle2 className="w-4 h-4" />}
+                    Mark Revisions as Complete
+                  </button>
+                )}
               </div>
             );
           })

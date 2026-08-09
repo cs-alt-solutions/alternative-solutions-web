@@ -1,4 +1,4 @@
-/* src/app/actions/storefront_applications.ts */
+// src/app/actions/storefront_applications.ts
 'use server';
 
 import { createClient } from '@/utils/supabase/server';
@@ -111,7 +111,6 @@ export async function submitStorefrontApplication(formData: FormData) {
   }
 }
 
-// THE FIX: Added `overrides` parameter to accept your "Pre-Dump" dropdown selections
 export async function updateApplicationStatus(id: string, newStatus: 'BUILDING' | 'CANCELED', overrides?: any) {
   const supabase = await createClient();
   
@@ -146,6 +145,28 @@ export async function updateApplicationStatus(id: string, newStatus: 'BUILDING' 
       const finalFlow = overrides?.flow || app.content_flow || 'classic';
       const finalPlan = overrides?.plan || app.selected_plan || 'foundation';
 
+      // THE NEW FIX: Establish the history of the project immediately
+      const initialTimeline = [
+        {
+          step: 'Application Received',
+          status: 'COMPLETED',
+          timestamp: app.created_at || new Date().toISOString(),
+          notes: 'Client submitted initial project intake.'
+        },
+        {
+          step: 'Blueprint Approved',
+          status: 'COMPLETED',
+          timestamp: new Date().toISOString(),
+          notes: 'Project scope approved and initialized by Admin.'
+        },
+        {
+          step: 'In Development',
+          status: 'IN_PROGRESS',
+          timestamp: new Date().toISOString(),
+          notes: 'Engineering team is building the storefront infrastructure.'
+        }
+      ];
+
       const { error: insertError } = await supabase.from('storefronts').insert([{
         business_name: app.business_name,
         contact_email: app.contact_email || app.applicant_email, 
@@ -168,10 +189,10 @@ export async function updateApplicationStatus(id: string, newStatus: 'BUILDING' 
         about_heading: 'About Us',
         about_bio: app.business_description || 'Dedicated to providing top-tier services and products to the community. Check out the gallery to see recent work!',
         social_url: app.existing_domain || '',
-        gallery_items: []
+        gallery_items: [],
+        timeline_events: initialTimeline // <--- INJECTED HISTORY
       }]);
       
-      // THE FIX: Throw an explicit error if the Storefront Engine injection fails so we know WHY
       if (insertError) throw new Error("Storefront Creation Blocked by Database: " + insertError.message);
 
       const { error: clientError } = await supabase.from('clients').insert([{
