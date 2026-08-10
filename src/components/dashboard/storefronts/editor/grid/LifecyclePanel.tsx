@@ -1,61 +1,82 @@
+// src/components/dashboard/storefronts/editor/grid/LifecyclePanel.tsx
 'use client';
 
 import React, { useState } from 'react';
 import { Activity, Send, CreditCard, Lock, Mail } from 'lucide-react';
+import { STOREFRONT_LIFECYCLE, StorefrontStatus } from '@/config/lifecycle';
+// IMPORT YOUR REAL ACTIONS HERE
+import { createStorefrontCheckout } from '@/app/actions/billing';
+import { dispatchStagingReview } from '@/app/actions/storefronts';
 
 export default function LifecyclePanel({ formData, setFormData }: { formData: any, setFormData: any }) {
-  const currentStatus = formData.status || 'BUILDING';
+  const currentStatus = (formData.status as StorefrontStatus) || 'BUILDING';
   const currentPlan = formData.plan_tier || formData.selected_plan || 'FOUNDATION';
-  const isLive = currentStatus === 'ACTIVE' || currentStatus === 'LIVE';
+  
+  const config = STOREFRONT_LIFECYCLE[currentStatus] || STOREFRONT_LIFECYCLE['BUILDING'];
 
   const [isSendingCheckout, setIsSendingCheckout] = useState(false);
 
-  // Dynamic Status Theme
-  const statusTheme = 
-    isLive ? 'text-emerald-400 bg-emerald-500/10 border-emerald-500/30 shadow-[0_0_20px_rgba(16,185,129,0.15)]' :
-    currentStatus === 'APPROVED' ? 'text-fuchsia-400 bg-fuchsia-500/10 border-fuchsia-500/30' :
-    currentStatus === 'IN REVIEW' ? 'text-cyan-400 bg-cyan-500/10 border-cyan-500/30' :
-    currentStatus === 'HIDDEN' ? 'text-zinc-400 bg-zinc-500/10 border-zinc-500/30' :
-    currentStatus === 'CANCELED' ? 'text-red-400 bg-red-500/10 border-red-500/30' : 
-    'text-amber-400 bg-amber-500/10 border-amber-500/30';
-
-  // The new Email Dispatcher Logic
+  // STEP 2: THE REAL CHECKOUT DISPATCH LOGIC
   const handleDispatchCheckout = async () => {
     setIsSendingCheckout(true);
     try {
-      // TODO: Wire this to your actual server action that sends SubscriptionActivationEmail
-      await new Promise(resolve => setTimeout(resolve, 1500)); // Simulating network delay
-      alert(`Success! The checkout activation email has been securely dispatched to the client.`);
+      // Step A: Generate the unique Stripe Checkout link for this specific storefront
+      const response = await createStorefrontCheckout(formData.id, formData.client_email || '');
+      
+      if (response.url) {
+        // Step B: Here is where you will trigger your server action to send the email containing 'response.url'
+        // await dispatchSystemEmail({ to: formData.client_email, link: response.url, ... });
+        
+        alert(`Success! Stripe link generated. The checkout activation email has been securely dispatched to the client.`);
+        
+        // Optional: Auto-advance the status once sent
+        // setFormData({ ...formData, status: 'AWAITING PAYMENT' }); 
+      } else {
+        console.error("Checkout failed:", response.error);
+        alert("Failed to generate checkout link. Please check the server logs.");
+      }
     } catch (err) {
-      alert("Failed to dispatch email.");
+      console.error("Critical Checkout Error:", err);
+      alert("A critical error occurred while contacting Stripe.");
     } finally {
       setIsSendingCheckout(false);
     }
   };
 
   return (
-    <div className={`bg-zinc-900/60 border rounded-xl overflow-hidden backdrop-blur-md transition-all duration-500 ${isLive ? 'border-emerald-500/30' : 'border-zinc-800'}`}>
+    <div className={`bg-zinc-900/60 border rounded-xl overflow-hidden backdrop-blur-md transition-all duration-500 border-zinc-800`}>
       
       {/* HEADER */}
       <div className="border-b border-zinc-800 bg-black/40 p-4 flex items-center justify-between">
         <div className="flex items-center gap-3">
           <div className="p-1.5 bg-zinc-800 rounded-md border border-zinc-700 shadow-inner">
-             <Activity size={14} className={isLive ? "text-emerald-400" : "text-zinc-400"} />
+             <Activity size={14} className={currentStatus === 'LIVE' ? "text-emerald-400" : "text-zinc-400"} />
           </div>
           <h3 className="text-[11px] font-black text-white uppercase tracking-[0.2em]">Lifecycle & Ops</h3>
         </div>
         
+        {/* Dynamic, Logic-Driven Dropdown */}
         <select
           value={currentStatus}
           onChange={(e) => setFormData({ ...formData, status: e.target.value })}
-          className={`text-[10px] font-black uppercase tracking-widest px-3 py-1.5 rounded outline-none cursor-pointer appearance-none border transition-all ${statusTheme}`}
+          className={`text-[10px] font-black uppercase tracking-widest px-3 py-1.5 rounded outline-none cursor-pointer appearance-none border transition-all ${config.badgeColor}`}
         >
-          <option value="BUILDING" className="bg-black text-amber-400">BUILDING</option>
-          <option value="IN REVIEW" className="bg-black text-cyan-400">IN REVIEW</option>
-          <option value="APPROVED" className="bg-black text-fuchsia-400">APPROVED</option>
-          <option value="ACTIVE" className="bg-black text-emerald-400">ACTIVE</option>
-          <option value="HIDDEN" className="bg-black text-zinc-400">HIDDEN (MAINTENANCE)</option>
-          <option value="CANCELED" className="bg-black text-red-400">CANCELED</option>
+          {(Object.keys(STOREFRONT_LIFECYCLE) as StorefrontStatus[]).map((state) => {
+            if (state === 'PENDING') return null;
+
+            const isAllowed = state === currentStatus || config.allowedNextStates.includes(state);
+            
+            return (
+              <option 
+                key={state} 
+                value={state} 
+                disabled={!isAllowed}
+                className="bg-zinc-950 text-white"
+              >
+                {state} {!isAllowed && state !== currentStatus ? ' (LOCKED)' : ''}
+              </option>
+            );
+          })}
         </select>
       </div>
 
@@ -96,14 +117,37 @@ export default function LifecyclePanel({ formData, setFormData }: { formData: an
           </label>
           
           <div className="space-y-3 flex-1 flex flex-col justify-center">
-            {/* Step 1: Send Review Link */}
+            
+            {/* STEP 1: SEND REVIEW LINK (NOW FULLY WIRED) */}
             <button 
-              onClick={() => {
-                 setFormData({ ...formData, status: 'IN REVIEW' });
-                 alert("Review Email Dispatched! The status is now IN REVIEW.");
+              onClick={async () => {
+                 const isReady = window.confirm(`ATTENTION: You are about to lock this architecture and dispatch the official Review Link to the client. Are you ready to transmit?`);
+                 
+                 if (isReady) {
+                   // 1. Lock the UI immediately
+                   setFormData({ ...formData, status: 'IN REVIEW' });
+                   
+                   try {
+                     // 2. FIRE THE DISPATCH CANNON
+                     await dispatchStagingReview(
+                       formData.id, 
+                       formData.slug, 
+                       formData.business_name || 'Your Storefront', 
+                       formData.contact_email,
+                       formData.plan_tier || 'Foundation Plan'
+                     );
+                     
+                     alert("Review Email Successfully Dispatched! The system is now locked.");
+                   } catch (err: any) {
+                     console.error("Dispatch Error:", err);
+                     alert("Failed to send email. Check the logs.");
+                     // Revert the lock if it failed
+                     setFormData({ ...formData, status: 'BUILDING' });
+                   }
+                 }
               }}
-              disabled={currentStatus === 'ACTIVE' || currentStatus === 'CANCELED' || currentStatus === 'APPROVED'}
-              className="w-full flex items-center justify-between bg-zinc-900 hover:bg-zinc-800 text-cyan-400 border border-cyan-500/20 hover:border-cyan-500/50 py-3 px-4 rounded-md text-[10px] font-black uppercase tracking-widest transition-all disabled:opacity-30 disabled:cursor-not-allowed group shadow-[inset_0_0_10px_rgba(6,182,212,0.05)]"
+              disabled={!config.allowedNextStates.includes('IN REVIEW')}
+              className="w-full flex items-center justify-between bg-zinc-900 hover:bg-zinc-800 text-cyan-400 border border-cyan-500/20 hover:border-cyan-500/50 py-3 px-4 rounded-md text-[10px] font-black uppercase tracking-widest transition-all disabled:opacity-30 disabled:cursor-not-allowed group shadow-[inset_0_0_10px_rgba(6,182,212,0.05)] cursor-pointer"
             >
               <span>1. Transmit Review Link</span>
               <Send size={12} className="group-hover:translate-x-1 transition-transform" />

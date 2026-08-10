@@ -20,7 +20,9 @@ import {
   Save,
   ArrowLeft,
   PanelLeftClose,
-  PanelLeftOpen
+  PanelLeftOpen,
+  Lock,           // <-- Added Lock import
+  ShieldAlert
 } from 'lucide-react';
 
 import CoreTab from '@/components/dashboard/storefronts/editor/CoreTab';
@@ -196,7 +198,8 @@ export default function TenantCommandHub() {
       </nav>
 
       {/* DYNAMIC WORKSPACE */}
-      <div className="flex-1 flex overflow-hidden w-full">
+      {/* 👇 Added 'relative' class below so the absolute lock shield perfectly bounds to this space */}
+      <div className="flex-1 flex overflow-hidden w-full relative">
         
         {/* TAB 1: THE CANVAS */}
         {activeTab === 'canvas' && (
@@ -219,7 +222,6 @@ export default function TenantCommandHub() {
                 </div>
 
                 <div className="flex-1 overflow-y-auto custom-scrollbar p-4">
-                  {/* THE FIX: Added onReload={reloadCanvas} to ALL tabs so they can trigger the iframe safely */}
                   {editorTab === 'content' && <CoreTab formData={formData} setFormData={setFormData} onReload={reloadCanvas} />}
                   {editorTab === 'design' && (
                     <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500 pb-12 p-2 pt-6 relative">
@@ -282,6 +284,41 @@ export default function TenantCommandHub() {
         {/* TAB 3: THE GRID */}
         {activeTab === 'grid' && (
            <GridTab formData={formData} setFormData={setFormData} onTerminate={handleStorefrontTermination} />
+        )}
+
+        {/* 🚨 THE GLOBAL SYSTEM LOCK SHIELD 🚨 */}
+        {/* Placed at the very end of the DYNAMIC WORKSPACE so it perfectly overlays the tabs below the header */}
+        
+{['IN REVIEW', 'APPROVED', 'LIVE'].includes(formData.status) && activeTab !== 'grid' && (
+          <div className="absolute inset-0 z-100 bg-black/60 backdrop-blur-md flex flex-col items-center justify-center border border-cyan-500/20 shadow-[inset_0_0_100px_rgba(6,182,212,0.05)] transition-all duration-500 animate-in fade-in zoom-in-95">
+            
+            <div className="bg-zinc-950/90 border border-zinc-800 p-8 rounded-2xl flex flex-col items-center max-w-md text-center shadow-2xl">
+              <div className="p-4 bg-cyan-500/10 rounded-full mb-4 border border-cyan-500/20">
+                <Lock size={32} className="text-cyan-400 animate-pulse" />
+              </div>
+              
+              <h2 className="text-lg font-black text-white tracking-[0.2em] uppercase mb-2">
+                System Locked
+              </h2>
+              
+              <div className="text-[10px] font-mono font-bold text-cyan-400 bg-cyan-500/10 px-3 py-1 rounded border border-cyan-500/20 mb-4 tracking-widest uppercase">
+                STATUS: {formData.status}
+              </div>
+              
+              <p className="text-[11px] text-zinc-400 leading-relaxed font-medium mb-8">
+                The architecture is currently secured for client review or active deployment. The Canvas and all Editor configurations are strictly read-only to prevent accidental data contamination.
+              </p>
+              
+              {/* OVERRIDE BUTTON */}
+              <button 
+                onClick={() => setFormData({ ...formData, status: 'BUILDING' })}
+                className="w-full flex items-center justify-center gap-2 bg-zinc-900 hover:bg-zinc-800 text-zinc-300 border border-zinc-700 hover:border-cyan-500 py-3 px-4 rounded-md text-[10px] font-black uppercase tracking-widest transition-all group cursor-pointer"
+              >
+                <ShieldAlert size={12} className="group-hover:text-cyan-400 transition-colors" />
+                Override & Return to Building
+              </button>
+            </div>
+          </div>
         )}
 
       </div>

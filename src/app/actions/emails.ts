@@ -10,6 +10,7 @@ import StagingAuditReceiptEmail from '@/components/emails/StagingAuditReceiptEma
 import StorefrontConfirmationEmail from '@/components/emails/StorefrontConfirmationEmail';
 import AdminIntakeEmail from '@/components/emails/AdminIntakeEmail';
 import PortalInviteEmail from '@/components/emails/PortalInviteEmail';
+import SubscriptionActivationEmail from '@/components/emails/SubscriptionActivationEmail'; // <-- IMPORTED!
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 
@@ -70,5 +71,30 @@ export async function dispatchSystemEmail({ to, subject, type, data }: DispatchP
   } catch (err: any) {
     console.error('Critical Email Dispatch Failure:', err);
     return { success: false, error: err.message };
+  }
+}
+
+// 🚨 THE NEW CHECKOUT TRIGGER FUNCTION 🚨
+export async function sendCheckoutEmail(email: string, clientName: string, projectName: string, checkoutUrl: string) {
+  try {
+    const { data, error } = await resend.emails.send({
+      from: SENDER_IDENTITY,
+      to: email,
+      subject: 'Action Required: Activate Your Storefront',
+      // Using React.createElement for Next.js compiler safety!
+      react: React.createElement(SubscriptionActivationEmail, {
+        clientName,
+        projectName,
+        checkoutUrl,
+        planName: "Foundation Plan",
+        price: "$5.00/mo"
+      })
+    });
+
+    if (error) throw error;
+    return { success: true };
+  } catch (error: any) {
+    console.error("Failed to dispatch checkout email:", error);
+    return { success: false, error: error.message };
   }
 }

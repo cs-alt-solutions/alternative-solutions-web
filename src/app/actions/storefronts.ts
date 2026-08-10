@@ -247,7 +247,8 @@ export async function dispatchStagingReview(id: string, slug: string, businessNa
       name: businessName,
       businessName: businessName,
       previewUrl: previewUrl,
-      planTier: planTier || 'Standard Starter'
+      planTier: planTier || 'Foundation Plan', // Defaulting to your real plan name
+      storefrontId: id // Ensure your StagingReviewEmail template receives this!
     }
   });
 
