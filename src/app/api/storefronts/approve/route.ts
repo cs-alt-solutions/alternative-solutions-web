@@ -1,43 +1,68 @@
-'use server';
+// src/app/api/storefronts/approve/route.ts
+import { NextRequest, NextResponse } from 'next/server';
+import { createClient } from '@/utils/supabase/server';
+import { createStorefrontCheckout } from '@/app/actions/billing';
 
-import Stripe from 'stripe';
+// 🚨 CRITICAL: Must be 'export async function GET', absolutely NO 'default' keyword!
+export async function GET(request: NextRequest) {
+  const { searchParams } = new URL(request.url);
+  const storefrontIdentifier = searchParams.get('id');
 
-// Initialize the Stripe engine securely on the server
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY as string, {
-  apiVersion: '2026-02-25.clover', // Updated to match your installed SDK version
-});
+  if (!storefrontIdentifier) {
+    return NextResponse.json({ error: 'Missing storefront identifier' }, { status: 400 });
+  }
 
-export async function createStorefrontCheckout(storefrontId: string, clientEmail: string) {
   try {
-    const session = await stripe.checkout.sessions.create({
-      payment_method_types: ['card'],
-      mode: 'subscription',
-      customer_email: clientEmail, // Pre-fills the form to reduce friction
-      line_items: [
-        {
-          // We will put your actual $5/mo Stripe Price ID in your .env file
-          price: process.env.STRIPE_PRICE_ID_FOUNDATION, 
-          quantity: 1,
-        },
-      ],
-      // 🚨 THE HANDSHAKE: This is the most important part of the architecture 🚨
-      // By nesting the metadata inside 'subscription_data', Stripe will permanently 
-      // stamp this specific Storefront ID onto the recurring subscription object.
-      subscription_data: {
-        metadata: {
-          storefront_id: storefrontId, 
-        },
+    const supabase = await createClient();
+
+    // 1. Bulletproof UUID vs Slug Check
+    const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(storefrontIdentifier);
+    const queryColumn = isUUID ? 'id' : 'slug';
+
+    // 2. Fetch the storefront to get client details
+    const { data: store, error: fetchError } = await supabase
+      .from('storefronts')
+      .select('*')
+      .eq(queryColumn, storefrontIdentifier)
+      .single();
+
+    if (fetchError || !store) throw new Error("Storefront not found in database");
+
+    // 3. Change the status to APPROVED
+    await supabase
+      .from('storefronts')
+      .update({ status: 'APPROVED' })
+      .eq('id', store.id);
+
+    // 4. Generate the Stripe Checkout Link
+    const checkoutResponse = await createStorefrontCheckout(store.id, store.contact_email || '');
+    
+    if (checkoutResponse.url) {
+       // 5. EMAIL SILENCED: We bypass Resend here so they don't get redundant emails
+       // 6. BOOM: Bulletproof standard browser redirect to Stripe
+       return new Response(null, {
+         status: 302,
+         headers: {
+           Location: checkoutResponse.url,
+         },
+       });
+    } else {
+       throw new Error("Failed to generate Stripe link");
+    }
+
+  } catch (error) {
+    console.error("Approval Automation Failed:", error);
+    
+    // If something fails, safely route them back to your main site with an error flag
+    const fallbackUrl = process.env.NODE_ENV === 'development' 
+      ? 'http://localhost:3000/dashboard?error=approval_failed'
+      : 'https://alternativesolutions.io?error=approval_failed';
+      
+    return new Response(null, {
+      status: 302,
+      headers: {
+        Location: fallbackUrl,
       },
-      // Where they go after they pay (or if they back out)
-      success_url: `${process.env.NEXT_PUBLIC_SITE_URL}/dashboard/storefronts?payment=success`,
-      cancel_url: `${process.env.NEXT_PUBLIC_SITE_URL}/dashboard/storefronts?payment=canceled`,
     });
-
-    // Return the secure Stripe URL so the frontend can route the user there
-    return { url: session.url };
-
-  } catch (error: any) {
-    console.error('STRIPE CHECKOUT ERROR:', error);
-    return { error: error.message };
   }
 }
