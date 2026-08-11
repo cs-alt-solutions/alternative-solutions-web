@@ -1,6 +1,6 @@
 // src/components/emails/StagingReviewEmail.tsx
 import React from 'react';
-import { Section, Text, Heading, Hr, Button, Link } from '@react-email/components';
+import { Section, Text, Heading, Hr, Button } from '@react-email/components';
 import BaseEmailLayout from '@/components/emails/BaseEmailLayout';
 
 export interface StagingReviewEmailProps {
@@ -8,20 +8,15 @@ export interface StagingReviewEmailProps {
   businessName: string;
   previewUrl: string;
   planTier?: string;
-  storefrontId: string; // <-- Added this to generate the unique approval link
+  storefrontId?: string; // Kept to prevent TS errors, but no longer used for buttons
 }
 
 export default function StagingReviewEmail({
   name = 'Founder',
   businessName = 'Your Empire',
   previewUrl = 'https://alternativesolutions.io',
-  planTier = 'Foundation Plan',
-  storefrontId = 'TEST_ID'
+  planTier = 'Foundation Plan'
 }: StagingReviewEmailProps) {
-
-  // The Magic Automation Links
-  const approveUrl = `https://alternativesolutions.io/api/storefronts/approve?id=${storefrontId}`;
-  const tweaksUrl = `mailto:hello@alternativesolutions.io?subject=Revisions Requested: ${businessName}`;
 
   return (
     <BaseEmailLayout>
@@ -43,10 +38,10 @@ export default function StagingReviewEmail({
         Hey {name}, we did it! I have everything built, wired up, and deployed to a private staging link just for you. Before we lock in your <strong className="text-white font-medium">{planTier}</strong> hosting and push this live to the world, I need you to take it for a spin.
       </Text>
 
-      {/* STEP 1: PREVIEW CALLOUT */}
+      {/* SINGLE CALL TO ACTION */}
       <Section className="bg-zinc-950/60 border border-zinc-800/80 rounded-2xl p-6 mb-8 text-center shadow-sm">
         <Text className="text-white font-bold text-base m-0 mb-2">
-          Step 1: Test Your Site
+          Access Your Staging Environment
         </Text>
         <Text className="text-zinc-400 text-sm m-0 mb-6 font-light max-w-md mx-auto">
           Click below to test your layout on desktop and mobile. Read the text, click the links, and make sure the overall vibe hits exactly how you envisioned.
@@ -59,34 +54,26 @@ export default function StagingReviewEmail({
         </Button>
       </Section>
 
-      {/* STEP 2: THE DECISION MATRIX */}
+      {/* THE WIDGET INSTRUCTIONS */}
       <Section className="bg-zinc-900/30 border-l-4 border-l-emerald-400 p-6 rounded-r-xl mb-8">
         <Text className="text-white font-bold text-sm m-0 mb-4">
-          Step 2: The Verdict
+          How Our Review Stage Works
         </Text>
-        <Text className="text-zinc-300 text-xs leading-relaxed m-0 mb-6 font-light">
-          Once you have reviewed the site, click one of the options below. If you approve, our system will instantly finalize your setup and send your activation link.
+        <Text className="text-zinc-300 text-xs leading-relaxed m-0 mb-5 font-light">
+          I built an interactive review widget right into the bottom corner of your staging site to make this super easy:
         </Text>
         
-        {/* Approve Button (Hits your API to automate everything) */}
-        <Button
-          href={approveUrl}
-          className="bg-emerald-500/10 border border-emerald-500/50 text-emerald-400 font-bold text-[11px] uppercase tracking-widest px-6 py-3.5 rounded-lg no-underline block w-full text-center mb-3"
-        >
-          ✔ YES, I APPROVE — LAUNCH IT
-        </Button>
-
-        {/* Reject/Tweaks Button (Opens an email draft directly to you) */}
-        <Button
-          href={tweaksUrl}
-          className="bg-zinc-900 border border-zinc-700 text-zinc-300 font-bold text-[11px] uppercase tracking-widest px-6 py-3.5 rounded-lg no-underline block w-full text-center"
-        >
-          ✖ NO, I HAVE TWEAKS
-        </Button>
+        <Text className="text-zinc-400 text-xs leading-relaxed m-0 mb-4 font-light">
+          <strong className="text-emerald-400 font-semibold">✔ If you love it:</strong> Check off the verification boxes in the widget and hit <strong className="text-zinc-200 font-medium">Approve!</strong> That logs your sign-off and instantly generates your activation link so we can flip your domain live.
+        </Text>
         
-        <div className="bg-black/50 p-3.5 rounded-lg border border-zinc-800/80 mt-6">
-          <Text className="text-zinc-500 text-[10px] leading-relaxed m-0 font-mono uppercase tracking-widest">
-            <strong>Note on Revisions:</strong> We do focused, purposeful reviews. If you need tweaks, please list all of them in a single email so I can execute them in one clean, lightning-fast pass.
+        <Text className="text-zinc-400 text-xs leading-relaxed m-0 mb-5 font-light">
+          <strong className="text-rose-400 font-semibold">✖ If you want tweaks:</strong> This is your chance! If a headline needs adjusting or an image doesn't hit right, type your notes directly into the widget and hit submit.
+        </Text>
+        
+        <div className="bg-black/50 p-3.5 rounded-lg border border-zinc-800/80">
+          <Text className="text-zinc-400 text-[10px] leading-relaxed m-0 font-mono uppercase tracking-widest">
+            <strong>⚡ Note on Revisions:</strong> We do focused, purposeful reviews. Please list all of your adjustments directly in the widget so I can execute them in one clean, lightning-fast pass.
           </Text>
         </div>
       </Section>

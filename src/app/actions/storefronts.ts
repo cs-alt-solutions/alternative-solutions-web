@@ -236,8 +236,8 @@ export async function dispatchStagingReview(id: string, slug: string, businessNa
     throw new Error(`Database update failed: ${dbError.message}`);
   }
 
-  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || process.env.NEXT_PUBLIC_BASE_URL || 'https://alternativesolutions.io';
-  const previewUrl = `${baseUrl}/${slug}`;
+  // Hardcoded to strictly point to the Template Engine subdomain
+  const previewUrl = `https://storefronts.alternativesolutions.io/${slug}`;
 
   const emailResult = await dispatchSystemEmail({
     to: contactEmail,

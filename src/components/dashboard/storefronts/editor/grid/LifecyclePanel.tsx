@@ -2,37 +2,30 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Activity, Send, CreditCard, Lock, Mail } from 'lucide-react';
+import { Activity, Send, CreditCard, Lock, Mail, CheckCircle2, AlertTriangle, RefreshCw } from 'lucide-react';
 import { STOREFRONT_LIFECYCLE, StorefrontStatus } from '@/config/lifecycle';
-// IMPORT YOUR REAL ACTIONS HERE
 import { createStorefrontCheckout } from '@/app/actions/billing';
 import { dispatchStagingReview } from '@/app/actions/storefronts';
 
 export default function LifecyclePanel({ formData, setFormData }: { formData: any, setFormData: any }) {
-  const currentStatus = (formData.status as StorefrontStatus) || 'BUILDING';
+  // FIX 1: Treat status as a string so TS accepts our new 'CHANGES_REQUESTED' state
+  const currentStatus = (formData.status as string) || 'BUILDING';
   const currentPlan = formData.plan_tier || formData.selected_plan || 'FOUNDATION';
-  
-  const config = STOREFRONT_LIFECYCLE[currentStatus] || STOREFRONT_LIFECYCLE['BUILDING'];
-
   const [isSendingCheckout, setIsSendingCheckout] = useState(false);
+  const [isSendingReview, setIsSendingReview] = useState(false);
 
-  // STEP 2: THE REAL CHECKOUT DISPATCH LOGIC
+  // Safe config fallback using type casting
+  const config = STOREFRONT_LIFECYCLE[currentStatus as StorefrontStatus] || STOREFRONT_LIFECYCLE['BUILDING'];
+
+  // --- AUTOMATION ACTIONS ---
+
   const handleDispatchCheckout = async () => {
     setIsSendingCheckout(true);
     try {
-      // Step A: Generate the unique Stripe Checkout link for this specific storefront
-      const response = await createStorefrontCheckout(formData.id, formData.client_email || '');
-      
+      const response = await createStorefrontCheckout(formData.id, formData.contact_email || '');
       if (response.url) {
-        // Step B: Here is where you will trigger your server action to send the email containing 'response.url'
-        // await dispatchSystemEmail({ to: formData.client_email, link: response.url, ... });
-        
         alert(`Success! Stripe link generated. The checkout activation email has been securely dispatched to the client.`);
-        
-        // Optional: Auto-advance the status once sent
-        // setFormData({ ...formData, status: 'AWAITING PAYMENT' }); 
       } else {
-        console.error("Checkout failed:", response.error);
         alert("Failed to generate checkout link. Please check the server logs.");
       }
     } catch (err) {
@@ -43,132 +36,167 @@ export default function LifecyclePanel({ formData, setFormData }: { formData: an
     }
   };
 
+  const handleTransmitReview = async (isResend = false) => {
+    const msg = isResend 
+      ? `Resend the Staging Review email to ${formData.contact_email}?`
+      : `ATTENTION: You are about to lock this architecture and dispatch the official Review Link to the client. Are you ready to transmit?`;
+
+    const isReady = window.confirm(msg);
+    
+    if (isReady) {
+      setIsSendingReview(true);
+      // Only update status if it's the first time sending
+      if (!isResend) {
+         setFormData({ ...formData, status: 'IN REVIEW' });
+      }
+      
+      try {
+        await dispatchStagingReview(
+          formData.id, 
+          formData.slug, 
+          formData.business_name || 'Your Storefront', 
+          formData.contact_email,
+          formData.plan_tier || 'Foundation Plan'
+        );
+        alert("Review Email Successfully Dispatched!");
+      } catch (err: any) {
+        console.error("Dispatch Error:", err);
+        alert("Failed to send email. Check the logs.");
+        if (!isResend) setFormData({ ...formData, status: 'BUILDING' });
+      } finally {
+        setIsSendingReview(false);
+      }
+    }
+  };
+
+  // --- PIPELINE DEFINITION ---
+  const pipelineSteps = [
+    { id: 'BUILDING', label: 'Architecture & Build' },
+    { id: 'IN REVIEW', label: 'Client Verification' },
+    { id: 'APPROVED', label: 'Financial Handshake' },
+    { id: 'LIVE', label: 'Live Edge Network' }
+  ];
+
+  // Treat CHANGES_REQUESTED as part of IN REVIEW for the pipeline visual
+  const visualStatus = currentStatus === 'CHANGES_REQUESTED' ? 'IN REVIEW' : currentStatus;
+  const currentIndex = pipelineSteps.findIndex(s => s.id === visualStatus);
+
   return (
-    <div className={`bg-zinc-900/60 border rounded-xl overflow-hidden backdrop-blur-md transition-all duration-500 border-zinc-800`}>
+    <div className="bg-zinc-900/60 border rounded-xl overflow-hidden backdrop-blur-md transition-all duration-500 border-zinc-800 flex flex-col">
       
       {/* HEADER */}
-      <div className="border-b border-zinc-800 bg-black/40 p-4 flex items-center justify-between">
+      <div className="border-b border-zinc-800 bg-black/40 p-4 flex items-center justify-between shrink-0">
         <div className="flex items-center gap-3">
           <div className="p-1.5 bg-zinc-800 rounded-md border border-zinc-700 shadow-inner">
-             <Activity size={14} className={currentStatus === 'LIVE' ? "text-emerald-400" : "text-zinc-400"} />
+             <Activity size={14} className={currentStatus === 'LIVE' ? "text-emerald-400" : "text-cyan-400"} />
           </div>
-          <h3 className="text-[11px] font-black text-white uppercase tracking-[0.2em]">Lifecycle & Ops</h3>
+          <div>
+            <h3 className="text-[11px] font-black text-white uppercase tracking-[0.2em]">Deployment Pipeline</h3>
+          </div>
         </div>
         
-        {/* Dynamic, Logic-Driven Dropdown */}
-        <select
-          value={currentStatus}
-          onChange={(e) => setFormData({ ...formData, status: e.target.value })}
-          className={`text-[10px] font-black uppercase tracking-widest px-3 py-1.5 rounded outline-none cursor-pointer appearance-none border transition-all ${config.badgeColor}`}
-        >
-          {(Object.keys(STOREFRONT_LIFECYCLE) as StorefrontStatus[]).map((state) => {
-            if (state === 'PENDING') return null;
-
-            const isAllowed = state === currentStatus || config.allowedNextStates.includes(state);
-            
-            return (
-              <option 
-                key={state} 
-                value={state} 
-                disabled={!isAllowed}
-                className="bg-zinc-950 text-white"
-              >
-                {state} {!isAllowed && state !== currentStatus ? ' (LOCKED)' : ''}
-              </option>
-            );
-          })}
-        </select>
+        <div className="flex items-center gap-2 bg-zinc-950 border border-zinc-800 px-3 py-1.5 rounded-full">
+          <CreditCard size={10} className="text-zinc-500" />
+          <span className="text-[9px] font-black text-zinc-400 uppercase tracking-widest">{currentPlan} TIER</span>
+        </div>
       </div>
 
-      <div className="p-5 grid grid-cols-1 lg:grid-cols-2 gap-4">
-        
-        {/* Module 1: Locked Financial Target */}
-        <div className="bg-black/50 border border-zinc-800/80 rounded-lg p-4 flex flex-col relative overflow-hidden">
-          <div className="flex items-center justify-between mb-4">
-            <div className="flex items-center gap-2">
-              <CreditCard size={12} className="text-zinc-500" />
-              <label className="text-[9px] font-bold text-zinc-500 uppercase tracking-widest">Target Plan Tier</label>
-            </div>
-            <span className="text-[10px] font-mono font-bold text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded border border-emerald-500/20">
-              $5.00/mo
-            </span>
-          </div>
-
-          <div className="space-y-2 flex-1 flex flex-col justify-center">
-            <select
-              value={currentPlan}
-              onChange={(e) => setFormData({ ...formData, plan_tier: e.target.value })}
-              className="w-full bg-zinc-900 border border-zinc-700 rounded-md px-3 py-2 text-xs text-white font-bold uppercase tracking-wider focus:outline-none focus:border-cyan-500 transition-colors appearance-none cursor-pointer"
-            >
-              <option value="FOUNDATION">Foundation ($5/mo)</option>
-              <option value="PROFESSIONAL" disabled>Professional ($15/mo) - Locked</option>
-              <option value="CUSTOM" disabled>High-Ticket Custom - Locked</option>
-            </select>
-            <p className="text-[10px] text-zinc-500 leading-relaxed font-medium mt-2">
-              Only the Foundation plan is actively mapped to the Stripe routing logic at this time. Proceed to Dispatch Controls.
-            </p>
-          </div>
-        </div>
-
-        {/* Module 2: Sequential Dispatch Actions */}
-        <div className="bg-black/50 border border-zinc-800/80 rounded-lg p-4 flex flex-col">
-          <label className="flex items-center gap-2 text-[9px] font-bold text-zinc-500 uppercase tracking-widest mb-4">
-             <Send size={12} className="text-zinc-500" /> Dispatch Controls
-          </label>
+      {/* PIPELINE BODY */}
+      <div className="p-6 flex-1 flex flex-col">
+        {/* FIX 2: Updated before:bg-gradient-to-b to before:bg-linear-to-b for Tailwind v4 */}
+        <div className="space-y-6 relative before:absolute before:inset-0 before:ml-3.5 before:-translate-x-px md:before:mx-auto md:before:translate-x-0 before:h-full before:w-0.5 before:bg-linear-to-b before:from-transparent before:via-zinc-800 before:to-transparent">
           
-          <div className="space-y-3 flex-1 flex flex-col justify-center">
-            
-            {/* STEP 1: SEND REVIEW LINK (NOW FULLY WIRED) */}
-            <button 
-              onClick={async () => {
-                 const isReady = window.confirm(`ATTENTION: You are about to lock this architecture and dispatch the official Review Link to the client. Are you ready to transmit?`);
-                 
-                 if (isReady) {
-                   // 1. Lock the UI immediately
-                   setFormData({ ...formData, status: 'IN REVIEW' });
-                   
-                   try {
-                     // 2. FIRE THE DISPATCH CANNON
-                     await dispatchStagingReview(
-                       formData.id, 
-                       formData.slug, 
-                       formData.business_name || 'Your Storefront', 
-                       formData.contact_email,
-                       formData.plan_tier || 'Foundation Plan'
-                     );
-                     
-                     alert("Review Email Successfully Dispatched! The system is now locked.");
-                   } catch (err: any) {
-                     console.error("Dispatch Error:", err);
-                     alert("Failed to send email. Check the logs.");
-                     // Revert the lock if it failed
-                     setFormData({ ...formData, status: 'BUILDING' });
-                   }
-                 }
-              }}
-              disabled={!config.allowedNextStates.includes('IN REVIEW')}
-              className="w-full flex items-center justify-between bg-zinc-900 hover:bg-zinc-800 text-cyan-400 border border-cyan-500/20 hover:border-cyan-500/50 py-3 px-4 rounded-md text-[10px] font-black uppercase tracking-widest transition-all disabled:opacity-30 disabled:cursor-not-allowed group shadow-[inset_0_0_10px_rgba(6,182,212,0.05)] cursor-pointer"
-            >
-              <span>1. Transmit Review Link</span>
-              <Send size={12} className="group-hover:translate-x-1 transition-transform" />
-            </button>
-            
-            {/* Step 2: Send Checkout Email */}
-            <button
-              onClick={handleDispatchCheckout}
-              disabled={currentStatus !== 'APPROVED'}
-              className={`w-full flex items-center justify-between py-3 px-4 rounded-md text-[10px] font-black uppercase tracking-widest transition-all ${
-                currentStatus === 'APPROVED' 
-                  ? 'bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 cursor-pointer shadow-[inset_0_0_10px_rgba(16,185,129,0.1)]' 
-                  : 'bg-zinc-900/50 border border-zinc-800 text-zinc-600 cursor-not-allowed'
-              }`}
-            >
-              <span>{isSendingCheckout ? 'Transmitting...' : '2. Dispatch Checkout Email'}</span>
-              {currentStatus === 'APPROVED' ? <Mail size={12} /> : <Lock size={10} />}
-            </button>
+          {/* STEP 1: BUILDING */}
+          <div className={`relative flex items-center justify-between md:justify-normal md:odd:flex-row-reverse group transition-opacity duration-300 ${currentIndex >= 0 ? 'opacity-100' : 'opacity-40'}`}>
+            <div className={`flex items-center justify-center w-7 h-7 rounded-full border-2 shrink-0 md:order-1 md:group-odd:-translate-x-1/2 md:group-even:translate-x-1/2 shadow-sm ${currentIndex > 0 ? 'bg-cyan-500 border-cyan-500 text-black' : currentIndex === 0 ? 'bg-zinc-950 border-cyan-500 text-cyan-500' : 'bg-zinc-950 border-zinc-800 text-zinc-600'}`}>
+              {currentIndex > 0 ? <CheckCircle2 size={14} /> : <span className="text-[10px] font-black">1</span>}
+            </div>
+            <div className="w-[calc(100%-3rem)] md:w-[calc(50%-1.5rem)] p-4 rounded-xl border border-zinc-800 bg-black/50 shadow-sm flex flex-col gap-3">
+              <div className="flex items-center justify-between">
+                <span className={`text-[10px] font-black uppercase tracking-widest ${currentIndex >= 0 ? 'text-white' : 'text-zinc-500'}`}>Architecture</span>
+              </div>
+              {currentIndex === 0 && (
+                <button onClick={() => handleTransmitReview(false)} disabled={isSendingReview} className="w-full flex items-center justify-center gap-2 bg-cyan-500/10 hover:bg-cyan-500/20 text-cyan-400 border border-cyan-500/30 py-2.5 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all cursor-pointer disabled:opacity-50">
+                  {isSendingReview ? 'Transmitting...' : 'Transmit Review Link'} {!isSendingReview && <Send size={12} />}
+                </button>
+              )}
+            </div>
           </div>
-        </div>
 
+          {/* STEP 2: IN REVIEW / CHANGES REQUESTED */}
+          <div className={`relative flex items-center justify-between md:justify-normal md:odd:flex-row-reverse group transition-opacity duration-300 ${currentIndex >= 1 ? 'opacity-100' : 'opacity-40'}`}>
+            <div className={`flex items-center justify-center w-7 h-7 rounded-full border-2 shrink-0 md:order-1 md:group-odd:-translate-x-1/2 md:group-even:translate-x-1/2 shadow-sm ${currentIndex > 1 ? 'bg-fuchsia-500 border-fuchsia-500 text-black' : currentIndex === 1 ? 'bg-zinc-950 border-fuchsia-500 text-fuchsia-500' : 'bg-zinc-950 border-zinc-800 text-zinc-600'}`}>
+              {currentIndex > 1 ? <CheckCircle2 size={14} /> : <span className="text-[10px] font-black">2</span>}
+            </div>
+            <div className="w-[calc(100%-3rem)] md:w-[calc(50%-1.5rem)] p-4 rounded-xl border border-zinc-800 bg-black/50 shadow-sm flex flex-col gap-3">
+              <div className="flex items-center justify-between">
+                <span className={`text-[10px] font-black uppercase tracking-widest ${currentIndex >= 1 ? 'text-white' : 'text-zinc-500'}`}>Client Verification</span>
+                {currentStatus === 'CHANGES_REQUESTED' && (
+                  <span className="px-2 py-0.5 rounded text-[8px] font-black bg-rose-500/10 text-rose-400 uppercase tracking-widest border border-rose-500/20">Tweaks Needed</span>
+                )}
+              </div>
+              
+              {currentIndex === 1 && (
+                <div className="flex flex-col gap-3">
+                  <div className="bg-zinc-950/50 border border-zinc-800/80 rounded-lg p-3">
+                    {currentStatus === 'CHANGES_REQUESTED' ? (
+                       <p className="text-[10px] text-zinc-300 font-medium leading-relaxed">
+                         Client has submitted revision notes. Please check the Audit Ledger, make changes, and resend the link.
+                       </p>
+                    ) : (
+                       <p className="text-[10px] text-zinc-400 font-medium italic">Awaiting client sign-off or revision notes...</p>
+                    )}
+                  </div>
+                  
+                  {/* Action Bar */}
+                  <div className="flex items-center justify-between mt-1">
+                    {/* RESEND BUTTON */}
+                    <button 
+                      onClick={() => handleTransmitReview(true)} 
+                      disabled={isSendingReview}
+                      className="text-[9px] font-mono text-cyan-500 hover:text-cyan-400 transition-colors uppercase tracking-widest flex items-center gap-1 cursor-pointer disabled:opacity-50"
+                    >
+                      <RefreshCw size={10} className={isSendingReview ? "animate-spin" : ""} /> Resend Link
+                    </button>
+
+                    {/* Emergency Manual Override */}
+                    <button 
+                      onClick={() => {
+                         if(window.confirm("Force override to APPROVED state?")) {
+                            setFormData({...formData, status: 'APPROVED'});
+                         }
+                      }} 
+                      className="text-[9px] font-mono text-zinc-600 hover:text-fuchsia-400 transition-colors uppercase tracking-widest flex items-center gap-1 cursor-pointer"
+                    >
+                      <AlertTriangle size={10}/> Force Approve
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* STEP 3: FINANCIAL HANDSHAKE */}
+          <div className={`relative flex items-center justify-between md:justify-normal md:odd:flex-row-reverse group transition-opacity duration-300 ${currentIndex >= 2 ? 'opacity-100' : 'opacity-40'}`}>
+            <div className={`flex items-center justify-center w-7 h-7 rounded-full border-2 shrink-0 md:order-1 md:group-odd:-translate-x-1/2 md:group-even:translate-x-1/2 shadow-sm ${currentIndex > 2 ? 'bg-emerald-500 border-emerald-500 text-black' : currentIndex === 2 ? 'bg-zinc-950 border-emerald-500 text-emerald-500' : 'bg-zinc-950 border-zinc-800 text-zinc-600'}`}>
+              {currentIndex > 2 ? <CheckCircle2 size={14} /> : <span className="text-[10px] font-black">3</span>}
+            </div>
+            <div className="w-[calc(100%-3rem)] md:w-[calc(50%-1.5rem)] p-4 rounded-xl border border-zinc-800 bg-black/50 shadow-sm flex flex-col gap-3">
+              <div className="flex items-center justify-between">
+                <span className={`text-[10px] font-black uppercase tracking-widest ${currentIndex >= 2 ? 'text-white' : 'text-zinc-500'}`}>Subscription Gate</span>
+              </div>
+              {currentIndex === 2 && (
+                <button onClick={handleDispatchCheckout} disabled={isSendingCheckout} className="w-full flex items-center justify-center gap-2 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 py-2.5 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all cursor-pointer">
+                  {isSendingCheckout ? 'Generating...' : 'Resend Checkout'} <Mail size={12} />
+                </button>
+              )}
+              {currentIndex < 2 && (
+                <div className="text-[10px] text-zinc-600 font-mono italic">Locked pending approval</div>
+              )}
+            </div>
+          </div>
+
+        </div>
       </div>
     </div>
   );

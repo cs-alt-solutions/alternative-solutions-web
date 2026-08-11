@@ -7,7 +7,6 @@ import Link from 'next/link';
 import { supabase } from '@/utils/supabase';
 import { 
   Layout, 
-  FileCheck, 
   Server, 
   ExternalLink, 
   Loader2, 
@@ -21,7 +20,7 @@ import {
   ArrowLeft,
   PanelLeftClose,
   PanelLeftOpen,
-  Lock,           // <-- Added Lock import
+  Lock,
   ShieldAlert
 } from 'lucide-react';
 
@@ -29,7 +28,6 @@ import CoreTab from '@/components/dashboard/storefronts/editor/CoreTab';
 import VisualArchitecture from '@/components/dashboard/storefronts/editor/core/VisualArchitecture';
 import MediaTab from '@/components/dashboard/storefronts/editor/MediaTab';
 import CapabilitiesTab from '@/components/dashboard/storefronts/editor/CapabilitiesTab';
-import StagingTab from '@/components/dashboard/storefronts/editor/staging/StagingTab';
 import GridTab from '@/components/dashboard/storefronts/editor/GridTab';
 import { deleteStorefront } from '@/app/actions/storefronts';
 
@@ -38,7 +36,9 @@ export default function TenantCommandHub() {
   const router = useRouter();
   
   const [formData, setFormData] = useState<any>(null);
-  const [activeTab, setActiveTab] = useState<'canvas' | 'staging' | 'grid'>('canvas');
+  
+  // NOTE: Staging is officially removed from the array!
+  const [activeTab, setActiveTab] = useState<'canvas' | 'grid'>('canvas');
   const [editorTab, setEditorTab] = useState<'content' | 'design' | 'media' | 'services'>('content');
   const [controlsExpanded, setControlsExpanded] = useState(true);
   
@@ -175,19 +175,13 @@ export default function TenantCommandHub() {
         </div>
       </header>
 
-      {/* COMMAND NAVIGATION */}
+      {/* COMMAND NAVIGATION (STAGING TAB DELETED) */}
       <nav className="flex items-center gap-4 md:gap-6 px-4 md:px-6 border-b border-zinc-800 bg-zinc-950 shrink-0">
         <button 
           onClick={() => setActiveTab('canvas')}
           className={`flex items-center gap-2 py-3 md:py-4 text-[10px] md:text-xs font-bold uppercase tracking-widest border-b-2 transition-colors cursor-pointer ${activeTab === 'canvas' ? 'border-cyan-400 text-cyan-400' : 'border-transparent text-zinc-500 hover:text-zinc-300'}`}
         >
           <Layout size={14} className="md:w-4 md:h-4" /> The Canvas
-        </button>
-        <button 
-          onClick={() => setActiveTab('staging')}
-          className={`flex items-center gap-2 py-3 md:py-4 text-[10px] md:text-xs font-bold uppercase tracking-widest border-b-2 transition-colors cursor-pointer ${activeTab === 'staging' ? 'border-fuchsia-400 text-fuchsia-400' : 'border-transparent text-zinc-500 hover:text-zinc-300'}`}
-        >
-          <FileCheck size={14} className="md:w-4 md:h-4" /> Staging & Scope
         </button>
         <button 
           onClick={() => setActiveTab('grid')}
@@ -198,7 +192,6 @@ export default function TenantCommandHub() {
       </nav>
 
       {/* DYNAMIC WORKSPACE */}
-      {/* 👇 Added 'relative' class below so the absolute lock shield perfectly bounds to this space */}
       <div className="flex-1 flex overflow-hidden w-full relative">
         
         {/* TAB 1: THE CANVAS */}
@@ -274,22 +267,13 @@ export default function TenantCommandHub() {
           </div>
         )}
 
-        {/* TAB 2: STAGING & SCOPE */}
-        {activeTab === 'staging' && (
-          <div className="w-full h-full relative bg-zinc-950">
-            <StagingTab formData={formData} setFormData={setFormData} />
-          </div>
-        )}
-
-        {/* TAB 3: THE GRID */}
+        {/* TAB 2: THE GRID */}
         {activeTab === 'grid' && (
            <GridTab formData={formData} setFormData={setFormData} onTerminate={handleStorefrontTermination} />
         )}
 
         {/* 🚨 THE GLOBAL SYSTEM LOCK SHIELD 🚨 */}
-        {/* Placed at the very end of the DYNAMIC WORKSPACE so it perfectly overlays the tabs below the header */}
-        
-{['IN REVIEW', 'APPROVED', 'LIVE'].includes(formData.status) && activeTab !== 'grid' && (
+        {['IN REVIEW', 'APPROVED', 'LIVE', 'CHANGES_REQUESTED'].includes(formData.status) && activeTab !== 'grid' && (
           <div className="absolute inset-0 z-100 bg-black/60 backdrop-blur-md flex flex-col items-center justify-center border border-cyan-500/20 shadow-[inset_0_0_100px_rgba(6,182,212,0.05)] transition-all duration-500 animate-in fade-in zoom-in-95">
             
             <div className="bg-zinc-950/90 border border-zinc-800 p-8 rounded-2xl flex flex-col items-center max-w-md text-center shadow-2xl">
