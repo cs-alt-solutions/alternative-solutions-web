@@ -96,5 +96,8 @@ export const EMAIL_COPY = {
     BODY: 'As requested, here is the secure link to initialize your monthly hosting and infrastructure subscription. Once this is activated, we will flip the switch and route your domain to the live server!',
     CTA_BUTTON: 'Activate Subscription',
     ...STANDARD_SIGNATURE
-  }
+  },
+
+  // RESTORED: Your API route needs this to compile the email subject!
+  INVITE_SUBJECT: 'Access Granted: Secure Workspace'
 };
