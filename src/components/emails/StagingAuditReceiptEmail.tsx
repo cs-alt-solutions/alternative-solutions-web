@@ -2,6 +2,7 @@
 import React from 'react';
 import { Section, Text, Heading, Hr } from '@react-email/components';
 import BaseEmailLayout from '@/components/emails/BaseEmailLayout';
+import { EMAIL_COPY } from '@/config/emails';
 
 export interface StagingAuditReceiptEmailProps {
   name?: string;
@@ -34,6 +35,7 @@ export default function StagingAuditReceiptEmail({
 }: StagingAuditReceiptEmailProps) {
   const isApproved = status === 'APPROVED';
   const isAdmin = recipientType === 'admin';
+  const copy = EMAIL_COPY.STAGING_RECEIPT;
 
   return (
     <BaseEmailLayout>
@@ -102,20 +104,20 @@ export default function StagingAuditReceiptEmail({
           <Text className="text-zinc-400 text-sm m-0 leading-relaxed">
             {isAdmin
               ? isApproved
-                ? `Client has locked the build! Verify their ${planTier} recurring subscription plan is active and initiate domain DNS wiring protocols.`
-                : `Client requested specific adjustments. Open the active codebase, apply the tweak list in a single pass, and push to staging for their second review.`
+                ? copy.ADMIN_APPROVED
+                : copy.ADMIN_CHANGES
               : isApproved 
-                ? `Keep an eye on your inbox for your official hosting activation link. Initializing your recurring ${planTier} plan gets your site live on the Alternative Solutions grid immediately.`
-                : `Our Review Promise: We do focused, purposeful reviews—not endless revision loops. We are taking your exact adjustment list above and applying it to the codebase in one clean pass. Once applied, we will send an updated link for your final approval.`}
+                ? copy.CLIENT_APPROVED
+                : copy.CLIENT_CHANGES}
           </Text>
         </Section>
 
         {/* SIGN-OFF (Only rendered for Client emails) */}
         {!isAdmin && (
           <Section>
-            <Text className="text-zinc-400 text-sm m-0 mb-1 font-light">Standing by,</Text>
-            <Text className="text-white font-bold text-base m-0 tracking-wide">Courtney Sulenski</Text>
-            <Text className="text-cyan-500 font-mono text-[11px] uppercase tracking-widest m-0 mt-1">Lead Solutions Architect • Alternative Solutions</Text>
+            <Text className="text-zinc-400 text-sm m-0 mb-1 font-light">{copy.SIGN_OFF}</Text>
+            <Text className="text-white font-bold text-base m-0 tracking-wide">{copy.NAME}</Text>
+            <Text className="text-cyan-500 font-mono text-[11px] uppercase tracking-widest m-0 mt-1">{copy.TITLE}</Text>
           </Section>
         )}
 

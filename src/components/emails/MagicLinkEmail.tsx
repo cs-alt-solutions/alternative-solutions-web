@@ -1,3 +1,4 @@
+// src/components/emails/MagicLinkEmail.tsx
 import React from 'react';
 import { Section, Text, Heading, Hr, Button } from '@react-email/components';
 import BaseEmailLayout from '@/components/emails/BaseEmailLayout';
@@ -12,7 +13,7 @@ export default function MagicLinkEmail({ magicLink }: MagicLinkEmailProps) {
 
   return (
     <BaseEmailLayout>
-      {/* The Universal Header block matching your other templates */}
+      {/* HEADER */}
       <Section className="bg-slate-900 text-center pt-10 pb-8 border-b-2 border-cyan-400 rounded-t-lg -mt-10 -mx-10 mb-8">
         <Heading className="text-cyan-400 text-2xl md:text-3xl font-bold uppercase tracking-widest m-0 mb-3">
           {copy.HEADER}
@@ -22,6 +23,7 @@ export default function MagicLinkEmail({ magicLink }: MagicLinkEmailProps) {
         </Text>
       </Section>
       
+      {/* BODY */}
       <Section className="mb-6">
         <Text className="text-white text-base m-0 mb-4">{copy.GREETING}</Text>
         <Text className="text-zinc-300 text-sm leading-relaxed m-0">
@@ -35,6 +37,7 @@ export default function MagicLinkEmail({ magicLink }: MagicLinkEmailProps) {
         </Text>
       </Section>
 
+      {/* CTA */}
       <Section className="text-center mt-8 mb-8">
         <Button 
           href={magicLink}
@@ -49,9 +52,11 @@ export default function MagicLinkEmail({ magicLink }: MagicLinkEmailProps) {
 
       <Hr className="border-zinc-700 m-0 mb-6" />
       
+      {/* STANDARD SIGNATURE */}
       <Section>
-        <Text className="text-zinc-500 text-xs m-0 mb-1">{copy.SIGN_OFF}</Text>
-        <Text className="text-cyan-400 font-bold text-sm m-0">{copy.SIGNATURE}</Text>
+        <Text className="text-zinc-400 text-sm m-0 mb-1 font-light">{copy.SIGN_OFF}</Text>
+        <Text className="text-white font-bold text-base m-0 tracking-wide">{copy.NAME}</Text>
+        <Text className="text-cyan-500 font-mono text-[11px] uppercase tracking-widest m-0 mt-1">{copy.TITLE}</Text>
       </Section>
     </BaseEmailLayout>
   );
