@@ -1,3 +1,4 @@
+// src/components/emails/StagingAuditReceiptEmail.tsx
 import React from 'react';
 import { Section, Text, Heading, Hr } from '@react-email/components';
 import BaseEmailLayout from '@/components/emails/BaseEmailLayout';
@@ -22,13 +23,13 @@ const AUDIT_SECTIONS = [
 ];
 
 export default function StagingAuditReceiptEmail({
-  name = 'Founder',
-  businessName = 'Your Empire',
+  name = 'Client',
+  businessName = 'Your Storefront',
   clientEmail = '',
   status = 'APPROVED',
   completedSteps = [0, 1, 2, 3],
   sectionNotes = {},
-  planTier = 'Standard Starter',
+  planTier = 'Foundation Plan',
   recipientType = 'client'
 }: StagingAuditReceiptEmailProps) {
   const isApproved = status === 'APPROVED';

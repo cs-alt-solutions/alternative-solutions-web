@@ -12,8 +12,8 @@ export interface StagingReviewEmailProps {
 }
 
 export default function StagingReviewEmail({
-  name = 'Founder',
-  businessName = 'Your Empire',
+  name = 'Client',
+  businessName = 'Your Storefront',
   previewUrl = 'https://alternativesolutions.io',
   planTier = 'Foundation Plan'
 }: StagingReviewEmailProps) {
