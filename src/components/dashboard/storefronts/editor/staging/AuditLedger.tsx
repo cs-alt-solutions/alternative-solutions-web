@@ -16,13 +16,14 @@ import {
 export default function AuditLedger({ formData }: { formData: any }) {
   const [showLegend, setShowLegend] = useState(false);
   
-  // THE FIX: Looking at the correct JSONB column
+  // Look at the correct JSONB column safely
   const auditLogs = formData?.audit_notes || [];
 
-  // THE FIX: Mapping to our exact Backend Event Types
+  // Map to our exact Backend Event Types
   const getLedgerTheme = (type: string) => {
     switch(type) {
       case 'APPROVED':
+      case 'APPROVED_PENDING_BILLING':
         return { text: 'text-emerald-400', icon: CheckCircle2 };
       case 'PAYMENT_CLEARED':
         return { text: 'text-fuchsia-400', icon: CreditCard };
@@ -62,7 +63,7 @@ export default function AuditLedger({ formData }: { formData: any }) {
         
         <button 
           onClick={() => setShowLegend(true)}
-          className="p-1.5 text-zinc-500 hover:text-cyan-400 hover:bg-cyan-500/10 rounded-md transition-colors"
+          className="p-1.5 text-zinc-500 hover:text-cyan-400 hover:bg-cyan-500/10 rounded-md transition-colors cursor-pointer"
           title="Timeline Legend"
         >
           <Info size={14} />
@@ -114,7 +115,7 @@ export default function AuditLedger({ formData }: { formData: any }) {
             
             <button 
               onClick={() => setShowLegend(false)}
-              className="absolute top-4 right-4 text-zinc-500 hover:text-white transition-colors"
+              className="absolute top-4 right-4 text-zinc-500 hover:text-white transition-colors cursor-pointer"
             >
               <X size={16} />
             </button>

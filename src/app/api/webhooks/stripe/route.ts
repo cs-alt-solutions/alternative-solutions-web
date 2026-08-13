@@ -12,7 +12,7 @@ export async function POST(req: Request) {
 
   // 1. Initialize Stripe
   const stripe = new Stripe(secretKey, {
-    apiVersion: '2026-02-25.clover', // Update this if your Stripe version differs
+    apiVersion: '2026-02-25.clover', // Best practice to use latest, but keeping your format
   });
 
   // 2. Initialize a secure Supabase Admin connection (Bypasses RLS)
@@ -48,7 +48,7 @@ export async function POST(req: Request) {
     .from('processed_webhooks')
     .select('id')
     .eq('id', event.id)
-    .single();
+    .maybeSingle();
 
   if (existingWebhook) {
     console.log(`Duplicate webhook ignored: ${event.id}`);
@@ -66,25 +66,29 @@ export async function POST(req: Request) {
   if (event.type === 'checkout.session.completed') {
     const session = event.data.object as Stripe.Checkout.Session;
     
-    // THE GOLD STANDARD: Look for the Storefront Slug in the URL reference
-    let targetSlug = session.client_reference_id || session.metadata?.storefront_id;
+    // THE GOLD STANDARD: Look for the Storefront ID/Slug in the URL reference
+    let targetIdentifier = session.client_reference_id || session.metadata?.storefront_id;
     
-    if (!targetSlug && session.subscription) {
+    if (!targetIdentifier && session.subscription) {
        const subscription = await stripe.subscriptions.retrieve(session.subscription as string);
-       targetSlug = subscription.metadata?.storefront_id;
+       targetIdentifier = subscription.metadata?.storefront_id;
     }
 
     // ------------------------------------------------------------------
     // PATH A: THE STOREFRONT SAAS ENGINE 
     // ------------------------------------------------------------------
-    if (targetSlug) {
-      console.log(`💳 Processing SaaS Payment for Storefront Slug: ${targetSlug}`);
+    if (targetIdentifier) {
+      console.log(`💳 Processing SaaS Payment for Storefront: ${targetIdentifier}`);
       
+      // Bulletproof UUID vs Slug Check (Just like your approval route!)
+      const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(targetIdentifier);
+      const queryColumn = isUUID ? 'id' : 'slug';
+
       // 1. Fetch the existing storefront to grab the current audit_notes
       const { data: storeData, error: fetchError } = await supabaseAdmin
         .from('storefronts')
         .select('audit_notes, contact_email')
-        .eq('slug', targetSlug)
+        .eq(queryColumn, targetIdentifier)
         .single();
 
       if (fetchError) {
@@ -98,7 +102,7 @@ export async function POST(req: Request) {
         timestamp: new Date().toISOString(),
         author: "SYSTEM",
         type: "PAYMENT_CLEARED",
-        message: `Subscription activated via Stripe. Payment cleared for ${session.customer_details?.email || storeData?.contact_email}. System upgraded to LIVE.`
+        message: `Subscription activated via Stripe. Payment cleared for ${session.customer_details?.email || storeData?.contact_email}. System upgraded to ACTIVE.`
       };
 
       const currentLogs = storeData?.audit_notes || [];
@@ -108,19 +112,19 @@ export async function POST(req: Request) {
       const { error: storeError } = await supabaseAdmin
         .from('storefronts')
         .update({ 
-          status: 'LIVE', // Upgraded from 'ACTIVE' to align with Dashboard UI
+          status: 'ACTIVE', // Setting to ACTIVE to trigger your new UI Badge!
           stripe_customer_id: session.customer as string,
           stripe_subscription_id: session.subscription as string,
           audit_notes: updatedLogs
         })
-        .eq('slug', targetSlug); 
+        .eq(queryColumn, targetIdentifier); 
 
       if (storeError) {
         console.error("Storefront Database Update Failed:", storeError);
         return new NextResponse('Database Error', { status: 500 });
       } 
       
-      console.log(`✅ Storefront [${targetSlug}] successfully activated and logged!`);
+      console.log(`✅ Storefront [${targetIdentifier}] successfully activated and logged!`);
       return NextResponse.json({ received: true });
     }
 
@@ -162,7 +166,7 @@ export async function POST(req: Request) {
         .from('supporters')
         .select('origin_tier')
         .eq('email', customerEmail)
-        .single();
+        .maybeSingle();
 
       const { error } = await supabaseAdmin
         .from('supporters')

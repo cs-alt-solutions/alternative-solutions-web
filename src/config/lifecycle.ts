@@ -1,10 +1,9 @@
-// src/config/lifecycle.ts
-
 export type StorefrontStatus = 
   | 'PENDING' 
   | 'BUILDING' 
   | 'IN REVIEW' 
   | 'APPROVED' 
+  | 'ACTIVE' 
   | 'LIVE' 
   | 'MAINTENANCE' 
   | 'HIDDEN' 
@@ -49,8 +48,16 @@ export const STOREFRONT_LIFECYCLE: Record<StorefrontStatus, LifecycleConfig> = {
     badgeColor: 'bg-fuchsia-500/10 text-fuchsia-400 border-fuchsia-500/20',
     isPubliclyVisible: true,
     isCanvasLocked: true,
-    allowedNextStates: ['LIVE', 'CANCELED'],
+    allowedNextStates: ['ACTIVE', 'LIVE', 'CANCELED'],
     description: 'Client approved the build. Ready for billing handshake.'
+  },
+  'ACTIVE': {
+    label: 'Active',
+    badgeColor: 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30 ring-emerald-500/30',
+    isPubliclyVisible: true,
+    isCanvasLocked: true,
+    allowedNextStates: ['LIVE', 'MAINTENANCE', 'HIDDEN', 'CANCELED'],
+    description: 'Subscription activated. Payment verified.'
   },
   'LIVE': {
     label: 'Live',
@@ -65,7 +72,7 @@ export const STOREFRONT_LIFECYCLE: Record<StorefrontStatus, LifecycleConfig> = {
     badgeColor: 'bg-blue-500/10 text-blue-400 border-blue-500/20',
     isPubliclyVisible: false, // Shows a maintenance screen to the public
     isCanvasLocked: false,    // Unlocks so you can make updates
-    allowedNextStates: ['LIVE', 'HIDDEN', 'CANCELED'],
+    allowedNextStates: ['ACTIVE', 'LIVE', 'HIDDEN', 'CANCELED'],
     description: 'Temporarily offline for scheduled upgrades.'
   },
   'HIDDEN': {
@@ -73,7 +80,7 @@ export const STOREFRONT_LIFECYCLE: Record<StorefrontStatus, LifecycleConfig> = {
     badgeColor: 'bg-slate-500/10 text-slate-400 border-slate-500/20',
     isPubliclyVisible: false,
     isCanvasLocked: true,
-    allowedNextStates: ['LIVE', 'MAINTENANCE', 'CANCELED'],
+    allowedNextStates: ['ACTIVE', 'LIVE', 'MAINTENANCE', 'CANCELED'],
     description: 'Active subscription, but temporarily hidden from the public grid.'
   },
   'CANCELED': {

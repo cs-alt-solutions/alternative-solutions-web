@@ -44,8 +44,15 @@ export default function StorefrontsManager({ initialData }: { initialData: any[]
   });
 
   const renderTableRow = (store: any) => {
-    const status: StorefrontStatus = store.status || 'BUILDING';
-    const config = STOREFRONT_LIFECYCLE[status];
+    const status = store.status as StorefrontStatus;
+    
+    // THE FIX: Bulletproof fallback if status doesn't exist in our dictionary
+    const config = STOREFRONT_LIFECYCLE[status] || { 
+      label: store.status || 'UNKNOWN', 
+      badgeColor: 'bg-zinc-800 text-zinc-400 border-zinc-700',
+      isPubliclyVisible: false
+    };
+
     const isOffline = status === 'MAINTENANCE' || status === 'HIDDEN' || status === 'CANCELED';
 
     const formattedDate = new Date(store.created_at).toLocaleDateString('en-US', {
