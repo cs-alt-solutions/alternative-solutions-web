@@ -80,13 +80,38 @@ export async function POST(req: Request) {
     if (targetSlug) {
       console.log(`💳 Processing SaaS Payment for Storefront Slug: ${targetSlug}`);
       
-      // Activate the Storefront Application directly
+      // 1. Fetch the existing storefront to grab the current audit_notes
+      const { data: storeData, error: fetchError } = await supabaseAdmin
+        .from('storefronts')
+        .select('audit_notes, contact_email')
+        .eq('slug', targetSlug)
+        .single();
+
+      if (fetchError) {
+        console.error("Storefront Database Fetch Failed:", fetchError);
+        return new NextResponse('Database Error', { status: 500 });
+      }
+
+      // 2. Create the new Payment Log
+      const paymentLog = {
+        id: crypto.randomUUID(),
+        timestamp: new Date().toISOString(),
+        author: "SYSTEM",
+        type: "PAYMENT_CLEARED",
+        message: `Subscription activated via Stripe. Payment cleared for ${session.customer_details?.email || storeData?.contact_email}. System upgraded to LIVE.`
+      };
+
+      const currentLogs = storeData?.audit_notes || [];
+      const updatedLogs = [...currentLogs, paymentLog];
+
+      // 3. Update the Storefront with the new status and the log
       const { error: storeError } = await supabaseAdmin
         .from('storefronts')
         .update({ 
-          status: 'ACTIVE', 
+          status: 'LIVE', // Upgraded from 'ACTIVE' to align with Dashboard UI
           stripe_customer_id: session.customer as string,
           stripe_subscription_id: session.subscription as string,
+          audit_notes: updatedLogs
         })
         .eq('slug', targetSlug); 
 
@@ -95,7 +120,7 @@ export async function POST(req: Request) {
         return new NextResponse('Database Error', { status: 500 });
       } 
       
-      console.log(`✅ Storefront [${targetSlug}] successfully activated!`);
+      console.log(`✅ Storefront [${targetSlug}] successfully activated and logged!`);
       return NextResponse.json({ received: true });
     }
 

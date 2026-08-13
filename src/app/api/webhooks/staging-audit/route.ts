@@ -2,6 +2,7 @@
 import { NextResponse } from "next/server";
 import { Resend } from "resend";
 import * as React from "react"; 
+import { createClient } from "@supabase/supabase-js";
 import StagingAuditReceiptEmail, { 
   StagingAuditReceiptEmailProps 
 } from "@/components/emails/StagingAuditReceiptEmail";
@@ -51,6 +52,50 @@ export async function POST(req: Request) {
     
     // 🚨 FIX: Now checks for business_name first, and uses a professional fallback
     const projectLabel = record.business_name || record.project_name || "Your Storefront";
+
+    // ==========================================================
+    // THE FIX: LOG THE NOTES TO THE STOREFRONT LEDGER
+    // ==========================================================
+    
+    // We need the admin client to bypass row-level security for webhooks
+    const supabaseAdmin = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!
+    );
+
+    // 1. Find the storefront attached to this email
+    const { data: storeData } = await supabaseAdmin
+      .from('storefronts')
+      .select('id, audit_notes')
+      .eq('contact_email', record.client_email)
+      .single();
+
+    if (storeData) {
+      // 2. Create the Ledger Entry
+      const reviewLog = {
+        id: crypto.randomUUID(),
+        timestamp: new Date().toISOString(),
+        author: "CLIENT",
+        type: status, // This will correctly pass "APPROVED" or "CHANGES_REQUESTED"
+        message: hasNotes 
+          ? `Client requests adjustments: "${rawNotes}"` 
+          : "Client verified and approved the staging architecture. Zero changes requested."
+      };
+
+      const updatedLogs = [...(storeData.audit_notes || []), reviewLog];
+
+      // 3. Save the log and update the storefront status
+      await supabaseAdmin
+        .from('storefronts')
+        .update({ 
+          status: status, 
+          audit_notes: updatedLogs 
+        })
+        .eq('id', storeData.id);
+    } else {
+      console.warn(`Could not attach log: Storefront not found for email ${record.client_email}`);
+    }
+    // ==========================================================
 
     const sectionNotes: Record<number, string> = hasNotes ? { 0: rawNotes } : {};
 

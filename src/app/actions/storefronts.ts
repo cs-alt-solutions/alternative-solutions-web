@@ -50,13 +50,13 @@ export async function createStorefront(formData: FormData) {
     about_bio: 'We are a local business dedicated to providing top-tier services and products to our community. Check out our gallery to see our recent work!',
     social_url: 'https://facebook.com',
     gallery_items: [],
-    logo_size: 'large' // Ensures new deployments always have a default size
+    logo_size: 'large',
+    audit_notes: [] // Ensures ledger is ready
   };
 
   const { error } = await supabase.from('storefronts').insert(storefrontData);
   if (error) throw new Error("Failed to create storefront.");
   
-  // THE FIX: 'layout' forces a deep purge of this path and all its children
   revalidatePath('/dashboard/storefronts', 'layout');
   revalidatePath('/', 'layout'); 
 }
@@ -64,16 +64,13 @@ export async function createStorefront(formData: FormData) {
 export async function updateStorefrontCore(id: string, formData: FormData) {
   const supabase = await createClient();
   
-  // THE FIX: We dynamically build the update payload. 
-  // If a field is not in the form (like logo_size when saving the Design tab), 
-  // it is ignored, preventing the "Null Wipeout" bug.
   const updateData: any = {};
 
   const fields = [
     'business_name', 'slug', 'tagline', 'subtext', 'primary_cta', 'secondary_cta',
     'brand_color', 'theme_style', 'hero_layout', 'content_layout', 'about_layout',
     'about_heading', 'about_bio', 'capabilities_heading', 'gallery_heading', 'contact_email',
-    'logo_size' // Catch it gracefully if it is passed
+    'logo_size' 
   ];
 
   fields.forEach(field => {
@@ -91,7 +88,6 @@ export async function updateStorefrontCore(id: string, formData: FormData) {
     if (error) throw new Error(error.message);
   }
 
-  // THE FIX: Deep Cache Purge
   revalidatePath('/dashboard/storefronts', 'layout');
 }
 
@@ -125,7 +121,6 @@ export async function updateStorefrontMedia(id: string, slug: string, formData: 
   if (aboutUrl) updateData.about_image = aboutUrl;
   if (logoUrl) updateData.brand_logo = logoUrl;
   
-  // Bind the logo size to the update payload
   if (logoSize) updateData.logo_size = logoSize;
 
   if (Object.keys(updateData).length > 0) {
@@ -133,7 +128,6 @@ export async function updateStorefrontMedia(id: string, slug: string, formData: 
     if (error) throw new Error(error.message);
   }
 
-  // THE FIX: Deep Cache Purge to prevent the "Reverting to Small" trap
   revalidatePath('/dashboard/storefronts', 'layout');
 }
 
@@ -227,9 +221,30 @@ export async function deleteStorefront(id: string) {
 export async function dispatchStagingReview(id: string, slug: string, businessName: string, contactEmail: string, planTier: string) {
   const supabase = await createClient();
 
+  // 1. Fetch current audit logs so we can append to them
+  const { data: storeData } = await supabase
+    .from('storefronts')
+    .select('audit_notes')
+    .eq('id', id)
+    .single();
+
+  const dispatchLog = {
+    id: crypto.randomUUID(),
+    timestamp: new Date().toISOString(),
+    author: "ADMIN",
+    type: "REVIEW_DISPATCHED",
+    message: "Staging architecture link securely transmitted to client for verification."
+  };
+
+  const updatedLogs = [...(storeData?.audit_notes || []), dispatchLog];
+
+  // 2. Update the status and write the log
   const { error: dbError } = await supabase
     .from('storefronts')
-    .update({ status: 'IN REVIEW' })
+    .update({ 
+      status: 'IN REVIEW',
+      audit_notes: updatedLogs 
+    })
     .eq('id', id);
 
   if (dbError) {
@@ -247,8 +262,8 @@ export async function dispatchStagingReview(id: string, slug: string, businessNa
       name: businessName,
       businessName: businessName,
       previewUrl: previewUrl,
-      planTier: planTier || 'Foundation Plan', // Defaulting to your real plan name
-      storefrontId: id // Ensure your StagingReviewEmail template receives this!
+      planTier: planTier || 'Foundation Plan', 
+      storefrontId: id 
     }
   });
 
@@ -259,135 +274,4 @@ export async function dispatchStagingReview(id: string, slug: string, businessNa
   revalidatePath('/dashboard/storefronts', 'layout');
   revalidatePath('/dashboard', 'layout');
   return { success: true };
-}
-
-export async function submitStorefrontApplication(formData: FormData) {
-  const supabase = await createClient();
-
-  try {
-    const payload = {
-      applicant_name: formData.get('name')?.toString() || '',
-      applicant_email: formData.get('email')?.toString() || '',
-      applicant_phone: formData.get('phone')?.toString() || '',
-      business_name: formData.get('projectName')?.toString() || 'Unnamed Project',
-      business_description: formData.get('description')?.toString() || '',
-      social_handles: JSON.parse(formData.get('socials')?.toString() || '{}'),
-      selected_vibe: formData.get('selectedVibe')?.toString() || 'clueless',
-      selected_plan: formData.get('selectedPlan')?.toString() || 'foundation',
-      wants_custom: formData.get('wantsCustom') === 'true',
-      existing_domain: formData.get('existingDomain')?.toString() || '',
-      is_priority: formData.get('priorityQueue') === 'true',
-      status: 'PENDING',
-      contact_email: formData.get('email')?.toString() || ''
-    };
-
-    const { error } = await supabase.from('storefront_applications').insert([payload]);
-    if (error) throw error;
-
-    await dispatchSystemEmail({
-      to: payload.applicant_email,
-      subject: `Application received: ${payload.business_name}`,
-      type: 'STOREFRONT_CONFIRMATION',
-      data: { 
-        name: payload.applicant_name, 
-        projectName: payload.business_name,
-        selectedPlan: payload.selected_plan,
-        selectedVibe: payload.selected_vibe,
-        originStory: payload.business_description
-      }
-    });
-
-    await dispatchSystemEmail({
-      to: process.env.ADMIN_EMAIL || 'hello@alternativesolutions.io',
-      subject: `🚨 NEW LEAD: ${payload.business_name}`,
-      type: 'ADMIN_INTAKE',
-      data: {
-        name: payload.applicant_name,
-        email: payload.applicant_email,
-        phone: payload.applicant_phone,
-        socials: formData.get('socials')?.toString() || '',
-        existingWebsite: payload.existing_domain,
-        projectScope: payload.business_description,
-        businessName: payload.business_name,
-        selectedPlan: payload.selected_plan,
-        selectedVibe: payload.selected_vibe,
-        wantsCustom: payload.wants_custom,
-        isPriority: payload.is_priority
-      }
-    });
-
-    revalidatePath('/dashboard/storefronts', 'layout');
-    return { success: true };
-  } catch (error: any) {
-    console.error('CRITICAL SUBMISSION ERROR:', error);
-    return { success: false, error: error.message || 'Transmission failed: Database or Auth Error' };
-  }
-}
-
-export async function updateApplicationStatus(id: string, newStatus: 'BUILDING' | 'CANCELED') {
-  const supabase = await createClient();
-  
-  try {
-    const { data: app, error: updateError } = await supabase
-      .from('storefront_applications')
-      .update({ status: newStatus })
-      .eq('id', id)
-      .select()
-      .single();
-
-    if (updateError) throw updateError;
-
-    if (newStatus === 'BUILDING' && app) {
-      let baseSlug = (app.business_name || 'store').toLowerCase().replace(/[^a-z0-9]+/g, '-');
-      let finalSlug = baseSlug;
-
-      const { data: existing } = await supabase.from('storefronts').select('slug').eq('slug', finalSlug);
-      if (existing && existing.length > 0) {
-        finalSlug = `${baseSlug}-${Math.random().toString(36).substring(2, 6)}`;
-      }
-
-      const { error: insertError } = await supabase.from('storefronts').insert([{
-        business_name: app.business_name,
-        contact_email: app.contact_email || app.applicant_email, 
-        status: 'BUILDING',
-        slug: finalSlug, 
-        plan_tier: app.selected_plan || 'foundation',
-        theme_style: app.selected_vibe || 'industrial',
-        tagline: app.business_description ? app.business_description.substring(0, 50) + '...' : 'Welcome to your new digital storefront.',
-        subtext: app.business_description || 'Getting operations online. Stay tuned.',
-        hero_layout: 'center',
-        content_layout: 'classic',
-        about_layout: 'split',
-        is_template: false,
-        hero_image: 'https://via.placeholder.com/1920x1080/000000/333333?text=NO+IMAGE',
-        about_image: 'https://via.placeholder.com/800x800/000000/333333?text=NO+IMAGE',
-        primary_cta: 'Get Started',
-        secondary_cta: 'Learn More',
-        about_heading: 'About Us',
-        about_bio: 'Dedicated to providing top-tier services and products to the community. Check out the gallery to see recent work!',
-        social_url: 'https://facebook.com',
-        gallery_items: []
-      }]);
-      
-      if (insertError) console.error('Failed to initialize storefront:', insertError);
-
-      const { error: clientError } = await supabase.from('clients').insert([{
-        id: finalSlug,
-        name: app.business_name,
-        primary_contact: app.applicant_name,
-        email: app.contact_email || app.applicant_email,
-        status: 'active'
-      }]);
-
-      if (clientError) console.error('Failed to initialize client portal:', clientError);
-    }
-
-    revalidatePath('/dashboard/storefronts', 'layout');
-    revalidatePath('/dashboard/clients', 'layout');
-    revalidatePath('/dashboard', 'layout'); 
-    return { success: true };
-  } catch (error: any) {
-    console.error('STATUS UPDATE ERROR:', error);
-    return { success: false, error: error.message || 'Failed to update status' };
-  }
 }

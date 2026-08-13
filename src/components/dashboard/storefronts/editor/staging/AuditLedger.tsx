@@ -9,24 +9,30 @@ import {
   Clock,
   Activity,
   Info,
-  X
+  X,
+  Send
 } from 'lucide-react';
 
 export default function AuditLedger({ formData }: { formData: any }) {
   const [showLegend, setShowLegend] = useState(false);
-  const auditLogs = formData?.timeline_events || [];
+  
+  // THE FIX: Looking at the correct JSONB column
+  const auditLogs = formData?.audit_notes || [];
 
-  const getLedgerTheme = (status: string) => {
-    switch(status) {
-      case 'COMPLETED':
+  // THE FIX: Mapping to our exact Backend Event Types
+  const getLedgerTheme = (type: string) => {
+    switch(type) {
       case 'APPROVED':
         return { text: 'text-emerald-400', icon: CheckCircle2 };
-      case 'IN_PROGRESS':
-        return { text: 'text-cyan-400', icon: Activity };
+      case 'PAYMENT_CLEARED':
+        return { text: 'text-fuchsia-400', icon: CreditCard };
       case 'CHANGES_REQUESTED':
         return { text: 'text-amber-400', icon: AlertCircle };
-      case 'SUBSCRIPTION_STARTED':
-        return { text: 'text-fuchsia-400', icon: CreditCard };
+      case 'REVIEW_DISPATCHED':
+        return { text: 'text-blue-400', icon: Send };
+      case 'BUILD_INITIALIZED':
+        return { text: 'text-cyan-400', icon: Activity };
+      case 'APPLICATION_RECEIVED':
       default:
         return { text: 'text-zinc-400', icon: Clock };
     }
@@ -45,7 +51,7 @@ export default function AuditLedger({ formData }: { formData: any }) {
   return (
     <div className="bg-zinc-900/60 border border-zinc-800 rounded-xl overflow-hidden shadow-2xl backdrop-blur-md flex flex-col max-h-150 relative">
       
-      {/* HEADER WITH NEW INFO BUTTON */}
+      {/* HEADER WITH INFO BUTTON */}
       <div className="border-b border-zinc-800 bg-black/40 p-4 flex items-center justify-between shrink-0">
         <div className="flex items-center gap-3">
           <div className="p-1.5 bg-zinc-800 rounded-md border border-zinc-700 shadow-inner">
@@ -71,7 +77,7 @@ export default function AuditLedger({ formData }: { formData: any }) {
           </div>
         ) : (
           [...auditLogs].reverse().map((log: any, idx: number) => {
-            const theme = getLedgerTheme(log.status);
+            const theme = getLedgerTheme(log.type);
 
             return (
               <div 
@@ -81,8 +87,8 @@ export default function AuditLedger({ formData }: { formData: any }) {
                 <div className="flex justify-between items-start mb-2">
                   <div className="flex items-center gap-2">
                     <theme.icon size={16} className={theme.text} />
-                    <span className={`text-sm font-bold ${theme.text}`}>
-                      {log.step}
+                    <span className={`text-[11px] uppercase tracking-wider font-bold ${theme.text}`}>
+                      {log.type.replace(/_/g, ' ')}
                     </span>
                   </div>
                   <span className="text-[11px] text-zinc-500 font-medium">
@@ -90,9 +96,9 @@ export default function AuditLedger({ formData }: { formData: any }) {
                   </span>
                 </div>
 
-                {log.notes && (
-                  <p className="text-sm text-zinc-300 ml-6">
-                    {log.notes}
+                {log.message && (
+                  <p className="text-sm text-zinc-300 ml-6 leading-relaxed">
+                    {log.message}
                   </p>
                 )}
               </div>
@@ -119,32 +125,24 @@ export default function AuditLedger({ formData }: { formData: any }) {
               <div className="flex items-start gap-3">
                 <CheckCircle2 size={16} className="text-emerald-400 shrink-0 mt-0.5" />
                 <div>
-                  <div className="text-sm font-bold text-emerald-400">Completed / Approved</div>
-                  <div className="text-xs text-zinc-500 mt-0.5">Phase finalized and locked in.</div>
+                  <div className="text-sm font-bold text-emerald-400">Approved</div>
+                  <div className="text-xs text-zinc-500 mt-0.5">Client verified architecture.</div>
                 </div>
               </div>
               
               <div className="flex items-start gap-3">
-                <Activity size={16} className="text-cyan-400 shrink-0 mt-0.5" />
-                <div>
-                  <div className="text-sm font-bold text-cyan-400">In Progress</div>
-                  <div className="text-xs text-zinc-500 mt-0.5">Active engineering or design underway.</div>
-                </div>
-              </div>
-
-              <div className="flex items-start gap-3">
                 <AlertCircle size={16} className="text-amber-400 shrink-0 mt-0.5" />
                 <div>
                   <div className="text-sm font-bold text-amber-400">Changes Requested</div>
-                  <div className="text-xs text-zinc-500 mt-0.5">Client revisions are pending action.</div>
+                  <div className="text-xs text-zinc-500 mt-0.5">Client revisions logged and pending.</div>
                 </div>
               </div>
 
               <div className="flex items-start gap-3">
                 <CreditCard size={16} className="text-fuchsia-400 shrink-0 mt-0.5" />
                 <div>
-                  <div className="text-sm font-bold text-fuchsia-400">Subscription Active</div>
-                  <div className="text-xs text-zinc-500 mt-0.5">Billing pipeline securely established.</div>
+                  <div className="text-sm font-bold text-fuchsia-400">Payment Cleared</div>
+                  <div className="text-xs text-zinc-500 mt-0.5">Subscription active. System Live.</div>
                 </div>
               </div>
             </div>

@@ -145,7 +145,25 @@ export async function updateApplicationStatus(id: string, newStatus: 'BUILDING' 
       const finalFlow = overrides?.flow || app.content_flow || 'classic';
       const finalPlan = overrides?.plan || app.selected_plan || 'foundation';
 
-      // 1. Create the storefront (Removed the timeline_events column injection)
+      // Initialize the Timeline directly in the JSONB column
+      const initialLogs = [
+        {
+          id: crypto.randomUUID(),
+          timestamp: new Date().toISOString(),
+          author: "SYSTEM",
+          type: "APPLICATION_RECEIVED",
+          message: "Client application successfully processed."
+        },
+        {
+          id: crypto.randomUUID(),
+          timestamp: new Date().toISOString(),
+          author: "ADMIN",
+          type: "BUILD_INITIALIZED",
+          message: "Application approved. Architecture initialized."
+        }
+      ];
+
+      // 1. Create the storefront
       const { error: insertError } = await supabase.from('storefronts').insert([{
         business_name: app.business_name,
         contact_email: app.contact_email || app.applicant_email, 
@@ -168,35 +186,13 @@ export async function updateApplicationStatus(id: string, newStatus: 'BUILDING' 
         about_heading: 'About Us',
         about_bio: app.business_description || 'Dedicated to providing top-tier services and products to the community. Check out the gallery to see recent work!',
         social_url: app.existing_domain || '',
-        gallery_items: []
+        gallery_items: [],
+        audit_notes: initialLogs // <-- Injected directly here
       }]);
       
       if (insertError) throw new Error("Storefront Creation Blocked by Database: " + insertError.message);
 
-      // 2. THE FIX: Inject the historical timeline directly into your Audit Ledger table!
-      // (Using empty objects for audit_notes prevents your JSON.parse from crashing)
-      const initialAudits = [
-        {
-          storefront_slug: finalSlug,
-          status: 'Application Received',
-          audit_notes: {} 
-        },
-        {
-          storefront_slug: finalSlug,
-          status: 'APPROVED', // This triggers the nice green "Client Approved" icon in your UI
-          audit_notes: {}
-        },
-        {
-          storefront_slug: finalSlug,
-          status: 'Engineering Commenced',
-          audit_notes: {}
-        }
-      ];
-
-      const { error: auditError } = await supabase.from('storefront_audits').insert(initialAudits);
-      if (auditError) console.error('Failed to initialize audit ledger:', auditError);
-
-      // 3. Create the Client Profile
+      // 2. Create the Client Profile
       const { error: clientError } = await supabase.from('clients').insert([{
         id: finalSlug,
         name: app.business_name,

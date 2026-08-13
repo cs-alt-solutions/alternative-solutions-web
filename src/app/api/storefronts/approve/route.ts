@@ -28,10 +28,23 @@ export async function GET(request: NextRequest) {
 
     if (fetchError || !store) throw new Error("Storefront not found in database");
 
-    // 3. Change the status to APPROVED
+    // 3. Change the status to APPROVED and append to the Audit Ledger
+    const approvalLog = {
+      id: crypto.randomUUID(),
+      timestamp: new Date().toISOString(),
+      author: "CLIENT",
+      type: "APPROVED",
+      message: "Client verified architecture. Build locked and approved."
+    };
+
+    const updatedLogs = [...(store.audit_notes || []), approvalLog];
+
     await supabase
       .from('storefronts')
-      .update({ status: 'APPROVED' })
+      .update({ 
+        status: 'APPROVED',
+        audit_notes: updatedLogs 
+      })
       .eq('id', store.id);
 
     // 4. Generate the Stripe Checkout Link
