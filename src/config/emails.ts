@@ -23,11 +23,30 @@ export const EMAIL_COPY = {
   
   // 1. THE INTAKE PIPELINE
   STOREFRONT_CONFIRMATION: {
-    HEADLINE: "Alternative Solutions",
-    GREETING: "Hey",
-    INTRO: "Thanks for reaching out! I’ve got the details for",
-    INTRO_END: "and I’m definitely digging what you’ve got in mind.",
-    BODY: "Just a heads-up—it’s just me over here running the show, so I’m the one who personally reviews every application. I’m going to look over what you sent, and I’ll be back in touch soon so I can outline the next steps. No hoops, no corporate fluff—just straight to the architecture.",
+    HEADER: "Application Locked In • Build Queue Active",
+    TITLE_START: "I have your blueprint, ",
+    BODY_START: "You made the decision to step out and build your own empire with ",
+    BODY_END: ", and that takes serious grit. I have your complete application file in my hands and am taking over the heavy tech lifting so you can focus on running your business.",
+    
+    RECEIPT_TITLE: "Your Custom Build Specs",
+    REC_INFRA: "Infrastructure:",
+    REC_VIBE: "Aesthetic Vibe:",
+    REC_ACCENT: "Brand Accent:",
+    
+    FLOW_TITLE: "The Architecture Flow:",
+    FLOW_HERO: "Top Greeting:",
+    FLOW_STORY: "Brand Story:",
+    FLOW_PORTFOLIO: "Portfolio & Services:",
+    
+    BRAG_TITLE: "The Badass Brag:",
+    
+    // 🚀 NEW: The Pledge Acknowledgment
+    PLEDGE_TITLE: "Rules of Engagement (Confirmed)",
+    PLEDGE_BODY: "By submitting this application, you officially acknowledged our operating agreement. You secured your Forever Rate Lock for your selected tier, agreed to open communication, and understand that Alternative Solutions is an active tech lab. We build together.",
+    
+    NEXT_TITLE: "What happens next?",
+    NEXT_BODY: "I am currently prepping your digital canvas and routing your social links. You will receive direct updates and preview links straight to this email inbox. If you forgot to mention a specific feature, want to tweak a color, or just have a sudden burst of inspiration, simply hit reply to this email and it goes straight to my personal terminal.",
+    
     ...STANDARD_SIGNATURE
   },
   

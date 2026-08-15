@@ -1,18 +1,15 @@
 // src/app/api/storefronts/approve/route.ts
-import { NextRequest } from 'next/server';
+import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { createStorefrontCheckout } from '@/app/actions/billing';
+import { sendCheckoutEmail } from '@/app/actions/emails';
 
-// 🚨 CRITICAL: Must be 'export async function GET', absolutely NO 'default' keyword!
-export async function GET(request: NextRequest) {
+export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const storefrontIdentifier = searchParams.get('id');
 
   if (!storefrontIdentifier) {
-    return new Response(JSON.stringify({ error: 'Missing storefront identifier' }), { 
-      status: 400,
-      headers: { 'Content-Type': 'application/json' },
-    });
+    return NextResponse.json({ error: 'Missing storefront identifier' }, { status: 400 });
   }
 
   try {
@@ -27,7 +24,7 @@ export async function GET(request: NextRequest) {
     const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(storefrontIdentifier);
     const queryColumn = isUUID ? 'id' : 'slug';
 
-    // 2. Fetch the storefront to get client details
+    // 2. Fetch the storefront to get client details & current logs
     const { data: store, error: fetchError } = await supabaseAdmin
       .from('storefronts')
       .select('*')
@@ -36,7 +33,7 @@ export async function GET(request: NextRequest) {
 
     if (fetchError || !store) throw new Error("Storefront not found in database");
 
-    // 3. Change the status to APPROVED and append to the Audit Ledger
+    // 3. Append to the Audit Ledger
     const approvalLog = {
       id: crypto.randomUUID(),
       timestamp: new Date().toISOString(),
@@ -47,25 +44,28 @@ export async function GET(request: NextRequest) {
 
     const updatedLogs = [...(store.audit_notes || []), approvalLog];
 
+    // 4. Change the status to APPROVED & save the log
     await supabaseAdmin
       .from('storefronts')
       .update({ 
         status: 'APPROVED',
-        audit_notes: updatedLogs 
+        audit_notes: updatedLogs
       })
       .eq('id', store.id);
 
-    // 🚨 THE STRIPE FIX: Stripe will crash if you send an empty string or 'No email provided'
-    const safeEmail = store.contact_email && store.contact_email.includes('@') 
-      ? store.contact_email 
-      : undefined;
-
-    // 4. Generate the Stripe Checkout Link
-    const checkoutResponse = await createStorefrontCheckout(store.id, safeEmail as string);
+    // 5. Generate the Stripe Checkout Link
+    const checkoutResponse = await createStorefrontCheckout(store.id, store.contact_email || '');
     
     if (checkoutResponse.url) {
-       // 5. EMAIL SILENCED: We bypass Resend here so they don't get redundant emails
-       // 6. BOOM: Bulletproof standard browser redirect to Stripe
+       // 6. Send the Subscription Activation Email
+       await sendCheckoutEmail(
+           store.contact_email,
+           store.client_name || 'Client',
+           store.business_name || 'Storefront',
+           checkoutResponse.url
+       );
+
+       // 7. BOOM: Bulletproof standard browser redirect
        return new Response(null, {
          status: 302,
          headers: {
@@ -78,7 +78,6 @@ export async function GET(request: NextRequest) {
 
   } catch (error) {
     console.error("Approval Automation Failed:", error);
-    
     // If something fails, safely route them back to your main site with an error flag
     const fallbackUrl = process.env.NODE_ENV === 'development' 
       ? 'http://localhost:3000/dashboard?error=approval_failed'

@@ -10,7 +10,6 @@ import StagingAuditReceiptEmail, {
 // Initialize Resend with our environment variable (Single Source of Truth)
 const resend = new Resend(process.env.RESEND_API_KEY);
 
-// 🚨 FIX: Updated the interface to match your exact database columns
 interface StagingAuditRecord {
   id: string;
   created_at?: string;
@@ -49,8 +48,6 @@ export async function POST(req: Request) {
       : "APPROVED";
     
     const statusLabel = hasNotes ? "Adjustments Logged" : "Approved & Locked";
-    
-    // 🚨 FIX: Now checks for business_name first, and uses a professional fallback
     const projectLabel = record.business_name || record.project_name || "Your Storefront";
 
     // ==========================================================
@@ -76,7 +73,7 @@ export async function POST(req: Request) {
         id: crypto.randomUUID(),
         timestamp: new Date().toISOString(),
         author: "CLIENT",
-        type: status, // This will correctly pass "APPROVED" or "CHANGES_REQUESTED"
+        type: status,
         message: hasNotes 
           ? `Client requests adjustments: "${rawNotes}"` 
           : "Client verified and approved the staging architecture. Zero changes requested."
