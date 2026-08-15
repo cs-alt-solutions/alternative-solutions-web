@@ -44,7 +44,7 @@ export async function POST(request: Request) {
       from: 'Courtney <hello@alternativesolutions.io>',
       to: [email],
       subject: 'Workspace Access Granted',
-      react: PortalInviteEmail({ inviteLink: data.properties.action_link }),
+      react: PortalInviteEmail({ magicLink: data.properties.action_link }),
     });
 
     if (resendError) {
