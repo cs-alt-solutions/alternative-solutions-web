@@ -19,7 +19,7 @@ export const WIZARD_COPY = {
         },
         { 
           TITLE: "The Business.", 
-          SUBTITLE: "Nice to meet you, {name}. What are we calling your digital storefront?" 
+          SUBTITLE: "Nice to meet you, {name}. What am I calling your digital storefront?" 
         },
         { 
           TITLE: "Comms.", 
@@ -54,9 +54,9 @@ export const WIZARD_COPY = {
       SUBTEXT: "e.g., We specialize in shadow work and ethically unearthed minerals...",
     },
     STORY: {
-      LABEL: "Tell Us Your Story",
+      LABEL: "Tell Me Your Story",
       BADGE: "Required",
-      HELPER: "What do you do? Why do you do it? Give us the raw brain-dump of your business so we can architect the right foundation for your brand.",
+      HELPER: "What do you do? Why do you do it? Give me the raw brain-dump of your business so I can architect the right foundation for your brand.",
       PLACEHOLDER: "Start typing your vision here..."
     },
     COMMS_PREF: {
@@ -84,7 +84,11 @@ export const WIZARD_COPY = {
   },
 
   STEP_2: {
-    // 🚀 NEW CONVERSATIONAL ENGINE FOR STEP 2
+    // 🚀 RESTORED MISSING STRINGS
+    TITLE_MAIN: "The ",
+    TITLE_HIGHLIGHT: "Network.",
+    SUBTITLE: "Drop your active handles below. Consider this giving me official permission to digitally stalk your brand—in a good way! I will snoop through your pages to pull photos, logos, and your vibe for the initial draft so you don't have to upload a million files. We can always tweak and swap specific assets later.",
+    
     CONVERSATION: {
       STEPS: [
         {
@@ -162,7 +166,7 @@ export const WIZARD_COPY = {
     },
     STORY_SELECT: {
       TITLE: "Story & About Layout",
-      SUBTITLE: "How should we frame your origin story and brand background?",
+      SUBTITLE: "How should I frame your origin story and brand background?",
       OPTIONS: [
         { id: 'classic-split', label: 'Classic Split', desc: 'Clean two-column balance between your narrative and visual proof.' },
         { id: 'editorial', label: 'Editorial', desc: 'Magazine-style typography with an asymmetrical staggered layout.' },
@@ -172,7 +176,7 @@ export const WIZARD_COPY = {
     },
     FLOW_SELECT: {
       TITLE: "Content Flow (Services & Gallery)",
-      SUBTITLE: "How should we display your core offerings, packages, or portfolio?",
+      SUBTITLE: "How should I display your core offerings, packages, or portfolio?",
       OPTIONS: [
         { id: 'stacked', label: 'Stacked', desc: 'Clean vertical progression of your core services and details.' },
         { id: 'bento-grid', label: 'Bento Grid', desc: 'Modern, multi-sized modular boxes for dynamic visual impact.' },
@@ -207,7 +211,6 @@ export const WIZARD_COPY = {
       HIDE_DETAILS: "Hide Details"
     },
     
-    // 🚀 RESTORED PLANS BLOCK
     PLANS: [
       {
         id: 'standard',
