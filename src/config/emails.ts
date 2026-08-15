@@ -45,7 +45,9 @@ export const EMAIL_COPY = {
     
     NEXT_TITLE: "What happens next?",
     NEXT_BODY: "I am currently prepping your digital canvas and routing your social links. You will receive direct updates and preview links straight to this email inbox. If you forgot to mention a specific feature, want to tweak a color, or just have a sudden burst of inspiration, simply hit reply to this email and it goes straight to my personal terminal.",
-    
+    PLEDGE_TITLE: 'Our Build Pledge',
+    PLEDGE_BODY: 'We are officially spinning up your secure infrastructure. You will receive a follow-up transmission with your staging access link once the foundational framework is deployed.',
+
     ...STANDARD_SIGNATURE
   },
   
