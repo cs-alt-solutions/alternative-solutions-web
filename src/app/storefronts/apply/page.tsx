@@ -1,5 +1,6 @@
 import React from 'react';
 import StorefrontWizard from '@/components/storefronts/wizard/StorefrontWizard'; // Update path if needed
+import { createClient } from '@/utils/supabase/server';
 
 export const metadata = {
   title: 'Start Application | Alternative Solutions',
