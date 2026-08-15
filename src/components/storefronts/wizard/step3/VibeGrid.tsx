@@ -1,8 +1,9 @@
+// src/components/storefronts/wizard/step3/VibeGrid.tsx
 'use client';
 
 import React from 'react';
-import { Palette, CheckCircle2, HelpCircle } from 'lucide-react';
-import { WIZARD_COPY } from '@/utils/glossary';
+import { CheckCircle2, HelpCircle } from 'lucide-react';
+import { WIZARD_COPY } from '@/config/wizard';
 
 interface VibeGridProps {
   selectedVibe: string | null;
@@ -10,7 +11,6 @@ interface VibeGridProps {
 }
 
 export default function VibeGrid({ selectedVibe, onSelect }: VibeGridProps) {
-  const copy = WIZARD_COPY.STEP_3;
   const vibesList = WIZARD_COPY.VIBES_LIST || [];
   const cluelessId = WIZARD_COPY.VIBES_META?.CLUELESS_ID || 'clueless';
 
@@ -30,43 +30,31 @@ export default function VibeGrid({ selectedVibe, onSelect }: VibeGridProps) {
   };
 
   return (
-    <div className="space-y-4">
-      <div className="space-y-1">
-        <h3 className="text-lg font-bold text-white flex items-center gap-2">
-          <Palette className="w-5 h-5 text-fuchsia-400" />
-          <span>{copy.VIBE_SELECT?.TITLE}</span>
-        </h3>
-        <p className="text-xs md:text-sm text-zinc-400 font-normal">
-          {copy.VIBE_SELECT?.SUBTITLE}
-        </p>
-      </div>
-
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
-        {vibesList.map((vibe) => (
-          <div 
-            key={vibe.id}
-            onClick={() => onSelect(vibe.id)}
-            className={`relative p-5 cursor-pointer transition-all flex flex-col justify-between min-h-35 group ${getVibeStyles(vibe.id)} ${selectedVibe === vibe.id ? 'ring-4 ring-cyan-400 scale-[1.02] z-10' : 'opacity-80 hover:opacity-100 hover:scale-[1.01]'}`}
-          >
-            <div className="flex justify-between items-start gap-2">
-              <h4 className="text-lg font-bold tracking-tight leading-tight">{vibe.title}</h4>
-              {selectedVibe === vibe.id && (
-                <CheckCircle2 className="w-5 h-5 shrink-0 text-current animate-in zoom-in-50 duration-200" />
-              )}
-            </div>
-            <p className="opacity-80 text-xs font-normal mt-3 leading-relaxed">{vibe.desc}</p>
-          </div>
-        ))}
-
-        {/* WILDCARD */}
+    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 w-full">
+      {vibesList.map((vibe) => (
         <div 
-          onClick={() => onSelect(cluelessId)}
-          className={`relative p-6 cursor-pointer transition-all flex flex-col items-center justify-center text-center group ${getVibeStyles('clueless')} ${selectedVibe === cluelessId ? 'ring-4 ring-fuchsia-400 bg-zinc-900' : 'opacity-70 hover:opacity-100'}`}
+          key={vibe.id}
+          onClick={() => onSelect(vibe.id)}
+          className={`relative p-5 cursor-pointer transition-all flex flex-col justify-between min-h-35 group ${getVibeStyles(vibe.id)} ${selectedVibe === vibe.id ? 'ring-4 ring-cyan-400 scale-[1.02] z-10' : 'opacity-80 hover:opacity-100 hover:scale-[1.01]'}`}
         >
-          <HelpCircle className="w-8 h-8 mb-2 text-fuchsia-400 group-hover:scale-110 transition-transform" />
-          <h4 className="text-base font-bold text-zinc-200">{WIZARD_COPY.VIBES_META?.CLUELESS_TITLE}</h4>
-          <p className="text-xs text-zinc-500 max-w-md mt-1 font-normal">{WIZARD_COPY.VIBES_META?.CLUELESS_DESC}</p>
+          <div className="flex justify-between items-start gap-2">
+            <h4 className="text-lg font-bold tracking-tight leading-tight">{vibe.title}</h4>
+            {selectedVibe === vibe.id && (
+              <CheckCircle2 className="w-5 h-5 shrink-0 text-current animate-in zoom-in-50 duration-200" />
+            )}
+          </div>
+          <p className="opacity-80 text-xs font-normal mt-3 leading-relaxed text-left">{vibe.desc}</p>
         </div>
+      ))}
+
+      {/* WILDCARD */}
+      <div 
+        onClick={() => onSelect(cluelessId)}
+        className={`relative p-6 cursor-pointer transition-all flex flex-col items-center justify-center text-center group ${getVibeStyles('clueless')} ${selectedVibe === cluelessId ? 'ring-4 ring-fuchsia-400 bg-zinc-900' : 'opacity-70 hover:opacity-100'}`}
+      >
+        <HelpCircle className="w-8 h-8 mb-2 text-fuchsia-400 group-hover:scale-110 transition-transform" />
+        <h4 className="text-base font-bold text-zinc-200">{WIZARD_COPY.VIBES_META?.CLUELESS_TITLE}</h4>
+        <p className="text-xs text-zinc-500 max-w-md mt-1 font-normal">{WIZARD_COPY.VIBES_META?.CLUELESS_DESC}</p>
       </div>
     </div>
   );

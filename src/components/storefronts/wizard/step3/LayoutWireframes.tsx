@@ -1,5 +1,4 @@
-'use client';
-
+// src/components/storefronts/wizard/step3/LayoutWireframes.tsx
 import React from 'react';
 
 export const renderHeroWireframe = (type: string) => {

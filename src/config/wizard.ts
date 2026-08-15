@@ -1,27 +1,61 @@
-/* src/config/wizard.ts */
+// src/config/wizard.ts
 
 export const WIZARD_COPY = {
+  PROGRESS_BAR: [
+    { num: 1, label: 'The Basics' },
+    { num: 2, label: 'Network' },
+    { num: 3, label: 'Vibe' },
+    { num: 4, label: 'Scope' },
+    { num: 5, label: 'Pledge' }
+  ],
   STEP_1: {
-    TITLE_MAIN: "Let's Build",
-    TITLE_PUNCT: ".",
-    SUBTITLE: "Answer what you know, leave what you don't. I will handle the heavy lifting.",
+    CONVERSATION: {
+      STEPS: [
+        { 
+          TITLE: "Let's Build.", 
+          SUBTITLE: "First things first. Who am I talking to?" 
+        },
+        { 
+          TITLE: "The Business.", 
+          SUBTITLE: "Nice to meet you, {name}. What am I calling your digital storefront?" 
+        },
+        { 
+          TITLE: "Comms.", 
+          SUBTITLE: "Got it. How can I get in touch when things are ready for review?" 
+        },
+        { 
+          TITLE: "The Brain Dump.", 
+          SUBTITLE: "Give me the raw vision. What do you do? Why do you do it? Don't worry about making it sound perfect. I genuinely want to know—I'm truly inspired by everyday entrepreneurship, and this is fun for me. I get to help be a part of your success, so this is my chance to hear your story." 
+        },
+        { 
+          TITLE: "The Hook.", 
+          SUBTITLE: "Do you know what you want to say, or is this something you want me to write?" 
+        }
+      ]
+    },
     LABELS: {
       NAME: "Your Name",
       BUSINESS: "Business Name",
       EMAIL: "Email Address",
       PHONE: "Phone Number",
-      TAGLINE: "Main Headline",
+      TAGLINE: "Elevator Pitch / Tagline",
       TAGLINE_HELPER: "The first words people read when they land on your page.",
-      SUBTEXT: "Elevator Pitch",
+      SUBTEXT: "Supporting Subtext",
       SUBTEXT_HELPER: "A simple sentence explaining what you actually sell or offer."
     },
     PLACEHOLDERS: {
-      NAME: "e.g., Art Vandelay",
-      BUSINESS: "e.g., Ducky's Obsidian Apothecary",
-      EMAIL: "e.g., ducky@quack.com",
-      PHONE: "(555) 867-5309",
-      TAGLINE: "e.g., Dark arts. Good intentions. Fierce magic.",
-      SUBTEXT: "e.g., We specialize in shadow work, protective talismans, and ethically unearthed minerals...",
+      NAME: "Type your full name...",
+      BUSINESS: "Type your business name...",
+      EMAIL: "courtney@example.com",
+      PHONE: "(555) 123-4567",
+      TAGLINE: "e.g., We specialize in shadow work and ethically unearthed minerals. Give me the full pitch...",
+      SUBTEXT: "e.g., We specialize in shadow work and ethically unearthed minerals...",
+    },
+    STORY: {
+      LABEL: "Tell Me Your Story",
+      BADGE: "Required",
+      HELPER: "What do you do? Why do you do it? Give me the raw brain-dump of your business so I can architect the right foundation for your brand.",
+      PLACEHOLDER: "Start typing your vision here..."
     },
     VALIDATION: {
       INVALID_EMAIL: "Invalid Format",
@@ -34,38 +68,41 @@ export const WIZARD_COPY = {
       BTN_YES_DESC: "I know exactly what I want my site to say.",
       BTN_NO_LABEL: "You Write The Copy",
       BTN_NO_DESC: "I have no clue. Just make it sound badass.",
-      DELEGATED_BADGE: "Hell yeah. I'll snoop through your social links and write something that actually slaps."
+      DELEGATED_BADGE: "Hell yeah. I'll extract the best parts of your story and write something that actually slaps."
     },
     ACTIONS: {
-      CANCEL: "Cancel Application",
-      NEXT: "Got it. Ready to link up 🔗"
+      CANCEL: "Cancel",
+      NEXT: "Continue"
     }
   },
   STEP_2: {
-    TITLE_MAIN: "The ",
-    TITLE_HIGHLIGHT: "Network.",
-    SUBTITLE: "Drop your active handles below. Consider this giving me official permission to digitally stalk your brand—in a good way! I will snoop through your pages to pull photos, logos, and your vibe for the initial draft so you don't have to upload a million files. We can always tweak and swap specific assets later.",
+    CONVERSATION: {
+      STEPS: [
+        {
+          TITLE: "The Network.",
+          SUBTITLE: "Do you have any of these? Select the platforms where your brand is currently active."
+        },
+        {
+          TITLE: "Sweet.",
+          SUBTITLE: "Drop your usernames below. I'll snoop through your pages to pull photos and get a feel for your overall vibe."
+        },
+        {
+          TITLE: "The Badass Brag.",
+          SUBTITLE: "I love to hear the story. You stepped out of the corporate rat race to build your own business, and that takes serious grit. Tell me why you started and what makes your brand kick ass."
+        }
+      ]
+    },
     LABELS: {
       OTHER_LINK: "Other Website or Link",
-      HANDLE_PREFIX: "@"
     },
     PLACEHOLDERS: {
-      SOCIAL: "clean_username (no URLs)",
-      OTHER: "https://yourwebsite.com or custom link"
-    },
-    ORIGIN_STORY: {
-      TITLE: "Flex Your Origin Story",
-      SUBTITLE: "I love to hear the story—I am all about the story. You stepped out of the corporate rat race to build your own empire, and that takes serious grit. Most people feel guilty bragging about themselves, but fuck yeah, fucking brag! You are actually doing this. Tell me why you started and what makes your business kick ass.",
-      LABEL: "The Badass Brag (Required)",
-      HELPER: "Whether this is just internal context for me to learn your vibe, or the exact words you want published to the world—let's hear it. You shouldn't have to stress over the annoying tech parts or learn things you don't care about. I actually enjoy building the engine; you just brag about your empire.",
-      PLACEHOLDER: "e.g., I got tired of bosses who didn't know their ass from their elbow, so I started Ducky's Obsidian Apothecary to do things on my own terms and build something real..."
-    },
-    COMMUNICATION: {
-      TITLE: "How I communicate",
-      BODY: "I route all build updates and preview links straight to your email. One searchable place, zero clutter."
+      SOCIAL: "username (no URLs)",
+      OTHER: "https://yourwebsite.com",
+      STORY: "e.g., I got tired of bosses who didn't know their ass from their elbow, so I started Ducky's Obsidian Apothecary to do things on my own terms..."
     },
     ACTIONS: {
-      NEXT: "Sweet. Bring on the visuals 🎨"
+      NEXT: "Continue",
+      FINISH: "Lock It In"
     }
   },
   STEP_3: {
@@ -115,7 +152,7 @@ export const WIZARD_COPY = {
     },
     STORY_SELECT: {
       TITLE: "Story & About Layout",
-      SUBTITLE: "How should we frame your origin story and brand background?",
+      SUBTITLE: "How should I frame your origin story and brand background?",
       OPTIONS: [
         { id: 'classic-split', label: 'Classic Split', desc: 'Clean two-column balance between your narrative and visual proof.' },
         { id: 'editorial', label: 'Editorial', desc: 'Magazine-style typography with an asymmetrical staggered layout.' },
@@ -125,7 +162,7 @@ export const WIZARD_COPY = {
     },
     FLOW_SELECT: {
       TITLE: "Content Flow (Services & Gallery)",
-      SUBTITLE: "How should we display your core offerings, packages, or portfolio?",
+      SUBTITLE: "How should I display your core offerings, packages, or portfolio?",
       OPTIONS: [
         { id: 'stacked', label: 'Stacked', desc: 'Clean vertical progression of your core services and details.' },
         { id: 'bento-grid', label: 'Bento Grid', desc: 'Modern, multi-sized modular boxes for dynamic visual impact.' },
@@ -148,16 +185,40 @@ export const WIZARD_COPY = {
     TITLE_HIGHLIGHT: "Scope.",
     SUBTITLE_START: "Last step! Choose your infrastructure plan. ",
     SUBTITLE_HIGHLIGHT: "This isn't a discounted deal; this is the new standard.",
-    SUBTITLE_END: " Quality web architecture shouldn't cost an arm and a leg. It should be accessible to anybody building an empire, not just those with capital to burn.",
-    EMPTY_PLANS: "No active plans found in the database.",
-    PLAN: {
-      FALLBACK_NAME: "Plan Option",
-      FALLBACK_DESC: "Standard plan tier.",
-      CURRENCY_SYMBOL: "$",
-      MONTHLY_SUFFIX: " a month",
-      VIEW_SCOPE: "View Scope",
-      HIDE_DETAILS: "Hide Details"
-    },
+    SUBTITLE_END: " Quality web architecture shouldn't cost an arm and a leg. It should be accessible to anybody building a business, not just those with capital to burn.",
+    
+    PLANS: [
+      {
+        id: 'standard',
+        name: "The Standard",
+        price: "$5",
+        suffix: " a month",
+        description: "The complete storefront engine. Built to scale your business.",
+        features: [
+          "Pre-engineered Next.js multi-page architecture",
+          "Direct lead routing straight to your email",
+          "Curated brand accents & layout frameworks",
+          "Forever Legacy Rate Lock guarantee"
+        ],
+        available: true,
+        recommended: true
+      },
+      {
+        id: 'professional',
+        name: "The Professional",
+        price: "$15",
+        suffix: " a month",
+        description: "Everyone starts at Standard. We will email you when this unlocks.",
+        features: [
+          "Everything in The Standard",
+          "Custom Domain Connection (yourname.com)",
+          "Priority support queue"
+        ],
+        available: false,
+        comingSoonText: "Under Construction"
+      }
+    ],
+
     DOMAIN: {
       TITLE: "Domain Connection",
       CHECKBOX: "I already have a custom domain",
@@ -174,33 +235,45 @@ export const WIZARD_COPY = {
       LABEL: "Final Brain-Dump (Optional)",
       PLACEHOLDER: "Drop any raw thoughts or specific functionality you need before I review your file..."
     },
-    // 🚀 RE-ENGINEERED FOR ACCORDION & STRICT RATE PARITY
-    LEGACY_PLEDGE: {
-      TITLE: "THE FOUNDER'S PLEDGE • LEGACY RATE AGREEMENT",
-      SUBTITLE: "Before we deploy your build, here is what you are guaranteed, why things might occasionally look wonky, and exactly how your rate lock works.",
-      SECTIONS: [
-        {
-          heading: "THE STANDARD",
-          body: "Professional, custom-coded web architecture shouldn't be gatekept by massive price tags. You get enterprise hosting, direct lead routing, and a clean custom build that scales with your empire."
-        },
-        {
-          heading: "THE REALITY CHECK",
-          body: "Alternative Solutions is an active, independent tech lab. As I push platform upgrades and build out new features, you might occasionally see digital dust or temporary wonkiness. You aren't just buying a static site; we are building an evolving engine. If the system gets sassy, you have my direct line and I fix it immediately."
-        },
-        {
-          heading: "THE FOREVER RATE LOCK & UPGRADES",
-          body: "Your rate is locked in for life FOR THE TIER YOU SELECT TODAY. When public pricing increases for new clients, your foundational price stays untouched. However, if you start on a baseline tier and later decide to upgrade to a premium tier packed with new features, you will upgrade at that tier's current market rate—no hopping to premium tiers for baseline prices!"
-        },
-        {
-          heading: "THE HARD BOUNDARIES",
-          body: "Two simple rules: Open communication is mandatory—we build this together as partners. Second, your legacy rate lock requires an active, uninterrupted subscription to remain valid."
-        }
-      ],
-      CHECKBOX_LABEL: "I understand that active development means occasional digital dust, I agree to communicate openly, and I acknowledge the rate-lock upgrade rules to secure my founder's pricing forever."
-    },
     ACTIONS: {
+      NEXT: "Review & Lock It In 🚀",
       SUBMIT_LOADING: "Transmitting...",
       SUBMIT: "Send It"
+    }
+  },
+  STEP_5: {
+    TITLE_MAIN: "The ",
+    TITLE_HIGHLIGHT: "Pledge.",
+    SUBTITLE: "No agency bloat. Zero friction. Before we initiate the build sequence, please review the standard operating agreement. These are the rules of engagement.",
+    PILLARS: [
+      {
+        title: "The Standard",
+        body: "I don't do rigid templates or standard corporate setups. I build custom, high-performance ecosystems. To get your custom engine running, we either agree on a simple, flat-rate build fee, or we set up a value-trade (bartering your goods/services). After that, it's just a flat monthly subscription for the enterprise infrastructure."
+      },
+      {
+        title: "The Reality Check",
+        body: "Alternative Solutions is an active, independent tech lab. This is a living, evolving engine—not a static, perfect-out-of-the-box product. Because this is an active build, you might occasionally see digital dust. If something looks wonky, it will be resolved; you have my direct line and I will fix it immediately."
+      },
+      {
+        title: "The Forever Rate",
+        body: "Your legacy pricing is locked in forever, but <strong>only for the specific tier you select today</strong>. As long as your subscription remains active and uninterrupted, your monthly rate for that specific plan will never increase."
+      },
+      {
+        title: "The Hard Boundaries",
+        body: "Open communication is mandatory—you and I build this together as partners. Second, if you choose to upgrade your plan later (e.g., transitioning from Standard to Professional), you will be subject to the <strong>current market pricing</strong> of that new tier. Lock in your advanced features now."
+      }
+    ],
+    AGREEMENT: {
+      CHECKBOX_LABEL: "I understand the boundaries and I am ready to build."
+    },
+    ACTIONS: {
+      BACK: "Back to Scope",
+      SUBMIT: "Dope. Let's Build 🤘",
+      SUBMITTING: "Sending..."
+    },
+    ALERTS: {
+      SUCCESS: "Sweet! Your application is locked in. I'm taking over the heavy lifting.",
+      ERROR: "Whoops, transmission failed. Check the console."
     }
   },
   VIBES_LIST: [
@@ -214,11 +287,6 @@ export const WIZARD_COPY = {
     { id: 'editorial', title: 'High Fashion Editorial', desc: 'Stark black and white contrast with oversized, dramatic serif headlines.' }
   ],
   VIBES_META: {
-    CLUELESS_ID: 'clueless',
-    CLUELESS_TITLE: 'No Fucking Clue',
-    CLUELESS_DESC: 'I trust you. Just build something badass.'
-  },
-  VIBES: {
     CLUELESS_ID: 'clueless',
     CLUELESS_TITLE: 'No Fucking Clue',
     CLUELESS_DESC: 'I trust you. Just build something badass.'

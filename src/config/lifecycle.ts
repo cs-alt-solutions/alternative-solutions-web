@@ -1,6 +1,10 @@
+// src/config/lifecycle.ts
+
 export type StorefrontStatus = 
   | 'PENDING' 
   | 'BUILDING' 
+  | 'AWAITING_ASSETS' // 🚀 NEW
+  | 'ON_HOLD'         // 🚀 NEW
   | 'IN REVIEW' 
   | 'APPROVED' 
   | 'ACTIVE' 
@@ -31,16 +35,34 @@ export const STOREFRONT_LIFECYCLE: Record<StorefrontStatus, LifecycleConfig> = {
     label: 'Building',
     badgeColor: 'bg-cyan-500/10 text-cyan-400 border-cyan-500/20',
     isPubliclyVisible: false,
-    isCanvasLocked: false, // ONLY state where the canvas is fully unlocked
-    allowedNextStates: ['IN REVIEW', 'CANCELED'],
+    isCanvasLocked: false, 
+    allowedNextStates: ['AWAITING_ASSETS', 'ON_HOLD', 'IN REVIEW', 'CANCELED'],
     description: 'In the workshop. Fully editable, hidden from public view.'
+  },
+  // 🚀 NEW: Waiting on the client
+  'AWAITING_ASSETS': {
+    label: 'Awaiting Assets',
+    badgeColor: 'bg-amber-500/10 text-amber-500 border-amber-500/20',
+    isPubliclyVisible: false,
+    isCanvasLocked: false, 
+    allowedNextStates: ['BUILDING', 'ON_HOLD', 'CANCELED'],
+    description: 'Build paused. Waiting on client to provide logos, copy, or media.'
+  },
+  // 🚀 NEW: General pause
+  'ON_HOLD': {
+    label: 'On Hold',
+    badgeColor: 'bg-rose-500/10 text-rose-400 border-rose-500/20',
+    isPubliclyVisible: false,
+    isCanvasLocked: true, 
+    allowedNextStates: ['BUILDING', 'CANCELED'],
+    description: 'Project frozen. No active development happening.'
   },
   'IN REVIEW': {
     label: 'In Review',
     badgeColor: 'bg-amber-500/10 text-amber-400 border-amber-500/20',
     isPubliclyVisible: true, 
     isCanvasLocked: true,    
-    allowedNextStates: ['BUILDING', 'APPROVED', 'CANCELED'], // Can go back to building if they want changes
+    allowedNextStates: ['BUILDING', 'APPROVED', 'CANCELED'], 
     description: 'Staging link transmitted. Canvas locked during client review.'
   },
   'APPROVED': {
@@ -64,14 +86,14 @@ export const STOREFRONT_LIFECYCLE: Record<StorefrontStatus, LifecycleConfig> = {
     badgeColor: 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20',
     isPubliclyVisible: true,
     isCanvasLocked: true,
-    allowedNextStates: ['MAINTENANCE', 'HIDDEN', 'CANCELED'], // Now they have access to the post-launch states!
+    allowedNextStates: ['MAINTENANCE', 'HIDDEN', 'CANCELED'], 
     description: 'Production active. Recurring revenue pipeline established.'
   },
   'MAINTENANCE': {
     label: 'Maintenance Mode',
     badgeColor: 'bg-blue-500/10 text-blue-400 border-blue-500/20',
-    isPubliclyVisible: false, // Shows a maintenance screen to the public
-    isCanvasLocked: false,    // Unlocks so you can make updates
+    isPubliclyVisible: false, 
+    isCanvasLocked: false,    
     allowedNextStates: ['ACTIVE', 'LIVE', 'HIDDEN', 'CANCELED'],
     description: 'Temporarily offline for scheduled upgrades.'
   },
@@ -88,7 +110,7 @@ export const STOREFRONT_LIFECYCLE: Record<StorefrontStatus, LifecycleConfig> = {
     badgeColor: 'bg-rose-500/10 text-rose-400 border-rose-500/20',
     isPubliclyVisible: false,
     isCanvasLocked: true,
-    allowedNextStates: ['BUILDING'], // In case of accidental cancellation
+    allowedNextStates: ['BUILDING'], 
     description: 'Project terminated or archived.'
   }
 };

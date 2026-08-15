@@ -51,7 +51,8 @@ export async function createStorefront(formData: FormData) {
     social_url: 'https://facebook.com',
     gallery_items: [],
     logo_size: 'large',
-    audit_notes: [] // Ensures ledger is ready
+    industry_tag: formData.get('industry_tag') || 'General', // 🟢 ADDED HERE
+    audit_notes: [] 
   };
 
   const { error } = await supabase.from('storefronts').insert(storefrontData);
@@ -66,11 +67,12 @@ export async function updateStorefrontCore(id: string, formData: FormData) {
   
   const updateData: any = {};
 
+  // 🟢 WE ADDED 'industry_tag' TO THE ALLOWED FIELDS ARRAY
   const fields = [
     'business_name', 'slug', 'tagline', 'subtext', 'primary_cta', 'secondary_cta',
     'brand_color', 'theme_style', 'hero_layout', 'content_layout', 'about_layout',
     'about_heading', 'about_bio', 'capabilities_heading', 'gallery_heading', 'contact_email',
-    'logo_size' 
+    'logo_size', 'industry_tag'
   ];
 
   fields.forEach(field => {
@@ -273,5 +275,18 @@ export async function dispatchStagingReview(id: string, slug: string, businessNa
 
   revalidatePath('/dashboard/storefronts', 'layout');
   revalidatePath('/dashboard', 'layout');
+  return { success: true };
+}
+export async function quickUpdateStorefrontStatus(id: string, newStatus: string) {
+  const supabase = await createClient();
+  
+  const { error } = await supabase
+    .from('storefronts')
+    .update({ status: newStatus })
+    .eq('id', id);
+    
+  if (error) throw new Error(error.message);
+  
+  revalidatePath('/dashboard/storefronts', 'layout');
   return { success: true };
 }

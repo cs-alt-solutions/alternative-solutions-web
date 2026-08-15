@@ -2,7 +2,8 @@
 'use client';
 
 import React, { useState, useRef } from 'react';
-import { X, Plus, Store, Link as LinkIcon, Palette, Sparkles, UploadCloud, LayoutTemplate, Columns, MonitorPlay, Check } from 'lucide-react';
+import Link from 'next/link';
+import { X, Plus, Store, Link as LinkIcon, Palette, Sparkles, UploadCloud, LayoutTemplate, Columns, MonitorPlay, Check, Rocket } from 'lucide-react';
 import { createStorefront } from '@/app/actions/storefronts';
 
 const BRAND_COLORS = [
@@ -84,13 +85,28 @@ export default function NewStorefrontModal() {
   }
 
   return (
-    <>
+    <div className="flex flex-wrap items-center gap-3">
+      
+      {/* 🚀 THE NEW POS IGNITION SWITCH */}
+      <Link 
+        href="/storefronts/apply"
+        target="_blank"
+        className="flex items-center gap-2 bg-fuchsia-500/10 hover:bg-fuchsia-500/20 border border-fuchsia-500/20 text-fuchsia-400 font-bold px-4 py-2.5 rounded-md transition-all duration-300"
+        title="Open interactive wizard for in-person clients"
+      >
+        <Rocket className="w-4 h-4" />
+        <span className="hidden sm:inline">LAUNCH APPLICATION</span>
+        <span className="sm:hidden">POS</span>
+      </Link>
+
+      {/* ORIGINAL MANUAL PROVISION BUTTON */}
       <button 
         onClick={() => setIsOpen(true)}
-        className="flex items-center gap-2 bg-cyan-600 hover:bg-cyan-500 text-zinc-950 font-bold px-5 py-2.5 rounded-md transition-all duration-300 transform hover:scale-105 shadow-[0_0_15px_rgba(8,145,178,0.4)]"
+        className="flex items-center gap-2 bg-cyan-600 hover:bg-cyan-500 text-zinc-950 font-bold px-4 py-2.5 rounded-md transition-all duration-300 transform hover:scale-105 shadow-[0_0_15px_rgba(8,145,178,0.4)]"
       >
-        <Plus className="w-5 h-5" />
-        NEW STOREFRONT
+        <Plus className="w-4 h-4" />
+        <span className="hidden sm:inline">MANUAL PROVISION</span>
+        <span className="sm:hidden">MANUAL</span>
       </button>
 
       {isOpen && (
@@ -112,9 +128,8 @@ export default function NewStorefrontModal() {
               </button>
             </div>
 
-            <form ref={formRef} action={handleAction} className="p-6 overflow-y-auto space-y-8">
+            <form ref={formRef} action={handleAction} className="p-6 overflow-y-auto space-y-8 text-left">
               
-              {/* HIDDEN INPUT FOR TOGGLE STATE */}
               <input type="hidden" name="is_template" value={isTemplate.toString()} />
 
               {/* ROW 1: Identity */}
@@ -172,7 +187,7 @@ export default function NewStorefrontModal() {
                         {isTemplate && <Check className="w-3 h-3 text-zinc-950" strokeWidth={4} />}
                      </div>
                      <span className={`text-[10px] font-bold uppercase tracking-widest ${isTemplate ? 'text-cyan-400' : 'text-zinc-500'}`}>
-                       Public Prototype
+                        Public Prototype
                      </span>
                      <MonitorPlay className={`w-4 h-4 ml-auto ${isTemplate ? 'text-cyan-400' : 'text-zinc-600'}`} />
                    </div>
@@ -271,14 +286,14 @@ export default function NewStorefrontModal() {
                 <button 
                   type="button"
                   onClick={() => setIsOpen(false)}
-                  className="px-6 py-3 rounded-lg font-bold text-zinc-400 hover:text-white transition-colors"
+                  className="px-6 py-3 rounded-lg font-bold text-zinc-400 hover:text-white transition-colors cursor-pointer"
                 >
                   CANCEL
                 </button>
                 <button 
                   type="submit"
                   disabled={isSubmitting}
-                  className="px-8 py-3 rounded-lg font-black tracking-widest uppercase bg-cyan-600 hover:bg-cyan-500 text-zinc-950 disabled:opacity-50 transition-all shadow-[0_0_15px_rgba(8,145,178,0.4)]"
+                  className="px-8 py-3 rounded-lg font-black tracking-widest uppercase bg-cyan-600 hover:bg-cyan-500 text-zinc-950 disabled:opacity-50 transition-all cursor-pointer shadow-[0_0_15px_rgba(8,145,178,0.4)]"
                 >
                   {isSubmitting ? 'PROVISIONING...' : 'DEPLOY STOREFRONT'}
                 </button>
@@ -287,6 +302,6 @@ export default function NewStorefrontModal() {
           </div>
         </div>
       )}
-    </>
+    </div>
   );
 }

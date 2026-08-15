@@ -1,8 +1,9 @@
+// src/components/storefronts/wizard/step3/LayoutArchitecture.tsx
 'use client';
 
 import React, { useState } from 'react';
-import { Layout, CheckCircle2, Sparkles } from 'lucide-react';
-import { WIZARD_COPY } from '@/utils/glossary';
+import { CheckCircle2, Sparkles } from 'lucide-react';
+import { WIZARD_COPY } from '@/config/wizard';
 import { renderHeroWireframe, renderStoryWireframe, renderFlowWireframe } from './LayoutWireframes';
 
 interface LayoutArchitectureProps {
@@ -26,17 +27,9 @@ export default function LayoutArchitecture({
   const [structureMode, setStructureMode] = useState<'delegate' | 'custom'>('delegate');
 
   return (
-    <div className="bg-zinc-900/30 border border-white/5 rounded-2xl p-6 md:p-8 shadow-xl space-y-6">
-      <div>
-        <h3 className="text-base md:text-lg font-bold text-white flex items-center gap-2">
-          <Layout className="w-4 h-4 text-cyan-400" />
-          <span>{copy.STRUCTURE_TOGGLE?.TITLE}</span>
-        </h3>
-        <p className="text-xs md:text-sm text-zinc-400 mt-1 font-normal max-w-xl">
-          {copy.STRUCTURE_TOGGLE?.SUBTITLE}
-        </p>
-      </div>
-
+    <div className="bg-zinc-900/30 border border-white/5 rounded-2xl p-6 shadow-xl space-y-6 w-full max-w-4xl mx-auto">
+      
+      {/* THE DELEGATE VS CUSTOM TOGGLE */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <button
           type="button"
@@ -80,8 +73,8 @@ export default function LayoutArchitecture({
       </div>
 
       {structureMode === 'delegate' && (
-        <div className="p-3.5 rounded-xl bg-cyan-500/10 border border-cyan-500/20 text-cyan-300 text-xs font-normal flex items-center gap-2.5 animate-in fade-in slide-in-from-top-2 duration-300">
-          <Sparkles className="w-4 h-4 text-cyan-400 shrink-0 animate-pulse" />
+        <div className="p-4 rounded-xl bg-cyan-500/10 border border-cyan-500/20 text-cyan-300 text-sm font-normal flex items-center gap-3 animate-in fade-in slide-in-from-top-2 duration-300">
+          <Sparkles className="w-5 h-5 text-cyan-400 shrink-0 animate-pulse" />
           <span>{copy.STRUCTURE_TOGGLE?.DELEGATED_BADGE}</span>
         </div>
       )}

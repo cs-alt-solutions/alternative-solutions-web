@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Activity, Send, CreditCard, Mail, CheckCircle2, AlertTriangle, RefreshCw, Globe } from 'lucide-react';
+import { Activity, Send, CreditCard, Mail, CheckCircle2, AlertTriangle, RefreshCw, Globe, PauseCircle, PlayCircle, Image as ImageIcon } from 'lucide-react';
 import { STOREFRONT_LIFECYCLE, StorefrontStatus } from '@/config/lifecycle';
 import { createStorefrontCheckout } from '@/app/actions/billing';
 import { dispatchStagingReview } from '@/app/actions/storefronts';
@@ -65,6 +65,12 @@ export default function LifecyclePanel({ formData, setFormData }: { formData: an
     }
   };
 
+  const handleStatusChange = (newStatus: StorefrontStatus) => {
+    if(window.confirm(`Update project status to ${newStatus}?`)) {
+      setFormData({...formData, status: newStatus});
+    }
+  };
+
   // --- BULLETPROOF PIPELINE DEFINITION ---
   const pipelineSteps = [
     { id: 'BUILDING', label: 'Architecture & Build' },
@@ -75,11 +81,16 @@ export default function LifecyclePanel({ formData, setFormData }: { formData: an
 
   // Robust mapping so the UI never crashes on an unmapped string
   let visualStatus = currentStatus;
+  // Map our new holding patterns to remain visually in Step 1
   if (['CHANGES_REQUESTED'].includes(currentStatus)) visualStatus = 'IN REVIEW';
   if (['APPROVED_PENDING_BILLING'].includes(currentStatus)) visualStatus = 'APPROVED';
+  if (['AWAITING_ASSETS', 'ON_HOLD'].includes(currentStatus)) visualStatus = 'BUILDING';
   if (['ACTIVE', 'LIVE', 'MAINTENANCE', 'HIDDEN'].includes(currentStatus)) visualStatus = 'ACTIVE';
 
   const currentIndex = pipelineSteps.findIndex(s => s.id === visualStatus);
+
+  // Check if we are currently in a paused state
+  const isPaused = currentStatus === 'AWAITING_ASSETS' || currentStatus === 'ON_HOLD';
 
   return (
     <div className="bg-zinc-900/60 border rounded-xl overflow-hidden backdrop-blur-md transition-all duration-500 border-zinc-800 flex flex-col">
@@ -105,19 +116,58 @@ export default function LifecyclePanel({ formData, setFormData }: { formData: an
       <div className="p-6 flex-1 flex flex-col">
         <div className="space-y-6 relative before:absolute before:inset-0 before:ml-3.5 before:-translate-x-px md:before:mx-auto md:before:translate-x-0 before:h-full before:w-0.5 before:bg-linear-to-b before:from-transparent before:via-zinc-800 before:to-transparent">
           
-          {/* STEP 1: BUILDING */}
+          {/* STEP 1: BUILDING & HOLDING PATTERNS */}
           <div className={`relative flex items-center justify-between md:justify-normal md:odd:flex-row-reverse group transition-opacity duration-300 ${currentIndex >= 0 ? 'opacity-100' : 'opacity-40'}`}>
-            <div className={`flex items-center justify-center w-7 h-7 rounded-full border-2 shrink-0 md:order-1 md:group-odd:-translate-x-1/2 md:group-even:translate-x-1/2 shadow-sm ${currentIndex > 0 ? 'bg-cyan-500 border-cyan-500 text-black' : currentIndex === 0 ? 'bg-zinc-950 border-cyan-500 text-cyan-500' : 'bg-zinc-950 border-zinc-800 text-zinc-600'}`}>
-              {currentIndex > 0 ? <CheckCircle2 size={14} /> : <span className="text-[10px] font-black">1</span>}
+            <div className={`flex items-center justify-center w-7 h-7 rounded-full border-2 shrink-0 md:order-1 md:group-odd:-translate-x-1/2 md:group-even:translate-x-1/2 shadow-sm ${
+              isPaused ? 'bg-zinc-950 border-amber-500 text-amber-500' :
+              currentIndex > 0 ? 'bg-cyan-500 border-cyan-500 text-black' : 
+              currentIndex === 0 ? 'bg-zinc-950 border-cyan-500 text-cyan-500' : 
+              'bg-zinc-950 border-zinc-800 text-zinc-600'
+            }`}>
+              {isPaused ? <PauseCircle size={14} /> : currentIndex > 0 ? <CheckCircle2 size={14} /> : <span className="text-[10px] font-black">1</span>}
             </div>
-            <div className="w-[calc(100%-3rem)] md:w-[calc(50%-1.5rem)] p-4 rounded-xl border border-zinc-800 bg-black/50 shadow-sm flex flex-col gap-3">
-              <div className="flex items-center justify-between">
-                <span className={`text-[10px] font-black uppercase tracking-widest ${currentIndex >= 0 ? 'text-white' : 'text-zinc-500'}`}>Architecture</span>
+            
+            <div className={`w-[calc(100%-3rem)] md:w-[calc(50%-1.5rem)] p-4 rounded-xl border shadow-sm flex flex-col gap-3 transition-all ${
+              isPaused ? 'border-amber-500/30 bg-amber-500/5' : 'border-zinc-800 bg-black/50'
+            }`}>
+              <div className="flex flex-col gap-1">
+                <span className={`text-[10px] font-black uppercase tracking-widest ${currentIndex >= 0 ? 'text-white' : 'text-zinc-500'}`}>
+                  Architecture
+                </span>
+                {isPaused && (
+                  <span className="text-[10px] font-mono text-amber-500 uppercase tracking-widest flex items-center gap-1.5">
+                    <AlertTriangle size={10} /> {config.label}
+                  </span>
+                )}
               </div>
+
               {currentIndex === 0 && (
-                <button onClick={() => handleTransmitReview(false)} disabled={isSendingReview} className="w-full flex items-center justify-center gap-2 bg-cyan-500/10 hover:bg-cyan-500/20 text-cyan-400 border border-cyan-500/30 py-2.5 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all cursor-pointer disabled:opacity-50">
-                  {isSendingReview ? 'Transmitting...' : 'Transmit Review Link'} {!isSendingReview && <Send size={12} />}
-                </button>
+                <div className="flex flex-col gap-3">
+                  
+                  {/* Transmission Button */}
+                  <button onClick={() => handleTransmitReview(false)} disabled={isSendingReview || isPaused} className="w-full flex items-center justify-center gap-2 bg-cyan-500/10 hover:bg-cyan-500/20 text-cyan-400 border border-cyan-500/30 py-2.5 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all cursor-pointer disabled:opacity-50 disabled:grayscale">
+                    {isSendingReview ? 'Transmitting...' : 'Transmit Review Link'} {!isSendingReview && <Send size={12} />}
+                  </button>
+
+                  {/* Holding Pattern Controls */}
+                  <div className="flex items-center gap-2 pt-2 border-t border-zinc-800/80">
+                    {isPaused ? (
+                      <button onClick={() => handleStatusChange('BUILDING')} className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded border border-zinc-700 hover:border-emerald-500/50 hover:bg-emerald-500/10 text-[9px] font-mono text-zinc-400 hover:text-emerald-400 transition-colors uppercase tracking-widest">
+                        <PlayCircle size={10} /> Resume Build
+                      </button>
+                    ) : (
+                      <>
+                        <button onClick={() => handleStatusChange('AWAITING_ASSETS')} className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded border border-zinc-800 hover:border-amber-500/50 hover:bg-amber-500/10 text-[9px] font-mono text-zinc-500 hover:text-amber-400 transition-colors uppercase tracking-widest">
+                          <ImageIcon size={10} /> Wait on Assets
+                        </button>
+                        <button onClick={() => handleStatusChange('ON_HOLD')} className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded border border-zinc-800 hover:border-rose-500/50 hover:bg-rose-500/10 text-[9px] font-mono text-zinc-500 hover:text-rose-400 transition-colors uppercase tracking-widest">
+                          <PauseCircle size={10} /> Pause Project
+                        </button>
+                      </>
+                    )}
+                  </div>
+
+                </div>
               )}
             </div>
           </div>
@@ -158,11 +208,7 @@ export default function LifecyclePanel({ formData, setFormData }: { formData: an
                     </button>
 
                     <button 
-                      onClick={() => {
-                         if(window.confirm("Force override to APPROVED state?")) {
-                            setFormData({...formData, status: 'APPROVED'});
-                         }
-                      }} 
+                      onClick={() => handleStatusChange('APPROVED')} 
                       className="text-[9px] font-mono text-zinc-600 hover:text-fuchsia-400 transition-colors uppercase tracking-widest flex items-center gap-1 cursor-pointer"
                     >
                       <AlertTriangle size={10}/> Force Approve

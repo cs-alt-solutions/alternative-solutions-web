@@ -1,13 +1,12 @@
-// src/components/dashboard/storefronts/ApplicationReviewModal.tsx
 'use client';
 
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { 
   X, Rocket, XCircle, CreditCard, User, Globe, 
-  Share2, Instagram, Twitter, Linkedin, 
-  Facebook, Hash, Flame, Palette, Layout, MessageSquare, 
-  Phone, Link as LinkIcon, Target
+  Share2, Instagram, Twitter, Linkedin, Zap,
+  Facebook, Hash, Palette, Layout, MessageSquare, 
+  Link as LinkIcon, Target
 } from 'lucide-react';
 import { updateApplicationStatus } from '@/app/actions/storefront_applications';
 
@@ -31,13 +30,13 @@ export default function ApplicationReviewModal({
 
   const targetApp = app || application || {};
 
-  // THE PRE-DUMP STATE
-  const [overrideVibe, setOverrideVibe] = useState(targetApp.selected_vibe || targetApp.theme_style || 'industrial');
+  // THE PRE-DUMP STATE (Defaults to what they selected in the Wizard, or fallbacks)
+  const [overrideVibe, setOverrideVibe] = useState(targetApp.selected_vibe || 'industrial');
   const [overrideColor, setOverrideColor] = useState(targetApp.brand_color || 'cyan');
-  const [overrideHero, setOverrideHero] = useState(targetApp.hero_structure || 'center');
-  const [overrideStory, setOverrideStory] = useState(targetApp.story_structure || 'split');
-  const [overrideFlow, setOverrideFlow] = useState(targetApp.content_flow || 'classic');
-  const [overridePlan, setOverridePlan] = useState((targetApp.selected_plan || targetApp.plan_tier || 'foundation').toLowerCase());
+  const [overrideHero, setOverrideHero] = useState(targetApp.hero_layout || 'centered');
+  const [overrideStory, setOverrideStory] = useState(targetApp.story_layout || 'classic-split');
+  const [overrideFlow, setOverrideFlow] = useState(targetApp.content_layout || 'stacked');
+  const [overridePlan, setOverridePlan] = useState((targetApp.selected_plan || 'standard').toLowerCase());
 
   // Universal close handler
   const triggerClose = () => {
@@ -103,12 +102,21 @@ export default function ApplicationReviewModal({
   };
 
   // --- ENGINE ARCHITECTURE RESOLVERS ---
-  const originStory = targetApp.origin_story || targetApp.badass_brag || targetApp.metadata?.originStory || null;
-  const brainDump = targetApp.description || targetApp.final_notes || targetApp.metadata?.description || null;
-  const phone = targetApp.phone || targetApp.applicant_phone || targetApp.metadata?.phone || null;
+  // Safely parse social handles from Supabase JSONB
+  const rawSocials = targetApp.social_handles;
+  const safeSocials = typeof rawSocials === 'string' ? JSON.parse(rawSocials) : (rawSocials || {});
+
+  const applicantName = targetApp.applicant_name || 'Pending Data';
+  const applicantEmail = targetApp.applicant_email || 'No Email';
+  const applicantPhone = targetApp.applicant_phone || null;
+  const existingDomain = targetApp.existing_domain || null;
+  const brainDump = targetApp.business_description || null;
+  const tagline = targetApp.tagline || null;
+  const wantsCustom = targetApp.wants_custom;
+  const isPriority = targetApp.is_priority;
 
   const getColorDotClass = (colorName: string) => {
-    switch(colorName.toLowerCase()) {
+    switch(colorName?.toLowerCase()) {
       case 'fuchsia': return 'bg-fuchsia-500 shadow-[0_0_8px_rgba(217,70,239,0.8)]';
       case 'emerald': return 'bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.8)]';
       case 'amber': return 'bg-amber-400 shadow-[0_0_8px_rgba(251,191,36,0.8)]';
@@ -120,12 +128,12 @@ export default function ApplicationReviewModal({
   };
 
   const socialProfiles = [
-    { name: 'Instagram', value: targetApp.instagram || targetApp.socials?.instagram, icon: Instagram, color: 'text-pink-400', border: 'border-pink-500/20 bg-pink-500/5' },
-    { name: 'X / Twitter', value: targetApp.twitter || targetApp.socials?.twitter, icon: Twitter, color: 'text-cyan-400', border: 'border-cyan-500/20 bg-cyan-500/5' },
-    { name: 'LinkedIn', value: targetApp.linkedin || targetApp.socials?.linkedin, icon: Linkedin, color: 'text-blue-400', border: 'border-blue-500/20 bg-blue-500/5' },
-    { name: 'Facebook', value: targetApp.facebook || targetApp.socials?.facebook, icon: Facebook, color: 'text-indigo-400', border: 'border-indigo-500/20 bg-indigo-500/5' },
-    { name: 'TikTok', value: targetApp.tiktok || targetApp.socials?.tiktok, icon: Hash, color: 'text-purple-400', border: 'border-purple-500/20 bg-purple-500/5' },
-    { name: 'Other', value: targetApp.other_link || targetApp.socials?.other, icon: LinkIcon, color: 'text-teal-400', border: 'border-teal-500/20 bg-teal-500/5' },
+    { name: 'Instagram', value: safeSocials.instagram, icon: Instagram, color: 'text-pink-400', border: 'border-pink-500/20 bg-pink-500/5' },
+    { name: 'X / Twitter', value: safeSocials.twitter, icon: Twitter, color: 'text-cyan-400', border: 'border-cyan-500/20 bg-cyan-500/5' },
+    { name: 'LinkedIn', value: safeSocials.linkedin, icon: Linkedin, color: 'text-blue-400', border: 'border-blue-500/20 bg-blue-500/5' },
+    { name: 'Facebook', value: safeSocials.facebook, icon: Facebook, color: 'text-indigo-400', border: 'border-indigo-500/20 bg-indigo-500/5' },
+    { name: 'TikTok', value: safeSocials.tiktok, icon: Hash, color: 'text-purple-400', border: 'border-purple-500/20 bg-purple-500/5' },
+    { name: 'Other', value: safeSocials.other, icon: LinkIcon, color: 'text-teal-400', border: 'border-teal-500/20 bg-teal-500/5' },
   ].filter(s => !!s.value);
 
   // Dynamic Header for Plan Tier
@@ -150,9 +158,15 @@ export default function ApplicationReviewModal({
                 <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-ping" /> Intake Brief
               </span>
               <span className="text-zinc-500 text-xs font-mono tracking-wider">ID: {targetApp.id?.slice(0, 8) || 'PENDING'}</span>
+              
+              {isPriority && (
+                <span className="px-2 py-0.5 rounded text-[9px] font-black uppercase tracking-widest bg-amber-500/10 text-amber-400 border border-amber-500/20 flex items-center gap-1">
+                  <Zap size={10} /> Priority Queue
+                </span>
+              )}
             </div>
             <h2 className="text-2xl md:text-3xl font-black text-white uppercase tracking-tight leading-none">
-              {targetApp.business_name || targetApp.projectName || 'Unnamed Project'}
+              {targetApp.business_name || 'Unnamed Project'}
             </h2>
           </div>
           
@@ -181,10 +195,10 @@ export default function ApplicationReviewModal({
                   </div>
                   <div>
                     <p className="text-[10px] font-black uppercase tracking-widest text-zinc-500">Applicant</p>
-                    <p className="text-sm font-bold text-white">{targetApp.applicant_name || targetApp.name || targetApp.primary_contact || 'N/A'}</p>
+                    <p className="text-sm font-bold text-white">{applicantName}</p>
                     <div className="flex flex-col gap-0.5 mt-1">
-                      <a href={`mailto:${targetApp.applicant_email || targetApp.email}`} className="text-xs font-mono text-cyan-400 hover:underline">{targetApp.applicant_email || targetApp.email || 'No Email'}</a>
-                      {phone && <a href={`tel:${phone}`} className="text-xs font-mono text-zinc-400 hover:text-white">{phone}</a>}
+                      <a href={`mailto:${applicantEmail}`} className="text-xs font-mono text-cyan-400 hover:underline">{applicantEmail}</a>
+                      {applicantPhone && <a href={`tel:${applicantPhone}`} className="text-xs font-mono text-zinc-400 hover:text-white">{applicantPhone}</a>}
                     </div>
                   </div>
                 </div>
@@ -195,9 +209,9 @@ export default function ApplicationReviewModal({
                   </div>
                   <div>
                     <p className="text-[10px] font-black uppercase tracking-widest text-zinc-500">Existing Domain</p>
-                    {targetApp.existing_domain ? (
-                      <a href={targetApp.existing_domain.startsWith('http') ? targetApp.existing_domain : `https://${targetApp.existing_domain}`} target="_blank" rel="noreferrer" className="text-sm font-mono font-bold text-cyan-400 hover:text-cyan-300 hover:underline break-all">
-                        {targetApp.existing_domain}
+                    {existingDomain ? (
+                      <a href={existingDomain.startsWith('http') ? existingDomain : `https://${existingDomain}`} target="_blank" rel="noreferrer" className="text-sm font-mono font-bold text-cyan-400 hover:text-cyan-300 hover:underline break-all">
+                        {existingDomain}
                       </a>
                     ) : (
                       <p className="text-sm font-mono text-zinc-600">None Provided</p>
@@ -208,48 +222,31 @@ export default function ApplicationReviewModal({
 
               <div className="h-px w-full bg-linear-to-r from-zinc-800/80 via-zinc-800/20 to-transparent" />
 
-              {/* The Ask / Elevator Pitch */}
+              {/* The Hook / Tagline */}
               <div>
                 <h3 className="text-xs font-black text-white uppercase tracking-widest flex items-center gap-2 mb-3">
-                  <Target size={14} className="text-fuchsia-400" /> The Vision
+                  <Target size={14} className="text-fuchsia-400" /> The Hook
                 </h3>
                 <div className="bg-zinc-900/50 rounded-xl border border-zinc-800 p-5 space-y-4">
-                  {targetApp.tagline && targetApp.tagline !== 'ARCHITECT_DELEGATED' ? (
-                    <p className="text-lg font-bold text-white tracking-wide border-l-2 border-fuchsia-500 pl-4">&ldquo;{targetApp.tagline}&rdquo;</p>
+                  {wantsCustom && tagline ? (
+                    <p className="text-lg font-bold text-white tracking-wide border-l-2 border-fuchsia-500 pl-4">&ldquo;{tagline}&rdquo;</p>
                   ) : (
                     <span className="inline-block px-2.5 py-1 rounded-md bg-fuchsia-500/10 border border-fuchsia-500/30 text-fuchsia-400 text-[10px] font-black uppercase tracking-widest">
                       Delegated to Architect
                     </span>
                   )}
-                  <p className="text-sm text-zinc-300 leading-relaxed font-light">
-                    {targetApp.business_description || targetApp.subtext || 'No pitch provided.'}
-                  </p>
                 </div>
               </div>
 
-              {/* Origin Story (The Flex) */}
-              {originStory && (
-                <div>
-                  <h3 className="text-xs font-black text-amber-400 uppercase tracking-widest flex items-center gap-2 mb-3">
-                    <Flame size={14} /> The Badass Brag
-                  </h3>
-                  <div className="bg-amber-500/5 rounded-xl border border-amber-500/20 p-5">
-                    <p className="text-sm text-zinc-300 leading-relaxed font-serif italic">
-                      &ldquo;{originStory}&rdquo;
-                    </p>
-                  </div>
-                </div>
-              )}
-
-              {/* Brain Dump / Notes */}
+              {/* Brain Dump / Origin Story */}
               {brainDump && (
                 <div>
                   <h3 className="text-xs font-black text-teal-400 uppercase tracking-widest flex items-center gap-2 mb-3">
-                    <MessageSquare size={14} /> Additional Notes
+                    <MessageSquare size={14} /> The Brain Dump
                   </h3>
                   <div className="bg-teal-500/5 rounded-xl border border-teal-500/20 p-5">
-                    <p className="text-sm text-zinc-300 leading-relaxed whitespace-pre-wrap">
-                      {brainDump}
+                    <p className="text-sm text-zinc-300 leading-relaxed whitespace-pre-wrap font-serif italic">
+                      &ldquo;{brainDump}&rdquo;
                     </p>
                   </div>
                 </div>
@@ -273,7 +270,7 @@ export default function ApplicationReviewModal({
                   onChange={(e) => setOverridePlan(e.target.value)}
                   className="w-full bg-transparent font-black tracking-tight text-white uppercase text-xl focus:outline-none appearance-none cursor-pointer"
                 >
-                  <option value="foundation" className="text-zinc-900">Foundation ($5/mo)</option>
+                  <option value="standard" className="text-zinc-900">Standard ($5/mo)</option>
                   <option value="professional" className="text-zinc-900">Professional ($15/mo)</option>
                   <option value="custom" className="text-zinc-900">Custom Engine</option>
                 </select>
@@ -286,6 +283,8 @@ export default function ApplicationReviewModal({
                 </h3>
                 
                 <div className="space-y-3">
+                  
+                  {/* Vibe */}
                   <div className="flex items-center justify-between">
                     <span className="text-xs font-medium text-zinc-500 w-1/3">Vibe</span>
                     <select 
@@ -294,13 +293,19 @@ export default function ApplicationReviewModal({
                       className="w-2/3 bg-black border border-zinc-800 rounded-lg p-2 text-xs font-bold text-white uppercase focus:border-cyan-500/50 focus:outline-none appearance-none cursor-pointer"
                     >
                       <option value="industrial">Industrial</option>
-                      <option value="midnight">Midnight Onyx</option>
+                      <option value="brutalist">Brutalist</option>
+                      <option value="neon">Neon Cyberpunk</option>
                       <option value="minimal">Minimalist</option>
-                      <option value="bold">Bold & Brutal</option>
+                      <option value="organic">Organic</option>
+                      <option value="onyx">Midnight Onyx</option>
+                      <option value="retro">Retro</option>
+                      <option value="corporate">Corporate</option>
+                      <option value="editorial">Editorial</option>
                       <option value="clueless">Clueless (Default)</option>
                     </select>
                   </div>
 
+                  {/* Color */}
                   <div className="flex items-center justify-between">
                     <span className="text-xs font-medium text-zinc-500 w-1/3">Color</span>
                     <div className="relative w-2/3">
@@ -323,6 +328,7 @@ export default function ApplicationReviewModal({
 
                   <div className="h-px w-full bg-zinc-800/60 my-2" />
                   
+                  {/* Hero */}
                   <div className="flex items-center justify-between">
                     <span className="text-xs font-medium text-zinc-500 w-1/3">Hero</span>
                     <select 
@@ -330,13 +336,15 @@ export default function ApplicationReviewModal({
                       onChange={(e) => setOverrideHero(e.target.value)}
                       className="w-2/3 bg-black border border-zinc-800 rounded-lg p-2 text-xs font-mono text-zinc-300 focus:border-cyan-500/50 focus:outline-none appearance-none cursor-pointer"
                     >
-                      <option value="centered">center</option>
+                      <option value="centered">Centered</option>
                       <option value="split-left">Split Left</option>
                       <option value="split-right">Split Right</option>
-                      <option value="minimal">Minimal</option>
+                      <option value="cinematic">Cinematic</option>
+                      <option value="glass-center">Glass Center</option>
                     </select>
                   </div>
 
+                  {/* Story */}
                   <div className="flex items-center justify-between">
                     <span className="text-xs font-medium text-zinc-500 w-1/3">Story</span>
                     <select 
@@ -345,9 +353,25 @@ export default function ApplicationReviewModal({
                       className="w-2/3 bg-black border border-zinc-800 rounded-lg p-2 text-xs font-mono text-zinc-300 focus:border-cyan-500/50 focus:outline-none appearance-none cursor-pointer"
                     >
                       <option value="classic-split">Classic Split</option>
-                      <option value="split-left">Split Left</option>
-                      <option value="split-right">Split Right</option>
-                      <option value="grid-mosaic">Grid Mosaic</option>
+                      <option value="editorial">Editorial</option>
+                      <option value="minimal-center">Minimal Center</option>
+                      <option value="glass-card">Glass Card</option>
+                    </select>
+                  </div>
+
+                  {/* Flow */}
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-medium text-zinc-500 w-1/3">Flow</span>
+                    <select 
+                      value={overrideFlow}
+                      onChange={(e) => setOverrideFlow(e.target.value)}
+                      className="w-2/3 bg-black border border-zinc-800 rounded-lg p-2 text-xs font-mono text-zinc-300 focus:border-cyan-500/50 focus:outline-none appearance-none cursor-pointer"
+                    >
+                      <option value="stacked">Stacked</option>
+                      <option value="bento-grid">Bento Grid</option>
+                      <option value="sticky-scroll">Sticky Scroll</option>
+                      <option value="editorial-hover">Editorial Hover</option>
+                      <option value="accordion">Accordion</option>
                     </select>
                   </div>
                 </div>
