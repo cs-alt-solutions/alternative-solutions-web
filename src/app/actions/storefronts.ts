@@ -277,12 +277,21 @@ export async function dispatchStagingReview(id: string, slug: string, businessNa
   revalidatePath('/dashboard', 'layout');
   return { success: true };
 }
-export async function quickUpdateStorefrontStatus(id: string, newStatus: string) {
+export async function quickUpdateStorefrontStatus(id: string, newStatus: string, logEntry?: any) {
   const supabase = await createClient();
+  
+  // If a log entry was passed, we need to fetch the existing logs first to append it
+  let updatePayload: any = { status: newStatus };
+  
+  if (logEntry) {
+    const { data } = await supabase.from('storefronts').select('audit_notes').eq('id', id).single();
+    const currentLogs = data?.audit_notes || [];
+    updatePayload.audit_notes = [...currentLogs, logEntry];
+  }
   
   const { error } = await supabase
     .from('storefronts')
-    .update({ status: newStatus })
+    .update(updatePayload)
     .eq('id', id);
     
   if (error) throw new Error(error.message);

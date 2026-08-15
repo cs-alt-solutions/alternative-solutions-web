@@ -7,26 +7,26 @@ import { supabase } from '@/utils/supabase';
 
 export default function PortalHeader({ clientId }: { clientId: string }) {
   const [workspaceName, setWorkspaceName] = useState('Loading...');
-  const [contactName, setContactName] = useState('Initializing...');
+  const [contactEmail, setContactEmail] = useState('Initializing...');
 
-  // Fetch the human-readable name and contact from the 'clients' table
+  // Fetch the live storefront identity by immutable UUID
   useEffect(() => {
-    const fetchName = async () => {
-      const { data } = await supabase
-        .from('clients')
-        .select('name, primary_contact')
+    const fetchStorefront = async () => {
+      const { data, error } = await supabase
+        .from('storefronts')
+        .select('business_name, contact_email')
         .eq('id', clientId)
         .single();
         
-      if (data) {
-        setWorkspaceName(data.name || 'Workspace');
-        setContactName(data.primary_contact || 'Client');
+      if (!error && data) {
+        setWorkspaceName(data.business_name || 'My Storefront');
+        setContactEmail(data.contact_email || 'Active Client');
       } else {
         setWorkspaceName('Workspace');
-        setContactName('Client');
+        setContactEmail('Client Portal');
       }
     };
-    fetchName();
+    fetchStorefront();
   }, [clientId]);
 
   return (
@@ -46,8 +46,7 @@ export default function PortalHeader({ clientId }: { clientId: string }) {
           <div className="w-8 h-8 rounded-full bg-slate-800 flex items-center justify-center border border-slate-700">
             <User className="w-4 h-4 text-slate-400" />
           </div>
-          {/* CHANGED: Dynamically pulling their contact name instead of Beta Tester */}
-          <span className="text-sm font-medium text-slate-300">{contactName}</span>
+          <span className="text-sm font-medium text-slate-300">{contactEmail}</span>
         </div>
       </div>
     </header>

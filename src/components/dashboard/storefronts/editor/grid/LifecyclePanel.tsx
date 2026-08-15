@@ -1,10 +1,10 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Activity, Send, CreditCard, Mail, CheckCircle2, AlertTriangle, RefreshCw, Globe, PauseCircle, PlayCircle, Image as ImageIcon } from 'lucide-react';
+import { Activity, Send, CreditCard, Mail, CheckCircle2, AlertTriangle, RefreshCw, Globe, Unlock, PlayCircle, ImageIcon, PauseCircle } from 'lucide-react';
 import { STOREFRONT_LIFECYCLE, StorefrontStatus } from '@/config/lifecycle';
 import { createStorefrontCheckout } from '@/app/actions/billing';
-import { dispatchStagingReview } from '@/app/actions/storefronts';
+import { dispatchStagingReview, quickUpdateStorefrontStatus } from '@/app/actions/storefronts';
 
 export default function LifecyclePanel({ formData, setFormData }: { formData: any, setFormData: any }) {
   const currentStatus = (formData.status as string) || 'BUILDING';
@@ -12,8 +12,37 @@ export default function LifecyclePanel({ formData, setFormData }: { formData: an
   const [isSendingCheckout, setIsSendingCheckout] = useState(false);
   const [isSendingReview, setIsSendingReview] = useState(false);
 
-  // Safe config fallback using type casting
   const config = STOREFRONT_LIFECYCLE[currentStatus as StorefrontStatus] || STOREFRONT_LIFECYCLE['BUILDING'];
+
+  // --- DATABASE HANDSHAKE + AUDIT LOGGER ---
+  const handleStatusChange = async (newStatus: StorefrontStatus, customMessage?: string) => {
+    if (window.confirm(`Update project status to ${newStatus}?`)) {
+      
+      // 1. Generate the Audit Log Entry
+      const logType = newStatus === 'APPROVED' ? 'APPROVED' : newStatus;
+      const logEntry = {
+        type: logType,
+        message: customMessage || `Project status updated to ${newStatus}.`,
+        timestamp: new Date().toISOString()
+      };
+
+      // 2. Optimistic UI update (including the new log so the ledger updates instantly)
+      setFormData({ 
+        ...formData, 
+        status: newStatus,
+        audit_notes: [...(formData.audit_notes || []), logEntry]
+      });
+      
+      // 3. Database Sync
+      try {
+        const result = await quickUpdateStorefrontStatus(formData.id, newStatus, logEntry);
+        if (!result || !result.success) throw new Error("Failed to update status");
+      } catch (err: any) {
+        console.error("Database sync failed:", err);
+        alert("Failed to save status to database. Please refresh and try again.");
+      }
+    }
+  };
 
   // --- AUTOMATION ACTIONS ---
   const handleDispatchCheckout = async () => {
@@ -36,14 +65,26 @@ export default function LifecyclePanel({ formData, setFormData }: { formData: an
   const handleTransmitReview = async (isResend = false) => {
     const msg = isResend 
       ? `Resend the Staging Review email to ${formData.contact_email}?`
-      : `ATTENTION: You are about to lock this architecture and dispatch the official Review Link to the client. Are you ready to transmit?`;
+      : `ATTENTION: You are about to lock the Canvas and dispatch the official Review Link to the client. Are you ready to transmit?`;
 
     const isReady = window.confirm(msg);
     
     if (isReady) {
       setIsSendingReview(true);
+      
       if (!isResend) {
-         setFormData({ ...formData, status: 'IN REVIEW' });
+         // Create optimistic log for transmitting
+         const transmitLog = {
+           type: 'REVIEW_DISPATCHED',
+           message: 'Staging architecture link securely transmitted to client for verification.',
+           timestamp: new Date().toISOString()
+         };
+         setFormData({ 
+           ...formData, 
+           status: 'IN REVIEW',
+           audit_notes: [...(formData.audit_notes || []), transmitLog]
+         });
+         await quickUpdateStorefrontStatus(formData.id, 'IN REVIEW', transmitLog);
       }
       
       try {
@@ -58,42 +99,36 @@ export default function LifecyclePanel({ formData, setFormData }: { formData: an
       } catch (err: any) {
         console.error("Dispatch Error:", err);
         alert("Failed to send email. Check the logs.");
-        if (!isResend) setFormData({ ...formData, status: 'BUILDING' });
+        if (!isResend) {
+          setFormData({ ...formData, status: 'BUILDING' });
+          await quickUpdateStorefrontStatus(formData.id, 'BUILDING');
+        }
       } finally {
         setIsSendingReview(false);
       }
     }
   };
 
-  const handleStatusChange = (newStatus: StorefrontStatus) => {
-    if(window.confirm(`Update project status to ${newStatus}?`)) {
-      setFormData({...formData, status: newStatus});
-    }
-  };
-
   // --- BULLETPROOF PIPELINE DEFINITION ---
   const pipelineSteps = [
-    { id: 'BUILDING', label: 'Architecture & Build' },
+    { id: 'BUILDING', label: 'Design & Build' },
     { id: 'IN REVIEW', label: 'Client Verification' },
     { id: 'APPROVED', label: 'Subscription Gate' },
     { id: 'ACTIVE', label: 'Live Edge Network' }
   ];
 
-  // Robust mapping so the UI never crashes on an unmapped string
+  // Robust mapping for holding patterns
   let visualStatus = currentStatus;
-  // Map our new holding patterns to remain visually in Step 1
   if (['CHANGES_REQUESTED'].includes(currentStatus)) visualStatus = 'IN REVIEW';
   if (['APPROVED_PENDING_BILLING'].includes(currentStatus)) visualStatus = 'APPROVED';
   if (['AWAITING_ASSETS', 'ON_HOLD'].includes(currentStatus)) visualStatus = 'BUILDING';
   if (['ACTIVE', 'LIVE', 'MAINTENANCE', 'HIDDEN'].includes(currentStatus)) visualStatus = 'ACTIVE';
 
   const currentIndex = pipelineSteps.findIndex(s => s.id === visualStatus);
-
-  // Check if we are currently in a paused state
   const isPaused = currentStatus === 'AWAITING_ASSETS' || currentStatus === 'ON_HOLD';
 
   return (
-    <div className="bg-zinc-900/60 border rounded-xl overflow-hidden backdrop-blur-md transition-all duration-500 border-zinc-800 flex flex-col">
+    <div className="bg-zinc-900/60 border rounded-xl backdrop-blur-md transition-all duration-500 border-zinc-800 flex flex-col h-full max-h-150">
       
       {/* HEADER */}
       <div className="border-b border-zinc-800 bg-black/40 p-4 flex items-center justify-between shrink-0">
@@ -112,11 +147,11 @@ export default function LifecyclePanel({ formData, setFormData }: { formData: an
         </div>
       </div>
 
-      {/* PIPELINE BODY */}
-      <div className="p-6 flex-1 flex flex-col">
+      {/* PIPELINE BODY (Scrollable Area) */}
+      <div className="p-6 flex-1 flex flex-col overflow-y-auto custom-scrollbar">
         <div className="space-y-6 relative before:absolute before:inset-0 before:ml-3.5 before:-translate-x-px md:before:mx-auto md:before:translate-x-0 before:h-full before:w-0.5 before:bg-linear-to-b before:from-transparent before:via-zinc-800 before:to-transparent">
           
-          {/* STEP 1: BUILDING & HOLDING PATTERNS */}
+          {/* STEP 1: DESIGN & BUILD */}
           <div className={`relative flex items-center justify-between md:justify-normal md:odd:flex-row-reverse group transition-opacity duration-300 ${currentIndex >= 0 ? 'opacity-100' : 'opacity-40'}`}>
             <div className={`flex items-center justify-center w-7 h-7 rounded-full border-2 shrink-0 md:order-1 md:group-odd:-translate-x-1/2 md:group-even:translate-x-1/2 shadow-sm ${
               isPaused ? 'bg-zinc-950 border-amber-500 text-amber-500' :
@@ -132,7 +167,7 @@ export default function LifecyclePanel({ formData, setFormData }: { formData: an
             }`}>
               <div className="flex flex-col gap-1">
                 <span className={`text-[10px] font-black uppercase tracking-widest ${currentIndex >= 0 ? 'text-white' : 'text-zinc-500'}`}>
-                  Architecture
+                  Design & Build
                 </span>
                 {isPaused && (
                   <span className="text-[10px] font-mono text-amber-500 uppercase tracking-widest flex items-center gap-1.5">
@@ -140,33 +175,47 @@ export default function LifecyclePanel({ formData, setFormData }: { formData: an
                   </span>
                 )}
               </div>
-
+              
+              {/* If we are actively in Step 1 */}
               {currentIndex === 0 && (
                 <div className="flex flex-col gap-3">
                   
-                  {/* Transmission Button */}
-                  <button onClick={() => handleTransmitReview(false)} disabled={isSendingReview || isPaused} className="w-full flex items-center justify-center gap-2 bg-cyan-500/10 hover:bg-cyan-500/20 text-cyan-400 border border-cyan-500/30 py-2.5 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all cursor-pointer disabled:opacity-50 disabled:grayscale">
-                    {isSendingReview ? 'Transmitting...' : 'Transmit Review Link'} {!isSendingReview && <Send size={12} />}
-                  </button>
+                  {/* Only show Transmit Review Link if NOT paused */}
+                  {!isPaused && (
+                    <button onClick={() => handleTransmitReview(false)} disabled={isSendingReview || isPaused} className="w-full flex items-center justify-center gap-2 bg-cyan-500/10 hover:bg-cyan-500/20 text-cyan-400 border border-cyan-500/30 py-2.5 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all cursor-pointer disabled:opacity-50 disabled:grayscale">
+                      {isSendingReview ? 'Transmitting...' : 'Transmit Review Link'} {!isSendingReview && <Send size={12} />}
+                    </button>
+                  )}
 
-                  {/* Holding Pattern Controls */}
-                  <div className="flex items-center gap-2 pt-2 border-t border-zinc-800/80">
+                  <div className={`flex items-center gap-2 ${!isPaused ? 'pt-2 border-t border-zinc-800/80' : ''}`}>
                     {isPaused ? (
-                      <button onClick={() => handleStatusChange('BUILDING')} className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded border border-zinc-700 hover:border-emerald-500/50 hover:bg-emerald-500/10 text-[9px] font-mono text-zinc-400 hover:text-emerald-400 transition-colors uppercase tracking-widest">
+                      <button onClick={() => handleStatusChange('BUILDING', 'Project build manually resumed.')} className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded border border-zinc-700 hover:border-emerald-500/50 hover:bg-emerald-500/10 text-[9px] font-mono text-zinc-400 hover:text-emerald-400 transition-colors uppercase tracking-widest cursor-pointer">
                         <PlayCircle size={10} /> Resume Build
                       </button>
                     ) : (
                       <>
-                        <button onClick={() => handleStatusChange('AWAITING_ASSETS')} className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded border border-zinc-800 hover:border-amber-500/50 hover:bg-amber-500/10 text-[9px] font-mono text-zinc-500 hover:text-amber-400 transition-colors uppercase tracking-widest">
+                        <button onClick={() => handleStatusChange('AWAITING_ASSETS', 'Project paused. Awaiting client assets.')} className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded border border-zinc-800 hover:border-amber-500/50 hover:bg-amber-500/10 text-[9px] font-mono text-zinc-500 hover:text-amber-400 transition-colors uppercase tracking-widest cursor-pointer">
                           <ImageIcon size={10} /> Wait on Assets
                         </button>
-                        <button onClick={() => handleStatusChange('ON_HOLD')} className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded border border-zinc-800 hover:border-rose-500/50 hover:bg-rose-500/10 text-[9px] font-mono text-zinc-500 hover:text-rose-400 transition-colors uppercase tracking-widest">
+                        <button onClick={() => handleStatusChange('ON_HOLD', 'Project manually placed on hold.')} className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded border border-zinc-800 hover:border-rose-500/50 hover:bg-rose-500/10 text-[9px] font-mono text-zinc-500 hover:text-rose-400 transition-colors uppercase tracking-widest cursor-pointer">
                           <PauseCircle size={10} /> Pause Project
                         </button>
                       </>
                     )}
                   </div>
+                </div>
+              )}
 
+              {/* If Step 1 is "Done" (Past it), give them an explicit way to GO BACK */}
+              {currentIndex > 0 && (
+                <div className="pt-2 mt-1 border-t border-zinc-800/80">
+                  <button 
+                    onClick={() => handleStatusChange('BUILDING', 'Canvas manually unlocked for architectural edits.')} 
+                    className="flex items-center gap-1.5 text-[9px] text-zinc-500 hover:text-amber-400 font-mono uppercase tracking-widest transition-colors cursor-pointer"
+                    title="Unlock the Canvas to make edits"
+                  >
+                    <Unlock size={10} /> Unlock Canvas & Edit
+                  </button>
                 </div>
               )}
             </div>
@@ -190,10 +239,10 @@ export default function LifecyclePanel({ formData, setFormData }: { formData: an
                   <div className="bg-zinc-950/50 border border-zinc-800/80 rounded-lg p-3">
                     {currentStatus === 'CHANGES_REQUESTED' ? (
                        <p className="text-[10px] text-zinc-300 font-medium leading-relaxed">
-                         Client has submitted revision notes. Please check the Audit Ledger, make changes, and resend the link.
+                         Client submitted revision notes. Check the Audit Ledger, make changes, and resend.
                        </p>
                     ) : (
-                       <p className="text-[10px] text-zinc-400 font-medium italic">Awaiting client sign-off or revision notes...</p>
+                       <p className="text-[10px] text-zinc-400 font-medium italic">Staging link sent. Awaiting client sign-off...</p>
                     )}
                   </div>
                   
@@ -208,7 +257,7 @@ export default function LifecyclePanel({ formData, setFormData }: { formData: an
                     </button>
 
                     <button 
-                      onClick={() => handleStatusChange('APPROVED')} 
+                      onClick={() => handleStatusChange('APPROVED', 'Project manually forced to Approved status.')} 
                       className="text-[9px] font-mono text-zinc-600 hover:text-fuchsia-400 transition-colors uppercase tracking-widest flex items-center gap-1 cursor-pointer"
                     >
                       <AlertTriangle size={10}/> Force Approve
@@ -234,7 +283,7 @@ export default function LifecyclePanel({ formData, setFormData }: { formData: an
                 </button>
               )}
               {currentIndex < 2 && (
-                <div className="text-[10px] text-zinc-600 font-mono italic">Locked pending approval</div>
+                <div className="text-[10px] text-zinc-600 font-mono italic">Locked pending client approval</div>
               )}
             </div>
           </div>

@@ -11,9 +11,9 @@ import {
 import { updateApplicationStatus } from '@/app/actions/storefront_applications';
 
 interface ApplicationReviewModalProps {
-  app?: any; 
-  application?: any; 
-  onClose?: () => void;
+  app?: any;
+  application?: any;
+  onClose?: () => void; // <--- THIS IS THE MISSING PIECE
   closeModal?: () => void;
   handleClose?: () => void;
 }
