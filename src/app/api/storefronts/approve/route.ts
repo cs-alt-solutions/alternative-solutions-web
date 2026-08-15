@@ -3,7 +3,6 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/utils/supabase/server';
 import { createStorefrontCheckout } from '@/app/actions/billing';
 
-// 🚨 CRITICAL: Must be 'export async function GET', absolutely NO 'default' keyword!
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
   const storefrontIdentifier = searchParams.get('id');
@@ -28,23 +27,10 @@ export async function GET(request: NextRequest) {
 
     if (fetchError || !store) throw new Error("Storefront not found in database");
 
-    // 3. Change the status to APPROVED and append to the Audit Ledger
-    const approvalLog = {
-      id: crypto.randomUUID(),
-      timestamp: new Date().toISOString(),
-      author: "CLIENT",
-      type: "APPROVED",
-      message: "Client verified architecture. Build locked and approved."
-    };
-
-    const updatedLogs = [...(store.audit_notes || []), approvalLog];
-
+    // 3. Change the status to APPROVED
     await supabase
       .from('storefronts')
-      .update({ 
-        status: 'APPROVED',
-        audit_notes: updatedLogs 
-      })
+      .update({ status: 'APPROVED' })
       .eq('id', store.id);
 
     // 4. Generate the Stripe Checkout Link
@@ -66,7 +52,6 @@ export async function GET(request: NextRequest) {
   } catch (error) {
     console.error("Approval Automation Failed:", error);
     
-    // If something fails, safely route them back to your main site with an error flag
     const fallbackUrl = process.env.NODE_ENV === 'development' 
       ? 'http://localhost:3000/dashboard?error=approval_failed'
       : 'https://alternativesolutions.io?error=approval_failed';

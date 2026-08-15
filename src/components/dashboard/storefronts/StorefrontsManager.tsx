@@ -143,7 +143,7 @@ export default function StorefrontsManager({ initialData }: { initialData: any[]
               )}
             </div>
             <div className="flex flex-col">
-              <span className="text-sm font-bold text-white tracking-tight truncate max-w-[200px] md:max-w-xs">
+              <span className="text-sm font-bold text-white tracking-tight truncate max-w-50 md:max-w-xs">
                 {store.business_name}
               </span>
               <span className="text-[10px] font-mono text-zinc-500 truncate">
@@ -311,7 +311,7 @@ export default function StorefrontsManager({ initialData }: { initialData: any[]
       </div>
 
       {/* THE DATA GRID */}
-      <div className="bg-[#0a0a0c] border border-zinc-800/80 rounded-xl shadow-xl p-4 sm:p-6">
+      <div className="bg-stardust border border-zinc-800/80 rounded-xl shadow-xl p-4 sm:p-6">
         <div className="overflow-x-auto rounded-lg border border-zinc-800/50 bg-zinc-950/50">
           {processedData.length === 0 ? (
             <div className="p-16 text-center flex flex-col items-center justify-center">
