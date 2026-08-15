@@ -4,17 +4,18 @@ import { Section, Text, Heading, Hr, Button } from '@react-email/components';
 import BaseEmailLayout from '@/components/emails/BaseEmailLayout';
 import { EMAIL_COPY } from '@/config/emails';
 
+// FIXED: Perfectly aligned with the Stripe Webhook payload
 interface PortalInviteEmailProps {
-  operatorName?: string;
-  workspaceName?: string;
-  inviteLink: string;
+  clientName?: string;
+  businessName?: string;
+  magicLink: string;
   role?: string;
 }
 
 export default function PortalInviteEmail({
-  operatorName = "Operator",
-  workspaceName = "Your Workspace",
-  inviteLink = "https://alternativesolutions.io/login",
+  clientName = "Client",
+  businessName = "Your Workspace",
+  magicLink = "https://alternativesolutions.io/login",
   role = "Client Owner"
 }: PortalInviteEmailProps) {
   const copy = EMAIL_COPY.PORTAL_INVITE;
@@ -33,9 +34,9 @@ export default function PortalInviteEmail({
       
       {/* GREETING & INTRO */}
       <Section className="mb-6">
-        <Text className="text-white text-base m-0 mb-4">{copy.GREETING} {operatorName},</Text>
+        <Text className="text-white text-base m-0 mb-4">{copy.GREETING} {clientName},</Text>
         <Text className="text-zinc-300 text-sm leading-relaxed m-0">
-          {copy.INTRO_START}<strong className="text-white">{workspaceName}</strong>{copy.INTRO_MID}<strong className="text-cyan-400">{role}</strong>{copy.INTRO_END}
+          {copy.INTRO_START}<strong className="text-white">{businessName}</strong>{copy.INTRO_MID}<strong className="text-cyan-400">{role}</strong>{copy.INTRO_END}
         </Text>
       </Section>
 
@@ -65,7 +66,7 @@ export default function PortalInviteEmail({
           {copy.CTA_TEXT}
         </Text>
         <Button 
-          href={inviteLink}
+          href={magicLink}
           className="bg-cyan-400 text-black font-black px-10 py-4 rounded-lg text-xs uppercase tracking-widest no-underline inline-block"
         >
           {copy.CTA_BUTTON}

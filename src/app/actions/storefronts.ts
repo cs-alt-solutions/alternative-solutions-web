@@ -1,4 +1,3 @@
-// src/app/actions/storefronts.ts
 'use server';
 
 import { revalidatePath } from 'next/cache';
@@ -51,7 +50,7 @@ export async function createStorefront(formData: FormData) {
     social_url: 'https://facebook.com',
     gallery_items: [],
     logo_size: 'large',
-    industry_tag: formData.get('industry_tag') || 'General', // 🟢 ADDED HERE
+    industry_tag: formData.get('industry_tag') || 'General',
     audit_notes: [] 
   };
 
@@ -67,7 +66,6 @@ export async function updateStorefrontCore(id: string, formData: FormData) {
   
   const updateData: any = {};
 
-  // 🟢 WE ADDED 'industry_tag' TO THE ALLOWED FIELDS ARRAY
   const fields = [
     'business_name', 'slug', 'tagline', 'subtext', 'primary_cta', 'secondary_cta',
     'brand_color', 'theme_style', 'hero_layout', 'content_layout', 'about_layout',
@@ -220,10 +218,9 @@ export async function deleteStorefront(id: string) {
   return { success: true };
 }
 
-export async function dispatchStagingReview(id: string, slug: string, businessName: string, contactEmail: string, planTier: string) {
+export async function dispatchStagingReview(id: string, slug: string, businessName: string, contactEmail: string, planTier: string, clientName: string) {
   const supabase = await createClient();
 
-  // 1. Fetch current audit logs so we can append to them
   const { data: storeData } = await supabase
     .from('storefronts')
     .select('audit_notes')
@@ -240,7 +237,6 @@ export async function dispatchStagingReview(id: string, slug: string, businessNa
 
   const updatedLogs = [...(storeData?.audit_notes || []), dispatchLog];
 
-  // 2. Update the status and write the log
   const { error: dbError } = await supabase
     .from('storefronts')
     .update({ 
@@ -253,7 +249,6 @@ export async function dispatchStagingReview(id: string, slug: string, businessNa
     throw new Error(`Database update failed: ${dbError.message}`);
   }
 
-  // Hardcoded to strictly point to the Template Engine subdomain
   const previewUrl = `https://storefronts.alternativesolutions.io/${slug}`;
 
   const emailResult = await dispatchSystemEmail({
@@ -261,7 +256,7 @@ export async function dispatchStagingReview(id: string, slug: string, businessNa
     subject: `Staging Ready • Review Your Blueprint: ${businessName}`,
     type: 'STAGING_REVIEW',
     data: {
-      name: businessName,
+      clientName: clientName, // 🚨 THE FIX: Ensures perfectly mapped payload
       businessName: businessName,
       previewUrl: previewUrl,
       planTier: planTier || 'Foundation Plan', 
@@ -277,10 +272,10 @@ export async function dispatchStagingReview(id: string, slug: string, businessNa
   revalidatePath('/dashboard', 'layout');
   return { success: true };
 }
+
 export async function quickUpdateStorefrontStatus(id: string, newStatus: string, logEntry?: any) {
   const supabase = await createClient();
   
-  // If a log entry was passed, we need to fetch the existing logs first to append it
   let updatePayload: any = { status: newStatus };
   
   if (logEntry) {

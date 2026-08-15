@@ -18,7 +18,6 @@ export default function LifecyclePanel({ formData, setFormData }: { formData: an
   const handleStatusChange = async (newStatus: StorefrontStatus, customMessage?: string) => {
     if (window.confirm(`Update project status to ${newStatus}?`)) {
       
-      // 1. Generate the Audit Log Entry
       const logType = newStatus === 'APPROVED' ? 'APPROVED' : newStatus;
       const logEntry = {
         type: logType,
@@ -26,14 +25,12 @@ export default function LifecyclePanel({ formData, setFormData }: { formData: an
         timestamp: new Date().toISOString()
       };
 
-      // 2. Optimistic UI update (including the new log so the ledger updates instantly)
       setFormData({ 
         ...formData, 
         status: newStatus,
         audit_notes: [...(formData.audit_notes || []), logEntry]
       });
       
-      // 3. Database Sync
       try {
         const result = await quickUpdateStorefrontStatus(formData.id, newStatus, logEntry);
         if (!result || !result.success) throw new Error("Failed to update status");
@@ -73,7 +70,6 @@ export default function LifecyclePanel({ formData, setFormData }: { formData: an
       setIsSendingReview(true);
       
       if (!isResend) {
-         // Create optimistic log for transmitting
          const transmitLog = {
            type: 'REVIEW_DISPATCHED',
            message: 'Staging architecture link securely transmitted to client for verification.',
@@ -93,7 +89,9 @@ export default function LifecyclePanel({ formData, setFormData }: { formData: an
           formData.slug, 
           formData.business_name || 'Your Storefront', 
           formData.contact_email,
-          formData.plan_tier || 'Foundation Plan'
+          formData.plan_tier || 'Foundation Plan',
+          // 🚨 THE FIX: Pulls contact_name, falls back to applicant_name, then falls back to a chill 'there'
+          formData.contact_name || formData.applicant_name || 'there' 
         );
         alert("Review Email Successfully Dispatched!");
       } catch (err: any) {
@@ -117,7 +115,6 @@ export default function LifecyclePanel({ formData, setFormData }: { formData: an
     { id: 'ACTIVE', label: 'Live Edge Network' }
   ];
 
-  // Robust mapping for holding patterns
   let visualStatus = currentStatus;
   if (['CHANGES_REQUESTED'].includes(currentStatus)) visualStatus = 'IN REVIEW';
   if (['APPROVED_PENDING_BILLING'].includes(currentStatus)) visualStatus = 'APPROVED';

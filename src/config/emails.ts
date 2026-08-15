@@ -40,9 +40,8 @@ export const EMAIL_COPY = {
     
     BRAG_TITLE: "The Badass Brag:",
     
-    // 🚀 NEW: The Pledge Acknowledgment
-    PLEDGE_TITLE: "Rules of Engagement (Confirmed)",
-    PLEDGE_BODY: "By submitting this application, you officially acknowledged our operating agreement. You secured your Forever Rate Lock for your selected tier, agreed to open communication, and understand that Alternative Solutions is an active tech lab. We build together.",
+    GUARANTEE_TITLE: "Your Foundational Rate Lock Guarantee",
+    GUARANTEE_BODY: "Per our Founder's Pledge, your pricing is locked in for life for the tier you selected today. As I continuously push platform upgrades and enhance the infrastructure, your foundational price will never increase when public rates go up. If you ever decide to upgrade to a higher tier packed with new features later, you will upgrade at that tier's active market rate—keeping everything fair, transparent, and built for growth.",
     
     NEXT_TITLE: "What happens next?",
     NEXT_BODY: "I am currently prepping your digital canvas and routing your social links. You will receive direct updates and preview links straight to this email inbox. If you forgot to mention a specific feature, want to tweak a color, or just have a sudden burst of inspiration, simply hit reply to this email and it goes straight to my personal terminal.",
@@ -86,16 +85,23 @@ export const EMAIL_COPY = {
 
   // 3. THE REVIEW & DEPLOYMENT PIPELINE
   STAGING_REVIEW: {
-    HEADER: 'Pre-Launch Deployment',
-    SUBHEADER: 'Ready For Review',
+    HEADER: 'Build Progress',
+    SUBHEADER: 'Staging Environment',
     GREETING: 'Hey',
-    BODY_1: 'we did it! I have everything built, wired up, and deployed to a private staging link just for you. Before we lock in your hosting and push this live to the world, I need you to take it for a spin.',
-    INSTRUCTIONS_TITLE: 'How Our Review Stage Works',
-    INSTRUCTIONS_INTRO: 'I built an interactive review widget right into the bottom corner of your staging site to make this super easy:',
-    INSTRUCTION_APPROVE: 'If you love it: Check off the verification boxes in the widget and hit Approve! That logs your sign-off and instantly generates your activation link so we can flip your domain live.',
-    INSTRUCTION_TWEAK: 'If you want tweaks: This is your chance! If a headline needs adjusting or an image doesn\'t hit right, type your notes directly into the widget and hit submit.',
-    INSTRUCTION_WARNING: 'Note on Revisions: We do focused, purposeful reviews. Please list all of your adjustments directly in the widget so I can execute them in one clean, lightning-fast pass.',
-    CTA_BUTTON: 'Open Private Staging Link',
+    BODY_1: "here is a quick preview of what your digital storefront's going to look like so far. We can definitely make adjustments, but I wanted to show you the progress before we get your subscription going.",
+    INSTRUCTIONS_TITLE: 'What happens next?',
+    INSTRUCTIONS_INTRO: 'Instead of going back and forth over email, I want to get you set up in your private client portal so we can collaborate and finish this efficiently.',
+    
+    INSTRUCTION_1_TITLE: '1. Take a look',
+    INSTRUCTION_1_BODY: 'Click the link, view the staging progress, and see the foundation we are building.',
+    
+    INSTRUCTION_2_TITLE: '2. Activate subscription',
+    INSTRUCTION_2_BODY: 'When you are ready to proceed, click the button on the staging widget to set up your subscription.',
+    
+    INSTRUCTION_3_TITLE: '⚡ 3. Enter your portal',
+    INSTRUCTION_3_BODY: 'Once active, you unlock your portal. That is where you will upload your images and drop your specific tweaks so we can finish getting you exactly where you need to be.',
+    
+    CTA_BUTTON: 'Access your staging environment',
     ...STANDARD_SIGNATURE
   },
 
@@ -107,13 +113,28 @@ export const EMAIL_COPY = {
     ...STANDARD_SIGNATURE
   },
 
-  // 4. THE MANUAL FALLBACK PIPELINE
+  // 4. THE MANUAL FALLBACK & ACTIVATION PIPELINE
   MANUAL_CHECKOUT: {
     HEADER: 'Architecture Sign-Off',
     SUBHEADER: 'Subscription Initialization',
     GREETING: 'Hey',
     BODY: 'As requested, here is the secure link to initialize your monthly hosting and infrastructure subscription. Once this is activated, we will flip the switch and route your domain to the live server!',
     CTA_BUTTON: 'Activate Subscription',
+    ...STANDARD_SIGNATURE
+  },
+
+  SUBSCRIPTION_ACTIVATION: {
+    HEADER: 'Storefront Approved',
+    SUBHEADER: 'Ready for Deployment',
+    GREETING: 'Hey',
+    BODY_START: 'Great news—your digital storefront for ',
+    BODY_END: ' is fully approved and ready to be deployed to the live edge network.',
+    DETAILS_TITLE: 'Activation Details',
+    PLAN_LABEL: 'Selected Tier:',
+    PRICE_LABEL: 'Subscription:',
+    NEXT_STEPS_TITLE: 'What happens next?',
+    NEXT_STEPS_BODY: 'Click the button below to initialize your monthly hosting subscription via our secure Stripe checkout. The second your payment clears, I get a ping, and I will instantly route your domain to the live server. It’s go time.',
+    CTA_BUTTON: 'Initialize Subscription',
     ...STANDARD_SIGNATURE
   },
 

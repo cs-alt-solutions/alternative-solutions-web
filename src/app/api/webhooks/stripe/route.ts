@@ -2,6 +2,9 @@ import { headers } from 'next/headers';
 import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js'; 
 import Stripe from 'stripe';
+import { Resend } from 'resend';
+import * as React from 'react';
+import PortalInviteEmail from '@/components/emails/PortalInviteEmail';
 
 export async function POST(req: Request) {
   const secretKey = process.env.STRIPE_SECRET_KEY;
@@ -12,7 +15,7 @@ export async function POST(req: Request) {
 
   // 1. Initialize Stripe
   const stripe = new Stripe(secretKey, {
-    apiVersion: '2026-02-25.clover', // Best practice to use latest, but keeping your format
+    apiVersion: '2026-02-25.clover', 
   });
 
   // 2. Initialize a secure Supabase Admin connection (Bypasses RLS)
@@ -80,14 +83,14 @@ export async function POST(req: Request) {
     if (targetIdentifier) {
       console.log(`💳 Processing SaaS Payment for Storefront: ${targetIdentifier}`);
       
-      // Bulletproof UUID vs Slug Check (Just like your approval route!)
+      // Bulletproof UUID vs Slug Check
       const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(targetIdentifier);
       const queryColumn = isUUID ? 'id' : 'slug';
 
       // 1. Fetch the existing storefront to grab the current audit_notes
       const { data: storeData, error: fetchError } = await supabaseAdmin
         .from('storefronts')
-        .select('audit_notes, contact_email')
+        .select('audit_notes, contact_email, business_name')
         .eq(queryColumn, targetIdentifier)
         .single();
 
@@ -96,13 +99,15 @@ export async function POST(req: Request) {
         return new NextResponse('Database Error', { status: 500 });
       }
 
+      const clientEmail = session.customer_details?.email || storeData?.contact_email;
+
       // 2. Create the new Payment Log
       const paymentLog = {
         id: crypto.randomUUID(),
         timestamp: new Date().toISOString(),
         author: "SYSTEM",
         type: "PAYMENT_CLEARED",
-        message: `Subscription activated via Stripe. Payment cleared for ${session.customer_details?.email || storeData?.contact_email}. System upgraded to ACTIVE.`
+        message: `Subscription activated via Stripe. Payment cleared for ${clientEmail}. System upgraded to ACTIVE.`
       };
 
       const currentLogs = storeData?.audit_notes || [];
@@ -112,7 +117,7 @@ export async function POST(req: Request) {
       const { error: storeError } = await supabaseAdmin
         .from('storefronts')
         .update({ 
-          status: 'ACTIVE', // Setting to ACTIVE to trigger your new UI Badge!
+          status: 'ACTIVE', 
           stripe_customer_id: session.customer as string,
           stripe_subscription_id: session.subscription as string,
           audit_notes: updatedLogs
@@ -124,6 +129,43 @@ export async function POST(req: Request) {
         return new NextResponse('Database Error', { status: 500 });
       } 
       
+      // ------------------------------------------------------------------
+      // 4. THE MAGIC LINK GENERATOR & PORTAL INVITE DISPATCH
+      // ------------------------------------------------------------------
+      if (clientEmail) {
+        try {
+          // Generate the passwordless login URL directly into their portal
+          const { data: linkData, error: linkError } = await supabaseAdmin.auth.admin.generateLink({
+            type: 'magiclink',
+            email: clientEmail,
+            options: {
+              redirectTo: `${process.env.NEXT_PUBLIC_BASE_URL || 'https://storefronts.alternativesolutions.io'}/portal/${targetIdentifier}`
+            }
+          });
+
+          if (linkError) throw linkError;
+
+          if (linkData?.properties?.action_link) {
+            const resend = new Resend(process.env.RESEND_API_KEY);
+            
+            // Dispatch the sleek invite email with the Magic Link attached
+            await resend.emails.send({
+              from: process.env.RESEND_FROM_EMAIL || "portal@alternativesolutions.io",
+              to: [clientEmail],
+              subject: `Welcome to your Workspace: ${storeData.business_name || 'Storefront'}`,
+              react: React.createElement(PortalInviteEmail, {
+                businessName: storeData.business_name || 'Your Storefront',
+                magicLink: linkData.properties.action_link
+              })
+            });
+            console.log(`✉️ Portal Invite with Magic Link dispatched to ${clientEmail}`);
+          }
+        } catch (emailErr) {
+          // We catch this so an email failure doesn't crash the Stripe 200 OK response
+          console.error("Failed to generate or send Magic Link:", emailErr);
+        }
+      }
+
       console.log(`✅ Storefront [${targetIdentifier}] successfully activated and logged!`);
       return NextResponse.json({ received: true });
     }

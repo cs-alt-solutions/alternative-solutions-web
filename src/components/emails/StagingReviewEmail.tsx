@@ -5,18 +5,16 @@ import BaseEmailLayout from '@/components/emails/BaseEmailLayout';
 import { EMAIL_COPY } from '@/config/emails';
 
 export interface StagingReviewEmailProps {
-  name: string;
+  clientName?: string; // 🚨 UPDATED: Changed from 'name' to 'clientName' for consistency
   businessName: string;
   previewUrl: string;
-  planTier?: string;
-  storefrontId?: string; // Kept to prevent TS errors, but no longer used for buttons
+  storefrontId?: string; 
 }
 
 export default function StagingReviewEmail({
-  name = 'Client',
+  clientName = 'Client',
   businessName = 'Your Storefront',
-  previewUrl = 'https://alternativesolutions.io',
-  planTier = 'Foundation Plan'
+  previewUrl = 'https://alternativesolutions.io'
 }: StagingReviewEmailProps) {
 
   const copy = EMAIL_COPY.STAGING_REVIEW;
@@ -29,7 +27,7 @@ export default function StagingReviewEmail({
           {copy.HEADER} • {copy.SUBHEADER}
         </Text>
         <Heading className="text-white text-2xl md:text-3xl font-bold tracking-tight m-0 mb-2">
-          Your architecture is built and ready for review.
+          Your digital storefront preview is ready.
         </Heading>
         <Text className="text-zinc-400 font-mono text-sm md:text-base font-semibold m-0">
           Project: {businessName}
@@ -38,17 +36,11 @@ export default function StagingReviewEmail({
 
       {/* CONVERSATIONAL BODY */}
       <Text className="text-zinc-300 text-base leading-relaxed m-0 mb-6 font-light">
-        {copy.GREETING} {name}, {copy.BODY_1.split('lock in your hosting')[0]}lock in your <strong className="text-white font-medium">{planTier}</strong> hosting{copy.BODY_1.split('lock in your hosting')[1]}
+        {copy.GREETING} {clientName}, {copy.BODY_1}
       </Text>
 
       {/* SINGLE CALL TO ACTION */}
       <Section className="bg-zinc-950/60 border border-zinc-800/80 rounded-2xl p-6 mb-8 text-center shadow-sm">
-        <Text className="text-white font-bold text-base m-0 mb-2">
-          Access Your Staging Environment
-        </Text>
-        <Text className="text-zinc-400 text-sm m-0 mb-6 font-light max-w-md mx-auto">
-          Click below to test your layout on desktop and mobile. Read the text, click the links, and make sure the overall vibe hits exactly how you envisioned.
-        </Text>
         <Button
           href={previewUrl}
           className="bg-cyan-600 hover:bg-cyan-500 text-zinc-950 font-black text-xs uppercase tracking-widest px-8 py-4 rounded-xl shadow-[0_0_20px_rgba(8,145,178,0.3)] no-underline inline-block"
@@ -57,8 +49,8 @@ export default function StagingReviewEmail({
         </Button>
       </Section>
 
-      {/* THE WIDGET INSTRUCTIONS */}
-      <Section className="bg-zinc-900/30 border-l-4 border-l-emerald-400 p-6 rounded-r-xl mb-8">
+      {/* THE PROGRESS INSTRUCTIONS */}
+      <Section className="bg-zinc-900/30 border-l-4 border-l-cyan-400 p-6 rounded-r-xl mb-8">
         <Text className="text-white font-bold text-sm m-0 mb-4">
           {copy.INSTRUCTIONS_TITLE}
         </Text>
@@ -67,16 +59,16 @@ export default function StagingReviewEmail({
         </Text>
         
         <Text className="text-zinc-400 text-xs leading-relaxed m-0 mb-4 font-light">
-          <strong className="text-emerald-400 font-semibold">✔ {copy.INSTRUCTION_APPROVE.split(':')[0]}:</strong> {copy.INSTRUCTION_APPROVE.split(':')[1]}
+          <strong className="text-cyan-400 font-semibold">{copy.INSTRUCTION_1_TITLE}:</strong> {copy.INSTRUCTION_1_BODY}
         </Text>
         
         <Text className="text-zinc-400 text-xs leading-relaxed m-0 mb-5 font-light">
-          <strong className="text-rose-400 font-semibold">✖ {copy.INSTRUCTION_TWEAK.split(':')[0]}:</strong> {copy.INSTRUCTION_TWEAK.split(':')[1]}
+          <strong className="text-cyan-400 font-semibold">{copy.INSTRUCTION_2_TITLE}:</strong> {copy.INSTRUCTION_2_BODY}
         </Text>
         
         <div className="bg-black/50 p-3.5 rounded-lg border border-zinc-800/80">
           <Text className="text-zinc-400 text-[10px] leading-relaxed m-0 font-mono uppercase tracking-widest">
-            <strong>⚡ {copy.INSTRUCTION_WARNING.split(':')[0]}:</strong> {copy.INSTRUCTION_WARNING.split(':')[1]}
+            <strong className="text-cyan-400 font-semibold">{copy.INSTRUCTION_3_TITLE}:</strong> {copy.INSTRUCTION_3_BODY}
           </Text>
         </div>
       </Section>
