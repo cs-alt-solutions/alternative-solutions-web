@@ -90,7 +90,7 @@ export async function POST(req: Request) {
       // 1. Fetch the existing storefront to grab the current audit_notes
       const { data: storeData, error: fetchError } = await supabaseAdmin
         .from('storefronts')
-        .select('audit_notes, contact_email, business_name')
+        .select('audit_notes, contact_email, business_name, contact_name')
         .eq(queryColumn, targetIdentifier)
         .single();
 
@@ -154,8 +154,9 @@ export async function POST(req: Request) {
               to: [clientEmail],
               subject: `Welcome to your Workspace: ${storeData.business_name || 'Storefront'}`,
               react: React.createElement(PortalInviteEmail, {
-                businessName: storeData.business_name || 'Your Storefront',
-                magicLink: linkData.properties.action_link
+                workspaceName: storeData.business_name || 'Your Storefront', // 🚨 FIXED: Correctly matches our newly defined interface
+                magicLink: linkData.properties.action_link,
+                clientName: storeData.contact_name || 'Client',
               })
             });
             console.log(`✉️ Portal Invite with Magic Link dispatched to ${clientEmail}`);

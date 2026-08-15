@@ -1,4 +1,3 @@
-// app/api/invites/route.tsx
 import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { Resend } from 'resend';
@@ -79,10 +78,9 @@ export async function POST(request: Request) {
       subject: EMAIL_COPY?.INVITE_SUBJECT || 'Access Granted: Secure Workspace',
       react: (
         <PortalInviteEmail 
-          operatorName={fullName || GLOSSARY?.ROLES?.DEFAULT_OPERATOR || 'Operator'}
+          clientName={fullName || GLOSSARY?.ROLES?.DEFAULT_OPERATOR || 'Operator'}
           workspaceName={workspaceName}
-          // Fixed: Changed property name to 'inviteLink' to match PortalInviteEmail component props
-          inviteLink={linkData?.properties?.action_link || `${origin}/login`}
+          magicLink={linkData?.properties?.action_link || `${origin}/login`}
           role={role === 'CLIENT_OWNER' ? GLOSSARY?.ROLES?.CLIENT_OWNER || 'Client Owner' : role}
         />
       )

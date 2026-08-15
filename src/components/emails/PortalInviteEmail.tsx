@@ -4,17 +4,18 @@ import { Section, Text, Heading, Hr, Button } from '@react-email/components';
 import BaseEmailLayout from '@/components/emails/BaseEmailLayout';
 import { EMAIL_COPY } from '@/config/emails';
 
-// FIXED: Perfectly aligned with the Stripe Webhook payload
-interface PortalInviteEmailProps {
-  clientName?: string;
-  businessName?: string;
+
+// FIXED: Perfectly aligned with the API Route payload
+export interface PortalInviteEmailProps {
   magicLink: string;
+  clientName?: string;
+  workspaceName?: string; // 🚨 UPDATED: Swapped from businessName to match the API route
   role?: string;
 }
 
 export default function PortalInviteEmail({
   clientName = "Client",
-  businessName = "Your Workspace",
+  workspaceName = "Your Workspace", // 🚨 UPDATED
   magicLink = "https://alternativesolutions.io/login",
   role = "Client Owner"
 }: PortalInviteEmailProps) {
@@ -36,7 +37,7 @@ export default function PortalInviteEmail({
       <Section className="mb-6">
         <Text className="text-white text-base m-0 mb-4">{copy.GREETING} {clientName},</Text>
         <Text className="text-zinc-300 text-sm leading-relaxed m-0">
-          {copy.INTRO_START}<strong className="text-white">{businessName}</strong>{copy.INTRO_MID}<strong className="text-cyan-400">{role}</strong>{copy.INTRO_END}
+          {copy.INTRO_START}<strong className="text-white">{workspaceName}</strong>{copy.INTRO_MID}<strong className="text-cyan-400">{role}</strong>{copy.INTRO_END}
         </Text>
       </Section>
 
