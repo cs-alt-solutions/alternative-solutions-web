@@ -154,12 +154,32 @@ export async function POST(req: Request) {
               to: [clientEmail],
               subject: `Welcome to your Workspace: ${storeData.business_name || 'Storefront'}`,
               react: React.createElement(PortalInviteEmail, {
-                workspaceName: storeData.business_name || 'Your Storefront', // 🚨 FIXED: Correctly matches our newly defined interface
+                workspaceName: storeData.business_name || 'Your Storefront',
                 magicLink: linkData.properties.action_link,
                 clientName: storeData.contact_name || 'Client',
               })
             });
             console.log(`✉️ Portal Invite with Magic Link dispatched to ${clientEmail}`);
+
+            // 🚨 2. NEW: DISPATCH THE HYPE EMAIL TO YOU (THE ADMIN) 🚨
+            await resend.emails.send({
+              from: process.env.RESEND_FROM_EMAIL || "portal@alternativesolutions.io",
+              to: [process.env.ADMIN_EMAIL || 'courtney@alternativesolutions.io'], // Sends to your admin email
+              subject: `💰 NEW SUBSCRIBER: ${storeData.business_name || 'A Client'} just paid!`,
+              html: `
+                <div style="font-family: monospace; background-color: #09090b; color: #10b981; padding: 30px; border-radius: 10px; border: 1px solid #047857;">
+                  <h1 style="color: #34d399; text-transform: uppercase;">Payment Cleared!</h1>
+                  <p style="color: #a1a1aa; font-size: 16px;">Hell yes. <strong>${storeData.business_name}</strong> (${clientEmail}) just locked in their subscription.</p>
+                  <ul style="color: #d4d4d8; padding-left: 20px;">
+                    <li><strong>Status:</strong> Upgraded to ACTIVE</li>
+                    <li><strong>Portal:</strong> Unlocked & Magic Link Sent</li>
+                    <li><strong>Action Required:</strong> Log into your Admin Dashboard and begin final deployment prep.</li>
+                  </ul>
+                  <a href="${process.env.NEXT_PUBLIC_SITE_URL || 'https://alternativesolutions.io'}/dashboard/storefronts" style="display: inline-block; margin-top: 20px; padding: 12px 24px; background-color: #10b981; color: #000; text-decoration: none; font-weight: bold; border-radius: 6px; text-transform: uppercase;">Open Command Center</a>
+                </div>
+              `
+            });
+            console.log(`🚨 Admin Alert dispatched to HQ for ${storeData.business_name}`);
           }
         } catch (emailErr) {
           // We catch this so an email failure doesn't crash the Stripe 200 OK response
