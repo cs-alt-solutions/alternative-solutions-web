@@ -10,8 +10,8 @@ export default async function TransferPage({
   const { clientId } = await params;
 
   return (
-    <div className="p-8 h-full">
-      {/* We pass the raw clientId straight to your permanent portal component */}
+    <div className="p-4 md:p-8 h-full overflow-y-auto">
+      {/* We pass the raw clientId straight to the newly redesigned asset hub */}
       <SecureTransfer clientId={clientId} />
     </div>
   );
