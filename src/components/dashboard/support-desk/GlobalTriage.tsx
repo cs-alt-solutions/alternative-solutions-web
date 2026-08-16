@@ -3,37 +3,54 @@
 
 import React, { useState, useEffect } from 'react';
 import { supabase } from '@/utils/supabase';
-import { Clock, AlertTriangle, CheckCircle2, Inbox, CheckSquare, MessageSquare } from 'lucide-react';
+import { Clock, AlertTriangle, CheckCircle2, Inbox, CheckSquare, MessageSquare, RefreshCw, Key } from 'lucide-react';
 
 export default function GlobalTriage() {
   const [tickets, setTickets] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [isRefreshing, setIsRefreshing] = useState(false);
   const [activeTab, setActiveTab] = useState<'OPEN' | 'RESOLVED'>('OPEN');
 
   useEffect(() => {
+    // Initial fetch on load
     fetchTickets();
+
+    // 🚀 THE MAGIC: Real-time database listener!
+    // This tells the component to auto-refresh the second a client submits a ticket.
+    const channel = supabase
+      .channel('schema-db-changes')
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'support_tickets' },
+        (payload) => {
+          console.log("Incoming transmission detected!", payload);
+          fetchTickets(); 
+        }
+      )
+      .subscribe();
+
+    // Cleanup the listener if you leave the page
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, []);
 
   const fetchTickets = async () => {
-    setIsLoading(true);
+    setIsRefreshing(true);
     
-    // 1. Fetch all tickets
     const { data: ticketsData } = await supabase
       .from('support_tickets')
       .select('*')
       .order('created_at', { ascending: false });
 
     if (ticketsData && ticketsData.length > 0) {
-      // 2. Extract unique storefront IDs to find out who sent them
       const storefrontIds = [...new Set(ticketsData.map(t => t.storefront_id))];
       
-      // 3. Fetch the business names for those IDs
       const { data: storefrontsData } = await supabase
         .from('storefronts')
         .select('id, business_name')
         .in('id', storefrontIds);
 
-      // 4. Map the names to the tickets
       const storefrontMap = storefrontsData?.reduce((acc: any, curr: any) => {
         acc[curr.id] = curr.business_name;
         return acc;
@@ -50,13 +67,12 @@ export default function GlobalTriage() {
     }
     
     setIsLoading(false);
+    setIsRefreshing(false);
   };
 
   const handleResolve = async (ticketId: string) => {
-    // Optimistic UI update for instant feedback
     setTickets(prev => prev.map(t => t.id === ticketId ? { ...t, status: 'RESOLVED' } : t));
     
-    // Update database
     await supabase
       .from('support_tickets')
       .update({ status: 'RESOLVED' })
@@ -78,29 +94,41 @@ export default function GlobalTriage() {
   return (
     <div className="space-y-6">
       
-      {/* Triage Tabs */}
-      <div className="flex items-center gap-2 border-b border-white/10 pb-4">
-        <button
-          onClick={() => setActiveTab('OPEN')}
-          className={`flex items-center gap-2 px-6 py-2.5 rounded-xl text-xs font-bold uppercase tracking-widest transition-all ${
-            activeTab === 'OPEN' 
-              ? 'bg-amber-500/10 text-amber-500 border border-amber-500/20' 
-              : 'text-zinc-500 hover:text-white hover:bg-white/5'
-          }`}
+      {/* Triage Tabs & Refresh Control */}
+      <div className="flex items-center justify-between border-b border-white/10 pb-4">
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => setActiveTab('OPEN')}
+            className={`flex items-center gap-2 px-6 py-2.5 rounded-xl text-xs font-bold uppercase tracking-widest transition-all ${
+              activeTab === 'OPEN' 
+                ? 'bg-amber-500/10 text-amber-500 border border-amber-500/20' 
+                : 'text-zinc-500 hover:text-white hover:bg-white/5'
+            }`}
+          >
+            <Inbox size={14} /> 
+            Needs Action ({tickets.filter(t => t.status === 'OPEN').length})
+          </button>
+          <button
+            onClick={() => setActiveTab('RESOLVED')}
+            className={`flex items-center gap-2 px-6 py-2.5 rounded-xl text-xs font-bold uppercase tracking-widest transition-all ${
+              activeTab === 'RESOLVED' 
+                ? 'bg-emerald-500/10 text-emerald-500 border border-emerald-500/20' 
+                : 'text-zinc-500 hover:text-white hover:bg-white/5'
+            }`}
+          >
+            <CheckSquare size={14} /> 
+            Resolved
+          </button>
+        </div>
+
+        {/* 🚀 Manual Refresh Button */}
+        <button 
+          onClick={fetchTickets}
+          disabled={isRefreshing}
+          className="flex items-center gap-2 px-4 py-2 bg-white/5 hover:bg-white/10 text-zinc-400 hover:text-white rounded-lg text-[10px] font-bold uppercase tracking-widest transition-colors disabled:opacity-50"
         >
-          <Inbox size={14} /> 
-          Needs Action ({tickets.filter(t => t.status === 'OPEN').length})
-        </button>
-        <button
-          onClick={() => setActiveTab('RESOLVED')}
-          className={`flex items-center gap-2 px-6 py-2.5 rounded-xl text-xs font-bold uppercase tracking-widest transition-all ${
-            activeTab === 'RESOLVED' 
-              ? 'bg-emerald-500/10 text-emerald-500 border border-emerald-500/20' 
-              : 'text-zinc-500 hover:text-white hover:bg-white/5'
-          }`}
-        >
-          <CheckSquare size={14} /> 
-          Resolved
+          <RefreshCw size={12} className={isRefreshing ? "animate-spin" : ""} />
+          Sync Queue
         </button>
       </div>
 
@@ -116,6 +144,7 @@ export default function GlobalTriage() {
         <div className="grid grid-cols-1 gap-4">
           {filteredTickets.map(ticket => {
             const isUrgent = ticket.category === 'Something Broke';
+            const isSystem = ticket.category === 'System Request'; // 🚀 Identifies Key Requests!
             
             return (
               <div 
@@ -123,15 +152,22 @@ export default function GlobalTriage() {
                 className={`flex flex-col md:flex-row gap-6 p-6 rounded-2xl border bg-black/40 backdrop-blur-sm transition-all ${
                   isUrgent && ticket.status === 'OPEN'
                     ? 'border-rose-500/30 shadow-[0_0_20px_rgba(243,24,129,0.05)]' 
+                    : isSystem && ticket.status === 'OPEN'
+                    ? 'border-orange-500/30 shadow-[0_0_20px_rgba(249,115,22,0.05)]'
                     : 'border-white/5 hover:border-white/10'
                 }`}
               >
                 {/* Left: Meta Info */}
                 <div className="md:w-64 shrink-0 flex flex-col gap-3 md:border-r md:border-white/5 md:pr-6">
+                  
+                  {/* 🚀 Dynamic Styling Badge */}
                   <span className={`inline-flex items-center justify-center px-2.5 py-1 rounded text-[9px] font-black uppercase tracking-widest w-max border ${
-                    isUrgent ? 'bg-rose-500/10 text-rose-400 border-rose-500/20' : 'bg-cyan-500/10 text-cyan-400 border-cyan-500/20'
+                    isUrgent ? 'bg-rose-500/10 text-rose-400 border-rose-500/20' 
+                    : isSystem ? 'bg-orange-500/10 text-orange-400 border-orange-500/20'
+                    : 'bg-cyan-500/10 text-cyan-400 border-cyan-500/20'
                   }`}>
                     {isUrgent && <AlertTriangle size={10} className="mr-1.5" />}
+                    {isSystem && <Key size={10} className="mr-1.5" />}
                     {ticket.category}
                   </span>
                   
@@ -147,7 +183,7 @@ export default function GlobalTriage() {
                   
                   <div className="flex items-center gap-1.5 text-[10px] font-mono text-zinc-500 mt-auto pt-2">
                     <Clock size={12} />
-                    {new Date(ticket.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} - {new Date(ticket.created_at).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })}
+                    {new Date(ticket.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} at {new Date(ticket.created_at).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })}
                   </div>
                 </div>
 
