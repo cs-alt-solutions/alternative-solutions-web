@@ -1,3 +1,4 @@
+/* src/components/dashboard/Sidebar.tsx */
 'use client';
 
 import React, { useState, useEffect } from 'react';
@@ -19,7 +20,8 @@ import {
   Server,
   Store,
   ChevronLeft,
-  ChevronRight
+  ChevronRight,
+  LifeBuoy
 } from 'lucide-react';
 import { DASHBOARD_COPY } from '@/config/dashboard';
 import { ROUTES } from '@/utils/glossary';
@@ -36,7 +38,6 @@ export default function Sidebar({ isOpen, closeMenu }: SidebarProps) {
   const [isLoggingOut, setIsLoggingOut] = useState(false);
   const copy = DASHBOARD_COPY.SIDEBAR;
 
-  // Prevent scrolling when mobile menu is open
   useEffect(() => {
     if (isOpen) {
       document.body.style.overflow = 'hidden';
@@ -46,7 +47,6 @@ export default function Sidebar({ isOpen, closeMenu }: SidebarProps) {
     return () => { document.body.style.overflow = 'unset'; }
   }, [isOpen]);
 
-  // Handle desktop collapse and broadcast state change for main layout shifting
   const handleToggleCollapse = () => {
     const newState = !isCollapsed;
     setIsCollapsed(newState);
@@ -59,10 +59,8 @@ export default function Sidebar({ isOpen, closeMenu }: SidebarProps) {
     router.push(ROUTES.PUBLIC.HOME);
   };
 
-  // TOP LEVEL (Anchor)
   const topItem = { name: copy.OVERVIEW || 'HOME', href: ROUTES.DASHBOARD.HOME, icon: LayoutDashboard };
 
-  // CORE GROUPS
   const navGroups = [
     {
       label: copy.GROUPS?.WORKSPACE || 'MY WORKSPACE', 
@@ -84,6 +82,7 @@ export default function Sidebar({ isOpen, closeMenu }: SidebarProps) {
     {
       label: copy.GROUPS?.LOGISTICS || 'LIFE & LOGISTICS', 
       items: [
+        { name: (copy as any).SUPPORT_DESK || 'SUPPORT DESK', href: (ROUTES.DASHBOARD as any).SUPPORT_DESK || '/dashboard/support-desk', icon: LifeBuoy },
         { name: copy.TASKS || 'TASKS', href: ROUTES.DASHBOARD.TASKS, icon: CheckSquare },
         { name: copy.LEDGER || 'LEDGER', href: ROUTES.DASHBOARD.LEDGER, icon: Wallet },
         { name: copy.INFRASTRUCTURE || 'INFRASTRUCTURE', href: ROUTES.DASHBOARD.INFRASTRUCTURE, icon: Server },
@@ -91,7 +90,6 @@ export default function Sidebar({ isOpen, closeMenu }: SidebarProps) {
     }
   ];
 
-  // SYSTEM ADMIN
   const adminItems = [
     { name: copy.CONFIG || 'SETTINGS', href: ROUTES.DASHBOARD.SETTINGS, icon: Settings },
   ];
@@ -105,9 +103,10 @@ export default function Sidebar({ isOpen, closeMenu }: SidebarProps) {
       <Link
         key={item.name}
         href={item.href}
-        onClick={closeMenu} // Auto-close on mobile when clicked
+        onClick={closeMenu} 
         title={isCollapsed ? item.name : undefined}
-        className={`flex items-center gap-3 px-4 py-3 rounded-xl text-xs font-mono uppercase tracking-widest transition-all group ${
+        // 🚀 FIXED: Reduced py-3 to py-2, and made the text slightly tighter to fit seamlessly
+        className={`flex items-center gap-3 px-4 py-2 rounded-xl text-[11px] font-mono uppercase tracking-widest transition-all group ${
           isCollapsed ? 'justify-center px-2' : ''
         } ${
           isActive 
@@ -115,7 +114,8 @@ export default function Sidebar({ isOpen, closeMenu }: SidebarProps) {
             : 'text-slate-400 hover:text-white hover:bg-white/5 border border-transparent'
         }`}
       >
-        <item.icon size={18} className={isActive ? 'text-brand-primary shrink-0' : 'group-hover:text-white shrink-0'} />
+        {/* 🚀 FIXED: Reduced icon size from 18 to 16 */}
+        <item.icon size={16} className={isActive ? 'text-brand-primary shrink-0' : 'group-hover:text-white shrink-0'} />
         {!isCollapsed && <span className="truncate">{item.name}</span>}
       </Link>
     );
@@ -123,7 +123,6 @@ export default function Sidebar({ isOpen, closeMenu }: SidebarProps) {
 
   return (
     <>
-      {/* MOBILE OVERLAY */}
       {isOpen && (
         <div 
           className="md:hidden fixed inset-0 bg-black/80 backdrop-blur-sm z-40"
@@ -131,7 +130,6 @@ export default function Sidebar({ isOpen, closeMenu }: SidebarProps) {
         />
       )}
 
-      {/* SIDEBAR */}
       <aside className={`
         fixed md:static inset-y-0 left-0 z-50
         bg-bg-surface-100 border-r border-white/5 h-screen flex flex-col
@@ -140,8 +138,8 @@ export default function Sidebar({ isOpen, closeMenu }: SidebarProps) {
         ${isCollapsed ? 'md:w-20' : 'md:w-64'}
         w-64
       `}>
-        {/* BRANDING & COLLAPSE TOGGLE */}
-        <div className="p-6 pb-4 flex items-center justify-between">
+        {/* 🚀 FIXED: Tightened up the top branding padding */}
+        <div className="p-5 pb-3 flex items-center justify-between">
           {!isCollapsed ? (
             <div>
               <div className="text-xl font-black text-white italic tracking-tighter uppercase truncate">
@@ -165,43 +163,46 @@ export default function Sidebar({ isOpen, closeMenu }: SidebarProps) {
           </button>
         </div>
 
-        <nav className="flex-1 space-y-6 overflow-y-auto pb-6 overflow-x-hidden custom-scrollbar">
-          <div className="space-y-1 px-3 mt-2">
+        {/* 🚀 FIXED: Reduced space-y-6 to space-y-3 to bring the groups closer together */}
+        <nav className="flex-1 space-y-3 overflow-y-auto pb-4 overflow-x-hidden custom-scrollbar">
+          <div className="space-y-1 px-3 mt-1">
             {renderLink(topItem)}
           </div>
 
           {navGroups.map((group) => (
-            <div key={group.label} className="mb-2">
+            <div key={group.label} className="mb-1">
               {!isCollapsed ? (
-                <div className="mb-3 border-l-[3px] border-brand-primary/60 bg-linear-to-r from-brand-primary/10 to-transparent px-4 py-1.5">
+                // 🚀 FIXED: Reduced padding and margin on category headers
+                <div className="mb-1.5 border-l-[3px] border-brand-primary/60 bg-linear-to-r from-brand-primary/10 to-transparent px-4 py-1">
                   <h3 className="text-[10px] font-mono font-black text-brand-primary uppercase tracking-[0.2em] truncate">
                     {group.label}
                   </h3>
                 </div>
               ) : (
-                <div className="my-2 border-t border-white/5 mx-3" />
+                <div className="my-1 border-t border-white/5 mx-3" />
               )}
-              <div className="space-y-1 px-3">
+              {/* 🚀 FIXED: Tighter gaps between links */}
+              <div className="space-y-0.5 px-3">
                 {group.items.map(renderLink)}
               </div>
             </div>
           ))}
         </nav>
 
-        {/* SYSTEM ADMIN BOTTOM BAR */}
-        <div className="pt-4 pb-6 border-t border-white/5 space-y-4 bg-bg-surface-200/30">
+        {/* 🚀 FIXED: Tightened the bottom static section */}
+        <div className="pt-3 pb-4 border-t border-white/5 space-y-2 bg-bg-surface-200/30">
           <div>
             {!isCollapsed ? (
-              <div className="mb-3 border-l-[3px] border-purple-500/60 bg-linear-to-r from-purple-500/10 to-transparent px-4 py-1.5">
+              <div className="mb-1.5 border-l-[3px] border-purple-500/60 bg-linear-to-r from-purple-500/10 to-transparent px-4 py-1">
                 <h3 className="text-[10px] font-mono font-black text-purple-400 uppercase tracking-[0.2em] opacity-90 truncate">
                   {copy.GROUPS?.SYSTEM || 'System Admin'}
                 </h3>
               </div>
             ) : (
-              <div className="my-2 border-t border-white/5 mx-3" />
+              <div className="my-1 border-t border-white/5 mx-3" />
             )}
             
-            <div className="space-y-1 px-3">
+            <div className="space-y-0.5 px-3">
               {adminItems.map(renderLink)}
             </div>
           </div>
@@ -211,11 +212,12 @@ export default function Sidebar({ isOpen, closeMenu }: SidebarProps) {
               onClick={handleSignOut}
               disabled={isLoggingOut}
               title={isCollapsed ? (copy.EXIT || 'EXIT SYSTEM') : undefined}
-              className={`w-full flex items-center gap-3 px-4 py-3 text-xs font-mono text-orange-500/70 hover:text-orange-400 hover:bg-orange-500/10 rounded-xl transition-colors border border-transparent hover:border-orange-500/20 cursor-pointer disabled:opacity-50 ${
+              // 🚀 FIXED: Reduced py-3 to py-2.5 on the exit button
+              className={`w-full flex items-center gap-3 px-4 py-2.5 text-xs font-mono text-orange-500/70 hover:text-orange-400 hover:bg-orange-500/10 rounded-xl transition-colors border border-transparent hover:border-orange-500/20 cursor-pointer disabled:opacity-50 ${
                 isCollapsed ? 'justify-center px-2' : ''
               }`}
             >
-              <LogOut size={18} className="shrink-0" /> 
+              <LogOut size={16} className="shrink-0" /> 
               {!isCollapsed && <span className="truncate">{isLoggingOut ? 'EJECTING...' : copy.EXIT || 'EXIT SYSTEM'}</span>}
             </button>
           </div>
