@@ -2,12 +2,15 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { Bell, User } from 'lucide-react';
+import { Bell, User, LogOut } from 'lucide-react';
 import { supabase } from '@/utils/supabase';
+import { useRouter } from 'next/navigation';
 
 export default function PortalHeader({ clientId }: { clientId: string }) {
   const [workspaceName, setWorkspaceName] = useState('Loading...');
   const [contactEmail, setContactEmail] = useState('Initializing...');
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
+  const router = useRouter();
 
   // Fetch the live storefront identity by immutable UUID
   useEffect(() => {
@@ -29,6 +32,12 @@ export default function PortalHeader({ clientId }: { clientId: string }) {
     fetchStorefront();
   }, [clientId]);
 
+  const handleSignOut = async () => {
+    setIsLoggingOut(true);
+    await supabase.auth.signOut();
+    router.push('/');
+  };
+
   return (
     <header className="h-16 bg-slate-900/50 backdrop-blur-md border-b border-slate-800 flex items-center justify-between px-8">
       <div>
@@ -46,7 +55,18 @@ export default function PortalHeader({ clientId }: { clientId: string }) {
           <div className="w-8 h-8 rounded-full bg-slate-800 flex items-center justify-center border border-slate-700">
             <User className="w-4 h-4 text-slate-400" />
           </div>
-          <span className="text-sm font-medium text-slate-300">{contactEmail}</span>
+          <span className="text-sm font-medium text-slate-300 mr-2 truncate max-w-[150px]">
+            {contactEmail}
+          </span>
+          
+          <button 
+            onClick={handleSignOut}
+            disabled={isLoggingOut}
+            className="flex items-center gap-2 px-3 py-1.5 bg-rose-500/10 text-rose-400 border border-rose-500/20 hover:bg-rose-500/20 rounded-md text-xs font-bold uppercase tracking-widest transition-all cursor-pointer disabled:opacity-50"
+          >
+            <LogOut size={14} />
+            {isLoggingOut ? 'SIGNING OUT...' : 'SIGN OUT'}
+          </button>
         </div>
       </div>
     </header>

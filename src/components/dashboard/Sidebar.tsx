@@ -1,9 +1,9 @@
-/* src/components/dashboard/Sidebar.tsx */
 'use client';
 
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
+import { supabase } from '@/utils/supabase';
 import { 
   LayoutDashboard, 
   Construction, 
@@ -31,7 +31,9 @@ interface SidebarProps {
 
 export default function Sidebar({ isOpen, closeMenu }: SidebarProps) {
   const pathname = usePathname();
+  const router = useRouter();
   const [isCollapsed, setIsCollapsed] = useState(false);
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
   const copy = DASHBOARD_COPY.SIDEBAR;
 
   // Prevent scrolling when mobile menu is open
@@ -49,6 +51,12 @@ export default function Sidebar({ isOpen, closeMenu }: SidebarProps) {
     const newState = !isCollapsed;
     setIsCollapsed(newState);
     window.dispatchEvent(new CustomEvent('sidebar-collapse', { detail: { isCollapsed: newState } }));
+  };
+
+  const handleSignOut = async () => {
+    setIsLoggingOut(true);
+    await supabase.auth.signOut();
+    router.push(ROUTES.PUBLIC.HOME);
   };
 
   // TOP LEVEL (Anchor)
@@ -199,16 +207,17 @@ export default function Sidebar({ isOpen, closeMenu }: SidebarProps) {
           </div>
 
           <div className="px-3">
-            <Link 
-              href={ROUTES.PUBLIC.HOME} 
+            <button 
+              onClick={handleSignOut}
+              disabled={isLoggingOut}
               title={isCollapsed ? (copy.EXIT || 'EXIT SYSTEM') : undefined}
-              className={`flex items-center gap-3 px-4 py-3 text-xs font-mono text-orange-500/70 hover:text-orange-400 hover:bg-orange-500/10 rounded-xl transition-colors border border-transparent hover:border-orange-500/20 ${
+              className={`w-full flex items-center gap-3 px-4 py-3 text-xs font-mono text-orange-500/70 hover:text-orange-400 hover:bg-orange-500/10 rounded-xl transition-colors border border-transparent hover:border-orange-500/20 cursor-pointer disabled:opacity-50 ${
                 isCollapsed ? 'justify-center px-2' : ''
               }`}
             >
               <LogOut size={18} className="shrink-0" /> 
-              {!isCollapsed && <span className="truncate">{copy.EXIT || 'EXIT SYSTEM'}</span>}
-            </Link>
+              {!isCollapsed && <span className="truncate">{isLoggingOut ? 'EJECTING...' : copy.EXIT || 'EXIT SYSTEM'}</span>}
+            </button>
           </div>
         </div>
       </aside>

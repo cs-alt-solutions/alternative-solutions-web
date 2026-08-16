@@ -5,7 +5,7 @@ import { WEBSITE_COPY, ROUTES } from '@/utils/glossary';
 import { Globe, ArrowLeft, Mail, ArrowRight, Loader2, KeyRound } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { supabase } from '@/utils/supabase'; // Using your direct client
+import { supabase } from '@/utils/supabase'; 
 
 // ==========================================
 // THE NUCLEAR EMAIL SANITIZER
@@ -33,23 +33,11 @@ export default function GatewayPage() {
     setErrorMsg('');
     setIsProcessing(true);
 
-    // Scrub the email before it ever touches Supabase
     const cleanEmail = sanitizeEmail(email);
 
     try {
-      // 1. PRE-VERIFICATION: Securely ask our database bouncer if the email exists
-      const { data: profileExists, error: profileError } = await supabase.rpc('check_profile_exists', {
-        lookup_email: cleanEmail
-      });
-
-      if (profileError) throw profileError;
-
-      // If the RPC returns false, the email is not in the system.
-      if (!profileExists) {
-        throw new Error("Unrecognized email. Please check for typos or contact an administrator.");
-      }
-
-      // 2. DISPATCH: Proceed with sending the secure code
+      // 1. DISPATCH: We removed the old profile check here. 
+      // Supabase securely handles the dispatch for us.
       const { error } = await supabase.auth.signInWithOtp({
         email: cleanEmail,
         options: {
@@ -71,7 +59,6 @@ export default function GatewayPage() {
     setErrorMsg('');
     setIsProcessing(true);
 
-    // Scrub the email here too, just in case they modified it while waiting for the OTP
     const cleanEmail = sanitizeEmail(email);
 
     try {
@@ -84,31 +71,9 @@ export default function GatewayPage() {
 
       if (error) throw error;
 
-      // SMART ROUTER (Client-Side Logic)
+      // 2. THE HANDOFF: If authentication passes, send them to the Traffic Cop!
       if (data.user) {
-        const { data: profile } = await supabase
-          .from('profiles')
-          .select('role, workspace_id, status')
-          .eq('id', data.user.id)
-          .single();
-
-        if (profile) {
-          // Activate profile if this is their first login
-          if (profile.status === 'INVITED' || profile.status === 'PENDING') {
-            await supabase.from('profiles').update({ status: 'ACTIVE' }).eq('id', data.user.id);
-          }
-
-          // Route them to their proper command center
-          if (profile.role === 'ADMIN' || profile.role === 'STAFF') {
-            router.push('/dashboard');
-          } else if (profile.workspace_id && profile.workspace_id !== 'NONE') {
-            router.push(`/portal/${profile.workspace_id}`);
-          } else {
-            router.push('/portal/unassigned');
-          }
-        } else {
-          router.push('/dashboard'); // Fallback
-        }
+        router.push('/portal');
       }
     } catch (error: any) {
       setErrorMsg(error.message || 'Invalid or expired access code.');

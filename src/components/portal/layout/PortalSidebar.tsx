@@ -1,10 +1,11 @@
 /* src/components/portal/layout/PortalSidebar.tsx */
 'use client';
 
-import { useState } from 'react';
-import { FileUp, Box, Settings, MessageSquare, TerminalSquare, Menu, X } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { FileUp, Box, Settings, MessageSquare, TerminalSquare, Menu, X, ArrowLeft, Store, CreditCard } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import { supabase } from '@/utils/supabase';
 
 // 1. Define our visual themes
 const THEMES = {
@@ -34,18 +35,43 @@ const THEMES = {
 export default function PortalSidebar({ clientId }: { clientId: string }) {
   const pathname = usePathname();
   const [isOpen, setIsOpen] = useState(false);
+  const [showSwitchWorkspace, setShowSwitchWorkspace] = useState(false);
 
-  // 2. Temporarily hardcode the logic to determine the tier (we will connect this to your Database later)
+  // Check if they have multiple workspaces so we can hide/show the Switch button
+  useEffect(() => {
+    const checkWorkspaceCount = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user || !user.email) return;
+
+      const { data } = await supabase
+        .from('storefronts')
+        .select('status, is_template')
+        .eq('contact_email', user.email);
+
+      // Count only active/live ones that aren't prototypes
+      const activeCount = data?.filter(s => (s.status === 'ACTIVE' || s.status === 'LIVE') && !s.is_template).length || 0;
+      
+      if (activeCount > 1) {
+        setShowSwitchWorkspace(true);
+      }
+    };
+    checkWorkspaceCount();
+  }, []);
+
+  // 2. Temporarily hardcode the logic to determine the tier
   let tier: 'client' | 'beta' | 'internal' = 'client';
   if (clientId === 'luckystrike') tier = 'beta';
-  if (clientId === 'division') tier = 'internal'; // Adjust this as needed!
+  if (clientId === 'division') tier = 'internal'; 
 
   const currentTheme = THEMES[tier];
 
+  // 3. The Upgraded Navigation Array
   const navItems = [
     { name: 'Dashboard', icon: TerminalSquare, href: `/portal/${clientId}` },
+    { name: 'Live Storefront', icon: Store, href: `/portal/${clientId}/storefront` },
+    { name: 'Billing & Plans', icon: CreditCard, href: `/portal/${clientId}/billing` },
     { name: 'Secure Transfer', icon: FileUp, href: `/portal/${clientId}/transfer` },
-    { name: 'Active Prototypes', icon: Box, href: `/portal/${clientId}/prototypes` },
+    { name: 'Developer Tools', icon: Box, href: `/portal/${clientId}/prototypes` },
     { name: 'Support', icon: MessageSquare, href: `/portal/${clientId}/support` },
     { name: 'Settings', icon: Settings, href: `/portal/${clientId}/settings` },
   ];
@@ -77,7 +103,6 @@ export default function PortalSidebar({ clientId }: { clientId: string }) {
       `}>
         
         {/* Logo & Tier Badge Area */}
-        {/* Added mt-14 on mobile so the logo doesn't hide behind the hamburger button */}
         <div className="flex flex-col justify-center px-6 py-6 border-b border-slate-800 lg:mt-0 mt-14">
           <span className="text-xl font-bold text-white tracking-widest mb-1">PORTAL</span>
           <span className={`text-[10px] font-bold tracking-wider px-2 py-0.5 rounded-full w-max ${currentTheme.bg} ${currentTheme.text} border ${currentTheme.border}`}>
@@ -93,7 +118,7 @@ export default function PortalSidebar({ clientId }: { clientId: string }) {
               <Link
                 key={item.name}
                 href={item.href}
-                onClick={() => setIsOpen(false)} // Auto-close on mobile after clicking
+                onClick={() => setIsOpen(false)} 
                 className={`flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors ${
                   isActive 
                     ? `${currentTheme.bg} ${currentTheme.text} border ${currentTheme.border}` 
@@ -106,6 +131,20 @@ export default function PortalSidebar({ clientId }: { clientId: string }) {
             );
           })}
         </nav>
+
+        {/* --- SMART SWITCH WORKSPACE BUTTON --- */}
+        {showSwitchWorkspace && (
+          <div className="p-4 border-t border-slate-800 bg-slate-900/30">
+            <Link 
+              href="/portal" 
+              className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800/50 hover:text-cyan-400 transition-colors group"
+            >
+              <ArrowLeft className="w-5 h-5 shrink-0 group-hover:-translate-x-1 transition-transform" />
+              <span className="text-sm font-medium">Switch Workspace</span>
+            </Link>
+          </div>
+        )}
+
       </div>
     </>
   );
