@@ -151,7 +151,7 @@ export default function SettingsModule({ clientId }: { clientId: string }) {
         <div className="space-y-6">
           
           {/* BRAND LOGO CARD */}
-          <div className="bg-zinc-950 border border-white/5 rounded-3xl p-6 shadow-xl flex flex-col items-center justify-center relative min-h-[260px]">
+          <div className="bg-zinc-950 border border-white/5 rounded-3xl p-6 shadow-xl flex flex-col items-center justify-center relative min-h-65">
             <div className="absolute top-5 left-5 right-5 flex items-center justify-between">
               <span className="text-[10px] font-black text-white uppercase tracking-widest">Brand Logo</span>
               <label className={`cursor-pointer flex items-center gap-1.5 px-3 py-1.5 bg-cyan-500/10 text-cyan-400 rounded-lg hover:bg-cyan-500 hover:text-black transition-colors text-[10px] font-bold uppercase tracking-widest ${isUploading ? 'opacity-50 pointer-events-none' : ''}`}>

@@ -151,7 +151,7 @@ export default function MediaTab({ storeId, formData, updateForm }: { storeId: s
 
           {/* UPLOADING STATE */}
           {isUploading && (
-            <div className="aspect-[3/4] bg-zinc-900/50 border border-dashed border-rose-500/30 rounded-2xl flex flex-col items-center justify-center animate-pulse shadow-inner">
+            <div className="aspect-3/4 bg-zinc-900/50 border border-dashed border-rose-500/30 rounded-2xl flex flex-col items-center justify-center animate-pulse shadow-inner">
               <Loader2 className="w-8 h-8 text-rose-400 animate-spin mb-3" />
               <span className="text-[10px] text-rose-400 font-bold uppercase tracking-widest">Processing Assets...</span>
             </div>

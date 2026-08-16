@@ -2,75 +2,53 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { FileUp, Box, Settings, MessageSquare, TerminalSquare, Menu, X, ArrowLeft, Store, CreditCard } from 'lucide-react';
+import { Box, Settings, MessageSquare, TerminalSquare, Menu, X, ArrowLeft, Store, CreditCard, Building2 } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { supabase } from '@/utils/supabase';
-
-// 1. Define our visual themes
-const THEMES = {
-  client: {
-    badge: 'ACTIVE CLIENT',
-    bg: 'bg-cyan-500/10',
-    text: 'text-cyan-400',
-    border: 'border-cyan-500/20',
-    hoverText: 'hover:text-cyan-400',
-  },
-  beta: {
-    badge: 'BETA PARTNER',
-    bg: 'bg-purple-500/10',
-    text: 'text-purple-400',
-    border: 'border-purple-500/20',
-    hoverText: 'hover:text-purple-400',
-  },
-  internal: {
-    badge: 'INTERNAL STAFF',
-    bg: 'bg-emerald-500/10',
-    text: 'text-emerald-400',
-    border: 'border-emerald-500/20',
-    hoverText: 'hover:text-emerald-400',
-  }
-};
+import { PORTAL_COPY } from '@/config/clients/portal'; 
+import { getPortalTheme } from './theme'; // 🚀 Importing your new Design System!
 
 export default function PortalSidebar({ clientId }: { clientId: string }) {
   const pathname = usePathname();
   const [isOpen, setIsOpen] = useState(false);
   const [showSwitchWorkspace, setShowSwitchWorkspace] = useState(false);
+  
+  const [brandData, setBrandData] = useState<{ logo: string | null, name: string }>({ logo: null, name: PORTAL_COPY.sidebar.title });
 
-  // Check if they have multiple workspaces so we can hide/show the Switch button
+  // 🚀 One line of code grabs all the correct colors!
+  const currentTheme = getPortalTheme(clientId);
+
   useEffect(() => {
-    const checkWorkspaceCount = async () => {
+    const initSidebar = async () => {
       const { data: { user } } = await supabase.auth.getUser();
-      if (!user || !user.email) return;
+      if (user && user.email) {
+        const { data: workspaces } = await supabase
+          .from('storefronts')
+          .select('status, is_template')
+          .eq('contact_email', user.email);
 
-      const { data } = await supabase
+        const activeCount = workspaces?.filter(s => (s.status === 'ACTIVE' || s.status === 'LIVE') && !s.is_template).length || 0;
+        if (activeCount > 1) setShowSwitchWorkspace(true);
+      }
+
+      const { data: store } = await supabase
         .from('storefronts')
-        .select('status, is_template')
-        .eq('contact_email', user.email);
-
-      // Count only active/live ones that aren't prototypes
-      const activeCount = data?.filter(s => (s.status === 'ACTIVE' || s.status === 'LIVE') && !s.is_template).length || 0;
-      
-      if (activeCount > 1) {
-        setShowSwitchWorkspace(true);
+        .select('business_name, brand_logo')
+        .eq('id', clientId)
+        .single();
+        
+      if (store) {
+        setBrandData({ logo: store.brand_logo, name: store.business_name || PORTAL_COPY.sidebar.title });
       }
     };
-    checkWorkspaceCount();
-  }, []);
+    initSidebar();
+  }, [clientId]);
 
-  // 2. Temporarily hardcode the logic to determine the tier
-  let tier: 'client' | 'beta' | 'internal' = 'client';
-  if (clientId === 'luckystrike') tier = 'beta';
-  if (clientId === 'division') tier = 'internal'; 
-
-  const currentTheme = THEMES[tier];
-
-  // 3. The Upgraded Navigation Array
   const navItems = [
     { name: 'Dashboard', icon: TerminalSquare, href: `/portal/${clientId}` },
     { name: 'Live Storefront', icon: Store, href: `/portal/${clientId}/storefront` },
     { name: 'Billing & Plans', icon: CreditCard, href: `/portal/${clientId}/billing` },
-    // 🚀 Removed Secure Transfer from the sidebar
     { name: 'Developer Tools', icon: Box, href: `/portal/${clientId}/prototypes` },
     { name: 'Support', icon: MessageSquare, href: `/portal/${clientId}/support` },
     { name: 'Settings', icon: Settings, href: `/portal/${clientId}/settings` },
@@ -78,40 +56,41 @@ export default function PortalSidebar({ clientId }: { clientId: string }) {
 
   return (
     <>
-      {/* Mobile Toggle Button */}
       <button 
-        className="lg:hidden fixed top-3 left-4 z-50 p-2 bg-slate-900 border border-slate-700 rounded-lg text-slate-300 hover:text-white transition-colors"
+        className="lg:hidden fixed top-3 left-4 z-50 p-2 bg-zinc-900 border border-zinc-800 rounded-lg text-zinc-300 hover:text-white transition-colors"
         onClick={() => setIsOpen(!isOpen)}
-        aria-label="Toggle Menu"
       >
         {isOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
       </button>
 
-      {/* Mobile Backdrop Overlay */}
       {isOpen && (
-        <div 
-          className="fixed inset-0 bg-black/60 backdrop-blur-sm z-30 lg:hidden"
-          onClick={() => setIsOpen(false)}
-        />
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-30 lg:hidden" onClick={() => setIsOpen(false)} />
       )}
 
-      {/* Sidebar Container */}
       <div className={`
-        fixed lg:static inset-y-0 left-0 z-40 w-64 bg-slate-900 border-r border-slate-800 flex flex-col h-full
-        transform transition-transform duration-300 ease-in-out
+        fixed lg:static inset-y-0 left-0 z-40 w-64 bg-zinc-950 border-r border-white/5 flex flex-col h-full
+        transform transition-transform duration-300 ease-in-out shadow-2xl
         ${isOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
       `}>
         
-        {/* Logo & Tier Badge Area */}
-        <div className="flex flex-col justify-center px-6 py-6 border-b border-slate-800 lg:mt-0 mt-14">
-          <span className="text-xl font-bold text-white tracking-widest mb-1">PORTAL</span>
-          <span className={`text-[10px] font-bold tracking-wider px-2 py-0.5 rounded-full w-max ${currentTheme.bg} ${currentTheme.text} border ${currentTheme.border}`}>
+        <div className="flex flex-col px-6 py-8 border-b border-white/5 lg:mt-0 mt-14">
+          <div className="w-12 h-12 rounded-xl bg-zinc-900 border border-zinc-800 flex items-center justify-center mb-4 overflow-hidden shadow-inner">
+            {brandData.logo ? (
+              <img src={brandData.logo} alt={brandData.name} className="w-full h-full object-contain p-1" />
+            ) : (
+              <Building2 size={20} className="text-zinc-600" />
+            )}
+          </div>
+          <span className="text-sm font-bold text-white tracking-wider mb-2 truncate" title={brandData.name}>
+            {brandData.name}
+          </span>
+          {/* 🚀 Using the dynamic theme below */}
+          <span className={`text-[9px] font-bold tracking-widest px-2 py-0.5 rounded border w-max ${currentTheme.bg} ${currentTheme.text} ${currentTheme.border}`}>
             {currentTheme.badge}
           </span>
         </div>
         
-        {/* Navigation Links */}
-        <nav className="flex-1 py-6 px-4 space-y-2 overflow-y-auto">
+        <nav className="flex-1 py-6 px-4 space-y-1.5 overflow-y-auto custom-scrollbar">
           {navItems.map((item) => {
             const isActive = pathname === item.href;
             return (
@@ -119,28 +98,27 @@ export default function PortalSidebar({ clientId }: { clientId: string }) {
                 key={item.name}
                 href={item.href}
                 onClick={() => setIsOpen(false)} 
-                className={`flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors ${
+                className={`flex items-center gap-3 px-3 py-3 rounded-xl transition-all ${
                   isActive 
-                    ? `${currentTheme.bg} ${currentTheme.text} border ${currentTheme.border}` 
-                    : `text-slate-400 hover:text-white hover:bg-slate-800/50 ${currentTheme.hoverText}`
+                    ? `${currentTheme.bg} ${currentTheme.text} border ${currentTheme.border} shadow-sm` 
+                    : `text-zinc-500 border border-transparent hover:text-white hover:bg-white/5`
                 }`}
               >
-                <item.icon className="w-5 h-5 shrink-0" />
-                <span className="text-sm font-medium">{item.name}</span>
+                <item.icon className="w-4 h-4 shrink-0" />
+                <span className="text-xs font-bold uppercase tracking-wider">{item.name}</span>
               </Link>
             );
           })}
         </nav>
 
-        {/* --- SMART SWITCH WORKSPACE BUTTON --- */}
         {showSwitchWorkspace && (
-          <div className="p-4 border-t border-slate-800 bg-slate-900/30">
+          <div className="p-4 border-t border-white/5 bg-black/20">
             <Link 
               href="/portal"
-              className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800/50 transition-colors group"
+              className="flex items-center justify-center gap-2 px-3 py-3 w-full rounded-xl border border-zinc-800 text-zinc-400 hover:text-white hover:border-zinc-600 hover:bg-zinc-900 transition-all group"
             >
-              <ArrowLeft className="w-5 h-5 shrink-0 group-hover:-translate-x-1 transition-transform" />
-              <span className="text-sm font-medium">Switch Workspace</span>
+              <ArrowLeft className="w-4 h-4 shrink-0 group-hover:-translate-x-1 transition-transform" />
+              <span className="text-[10px] font-bold uppercase tracking-widest">{PORTAL_COPY.sidebar.switchWorkspace}</span>
             </Link>
           </div>
         )}
