@@ -94,12 +94,21 @@ export default function BillingModule({ clientId }: { clientId: string }) {
                 <span className="text-sm font-bold text-zinc-500 uppercase tracking-widest">/ month</span>
               </div>
 
-              {upcoming && (
+              {/* Auto-Pay Display with Fallback State */}
+              {upcoming ? (
                 <div className="bg-emerald-500/5 border border-emerald-500/20 rounded-xl p-4 mb-6 flex items-center gap-4">
                   <div className="p-2 bg-emerald-500/10 rounded-lg"><Calendar className="w-4 h-4 text-emerald-400" /></div>
                   <div>
                     <p className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest mb-0.5">Next Auto-Pay</p>
                     <p className="text-sm font-mono text-emerald-400">${upcoming.amount} <span className="text-zinc-500 text-xs">on</span> {upcoming.date}</p>
+                  </div>
+                </div>
+              ) : (
+                <div className="bg-zinc-900/50 border border-zinc-800/50 rounded-xl p-4 mb-6 flex items-center gap-4">
+                  <div className="p-2 bg-zinc-800/50 rounded-lg"><Calendar className="w-4 h-4 text-zinc-500" /></div>
+                  <div>
+                    <p className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest mb-0.5">Next Auto-Pay</p>
+                    <p className="text-sm font-mono text-zinc-400">Pending Stripe Sync</p>
                   </div>
                 </div>
               )}
@@ -118,7 +127,7 @@ export default function BillingModule({ clientId }: { clientId: string }) {
             </div>
           </div>
           
-          {/* 🚀 THE UPDATED STRIPE PORTAL CONNECTOR */}
+          {/* THE UPDATED STRIPE PORTAL CONNECTOR */}
           <div className="bg-zinc-950 border border-zinc-800/80 rounded-3xl p-6 md:p-8 flex flex-col md:flex-row md:items-center justify-between group gap-6 shadow-xl">
             <div className="flex-1">
               <h3 className="text-sm font-bold text-white tracking-widest uppercase mb-2">Manage Subscription & Billing</h3>
