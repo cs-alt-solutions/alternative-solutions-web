@@ -14,7 +14,6 @@ export default function PortalTrafficCop() {
 
   useEffect(() => {
     const runIntercept = async () => {
-      // 1. Get the authenticated user's email
       const { data: { user } } = await supabase.auth.getUser();
       
       if (!user || !user.email) {
@@ -22,7 +21,6 @@ export default function PortalTrafficCop() {
         return;
       }
 
-      // 2. Look up all storefronts attached to this email
       const { data, error } = await supabase
         .from('storefronts')
         .select('id, business_name, industry_tag, brand_color, status, is_template')
@@ -34,18 +32,14 @@ export default function PortalTrafficCop() {
         return;
       }
 
-      // 3. STRICT VIP FILTER: Only keep storefronts that have successfully paid and are active.
-      // This automatically hides anything still BUILDING, IN REVIEW, or marked as a prototype.
       const activeWorkspaces = data?.filter(store => 
         (store.status === 'ACTIVE' || store.status === 'LIVE') && 
         !store.is_template
       ) || [];
 
-      // 4. THE TELEPORT: If exactly ONE active storefront exists, bypass this page entirely
       if (activeWorkspaces.length === 1) {
         router.push(`/portal/${activeWorkspaces[0].id}`);
       } 
-      // 5. THE SELECTOR: If MULTIPLE active exist, or ZERO active exist, stop the loading state
       else {
         setStorefronts(activeWorkspaces);
         setIsInitializing(false);
@@ -55,13 +49,12 @@ export default function PortalTrafficCop() {
     runIntercept();
   }, [router]);
 
-  // Loading State (The Millisecond Intercept)
   if (isInitializing) {
     return (
       <div className="min-h-[80vh] flex flex-col items-center justify-center relative isolate">
-        {/* 🚀 WATERMARK */}
-        <div className="fixed inset-0 pointer-events-none flex items-center justify-center z-0 opacity-5">
-          <img src="/logo.png" alt="Alternative Solutions Watermark" className="w-100 h-100 md:w-150 md:h-150 object-contain grayscale" />
+        {/* 🚀 MASSIVE WATERMARK */}
+        <div className="fixed inset-0 pointer-events-none flex items-center justify-center z-0 opacity-[0.07]">
+          <img src="/logo.png" alt="Alternative Solutions Watermark" className="w-[600px] h-[600px] md:w-[1000px] md:h-[1000px] object-contain grayscale max-w-none" />
         </div>
         <Loader2 size={40} className="text-cyan-500 animate-spin mb-6 relative z-10" />
         <p className="text-xs font-mono text-cyan-500 uppercase tracking-widest animate-pulse relative z-10">
@@ -71,13 +64,12 @@ export default function PortalTrafficCop() {
     );
   }
 
-  // Fallback: If they log in but have ZERO active/paid storefronts
   if (storefronts.length === 0) {
     return (
       <div className="min-h-[80vh] flex flex-col items-center justify-center p-6 text-center relative isolate">
-        {/* 🚀 WATERMARK */}
-        <div className="fixed inset-0 pointer-events-none flex items-center justify-center z-0 opacity-5">
-          <img src="/logo.png" alt="Alternative Solutions Watermark" className="w-100 h-100 md:w-150 md:h-150 object-contain grayscale" />
+        {/* 🚀 MASSIVE WATERMARK */}
+        <div className="fixed inset-0 pointer-events-none flex items-center justify-center z-0 opacity-[0.07]">
+          <img src="/logo.png" alt="Alternative Solutions Watermark" className="w-[600px] h-[600px] md:w-[1000px] md:h-[1000px] object-contain grayscale max-w-none" />
         </div>
         <div className="bg-black/40 border border-white/5 rounded-3xl p-12 max-w-lg shadow-2xl backdrop-blur-md relative z-10">
           <Sparkles className="w-12 h-12 text-cyan-500 mx-auto mb-6 opacity-80" />
@@ -96,12 +88,11 @@ export default function PortalTrafficCop() {
     );
   }
 
-  // THE MULTI-WORKSPACE SELECTOR (Only shows paid/active ones)
   return (
     <div className="min-h-[80vh] flex flex-col items-center justify-center p-6 relative isolate">
-      {/* 🚀 WATERMARK */}
-      <div className="fixed inset-0 pointer-events-none flex items-center justify-center z-0 opacity-5">
-        <img src="/logo.png" alt="Alternative Solutions Watermark" className="w-100 h-100 md:w-150 md:h-150 object-contain grayscale" />
+      {/* 🚀 MASSIVE WATERMARK */}
+      <div className="fixed inset-0 pointer-events-none flex items-center justify-center z-0 opacity-[0.07]">
+        <img src="/logo.png" alt="Alternative Solutions Watermark" className="w-[600px] h-[600px] md:w-[1000px] md:h-[1000px] object-contain grayscale max-w-none" />
       </div>
 
       <div className="w-full max-w-4xl relative z-10">
@@ -122,7 +113,6 @@ export default function PortalTrafficCop() {
               href={`/portal/${store.id}`}
               className="group relative bg-slate-900/40 border border-slate-800 hover:border-cyan-500/50 rounded-2xl p-8 transition-all overflow-hidden shadow-xl hover:shadow-[0_0_30px_rgba(6,182,212,0.1)] flex flex-col h-full"
             >
-              {/* Background Glow */}
               <div 
                 className="absolute -top-12 -right-12 w-32 h-32 rounded-full blur-[80px] opacity-20 group-hover:opacity-40 transition-opacity"
                 style={{ backgroundColor: store.brand_color || '#06b6d4' }}
@@ -144,7 +134,6 @@ export default function PortalTrafficCop() {
                     </div>
                   </div>
                   
-                  {/* The Active Badge */}
                   <span className="text-[9px] font-black uppercase tracking-widest px-2 py-1 rounded-md border bg-emerald-500/10 text-emerald-400 border-emerald-500/20">
                     {store.status}
                   </span>
