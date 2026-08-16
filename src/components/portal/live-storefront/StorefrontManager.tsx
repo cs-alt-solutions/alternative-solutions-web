@@ -1,11 +1,17 @@
+/* src/components/portal/live-storefront/StorefrontManager.tsx */
 'use client';
 
 import React, { useState } from 'react';
 import { supabase } from '@/utils/supabase';
-import { Save, CheckCircle2, Loader2, Type, AlignLeft, Link as LinkIcon, Sparkles, Unlock, Lock, AlertTriangle } from 'lucide-react';
+import { 
+  Save, CheckCircle2, Loader2, Type, AlignLeft, 
+  Link as LinkIcon, Sparkles, Unlock, Lock, AlertTriangle, 
+  Image as ImageIcon 
+} from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import HeroTab from './tabs/HeroTab';
 import StoryTab from './tabs/StoryTab';
+import MediaTab from './tabs/MediaTab'; 
 import ServicesTab from './tabs/ServicesTab';
 import ConnectionsTab from './tabs/ConnectionsTab';
 
@@ -13,20 +19,25 @@ export default function StorefrontManager({ store }: { store: any }) {
   const router = useRouter();
   const [isSaving, setIsSaving] = useState(false);
   const [saved, setSaved] = useState(false);
-  const [activeTab, setActiveTab] = useState<'HERO' | 'STORY' | 'SERVICES' | 'CONNECTIONS'>('HERO');
   
-  // THE NEW EDIT MODE STATE
+  const [activeTab, setActiveTab] = useState<'HERO' | 'STORY' | 'MEDIA' | 'SERVICES' | 'CONNECTIONS'>('HERO');
+  
   const [isEditing, setIsEditing] = useState(false);
 
-  // Parse JSONB objects safely from Supabase
+  // Parse JSONB objects and arrays safely from Supabase
   const safeSocials = typeof store.social_handles === 'string' ? JSON.parse(store.social_handles) : (store.social_handles || {});
   const safeCapabilities = Array.isArray(store.capabilities) ? store.capabilities : [];
+  const safeGallery = Array.isArray(store.gallery_items) ? store.gallery_items : []; // 🚀 Added Gallery Parser
 
   const [formData, setFormData] = useState({
     tagline: store.tagline || '',
     subtext: store.subtext || '',
     about_bio: store.about_bio || '',
     contact_email: store.contact_email || '',
+    hero_image: store.hero_image || '',
+    about_image: store.about_image || '',
+    brand_logo: store.brand_logo || '',
+    gallery_items: safeGallery, // 🚀 Registered to form state
     social_handles: safeSocials,
     capabilities: safeCapabilities,
   });
@@ -36,7 +47,6 @@ export default function StorefrontManager({ store }: { store: any }) {
   };
 
   const handleUnlock = () => {
-    // The fun, client-friendly reality check
     const isSure = window.confirm("Hold up! 🚨 You are unlocking the live editor. This isn't a test mode—anything you publish here instantly updates your actual website. You have total creative control, but with great power comes... well, you know. Ready to dive in and make some magic?");
     if (isSure) {
       setIsEditing(true);
@@ -57,7 +67,7 @@ export default function StorefrontManager({ store }: { store: any }) {
       router.refresh(); 
       setTimeout(() => {
         setSaved(false);
-        setIsEditing(false); // Auto-lock the editor again after a successful save
+        setIsEditing(false); 
       }, 3000);
     } catch (error) {
       console.error("Save failed:", error);
@@ -70,6 +80,7 @@ export default function StorefrontManager({ store }: { store: any }) {
   const tabs = [
     { id: 'HERO', label: 'Hero', icon: Type, color: 'text-cyan-400', border: 'border-cyan-500' },
     { id: 'STORY', label: 'Story', icon: AlignLeft, color: 'text-fuchsia-400', border: 'border-fuchsia-500' },
+    { id: 'MEDIA', label: 'Gallery', icon: ImageIcon, color: 'text-rose-400', border: 'border-rose-500' }, // 🚀 Renamed label to Gallery
     { id: 'SERVICES', label: 'Services', icon: Sparkles, color: 'text-amber-400', border: 'border-amber-500' },
     { id: 'CONNECTIONS', label: 'Links', icon: LinkIcon, color: 'text-emerald-400', border: 'border-emerald-500' },
   ] as const;
@@ -122,7 +133,7 @@ export default function StorefrontManager({ store }: { store: any }) {
         {tabs.map(tab => (
           <button
             key={tab.id}
-            onClick={() => setActiveTab(tab.id)}
+            onClick={() => setActiveTab(tab.id as any)}
             className={`flex items-center gap-2 px-4 py-2.5 rounded-lg text-[10px] font-bold uppercase tracking-widest transition-all whitespace-nowrap ${
               activeTab === tab.id 
                 ? `bg-zinc-900 border ${tab.border} ${tab.color} shadow-inner` 
@@ -139,8 +150,9 @@ export default function StorefrontManager({ store }: { store: any }) {
         disabled={!isEditing} 
         className={`flex-1 min-w-0 border-none p-0 m-0 overflow-y-auto custom-scrollbar pr-2 pb-12 transition-all duration-500 ${!isEditing ? 'opacity-50 grayscale-30' : 'opacity-100'}`}
       >
-        {activeTab === 'HERO' && <HeroTab formData={formData} updateForm={updateForm} />}
-        {activeTab === 'STORY' && <StoryTab formData={formData} updateForm={updateForm} />}
+        {activeTab === 'HERO' && <HeroTab storeId={store.id} formData={formData} updateForm={updateForm} />}
+        {activeTab === 'STORY' && <StoryTab storeId={store.id} formData={formData} updateForm={updateForm} />}
+        {activeTab === 'MEDIA' && <MediaTab storeId={store.id} formData={formData} updateForm={updateForm} />}
         {activeTab === 'SERVICES' && <ServicesTab formData={formData} updateForm={updateForm} />}
         {activeTab === 'CONNECTIONS' && <ConnectionsTab formData={formData} updateForm={updateForm} />}
       </fieldset>

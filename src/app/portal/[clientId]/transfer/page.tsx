@@ -1,6 +1,6 @@
 /* src/app/portal/[clientId]/transfer/page.tsx */
 import React from 'react';
-import SecureTransfer from '@/components/portal/secure-transfer/SecureTransfer';
+import SecureTransfer from '@/components/portal/settings/secure-transfer/SecureTransfer';
 
 export default async function TransferPage({ 
   params 
