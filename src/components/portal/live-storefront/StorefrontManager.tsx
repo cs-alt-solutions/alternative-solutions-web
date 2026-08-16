@@ -5,33 +5,28 @@ import React, { useState } from 'react';
 import { supabase } from '@/utils/supabase';
 import { 
   Save, CheckCircle2, Loader2, Type, AlignLeft, 
-  Sparkles, Unlock, Lock, AlertTriangle, Image as ImageIcon 
+  Sparkles, Unlock, Lock, AlertTriangle, Image as ImageIcon, Paintbrush 
 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import HeroTab from './tabs/HeroTab';
 import StoryTab from './tabs/StoryTab';
 import MediaTab from './tabs/MediaTab'; 
 import ServicesTab from './tabs/ServicesTab';
+import { PORTAL_COPY } from '@/config/clients/portal';
+import { getPortalTheme } from '../core/theme';
 
 export default function StorefrontManager({ store }: { store: any }) {
   const router = useRouter();
   const [isSaving, setIsSaving] = useState(false);
   const [saved, setSaved] = useState(false);
-  
-  // 🚀 Reduced to 4 core tabs
   const [activeTab, setActiveTab] = useState<'HERO' | 'STORY' | 'MEDIA' | 'SERVICES'>('HERO');
-  
   const [isEditing, setIsEditing] = useState(false);
 
-  // Parse JSONB objects safely
+  const currentTheme = getPortalTheme(store.id);
+
   const safeSocials = typeof store.social_handles === 'string' ? JSON.parse(store.social_handles) : (store.social_handles || {});
   const safeCapabilities = Array.isArray(store.capabilities) ? store.capabilities : [];
-  
-  // 🚀 DYNAMIC BACKWARDS COMPATIBILITY: 
-  // If the database has old images stored as just strings (URLs), we instantly convert them into objects with blank captions!
   const rawGallery = Array.isArray(store.gallery_items) ? store.gallery_items : [];
-  
-  // THE FIX: Explicitly typed 'item' as 'any' to satisfy strict mode
   const safeGallery = rawGallery.map((item: any) => 
     typeof item === 'string' ? { url: item, caption: '' } : item
   );
@@ -82,7 +77,6 @@ export default function StorefrontManager({ store }: { store: any }) {
     }
   };
 
-  // 🚀 Dropped Connections Tab, keeping it clean and grouped
   const tabs = [
     { id: 'HERO', label: 'Hero', icon: Type, color: 'text-cyan-400', border: 'border-cyan-500' },
     { id: 'STORY', label: 'Story & Links', icon: AlignLeft, color: 'text-fuchsia-400', border: 'border-fuchsia-500' },
@@ -93,6 +87,21 @@ export default function StorefrontManager({ store }: { store: any }) {
   return (
     <div className="flex flex-col h-full overflow-hidden">
       
+      {/* 🚀 THE VIBE CHECK BANNER */}
+      <div className={`shrink-0 mb-6 bg-zinc-950/80 border ${currentTheme.border} rounded-3xl p-5 md:p-6 flex flex-col md:flex-row gap-4 shadow-xl backdrop-blur-md items-start md:items-center`}>
+        <div className={`p-3 ${currentTheme.bg} rounded-xl shrink-0`}>
+          <Paintbrush className={`w-6 h-6 ${currentTheme.text}`} />
+        </div>
+        <div className="flex-1">
+          <h3 className={`text-sm font-black ${currentTheme.text} uppercase tracking-widest mb-1.5`}>
+            {PORTAL_COPY.storefront.vibeCheckTitle}
+          </h3>
+          <p className="text-xs text-zinc-400 leading-relaxed">
+            {PORTAL_COPY.storefront.vibeCheckBody}
+          </p>
+        </div>
+      </div>
+
       {/* COMMAND BAR */}
       <div className="shrink-0 mb-6 flex gap-3">
         {!isEditing ? (

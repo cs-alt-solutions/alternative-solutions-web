@@ -26,7 +26,7 @@ export default async function DashboardModule({
   return (
     <div className="p-4 md:p-8 max-w-7xl mx-auto w-full animate-in fade-in duration-500 pb-12">
       
-      {/* 1. Personalized Welcome Banner (Injected with a rich Fuchsia/Cyan gradient) */}
+      {/* 1. Personalized Welcome Banner (Restored to bg-gradient) */}
       <div className="bg-linear-to-br from-zinc-950 to-zinc-900 border border-white/10 rounded-3xl p-8 lg:p-12 relative overflow-hidden mb-8 shadow-2xl">
         <div className="absolute -top-24 -right-24 w-64 h-64 bg-linear-to-br from-fuchsia-500/20 to-cyan-500/20 rounded-full blur-[80px] pointer-events-none" />
         <div className="absolute bottom-0 left-1/4 w-96 h-40 bg-cyan-500/10 rounded-full blur-[100px] pointer-events-none" />
@@ -94,7 +94,6 @@ export default async function DashboardModule({
         {/* Right Column Action Stack */}
         <div className="lg:col-span-4 flex flex-col gap-6">
           
-          {/* Live Storefront Link (Cyan Theme) */}
           <Link 
             href={`/portal/${clientId}/storefront`}
             className="flex-1 bg-zinc-950/80 border border-cyan-500/20 rounded-3xl p-6 flex flex-col group hover:border-cyan-500/50 hover:bg-cyan-500/5 transition-all shadow-xl backdrop-blur-sm"
@@ -115,7 +114,6 @@ export default async function DashboardModule({
             </div>
           </Link>
 
-          {/* Billing & Subscription Link (Emerald Theme) */}
           <Link 
             href={`/portal/${clientId}/billing`}
             className="flex-1 bg-zinc-950/80 border border-emerald-500/20 rounded-3xl p-6 flex flex-col group hover:border-emerald-500/50 hover:bg-emerald-500/5 transition-all shadow-xl backdrop-blur-sm"
@@ -128,7 +126,6 @@ export default async function DashboardModule({
                 Billing & Plans
               </h3>
             </div>
-            {/* 🚀 FIXED: Radical transparency on cancellations! */}
             <p className="text-xs text-zinc-400 leading-relaxed mb-6 flex-1">
               Manage your subscription tier, view invoices, update payment methods, or safely cancel your plan.
             </p>
@@ -137,7 +134,6 @@ export default async function DashboardModule({
             </div>
           </Link>
 
-          {/* Future Expansion (Fuchsia Theme) */}
           <div className="flex-1 bg-zinc-950/80 border border-fuchsia-500/20 rounded-3xl p-6 flex flex-col relative overflow-hidden group">
             <div className="absolute top-6 right-6 text-fuchsia-500/40">
               <Lock size={16} />
