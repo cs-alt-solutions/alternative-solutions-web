@@ -10,13 +10,12 @@ export const PORTAL_COPY = {
     switchWorkspace: "Switch Workspace"
   },
   storefront: {
-    vibeCheckTitle: "Need a different vibe?",
-    vibeCheckBody: "This command center gives you absolute control over your words and media. But if you're looking to fundamentally restructure your layout, add brand new sections, or completely shift the design aesthetic—just shoot me an email! I can help you scope out a custom expansion and get an upgrade mapped out.",
-    lockedTitle: "Production Environment Secured",
-    lockedBody: "To prevent accidental structural changes, your live storefront editor is locked by default. If you need to update your copy, swap images, or adjust your service offerings, simply request the keys to unlock a 48-hour edit window.",
+    // Merged the Vibe Check and Locked states into one friendly flow!
+    lockedTitle: "Want to make an edit or change the vibe?",
+    lockedBody: "I keep the live storefront locked by default so we don't accidentally break your layout. If you need to update text, swap out some images, or completely shift the visual aesthetic, just request the keys!",
     requestKeysBtn: "Request The Keys",
-    keysRequested: "Access Request Sent",
-    keysPendingBody: "Your architect has been notified. You will receive an email as soon as your 48-hour edit window is unlocked."
+    keysRequested: "Keys Requested",
+    keysPendingBody: "I've been pinged! I'll unlock your edit window shortly."
   },
   support: {
     title: "Help & Support",
@@ -42,7 +41,6 @@ export const PORTAL_COPY = {
     expectBody: "I usually review and reply to general questions within 24 hours. If we're mapping out a big upgrade or a custom build, we'll hash out a clear timeline together before diving in.",
     emergencyTitle: "Real Emergencies",
     emergencyBody: "If your website goes completely offline or something is seriously broken, flag it as 'Something Broke'. This bypasses the normal inbox and alerts me immediately so we can put out the fire fast.",
-    // 🚀 NEW: Friendly history text!
     historyTitle: "Message History",
     historyEmpty: "You haven't sent any messages yet."
   }
