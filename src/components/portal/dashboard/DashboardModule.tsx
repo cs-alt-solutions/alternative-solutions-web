@@ -182,68 +182,59 @@ export default async function DashboardModule({
         </div>
 
         {/* ==========================================
-            RIGHT COLUMN: ACTION STACK
+            RIGHT COLUMN: ACTION STACK (Sleek Rectangles)
         ========================================== */}
-        <div className="lg:col-span-4 flex flex-col gap-6">
+        <div className="lg:col-span-4 flex flex-col gap-4">
           
           <Link 
             href={`/portal/${clientId}/storefront`}
-            className="flex-1 bg-zinc-950/80 border border-cyan-500/20 rounded-3xl p-6 flex flex-col group hover:border-cyan-500/50 hover:bg-cyan-500/5 transition-all shadow-xl backdrop-blur-sm"
+            className="bg-zinc-950/80 border border-cyan-500/20 rounded-2xl p-5 flex items-center gap-4 group hover:border-cyan-500/50 hover:bg-cyan-500/5 transition-all shadow-md backdrop-blur-sm"
           >
-            <div className="flex items-center gap-3 mb-4">
-              <div className="p-2 bg-cyan-500/10 border border-cyan-500/20 rounded-lg text-cyan-400 group-hover:scale-110 transition-transform">
-                <Store size={18} />
-              </div>
-              <h3 className="text-sm font-bold text-white uppercase tracking-widest">
+            <div className="p-3 bg-cyan-500/10 border border-cyan-500/20 rounded-xl text-cyan-400 group-hover:scale-110 transition-transform shrink-0">
+              <Store size={20} />
+            </div>
+            <div className="flex-1 min-w-0">
+              <h3 className="text-sm font-bold text-white uppercase tracking-widest mb-1">
                 Live Storefront
               </h3>
+              <p className="text-[10px] text-zinc-400 leading-relaxed line-clamp-2">
+                Manage your live website, update media, and review your digital storefront settings.
+              </p>
             </div>
-            <p className="text-xs text-zinc-400 leading-relaxed mb-6 flex-1">
-              Manage your live website, update media, and review your digital storefront settings.
-            </p>
-            <div className="flex items-center gap-2 text-[10px] font-mono text-cyan-400 font-bold uppercase tracking-widest mt-auto">
-              Manage Storefront <ArrowRight size={12} className="group-hover:translate-x-1 transition-transform" />
-            </div>
+            <ArrowRight size={16} className="text-cyan-400 group-hover:translate-x-1 transition-transform shrink-0 ml-1" />
           </Link>
 
           <Link 
             href={`/portal/${clientId}/billing`}
-            className="flex-1 bg-zinc-950/80 border border-emerald-500/20 rounded-3xl p-6 flex flex-col group hover:border-emerald-500/50 hover:bg-emerald-500/5 transition-all shadow-xl backdrop-blur-sm"
+            className="bg-zinc-950/80 border border-emerald-500/20 rounded-2xl p-5 flex items-center gap-4 group hover:border-emerald-500/50 hover:bg-emerald-500/5 transition-all shadow-md backdrop-blur-sm"
           >
-            <div className="flex items-center gap-3 mb-4">
-              <div className="p-2 bg-emerald-500/10 border border-emerald-500/20 rounded-lg text-emerald-400 group-hover:scale-110 transition-transform">
-                <CreditCard size={18} />
-              </div>
-              <h3 className="text-sm font-bold text-white uppercase tracking-widest">
+            <div className="p-3 bg-emerald-500/10 border border-emerald-500/20 rounded-xl text-emerald-400 group-hover:scale-110 transition-transform shrink-0">
+              <CreditCard size={20} />
+            </div>
+            <div className="flex-1 min-w-0">
+              <h3 className="text-sm font-bold text-white uppercase tracking-widest mb-1">
                 Billing & Plans
               </h3>
+              <p className="text-[10px] text-zinc-400 leading-relaxed line-clamp-2">
+                Manage your subscription tier, view invoices, update payment methods, or safely cancel.
+              </p>
             </div>
-            <p className="text-xs text-zinc-400 leading-relaxed mb-6 flex-1">
-              Manage your subscription tier, view invoices, update payment methods, or safely cancel your plan.
-            </p>
-            <div className="flex items-center gap-2 text-[10px] font-mono text-emerald-400 font-bold uppercase tracking-widest mt-auto">
-              Manage Billing <ArrowRight size={12} className="group-hover:translate-x-1 transition-transform" />
-            </div>
+            <ArrowRight size={16} className="text-emerald-400 group-hover:translate-x-1 transition-transform shrink-0 ml-1" />
           </Link>
 
-          <div className="flex-1 bg-zinc-950/80 border border-fuchsia-500/20 rounded-3xl p-6 flex flex-col relative overflow-hidden group grayscale opacity-70">
-            <div className="absolute top-6 right-6 text-fuchsia-500/40">
-              <Lock size={16} />
+          <div className="bg-zinc-950/80 border border-fuchsia-500/20 rounded-2xl p-5 flex items-center gap-4 relative overflow-hidden group grayscale opacity-70 cursor-not-allowed shadow-md backdrop-blur-sm">
+            <div className="p-3 bg-fuchsia-500/10 border border-fuchsia-500/20 rounded-xl text-fuchsia-400 shrink-0">
+              <Box size={20} />
             </div>
-            <div className="flex items-center gap-3 mb-4">
-              <div className="p-2 bg-fuchsia-500/10 border border-fuchsia-500/20 rounded-lg text-fuchsia-400">
-                <Box size={18} />
-              </div>
-              <h3 className="text-sm font-bold text-zinc-300 uppercase tracking-widest">
+            <div className="flex-1 min-w-0 pr-4">
+              <h3 className="text-sm font-bold text-zinc-300 uppercase tracking-widest mb-1">
                 Developer Tools
               </h3>
+              <p className="text-[10px] text-zinc-500 leading-relaxed line-clamp-2">
+                Ecosystem expansions, API connections, and beta toggles are currently in the lab.
+              </p>
             </div>
-            <p className="text-xs text-zinc-500 leading-relaxed mb-4 flex-1">
-              Ecosystem expansions, API connections, and beta toggles are currently in the lab.
-            </p>
-            <div className="flex items-center gap-2 text-[10px] font-mono text-fuchsia-500/60 font-bold uppercase tracking-widest mt-auto">
-              Future Expansion
-            </div>
+            <Lock size={16} className="text-fuchsia-500/40 shrink-0 absolute right-6" />
           </div>
 
         </div>
