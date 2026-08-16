@@ -2,7 +2,7 @@
 import React from 'react';
 import Link from 'next/link';
 import { createClient } from '@/utils/supabase/server';
-import { Sparkles, Radio, FileUp, Box, ArrowRight, Store, CreditCard } from 'lucide-react';
+import { Sparkles, Store, CreditCard, ArrowRight, TerminalSquare, Box, Lock } from 'lucide-react';
 import { WEBSITE_COPY } from '@/utils/glossary';
 
 export default async function DashboardModule({ 
@@ -14,88 +14,85 @@ export default async function DashboardModule({
 
   const { data: store } = await supabase
     .from('storefronts')
-    .select('business_name, tagline')
+    .select('business_name')
     .eq('id', clientId)
     .single();
 
   const businessName = store?.business_name || 'My Workspace';
-  const { WELCOME_TITLE, WELCOME_DESC } = WEBSITE_COPY.DASHBOARD.CLIENT_PORTAL;
+  const { WELCOME_TITLE } = WEBSITE_COPY.DASHBOARD.CLIENT_PORTAL;
 
-  // We grab today's date so the system update always looks fresh
+  // Grab today's date so the system update always looks fresh
   const currentDate = new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
 
   return (
     <div className="p-4 md:p-8 max-w-7xl mx-auto w-full animate-in fade-in duration-500 pb-12">
       
       {/* 1. Personalized Welcome Banner */}
-      <div className="bg-brand-primary/5 border border-brand-primary/20 rounded-3xl p-8 lg:p-12 relative overflow-hidden mb-8 shadow-[0_0_30px_rgba(6,182,212,0.05)]">
-        <div className="absolute -top-12 -right-12 w-40 h-40 bg-brand-primary/10 rounded-full blur-3xl pointer-events-none" />
+      <div className="bg-cyan-500/5 border border-cyan-500/20 rounded-3xl p-8 lg:p-12 relative overflow-hidden mb-8 shadow-[0_0_30px_rgba(6,182,212,0.05)]">
+        <div className="absolute -top-12 -right-12 w-40 h-40 bg-cyan-500/10 rounded-full blur-3xl pointer-events-none" />
         <div className="relative z-10 max-w-3xl">
           <div className="flex items-center gap-2 mb-4">
-            <Sparkles size={16} className="text-brand-primary" />
-            <span className="text-[10px] font-mono text-brand-primary uppercase tracking-widest">
+            <Sparkles size={16} className="text-cyan-500" />
+            <span className="text-[10px] font-mono text-cyan-500 uppercase tracking-widest">
               {businessName} Workspace
             </span>
           </div>
           <h1 className="text-3xl md:text-5xl font-black text-white tracking-tight mb-4 drop-shadow-[0_0_15px_rgba(255,255,255,0.1)]">
             {WELCOME_TITLE}
           </h1>
-          <p className="text-sm md:text-base text-white/60 leading-relaxed font-light">
-            {store?.tagline || WELCOME_DESC}
+          <p className="text-sm md:text-base text-cyan-500/80 leading-relaxed font-mono uppercase tracking-widest">
+            This is dope. Let's get building.
           </p>
         </div>
       </div>
 
-      {/* 2. Functional Communication & Core Action Grid */}
+      {/* 2. Core Dashboard Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 mb-6">
         
-        {/* System Broadcast Panel (Replaces Direct Messages) */}
-        <div className="lg:col-span-8 bg-black/40 border border-white/5 rounded-3xl p-8 flex flex-col min-h-75 group hover:border-amber-500/30 transition-all shadow-xl backdrop-blur-sm relative overflow-hidden">
+        {/* Architect's Welcome Letter (Replaces System Broadcast) */}
+        <div className="lg:col-span-8 bg-zinc-950/50 border border-zinc-800/80 rounded-3xl p-8 flex flex-col min-h-75 group hover:border-cyan-500/30 transition-all shadow-xl backdrop-blur-sm relative overflow-hidden">
           
           {/* Header */}
           <div className="flex items-center gap-3 mb-6 pb-4 border-b border-white/5">
-            <Radio size={18} className="text-amber-500" />
+            <TerminalSquare size={18} className="text-cyan-500" />
             <h2 className="text-sm font-bold text-white uppercase tracking-widest">
-              System Broadcast
+              Architect's Log
             </h2>
             <span className="ml-auto text-[10px] font-mono text-zinc-500 bg-zinc-900 px-2 py-1 rounded border border-zinc-800">
               v1.0.0-beta
             </span>
           </div>
 
-          {/* Timeline Update Feed */}
+          {/* Letter Content */}
           <div className="flex-1 space-y-6 overflow-y-auto pr-2 custom-scrollbar">
-            
-            {/* Latest Update Block */}
             <div className="relative pl-6 border-l border-zinc-800/80 pb-2">
-              <div className="absolute w-2.5 h-2.5 bg-amber-500 rounded-full -left-[5.5px] top-1.5 shadow-[0_0_10px_rgba(245,158,11,0.6)]" />
-              <h3 className="text-sm font-black text-amber-500 uppercase tracking-widest mb-1">
-                Content Manager Online
+              <div className="absolute w-2.5 h-2.5 bg-cyan-500 rounded-full -left-[5.5px] top-1.5 shadow-[0_0_10px_rgba(34,211,238,0.6)]" />
+              <h3 className="text-sm font-black text-cyan-500 uppercase tracking-widest mb-1">
+                Welcome to the Grid
               </h3>
-              <p className="text-[10px] font-mono text-zinc-500 mb-4 uppercase tracking-widest">
-                {currentDate} // Architect Log
+              <p className="text-[10px] font-mono text-zinc-500 mb-6 uppercase tracking-widest">
+                {currentDate} // Transmission
               </p>
               
-              <div className="text-sm text-zinc-300 leading-relaxed font-light space-y-4">
+              <div className="text-sm text-zinc-300 leading-relaxed font-light space-y-5">
                 <p>
-                  I wanted to get you in here early so we can start building this together. You now have full access to your <strong className="text-white font-medium">Live Storefront</strong> tab! You can jump in right now to update your hero text, brand story, social connections, and service offerings.
+                  I am super pumped that we are finally here. I just want to pause for a second to say how incredibly grateful I am for this opportunity and for you taking a chance on me. 
                 </p>
                 <p>
-                  A quick heads-up: Please pardon the digital dust! I am moving as quickly as I can, but a lot of the secondary tools in this portal are still under construction. My absolute main focus right now is ensuring you have access to your own content and keeping track of your billing smoothly.
+                  I honestly don't think this first group of early adopters recognizes just how impactful your involvement is in shaping this entire ecosystem. We are building something radically different, and having you in this initial launch group means absolutely everything to me.
                 </p>
                 <p>
-                  If you click around and hit a construction page, just know I'm actively wiring it up in the trenches. Poke around, get comfortable, and if you have any questions, just shoot me an email!
+                  Pardon the digital dust while we get the engines running! Your <strong className="text-white font-medium">Live Storefront</strong> tab is online right now, so jump in, poke around, and start updating your media and text. If you hit any construction zones, just know I'm actively wiring them up in the trenches. 
                 </p>
-                <p className="text-cyan-500 font-mono text-[10px] uppercase tracking-widest pt-2">
+                <p className="text-cyan-500 font-mono text-[10px] uppercase tracking-widest pt-4">
                   — Courtney
                 </p>
               </div>
             </div>
-
           </div>
         </div>
 
-        {/* Core Business Stack (Spans 4 cols on desktop) */}
+        {/* Right Column Action Stack */}
         <div className="lg:col-span-4 flex flex-col gap-6">
           
           {/* Live Storefront Link */}
@@ -111,8 +108,8 @@ export default async function DashboardModule({
                 Live Storefront
               </h3>
             </div>
-            <p className="text-xs text-white/60 leading-relaxed mb-6 flex-1">
-              Manage your live website, update text, and review your digital storefront settings.
+            <p className="text-xs text-zinc-400 leading-relaxed mb-6 flex-1">
+              Manage your live website, update media, and review your digital storefront settings.
             </p>
             <div className="flex items-center gap-2 text-[10px] font-mono text-cyan-400 font-bold uppercase tracking-widest mt-auto">
               Manage Storefront <ArrowRight size={12} className="group-hover:translate-x-1 transition-transform" />
@@ -132,62 +129,36 @@ export default async function DashboardModule({
                 Billing & Plans
               </h3>
             </div>
-            <p className="text-xs text-white/60 leading-relaxed mb-6 flex-1">
-              Manage your $5 foundation subscription, invoices, and payment methods.
+            <p className="text-xs text-zinc-400 leading-relaxed mb-6 flex-1">
+              Manage your subscription tier, view invoices, and update payment methods securely.
             </p>
             <div className="flex items-center gap-2 text-[10px] font-mono text-emerald-400 font-bold uppercase tracking-widest mt-auto">
               Manage Billing <ArrowRight size={12} className="group-hover:translate-x-1 transition-transform" />
             </div>
           </Link>
 
+          {/* Future Expansion: Developer Tools (Disabled UI) */}
+          <div className="flex-1 bg-zinc-950/40 border border-zinc-800/50 rounded-3xl p-6 flex flex-col relative overflow-hidden grayscale opacity-70">
+            <div className="absolute top-6 right-6 text-zinc-600">
+              <Lock size={16} />
+            </div>
+            <div className="flex items-center gap-3 mb-4">
+              <div className="p-2 bg-zinc-800/50 rounded-lg text-zinc-500">
+                <Box size={18} />
+              </div>
+              <h3 className="text-sm font-bold text-zinc-400 uppercase tracking-widest">
+                Developer Tools
+              </h3>
+            </div>
+            <p className="text-xs text-zinc-500 leading-relaxed mb-4 flex-1">
+              Advanced staging environments, API webhooks, and beta feature toggles are currently under construction.
+            </p>
+            <div className="flex items-center gap-2 text-[10px] font-mono text-fuchsia-500/50 font-bold uppercase tracking-widest mt-auto">
+              Future Expansion
+            </div>
+          </div>
+
         </div>
-      </div>
-
-      {/* 3. Development & Asset Tools Row */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-
-          {/* Secure Transfer Link */}
-          <Link 
-            href={`/portal/${clientId}/transfer`}
-            className="bg-black/40 border border-white/5 rounded-3xl p-6 md:p-8 flex items-center justify-between group hover:border-white/20 hover:bg-white/5 transition-all shadow-xl backdrop-blur-sm"
-          >
-             <div className="flex items-center gap-6">
-                <div className="p-4 bg-zinc-800/50 rounded-2xl text-zinc-400 group-hover:text-white transition-colors">
-                  <FileUp size={24} />
-                </div>
-                <div>
-                  <h3 className="text-sm font-bold text-white uppercase tracking-widest mb-1">
-                    Secure Transfer Vault
-                  </h3>
-                  <p className="text-xs text-white/50 leading-relaxed max-w-sm">
-                    Upload high-res assets, documents, and brand files directly to our engineering pipeline.
-                  </p>
-                </div>
-             </div>
-             <ArrowRight size={20} className="text-zinc-600 group-hover:text-white group-hover:translate-x-2 transition-all hidden sm:block" />
-          </Link>
-
-          {/* Active Prototypes Link */}
-          <Link 
-            href={`/portal/${clientId}/prototypes`}
-            className="bg-black/40 border border-white/5 rounded-3xl p-6 md:p-8 flex items-center justify-between group hover:border-fuchsia-500/30 hover:bg-fuchsia-500/5 transition-all shadow-xl backdrop-blur-sm"
-          >
-             <div className="flex items-center gap-6">
-                <div className="p-4 bg-fuchsia-500/10 rounded-2xl text-fuchsia-400 group-hover:scale-110 transition-transform">
-                  <Box size={24} />
-                </div>
-                <div>
-                  <h3 className="text-sm font-bold text-white uppercase tracking-widest mb-1">
-                    Developer Tools
-                  </h3>
-                  <p className="text-xs text-white/50 leading-relaxed max-w-sm">
-                    Access staging environments, experimental tools, and beta features.
-                  </p>
-                </div>
-             </div>
-             <ArrowRight size={20} className="text-fuchsia-400 group-hover:translate-x-2 transition-all hidden sm:block" />
-          </Link>
-
       </div>
 
     </div>
