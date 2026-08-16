@@ -12,10 +12,19 @@ export default function AppIframe({ url, title, clientId }: { url: string, title
   const currentTheme = getPortalTheme(clientId || '');
 
   return (
-    <div className="relative w-full h-full min-h-[75vh] max-w-6xl mx-auto bg-black/40 border border-white/5 rounded-2xl overflow-hidden flex flex-col group shadow-2xl">
+    <div className="relative w-full h-full min-h-[75vh] max-w-6xl mx-auto bg-zinc-950 border border-white/5 rounded-2xl overflow-hidden flex flex-col group shadow-2xl isolate">
       
+      {/* 🚀 THE WATERMARK: Massive, subtle AS logo in the background */}
+      <div className="absolute inset-0 pointer-events-none flex items-center justify-center z-0 opacity-5">
+        <img 
+          src="/logo.png" 
+          alt="Alternative Solutions Watermark" 
+          className="w-96 h-96 object-contain grayscale" 
+        />
+      </div>
+
       {/* Synthetic Application Header (Upgraded to Zinc) */}
-      <div className="h-10 bg-zinc-950/80 border-b border-zinc-800/80 flex items-center justify-between px-4 shrink-0 backdrop-blur-md">
+      <div className="h-10 bg-zinc-900/80 border-b border-zinc-800/80 flex items-center justify-between px-4 shrink-0 backdrop-blur-md relative z-20">
         <div className="flex gap-2">
           <div className="w-2.5 h-2.5 rounded-full bg-zinc-800" />
           <div className="w-2.5 h-2.5 rounded-full bg-zinc-800" />
@@ -37,7 +46,7 @@ export default function AppIframe({ url, title, clientId }: { url: string, title
 
       {/* Loading Telemetry (Themed) */}
       {isLoading && (
-        <div className="absolute inset-0 top-10 flex flex-col items-center justify-center bg-black/80 backdrop-blur-md z-10">
+        <div className="absolute inset-0 top-10 flex flex-col items-center justify-center bg-zinc-950/90 backdrop-blur-md z-10">
           <Loader2 size={32} className={`${currentTheme.text} animate-spin mb-4`} />
           <span className={`text-xs font-mono ${currentTheme.text} uppercase tracking-widest animate-pulse`}>
             Initializing Environment...
@@ -49,7 +58,7 @@ export default function AppIframe({ url, title, clientId }: { url: string, title
       <iframe
         src={url}
         onLoad={() => setIsLoading(false)}
-        className="w-full h-full border-none flex-1"
+        className="w-full h-full border-none flex-1 relative z-10 bg-transparent"
         allow="clipboard-read; clipboard-write"
       />
     </div>
