@@ -5,7 +5,7 @@ import React, { useState } from 'react';
 import { supabase } from '@/utils/supabase';
 import { 
   Save, CheckCircle2, Loader2, Type, AlignLeft, 
-  Sparkles, Unlock, Lock, AlertTriangle, Image as ImageIcon, Paintbrush 
+  Sparkles, Lock, AlertTriangle, Image as ImageIcon, Paintbrush, Key, Clock 
 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import HeroTab from './tabs/HeroTab';
@@ -20,7 +20,9 @@ export default function StorefrontManager({ store }: { store: any }) {
   const [isSaving, setIsSaving] = useState(false);
   const [saved, setSaved] = useState(false);
   const [activeTab, setActiveTab] = useState<'HERO' | 'STORY' | 'MEDIA' | 'SERVICES'>('HERO');
-  const [isEditing, setIsEditing] = useState(false);
+  
+  // 🚀 NEW: The 3-tier access state. Default is LOCKED.
+  const [accessState, setAccessState] = useState<'LOCKED' | 'REQUESTED' | 'UNLOCKED'>('LOCKED');
 
   const currentTheme = getPortalTheme(store.id);
 
@@ -48,26 +50,22 @@ export default function StorefrontManager({ store }: { store: any }) {
     setFormData(prev => ({ ...prev, ...updates }));
   };
 
-  const handleUnlock = () => {
-    const isSure = window.confirm("Hold up! 🚨 You are unlocking the live editor. This isn't a test mode—anything you publish here instantly updates your actual website. You have total creative control, but with great power comes... well, you know. Ready to dive in and make some magic?");
-    if (isSure) setIsEditing(true);
+  const handleRequestKeys = () => {
+    // 🚀 In the future, this will trigger a Supabase Edge Function to email you!
+    setAccessState('REQUESTED');
   };
 
   const handleSave = async () => {
     setIsSaving(true);
     try {
-      const { error } = await supabase
-        .from('storefronts')
-        .update(formData)
-        .eq('id', store.id);
-
+      const { error } = await supabase.from('storefronts').update(formData).eq('id', store.id);
       if (error) throw error;
       
       setSaved(true);
       router.refresh(); 
       setTimeout(() => {
         setSaved(false);
-        setIsEditing(false); 
+        setAccessState('LOCKED'); 
       }, 3000);
     } catch (error) {
       console.error("Save failed:", error);
@@ -87,7 +85,6 @@ export default function StorefrontManager({ store }: { store: any }) {
   return (
     <div className="flex flex-col h-full overflow-hidden">
       
-      {/* 🚀 THE VIBE CHECK BANNER */}
       <div className={`shrink-0 mb-6 bg-zinc-950/80 border ${currentTheme.border} rounded-3xl p-5 md:p-6 flex flex-col md:flex-row gap-4 shadow-xl backdrop-blur-md items-start md:items-center`}>
         <div className={`p-3 ${currentTheme.bg} rounded-xl shrink-0`}>
           <Paintbrush className={`w-6 h-6 ${currentTheme.text}`} />
@@ -102,16 +99,42 @@ export default function StorefrontManager({ store }: { store: any }) {
         </div>
       </div>
 
-      {/* COMMAND BAR */}
+      {/* 🚀 THE NEW ACCESS COMMAND BAR */}
       <div className="shrink-0 mb-6 flex gap-3">
-        {!isEditing ? (
-          <button 
-            onClick={handleUnlock}
-            className="w-full flex items-center justify-center gap-2 bg-amber-500/10 hover:bg-amber-500/20 text-amber-500 border border-amber-500/30 px-6 py-4 rounded-xl text-xs font-black uppercase tracking-widest transition-all cursor-pointer shadow-[0_0_15px_rgba(245,158,11,0.1)]"
-          >
-            <Unlock size={16} /> Unlock Content Manager
-          </button>
-        ) : (
+        {accessState === 'LOCKED' && (
+          <div className="w-full bg-black/40 border border-zinc-800/80 rounded-2xl p-4 md:p-6 flex flex-col md:flex-row items-center justify-between gap-6 shadow-inner">
+            <div>
+              <h3 className="text-sm font-bold text-white uppercase tracking-widest mb-1 flex items-center gap-2">
+                <Lock size={14} className="text-zinc-500" /> {PORTAL_COPY.storefront.lockedTitle}
+              </h3>
+              <p className="text-xs text-zinc-500 max-w-lg leading-relaxed">
+                {PORTAL_COPY.storefront.lockedBody}
+              </p>
+            </div>
+            <button 
+              onClick={handleRequestKeys}
+              className="w-full md:w-auto shrink-0 flex items-center justify-center gap-2 bg-amber-500 hover:bg-amber-400 text-amber-950 px-6 py-3.5 rounded-xl text-xs font-black uppercase tracking-widest transition-all cursor-pointer shadow-[0_0_20px_rgba(245,158,11,0.2)]"
+            >
+              <Key size={16} /> {PORTAL_COPY.storefront.requestKeysBtn}
+            </button>
+          </div>
+        )}
+
+        {accessState === 'REQUESTED' && (
+          <div className="w-full bg-amber-500/5 border border-amber-500/20 rounded-2xl p-4 md:p-6 flex items-start gap-4">
+            <Clock className="text-amber-500 shrink-0 mt-0.5" />
+            <div>
+              <h3 className="text-sm font-bold text-amber-500 uppercase tracking-widest mb-1">
+                {PORTAL_COPY.storefront.keysRequested}
+              </h3>
+              <p className="text-xs text-amber-500/70 leading-relaxed">
+                {PORTAL_COPY.storefront.keysPendingBody}
+              </p>
+            </div>
+          </div>
+        )}
+
+        {accessState === 'UNLOCKED' && (
           <>
             <button 
               onClick={handleSave}
@@ -121,7 +144,7 @@ export default function StorefrontManager({ store }: { store: any }) {
               {isSaving ? <><Loader2 size={16} className="animate-spin" /> Compiling...</> : saved ? <><CheckCircle2 size={16} /> Live Synced</> : <><Save size={16} /> Publish Changes</>}
             </button>
             <button 
-              onClick={() => setIsEditing(false)}
+              onClick={() => setAccessState('LOCKED')}
               disabled={isSaving}
               className="px-5 py-4 rounded-xl bg-zinc-900 border border-zinc-800 text-zinc-500 hover:text-white transition-colors flex items-center justify-center cursor-pointer disabled:opacity-50"
               title="Lock Editor"
@@ -132,7 +155,7 @@ export default function StorefrontManager({ store }: { store: any }) {
         )}
       </div>
 
-      {isEditing && (
+      {accessState === 'UNLOCKED' && (
         <div className="shrink-0 mb-4 bg-amber-500/10 border border-amber-500/30 rounded-lg p-3 flex items-center gap-3 animate-in fade-in slide-in-from-top-2">
           <AlertTriangle size={14} className="text-amber-500 shrink-0" />
           <p className="text-[10px] text-amber-400/90 font-mono uppercase tracking-widest leading-relaxed">
@@ -158,10 +181,10 @@ export default function StorefrontManager({ store }: { store: any }) {
         ))}
       </div>
 
-      {/* TAB CONTENT */}
+      {/* TAB CONTENT (Disabled globally unless UNLOCKED) */}
       <fieldset 
-        disabled={!isEditing} 
-        className={`flex-1 min-w-0 border-none p-0 m-0 overflow-y-auto custom-scrollbar pr-2 pb-12 transition-all duration-500 ${!isEditing ? 'opacity-50 grayscale-30' : 'opacity-100'}`}
+        disabled={accessState !== 'UNLOCKED'} 
+        className={`flex-1 min-w-0 border-none p-0 m-0 overflow-y-auto custom-scrollbar pr-2 pb-12 transition-all duration-500 ${accessState !== 'UNLOCKED' ? 'opacity-50 grayscale-30' : 'opacity-100'}`}
       >
         {activeTab === 'HERO' && <HeroTab storeId={store.id} formData={formData} updateForm={updateForm} />}
         {activeTab === 'STORY' && <StoryTab storeId={store.id} formData={formData} updateForm={updateForm} />}
