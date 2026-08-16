@@ -48,7 +48,7 @@ export default async function ClientDashboardHome({
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 mb-6">
         
         {/* Main Messages Panel (Spans 8 cols on desktop) */}
-        <div className="lg:col-span-8 bg-black/40 border border-white/5 rounded-3xl p-8 flex flex-col min-h-[300px] group hover:border-brand-primary/30 transition-all shadow-xl backdrop-blur-sm">
+        <div className="lg:col-span-8 bg-black/40 border border-white/5 rounded-3xl p-8 flex flex-col min-h-75 group hover:border-brand-primary/30 transition-all shadow-xl backdrop-blur-sm">
           <div className="flex items-center gap-3 mb-6 pb-4 border-b border-white/5">
             <MessageSquare size={18} className="text-fuchsia-400" />
             <h2 className="text-sm font-bold text-white uppercase tracking-widest">

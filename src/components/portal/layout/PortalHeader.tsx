@@ -55,7 +55,7 @@ export default function PortalHeader({ clientId }: { clientId: string }) {
           <div className="w-8 h-8 rounded-full bg-slate-800 flex items-center justify-center border border-slate-700">
             <User className="w-4 h-4 text-slate-400" />
           </div>
-          <span className="text-sm font-medium text-slate-300 mr-2 truncate max-w-[150px]">
+          <span className="text-sm font-medium text-slate-300 mr-2 truncate max-w-37.5">
             {contactEmail}
           </span>
           

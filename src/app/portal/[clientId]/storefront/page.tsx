@@ -1,43 +1,60 @@
+/* src/app/portal/[clientId]/storefront/page.tsx */
 import React from 'react';
-import Link from 'next/link';
-import { Hammer, ArrowLeft } from 'lucide-react';
+import { createClient } from '@/utils/supabase/server';
+import AppIframe from '@/components/portal/shared/AppIframe';
+import ClientStorefrontEditor from '@/components/portal/core/ClientStorefrontEditor';
+import { Store, AlertTriangle } from 'lucide-react';
 
-export default async function UnderConstructionPage({ 
+export default async function LiveStorefrontPage({ 
   params 
 }: { 
   params: Promise<{ clientId: string }> 
 }) {
   const { clientId } = await params;
+  const supabase = await createClient();
+
+  const { data: store } = await supabase
+    .from('storefronts')
+    .select('*')
+    .eq('id', clientId)
+    .single();
+
+  if (!store) {
+    return (
+      <div className="p-8 text-rose-500 bg-rose-500/10 rounded-xl border border-rose-500/20 font-mono text-sm flex items-center gap-3">
+        <AlertTriangle /> Error: Storefront data not found.
+      </div>
+    );
+  }
+
+  // Determine the live URL
+  const liveUrl = store.custom_domain 
+    ? `https://${store.custom_domain}` 
+    : `https://storefronts.alternativesolutions.io/${store.slug}`;
 
   return (
-    <div className="h-full min-h-[75vh] flex flex-col items-center justify-center p-6 text-center animate-in fade-in zoom-in-95 duration-500">
+    <div className="h-full flex flex-col xl:flex-row gap-8 p-4 lg:p-8 animate-in fade-in duration-500">
       
-      {/* Background Glow */}
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-amber-500/10 rounded-full blur-[100px] pointer-events-none" />
-
-      <div className="relative z-10 bg-black/40 border border-white/5 rounded-3xl p-8 md:p-12 max-w-lg w-full shadow-2xl backdrop-blur-md">
-        
-        <div className="w-16 h-16 rounded-2xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center mx-auto mb-6 shadow-[0_0_30px_rgba(245,158,11,0.15)]">
-          <Hammer className="w-8 h-8 text-amber-500" />
+      {/* LEFT COLUMN: The Text Editor */}
+      <div className="w-full xl:w-1/3 flex flex-col gap-6 overflow-y-auto custom-scrollbar pr-2 pb-12">
+        <div className="flex items-center gap-4 border-b border-white/5 pb-6">
+          <div className="w-12 h-12 rounded-full bg-cyan-500/10 flex items-center justify-center border border-cyan-500/20 shrink-0">
+            <Store className="text-cyan-500 w-6 h-6" />
+          </div>
+          <div>
+            <h1 className="text-xl font-black text-white uppercase tracking-widest">Content Manager</h1>
+            <p className="text-xs text-zinc-500 font-mono uppercase tracking-widest mt-1">Live Database Sync</p>
+          </div>
         </div>
-
-        <h1 className="text-2xl font-black text-white uppercase tracking-widest mb-3">
-          Sector In Development
-        </h1>
         
-        <p className="text-sm text-zinc-400 font-light leading-relaxed mb-8">
-          We are actively wiring up this module of your command center. Please check back shortly as we deploy new infrastructure and functionality.
-        </p>
-
-        <Link 
-          href={`/portal/${clientId}`}
-          className="inline-flex items-center justify-center gap-2 w-full sm:w-auto bg-zinc-900 border border-zinc-800 hover:border-cyan-500/50 hover:bg-zinc-800/80 text-zinc-300 hover:text-cyan-400 text-xs font-bold uppercase tracking-widest px-8 py-3.5 rounded-xl transition-all group"
-        >
-          <ArrowLeft size={14} className="group-hover:-translate-x-1 transition-transform" />
-          Return to Dashboard
-        </Link>
-        
+        <ClientStorefrontEditor store={store} />
       </div>
+
+      {/* RIGHT COLUMN: The Live Preview Iframe */}
+      <div className="w-full xl:w-2/3 h-[600px] xl:h-[calc(100vh-6rem)]">
+        <AppIframe url={liveUrl} title={`${store.business_name} Live View`} />
+      </div>
+
     </div>
   );
 }

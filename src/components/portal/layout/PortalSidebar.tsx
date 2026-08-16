@@ -137,7 +137,7 @@ export default function PortalSidebar({ clientId }: { clientId: string }) {
           <div className="p-4 border-t border-slate-800 bg-slate-900/30">
             <Link 
               href="/portal" 
-              className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800/50 hover:text-cyan-400 transition-colors group"
+              className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800/50 transition-colors group"
             >
               <ArrowLeft className="w-5 h-5 shrink-0 group-hover:-translate-x-1 transition-transform" />
               <span className="text-sm font-medium">Switch Workspace</span>

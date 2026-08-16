@@ -122,7 +122,7 @@ export default function PortalTrafficCop() {
                       <Building className="w-5 h-5 text-slate-400 group-hover:text-cyan-400 transition-colors" />
                     </div>
                     <div>
-                      <h2 className="text-lg font-black text-white tracking-wide truncate max-w-[200px]">
+                      <h2 className="text-lg font-black text-white tracking-wide truncate max-w-50">
                         {store.business_name}
                       </h2>
                       <span className="text-[10px] font-mono text-slate-500 uppercase tracking-widest">
