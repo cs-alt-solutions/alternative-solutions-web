@@ -3,7 +3,7 @@
 
 import React, { useEffect, useState, use } from 'react';
 import { supabase } from '@/utils/supabase';
-import AppIframe from '@/components/portal/shared/AppIframe';
+import AppIframe from '@/components/portal/core/AppIframe';
 import { Loader2, AlertTriangle } from 'lucide-react';
 
 export default function ActivePrototypesPage({ params }: { params: Promise<{ clientId: string }> }) {

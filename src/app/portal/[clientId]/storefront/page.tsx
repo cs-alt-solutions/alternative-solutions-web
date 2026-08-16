@@ -1,8 +1,8 @@
 /* src/app/portal/[clientId]/storefront/page.tsx */
 import React from 'react';
 import { createClient } from '@/utils/supabase/server';
-import AppIframe from '@/components/portal/shared/AppIframe';
-import ClientStorefrontEditor from '@/components/portal/storefront/StorefrontManager';
+import AppIframe from '@/components/portal/core/AppIframe';
+import ClientStorefrontEditor from '@/components/portal/live-storefront/StorefrontManager';
 import { Store, AlertTriangle } from 'lucide-react';
 
 export default async function LiveStorefrontPage({ 

@@ -1,7 +1,7 @@
 /* src/app/portal/[clientId]/settings/page.tsx */
 import React from 'react';
 import { SANDBOX_CLIENTS } from '@/utils/glossary';
-import ClientProfile from '@/components/portal/core/ClientProfile';
+import ClientProfile from '@/components/portal/settings/SettingsModule';
 
 export default async function SettingsPage({ 
   params 

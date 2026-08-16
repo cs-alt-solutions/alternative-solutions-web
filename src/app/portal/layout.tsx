@@ -2,8 +2,8 @@
 'use client';
 
 import { usePathname } from 'next/navigation';
-import PortalSidebar from '@/components/portal/layout/PortalSidebar';
-import PortalHeader from '@/components/portal/layout/PortalHeader';
+import PortalSidebar from '@/components/portal/core/PortalSidebar';
+import PortalHeader from '@/components/portal/core/PortalHeader';
 
 export default function PortalLayout({
   children,
