@@ -71,7 +71,7 @@ export default function BillingModule({ clientId }: { clientId: string }) {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 md:gap-8">
         
         {/* LEFT COL: Active Plan & Upgrades */}
         <div className="lg:col-span-7 space-y-6">
@@ -108,7 +108,7 @@ export default function BillingModule({ clientId }: { clientId: string }) {
             </div>
           </div>
           
-          {/* THE UPDATED STRIPE PORTAL CONNECTOR */}
+          {/* THE STRIPE PORTAL CONNECTOR */}
           <div className="bg-zinc-950 border border-zinc-800/80 rounded-3xl p-6 md:p-8 flex flex-col md:flex-row md:items-center justify-between group gap-6 shadow-xl">
             <div className="flex-1">
               <h3 className="text-sm font-bold text-white tracking-widest uppercase mb-2">Manage Subscription & Billing</h3>
@@ -158,40 +158,42 @@ export default function BillingModule({ clientId }: { clientId: string }) {
 
         </div>
 
-        {/* RIGHT COL: Native Invoice Table & Auto-Pay */}
-        <div className="lg:col-span-5 flex flex-col">
-          <div className="bg-zinc-950 border border-zinc-800/80 rounded-3xl p-6 md:p-8 flex flex-col h-full overflow-hidden shadow-xl">
+        {/* RIGHT COL: Standalone Auto-Pay & Invoice Table */}
+        <div className="lg:col-span-5 flex flex-col gap-6">
+          
+          {/* 🚀 STANDALONE AUTO-PAY WIDGET */}
+          <div className="bg-zinc-950 border border-zinc-800/80 rounded-3xl p-6 shadow-xl flex items-center justify-between group relative overflow-hidden">
+            <div className={`absolute -right-10 -top-10 w-32 h-32 rounded-full blur-[50px] opacity-20 pointer-events-none ${upcoming ? 'bg-emerald-500' : 'bg-zinc-500'}`} />
+            
+            <div className="flex items-center gap-4 relative z-10">
+              <div className={`p-3 rounded-xl ${upcoming ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' : 'bg-zinc-800/50 text-zinc-500'}`}>
+                <Calendar className="w-5 h-5" />
+              </div>
+              <div>
+                <p className={`text-[10px] font-bold uppercase tracking-widest mb-0.5 ${upcoming ? 'text-zinc-400' : 'text-zinc-500'}`}>
+                  Next Auto-Pay
+                </p>
+                {upcoming ? (
+                  <p className="text-lg font-mono text-emerald-400">
+                    ${upcoming.amount} <span className="text-zinc-500 text-xs font-sans">on</span> {upcoming.date}
+                  </p>
+                ) : (
+                  <p className="text-sm font-mono text-zinc-400">Pending Stripe Sync</p>
+                )}
+              </div>
+            </div>
+          </div>
+
+          {/* BILLING HISTORY TABLE */}
+          <div className="bg-zinc-950 border border-zinc-800/80 rounded-3xl p-6 md:p-8 flex flex-col flex-1 overflow-hidden shadow-xl min-h-[400px]">
             <div className="flex items-center gap-3 mb-6 pb-4 border-b border-white/5">
               <Receipt className="text-emerald-500 w-5 h-5" />
               <h3 className="text-sm font-bold text-white uppercase tracking-widest">Billing History</h3>
             </div>
             
-            {/* 🚀 MOVED AUTO-PAY WIDGET HERE */}
-            {upcoming ? (
-              <div className="bg-emerald-500/5 border border-emerald-500/20 rounded-xl p-4 mb-6 flex items-center justify-between shrink-0">
-                <div className="flex items-center gap-4">
-                  <div className="p-2 bg-emerald-500/10 rounded-lg"><Calendar className="w-4 h-4 text-emerald-400" /></div>
-                  <div>
-                    <p className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest mb-0.5">Next Auto-Pay</p>
-                    <p className="text-sm font-mono text-emerald-400">${upcoming.amount} <span className="text-zinc-500 text-xs">on</span> {upcoming.date}</p>
-                  </div>
-                </div>
-              </div>
-            ) : (
-              <div className="bg-zinc-900/50 border border-zinc-800/50 rounded-xl p-4 mb-6 flex items-center justify-between shrink-0">
-                <div className="flex items-center gap-4">
-                  <div className="p-2 bg-zinc-800/50 rounded-lg"><Calendar className="w-4 h-4 text-zinc-500" /></div>
-                  <div>
-                    <p className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest mb-0.5">Next Auto-Pay</p>
-                    <p className="text-sm font-mono text-zinc-400">Pending Stripe Sync</p>
-                  </div>
-                </div>
-              </div>
-            )}
-
             <div className="flex-1 overflow-y-auto pr-2 custom-scrollbar">
               {invoices.length === 0 ? (
-                <div className="text-center py-12 border-2 border-dashed border-zinc-800/50 rounded-2xl bg-zinc-900/20">
+                <div className="text-center py-12 border-2 border-dashed border-zinc-800/50 rounded-2xl bg-zinc-900/20 h-full flex flex-col items-center justify-center">
                   <p className="text-xs text-zinc-500 font-mono tracking-widest uppercase">No invoices generated yet.</p>
                 </div>
               ) : (
