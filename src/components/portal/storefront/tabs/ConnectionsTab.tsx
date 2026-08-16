@@ -26,7 +26,7 @@ export default function ConnectionsTab({ formData, updateForm }: { formData: any
   return (
     <div className="bg-black/40 border border-emerald-500/20 rounded-2xl p-6 shadow-xl backdrop-blur-sm space-y-6">
       <div>
-        <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest block mb-2 flex items-center gap-2">
+        <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest block mb-2 items-center gap-2">
           <Mail size={12}/> Public Contact Email
         </label>
         <input 

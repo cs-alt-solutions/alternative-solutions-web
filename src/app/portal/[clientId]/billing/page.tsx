@@ -3,8 +3,8 @@
 
 import React, { useState, useEffect } from 'react';
 import { supabase } from '@/utils/supabase';
-import { CreditCard, Receipt, ArrowRight, Loader2, ShieldCheck, Zap, Download } from 'lucide-react';
-import { createCustomerPortalSession, getClientInvoices } from '@/app/actions/billing';
+import { CreditCard, Receipt, ArrowRight, Loader2, ShieldCheck, Zap, Download, Calendar, Lock, Globe } from 'lucide-react';
+import { createCustomerPortalSession, getClientInvoices, getUpcomingInvoice } from '@/app/actions/billing';
 
 export default function BillingPage({ 
   params 
@@ -14,16 +14,15 @@ export default function BillingPage({
   const [clientId, setClientId] = useState<string | null>(null);
   const [store, setStore] = useState<any>(null);
   const [invoices, setInvoices] = useState<any[]>([]);
+  const [upcoming, setUpcoming] = useState<{ amount: string, date: string } | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isRedirecting, setIsRedirecting] = useState(false);
 
-  // Unwrap params and fetch data
   useEffect(() => {
     const init = async () => {
       const resolvedParams = await params;
       setClientId(resolvedParams.clientId);
 
-      // 1. Fetch Storefront Data
       const { data: storeData } = await supabase
         .from('storefronts')
         .select('*')
@@ -32,11 +31,22 @@ export default function BillingPage({
         
       setStore(storeData);
 
-      // 2. Secretly Fetch Invoices from Stripe if they have an active Customer ID
       if (storeData?.stripe_customer_id) {
+        // Fetch Billing History
         const invoiceData = await getClientInvoices(storeData.stripe_customer_id);
         if (invoiceData.success) {
           setInvoices(invoiceData.invoices || []);
+        }
+        
+        // Fetch Upcoming Payment
+        const upcomingData = await getUpcomingInvoice(storeData.stripe_customer_id);
+        
+        // THE FIX: Strict undefined safety check
+        if (upcomingData.success && upcomingData.amount && upcomingData.date) {
+          setUpcoming({ 
+            amount: upcomingData.amount as string, 
+            date: upcomingData.date as string 
+          });
         }
       }
 
@@ -47,16 +57,10 @@ export default function BillingPage({
 
   const handlePortalRedirect = async () => {
     if (!store?.stripe_customer_id || !clientId) return;
-    
     setIsRedirecting(true);
-    const { url, error } = await createCustomerPortalSession(store.stripe_customer_id, clientId);
-    
-    if (url) {
-      window.location.href = url;
-    } else {
-      alert("Failed to connect to billing portal. Please contact support.");
-      setIsRedirecting(false);
-    }
+    const { url } = await createCustomerPortalSession(store.stripe_customer_id, clientId);
+    if (url) window.location.href = url;
+    else { alert("Failed to connect to billing portal."); setIsRedirecting(false); }
   };
 
   if (isLoading) {
@@ -84,10 +88,11 @@ export default function BillingPage({
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
         
-        {/* LEFT COL: Active Plan */}
+        {/* LEFT COL: Active Plan & Upgrades */}
         <div className="lg:col-span-7 space-y-6">
+          
+          {/* Active Plan Card */}
           <div className="bg-black/40 border border-emerald-500/20 rounded-3xl p-8 shadow-[0_0_30px_rgba(16,185,129,0.05)] relative overflow-hidden">
-            {/* Ambient Glow */}
             <div className="absolute -top-24 -right-24 w-64 h-64 bg-emerald-500/10 rounded-full blur-[80px] pointer-events-none" />
             
             <div className="relative z-10">
@@ -101,10 +106,25 @@ export default function BillingPage({
               <h2 className="text-3xl font-black text-white uppercase tracking-wider mb-2">
                 The {store?.plan_tier || 'Foundation'} Plan
               </h2>
-              <div className="flex items-baseline gap-1 mb-8">
+              <div className="flex items-baseline gap-1 mb-6">
                 <span className="text-4xl font-black text-emerald-400">$5</span>
                 <span className="text-sm font-bold text-zinc-500 uppercase tracking-widest">/ month</span>
               </div>
+
+              {/* UPCOMING INVOICE WIDGET */}
+              {upcoming && (
+                <div className="bg-emerald-500/5 border border-emerald-500/20 rounded-xl p-4 mb-6 flex items-center gap-4">
+                  <div className="p-2 bg-emerald-500/10 rounded-lg">
+                    <Calendar className="w-4 h-4 text-emerald-400" />
+                  </div>
+                  <div>
+                    <p className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest mb-0.5">Next Auto-Pay</p>
+                    <p className="text-sm font-mono text-emerald-400">
+                      ${upcoming.amount} <span className="text-zinc-500 text-xs">on</span> {upcoming.date}
+                    </p>
+                  </div>
+                </div>
+              )}
 
               <div className="space-y-4 pt-6 border-t border-white/5">
                 <div className="flex items-center gap-3 text-sm text-zinc-300">
@@ -137,6 +157,45 @@ export default function BillingPage({
               {isRedirecting ? 'Connecting...' : 'Manage Card'}
             </button>
           </div>
+
+          {/* AVAILABLE UPGRADES (LOCKED TIER) */}
+          <div className="pt-4">
+            <h3 className="text-xs font-black text-zinc-500 uppercase tracking-widest mb-4 pl-2">Available Upgrades</h3>
+            
+            <div className="relative flex flex-col rounded-2xl p-6 bg-zinc-950/40 border border-zinc-800/50 grayscale cursor-not-allowed overflow-hidden">
+              <div className="absolute top-4 right-4 text-zinc-600">
+                <Lock className="w-5 h-5" />
+              </div>
+              
+              <div className="mb-4">
+                <h3 className="text-xl font-black uppercase tracking-wide text-zinc-300">The Professional</h3>
+                <div className="mt-2 flex items-baseline gap-1">
+                  <span className="text-4xl font-black text-zinc-500">$15</span>
+                  <span className="text-xs text-zinc-600 font-medium uppercase tracking-widest">/ month</span>
+                </div>
+                <div className="mt-3">
+                  <span className="text-[10px] font-bold text-amber-500 uppercase tracking-widest bg-amber-500/10 px-2 py-1 rounded border border-amber-500/20">
+                    Under Construction
+                  </span>
+                </div>
+                <p className="text-xs text-amber-500/80 font-medium mt-4 leading-relaxed">
+                  We are finalizing the custom domain integration architecture. You will be notified when this unlocks.
+                </p>
+              </div>
+
+              <div className="space-y-3 pt-6 border-t border-zinc-800/60">
+                <div className="flex items-start gap-2.5 text-xs text-zinc-500">
+                  <ShieldCheck className="w-4 h-4 shrink-0 text-zinc-600" />
+                  <span className="leading-tight">Everything in The Foundation</span>
+                </div>
+                <div className="flex items-start gap-2.5 text-xs text-zinc-500">
+                  <Globe className="w-4 h-4 shrink-0 text-zinc-600" />
+                  <span className="leading-tight">Custom Domain Connection (yourname.com)</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
         </div>
 
         {/* RIGHT COL: Native Invoice Table */}

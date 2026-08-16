@@ -99,3 +99,36 @@ export async function getClientInvoices(customerId: string) {
     return { success: false, error: error.message };
   }
 }
+
+export async function getUpcomingInvoice(customerId: string) {
+  try {
+    // 🚨 WIRETAP: Check upcoming invoices
+    console.log(`\n=== 🔮 STRIPE UPCOMING PREDICTOR ===`);
+    
+    // THE FIX: We cast to 'any' to bypass outdated local TS definitions for the SDK
+    const upcoming = await (stripe.invoices as any).retrieveUpcoming({
+      customer: customerId,
+    });
+
+    // We only care about the date and the amount
+    const formattedDate = new Date(upcoming.next_payment_attempt! * 1000).toLocaleDateString('en-US', { 
+      month: 'short', 
+      day: 'numeric', 
+      year: 'numeric' 
+    });
+
+    console.log(`✅ PREDICTION: $${(upcoming.amount_due / 100).toFixed(2)} on ${formattedDate}`);
+    console.log(`=================================\n`);
+
+    return { 
+      success: true, 
+      amount: (upcoming.amount_due / 100).toFixed(2),
+      date: formattedDate
+    };
+  } catch (error: any) {
+    // If they canceled or don't have a recurring sub, Stripe throws an error. We just catch it silently.
+    console.log(`ℹ️ No upcoming invoice found (or subscription canceled).`);
+    console.log(`=================================\n`);
+    return { success: false, error: error.message };
+  }
+}

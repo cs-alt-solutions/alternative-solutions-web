@@ -51,7 +51,7 @@ export default async function ClientDashboardHome({
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 mb-6">
         
         {/* System Broadcast Panel (Replaces Direct Messages) */}
-        <div className="lg:col-span-8 bg-black/40 border border-white/5 rounded-3xl p-8 flex flex-col min-h-[300px] group hover:border-amber-500/30 transition-all shadow-xl backdrop-blur-sm relative overflow-hidden">
+        <div className="lg:col-span-8 bg-black/40 border border-white/5 rounded-3xl p-8 flex flex-col min-h-75 group hover:border-amber-500/30 transition-all shadow-xl backdrop-blur-sm relative overflow-hidden">
           
           {/* Header */}
           <div className="flex items-center gap-3 mb-6 pb-4 border-b border-white/5">
