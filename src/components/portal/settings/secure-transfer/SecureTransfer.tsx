@@ -107,7 +107,8 @@ export default function SecureTransfer({ clientId }: { clientId: string }) {
   });
 
   return (
-    <div className="flex flex-col h-full max-w-6xl mx-auto animate-in fade-in duration-500 pb-12">
+    // 🚀 FIXED: Changed from max-w-6xl mx-auto to w-full so it nests seamlessly
+    <div className="flex flex-col h-full w-full animate-in fade-in duration-500 pb-12">
       <div className="flex justify-between items-end mb-8 border-b border-zinc-800 pb-4 mt-2">
         <div>
           <h2 className="font-black tracking-widest uppercase text-xl text-white flex items-center gap-3">

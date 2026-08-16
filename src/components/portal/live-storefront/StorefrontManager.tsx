@@ -5,29 +5,36 @@ import React, { useState } from 'react';
 import { supabase } from '@/utils/supabase';
 import { 
   Save, CheckCircle2, Loader2, Type, AlignLeft, 
-  Link as LinkIcon, Sparkles, Unlock, Lock, AlertTriangle, 
-  Image as ImageIcon 
+  Sparkles, Unlock, Lock, AlertTriangle, Image as ImageIcon 
 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import HeroTab from './tabs/HeroTab';
 import StoryTab from './tabs/StoryTab';
 import MediaTab from './tabs/MediaTab'; 
 import ServicesTab from './tabs/ServicesTab';
-import ConnectionsTab from './tabs/ConnectionsTab';
 
 export default function StorefrontManager({ store }: { store: any }) {
   const router = useRouter();
   const [isSaving, setIsSaving] = useState(false);
   const [saved, setSaved] = useState(false);
   
-  const [activeTab, setActiveTab] = useState<'HERO' | 'STORY' | 'MEDIA' | 'SERVICES' | 'CONNECTIONS'>('HERO');
+  // 🚀 Reduced to 4 core tabs
+  const [activeTab, setActiveTab] = useState<'HERO' | 'STORY' | 'MEDIA' | 'SERVICES'>('HERO');
   
   const [isEditing, setIsEditing] = useState(false);
 
-  // Parse JSONB objects and arrays safely from Supabase
+  // Parse JSONB objects safely
   const safeSocials = typeof store.social_handles === 'string' ? JSON.parse(store.social_handles) : (store.social_handles || {});
   const safeCapabilities = Array.isArray(store.capabilities) ? store.capabilities : [];
-  const safeGallery = Array.isArray(store.gallery_items) ? store.gallery_items : []; // 🚀 Added Gallery Parser
+  
+  // 🚀 DYNAMIC BACKWARDS COMPATIBILITY: 
+  // If the database has old images stored as just strings (URLs), we instantly convert them into objects with blank captions!
+  const rawGallery = Array.isArray(store.gallery_items) ? store.gallery_items : [];
+  
+  // THE FIX: Explicitly typed 'item' as 'any' to satisfy strict mode
+  const safeGallery = rawGallery.map((item: any) => 
+    typeof item === 'string' ? { url: item, caption: '' } : item
+  );
 
   const [formData, setFormData] = useState({
     tagline: store.tagline || '',
@@ -37,7 +44,7 @@ export default function StorefrontManager({ store }: { store: any }) {
     hero_image: store.hero_image || '',
     about_image: store.about_image || '',
     brand_logo: store.brand_logo || '',
-    gallery_items: safeGallery, // 🚀 Registered to form state
+    gallery_items: safeGallery, 
     social_handles: safeSocials,
     capabilities: safeCapabilities,
   });
@@ -48,9 +55,7 @@ export default function StorefrontManager({ store }: { store: any }) {
 
   const handleUnlock = () => {
     const isSure = window.confirm("Hold up! 🚨 You are unlocking the live editor. This isn't a test mode—anything you publish here instantly updates your actual website. You have total creative control, but with great power comes... well, you know. Ready to dive in and make some magic?");
-    if (isSure) {
-      setIsEditing(true);
-    }
+    if (isSure) setIsEditing(true);
   };
 
   const handleSave = async () => {
@@ -77,12 +82,12 @@ export default function StorefrontManager({ store }: { store: any }) {
     }
   };
 
+  // 🚀 Dropped Connections Tab, keeping it clean and grouped
   const tabs = [
     { id: 'HERO', label: 'Hero', icon: Type, color: 'text-cyan-400', border: 'border-cyan-500' },
-    { id: 'STORY', label: 'Story', icon: AlignLeft, color: 'text-fuchsia-400', border: 'border-fuchsia-500' },
-    { id: 'MEDIA', label: 'Gallery', icon: ImageIcon, color: 'text-rose-400', border: 'border-rose-500' }, // 🚀 Renamed label to Gallery
+    { id: 'STORY', label: 'Story & Links', icon: AlignLeft, color: 'text-fuchsia-400', border: 'border-fuchsia-500' },
+    { id: 'MEDIA', label: 'Gallery', icon: ImageIcon, color: 'text-rose-400', border: 'border-rose-500' }, 
     { id: 'SERVICES', label: 'Services', icon: Sparkles, color: 'text-amber-400', border: 'border-amber-500' },
-    { id: 'CONNECTIONS', label: 'Links', icon: LinkIcon, color: 'text-emerald-400', border: 'border-emerald-500' },
   ] as const;
 
   return (
@@ -118,7 +123,6 @@ export default function StorefrontManager({ store }: { store: any }) {
         )}
       </div>
 
-      {/* Warning Banner when Editing */}
       {isEditing && (
         <div className="shrink-0 mb-4 bg-amber-500/10 border border-amber-500/30 rounded-lg p-3 flex items-center gap-3 animate-in fade-in slide-in-from-top-2">
           <AlertTriangle size={14} className="text-amber-500 shrink-0" />
@@ -154,7 +158,6 @@ export default function StorefrontManager({ store }: { store: any }) {
         {activeTab === 'STORY' && <StoryTab storeId={store.id} formData={formData} updateForm={updateForm} />}
         {activeTab === 'MEDIA' && <MediaTab storeId={store.id} formData={formData} updateForm={updateForm} />}
         {activeTab === 'SERVICES' && <ServicesTab formData={formData} updateForm={updateForm} />}
-        {activeTab === 'CONNECTIONS' && <ConnectionsTab formData={formData} updateForm={updateForm} />}
       </fieldset>
 
     </div>
