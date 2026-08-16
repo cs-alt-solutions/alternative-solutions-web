@@ -3,7 +3,10 @@
 
 import React, { useState, useEffect } from 'react';
 import { supabase } from '@/utils/supabase';
-import { CreditCard, Receipt, Loader2, ShieldCheck, Zap, Download, Calendar, Lock, Globe } from 'lucide-react';
+import { 
+  CreditCard, Receipt, Loader2, ShieldCheck, Zap, 
+  Download, Calendar, Lock, Globe, AlertTriangle, ExternalLink 
+} from 'lucide-react';
 import { createCustomerPortalSession, getClientInvoices, getUpcomingInvoice } from '@/app/actions/billing';
 
 export default function BillingModule({ clientId }: { clientId: string }) {
@@ -55,10 +58,10 @@ export default function BillingModule({ clientId }: { clientId: string }) {
   }
 
   return (
-    <div className="h-full max-w-6xl mx-auto animate-in fade-in duration-500 pb-12">
+    <div className="h-full max-w-6xl mx-auto animate-in fade-in duration-500 pb-12 mt-2">
       
       {/* Header */}
-      <div className="flex items-center gap-4 border-b border-white/5 pb-6 mb-8 mt-2">
+      <div className="flex items-center gap-4 border-b border-white/5 pb-6 mb-8">
         <div className="w-12 h-12 rounded-full bg-emerald-500/10 flex items-center justify-center border border-emerald-500/20 shrink-0">
           <CreditCard className="text-emerald-500 w-6 h-6" />
         </div>
@@ -72,6 +75,7 @@ export default function BillingModule({ clientId }: { clientId: string }) {
         
         {/* LEFT COL: Active Plan & Upgrades */}
         <div className="lg:col-span-7 space-y-6">
+          
           <div className="bg-black/40 border border-emerald-500/20 rounded-3xl p-8 shadow-[0_0_30px_rgba(16,185,129,0.05)] relative overflow-hidden">
             <div className="absolute -top-24 -right-24 w-64 h-64 bg-emerald-500/10 rounded-full blur-[80px] pointer-events-none" />
             <div className="relative z-10">
@@ -114,24 +118,32 @@ export default function BillingModule({ clientId }: { clientId: string }) {
             </div>
           </div>
           
-          <div className="bg-zinc-900/50 border border-zinc-800 rounded-2xl p-6 flex items-center justify-between group">
-            <div>
-              <h3 className="text-sm font-bold text-white tracking-widest uppercase mb-1">Update Payment Method</h3>
-              <p className="text-xs text-zinc-500">Securely change your credit card on file via Stripe.</p>
+          {/* 🚀 THE UPDATED STRIPE PORTAL CONNECTOR */}
+          <div className="bg-zinc-950 border border-zinc-800/80 rounded-3xl p-6 md:p-8 flex flex-col md:flex-row md:items-center justify-between group gap-6 shadow-xl">
+            <div className="flex-1">
+              <h3 className="text-sm font-bold text-white tracking-widest uppercase mb-2">Manage Subscription & Billing</h3>
+              <p className="text-xs text-zinc-400 leading-relaxed mb-4 max-w-md">
+                Securely update your credit card, download historical tax receipts, or cancel your active subscription directly through our Stripe portal.
+              </p>
+              <div className="flex items-center gap-2 text-[10px] font-mono text-zinc-500 uppercase tracking-widest">
+                <AlertTriangle size={12} className="text-amber-500/60" />
+                <span>Cancellations take effect at the end of your billing cycle.</span>
+              </div>
             </div>
             <button
               onClick={handlePortalRedirect}
               disabled={isRedirecting || !store?.stripe_customer_id}
-              className="px-4 py-2 bg-zinc-800 hover:bg-zinc-700 text-white rounded-lg text-[10px] font-bold uppercase tracking-widest transition-colors disabled:opacity-50"
+              className="shrink-0 px-6 py-4 bg-zinc-900 border border-zinc-700 hover:border-emerald-500/50 hover:text-emerald-400 hover:bg-zinc-800 text-white rounded-xl text-[10px] font-bold uppercase tracking-widest transition-all disabled:opacity-50 flex items-center justify-center gap-2 w-full md:w-auto"
             >
-              {isRedirecting ? 'Connecting...' : 'Manage Card'}
+              {isRedirecting ? <Loader2 size={14} className="animate-spin" /> : <ExternalLink size={14} />}
+              {isRedirecting ? 'Connecting...' : 'Open Billing Portal'}
             </button>
           </div>
 
           <div className="pt-4">
             <h3 className="text-xs font-black text-zinc-500 uppercase tracking-widest mb-4 pl-2">Available Upgrades</h3>
-            <div className="relative flex flex-col rounded-2xl p-6 bg-zinc-950/40 border border-zinc-800/50 grayscale cursor-not-allowed overflow-hidden">
-              <div className="absolute top-4 right-4 text-zinc-600"><Lock className="w-5 h-5" /></div>
+            <div className="relative flex flex-col rounded-3xl p-6 bg-zinc-950 border border-zinc-800/50 grayscale opacity-60 cursor-not-allowed overflow-hidden">
+              <div className="absolute top-6 right-6 text-zinc-600"><Lock className="w-5 h-5" /></div>
               <div className="mb-4">
                 <h3 className="text-xl font-black uppercase tracking-wide text-zinc-300">The Professional</h3>
                 <div className="mt-2 flex items-baseline gap-1">
@@ -141,7 +153,7 @@ export default function BillingModule({ clientId }: { clientId: string }) {
                 <div className="mt-3">
                   <span className="text-[10px] font-bold text-amber-500 uppercase tracking-widest bg-amber-500/10 px-2 py-1 rounded border border-amber-500/20">Under Construction</span>
                 </div>
-                <p className="text-xs text-amber-500/80 font-medium mt-4 leading-relaxed">We are finalizing the custom domain integration architecture. You will be notified when this unlocks.</p>
+                <p className="text-xs text-amber-500/80 font-medium mt-4 leading-relaxed max-w-md">We are finalizing the custom domain integration architecture. You will be notified when this unlocks.</p>
               </div>
               <div className="space-y-3 pt-6 border-t border-zinc-800/60">
                 <div className="flex items-start gap-2.5 text-xs text-zinc-500">
@@ -153,25 +165,26 @@ export default function BillingModule({ clientId }: { clientId: string }) {
               </div>
             </div>
           </div>
+
         </div>
 
         {/* RIGHT COL: Native Invoice Table */}
         <div className="lg:col-span-5 flex flex-col">
-          <div className="bg-zinc-900/50 border border-zinc-800 rounded-3xl p-6 flex flex-col h-full overflow-hidden">
-            <div className="flex items-center gap-3 mb-6 pb-4 border-b border-zinc-800">
-              <Receipt className="text-zinc-400 w-5 h-5" />
+          <div className="bg-zinc-950 border border-zinc-800/80 rounded-3xl p-6 md:p-8 flex flex-col h-full overflow-hidden shadow-xl">
+            <div className="flex items-center gap-3 mb-6 pb-4 border-b border-white/5">
+              <Receipt className="text-emerald-500 w-5 h-5" />
               <h3 className="text-sm font-bold text-white uppercase tracking-widest">Billing History</h3>
             </div>
             
             <div className="flex-1 overflow-y-auto pr-2 custom-scrollbar">
               {invoices.length === 0 ? (
-                <div className="text-center py-12 border border-dashed border-zinc-800 rounded-xl bg-black/20">
+                <div className="text-center py-12 border-2 border-dashed border-zinc-800/50 rounded-2xl bg-zinc-900/20">
                   <p className="text-xs text-zinc-500 font-mono tracking-widest uppercase">No invoices generated yet.</p>
                 </div>
               ) : (
                 <div className="space-y-3">
                   {invoices.map((invoice) => (
-                    <div key={invoice.id} className="flex items-center justify-between p-4 rounded-xl bg-black/40 border border-white/5 hover:border-emerald-500/30 transition-colors group">
+                    <div key={invoice.id} className="flex items-center justify-between p-4 rounded-2xl bg-zinc-900/50 border border-zinc-800 hover:border-emerald-500/30 transition-colors group">
                       <div>
                         <div className="text-sm font-bold text-white mb-1">${invoice.amount}</div>
                         <div className="text-[10px] font-mono text-zinc-500 uppercase tracking-widest">{invoice.date}</div>

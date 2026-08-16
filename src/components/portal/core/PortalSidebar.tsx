@@ -1,4 +1,4 @@
-/* src/components/portal/layout/PortalSidebar.tsx */
+/* src/components/portal/core/PortalSidebar.tsx */
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -70,7 +70,7 @@ export default function PortalSidebar({ clientId }: { clientId: string }) {
     { name: 'Dashboard', icon: TerminalSquare, href: `/portal/${clientId}` },
     { name: 'Live Storefront', icon: Store, href: `/portal/${clientId}/storefront` },
     { name: 'Billing & Plans', icon: CreditCard, href: `/portal/${clientId}/billing` },
-    { name: 'Secure Transfer', icon: FileUp, href: `/portal/${clientId}/transfer` },
+    // 🚀 Removed Secure Transfer from the sidebar
     { name: 'Developer Tools', icon: Box, href: `/portal/${clientId}/prototypes` },
     { name: 'Support', icon: MessageSquare, href: `/portal/${clientId}/support` },
     { name: 'Settings', icon: Settings, href: `/portal/${clientId}/settings` },
@@ -90,7 +90,7 @@ export default function PortalSidebar({ clientId }: { clientId: string }) {
       {/* Mobile Backdrop Overlay */}
       {isOpen && (
         <div 
-          className="fixed inset-0 bg-black/60 backdrop-blur-sm z-30 lg:hidden" 
+          className="fixed inset-0 bg-black/60 backdrop-blur-sm z-30 lg:hidden"
           onClick={() => setIsOpen(false)}
         />
       )}
@@ -136,7 +136,7 @@ export default function PortalSidebar({ clientId }: { clientId: string }) {
         {showSwitchWorkspace && (
           <div className="p-4 border-t border-slate-800 bg-slate-900/30">
             <Link 
-              href="/portal" 
+              href="/portal"
               className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800/50 transition-colors group"
             >
               <ArrowLeft className="w-5 h-5 shrink-0 group-hover:-translate-x-1 transition-transform" />
@@ -144,7 +144,6 @@ export default function PortalSidebar({ clientId }: { clientId: string }) {
             </Link>
           </div>
         )}
-
       </div>
     </>
   );
