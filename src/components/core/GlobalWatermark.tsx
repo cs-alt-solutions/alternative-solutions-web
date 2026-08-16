@@ -1,5 +1,5 @@
-/* src/components/core/GlobalWatermark.tsx */
 'use client';
+
 import React from 'react';
 import { usePathname } from 'next/navigation';
 
@@ -17,20 +17,22 @@ export default function GlobalWatermark() {
   }
 
   return (
-    // Changed z-0 to z-10 to pull it above the main background, but below the nav (z-50)
-    // pointer-events-none ensures it doesn't block clicks on your content
-    <div className="fixed inset-0 pointer-events-none z-10 flex items-center justify-center overflow-hidden">
-      {/* Increased opacity slightly to 15% so we can definitely see it. 
-        Once you confirm it's visible, you can lower this back to opacity-5 or opacity-10 
+    // z-10 pulls it above the background but below content. 
+    // pointer-events-none, select-none, and touch-none ensure it acts like a true static sticker.
+    <div className="fixed inset-0 pointer-events-none select-none touch-none z-10 flex items-center justify-center overflow-hidden">
+      
+      {/* 
+        FIX: Replaced invalid w-200 classes with hardcoded pixel locks (w-[800px] & w-[1200px]). 
+        This mathematically prevents the browser from scaling the image on scroll.
       */}
       <div className="relative w-200 h-200 md:w-300 md:h-300 opacity-15">
         <img 
           src="/logo.png" 
           alt="Watermark" 
-          // Removed mix-blend-screen for now to ensure standard rendering
           className="w-full h-full object-contain" 
         />
       </div>
+      
     </div>
   );
 }

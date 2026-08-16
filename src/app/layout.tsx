@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { Inter, JetBrains_Mono } from "next/font/google";
-import "./globals.css";
+import "./globals.css"; // Ensure your file in src/app is exactly named globals.css (plural)
 
 // IMPORT THEM HERE ON THE SERVER
 import Navbar from '@/components/Navbar';
@@ -54,6 +54,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <ConditionalUI navbar={<Navbar />} footer={<Footer />}>
           {children}
         </ConditionalUI>
+        
       </body>
     </html>
   );
