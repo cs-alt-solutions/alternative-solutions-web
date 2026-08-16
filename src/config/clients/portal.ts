@@ -9,7 +9,6 @@ export const PORTAL_COPY = {
     title: "PORTAL",
     switchWorkspace: "Switch Workspace"
   },
-  // 🚀 NEW: The Dashboard Quick Start Guide
   dashboard: {
     welcomeTitle: "Welcome to your Workspace",
     guideTitle: "Quick Start Guide",
@@ -19,6 +18,11 @@ export const PORTAL_COPY = {
       {
         name: "Live Storefront",
         desc: "Your portal to edit copy and media. Note that to prevent accidental breaks, the live editor is locked by default. If you need to make structural changes, just request the keys to temporarily unlock it, or shoot me a message to handle it for you."
+      },
+      // 🚀 NEW: Added the Billing & Plans explanation
+      {
+        name: "Billing & Plans",
+        desc: "Manage your active subscription tier, safely update your payment methods, download historical tax receipts, and view upcoming auto-pay dates directly through the secure Stripe portal."
       },
       {
         name: "Support Desk",
