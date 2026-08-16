@@ -210,7 +210,7 @@ export default function StorefrontManager({ store }: { store: any }) {
         {/* EDITOR AREA */}
         <fieldset 
           disabled={accessState !== 'UNLOCKED'} 
-          className={`flex-1 min-w-0 border-none p-0 m-0 overflow-y-auto custom-scrollbar pr-2 pb-6 transition-all duration-500 ${accessState !== 'UNLOCKED' ? 'opacity-50 grayscale-[50%]' : 'opacity-100'}`}
+          className={`flex-1 min-w-0 border-none p-0 m-0 overflow-y-auto custom-scrollbar pr-2 pb-6 transition-all duration-500 ${accessState !== 'UNLOCKED' ? 'opacity-50 grayscale-50' : 'opacity-100'}`}
         >
           {activeTab === 'HERO' && <HeroTab storeId={store.id} formData={formData} updateForm={updateForm} />}
           {activeTab === 'STORY' && <StoryTab storeId={store.id} formData={formData} updateForm={updateForm} />}

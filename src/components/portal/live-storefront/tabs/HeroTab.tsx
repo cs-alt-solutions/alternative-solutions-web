@@ -57,7 +57,7 @@ export default function HeroTab({ storeId, formData, updateForm }: { storeId: st
             <input type="file" className="hidden" accept="image/*" onChange={(e) => e.target.files?.[0] && handleImageUpload(e.target.files[0])} />
           </label>
         </div>
-        <div className="flex-1 rounded-xl bg-zinc-900 border border-zinc-800 overflow-hidden relative min-h-[200px]">
+        <div className="flex-1 rounded-xl bg-zinc-900 border border-zinc-800 overflow-hidden relative min-h-50">
           <img src={formData.hero_image || 'https://placehold.co/600x400/18181b/a1a1aa?text=No+Hero+Set'} alt="Hero" className="absolute inset-0 w-full h-full object-cover opacity-80" />
         </div>
       </div>

@@ -16,7 +16,7 @@ export default async function ClientDashboardHome({
         <img 
           src="/logo.png" 
           alt="Alternative Solutions Watermark" 
-          className="w-[400px] h-[400px] md:w-[600px] md:h-[600px] object-contain grayscale" 
+          className="w-100 h-100 md:w-150 md:h-150 object-contain grayscale" 
         />
       </div>
 

@@ -58,9 +58,13 @@ export default function PortalTrafficCop() {
   // Loading State (The Millisecond Intercept)
   if (isInitializing) {
     return (
-      <div className="min-h-[80vh] flex flex-col items-center justify-center">
-        <Loader2 size={40} className="text-cyan-500 animate-spin mb-6" />
-        <p className="text-xs font-mono text-cyan-500 uppercase tracking-widest animate-pulse">
+      <div className="min-h-[80vh] flex flex-col items-center justify-center relative isolate">
+        {/* 🚀 WATERMARK */}
+        <div className="fixed inset-0 pointer-events-none flex items-center justify-center z-0 opacity-5">
+          <img src="/logo.png" alt="Alternative Solutions Watermark" className="w-100 h-100 md:w-150 md:h-150 object-contain grayscale" />
+        </div>
+        <Loader2 size={40} className="text-cyan-500 animate-spin mb-6 relative z-10" />
+        <p className="text-xs font-mono text-cyan-500 uppercase tracking-widest animate-pulse relative z-10">
           Authenticating Workspace...
         </p>
       </div>
@@ -70,8 +74,12 @@ export default function PortalTrafficCop() {
   // Fallback: If they log in but have ZERO active/paid storefronts
   if (storefronts.length === 0) {
     return (
-      <div className="min-h-[80vh] flex flex-col items-center justify-center p-6 text-center">
-        <div className="bg-black/40 border border-white/5 rounded-3xl p-12 max-w-lg shadow-2xl backdrop-blur-md">
+      <div className="min-h-[80vh] flex flex-col items-center justify-center p-6 text-center relative isolate">
+        {/* 🚀 WATERMARK */}
+        <div className="fixed inset-0 pointer-events-none flex items-center justify-center z-0 opacity-5">
+          <img src="/logo.png" alt="Alternative Solutions Watermark" className="w-100 h-100 md:w-150 md:h-150 object-contain grayscale" />
+        </div>
+        <div className="bg-black/40 border border-white/5 rounded-3xl p-12 max-w-lg shadow-2xl backdrop-blur-md relative z-10">
           <Sparkles className="w-12 h-12 text-cyan-500 mx-auto mb-6 opacity-80" />
           <h1 className="text-2xl font-black text-white uppercase tracking-widest mb-4">No Active Workspaces</h1>
           <p className="text-sm text-slate-400 font-light leading-relaxed mb-8">
@@ -90,8 +98,13 @@ export default function PortalTrafficCop() {
 
   // THE MULTI-WORKSPACE SELECTOR (Only shows paid/active ones)
   return (
-    <div className="min-h-[80vh] flex flex-col items-center justify-center p-6">
-      <div className="w-full max-w-4xl">
+    <div className="min-h-[80vh] flex flex-col items-center justify-center p-6 relative isolate">
+      {/* 🚀 WATERMARK */}
+      <div className="fixed inset-0 pointer-events-none flex items-center justify-center z-0 opacity-5">
+        <img src="/logo.png" alt="Alternative Solutions Watermark" className="w-100 h-100 md:w-150 md:h-150 object-contain grayscale" />
+      </div>
+
+      <div className="w-full max-w-4xl relative z-10">
         
         <div className="text-center mb-12 animate-in slide-in-from-bottom-4 fade-in duration-500">
           <h1 className="text-3xl md:text-5xl font-black text-white uppercase tracking-tight mb-4 drop-shadow-[0_0_15px_rgba(255,255,255,0.1)]">
