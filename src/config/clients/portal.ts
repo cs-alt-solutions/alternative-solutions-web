@@ -28,7 +28,6 @@ export const PORTAL_COPY = {
       { id: 'broken', label: 'Something Broke', description: 'Glitches, display errors, or something is malfunctioning.' },
       { id: 'idea', label: 'Big New Idea', description: 'Scope out a custom upgrade, new page, or structural shift.' }
     ],
-    // 🚀 FIXED: Stripped out the redundant intents so it just focuses on the "Where"
     topics: [
       'Live Storefront',
       'Client Portal',
@@ -42,6 +41,9 @@ export const PORTAL_COPY = {
     expectTitle: "What to Expect",
     expectBody: "I usually review and reply to general questions within 24 hours. If we're mapping out a big upgrade or a custom build, we'll hash out a clear timeline together before diving in.",
     emergencyTitle: "Real Emergencies",
-    emergencyBody: "If your website goes completely offline or something is seriously broken, flag it as 'Something Broke'. This bypasses the normal inbox and alerts me immediately so we can put out the fire fast."
+    emergencyBody: "If your website goes completely offline or something is seriously broken, flag it as 'Something Broke'. This bypasses the normal inbox and alerts me immediately so we can put out the fire fast.",
+    // 🚀 NEW: Friendly history text!
+    historyTitle: "Message History",
+    historyEmpty: "You haven't sent any messages yet."
   }
 };
