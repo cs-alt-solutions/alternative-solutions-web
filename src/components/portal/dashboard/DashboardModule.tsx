@@ -2,8 +2,10 @@
 import React from 'react';
 import Link from 'next/link';
 import { createClient } from '@/utils/supabase/server';
-import { Sparkles, Store, CreditCard, ArrowRight, TerminalSquare, Box, Lock } from 'lucide-react';
+import { Sparkles, Store, CreditCard, ArrowRight, Box, Lock, Activity, LifeBuoy, Compass } from 'lucide-react';
 import { WEBSITE_COPY } from '@/utils/glossary';
+import { PORTAL_COPY } from '@/config/clients/portal';
+import { STOREFRONT_LIFECYCLE, StorefrontStatus } from '@/config/lifecycle';
 
 export default async function DashboardModule({ 
   clientId 
@@ -11,35 +13,47 @@ export default async function DashboardModule({
   clientId: string 
 }) {
   const supabase = await createClient();
-
+  
+  // Fetch Storefront Data
   const { data: store } = await supabase
     .from('storefronts')
-    .select('business_name')
+    .select('*')
     .eq('id', clientId)
     .single();
 
   const businessName = store?.business_name || 'My Workspace';
-  const { WELCOME_TITLE } = WEBSITE_COPY.DASHBOARD.CLIENT_PORTAL;
+  const statusKey = (store?.status as StorefrontStatus) || 'PENDING';
+  const statusConfig = STOREFRONT_LIFECYCLE[statusKey] || STOREFRONT_LIFECYCLE['PENDING'];
+  
+  // Calculate price display based on tier
+  const planName = store?.plan_tier || 'Standard';
+  const planPrice = planName.toLowerCase() === 'professional' ? '15' : '5';
 
-  const currentDate = new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+  // Fetch their 3 most recent support tickets
+  const { data: tickets } = await supabase
+    .from('support_tickets')
+    .select('*')
+    .eq('storefront_id', clientId)
+    .order('created_at', { ascending: false })
+    .limit(3);
 
   return (
     <div className="p-4 md:p-8 max-w-7xl mx-auto w-full animate-in fade-in duration-500 pb-12">
       
-      {/* 1. Personalized Welcome Banner (Restored to bg-gradient) */}
+      {/* 1. Personalized Welcome Banner */}
       <div className="bg-linear-to-br from-zinc-950 to-zinc-900 border border-white/10 rounded-3xl p-8 lg:p-12 relative overflow-hidden mb-8 shadow-2xl">
         <div className="absolute -top-24 -right-24 w-64 h-64 bg-linear-to-br from-fuchsia-500/20 to-cyan-500/20 rounded-full blur-[80px] pointer-events-none" />
         <div className="absolute bottom-0 left-1/4 w-96 h-40 bg-cyan-500/10 rounded-full blur-[100px] pointer-events-none" />
         
         <div className="relative z-10 max-w-3xl">
           <div className="flex items-center gap-2 mb-4">
-            <Sparkles size={16} className="text-fuchsia-400" />
-            <span className="text-[10px] font-bold text-fuchsia-400 uppercase tracking-widest">
+            <Sparkles size={16} className="text-cyan-400" />
+            <span className="text-[10px] font-bold text-cyan-400 uppercase tracking-widest">
               {businessName} Workspace
             </span>
           </div>
           <h1 className="text-3xl md:text-5xl font-black text-white tracking-tight mb-4 drop-shadow-lg">
-            {WELCOME_TITLE}
+            {PORTAL_COPY.dashboard.welcomeTitle}
           </h1>
           <p className="text-sm md:text-base text-zinc-400 leading-relaxed font-mono uppercase tracking-widest">
             This is dope. Let's get building.
@@ -50,48 +64,126 @@ export default async function DashboardModule({
       {/* 2. Core Dashboard Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 mb-6">
         
-        {/* Architect's Log (Amber Theme) */}
-        <div className="lg:col-span-8 bg-zinc-950/80 border border-amber-500/20 rounded-3xl p-8 flex flex-col min-h-75 group hover:border-amber-500/40 transition-all shadow-xl backdrop-blur-sm relative overflow-hidden">
+        {/* ==========================================
+            LEFT COLUMN: COMMS, STATUS & SUPPORT
+        ========================================== */}
+        <div className="lg:col-span-8 flex flex-col gap-6">
           
-          <div className="flex items-center gap-3 mb-6 pb-4 border-b border-amber-500/10">
-            <TerminalSquare size={18} className="text-amber-500" />
-            <h2 className="text-sm font-bold text-white uppercase tracking-widest">
-              Architect's Log
-            </h2>
-            <span className="ml-auto text-[10px] font-mono text-amber-500/80 bg-amber-500/10 px-2 py-1 rounded border border-amber-500/20">
-              v1.0.0-beta
-            </span>
-          </div>
-
-          <div className="flex-1 space-y-6 overflow-y-auto pr-2 custom-scrollbar">
-            <div className="relative pl-6 border-l border-zinc-800/80 pb-2">
+          {/* QUICK START GUIDE */}
+          <div className="bg-zinc-950/80 border border-amber-500/20 rounded-3xl p-6 md:p-8 flex flex-col group hover:border-amber-500/40 transition-all shadow-xl backdrop-blur-sm relative overflow-hidden">
+            <div className="flex items-center gap-3 mb-6 pb-4 border-b border-amber-500/10">
+              <Compass size={18} className="text-amber-500" />
+              <h2 className="text-sm font-bold text-white uppercase tracking-widest">
+                {PORTAL_COPY.dashboard.guideTitle}
+              </h2>
+              <span className="ml-auto text-[10px] font-mono text-amber-500/80 bg-amber-500/10 px-2 py-1 rounded border border-amber-500/20">
+                v1.0.0-beta
+              </span>
+            </div>
+            
+            <div className="relative pl-5 md:pl-6 border-l border-zinc-800/80 pb-2">
               <div className="absolute w-2.5 h-2.5 bg-amber-500 rounded-full -left-[5.5px] top-1.5 shadow-[0_0_15px_rgba(245,158,11,0.8)]" />
-              <h3 className="text-sm font-black text-amber-400 uppercase tracking-widest mb-1">
-                Welcome to the Grid
+              <h3 className="text-xs md:text-sm font-black text-amber-400 uppercase tracking-widest mb-4">
+                {PORTAL_COPY.dashboard.guideSubtitle}
               </h3>
-              <p className="text-[10px] font-mono text-zinc-500 mb-6 uppercase tracking-widest">
-                {currentDate} // Transmission
-              </p>
               
-              <div className="text-sm text-zinc-300 leading-relaxed font-light space-y-5">
+              <div className="text-xs md:text-sm text-zinc-300 leading-relaxed font-light space-y-5">
                 <p>
-                  I am super pumped that we are finally here. I just want to pause for a second to say how incredibly grateful I am for this opportunity and for you taking a chance on me. 
+                  {PORTAL_COPY.dashboard.intro}
                 </p>
-                <p>
-                  I honestly don't think this first group of early adopters recognizes just how impactful your involvement is in shaping this entire ecosystem. We are building something radically different, and having you in this initial launch group means absolutely everything to me.
-                </p>
-                <p>
-                  Pardon the digital dust while we get the engines running! Your <strong className="text-white font-medium">Live Storefront</strong> tab is online right now, so jump in, poke around, and start updating your media and text. If you hit any construction zones, just know I'm actively wiring them up in the trenches. 
-                </p>
+                
+                <div className="space-y-4 mt-2">
+                  {PORTAL_COPY.dashboard.steps.map((step, idx) => (
+                    <div key={idx} className="flex flex-col gap-1">
+                      <span className="font-bold text-white">{step.name}</span>
+                      <span className="text-zinc-400 leading-relaxed">{step.desc}</span>
+                    </div>
+                  ))}
+                </div>
+                
                 <p className="text-amber-500 font-mono text-[10px] uppercase tracking-widest pt-4">
-                  — Courtney
+                  {PORTAL_COPY.dashboard.signOff}
                 </p>
               </div>
             </div>
           </div>
+
+          {/* WORKSPACE STATUS (Simplified Telemetry) */}
+          <div className="bg-zinc-950/80 border border-white/5 rounded-3xl p-6 md:p-8 flex flex-col shadow-xl backdrop-blur-sm relative overflow-hidden group">
+            <div className="absolute top-0 right-0 w-32 h-32 bg-cyan-500/5 rounded-full blur-[50px] pointer-events-none" />
+            <div className="flex items-center gap-3 mb-6 pb-4 border-b border-white/5">
+              <Activity size={18} className="text-cyan-400" />
+              <h2 className="text-sm font-bold text-white uppercase tracking-widest">Workspace Status</h2>
+            </div>
+            
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="bg-black/40 border border-white/5 rounded-2xl p-4">
+                <p className="text-[10px] text-zinc-500 font-bold uppercase tracking-widest mb-1.5">Project Status</p>
+                <div className="flex items-center gap-2">
+                  <span className={`w-2 h-2 rounded-full ${statusConfig.badgeColor.split(' ')[0]} animate-pulse`} />
+                  <span className="text-sm font-black text-white uppercase tracking-widest truncate">{statusConfig.label}</span>
+                </div>
+              </div>
+              
+              <div className="bg-black/40 border border-white/5 rounded-2xl p-4">
+                <p className="text-[10px] text-zinc-500 font-bold uppercase tracking-widest mb-1.5">Web Address</p>
+                <p className="text-sm font-black text-white truncate">{store?.custom_domain || 'Pending Setup'}</p>
+              </div>
+              
+              <div className="bg-black/40 border border-white/5 rounded-2xl p-4">
+                <p className="text-[10px] text-zinc-500 font-bold uppercase tracking-widest mb-1.5">Active Plan</p>
+                <div className="flex items-baseline gap-1.5">
+                  <span className="text-sm font-black text-white uppercase tracking-widest">{planName}</span>
+                  <span className="text-[10px] font-mono text-emerald-400 uppercase tracking-widest">(${planPrice}/mo)</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* RECENT TRANSMISSIONS (SUPPORT TICKETS) */}
+          <div className="bg-zinc-950/80 border border-white/5 rounded-3xl p-6 md:p-8 flex flex-col shadow-xl backdrop-blur-sm flex-1">
+            <div className="flex items-center justify-between mb-6 pb-4 border-b border-white/5">
+              <div className="flex items-center gap-3">
+                <LifeBuoy size={18} className="text-fuchsia-400" />
+                <h2 className="text-sm font-bold text-white uppercase tracking-widest">Recent Transmissions</h2>
+              </div>
+              <Link href={`/portal/${clientId}/support`} className="text-[10px] font-bold text-fuchsia-400 uppercase tracking-widest hover:text-fuchsia-300 transition-colors">
+                View All
+              </Link>
+            </div>
+            
+            <div className="space-y-3">
+              {(!tickets || tickets.length === 0) ? (
+                <div className="text-center py-8 border border-dashed border-zinc-800/50 rounded-2xl bg-zinc-900/20">
+                  <p className="text-xs text-zinc-500 font-mono uppercase tracking-widest">Inbox Zero</p>
+                </div>
+              ) : (
+                tickets.map(t => (
+                  <div key={t.id} className="flex items-center justify-between p-4 bg-black/40 border border-white/5 rounded-2xl hover:border-zinc-700 transition-colors">
+                    <div className="flex-1 min-w-0 pr-4">
+                      <span className={`text-[9px] font-black uppercase tracking-widest block mb-1 ${t.category === 'System Request' ? 'text-orange-400' : 'text-fuchsia-400'}`}>
+                        {t.category}
+                      </span>
+                      <p className="text-sm font-bold text-white truncate">{t.topic}</p>
+                    </div>
+                    <span className={`shrink-0 text-[9px] font-black uppercase tracking-widest px-2.5 py-1 rounded-md border ${
+                      t.status === 'OPEN' 
+                        ? 'bg-amber-500/10 text-amber-500 border-amber-500/20' 
+                        : 'bg-emerald-500/10 text-emerald-500 border-emerald-500/20'
+                    }`}>
+                      {t.status === 'OPEN' ? 'In Review' : 'Resolved'}
+                    </span>
+                  </div>
+                ))
+              )}
+            </div>
+          </div>
+
         </div>
 
-        {/* Right Column Action Stack */}
+        {/* ==========================================
+            RIGHT COLUMN: ACTION STACK
+        ========================================== */}
         <div className="lg:col-span-4 flex flex-col gap-6">
           
           <Link 
@@ -134,7 +226,7 @@ export default async function DashboardModule({
             </div>
           </Link>
 
-          <div className="flex-1 bg-zinc-950/80 border border-fuchsia-500/20 rounded-3xl p-6 flex flex-col relative overflow-hidden group">
+          <div className="flex-1 bg-zinc-950/80 border border-fuchsia-500/20 rounded-3xl p-6 flex flex-col relative overflow-hidden group grayscale opacity-70">
             <div className="absolute top-6 right-6 text-fuchsia-500/40">
               <Lock size={16} />
             </div>
@@ -156,7 +248,6 @@ export default async function DashboardModule({
 
         </div>
       </div>
-
     </div>
   );
 }

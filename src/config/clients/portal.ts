@@ -9,8 +9,29 @@ export const PORTAL_COPY = {
     title: "PORTAL",
     switchWorkspace: "Switch Workspace"
   },
+  // 🚀 NEW: The Dashboard Quick Start Guide
+  dashboard: {
+    welcomeTitle: "Welcome to your Workspace",
+    guideTitle: "Quick Start Guide",
+    guideSubtitle: "Welcome to your command center",
+    intro: "I am super pumped that we are finally here. Pardon the digital dust while we get the engines running! Here is a quick breakdown of how to navigate your new workspace:",
+    steps: [
+      {
+        name: "Live Storefront",
+        desc: "Your portal to edit copy and media. Note that to prevent accidental breaks, the live editor is locked by default. If you need to make structural changes, just request the keys to temporarily unlock it, or shoot me a message to handle it for you."
+      },
+      {
+        name: "Support Desk",
+        desc: "Got a question, found a glitch, or want to scope out a new feature? Drop it in the Support tab. It acts as a direct, permanent pipeline to my inbox so nothing gets lost in email threads."
+      },
+      {
+        name: "Settings & Vault",
+        desc: "Manage your core identity, update your brand logo, and drop high-res files directly into the secure transfer vault."
+      }
+    ],
+    signOff: "— Courtney"
+  },
   storefront: {
-    // Merged the Vibe Check and Locked states into one friendly flow!
     lockedTitle: "Want to make an edit or change the vibe?",
     lockedBody: "I keep the live storefront locked by default so we don't accidentally break your layout. If you need to update text, swap out some images, or completely shift the visual aesthetic, just request the keys!",
     requestKeysBtn: "Request The Keys",
