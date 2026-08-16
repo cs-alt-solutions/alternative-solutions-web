@@ -182,53 +182,68 @@ export default async function DashboardModule({
         {/* RIGHT COLUMN: ACTIONS & STATUS */}
         <div className="lg:col-span-4 flex flex-col gap-4">
           
+          {/* 🚀 SMOOTH HOVER BUTTON 1: Live Storefront */}
           <Link 
             href={`/portal/${clientId}/storefront`}
-            className="bg-zinc-950/80 border border-cyan-500/20 rounded-2xl p-5 flex items-center gap-4 group hover:border-cyan-500/50 hover:bg-cyan-500/5 transition-all shadow-md backdrop-blur-sm"
+            className="bg-zinc-950/80 border border-cyan-500/20 rounded-2xl p-5 flex items-center gap-4 group hover:border-cyan-500/50 hover:bg-cyan-500/5 transition-all duration-300 shadow-md backdrop-blur-sm"
           >
             <div className="p-3 bg-cyan-500/10 border border-cyan-500/20 rounded-xl text-cyan-400 group-hover:scale-110 transition-transform shrink-0">
               <Store size={20} />
             </div>
-            <div className="flex-1 min-w-0">
-              <h3 className="text-sm font-bold text-white uppercase tracking-widest mb-1">
+            <div className="flex-1 min-w-0 flex flex-col justify-center">
+              <h3 className="text-sm font-bold text-white uppercase tracking-widest mb-0">
                 Live Storefront
               </h3>
-              <p className="text-[10px] text-zinc-400 leading-relaxed line-clamp-2">
-                Manage your live website, update media, and review your digital storefront settings.
-              </p>
+              <div className="grid grid-rows-[0fr] group-hover:grid-rows-[1fr] transition-all duration-300 ease-in-out">
+                <div className="overflow-hidden opacity-0 group-hover:opacity-100 transition-opacity duration-300 delay-75">
+                  <p className="text-[10px] text-zinc-400 leading-relaxed mt-1 line-clamp-2">
+                    Manage your live website, update media, and review your digital storefront settings.
+                  </p>
+                </div>
+              </div>
             </div>
             <ArrowRight size={16} className="text-cyan-400 group-hover:translate-x-1 transition-transform shrink-0 ml-1" />
           </Link>
 
+          {/* 🚀 SMOOTH HOVER BUTTON 2: Billing & Plans */}
           <Link 
             href={`/portal/${clientId}/billing`}
-            className="bg-zinc-950/80 border border-emerald-500/20 rounded-2xl p-5 flex items-center gap-4 group hover:border-emerald-500/50 hover:bg-emerald-500/5 transition-all shadow-md backdrop-blur-sm"
+            className="bg-zinc-950/80 border border-emerald-500/20 rounded-2xl p-5 flex items-center gap-4 group hover:border-emerald-500/50 hover:bg-emerald-500/5 transition-all duration-300 shadow-md backdrop-blur-sm"
           >
             <div className="p-3 bg-emerald-500/10 border border-emerald-500/20 rounded-xl text-emerald-400 group-hover:scale-110 transition-transform shrink-0">
               <CreditCard size={20} />
             </div>
-            <div className="flex-1 min-w-0">
-              <h3 className="text-sm font-bold text-white uppercase tracking-widest mb-1">
+            <div className="flex-1 min-w-0 flex flex-col justify-center">
+              <h3 className="text-sm font-bold text-white uppercase tracking-widest mb-0">
                 Billing & Plans
               </h3>
-              <p className="text-[10px] text-zinc-400 leading-relaxed line-clamp-2">
-                Manage your subscription tier, view invoices, update payment methods, or safely cancel.
-              </p>
+              <div className="grid grid-rows-[0fr] group-hover:grid-rows-[1fr] transition-all duration-300 ease-in-out">
+                <div className="overflow-hidden opacity-0 group-hover:opacity-100 transition-opacity duration-300 delay-75">
+                  <p className="text-[10px] text-zinc-400 leading-relaxed mt-1 line-clamp-2">
+                    Manage your subscription tier, view invoices, update payment methods, or safely cancel.
+                  </p>
+                </div>
+              </div>
             </div>
             <ArrowRight size={16} className="text-emerald-400 group-hover:translate-x-1 transition-transform shrink-0 ml-1" />
           </Link>
 
-          <div className="bg-zinc-950/80 border border-fuchsia-500/20 rounded-2xl p-5 flex items-center gap-4 relative overflow-hidden group grayscale opacity-70 cursor-not-allowed shadow-md backdrop-blur-sm">
+          {/* 🚀 SMOOTH HOVER BUTTON 3: Developer Tools */}
+          <div className="bg-zinc-950/80 border border-fuchsia-500/20 rounded-2xl p-5 flex items-center gap-4 relative overflow-hidden group grayscale opacity-70 cursor-not-allowed shadow-md backdrop-blur-sm transition-all duration-300">
             <div className="p-3 bg-fuchsia-500/10 border border-fuchsia-500/20 rounded-xl text-fuchsia-400 shrink-0">
               <Box size={20} />
             </div>
-            <div className="flex-1 min-w-0 pr-4">
-              <h3 className="text-sm font-bold text-zinc-300 uppercase tracking-widest mb-1">
+            <div className="flex-1 min-w-0 pr-4 flex flex-col justify-center">
+              <h3 className="text-sm font-bold text-zinc-300 uppercase tracking-widest mb-0">
                 Developer Tools
               </h3>
-              <p className="text-[10px] text-zinc-500 leading-relaxed line-clamp-2">
-                Ecosystem expansions, API connections, and beta toggles are currently in the lab.
-              </p>
+              <div className="grid grid-rows-[0fr] group-hover:grid-rows-[1fr] transition-all duration-300 ease-in-out">
+                <div className="overflow-hidden opacity-0 group-hover:opacity-100 transition-opacity duration-300 delay-75">
+                  <p className="text-[10px] text-zinc-500 leading-relaxed mt-1 line-clamp-2">
+                    Ecosystem expansions, API connections, and beta toggles are currently in the lab.
+                  </p>
+                </div>
+              </div>
             </div>
             <Lock size={16} className="text-fuchsia-500/40 shrink-0 absolute right-6" />
           </div>
