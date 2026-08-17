@@ -3,11 +3,11 @@
 import React, { useState } from 'react';
 import Link from 'next/link';
 import { 
-  Settings, Globe, ShieldAlert, Search, Users, FlaskConical, 
-  LayoutGrid, ArrowUpDown, Filter, ChevronUp, ChevronDown 
+  Settings, Search, Users, FlaskConical, 
+  LayoutGrid, ArrowUpDown, Filter, ChevronUp, ChevronDown, Eye, EyeOff 
 } from 'lucide-react';
 import { STOREFRONT_LIFECYCLE, StorefrontStatus } from '@/config/lifecycle';
-import { deleteStorefront } from '@/app/actions/storefronts';
+import { deleteStorefront, quickToggleStorefrontFlags } from '@/app/actions/storefronts';
 import NewStorefrontModal from './NewStorefrontModal';
 
 export default function StorefrontsManager({ initialData }: { initialData: any[] }) {
@@ -52,6 +52,20 @@ export default function StorefrontsManager({ initialData }: { initialData: any[]
     }
   };
 
+  // 🚀 Optimistic toggle for Template & Visibility flags
+  const handleToggleFlags = async (id: string, payload: { is_published?: boolean, is_template?: boolean }) => {
+    setStorefronts(prev => prev.map(store => 
+      store.id === id ? { ...store, ...payload } : store
+    ));
+
+    try {
+      await quickToggleStorefrontFlags(id, payload);
+    } catch (err) {
+      console.error("Failed to toggle flags:", err);
+      alert("Database sync failed. Refreshing data.");
+    }
+  };
+
   // 1. Base Search & Active Tab Filtering
   let processedData = storefronts.filter(store => 
     store.status !== 'PENDING' &&
@@ -78,7 +92,6 @@ export default function StorefrontsManager({ initialData }: { initialData: any[]
       let aValue = a[sortConfig.key] || '';
       let bValue = b[sortConfig.key] || '';
 
-      // Map fallbacks for flexible keys
       if (sortConfig.key === 'category') {
         aValue = a.category || a.industry || '';
         bValue = b.category || b.industry || '';
@@ -143,7 +156,7 @@ export default function StorefrontsManager({ initialData }: { initialData: any[]
               )}
             </div>
             <div className="flex flex-col">
-              <span className="text-sm font-bold text-white tracking-tight truncate max-w-50 md:max-w-xs">
+              <span className="text-sm font-bold text-white tracking-tight truncate max-w-[200px] md:max-w-xs">
                 {store.business_name}
               </span>
               <span className="text-[10px] font-mono text-zinc-500 truncate">
@@ -165,11 +178,24 @@ export default function StorefrontsManager({ initialData }: { initialData: any[]
           </span>
         </td>
         
-        {/* 🚀 LOCKED DOWN STATUS COLUMN */}
+        {/* CONTEXT-AWARE STATUS COLUMN */}
         <td className="px-6 py-4 hidden sm:table-cell">
-          <span className={`inline-flex items-center px-2.5 py-1 rounded-md text-[10px] font-black uppercase tracking-widest border ${config.badgeColor}`}>
-            {config.label}
-          </span>
+          {store.is_template ? (
+            <button
+              onClick={() => handleToggleFlags(store.id, { is_published: !store.is_published })}
+              className={`flex items-center gap-2 px-3 py-1.5 rounded-md text-[10px] font-black uppercase tracking-widest border transition-all cursor-pointer ${
+                store.is_published
+                  ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400 hover:bg-emerald-500/20'
+                  : 'bg-zinc-800/50 border-zinc-700 text-zinc-500 hover:bg-zinc-700'
+              }`}
+            >
+              {store.is_published ? <><Eye size={12}/> Visible</> : <><EyeOff size={12}/> Hidden</>}
+            </button>
+          ) : (
+            <span className={`inline-flex items-center px-2.5 py-1 rounded-md text-[10px] font-black uppercase tracking-widest border ${config.badgeColor}`}>
+              {config.label}
+            </span>
+          )}
         </td>
 
         {/* DATE COLUMN */}
@@ -177,24 +203,21 @@ export default function StorefrontsManager({ initialData }: { initialData: any[]
           {formattedDate}
         </td>
 
-        {/* ACTIONS COLUMN */}
+        {/* 🚀 STREAMLINED ACTIONS COLUMN */}
         <td className="px-6 py-4 text-right">
           <div className="flex items-center justify-end gap-2">
-            {config.isPubliclyVisible ? (
-               <a 
-                href={`https://storefronts.alternativesolutions.io/${store.slug}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-md text-[10px] font-bold uppercase tracking-widest text-emerald-400 bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/20 transition-colors"
-                title="View Live Site"
-              >
-                <Globe size={12} /> Live
-              </a>
-            ) : (
-              <span className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-md text-[10px] font-bold uppercase tracking-widest text-zinc-500 bg-zinc-900/50 border border-zinc-800/50 cursor-not-allowed" title="Site is currently locked or building">
-                <ShieldAlert size={12} /> Locked
-              </span>
-            )}
+            
+            <button
+              onClick={() => handleToggleFlags(store.id, { is_template: !store.is_template })}
+              title={store.is_template ? "Convert to Client Build" : "Convert to Prototype"}
+              className={`p-1.5 rounded-md border transition-all flex items-center justify-center cursor-pointer ${
+                store.is_template 
+                  ? 'text-fuchsia-400 bg-fuchsia-500/10 hover:bg-fuchsia-500/20 border-fuchsia-500/20' 
+                  : 'text-cyan-400 bg-cyan-500/10 hover:bg-cyan-500/20 border-cyan-500/20'
+              }`}
+            >
+              {store.is_template ? <Users size={14} /> : <FlaskConical size={14} />}
+            </button>
 
             <Link 
               href={`/dashboard/storefronts/${store.id}`}
@@ -254,7 +277,7 @@ export default function StorefrontsManager({ initialData }: { initialData: any[]
               placeholder="Search records..." 
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="w-full bg-zinc-900/50 border border-zinc-800 focus:border-cyan-500/50 rounded-lg pl-10 pr-4 py-2.5 text-xs text-white font-medium placeholder:text-zinc-600 outline-none transition-all shadow-inner"
+              className="w-full bg-zinc-950/50 border border-zinc-800 focus:border-cyan-500/50 rounded-lg pl-10 pr-4 py-2.5 text-xs text-white font-medium placeholder:text-zinc-600 outline-none transition-all shadow-inner"
             />
           </div>
         </div>
@@ -268,7 +291,7 @@ export default function StorefrontsManager({ initialData }: { initialData: any[]
             <select
               value={categoryFilter}
               onChange={(e) => setCategoryFilter(e.target.value)}
-              className="w-full sm:w-44 bg-zinc-900/50 border border-zinc-800 focus:border-cyan-500/50 rounded-lg pl-8 pr-4 py-2 text-[10px] font-black uppercase tracking-widest text-zinc-300 outline-none transition-all shadow-inner appearance-none cursor-pointer"
+              className="w-full sm:w-44 bg-zinc-950/50 border border-zinc-800 focus:border-cyan-500/50 rounded-lg pl-8 pr-4 py-2 text-[10px] font-black uppercase tracking-widest text-zinc-300 outline-none transition-all shadow-inner appearance-none cursor-pointer"
             >
               <option value="ALL">All Categories</option>
               {availableCategories.map(cat => (
@@ -283,7 +306,7 @@ export default function StorefrontsManager({ initialData }: { initialData: any[]
             <select
               value={planFilter}
               onChange={(e) => setPlanFilter(e.target.value)}
-              className="w-full sm:w-40 bg-zinc-900/50 border border-zinc-800 focus:border-cyan-500/50 rounded-lg pl-8 pr-4 py-2 text-[10px] font-black uppercase tracking-widest text-zinc-300 outline-none transition-all shadow-inner appearance-none cursor-pointer"
+              className="w-full sm:w-40 bg-zinc-950/50 border border-zinc-800 focus:border-cyan-500/50 rounded-lg pl-8 pr-4 py-2 text-[10px] font-black uppercase tracking-widest text-zinc-300 outline-none transition-all shadow-inner appearance-none cursor-pointer"
             >
               <option value="ALL">All Plans</option>
               {availablePlans.map(plan => (
@@ -298,7 +321,7 @@ export default function StorefrontsManager({ initialData }: { initialData: any[]
             <select
               value={statusFilter}
               onChange={(e) => setStatusFilter(e.target.value)}
-              className="w-full sm:w-40 bg-zinc-900/50 border border-zinc-800 focus:border-cyan-500/50 rounded-lg pl-8 pr-4 py-2 text-[10px] font-black uppercase tracking-widest text-zinc-300 outline-none transition-all shadow-inner appearance-none cursor-pointer"
+              className="w-full sm:w-40 bg-zinc-950/50 border border-zinc-800 focus:border-cyan-500/50 rounded-lg pl-8 pr-4 py-2 text-[10px] font-black uppercase tracking-widest text-zinc-300 outline-none transition-all shadow-inner appearance-none cursor-pointer"
             >
               <option value="ALL">All Statuses</option>
               {availableStatuses.map(status => (
@@ -311,7 +334,7 @@ export default function StorefrontsManager({ initialData }: { initialData: any[]
       </div>
 
       {/* THE DATA GRID */}
-      <div className="bg-stardust border border-zinc-800/80 rounded-xl shadow-xl p-4 sm:p-6">
+      <div className="bg-[#0a0a0c] border border-zinc-800/80 rounded-xl shadow-xl p-4 sm:p-6">
         <div className="overflow-x-auto rounded-lg border border-zinc-800/50 bg-zinc-950/50">
           {processedData.length === 0 ? (
             <div className="p-16 text-center flex flex-col items-center justify-center">

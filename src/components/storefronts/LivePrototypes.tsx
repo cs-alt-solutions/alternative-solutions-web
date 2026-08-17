@@ -8,10 +8,12 @@ import { STOREFRONTS } from '@/config/marketing/sector-zero';
 export default async function LivePrototypes() {
   const supabase = await createClient();
 
+  // 🚀 THE FIX: Added the is_published check so hidden prototypes stay off the public grid
   const { data: prototypes, error } = await supabase
     .from('storefronts')
     .select('*')
     .eq('is_template', true)
+    .eq('is_published', true) 
     .order('created_at', { ascending: false });
 
   if (error) console.error("Supabase Error ->", error.message);

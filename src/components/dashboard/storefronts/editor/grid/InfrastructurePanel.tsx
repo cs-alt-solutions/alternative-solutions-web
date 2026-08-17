@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Globe, Server, Code, Save, Loader2 } from 'lucide-react';
+import { Globe, Server, Code, Save, Loader2, Eye } from 'lucide-react';
 import { updateStorefrontCore } from '@/app/actions/storefronts';
 
 export default function InfrastructurePanel({ formData, setFormData }: { formData: any, setFormData: any }) {
@@ -13,6 +13,8 @@ export default function InfrastructurePanel({ formData, setFormData }: { formDat
       const uploadData = new FormData();
       uploadData.append('custom_domain', formData.custom_domain || '');
       uploadData.append('is_template', formData.is_template ? 'true' : 'false');
+      // NEW: Append the visibility state to be saved to the database
+      uploadData.append('is_published', formData.is_published ? 'true' : 'false');
       
       // Execute the save to the database
       await updateStorefrontCore(formData.id, uploadData);
@@ -38,7 +40,7 @@ export default function InfrastructurePanel({ formData, setFormData }: { formDat
           <h3 className="text-[11px] font-black text-white uppercase tracking-[0.2em]">Infrastructure</h3>
         </div>
         
-        {/* NEW: Master Save Button for Infrastructure */}
+        {/* Master Save Button for Infrastructure */}
         <button 
           onClick={handleSaveInfrastructure}
           disabled={isSaving}
@@ -49,10 +51,10 @@ export default function InfrastructurePanel({ formData, setFormData }: { formDat
         </button>
       </div>
 
-      <div className="p-5 flex-1 flex flex-col justify-center gap-4">
+      <div className="p-5 flex-1 flex flex-col justify-start gap-4 overflow-y-auto">
         
         {/* Module 1: Domain Routing */}
-        <div className="bg-black/50 border border-zinc-800/80 rounded-lg p-4 flex flex-col justify-center">
+        <div className="bg-black/50 border border-zinc-800/80 rounded-lg p-4 flex flex-col justify-center shrink-0">
           <label className="flex items-center gap-2 text-[9px] font-bold text-zinc-500 uppercase tracking-widest mb-3">
              <Globe size={12} className="text-zinc-500" /> Edge Network Domain
           </label>
@@ -80,7 +82,7 @@ export default function InfrastructurePanel({ formData, setFormData }: { formDat
         </div>
 
         {/* Module 2: System Classification (Template Engine Toggle) */}
-        <div className="bg-black/50 border border-zinc-800/80 rounded-lg p-4 flex flex-col justify-center">
+        <div className="bg-black/50 border border-zinc-800/80 rounded-lg p-4 flex flex-col justify-center shrink-0">
            <div className="flex items-center justify-between w-full">
               <div className="flex items-center gap-3">
                  <div className={`p-2 rounded-md border transition-colors ${formData.is_template ? 'bg-fuchsia-500/10 border-fuchsia-500/30 text-fuchsia-400' : 'bg-zinc-800/50 border-zinc-700 text-zinc-500'}`}>
@@ -88,11 +90,10 @@ export default function InfrastructurePanel({ formData, setFormData }: { formDat
                  </div>
                  <div>
                     <span className="block text-[11px] font-black text-white uppercase tracking-wider mb-0.5">Template Engine</span>
-                    <span className="block text-[9px] font-mono text-zinc-500 uppercase">Public Directory Exposure</span>
+                    <span className="block text-[9px] font-mono text-zinc-500 uppercase">Classify as Reusable Architecture</span>
                  </div>
               </div>
               
-              {/* Sleek Toggle */}
               <label className="relative inline-flex items-center cursor-pointer group">
                 <input 
                   type="checkbox" 
@@ -101,6 +102,31 @@ export default function InfrastructurePanel({ formData, setFormData }: { formDat
                   onChange={(e) => setFormData({ ...formData, is_template: e.target.checked })}
                 />
                 <div className="w-10 h-5 bg-zinc-800 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-0.5 after:left-0.5 after:bg-zinc-400 after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-fuchsia-500/20 peer-checked:border-fuchsia-500/50 peer-checked:after:bg-fuchsia-400 border border-zinc-700 group-hover:border-zinc-500"></div>
+              </label>
+           </div>
+        </div>
+
+        {/* Module 3: Directory Visibility (The Kill Switch) */}
+        <div className="bg-black/50 border border-zinc-800/80 rounded-lg p-4 flex flex-col justify-center shrink-0">
+           <div className="flex items-center justify-between w-full">
+              <div className="flex items-center gap-3">
+                 <div className={`p-2 rounded-md border transition-colors ${formData.is_published ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400' : 'bg-zinc-800/50 border-zinc-700 text-zinc-500'}`}>
+                    <Eye size={14} />
+                 </div>
+                 <div>
+                    <span className="block text-[11px] font-black text-white uppercase tracking-wider mb-0.5">Directory Exposure</span>
+                    <span className="block text-[9px] font-mono text-zinc-500 uppercase">Showcase on Live Public Grid</span>
+                 </div>
+              </div>
+              
+              <label className="relative inline-flex items-center cursor-pointer group">
+                <input 
+                  type="checkbox" 
+                  className="sr-only peer" 
+                  checked={formData.is_published || false}
+                  onChange={(e) => setFormData({ ...formData, is_published: e.target.checked })}
+                />
+                <div className="w-10 h-5 bg-zinc-800 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-0.5 after:left-0.5 after:bg-zinc-400 after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-emerald-500/20 peer-checked:border-emerald-500/50 peer-checked:after:bg-emerald-400 border border-zinc-700 group-hover:border-zinc-500"></div>
               </label>
            </div>
         </div>

@@ -1,4 +1,3 @@
-/* src/app/actions/storefronts.ts */
 'use server';
 
 import { revalidatePath } from 'next/cache';
@@ -40,6 +39,7 @@ export async function createStorefront(formData: FormData) {
     content_layout: formData.get('content_layout') || 'classic',
     about_layout: formData.get('about_layout') || 'split',
     is_template: formData.get('is_template') === 'true',
+    is_published: false, // 🚀 Defaults to hidden from the public directory
     hero_image: heroUrl, 
     about_image: aboutUrl,
     subtext: 'Welcome to our new digital storefront.',
@@ -67,11 +67,12 @@ export async function updateStorefrontCore(id: string, formData: FormData) {
   
   const updateData: any = {};
 
+  // 🚀 Added custom_domain to catch the Infrastructure tab updates
   const fields = [
     'business_name', 'slug', 'tagline', 'subtext', 'primary_cta', 'secondary_cta',
     'brand_color', 'theme_style', 'hero_layout', 'content_layout', 'about_layout',
     'about_heading', 'about_bio', 'capabilities_heading', 'gallery_heading', 'contact_email',
-    'logo_size', 'industry_tag'
+    'logo_size', 'industry_tag', 'custom_domain'
   ];
 
   fields.forEach(field => {
@@ -82,6 +83,15 @@ export async function updateStorefrontCore(id: string, formData: FormData) {
 
   if (formData.has('capabilities')) {
     updateData.capabilities = JSON.parse(formData.get('capabilities') as string);
+  }
+
+  // 🚀 Safely catch the booleans for the Infrastructure toggles
+  if (formData.has('is_template')) {
+    updateData.is_template = formData.get('is_template') === 'true';
+  }
+  
+  if (formData.has('is_published')) {
+    updateData.is_published = formData.get('is_published') === 'true';
   }
 
   if (Object.keys(updateData).length > 0) {
@@ -157,7 +167,6 @@ export async function updateStorefrontGallery(id: string, slug: string, formData
     
     if (!error) {
       const { data } = supabase.storage.from('client-assets').getPublicUrl(filePath);
-      // 🚀 FORMATTING FIX: Push as standardized imageUrl object
       uploadedUrls.push({
         imageUrl: data.publicUrl,
         title: '',
@@ -180,7 +189,6 @@ export async function updateStorefrontGallery(id: string, slug: string, formData
   revalidatePath('/dashboard/storefronts', 'layout');
   revalidatePath('/', 'layout'); 
 
-  // 🚀 RETURN FIX: Hands the data back to the Admin Dashboard
   return { success: true, gallery_items: updatedGallery };
 }
 
@@ -303,6 +311,21 @@ export async function quickUpdateStorefrontStatus(id: string, newStatus: string,
   const { error } = await supabase.from('storefronts').update(updatePayload).eq('id', id);
   if (error) throw new Error(error.message);
   
+  revalidatePath('/dashboard/storefronts', 'layout');
+  revalidatePath('/', 'layout'); 
+  return { success: true };
+}
+export async function quickToggleStorefrontFlags(id: string, payload: { is_published?: boolean, is_template?: boolean }) {
+  const supabase = await createClient();
+  
+  const { error } = await supabase
+    .from('storefronts')
+    .update(payload)
+    .eq('id', id);
+    
+  if (error) throw new Error(error.message);
+  
+  // Nuke the cache so the grid and public directory update instantly
   revalidatePath('/dashboard/storefronts', 'layout');
   revalidatePath('/', 'layout'); 
   return { success: true };
