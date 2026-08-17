@@ -24,7 +24,7 @@ export default function PortalLayout({
         <img 
           src="/logo.png" 
           alt="Alternative Solutions Watermark" 
-          className="w-[600px] h-[600px] md:w-[1000px] md:h-[1000px] object-contain grayscale max-w-none" 
+          className="w-150 h-150 md:w-250 md:h-250 object-contain grayscale max-w-none" 
         />
       </div>
 

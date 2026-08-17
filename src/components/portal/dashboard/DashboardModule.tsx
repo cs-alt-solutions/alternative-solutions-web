@@ -71,7 +71,7 @@ export default async function DashboardModule({
 
             {/* Sub-headline accent */}
             <div className="flex items-center gap-3">
-               <div className="h-px w-8 bg-gradient-to-r from-cyan-500 to-fuchsia-500" />
+               <div className="h-px w-8 bg-linear-to-r from-cyan-500 to-fuchsia-500" />
                <p className="text-xs md:text-sm text-zinc-400 font-mono uppercase tracking-widest">
                  This is dope. Let's get building.
                </p>

@@ -90,7 +90,7 @@ export async function updateStorefrontCore(id: string, formData: FormData) {
   }
 
   revalidatePath('/dashboard/storefronts', 'layout');
-  revalidatePath('/', 'layout'); // 🚀 FORCES LIVE SITE TO REBUILD
+  revalidatePath('/', 'layout'); 
 }
 
 export async function updateStorefrontMedia(id: string, slug: string, formData: FormData) {
@@ -131,7 +131,7 @@ export async function updateStorefrontMedia(id: string, slug: string, formData: 
   }
 
   revalidatePath('/dashboard/storefronts', 'layout');
-  revalidatePath('/', 'layout'); // 🚀 FORCES LIVE SITE TO REBUILD
+  revalidatePath('/', 'layout'); 
 }
 
 export async function updateStorefrontCapabilities(id: string, capabilities: any[]) {
@@ -140,7 +140,7 @@ export async function updateStorefrontCapabilities(id: string, capabilities: any
   if (error) throw new Error(error.message);
   
   revalidatePath('/dashboard/storefronts', 'layout');
-  revalidatePath('/', 'layout'); // 🚀 FORCES LIVE SITE TO REBUILD
+  revalidatePath('/', 'layout'); 
 }
 
 export async function updateStorefrontGallery(id: string, slug: string, formData: FormData) {
@@ -157,27 +157,36 @@ export async function updateStorefrontGallery(id: string, slug: string, formData
     
     if (!error) {
       const { data } = supabase.storage.from('client-assets').getPublicUrl(filePath);
-      uploadedUrls.push(data.publicUrl);
+      // 🚀 FORMATTING FIX: Push as standardized imageUrl object
+      uploadedUrls.push({
+        imageUrl: data.publicUrl,
+        title: '',
+        service: 'MAIN PORTFOLIO',
+        description: ''
+      });
     }
   }
 
   const { data: currentStore } = await supabase.from('storefronts').select('gallery_items').eq('id', id).single();
   const existingItems = currentStore?.gallery_items || [];
+  const updatedGallery = [...existingItems, ...uploadedUrls];
   
   const { error: updateError } = await supabase.from('storefronts')
-    .update({ gallery_items: [...existingItems, ...uploadedUrls] })
+    .update({ gallery_items: updatedGallery })
     .eq('id', id);
 
   if (updateError) throw new Error("Database sync failed");
 
   revalidatePath('/dashboard/storefronts', 'layout');
-  revalidatePath('/', 'layout'); // 🚀 FORCES LIVE SITE TO REBUILD
+  revalidatePath('/', 'layout'); 
+
+  // 🚀 RETURN FIX: Hands the data back to the Admin Dashboard
+  return { success: true, gallery_items: updatedGallery };
 }
 
 export async function removeImageFromGallery(storeId: string, imageUrlToRemove: string) {
   const supabase = await createClient();
 
-  // 1. Grab the current array and the slug (for cache busting)
   const { data: store, error: fetchError } = await supabase
     .from('storefronts')
     .select('slug, gallery_items')
@@ -187,27 +196,15 @@ export async function removeImageFromGallery(storeId: string, imageUrlToRemove: 
   if (fetchError || !store) throw new Error("Failed to find store data");
 
   const currentGallery = store.gallery_items || [];
-
-  // ☢️ THE NUCLEAR FILTER ☢️
-  // Extract the exact filename from the URL, ignoring all URL formatting or query params
   const filename = imageUrlToRemove.split('/').pop()?.split('?')[0];
 
   const updatedGallery = currentGallery.filter((item: any) => {
     const stringifiedItem = JSON.stringify(item);
-    
-    // If the database item contains the filename anywhere inside it, NUKE IT.
-    if (filename && stringifiedItem.includes(filename)) {
-        return false; 
-    }
-    // Fallback exact match check
-    if (stringifiedItem.includes(imageUrlToRemove)) {
-        return false; 
-    }
-    
-    return true; // Keep the image
+    if (filename && stringifiedItem.includes(filename)) return false; 
+    if (stringifiedItem.includes(imageUrlToRemove)) return false; 
+    return true; 
   });
 
-  // 2. Overwrite the database with the newly scrubbed array
   const { error: updateError } = await supabase
     .from('storefronts')
     .update({ gallery_items: updatedGallery })
@@ -215,7 +212,6 @@ export async function removeImageFromGallery(storeId: string, imageUrlToRemove: 
 
   if (updateError) throw new Error("Failed to delete image from gallery array.");
 
-  // 3. Sledgehammer the Next.js Cache across the entire ecosystem
   revalidatePath('/dashboard/storefronts', 'layout');
   revalidatePath(`/${store.slug}`, 'page');
   revalidatePath('/', 'layout'); 
@@ -232,13 +228,8 @@ export async function deleteStorefront(id: string) {
     .eq('id', id)
     .select(); 
 
-  if (error) {
-    throw new Error(`Failed to delete storefront: ${error.message}`);
-  }
-
-  if (!data || data.length === 0) {
-    throw new Error("Delete BLOCKED by Supabase RLS.");
-  }
+  if (error) throw new Error(`Failed to delete storefront: ${error.message}`);
+  if (!data || data.length === 0) throw new Error("Delete BLOCKED by Supabase RLS.");
 
   revalidatePath('/dashboard/storefronts', 'layout');
   revalidatePath('/dashboard', 'layout');
@@ -274,9 +265,7 @@ export async function dispatchStagingReview(id: string, slug: string, businessNa
     })
     .eq('id', id);
 
-  if (dbError) {
-    throw new Error(`Database update failed: ${dbError.message}`);
-  }
+  if (dbError) throw new Error(`Database update failed: ${dbError.message}`);
 
   const previewUrl = `https://storefronts.alternativesolutions.io/${slug}`;
 
@@ -293,19 +282,16 @@ export async function dispatchStagingReview(id: string, slug: string, businessNa
     }
   });
 
-  if (!emailResult.success) {
-    throw new Error(emailResult.error || 'Failed to dispatch review email.');
-  }
+  if (!emailResult.success) throw new Error(emailResult.error || 'Failed to dispatch review email.');
 
   revalidatePath('/dashboard/storefronts', 'layout');
   revalidatePath('/dashboard', 'layout');
-  revalidatePath('/', 'layout'); // 🚀 FORCES LIVE SITE TO REBUILD
+  revalidatePath('/', 'layout'); 
   return { success: true };
 }
 
 export async function quickUpdateStorefrontStatus(id: string, newStatus: string, logEntry?: any) {
   const supabase = await createClient();
-  
   let updatePayload: any = { status: newStatus };
   
   if (logEntry) {
@@ -314,14 +300,10 @@ export async function quickUpdateStorefrontStatus(id: string, newStatus: string,
     updatePayload.audit_notes = [...currentLogs, logEntry];
   }
   
-  const { error } = await supabase
-    .from('storefronts')
-    .update(updatePayload)
-    .eq('id', id);
-    
+  const { error } = await supabase.from('storefronts').update(updatePayload).eq('id', id);
   if (error) throw new Error(error.message);
   
   revalidatePath('/dashboard/storefronts', 'layout');
-  revalidatePath('/', 'layout'); // 🚀 FORCES LIVE SITE TO REBUILD
+  revalidatePath('/', 'layout'); 
   return { success: true };
 }

@@ -185,7 +185,7 @@ export default function BillingModule({ clientId }: { clientId: string }) {
           </div>
 
           {/* BILLING HISTORY TABLE */}
-          <div className="bg-zinc-950 border border-zinc-800/80 rounded-3xl p-6 md:p-8 flex flex-col flex-1 overflow-hidden shadow-xl min-h-[400px]">
+          <div className="bg-zinc-950 border border-zinc-800/80 rounded-3xl p-6 md:p-8 flex flex-col flex-1 overflow-hidden shadow-xl min-h-100">
             <div className="flex items-center gap-3 mb-6 pb-4 border-b border-white/5">
               <Receipt className="text-emerald-500 w-5 h-5" />
               <h3 className="text-sm font-bold text-white uppercase tracking-widest">Billing History</h3>

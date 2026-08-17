@@ -54,7 +54,7 @@ export default function PortalTrafficCop() {
       <div className="min-h-[80vh] flex flex-col items-center justify-center relative isolate">
         {/* 🚀 MASSIVE WATERMARK */}
         <div className="fixed inset-0 pointer-events-none flex items-center justify-center z-0 opacity-[0.07]">
-          <img src="/logo.png" alt="Alternative Solutions Watermark" className="w-[600px] h-[600px] md:w-[1000px] md:h-[1000px] object-contain grayscale max-w-none" />
+          <img src="/logo.png" alt="Alternative Solutions Watermark" className="w-150 h-150 md:w-250 md:h-250 object-contain grayscale max-w-none" />
         </div>
         <Loader2 size={40} className="text-cyan-500 animate-spin mb-6 relative z-10" />
         <p className="text-xs font-mono text-cyan-500 uppercase tracking-widest animate-pulse relative z-10">
@@ -69,7 +69,7 @@ export default function PortalTrafficCop() {
       <div className="min-h-[80vh] flex flex-col items-center justify-center p-6 text-center relative isolate">
         {/* 🚀 MASSIVE WATERMARK */}
         <div className="fixed inset-0 pointer-events-none flex items-center justify-center z-0 opacity-[0.07]">
-          <img src="/logo.png" alt="Alternative Solutions Watermark" className="w-[600px] h-[600px] md:w-[1000px] md:h-[1000px] object-contain grayscale max-w-none" />
+          <img src="/logo.png" alt="Alternative Solutions Watermark" className="w-150 h-150 md:w-250 md:h-250 object-contain grayscale max-w-none" />
         </div>
         <div className="bg-black/40 border border-white/5 rounded-3xl p-12 max-w-lg shadow-2xl backdrop-blur-md relative z-10">
           <Sparkles className="w-12 h-12 text-cyan-500 mx-auto mb-6 opacity-80" />
@@ -92,7 +92,7 @@ export default function PortalTrafficCop() {
     <div className="min-h-[80vh] flex flex-col items-center justify-center p-6 relative isolate">
       {/* 🚀 MASSIVE WATERMARK */}
       <div className="fixed inset-0 pointer-events-none flex items-center justify-center z-0 opacity-[0.07]">
-        <img src="/logo.png" alt="Alternative Solutions Watermark" className="w-[600px] h-[600px] md:w-[1000px] md:h-[1000px] object-contain grayscale max-w-none" />
+        <img src="/logo.png" alt="Alternative Solutions Watermark" className="w-150 h-150 md:w-250 md:h-250 object-contain grayscale max-w-none" />
       </div>
 
       <div className="w-full max-w-4xl relative z-10">

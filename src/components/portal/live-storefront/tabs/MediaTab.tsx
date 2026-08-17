@@ -27,7 +27,7 @@ export default function MediaTab({ storeId, formData, updateForm }: { storeId: s
 
         const { data } = supabase.storage.from('client-assets').getPublicUrl(filePath);
         
-        // 🚀 THE FIX: Standardized to 'imageUrl'
+        // 🚀 FORMATTING FIX: Standardized to 'imageUrl'
         newItems.push({ 
           imageUrl: data.publicUrl, 
           title: '', 
@@ -81,7 +81,6 @@ export default function MediaTab({ storeId, formData, updateForm }: { storeId: s
               
               {/* IMAGE PREVIEW REGION */}
               <div className="relative rounded-xl overflow-hidden bg-black aspect-video border border-zinc-800/50">
-                {/* 🚀 THE FIX: Rendering from 'imageUrl' */}
                 <img src={item.imageUrl} alt={item.title || `Gallery ${index}`} className="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-opacity" />
                 
                 <button

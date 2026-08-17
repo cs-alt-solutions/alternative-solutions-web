@@ -1,15 +1,14 @@
 /* src/components/dashboard/storefronts/editor/MediaTab.tsx */
 'use client';
 
-// 🚀 FIX: Imported startTransition
 import React, { useState, useRef, startTransition } from 'react';
-import { useRouter } from 'next/navigation'; // 🚀 FIX: Imported useRouter
+import { useRouter } from 'next/navigation'; 
 import { UploadCloud, Image as ImageIcon, X, LayoutGrid, Trash2, Layers, Move } from 'lucide-react';
 import { updateStorefrontMedia, updateStorefrontGallery, removeImageFromGallery } from '@/app/actions/storefronts';
 
 export default function MediaTab({ formData, setFormData, onReload }: { formData: any, setFormData: any, onReload?: () => void }) {
   
-  const router = useRouter(); // 🚀 FIX: Initialized router
+  const router = useRouter(); 
   const [files, setFiles] = useState<File[]>([]);
   const [isUploadingGallery, setIsUploadingGallery] = useState(false);
   const [isDeleting, setIsDeleting] = useState<string | null>(null);
@@ -74,8 +73,14 @@ export default function MediaTab({ formData, setFormData, onReload }: { formData
     const uploadData = new FormData();
     files.forEach(file => uploadData.append('images', file));
     try {
-      await updateStorefrontGallery(formData.id, formData.slug, uploadData);
+      // 🚀 INJECTION FIX: Captures returned array from server
+      const response = await updateStorefrontGallery(formData.id, formData.slug, uploadData);
       setFiles([]);
+      
+      if (response?.gallery_items) {
+         setFormData((prev: any) => ({ ...prev, gallery_items: response.gallery_items }));
+      }
+      
       if (onReload) onReload(); 
     } catch (e) {
       alert("Gallery sync failed.");
@@ -98,10 +103,8 @@ export default function MediaTab({ formData, setFormData, onReload }: { formData
     if (!window.confirm("Remove this image from live gallery?")) return;
     setIsDeleting(imageUrlToRemove);
     try {
-      // 1. Delete from Supabase
       await removeImageFromGallery(formData.id, imageUrlToRemove);
       
-      // 2. Update Local State
       setFormData((prev: any) => ({
         ...prev,
         gallery_items: prev.gallery_items.filter((img: any) => 
@@ -109,7 +112,6 @@ export default function MediaTab({ formData, setFormData, onReload }: { formData
         )
       }));
 
-      // 🚀 3. THE FIX: Force Next.js to purge the browser's stale memory cache
       startTransition(() => {
         router.refresh();
         if (onReload) onReload(); 
