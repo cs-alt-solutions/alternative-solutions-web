@@ -1,3 +1,4 @@
+/* src/app/actions/storefronts.ts */
 'use server';
 
 import { revalidatePath } from 'next/cache';
@@ -89,6 +90,7 @@ export async function updateStorefrontCore(id: string, formData: FormData) {
   }
 
   revalidatePath('/dashboard/storefronts', 'layout');
+  revalidatePath('/', 'layout'); // 🚀 FORCES LIVE SITE TO REBUILD
 }
 
 export async function updateStorefrontMedia(id: string, slug: string, formData: FormData) {
@@ -129,6 +131,7 @@ export async function updateStorefrontMedia(id: string, slug: string, formData: 
   }
 
   revalidatePath('/dashboard/storefronts', 'layout');
+  revalidatePath('/', 'layout'); // 🚀 FORCES LIVE SITE TO REBUILD
 }
 
 export async function updateStorefrontCapabilities(id: string, capabilities: any[]) {
@@ -137,6 +140,7 @@ export async function updateStorefrontCapabilities(id: string, capabilities: any
   if (error) throw new Error(error.message);
   
   revalidatePath('/dashboard/storefronts', 'layout');
+  revalidatePath('/', 'layout'); // 🚀 FORCES LIVE SITE TO REBUILD
 }
 
 export async function updateStorefrontGallery(id: string, slug: string, formData: FormData) {
@@ -167,21 +171,35 @@ export async function updateStorefrontGallery(id: string, slug: string, formData
   if (updateError) throw new Error("Database sync failed");
 
   revalidatePath('/dashboard/storefronts', 'layout');
+  revalidatePath('/', 'layout'); // 🚀 FORCES LIVE SITE TO REBUILD
 }
 
 export async function removeImageFromGallery(storeId: string, imageUrlToRemove: string) {
   const supabase = await createClient();
 
+  // 🚀 FIX: We added 'slug' to the select statement so we know exactly what URL to purge
   const { data: store, error: fetchError } = await supabase
     .from('storefronts')
-    .select('gallery_items')
+    .select('slug, gallery_items')
     .eq('id', storeId)
     .single();
 
   if (fetchError || !store) throw new Error("Failed to find store data");
 
   const currentGallery = store.gallery_items || [];
-  const updatedGallery = currentGallery.filter((url: string) => url !== imageUrlToRemove);
+  
+  // Keep strings as strings, or extract imageUrl if it's an object, to accurately filter it out
+  const updatedGallery = currentGallery.filter((item: any) => {
+    const url = typeof item === 'string' ? item : item.imageUrl;
+    return url !== imageUrlToRemove;
+  });
+
+  // 🚨 WIRETAP: This will print in your terminal so you can verify the array actually shrank!
+  console.log(`\n=== 🗑️ IMAGE DELETE WIRETAP ===`);
+  console.log(`STORE: ${store.slug}`);
+  console.log(`ARRAY BEFORE: ${currentGallery.length} images`);
+  console.log(`ARRAY AFTER:  ${updatedGallery.length} images`);
+  console.log(`=================================\n`);
 
   const { error: updateError } = await supabase
     .from('storefronts')
@@ -190,7 +208,13 @@ export async function removeImageFromGallery(storeId: string, imageUrlToRemove: 
 
   if (updateError) throw new Error("Failed to delete image from gallery array.");
 
+  // Clear the cache for the admin dashboard
   revalidatePath('/dashboard/storefronts', 'layout');
+  
+  // 🚀 FIX: Specifically target the exact dynamic URL of the live storefront
+  revalidatePath(`/${store.slug}`, 'page'); 
+  revalidatePath('/', 'layout'); 
+
   return { success: true };
 }
 
@@ -256,7 +280,7 @@ export async function dispatchStagingReview(id: string, slug: string, businessNa
     subject: `Staging Ready • Review Your Blueprint: ${businessName}`,
     type: 'STAGING_REVIEW',
     data: {
-      clientName: clientName, // 🚨 THE FIX: Ensures perfectly mapped payload
+      clientName: clientName, 
       businessName: businessName,
       previewUrl: previewUrl,
       planTier: planTier || 'Foundation Plan', 
@@ -270,6 +294,7 @@ export async function dispatchStagingReview(id: string, slug: string, businessNa
 
   revalidatePath('/dashboard/storefronts', 'layout');
   revalidatePath('/dashboard', 'layout');
+  revalidatePath('/', 'layout'); // 🚀 FORCES LIVE SITE TO REBUILD
   return { success: true };
 }
 
@@ -292,5 +317,6 @@ export async function quickUpdateStorefrontStatus(id: string, newStatus: string,
   if (error) throw new Error(error.message);
   
   revalidatePath('/dashboard/storefronts', 'layout');
+  revalidatePath('/', 'layout'); // 🚀 FORCES LIVE SITE TO REBUILD
   return { success: true };
 }

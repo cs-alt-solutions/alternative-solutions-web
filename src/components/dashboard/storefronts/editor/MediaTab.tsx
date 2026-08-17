@@ -1,12 +1,15 @@
-// src/components/dashboard/storefronts/editor/MediaTab.tsx
+/* src/components/dashboard/storefronts/editor/MediaTab.tsx */
 'use client';
 
-import React, { useState, useRef } from 'react';
+// 🚀 FIX: Imported startTransition
+import React, { useState, useRef, startTransition } from 'react';
+import { useRouter } from 'next/navigation'; // 🚀 FIX: Imported useRouter
 import { UploadCloud, Image as ImageIcon, X, LayoutGrid, Trash2, Layers, Move } from 'lucide-react';
 import { updateStorefrontMedia, updateStorefrontGallery, removeImageFromGallery } from '@/app/actions/storefronts';
 
 export default function MediaTab({ formData, setFormData, onReload }: { formData: any, setFormData: any, onReload?: () => void }) {
   
+  const router = useRouter(); // 🚀 FIX: Initialized router
   const [files, setFiles] = useState<File[]>([]);
   const [isUploadingGallery, setIsUploadingGallery] = useState(false);
   const [isDeleting, setIsDeleting] = useState<string | null>(null);
@@ -40,7 +43,7 @@ export default function MediaTab({ formData, setFormData, onReload }: { formData
   async function handleSaveCore(uploadData: FormData) {
     setIsUploadingCore(true);
     uploadData.set('logo_size', formData.logo_size || 'large');
-    uploadData.set('hero_position', formData.hero_position || 'center'); // Catch new position state
+    uploadData.set('hero_position', formData.hero_position || 'center');
     
     try {
       await updateStorefrontMedia(formData.id, formData.slug, uploadData);
@@ -95,14 +98,23 @@ export default function MediaTab({ formData, setFormData, onReload }: { formData
     if (!window.confirm("Remove this image from live gallery?")) return;
     setIsDeleting(imageUrlToRemove);
     try {
+      // 1. Delete from Supabase
       await removeImageFromGallery(formData.id, imageUrlToRemove);
+      
+      // 2. Update Local State
       setFormData((prev: any) => ({
         ...prev,
         gallery_items: prev.gallery_items.filter((img: any) => 
           (typeof img === 'string' ? img : img.imageUrl) !== imageUrlToRemove
         )
       }));
-      if (onReload) onReload(); 
+
+      // 🚀 3. THE FIX: Force Next.js to purge the browser's stale memory cache
+      startTransition(() => {
+        router.refresh();
+        if (onReload) onReload(); 
+      });
+
     } catch (e) {
       alert("Failed to remove image.");
     } finally {
@@ -110,7 +122,6 @@ export default function MediaTab({ formData, setFormData, onReload }: { formData
     }
   }
 
-  // Visual helper to preview the crop directly in the dashboard
   const positionClassMap: Record<string, string> = {
     'top': 'object-top',
     'center': 'object-center',
@@ -158,7 +169,6 @@ export default function MediaTab({ formData, setFormData, onReload }: { formData
               <div className="flex flex-col sm:flex-row gap-2 w-full">
                 <input type="file" accept="image/*" name="hero_file" onChange={handleHeroSelect} className="flex-1 text-xs text-zinc-400 file:mr-3 file:py-1.5 file:px-3 file:rounded-md file:border-0 file:text-[10px] file:font-bold file:uppercase file:tracking-widest file:bg-zinc-800 file:text-white hover:file:bg-zinc-700 cursor-pointer transition-colors" />
                 
-                {/* NEW: FOCAL POINT CONTROLLER */}
                 <div className="relative shrink-0 w-full sm:w-40">
                   <Move className="w-3 h-3 text-cyan-500 absolute left-2.5 top-2.5 pointer-events-none" />
                   <select
