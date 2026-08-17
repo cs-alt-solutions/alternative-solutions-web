@@ -71,9 +71,25 @@ export default function GatewayPage() {
 
       if (error) throw error;
 
-      // 2. THE HANDOFF: If authentication passes, send them to the Traffic Cop!
+      // 2. THE HANDOFF: The Smart Router
       if (data.user) {
-        router.push('/portal');
+        // Fetch their live profile to check security clearance
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('role, workspace_id')
+          .eq('id', data.user.id)
+          .single();
+
+        if (profile?.role === 'ADMIN' || profile?.role === 'STAFF') {
+          // Executives go to the Command Center
+          router.push('/dashboard');
+        } else if (profile?.workspace_id && profile.workspace_id !== 'NONE') {
+          // Clients with assigned workspaces go to their specific sandbox
+          router.push(`/portal/${profile.workspace_id}`);
+        } else {
+          // Unassigned clients go to the generic portal lobby
+          router.push('/portal');
+        }
       }
     } catch (error: any) {
       setErrorMsg(error.message || 'Invalid or expired access code.');
