@@ -177,7 +177,7 @@ export async function updateStorefrontGallery(id: string, slug: string, formData
 export async function removeImageFromGallery(storeId: string, imageUrlToRemove: string) {
   const supabase = await createClient();
 
-  // 🚀 FIX: We added 'slug' to the select statement so we know exactly what URL to purge
+  // 1. Grab the current array and the slug (for cache busting)
   const { data: store, error: fetchError } = await supabase
     .from('storefronts')
     .select('slug, gallery_items')
@@ -187,20 +187,27 @@ export async function removeImageFromGallery(storeId: string, imageUrlToRemove: 
   if (fetchError || !store) throw new Error("Failed to find store data");
 
   const currentGallery = store.gallery_items || [];
-  
-  // Keep strings as strings, or extract imageUrl if it's an object, to accurately filter it out
+
+  // ☢️ THE NUCLEAR FILTER ☢️
+  // Extract the exact filename from the URL, ignoring all URL formatting or query params
+  const filename = imageUrlToRemove.split('/').pop()?.split('?')[0];
+
   const updatedGallery = currentGallery.filter((item: any) => {
-    const url = typeof item === 'string' ? item : item.imageUrl;
-    return url !== imageUrlToRemove;
+    const stringifiedItem = JSON.stringify(item);
+    
+    // If the database item contains the filename anywhere inside it, NUKE IT.
+    if (filename && stringifiedItem.includes(filename)) {
+        return false; 
+    }
+    // Fallback exact match check
+    if (stringifiedItem.includes(imageUrlToRemove)) {
+        return false; 
+    }
+    
+    return true; // Keep the image
   });
 
-  // 🚨 WIRETAP: This will print in your terminal so you can verify the array actually shrank!
-  console.log(`\n=== 🗑️ IMAGE DELETE WIRETAP ===`);
-  console.log(`STORE: ${store.slug}`);
-  console.log(`ARRAY BEFORE: ${currentGallery.length} images`);
-  console.log(`ARRAY AFTER:  ${updatedGallery.length} images`);
-  console.log(`=================================\n`);
-
+  // 2. Overwrite the database with the newly scrubbed array
   const { error: updateError } = await supabase
     .from('storefronts')
     .update({ gallery_items: updatedGallery })
@@ -208,11 +215,9 @@ export async function removeImageFromGallery(storeId: string, imageUrlToRemove: 
 
   if (updateError) throw new Error("Failed to delete image from gallery array.");
 
-  // Clear the cache for the admin dashboard
+  // 3. Sledgehammer the Next.js Cache across the entire ecosystem
   revalidatePath('/dashboard/storefronts', 'layout');
-  
-  // 🚀 FIX: Specifically target the exact dynamic URL of the live storefront
-  revalidatePath(`/${store.slug}`, 'page'); 
+  revalidatePath(`/${store.slug}`, 'page');
   revalidatePath('/', 'layout'); 
 
   return { success: true };

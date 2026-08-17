@@ -15,7 +15,7 @@ export default function MediaTab({ storeId, formData, updateForm }: { storeId: s
 
     setIsUploading(true);
     try {
-      const newItems: { url: string; title: string; service: string; description: string }[] = [];
+      const newItems: { imageUrl: string; title: string; service: string; description: string }[] = [];
 
       for (let i = 0; i < files.length; i++) {
         const file = files[i];
@@ -27,8 +27,9 @@ export default function MediaTab({ storeId, formData, updateForm }: { storeId: s
 
         const { data } = supabase.storage.from('client-assets').getPublicUrl(filePath);
         
+        // 🚀 THE FIX: Standardized to 'imageUrl'
         newItems.push({ 
-          url: data.publicUrl, 
+          imageUrl: data.publicUrl, 
           title: '', 
           service: 'MAIN PORTFOLIO', 
           description: '' 
@@ -72,7 +73,7 @@ export default function MediaTab({ storeId, formData, updateForm }: { storeId: s
           </label>
         </div>
 
-        {/* GALLERY GRID (Now locked to a spacious 2-column grid) */}
+        {/* GALLERY GRID */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
           
           {galleryItems.map((item: any, index: number) => (
@@ -80,7 +81,9 @@ export default function MediaTab({ storeId, formData, updateForm }: { storeId: s
               
               {/* IMAGE PREVIEW REGION */}
               <div className="relative rounded-xl overflow-hidden bg-black aspect-video border border-zinc-800/50">
-                <img src={item.url} alt={item.title || `Gallery ${index}`} className="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-opacity" />
+                {/* 🚀 THE FIX: Rendering from 'imageUrl' */}
+                <img src={item.imageUrl} alt={item.title || `Gallery ${index}`} className="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-opacity" />
+                
                 <button
                   onClick={() => removeGalleryImage(index)}
                   className="absolute top-2 right-2 p-2 bg-black/80 text-rose-400 rounded-lg hover:bg-rose-500 hover:text-white opacity-0 group-hover:opacity-100 transition-all backdrop-blur-md"

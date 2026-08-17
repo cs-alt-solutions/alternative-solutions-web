@@ -5,7 +5,7 @@ import React, { useState } from 'react';
 import { supabase } from '@/utils/supabase';
 import { 
   Save, CheckCircle2, Loader2, Type, AlignLeft, 
-  Sparkles, Lock, AlertTriangle, Image as ImageIcon, Key, Clock, MonitorSmartphone, ChevronDown
+  Sparkles, Lock, AlertTriangle, Image as ImageIcon, Key, Clock, MonitorSmartphone, ChevronDown 
 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import HeroTab from './tabs/HeroTab';
@@ -19,17 +19,21 @@ export default function StorefrontManager({ store }: { store: any }) {
   const [isSaving, setIsSaving] = useState(false);
   const [saved, setSaved] = useState(false);
   const [activeTab, setActiveTab] = useState<'HERO' | 'STORY' | 'MEDIA' | 'SERVICES'>('HERO');
-  
   const [accessState, setAccessState] = useState<'LOCKED' | 'REQUESTED' | 'UNLOCKED'>('LOCKED');
   const [isRequesting, setIsRequesting] = useState(false);
   const [isInfoExpanded, setIsInfoExpanded] = useState(false);
 
   const safeSocials = typeof store.social_handles === 'string' ? JSON.parse(store.social_handles) : (store.social_handles || {});
   const safeCapabilities = Array.isArray(store.capabilities) ? store.capabilities : [];
+  
+  // 🚀 THE FIX: Standardized to 'imageUrl' and auto-healing broken 'url' data
   const rawGallery = Array.isArray(store.gallery_items) ? store.gallery_items : [];
-  const safeGallery = rawGallery.map((item: any) => 
-    typeof item === 'string' ? { url: item, caption: '' } : item
-  );
+  const safeGallery = rawGallery.map((item: any) => {
+    if (typeof item === 'string') return { imageUrl: item, caption: '' };
+    // Auto-heal if the database currently has the broken 'url' key
+    if (item.url && !item.imageUrl) item.imageUrl = item.url;
+    return item;
+  });
 
   const [formData, setFormData] = useState({
     tagline: store.tagline || '',
@@ -58,7 +62,6 @@ export default function StorefrontManager({ store }: { store: any }) {
         details: 'Client has requested access to unlock their live storefront editor for structural/copy changes.',
         status: 'OPEN'
       }]);
-
       if (error) throw error;
       setAccessState('REQUESTED');
       setIsInfoExpanded(false); // Auto-collapse the accordion once requested
@@ -217,6 +220,7 @@ export default function StorefrontManager({ store }: { store: any }) {
           {activeTab === 'MEDIA' && <MediaTab storeId={store.id} formData={formData} updateForm={updateForm} />}
           {activeTab === 'SERVICES' && <ServicesTab formData={formData} updateForm={updateForm} />}
         </fieldset>
+
       </div>
     </div>
   );
