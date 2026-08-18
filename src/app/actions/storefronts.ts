@@ -1,11 +1,11 @@
 'use server';
 
 import { revalidatePath } from 'next/cache';
-import { createClient } from '@/utils/supabase/server'; 
+import { createClient } from '@/utils/supabase/server';
 import { dispatchSystemEmail } from '@/app/actions/emails';
 
 export async function createStorefront(formData: FormData) {
-  const supabase = await createClient(); 
+  const supabase = await createClient();
   
   const slug = formData.get('slug') as string;
   if (!slug) throw new Error("Slug is required");
@@ -39,7 +39,7 @@ export async function createStorefront(formData: FormData) {
     content_layout: formData.get('content_layout') || 'classic',
     about_layout: formData.get('about_layout') || 'split',
     is_template: formData.get('is_template') === 'true',
-    is_published: false, // 🚀 Defaults to hidden from the public directory
+    is_published: false,
     hero_image: heroUrl, 
     about_image: aboutUrl,
     subtext: 'Welcome to our new digital storefront.',
@@ -52,7 +52,7 @@ export async function createStorefront(formData: FormData) {
     gallery_items: [],
     logo_size: 'large',
     industry_tag: formData.get('industry_tag') || 'General',
-    audit_notes: [] 
+    audit_notes: [] // Initializes the empty flight recorder
   };
 
   const { error } = await supabase.from('storefronts').insert(storefrontData);
@@ -67,7 +67,6 @@ export async function updateStorefrontCore(id: string, formData: FormData) {
   
   const updateData: any = {};
 
-  // 🚀 Added custom_domain to catch the Infrastructure tab updates
   const fields = [
     'business_name', 'slug', 'tagline', 'subtext', 'primary_cta', 'secondary_cta',
     'brand_color', 'theme_style', 'hero_layout', 'content_layout', 'about_layout',
@@ -85,7 +84,6 @@ export async function updateStorefrontCore(id: string, formData: FormData) {
     updateData.capabilities = JSON.parse(formData.get('capabilities') as string);
   }
 
-  // 🚀 Safely catch the booleans for the Infrastructure toggles
   if (formData.has('is_template')) {
     updateData.is_template = formData.get('is_template') === 'true';
   }
@@ -315,6 +313,7 @@ export async function quickUpdateStorefrontStatus(id: string, newStatus: string,
   revalidatePath('/', 'layout'); 
   return { success: true };
 }
+
 export async function quickToggleStorefrontFlags(id: string, payload: { is_published?: boolean, is_template?: boolean }) {
   const supabase = await createClient();
   
@@ -325,8 +324,44 @@ export async function quickToggleStorefrontFlags(id: string, payload: { is_publi
     
   if (error) throw new Error(error.message);
   
-  // Nuke the cache so the grid and public directory update instantly
   revalidatePath('/dashboard/storefronts', 'layout');
   revalidatePath('/', 'layout'); 
   return { success: true };
+}
+
+// 🚀 NEW: The Universal Audit Logger
+export async function addStorefrontAuditLog(storeId: string, author: string, type: string, message: string) {
+  const supabase = await createClient();
+  
+  // 1. Fetch current logs
+  const { data: store, error: fetchError } = await supabase
+    .from('storefronts')
+    .select('audit_notes')
+    .eq('id', storeId)
+    .single();
+
+  if (fetchError || !store) throw new Error("Storefront not found in database.");
+
+  // 2. Create the new timestamped event
+  const newLog = {
+    id: crypto.randomUUID(),
+    timestamp: new Date().toISOString(),
+    author, 
+    type,   
+    message
+  };
+
+  // 3. Append and save
+  const updatedLogs = [...(store.audit_notes || []), newLog];
+
+  const { error: updateError } = await supabase
+    .from('storefronts')
+    .update({ audit_notes: updatedLogs })
+    .eq('id', storeId);
+
+  if (updateError) throw new Error("Failed to append audit log.");
+
+  revalidatePath(`/dashboard/storefronts/${storeId}`, 'layout');
+  
+  return { success: true, log: newLog };
 }

@@ -132,3 +132,35 @@ export async function getUpcomingInvoice(customerId: string) {
     return { success: false, error: error.message };
   }
 }
+
+// 🚀 NEW: Fetch Master Global Invoices for The Ledger
+export async function getGlobalInvoices() {
+  try {
+    // Ask Stripe for the last 50 successful payments globally
+    const invoices = await stripe.invoices.list({
+      limit: 50,
+      status: 'paid', 
+      expand: ['data.customer'], // Pulls in the customer details so we know who paid
+    });
+
+    const formattedInvoices = invoices.data.map(inv => {
+      const customer = inv.customer as Stripe.Customer | null;
+      
+      return {
+        id: inv.id,
+        date: new Date(inv.created * 1000).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
+        amount: (inv.amount_paid / 100).toFixed(2),
+        status: inv.status,
+        customerEmail: customer?.email || 'Unknown Client',
+        customerName: customer?.name || 'No Name',
+        pdfUrl: inv.invoice_pdf, // The magic secure download link
+      };
+    });
+
+    return { success: true, invoices: formattedInvoices };
+    
+  } catch (error: any) {
+    console.error("❌ STRIPE GLOBAL API ERROR:", error);
+    return { success: false, error: error.message };
+  }
+}
