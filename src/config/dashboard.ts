@@ -255,3 +255,31 @@ export const DASHBOARD_COPY = {
     AUDIT_EMPTY: "Awaiting client review..."
   }
 };
+
+// 🚀 ADDED THE NEW STOREFRONT ENGINE COPY 
+export const STOREFRONT_ENGINE_COPY = {
+  HEADER: {
+    TITLE: "Storefront Engine",
+    SUBTITLE: "Manage active client projects and sandbox prototypes."
+  },
+  TABS: {
+    CLIENTS: "Active Clients",
+    PROTOTYPES: "Prototypes",
+    ALL: "All"
+  },
+  SEARCH_PLACEHOLDER: "Search records...",
+  FILTERS: {
+    CATEGORY: "All Categories",
+    PLAN: "All Plans",
+    STATUS: "All Statuses"
+  },
+  TABLE: {
+    BUSINESS: "Client / Business",
+    CATEGORY: "Category",
+    PLAN: "Plan Tier",
+    STATUS: "Current Status",
+    TIMELINE: "Timeline",
+    ACTIONS: "System Actions",
+    EMPTY: "No matching records found."
+  }
+};

@@ -1,18 +1,19 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Users, Briefcase, LineChart } from 'lucide-react';
+import { CreditCard, Briefcase, LineChart } from 'lucide-react';
 import ExternalFuelTab from '@/components/dashboard/ledger/ExternalFuelTab';
-import RosterTab from '@/components/dashboard/ledger/RosterTab';
-import ProjectionEngineTab from '@/components/dashboard/ledger/ProjectionEngineTab'; // NEW
+import SubscriptionsTab from '@/components/dashboard/ledger/SubscriptionsTab';
+import ProjectionEngineTab from '@/components/dashboard/ledger/ProjectionEngineTab';
 
 export default function LedgerPage() {
-  const [activeTab, setActiveTab] = useState<'external' | 'roster' | 'projection'>('projection'); // Defaulting to the new tab so you can see it
+  // 🚀 THE FIX: Default state is now 'subscriptions'
+  const [activeTab, setActiveTab] = useState<'external' | 'subscriptions' | 'projection'>('subscriptions');
 
   const tabs = [
     { id: 'external', label: 'External Fuel', icon: Briefcase },
-    { id: 'roster', label: 'Platform Backers', icon: Users },
-    { id: 'projection', label: 'Projection Engine', icon: LineChart } // NEW TAB
+    { id: 'subscriptions', label: 'Active Subscriptions', icon: CreditCard },
+    { id: 'projection', label: 'Projection Engine', icon: LineChart }
   ] as const;
 
   return (
@@ -29,7 +30,7 @@ export default function LedgerPage() {
         {tabs.map(tab => (
           <button
             key={tab.id}
-            onClick={() => setActiveTab(tab.id as 'external' | 'roster' | 'projection')}
+            onClick={() => setActiveTab(tab.id as 'external' | 'subscriptions' | 'projection')}
             className={`flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-mono tracking-widest uppercase transition-all ${
               activeTab === tab.id 
                 ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 shadow-[0_0_15px_rgba(16,185,129,0.1)]' 
@@ -45,7 +46,7 @@ export default function LedgerPage() {
       {/* Tab Content */}
       <div className="pt-4">
         {activeTab === 'external' && <ExternalFuelTab />}
-        {activeTab === 'roster' && <RosterTab />}
+        {activeTab === 'subscriptions' && <SubscriptionsTab />}
         {activeTab === 'projection' && <ProjectionEngineTab />}
       </div>
       

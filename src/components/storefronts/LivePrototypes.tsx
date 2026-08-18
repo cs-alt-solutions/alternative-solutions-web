@@ -2,18 +2,17 @@
 import React from 'react';
 import { TerminalSquare } from 'lucide-react';
 import { createClient } from '@/utils/supabase/server';
-import PerspectiveStage from './PerspectiveStage';
+import PrototypeGrid from './PrototypeGrid'; // 🚀 Plug in the new clean grid
 import { STOREFRONTS } from '@/config/marketing/sector-zero';
 
 export default async function LivePrototypes() {
   const supabase = await createClient();
 
-  // 🚀 THE FIX: Added the is_published check so hidden prototypes stay off the public grid
   const { data: prototypes, error } = await supabase
     .from('storefronts')
     .select('*')
     .eq('is_template', true)
-    .eq('is_published', true) 
+    .eq('is_published', true) // Only grab visible templates
     .order('created_at', { ascending: false });
 
   if (error) console.error("Supabase Error ->", error.message);
@@ -24,17 +23,19 @@ export default async function LivePrototypes() {
   return (
     <div className="w-full mt-20 mb-32 relative z-10">
       <div className="max-w-screen-2xl mx-auto px-6 text-center mb-12">
-        <h2 className="text-4xl md:text-6xl font-black uppercase tracking-tighter text-white mb-4">
-          {GALLERY.TITLE_1}{" "}
-          {/* 🚀 ANIMATED NEON TEXT GRADIENT: Dynamic color transition with subtle neon glow */}
-          <span className="text-transparent bg-clip-text bg-linear-to-r from-cyan-400 via-fuchsia-400 to-cyan-300 animate-text-gradient drop-shadow-[0_0_20px_rgba(34,211,238,0.4)]">
-            {GALLERY.TITLE_2}
+        <h2 className="text-4xl md:text-6xl font-black uppercase tracking-tighter text-white mb-6">
+          Find Your{" "}
+          <span className="text-transparent bg-clip-text bg-[linear-gradient(to_right,#22d3ee,#d946ef,#67e8f9)] animate-text-gradient drop-shadow-[0_0_20px_rgba(34,211,238,0.4)]">
+            Vibe
           </span>
         </h2>
         
-        <p className="text-zinc-300 font-normal max-w-3xl mx-auto text-base md:text-lg leading-relaxed">
-          <span className="text-white font-bold">{GALLERY.PITCH_BOLD}</span> {GALLERY.PITCH_REST}
-        </p>
+        <div className="max-w-2xl mx-auto text-zinc-400 font-light text-base md:text-lg leading-relaxed">
+          <p>
+            We don't do cookie-cutter themes. Building your digital storefront is a tailored process that starts with finding your business's pulse. 
+            Browse our current architectural concepts below.
+          </p>
+        </div>
       </div>
 
       {activePrototypes.length === 0 ? (
@@ -44,7 +45,7 @@ export default async function LivePrototypes() {
           <p className="text-zinc-500 text-xs font-mono uppercase tracking-wider">{GALLERY.EMPTY_DESC}</p>
         </div>
       ) : (
-        <PerspectiveStage prototypes={activePrototypes} />
+        <PrototypeGrid prototypes={activePrototypes} />
       )}
     </div>
   );

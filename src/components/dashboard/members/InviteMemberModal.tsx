@@ -1,4 +1,5 @@
 'use client';
+
 import React, { useState } from 'react';
 import { X, Mail, Shield, Briefcase, Loader2, Send, UserPlus } from 'lucide-react';
 
@@ -39,7 +40,6 @@ export default function InviteMemberModal({ isOpen, onClose, onSuccess, workspac
         throw new Error(data.error || 'Failed to send invite');
       }
 
-      // THE FIX: Provide both name mapping variants to guarantee instant UI rendering
       const newProfile = {
         id: data.user?.id || crypto.randomUUID(), 
         email: email,
@@ -51,7 +51,6 @@ export default function InviteMemberModal({ isOpen, onClose, onSuccess, workspac
         created_at: new Date().toISOString()
       };
 
-      // Fire it up to the parent table immediately
       if (onSuccess) {
         onSuccess(newProfile);
       }
