@@ -10,10 +10,11 @@ import StagingAuditReceiptEmail from '@/components/emails/StagingAuditReceiptEma
 import StorefrontConfirmationEmail from '@/components/emails/StorefrontConfirmationEmail';
 import AdminIntakeEmail from '@/components/emails/AdminIntakeEmail';
 import PortalInviteEmail from '@/components/emails/PortalInviteEmail';
-import SubscriptionActivationEmail from '@/components/emails/SubscriptionActivationEmail'; // <-- IMPORTED!
+import SubscriptionActivationEmail from '@/components/emails/SubscriptionActivationEmail';
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 
+// 🚨 THE FIX: Replaced markdown formatting with standard angle brackets for SMTP compliance
 const SENDER_IDENTITY = 'Courtney | Alternative Solutions <hello@alternativesolutions.io>'; 
 
 type EmailType = 
