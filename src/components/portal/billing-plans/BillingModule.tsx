@@ -123,7 +123,7 @@ export default function BillingModule({ clientId }: { clientId: string }) {
             <button
               onClick={handlePortalRedirect}
               disabled={isRedirecting || !store?.stripe_customer_id}
-              className="shrink-0 px-6 py-4 bg-zinc-900 border border-zinc-700 hover:border-emerald-500/50 hover:text-emerald-400 hover:bg-zinc-800 text-white rounded-xl text-[10px] font-bold uppercase tracking-widest transition-all disabled:opacity-50 flex items-center justify-center gap-2 w-full md:w-auto"
+              className="shrink-0 px-6 py-4 bg-zinc-900 border border-zinc-700 hover:border-emerald-500/50 hover:text-emerald-400 hover:bg-zinc-800 text-white rounded-xl text-[10px] font-bold uppercase tracking-widest transition-all disabled:opacity-50 flex items-center justify-center gap-2 w-full md:w-auto cursor-pointer"
             >
               {isRedirecting ? <Loader2 size={14} className="animate-spin" /> : <ExternalLink size={14} />}
               {isRedirecting ? 'Connecting...' : 'Open Billing Portal'}

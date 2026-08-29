@@ -1,4 +1,3 @@
-/* src/app/actions/billing.ts */
 'use server';
 
 import Stripe from 'stripe';
@@ -77,7 +76,7 @@ export async function getClientInvoices(customerId: string) {
     console.log(`✅ STRIPE REPLY: Found ${invoices.data.length} invoices for this ID.`);
 
     const formattedInvoices = invoices.data.map(inv => {
-      console.log(`   -> Invoice: ${inv.id} | Status: ${inv.status} | Amount: $${(inv.amount_paid / 100).toFixed(2)}`);
+      console.log(`  -> Invoice: ${inv.id} | Status: ${inv.status} | Amount: $${(inv.amount_paid / 100).toFixed(2)}`);
       
       return {
         id: inv.id,
@@ -128,24 +127,28 @@ export async function getUpcomingInvoice(customerId: string) {
   }
 }
 
-// 🚀 NEW: Fetch Master Global Invoices for The Ledger
+// 🚀 Fetch Master Global Invoices for The Ledger (Now Strictly Filtered by Price ID)
 export async function getGlobalInvoices() {
   try {
-    // 1. Ask Stripe for the last 100 successful payments globally.
-    // We expand the subscription object so we can read the metadata!
     const invoices = await stripe.invoices.list({
       limit: 100,
       status: 'paid', 
       expand: ['data.customer', 'data.subscription'], 
     });
 
-    // 2. THE BULLETPROOF METADATA FILTER
-    // We cast 'inv' to 'any' to bypass strict TS definitions that forget 'subscription' is expanded
+    const targetPriceId = process.env.STRIPE_PRICE_ID_FOUNDATION;
+
     const filteredInvoices = invoices.data.filter((inv: any) => {
-      return inv.subscription?.metadata?.storefront_id !== undefined;
+      // 1. Ensure the subscription contains your specific Storefront Metadata
+      const hasStorefrontMeta = inv.subscription?.metadata?.storefront_id !== undefined;
+      
+      // 2. Ensure the invoice is explicitly paying for your $5 Foundation Price ID
+      // This permanently sweeps out any old "Bartok" tests or random Stripe products
+      const hasMatchingPrice = inv.lines?.data?.some((line: any) => line.price?.id === targetPriceId);
+
+      return hasStorefrontMeta && hasMatchingPrice;
     });
 
-    // Slice it back down to a clean 50 for the UI
     const recentStorefrontInvoices = filteredInvoices.slice(0, 50);
 
     const formattedInvoices = recentStorefrontInvoices.map((inv: any) => {
@@ -156,7 +159,7 @@ export async function getGlobalInvoices() {
         status: inv.status,
         customerEmail: inv.customer?.email || 'Unknown Client',
         customerName: inv.customer?.name || 'No Name',
-        pdfUrl: inv.invoice_pdf, // The magic secure download link
+        pdfUrl: inv.invoice_pdf,
       };
     });
 
