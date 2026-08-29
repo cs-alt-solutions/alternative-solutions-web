@@ -61,7 +61,6 @@ export async function createCustomerPortalSession(customerId: string, storefront
 
 export async function getClientInvoices(customerId: string) {
   try {
-    // 🚨 WIRETAP 1: See exactly what ID the Dashboard passed to the Server
     console.log(`\n=== 🔎 STRIPE INVOICE WIRETAP ===`);
     console.log(`REQUESTED CUSTOMER ID: ${customerId}`);
     
@@ -70,17 +69,14 @@ export async function getClientInvoices(customerId: string) {
       return { success: false, error: "No Customer ID provided." };
     }
 
-    // Ask Stripe for the invoices
     const invoices = await stripe.invoices.list({
       customer: customerId,
       limit: 12, 
     });
 
-    // 🚨 WIRETAP 2: See exactly what Stripe replied with
     console.log(`✅ STRIPE REPLY: Found ${invoices.data.length} invoices for this ID.`);
 
     const formattedInvoices = invoices.data.map(inv => {
-      // 🚨 WIRETAP 3: See the exact status of the fetched invoices
       console.log(`   -> Invoice: ${inv.id} | Status: ${inv.status} | Amount: $${(inv.amount_paid / 100).toFixed(2)}`);
       
       return {
@@ -109,7 +105,6 @@ export async function getUpcomingInvoice(customerId: string) {
       customer: customerId,
     });
 
-    // 🚀 THE FIX: Use the projected 'created' or 'period_end' date instead of 'next_payment_attempt'
     const targetDate = upcoming.created || upcoming.period_end;
 
     const formattedDate = new Date(targetDate * 1000).toLocaleDateString('en-US', { 
@@ -136,23 +131,31 @@ export async function getUpcomingInvoice(customerId: string) {
 // 🚀 NEW: Fetch Master Global Invoices for The Ledger
 export async function getGlobalInvoices() {
   try {
-    // Ask Stripe for the last 50 successful payments globally
+    // 1. Ask Stripe for the last 100 successful payments globally.
+    // We expand the subscription object so we can read the metadata!
     const invoices = await stripe.invoices.list({
-      limit: 50,
+      limit: 100,
       status: 'paid', 
-      expand: ['data.customer'], // Pulls in the customer details so we know who paid
+      expand: ['data.customer', 'data.subscription'], 
     });
 
-    const formattedInvoices = invoices.data.map(inv => {
-      const customer = inv.customer as Stripe.Customer | null;
-      
+    // 2. THE BULLETPROOF METADATA FILTER
+    // We cast 'inv' to 'any' to bypass strict TS definitions that forget 'subscription' is expanded
+    const filteredInvoices = invoices.data.filter((inv: any) => {
+      return inv.subscription?.metadata?.storefront_id !== undefined;
+    });
+
+    // Slice it back down to a clean 50 for the UI
+    const recentStorefrontInvoices = filteredInvoices.slice(0, 50);
+
+    const formattedInvoices = recentStorefrontInvoices.map((inv: any) => {
       return {
         id: inv.id,
         date: new Date(inv.created * 1000).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
         amount: (inv.amount_paid / 100).toFixed(2),
         status: inv.status,
-        customerEmail: customer?.email || 'Unknown Client',
-        customerName: customer?.name || 'No Name',
+        customerEmail: inv.customer?.email || 'Unknown Client',
+        customerName: inv.customer?.name || 'No Name',
         pdfUrl: inv.invoice_pdf, // The magic secure download link
       };
     });
