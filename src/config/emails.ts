@@ -126,17 +126,17 @@ export const EMAIL_COPY = {
   },
 
   SUBSCRIPTION_ACTIVATION: {
-    HEADER: 'Storefront Approved',
-    SUBHEADER: 'Ready for Deployment',
+    HEADER: 'Green Light',
+    SUBHEADER: 'Ready To Launch',
     GREETING: 'Hey',
-    BODY_START: 'Great news—your digital storefront for ',
-    BODY_END: ' is fully approved and ready to be deployed to the live edge network.',
-    DETAILS_TITLE: 'Activation Details',
+    BODY_START: 'Great news—I have everything for ',
+    BODY_END: ' completely dialed in and ready to go live.',
+    DETAILS_TITLE: 'The Details',
     PLAN_LABEL: 'Selected Tier:',
     PRICE_LABEL: 'Subscription:',
     NEXT_STEPS_TITLE: 'What happens next?',
-    NEXT_STEPS_BODY: 'Click the button below to initialize your monthly hosting subscription via our secure Stripe checkout. The second your payment clears, I get a ping, and I will instantly route your domain to the live server. It’s go time.',
-    CTA_BUTTON: 'Initialize Subscription',
+    NEXT_STEPS_BODY: "Just click the button below to lock in your secure hosting subscription. The second your payment clears, I get a ping on my end, and I'll flip the switch to put your site live. Let's get this thing out there.",
+    CTA_BUTTON: 'Activate & Go Live',
     ...STANDARD_SIGNATURE
   },
 
