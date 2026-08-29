@@ -137,7 +137,9 @@ export const EMAIL_COPY = {
     NEXT_STEPS_TITLE: 'What happens next?',
     NEXT_STEPS_BODY: "Just click the button below to lock in your secure hosting subscription. The second your payment clears, I get a ping on my end, and I'll flip the switch to put your site live. Let's get this thing out there.",
     CTA_BUTTON: 'Activate & Go Live',
-    ...STANDARD_SIGNATURE
+    SIGN_OFF: 'Talk soon,',
+    NAME: 'Courtney',
+    TITLE: 'Alternative Solutions IO'
   },
 
   // RESTORED: Your API route needs this to compile the email subject!

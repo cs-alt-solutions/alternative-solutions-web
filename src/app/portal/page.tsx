@@ -38,7 +38,15 @@ export default function PortalTrafficCop() {
       ) || [];
 
       if (activeWorkspaces.length === 1) {
-        router.push(`/portal/${activeWorkspaces[0].id}`);
+        const targetStoreId = activeWorkspaces[0].id;
+
+        // 🚨 THE NEW TRACKER: Log the exact timestamp they logged in
+        await supabase
+          .from('storefronts')
+          .update({ last_login: new Date().toISOString() })
+          .eq('id', targetStoreId);
+
+        router.push(`/portal/${targetStoreId}`);
       } 
       else {
         setStorefronts(activeWorkspaces);

@@ -1,8 +1,7 @@
-// src/components/emails/SubscriptionActivationEmail.tsx
 import React from 'react';
 import { Section, Text, Heading, Button, Hr } from '@react-email/components';
 import BaseEmailLayout from '@/components/emails/BaseEmailLayout';
-import { EMAIL_COPY } from '@/config/emails';
+import { EMAIL_COPY } from '@/config/emails'; // Ensure this path matches your setup
 
 export default function SubscriptionActivationEmail({
   clientName = "there",
@@ -21,7 +20,7 @@ export default function SubscriptionActivationEmail({
 
   return (
     <BaseEmailLayout>
-      {/* HEADER: Clean, approachable typography */}
+      {/* HEADER */}
       <Section className="bg-zinc-900/60 text-left p-6 md:p-8 border-b-2 border-cyan-500 rounded-t-xl -mt-10 -mx-10 mb-8">
         <Text className="text-cyan-400 font-mono text-xs uppercase tracking-widest m-0 mb-2">
           {copy.HEADER} • {copy.SUBHEADER}
@@ -62,7 +61,7 @@ export default function SubscriptionActivationEmail({
       {/* CTA BUTTON */}
       <Button
         href={checkoutUrl}
-        className="bg-cyan-600 hover:bg-cyan-500 text-zinc-950 font-black text-xs uppercase tracking-widest px-8 py-4 rounded-xl shadow-[0_0_20px_rgba(8,145,178,0.3)] no-underline inline-block w-full text-center"
+        className="bg-cyan-600 hover:bg-cyan-500 text-zinc-950 font-black text-xs uppercase tracking-widest px-8 py-4 rounded-xl shadow-[0_0_20px_rgba(8,145,178,0.3)] no-underline inline-block w-full text-center transition-all"
       >
         {copy.CTA_BUTTON}
       </Button>
@@ -74,11 +73,6 @@ export default function SubscriptionActivationEmail({
       <Text className="text-white font-bold text-base m-0">{copy.NAME}</Text>
       <Text className="text-cyan-400 font-mono text-xs m-0">{copy.TITLE}</Text>
 
-      <Section className="text-center mt-8">
-        <Text className="text-zinc-600 font-mono text-[10px] uppercase tracking-widest m-0">
-          Alternative Solutions Input Output LLC • Williamsburg, VA
-        </Text>
-      </Section>
     </BaseEmailLayout>
   );
 }

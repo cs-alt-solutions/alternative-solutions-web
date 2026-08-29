@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Inter, JetBrains_Mono } from "next/font/google";
-import "./globals.css"; // Ensure your file in src/app is exactly named globals.css (plural)
+import { Analytics } from "@vercel/analytics/react"; // 🚀 Imported Vercel Analytics
+import "./globals.css"; 
 
 // IMPORT THEM HERE ON THE SERVER
 import Navbar from '@/components/Navbar';
@@ -54,6 +55,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <ConditionalUI navbar={<Navbar />} footer={<Footer />}>
           {children}
         </ConditionalUI>
+        
+        {/* 🚀 VERCEL ANALYTICS ENGINE INJECTED HERE */}
+        <Analytics />
         
       </body>
     </html>
