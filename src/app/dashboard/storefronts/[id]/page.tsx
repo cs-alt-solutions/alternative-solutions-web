@@ -21,7 +21,8 @@ import {
   PanelLeftClose,
   PanelLeftOpen,
   Lock,
-  ShieldAlert
+  ShieldAlert,
+  Unlock // Added for the override button
 } from 'lucide-react';
 
 import CoreTab from '@/components/dashboard/storefronts/editor/CoreTab';
@@ -47,6 +48,9 @@ export default function TenantCommandHub() {
   const [isSaving, setIsSaving] = useState(false);
   const [saveMessage, setSaveMessage] = useState('');
   const [refreshKey, setRefreshKey] = useState(Date.now());
+  
+  // THE NEW STATE: Controls the silent ghost-edit bypass
+  const [isUnlocked, setIsUnlocked] = useState(false);
 
   const PREVIEW_BASE_URL = 'https://storefronts.alternativesolutions.io';
 
@@ -175,7 +179,7 @@ export default function TenantCommandHub() {
         </div>
       </header>
 
-      {/* COMMAND NAVIGATION (STAGING TAB DELETED) */}
+      {/* COMMAND NAVIGATION */}
       <nav className="flex items-center gap-4 md:gap-6 px-4 md:px-6 border-b border-zinc-800 bg-zinc-950 shrink-0">
         <button 
           onClick={() => setActiveTab('canvas')}
@@ -273,10 +277,10 @@ export default function TenantCommandHub() {
         )}
 
         {/* 🚨 THE GLOBAL SYSTEM LOCK SHIELD 🚨 */}
-        {['IN REVIEW', 'APPROVED', 'LIVE', 'CHANGES_REQUESTED'].includes(formData.status) && activeTab !== 'grid' && (
+        {['IN REVIEW', 'APPROVED', 'LIVE', 'CHANGES_REQUESTED'].includes(formData.status) && activeTab !== 'grid' && !isUnlocked && (
           <div className="absolute inset-0 z-100 bg-black/60 backdrop-blur-md flex flex-col items-center justify-center border border-cyan-500/20 shadow-[inset_0_0_100px_rgba(6,182,212,0.05)] transition-all duration-500 animate-in fade-in zoom-in-95">
             
-            <div className="bg-zinc-950/90 border border-zinc-800 p-8 rounded-2xl flex flex-col items-center max-w-md text-center shadow-2xl">
+            <div className="bg-zinc-950/90 border border-zinc-800 p-8 rounded-2xl flex flex-col items-center max-w-sm text-center shadow-2xl">
               <div className="p-4 bg-cyan-500/10 rounded-full mb-4 border border-cyan-500/20">
                 <Lock size={32} className="text-cyan-400 animate-pulse" />
               </div>
@@ -289,18 +293,28 @@ export default function TenantCommandHub() {
                 STATUS: {formData.status}
               </div>
               
-              <p className="text-[11px] text-zinc-400 leading-relaxed font-medium mb-8">
+              <p className="text-[11px] text-zinc-400 leading-relaxed font-medium mb-8 px-4">
                 The architecture is currently secured for client review or active deployment. The Canvas and all Editor configurations are strictly read-only to prevent accidental data contamination.
               </p>
               
-              {/* OVERRIDE BUTTON */}
-              <button 
-                onClick={() => setFormData({ ...formData, status: 'BUILDING' })}
-                className="w-full flex items-center justify-center gap-2 bg-zinc-900 hover:bg-zinc-800 text-zinc-300 border border-zinc-700 hover:border-cyan-500 py-3 px-4 rounded-md text-[10px] font-black uppercase tracking-widest transition-all group cursor-pointer"
-              >
-                <ShieldAlert size={12} className="group-hover:text-cyan-400 transition-colors" />
-                Override & Return to Building
-              </button>
+              <div className="flex flex-col gap-3 w-full">
+                {/* OVERRIDE 1: SILENT ADMIN BYPASS */}
+                <button 
+                  onClick={() => setIsUnlocked(true)}
+                  className="w-full flex items-center justify-center gap-2 bg-cyan-500 hover:bg-cyan-400 text-zinc-950 font-black py-3 px-4 rounded-md text-[10px] uppercase tracking-widest transition-all shadow-[0_0_15px_rgba(6,182,212,0.4)] cursor-pointer"
+                >
+                  <Unlock size={14} /> Silent Admin Override
+                </button>
+
+                {/* OVERRIDE 2: PIPELINE RESET */}
+                <button 
+                  onClick={() => setFormData({ ...formData, status: 'BUILDING' })}
+                  className="w-full flex items-center justify-center gap-2 bg-zinc-900 hover:bg-zinc-800 text-zinc-300 border border-zinc-700 hover:border-amber-500/50 py-3 px-4 rounded-md text-[10px] font-black uppercase tracking-widest transition-all group cursor-pointer"
+                >
+                  <ShieldAlert size={12} className="group-hover:text-amber-400 transition-colors" />
+                  Revert to Building
+                </button>
+              </div>
             </div>
           </div>
         )}
