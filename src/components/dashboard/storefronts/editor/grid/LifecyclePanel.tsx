@@ -5,6 +5,8 @@ import { Activity, Send, CreditCard, Mail, CheckCircle2, AlertTriangle, RefreshC
 import { STOREFRONT_LIFECYCLE, StorefrontStatus } from '@/config/lifecycle';
 import { createStorefrontCheckout } from '@/app/actions/billing';
 import { dispatchStagingReview, quickUpdateStorefrontStatus } from '@/app/actions/storefronts';
+// 🚨 NEW: Imported your checkout email trigger
+import { sendCheckoutEmail } from '@/app/actions/emails';
 
 export default function LifecyclePanel({ formData, setFormData }: { formData: any, setFormData: any }) {
   const currentStatus = (formData.status as string) || 'BUILDING';
@@ -45,9 +47,23 @@ export default function LifecyclePanel({ formData, setFormData }: { formData: an
   const handleDispatchCheckout = async () => {
     setIsSendingCheckout(true);
     try {
+      // 1. Generate the Stripe Link
       const response = await createStorefrontCheckout(formData.id, formData.contact_email || '');
+      
       if (response.url) {
-        alert(`Success! Stripe link generated. The checkout activation email has been securely dispatched to the client.`);
+        // 2. 🚨 THE FIX: Actually send the email using the generated Stripe URL
+        const emailResult = await sendCheckoutEmail(
+          formData.contact_email,
+          formData.contact_name || formData.applicant_name || 'there',
+          formData.business_name || 'Your Storefront',
+          response.url
+        );
+
+        if (emailResult.success) {
+          alert(`Success! Stripe link generated AND activation email securely dispatched to ${formData.contact_email}.`);
+        } else {
+          alert(`Stripe link generated, but the email failed to send: ${emailResult.error}`);
+        }
       } else {
         alert("Failed to generate checkout link. Please check the server logs.");
       }
@@ -275,8 +291,8 @@ export default function LifecyclePanel({ formData, setFormData }: { formData: an
                 <span className={`text-[10px] font-black uppercase tracking-widest ${currentIndex >= 2 ? 'text-white' : 'text-zinc-500'}`}>Subscription Gate</span>
               </div>
               {currentIndex === 2 && (
-                <button onClick={handleDispatchCheckout} disabled={isSendingCheckout} className="w-full flex items-center justify-center gap-2 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 py-2.5 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all cursor-pointer">
-                  {isSendingCheckout ? 'Generating...' : 'Resend Checkout'} <Mail size={12} />
+                <button onClick={handleDispatchCheckout} disabled={isSendingCheckout} className="w-full flex items-center justify-center gap-2 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 py-2.5 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all cursor-pointer disabled:opacity-50">
+                  {isSendingCheckout ? 'Transmitting...' : 'Resend Checkout'} {!isSendingCheckout && <Mail size={12} />}
                 </button>
               )}
               {currentIndex < 2 && (
