@@ -17,11 +17,8 @@ export async function submitSectorZeroIntake(formData: FormData) {
   const website = formData.get('website') as string;
   const projectScope = formData.get('projectScope') as string;
 
-  // 🚀 EXTRACTION & DEFENSIVE FALLBACKS FOR TELEMETRY CONTRACT
   const phone = (formData.get('phone') as string) || '';
   const selectedPlan = (formData.get('selectedPlan') as string) || (formData.get('plan') as string) || 'Standard Tier ($5/mo)';
-  const selectedVibe = (formData.get('selectedVibe') as string) || (formData.get('vibe') as string) || 'Midnight Standard';
-  const wantsCustom = formData.get('wantsCustom') === 'true' || formData.get('customCode') === 'true';
   const isPriority = formData.get('isPriority') === 'true' || formData.get('priority') === 'true';
 
   try {
@@ -60,11 +57,8 @@ export async function submitSectorZeroIntake(formData: FormData) {
         phone: phone || undefined,
         socials: [socialFacebook, socialTiktok].filter(Boolean).join(' | ') || 'None provided',
         existingWebsite: website || 'None provided',
-        projectScope: projectScope || 'No scope provided',
         businessName: businessName || name || 'Unnamed Project',
         selectedPlan: selectedPlan,
-        selectedVibe: selectedVibe,
-        wantsCustom: wantsCustom,
         isPriority: isPriority,
       })
     });
@@ -83,7 +77,7 @@ export async function submitSectorZeroIntake(formData: FormData) {
             </div>
             <div style="padding: 30px;">
               <p>Hey ${name.split(' ')[0]},</p>
-              <p>Thanks for submitting your application for a new website build! I am super pumped to read through your project scope and see what we can create together.</p>
+              <p>Thanks for submitting your application for a new website build! I am super pumped to read through your details and see what we can create together.</p>
               <p style="margin: 25px 0; padding: 15px; background-color: rgba(217, 70, 239, 0.1); border: 1px solid rgba(217, 70, 239, 0.3); border-radius: 8px; text-align: center;">
                 <strong>Your official Application ID is: <span style="color: #d946ef; font-family: monospace; font-size: 18px; letter-spacing: 1px;">${appId}</span></strong>
               </p>
@@ -92,13 +86,13 @@ export async function submitSectorZeroIntake(formData: FormData) {
               <div style="background-color: #111827; padding: 25px; border-radius: 8px; margin: 30px 0; border-left: 4px solid #d946ef;">
                 <h4 style="margin-top: 0; color: #f8fafc; text-transform: uppercase; font-size: 12px; letter-spacing: 1px;">What you sent over:</h4>
                 <p style="margin: 8px 0; color: #cbd5e1;"><strong>Business:</strong> ${businessName || name}</p>
-                <p style="margin: 8px 0; color: #cbd5e1;"><strong>Scope:</strong><br/> <span style="color: #94a3b8;">${projectScope}</span></p>
+                ${projectScope ? `<p style="margin: 8px 0; color: #cbd5e1;"><strong>Scope:</strong><br/> <span style="color: #94a3b8;">${projectScope}</span></p>` : ''}
               </div>
               <p>If you realize you forgot a detail or need to update a link, no sweat—just reply directly to this email and include your Application ID.</p>
               <p style="margin-top: 30px;">Talk soon,</p>
               <p style="margin-top: 10px;">
                 <strong style="color: #f8fafc;">Courtney M. Sulenski</strong><br/>
-                <span style="color: #06b6d4; font-size: 11px; text-transform: uppercase; letter-spacing: 1px;">Lead Solutions Architect | Alternative Solutions</span>
+                <span style="color: #06b6d4; font-size: 11px; text-transform: uppercase; letter-spacing: 1px;">Lead Architect | Alternative Solutions</span>
               </p>
             </div>
           </div>
