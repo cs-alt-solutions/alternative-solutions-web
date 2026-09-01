@@ -11,28 +11,18 @@ export interface WizardData {
   headlineMode: 'custom' | 'delegate' | null;
   tagline: string;
   subtext: string;
-  
-  // Step 1 / Step 2 Context: The Origin Story / Badass Brag
   originStory: string; 
-
-  // Step 2: Network
   activeSocials: Record<string, boolean>;
   socialHandles: Record<string, string>;
-
-  // Step 3: Vibe
   themeStyle: string;
   brandColor: string;
   heroLayout: string;
   storyLayout: string;
   contentLayout: string;
-
-  // Step 4: Scope
   targetPlan: string;
-  customDomain: string; // 🚀 ADDED
-  priorityQueue: boolean; // 🚀 ADDED
-  finalNotes: string; // 🚀 ADDED
-  
-  // Step 5: Pledge
+  customDomain: string; 
+  priorityQueue: boolean; 
+  finalNotes: string; 
   isPledged: boolean; 
 }
 
@@ -50,39 +40,15 @@ const WizardContext = createContext<WizardContextType | undefined>(undefined);
 
 export function WizardProvider({ children }: { children: React.ReactNode }) {
   const [currentStep, setCurrentStep] = useState(1);
-  const totalSteps = 5; 
+  const totalSteps = 3; // 🚀 REDUCED DOWN TO 3 STEPS!
   
   const [formData, setFormData] = useState<WizardData>({
-    // Basics
-    name: '',
-    email: '',
-    phone: '',
-    businessName: '',
-    description: '', 
-    headlineMode: 'custom', 
-    tagline: '',
-    subtext: '',
-    originStory: '', 
-    
-    // Network
-    activeSocials: {},
-    socialHandles: {},
-    
-    // Vibe
-    themeStyle: 'industrial',
-    brandColor: 'cyan',
-    heroLayout: 'centered',
-    storyLayout: 'classic-split',
-    contentLayout: 'stacked',
-    
-    // Scope
-    targetPlan: 'standard', // Defaults to the base tier
-    customDomain: '', // 🚀 ADDED
-    priorityQueue: false, // 🚀 ADDED
-    finalNotes: '', // 🚀 ADDED
-    
-    // Pledge
-    isPledged: false,
+    name: '', email: '', phone: '', businessName: '', description: '', 
+    headlineMode: 'custom', tagline: '', subtext: '', originStory: '',
+    activeSocials: {}, socialHandles: {},
+    themeStyle: 'industrial', brandColor: 'cyan', heroLayout: 'centered', 
+    storyLayout: 'classic-split', contentLayout: 'stacked', targetPlan: 'standard',
+    customDomain: '', priorityQueue: false, finalNotes: '', isPledged: false,
   });
 
   const updateForm = (updates: Partial<WizardData>) => {

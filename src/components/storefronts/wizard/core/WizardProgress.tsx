@@ -1,38 +1,31 @@
-// src/components/storefronts/wizard/core/WizardProgress.tsx
 'use client';
 
 import React from 'react';
-import { useWizard } from './WizardContext'; // 🚀 Fixed relative path since it's in the same folder!
+import { useWizard } from './WizardContext'; 
 import { Check } from 'lucide-react';
-import { WIZARD_COPY } from '@/config/wizard'; 
 
 export default function WizardProgress() {
   const { currentStep, totalSteps } = useWizard();
 
-  // Pulls the labels from your central brain
-  const steps = WIZARD_COPY.PROGRESS_BAR;
+  // 🚀 Renamed back to Basics!
+  const steps = [
+    { num: 1, label: 'Basics' },
+    { num: 2, label: 'Network' },
+    { num: 3, label: 'Scope' }
+  ];
 
-  // The perfect math logic: (currentStep - 1) / (totalSteps - 1) * 100
   const progressPercentage = ((currentStep - 1) / (totalSteps - 1)) * 100;
 
   return (
-    <div className="w-full mb-12 px-2 sm:px-8">
+    <div className="w-full mb-12 relative px-2 sm:px-8">
+      <div className="absolute top-1/2 left-2 sm:left-8 right-2 sm:right-8 h-0.5 bg-zinc-800/80 -translate-y-1/2 rounded-full" />
       
-      <div className="relative flex justify-between w-full">
-        
-        {/* Inner Track Wrapper */}
-        <div className="absolute top-1/2 left-4 right-4 md:left-5 md:right-5 -translate-y-1/2 z-0">
-          {/* Background Track */}
-          <div className="w-full h-0.5 bg-zinc-800/80 rounded-full" />
-          
-          {/* Glowing Progress Line */}
-          <div 
-            className="absolute top-0 left-0 h-0.5 bg-cyan-400 rounded-full transition-all duration-700 ease-out shadow-[0_0_15px_rgba(34,211,238,0.5)]"
-            style={{ width: `${progressPercentage}%` }}
-          />
-        </div>
+      <div 
+        className="absolute top-1/2 left-2 sm:left-8 h-0.5 bg-cyan-400 -translate-y-1/2 rounded-full transition-all duration-700 ease-out shadow-[0_0_15px_rgba(34,211,238,0.5)]"
+        style={{ width: `calc(${progressPercentage}% - ${progressPercentage === 100 ? '2rem' : '0px'})` }}
+      />
 
-        {/* Step Nodes */}
+      <div className="relative flex justify-between w-full">
         {steps.map((step) => {
           const isCompleted = step.num < currentStep;
           const isActive = step.num === currentStep;
