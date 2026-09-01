@@ -78,13 +78,15 @@ export default function PortalSidebar({ clientId }: { clientId: string }) {
             {brandData.logo ? (
               <img src={brandData.logo} alt={brandData.name} className="w-full h-full object-contain p-1" />
             ) : (
-              <Building2 size={20} className="text-zinc-600" />
+              // 🚀 THE NEW FALLBACK LOGIC
+              <span className="text-2xl font-black text-zinc-700 uppercase">
+                {brandData.name.charAt(0)}
+              </span>
             )}
           </div>
           <span className="text-sm font-bold text-white tracking-wider mb-2 truncate" title={brandData.name}>
             {brandData.name}
           </span>
-          {/* 🚀 Using the dynamic theme below */}
           <span className={`text-[9px] font-bold tracking-widest px-2 py-0.5 rounded border w-max ${currentTheme.bg} ${currentTheme.text} ${currentTheme.border}`}>
             {currentTheme.badge}
           </span>

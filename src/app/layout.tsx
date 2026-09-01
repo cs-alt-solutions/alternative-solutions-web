@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { Inter, JetBrains_Mono } from "next/font/google";
 import { Analytics } from "@vercel/analytics/react"; // 🚀 Imported Vercel Analytics
-import "./globals.css"; 
+import './globals.css';
 
 // IMPORT THEM HERE ON THE SERVER
 import Navbar from '@/components/Navbar';

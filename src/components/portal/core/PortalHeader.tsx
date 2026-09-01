@@ -1,16 +1,18 @@
-/* src/components/portal/core/PortalHeader.tsx */
 'use client';
 
-import { useState, useEffect } from 'react';
-import { Bell, User, LogOut } from 'lucide-react';
+import { useState, useEffect, useRef } from 'react';
+import { Bell, User, LogOut, Settings, CreditCard, ChevronDown } from 'lucide-react';
 import { supabase } from '@/utils/supabase';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import { PORTAL_COPY } from '@/config/clients/portal';
 import { getPortalTheme } from './theme'; // 🚀 Importing the Theme Engine
 
 export default function PortalHeader({ clientId }: { clientId: string }) {
   const [contactEmail, setContactEmail] = useState('Initializing...');
   const [isLoggingOut, setIsLoggingOut] = useState(false);
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
   const router = useRouter();
   
   // 🚀 Fetch the dynamic theme
@@ -24,6 +26,15 @@ export default function PortalHeader({ clientId }: { clientId: string }) {
       }
     };
     fetchUser();
+
+    // Close the dropdown if the user clicks anywhere else on the screen
+    const handleClickOutside = (event: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setIsDropdownOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
   const handleSignOut = async () => {
@@ -39,27 +50,63 @@ export default function PortalHeader({ clientId }: { clientId: string }) {
         {/* Notifications */}
         <button className={`p-2 text-zinc-500 ${currentTheme.hoverText} transition-colors relative`}>
           <Bell className="w-5 h-5" />
-          {/* 🚀 Using bg-current to dynamically inherit the text color for the background! */}
           <span className={`absolute top-1.5 right-1.5 w-2 h-2 rounded-full ${currentTheme.text} bg-current shadow-sm`}></span>
         </button>
         
-        {/* User Profile & Logout */}
-        <div className="flex items-center gap-3 pl-4 border-l border-zinc-800">
-          <div className="w-8 h-8 rounded-full bg-zinc-900 flex items-center justify-center border border-zinc-700">
-            <User className="w-4 h-4 text-zinc-400" />
-          </div>
-          <span className="text-sm font-medium text-zinc-400 mr-2 hidden md:block">
-            {contactEmail}
-          </span>
-          
+        {/* User Profile & Dropdown Menu */}
+        <div className="relative pl-4 border-l border-zinc-800" ref={dropdownRef}>
           <button 
-            onClick={handleSignOut}
-            disabled={isLoggingOut}
-            className="flex items-center gap-2 px-3 py-1.5 bg-rose-500/10 text-rose-400 border border-rose-500/20 hover:bg-rose-500/20 rounded-md text-xs font-bold uppercase tracking-widest transition-all cursor-pointer disabled:opacity-50"
+            onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+            className="flex items-center gap-3 group hover:bg-white/5 p-1 pr-3 rounded-xl transition-colors cursor-pointer"
           >
-            <LogOut size={14} />
-            {isLoggingOut ? PORTAL_COPY.header.signingOut : PORTAL_COPY.header.signOut}
+            <div className={`w-8 h-8 rounded-full bg-zinc-900 flex items-center justify-center border border-zinc-800 group-hover:border-zinc-600 transition-colors`}>
+              <User className="w-4 h-4 text-zinc-400" />
+            </div>
+            <div className="hidden md:flex items-center gap-2">
+              <span className="text-sm font-medium text-zinc-400 group-hover:text-white transition-colors">
+                {contactEmail}
+              </span>
+              <ChevronDown size={14} className={`text-zinc-500 transition-transform ${isDropdownOpen ? 'rotate-180' : ''}`} />
+            </div>
           </button>
+
+          {/* The Dropdown Card */}
+          {isDropdownOpen && (
+            <div className="absolute right-0 mt-3 w-64 bg-zinc-950 border border-zinc-800 rounded-xl shadow-2xl overflow-hidden animate-in fade-in slide-in-from-top-2 duration-200 z-50">
+              <div className="px-4 py-3 border-b border-zinc-800/80 bg-zinc-900/30">
+                <p className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest mb-1">Signed in as</p>
+                <p className="text-xs text-white truncate">{contactEmail}</p>
+              </div>
+              
+              <div className="p-2 space-y-1">
+                <Link 
+                  href={`/portal/${clientId}/settings`}
+                  onClick={() => setIsDropdownOpen(false)}
+                  className="flex items-center gap-3 px-3 py-2.5 text-xs font-bold text-zinc-400 hover:text-white hover:bg-zinc-900 rounded-lg transition-colors uppercase tracking-widest"
+                >
+                  <Settings size={14} className={currentTheme.text} /> Update Profile
+                </Link>
+                <Link 
+                  href={`/portal/${clientId}/billing`}
+                  onClick={() => setIsDropdownOpen(false)}
+                  className="flex items-center gap-3 px-3 py-2.5 text-xs font-bold text-zinc-400 hover:text-white hover:bg-zinc-900 rounded-lg transition-colors uppercase tracking-widest"
+                >
+                  <CreditCard size={14} className={currentTheme.text} /> Billing & Plans
+                </Link>
+              </div>
+
+              <div className="p-2 border-t border-zinc-800/80 bg-black/20">
+                <button 
+                  onClick={handleSignOut}
+                  disabled={isLoggingOut}
+                  className="w-full flex items-center gap-3 px-3 py-2.5 text-xs font-bold text-rose-500 hover:text-rose-400 hover:bg-rose-500/10 rounded-lg transition-colors uppercase tracking-widest disabled:opacity-50 cursor-pointer"
+                >
+                  <LogOut size={14} />
+                  {isLoggingOut ? PORTAL_COPY.header.signingOut : PORTAL_COPY.header.signOut}
+                </button>
+              </div>
+            </div>
+          )}
         </div>
 
       </div>
