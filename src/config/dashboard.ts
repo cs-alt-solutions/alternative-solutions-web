@@ -1,4 +1,5 @@
 // src/config/dashboard.ts
+
 export const DASHBOARD_COPY = {
   COMMON: { BRAND_VERSION: "Alternative Solutions Workspace", STATUS_ONLINE: "All Systems Go", ACTION_REVIEW: "Review" },
   SIDEBAR: {
@@ -12,7 +13,9 @@ export const DASHBOARD_COPY = {
     BROADCAST: "Emails & Updates",
     MEMBERS: "Members & Access",
     CLIENTS: "Client HQ",
+    SUPPORT_DESK: "Support Desk", // 🚀 FIX: Added for the missing Support error
     TASKS: "Tasks",
+    ANALYTICS: "Live Traffic",    // 🚀 NEW: Added for the Vercel Analytics route
     INFRASTRUCTURE: "Infrastructure",
     CONFIG: "Settings",
     EXIT: "  Back to Website"
