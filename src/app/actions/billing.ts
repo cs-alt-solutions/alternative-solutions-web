@@ -96,15 +96,17 @@ export async function getClientInvoices(customerId: string) {
   }
 }
 
-export async function getUpcomingInvoice(customerId: string) {
+// 🚀 THE FIX: Explicitly typing the return clears the "string | undefined" TS error
+export async function getUpcomingInvoice(customerId: string): Promise<{ success: boolean; amount?: string; date?: string; error?: string }> {
   try {
     console.log(`\n=== 🔮 STRIPE UPCOMING PREDICTOR ===`);
     
-    const upcoming = await (stripe.invoices as any).retrieveUpcoming({
+    // 🚀 THE FIX: 'retrieveUpcoming' was deleted in the new SDK. We must use 'createPreview'.
+    const upcoming = await stripe.invoices.createPreview({
       customer: customerId,
     });
 
-    const targetDate = upcoming.created || upcoming.period_end;
+    const targetDate = upcoming.next_payment_attempt || upcoming.period_end || upcoming.created;
 
     const formattedDate = new Date(targetDate * 1000).toLocaleDateString('en-US', { 
       month: 'short', 
@@ -143,7 +145,7 @@ export async function getGlobalInvoices() {
       const hasStorefrontMeta = inv.subscription?.metadata?.storefront_id !== undefined;
       
       // 2. Ensure the invoice is explicitly paying for your $5 Foundation Price ID
-      // This permanently sweeps out any old "Bartok" tests or random Stripe products
+      // This permanently sweeps out any old tests or random Stripe products
       const hasMatchingPrice = inv.lines?.data?.some((line: any) => line.price?.id === targetPriceId);
 
       return hasStorefrontMeta && hasMatchingPrice;
@@ -168,5 +170,39 @@ export async function getGlobalInvoices() {
   } catch (error: any) {
     console.error("❌ STRIPE GLOBAL API ERROR:", error);
     return { success: false, error: error.message };
+  }
+}
+
+export async function createProTierCheckout(storefrontId: string, customerEmail: string, customDomain: string) {
+  try {
+    const headersList = await headers();
+    const origin = headersList.get('origin') || process.env.NEXT_PUBLIC_BASE_URL || 'https://www.alternativesolutions.io';
+
+    const session = await stripe.checkout.sessions.create({
+      payment_method_types: ['card'],
+      customer_email: customerEmail || undefined,
+      line_items: [
+        {
+          price: process.env.STRIPE_PRICE_ID_PROFESSIONAL, // Your new $15 Live Key!
+          quantity: 1,
+        },
+      ],
+      mode: 'subscription',
+      subscription_data: {
+        metadata: {
+          storefront_id: storefrontId,
+          tier: 'PROFESSIONAL',
+          // 🚨 We attach their requested domain directly to the Stripe receipt
+          custom_domain: customDomain 
+        },
+      },
+      success_url: `${origin}/portal/${storefrontId}?payment=success`,
+      cancel_url: `${origin}/portal/${storefrontId}?payment=canceled`,
+    });
+
+    return { url: session.url };
+  } catch (error: any) {
+    console.error("PRO CHECKOUT ERROR:", error);
+    return { error: error.message };
   }
 }

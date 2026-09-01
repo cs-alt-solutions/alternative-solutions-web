@@ -1,13 +1,12 @@
-/* src/components/portal/billing-plans/BillingModule.tsx */
 'use client';
 
 import React, { useState, useEffect } from 'react';
 import { supabase } from '@/utils/supabase';
 import { 
   CreditCard, Receipt, Loader2, ShieldCheck, Zap, 
-  Download, Calendar, Lock, Globe, AlertTriangle, ExternalLink 
+  Download, Calendar, Globe, AlertTriangle, ExternalLink, Lock
 } from 'lucide-react';
-import { createCustomerPortalSession, getClientInvoices, getUpcomingInvoice } from '@/app/actions/billing';
+import { createCustomerPortalSession, getClientInvoices, getUpcomingInvoice, createProTierCheckout } from '@/app/actions/billing';
 
 export default function BillingModule({ clientId }: { clientId: string }) {
   const [store, setStore] = useState<any>(null);
@@ -15,6 +14,10 @@ export default function BillingModule({ clientId }: { clientId: string }) {
   const [upcoming, setUpcoming] = useState<{ amount: string, date: string } | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isRedirecting, setIsRedirecting] = useState(false);
+  
+  // NEW: State for the Professional Tier Upgrade
+  const [customDomain, setCustomDomain] = useState('');
+  const [isUpgrading, setIsUpgrading] = useState(false);
 
   useEffect(() => {
     const init = async () => {
@@ -46,6 +49,24 @@ export default function BillingModule({ clientId }: { clientId: string }) {
     const { url } = await createCustomerPortalSession(store.stripe_customer_id, clientId);
     if (url) window.location.href = url;
     else { alert("Failed to connect to billing portal."); setIsRedirecting(false); }
+  };
+
+  // NEW: The Upgrade Execution
+  const handleProUpgrade = async () => {
+    if (!customDomain) return;
+    setIsUpgrading(true);
+    
+    // Format the domain cleanly
+    const cleanDomain = customDomain.replace(/^https?:\/\//, '').replace(/\/$/, '').toLowerCase();
+    
+    const { url, error } = await createProTierCheckout(clientId, store?.contact_email || '', cleanDomain);
+    
+    if (url) {
+      window.location.href = url;
+    } else {
+      alert(`Checkout failed: ${error}`);
+      setIsUpgrading(false);
+    }
   };
 
   if (isLoading) {
@@ -130,27 +151,54 @@ export default function BillingModule({ clientId }: { clientId: string }) {
             </button>
           </div>
 
+          {/* 🚀 THE UNLOCKED PROFESSIONAL UPGRADE TIER */}
           <div className="pt-4">
-            <h3 className="text-xs font-black text-zinc-500 uppercase tracking-widest mb-4 pl-2">Available Upgrades</h3>
-            <div className="relative flex flex-col rounded-3xl p-6 bg-zinc-950 border border-zinc-800/50 grayscale opacity-60 cursor-not-allowed overflow-hidden">
-              <div className="absolute top-6 right-6 text-zinc-600"><Lock className="w-5 h-5" /></div>
-              <div className="mb-4">
-                <h3 className="text-xl font-black uppercase tracking-wide text-zinc-300">The Professional</h3>
+            <h3 className="text-xs font-black text-cyan-500 uppercase tracking-widest mb-4 pl-2">Available Upgrades</h3>
+            <div className="relative flex flex-col rounded-3xl p-6 md:p-8 bg-zinc-950 border border-cyan-500/30 shadow-[0_0_20px_rgba(6,182,212,0.05)] overflow-hidden transition-all">
+              <div className="absolute top-0 right-0 w-32 h-32 bg-cyan-500/10 rounded-full blur-[60px] pointer-events-none" />
+              
+              <div className="mb-6 relative z-10">
+                <h3 className="text-xl font-black uppercase tracking-wide text-white">The Professional</h3>
                 <div className="mt-2 flex items-baseline gap-1">
-                  <span className="text-4xl font-black text-zinc-500">$15</span>
-                  <span className="text-xs text-zinc-600 font-medium uppercase tracking-widest">/ month</span>
+                  <span className="text-4xl font-black text-cyan-400">$15</span>
+                  <span className="text-xs text-zinc-500 font-medium uppercase tracking-widest">/ month</span>
                 </div>
-                <div className="mt-3">
-                  <span className="text-[10px] font-bold text-amber-500 uppercase tracking-widest bg-amber-500/10 px-2 py-1 rounded border border-amber-500/20">Under Construction</span>
-                </div>
-                <p className="text-xs text-amber-500/80 font-medium mt-4 leading-relaxed max-w-md">We are finalizing the custom domain integration architecture. You will be notified when this unlocks.</p>
+                <p className="text-xs text-zinc-400 font-medium mt-4 leading-relaxed max-w-md">
+                  Upgrade your architecture to support your own custom domain. We handle the enterprise hosting, SSL certification, and routing.
+                </p>
               </div>
-              <div className="space-y-3 pt-6 border-t border-zinc-800/60">
-                <div className="flex items-start gap-2.5 text-xs text-zinc-500">
-                  <ShieldCheck className="w-4 h-4 shrink-0 text-zinc-600" /><span>Everything in The Foundation</span>
+
+              {/* The Input & Action Bar */}
+              <div className="bg-black/50 border border-zinc-800/80 rounded-2xl p-4 flex flex-col gap-3 relative z-10">
+                <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest px-1">Connect Your Domain</label>
+                <div className="flex flex-col sm:flex-row gap-3">
+                  <div className="relative flex-1">
+                    <Globe className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-600" />
+                    <input 
+                      type="text"
+                      placeholder="e.g., mybrand.com"
+                      value={customDomain}
+                      onChange={(e) => setCustomDomain(e.target.value)}
+                      className="w-full bg-zinc-900 border border-zinc-700 rounded-xl pl-10 pr-4 py-3 text-sm text-white focus:outline-none focus:border-cyan-500 transition-colors"
+                    />
+                  </div>
+                  <button 
+                    onClick={handleProUpgrade}
+                    disabled={!customDomain || isUpgrading}
+                    className="sm:w-auto w-full bg-cyan-600 hover:bg-cyan-500 text-zinc-950 font-black text-[10px] uppercase tracking-widest px-6 py-3 rounded-xl transition-all disabled:opacity-50 disabled:grayscale cursor-pointer whitespace-nowrap"
+                  >
+                    {isUpgrading ? 'Generating...' : 'Upgrade Now'}
+                  </button>
                 </div>
-                <div className="flex items-start gap-2.5 text-xs text-zinc-500">
-                  <Globe className="w-4 h-4 shrink-0 text-zinc-600" /><span>Custom Domain Connection (yourname.com)</span>
+                <p className="text-[9px] text-zinc-500 font-mono tracking-widest uppercase mt-1 px-1">You must already own this domain.</p>
+              </div>
+
+              <div className="space-y-3 pt-6 mt-6 border-t border-white/5 relative z-10">
+                <div className="flex items-start gap-2.5 text-xs text-zinc-400">
+                  <ShieldCheck className="w-4 h-4 shrink-0 text-cyan-500" /><span>Everything in The Foundation</span>
+                </div>
+                <div className="flex items-start gap-2.5 text-xs text-zinc-400">
+                  <Globe className="w-4 h-4 shrink-0 text-cyan-500" /><span>Automated Edge SSL & Vercel Network Routing</span>
                 </div>
               </div>
             </div>
@@ -161,7 +209,6 @@ export default function BillingModule({ clientId }: { clientId: string }) {
         {/* RIGHT COL: Standalone Auto-Pay & Invoice Table */}
         <div className="lg:col-span-5 flex flex-col gap-6">
           
-          {/* 🚀 STANDALONE AUTO-PAY WIDGET */}
           <div className="bg-zinc-950 border border-zinc-800/80 rounded-3xl p-6 shadow-xl flex items-center justify-between group relative overflow-hidden">
             <div className={`absolute -right-10 -top-10 w-32 h-32 rounded-full blur-[50px] opacity-20 pointer-events-none ${upcoming ? 'bg-emerald-500' : 'bg-zinc-500'}`} />
             
@@ -184,8 +231,7 @@ export default function BillingModule({ clientId }: { clientId: string }) {
             </div>
           </div>
 
-          {/* BILLING HISTORY TABLE */}
-          <div className="bg-zinc-950 border border-zinc-800/80 rounded-3xl p-6 md:p-8 flex flex-col flex-1 overflow-hidden shadow-xl min-h-100">
+          <div className="bg-zinc-950 border border-zinc-800/80 rounded-3xl p-6 md:p-8 flex flex-col flex-1 overflow-hidden shadow-xl min-h-[400px]">
             <div className="flex items-center gap-3 mb-6 pb-4 border-b border-white/5">
               <Receipt className="text-emerald-500 w-5 h-5" />
               <h3 className="text-sm font-bold text-white uppercase tracking-widest">Billing History</h3>
