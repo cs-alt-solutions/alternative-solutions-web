@@ -14,48 +14,46 @@ export const BRAND_CLASSES = {
 
 // Single Source of Truth for the Sign-off
 const STANDARD_SIGNATURE = {
-  SIGN_OFF: "Standing by,",
+  SIGN_OFF: "Talk soon,",
   NAME: "Courtney Sulenski",
-  TITLE: "Lead Solutions Architect • Alternative Solutions"
+  TITLE: "Lead Architect • Alternative Solutions"
 };
 
 export const EMAIL_COPY = {
   
   // 1. THE INTAKE PIPELINE
   STOREFRONT_CONFIRMATION: {
-    HEADER: "Application Locked In • Build Queue Active",
-    TITLE_START: "I have your blueprint, ",
-    BODY_START: "You made the decision to step out and build your own empire with ",
-    BODY_END: ", and that takes serious grit. I have your complete application file in my hands and am taking over the heavy tech lifting so you can focus on running your business.",
-    
-    RECEIPT_TITLE: "Your Custom Build Specs",
-    REC_INFRA: "Infrastructure:",
-    REC_VIBE: "Aesthetic Vibe:",
-    REC_ACCENT: "Brand Accent:",
-    
-    FLOW_TITLE: "The Architecture Flow:",
-    FLOW_HERO: "Top Greeting:",
-    FLOW_STORY: "Brand Story:",
-    FLOW_PORTFOLIO: "Portfolio & Services:",
-    
-    BRAG_TITLE: "The Badass Brag:",
-    
-    GUARANTEE_TITLE: "Your Foundational Rate Lock Guarantee",
-    GUARANTEE_BODY: "Per our Founder's Pledge, your pricing is locked in for life for the tier you selected today. As I continuously push platform upgrades and enhance the infrastructure, your foundational price will never increase when public rates go up. If you ever decide to upgrade to a higher tier packed with new features later, you will upgrade at that tier's active market rate—keeping everything fair, transparent, and built for growth.",
-    
-    NEXT_TITLE: "What happens next?",
-    NEXT_BODY: "I am currently prepping your digital canvas and routing your social links. You will receive direct updates and preview links straight to this email inbox. If you forgot to mention a specific feature, want to tweak a color, or just have a sudden burst of inspiration, simply hit reply to this email and it goes straight to my personal terminal.",
-    PLEDGE_TITLE: 'Our Build Pledge',
-    PLEDGE_BODY: 'We are officially spinning up your secure infrastructure. You will receive a follow-up transmission with your staging access link once the foundational framework is deployed.',
-
+    HEADER: "Intake Received",
+    TITLE_START: "Let's build, ",
+    BODY_START: "I have received the foundational details for ",
+    BODY_END: ". I'm officially initiating the digital recon phase.",
+    RECEIPT_TITLE: "Application Summary",
+    REC_INFRA: "Target Infrastructure:",
+    PLEDGE_TITLE: "Rules of Engagement",
+    PLEDGE_BODY: "As a reminder, you are not paying for anything today. I am going to build a working prototype based on your digital footprint. We only lock in your subscription when you review the prototype and say, 'Yeah, this is pretty cool. Let's go.'",
+    NEXT_TITLE: "What Happens Next?",
+    NEXT_BODY: "Hang tight. I am reviewing your social links and building out the initial structure. I will reach out shortly with a staging link for you to review.",
     ...STANDARD_SIGNATURE
   },
   
   ADMIN_INTAKE: {
-    HEADER: 'New Project Application',
-    SUBHEADER: 'System Intake',
-    GREETING: 'System Alert,',
-    INTRO: 'A new project application has been submitted to the queue. Review the dossier below and authorize the build inside the command center when ready.',
+    SUBJECT: "🚨 New Application: {businessName}",
+    HEADER_TITLE: "NEW STOREFRONT INTAKE",
+    GREETING: "A new prospect has submitted their basic details.",
+    BODY: "Review their identity and footprint below before logging into the Command Center to initiate the discovery phase.",
+    SECTIONS: {
+      IDENTITY: "Identity & Routing",
+      PRIORITY_WARNING: "⚠️ Priority Queue Fast-Track Requested ($1 Upgrade)"
+    },
+    LABELS: {
+      BUSINESS_NAME: "Business Name:",
+      CONTACT: "Point of Contact:",
+      EMAIL: "Email Routing:",
+      PHONE: "Phone Number:",
+      TIER: "Requested Tier:",
+      DOMAIN: "Existing Domain:",
+      SOCIALS: "Digital Footprint & Socials:"
+    }
   },
 
   // 2. THE ACCESS PIPELINE
@@ -90,26 +88,26 @@ export const EMAIL_COPY = {
     HEADER: 'Build Progress',
     SUBHEADER: 'Staging Environment',
     GREETING: 'Hey',
-    BODY_1: "here is a quick preview of what your digital storefront's going to look like so far. We can definitely make adjustments, but I wanted to show you the progress before we get your subscription going.",
+    BODY_1: "Here is a quick preview of what your digital storefront's going to look like so far. We can definitely make adjustments together, but I wanted to show you the progress before you lock in your subscription.",
     INSTRUCTIONS_TITLE: 'What happens next?',
     INSTRUCTIONS_INTRO: 'Instead of going back and forth over email, I want to get you set up in your private client portal so we can collaborate and finish this efficiently.',
     
     INSTRUCTION_1_TITLE: '1. Take a look',
-    INSTRUCTION_1_BODY: 'Click the link, view the staging progress, and see the foundation we are building.',
+    INSTRUCTION_1_BODY: 'Click the link, view the staging progress, and see the foundation I am building for you.',
     
     INSTRUCTION_2_TITLE: '2. Activate subscription',
     INSTRUCTION_2_BODY: 'When you are ready to proceed, click the button on the staging widget to set up your subscription.',
     
     INSTRUCTION_3_TITLE: '⚡ 3. Enter your portal',
-    INSTRUCTION_3_BODY: 'Once active, you unlock your portal. That is where you will upload your images and drop your specific tweaks so we can finish getting you exactly where you need to be.',
+    INSTRUCTION_3_BODY: 'Once active, you unlock your portal. That is where you will upload your images and drop your specific tweaks so I can finish getting you exactly where you need to be.',
     
     CTA_BUTTON: 'Access your staging environment',
     ...STANDARD_SIGNATURE
   },
 
   STAGING_RECEIPT: {
-    CLIENT_APPROVED: 'Thank you for completing your live staging review. You have verified all checkpoints with zero requested changes. This build is officially locked in our dev queue for final deployment. Keep an eye out for your official hosting activation link.',
-    CLIENT_CHANGES: 'Thank you for completing your live staging review. We have logged your verified checkpoints and adjustment requests below. Our team is jumping under the hood to execute your exact tweak list in one clean pass. Once applied, we will send an updated link for your final approval.',
+    CLIENT_APPROVED: 'Thank you for completing your live staging review. You have verified all checkpoints with zero requested changes. This build is officially locked in my dev queue for final deployment. Keep an eye out for your official hosting activation link.',
+    CLIENT_CHANGES: 'Thank you for completing your live staging review. I have logged your verified checkpoints and adjustment requests below. I am jumping under the hood to execute your exact tweak list in one clean pass. Once applied, I will send an updated link for your final approval.',
     ADMIN_APPROVED: 'Client has locked the build! Verify their recurring subscription plan is active and initiate domain DNS wiring protocols.',
     ADMIN_CHANGES: 'Client requested specific adjustments. Open the active codebase, apply the tweak list in a single pass, and push to staging for their second review.',
     ...STANDARD_SIGNATURE
@@ -120,7 +118,7 @@ export const EMAIL_COPY = {
     HEADER: 'Architecture Sign-Off',
     SUBHEADER: 'Subscription Initialization',
     GREETING: 'Hey',
-    BODY: 'As requested, here is the secure link to initialize your monthly hosting and infrastructure subscription. Once this is activated, we will flip the switch and route your domain to the live server!',
+    BODY: 'As requested, here is the secure link to initialize your monthly hosting and infrastructure subscription. Once this is activated, I will flip the switch and route your domain to the live server!',
     CTA_BUTTON: 'Activate Subscription',
     ...STANDARD_SIGNATURE
   },
@@ -137,9 +135,7 @@ export const EMAIL_COPY = {
     NEXT_STEPS_TITLE: 'What happens next?',
     NEXT_STEPS_BODY: "Just click the button below to lock in your secure hosting subscription. The second your payment clears, I get a ping on my end, and I'll flip the switch to put your site live. Let's get this thing out there.",
     CTA_BUTTON: 'Activate & Go Live',
-    SIGN_OFF: 'Talk soon,',
-    NAME: 'Courtney',
-    TITLE: 'Alternative Solutions IO'
+    ...STANDARD_SIGNATURE
   },
 
   // RESTORED: Your API route needs this to compile the email subject!
