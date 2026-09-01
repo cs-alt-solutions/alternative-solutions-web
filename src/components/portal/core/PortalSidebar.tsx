@@ -1,8 +1,7 @@
-/* src/components/portal/core/PortalSidebar.tsx */
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Box, Settings, MessageSquare, TerminalSquare, Menu, X, ArrowLeft, Store, CreditCard, Building2 } from 'lucide-react';
+import { Box, MessageSquare, TerminalSquare, Menu, X, ArrowLeft, Store, Building2 } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { supabase } from '@/utils/supabase';
@@ -45,13 +44,12 @@ export default function PortalSidebar({ clientId }: { clientId: string }) {
     initSidebar();
   }, [clientId]);
 
+  // 🚀 THE REFINED PRODUCTION NAVIGATION
   const navItems = [
     { name: 'Dashboard', icon: TerminalSquare, href: `/portal/${clientId}` },
     { name: 'Live Storefront', icon: Store, href: `/portal/${clientId}/storefront` },
-    { name: 'Billing & Plans', icon: CreditCard, href: `/portal/${clientId}/billing` },
     { name: 'Developer Tools', icon: Box, href: `/portal/${clientId}/prototypes` },
     { name: 'Support', icon: MessageSquare, href: `/portal/${clientId}/support` },
-    { name: 'Settings', icon: Settings, href: `/portal/${clientId}/settings` },
   ];
 
   return (

@@ -1,4 +1,3 @@
-/* src/components/portal/shared/AppIframe.tsx */
 'use client';
 
 import React, { useState } from 'react';
