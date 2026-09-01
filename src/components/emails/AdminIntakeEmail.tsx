@@ -33,7 +33,7 @@ export default function AdminIntakeEmail({
     <BaseEmailLayout>
       <Section className="bg-slate-900 text-center pt-10 pb-8 border-b-2 border-cyan-400 rounded-t-lg -mt-10 -mx-10 mb-8">
         <Heading className="text-cyan-400 text-2xl md:text-3xl font-bold uppercase tracking-widest m-0 mb-3">
-          🚨 NEW STOREFRONT INTAKE
+          🚨 {copy.HEADER_TITLE || 'NEW STOREFRONT INTAKE'}
         </Heading>
         <Text className="text-slate-400 font-mono text-[10px] uppercase tracking-widest m-0">
           Target • {displayBusiness}
@@ -41,16 +41,18 @@ export default function AdminIntakeEmail({
       </Section>
       
       <Section className="mb-4">
-        <Text className="text-white text-base font-bold m-0 mb-2">A new prospect has submitted their basic details.</Text>
+        <Text className="text-white text-base font-bold m-0 mb-2">
+          {copy.GREETING || 'A new prospect has submitted their basic details.'}
+        </Text>
         <Text className="text-zinc-300 text-sm leading-relaxed m-0 font-light">
-          Review their identity and footprint below before logging into the Command Center to initiate the discovery phase.
+          {copy.BODY || 'Review their identity and footprint below before logging into the Command Center to initiate the discovery phase.'}
         </Text>
       </Section>
 
       {isPriority && (
         <Section className="mb-6 bg-amber-500/10 rounded-lg border-l-4 border-l-amber-500 p-4 text-center">
           <Text className="text-amber-400 font-black text-xs uppercase tracking-widest m-0">
-            ⚠️ Priority Queue Fast-Track Requested ($1 Upgrade)
+            {copy.SECTIONS?.PRIORITY_WARNING || '⚠️ Priority Queue Fast-Track Requested ($1 Upgrade)'}
           </Text>
         </Section>
       )}
@@ -58,15 +60,29 @@ export default function AdminIntakeEmail({
       {/* 1. IDENTITY & ROUTING */}
       <Section className="mb-6 bg-zinc-950/60 rounded-xl border-l-4 border-l-cyan-400 p-6 shadow-sm">
         <Text className="text-cyan-400 font-mono font-bold text-xs uppercase tracking-widest m-0 mb-4">
-          Identity & Routing
+          {copy.SECTIONS?.IDENTITY || 'Identity & Routing'}
         </Text>
-        <Text className="text-zinc-300 text-sm m-0 mb-2 font-light"><strong className="text-white font-bold">Business Name:</strong> {displayBusiness}</Text>
-        <Text className="text-zinc-300 text-sm m-0 mb-2 font-light"><strong className="text-white font-bold">Point of Contact:</strong> {name}</Text>
-        <Text className="text-zinc-300 text-sm m-0 mb-2 font-light"><strong className="text-white font-bold">Email Routing:</strong> {email}</Text>
-        <Text className="text-zinc-300 text-sm m-0 mb-2 font-light"><strong className="text-white font-bold">Phone Number:</strong> {phone || 'Not provided'}</Text>
-        <Text className="text-zinc-300 text-sm m-0 mb-2 font-light"><strong className="text-white font-bold">Requested Tier:</strong> {displayPlan}</Text>
-        <Text className="text-zinc-300 text-sm m-0 mb-2 font-light"><strong className="text-white font-bold">Existing Domain:</strong> {existingWebsite}</Text>
-        <Text className="text-zinc-300 text-sm m-0 mb-2 mt-4 font-light"><strong className="text-white font-bold">Digital Footprint & Socials:</strong> {socials}</Text>
+        <Text className="text-zinc-300 text-sm m-0 mb-2 font-light">
+          <strong className="text-white font-bold">{copy.LABELS?.BUSINESS_NAME || 'Business Name:'}</strong> {displayBusiness}
+        </Text>
+        <Text className="text-zinc-300 text-sm m-0 mb-2 font-light">
+          <strong className="text-white font-bold">{copy.LABELS?.CONTACT || 'Point of Contact:'}</strong> {name}
+        </Text>
+        <Text className="text-zinc-300 text-sm m-0 mb-2 font-light">
+          <strong className="text-white font-bold">{copy.LABELS?.EMAIL || 'Email Routing:'}</strong> {email}
+        </Text>
+        <Text className="text-zinc-300 text-sm m-0 mb-2 font-light">
+          <strong className="text-white font-bold">{copy.LABELS?.PHONE || 'Phone Number:'}</strong> {phone || 'Not provided'}
+        </Text>
+        <Text className="text-zinc-300 text-sm m-0 mb-2 font-light">
+          <strong className="text-white font-bold">{copy.LABELS?.TIER || 'Requested Tier:'}</strong> {displayPlan}
+        </Text>
+        <Text className="text-zinc-300 text-sm m-0 mb-2 font-light">
+          <strong className="text-white font-bold">{copy.LABELS?.DOMAIN || 'Existing Domain:'}</strong> {existingWebsite}
+        </Text>
+        <Text className="text-zinc-300 text-sm m-0 mb-2 mt-4 font-light">
+          <strong className="text-white font-bold">{copy.LABELS?.SOCIALS || 'Digital Footprint & Socials:'}</strong> {socials}
+        </Text>
       </Section>
       
       <Hr className="border-zinc-800 m-0 mb-6" />
