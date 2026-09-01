@@ -54,7 +54,7 @@ export async function submitStorefrontApplication(formData: FormData) {
       business_description: formData.get('description')?.toString() || '',
       social_handles: JSON.parse(formData.get('socials')?.toString() || '{}'),
       selected_vibe: formData.get('selectedVibe')?.toString() || 'clueless',
-      selected_plan: formData.get('selectedPlan')?.toString() || 'foundation',
+      selected_plan: formData.get('selectedPlan')?.toString() || 'standard',
       wants_custom: formData.get('wantsCustom') === 'true',
       existing_domain: formData.get('existingDomain')?.toString() || '',
       is_priority: formData.get('priorityQueue') === 'true',
@@ -76,7 +76,8 @@ export async function submitStorefrontApplication(formData: FormData) {
           subject: `Application received: ${payload.business_name}`,
           react: StorefrontConfirmationEmail({ 
             name: payload.applicant_name, 
-            projectName: payload.business_name 
+            projectName: payload.business_name,
+            selectedPlan: payload.selected_plan
           })
         });
 
@@ -90,11 +91,8 @@ export async function submitStorefrontApplication(formData: FormData) {
             phone: payload.applicant_phone,
             socials: formData.get('socials')?.toString() || '',
             existingWebsite: payload.existing_domain,
-            projectScope: payload.business_description,
             businessName: payload.business_name,
             selectedPlan: payload.selected_plan,
-            selectedVibe: payload.selected_vibe,
-            wantsCustom: payload.wants_custom,
             isPriority: payload.is_priority
           })
         });
@@ -137,15 +135,13 @@ export async function updateApplicationStatus(id: string, newStatus: 'BUILDING' 
         finalSlug = `${baseSlug}-${Math.random().toString(36).substring(2, 6)}`;
       }
 
-      // Read overrides from your UI, or fall back to their original choices
       const finalVibe = overrides?.vibe || app.selected_vibe || 'industrial';
       const finalColor = overrides?.brandColor || app.brand_color || 'cyan';
       const finalHero = overrides?.hero || app.hero_structure || 'centered';
       const finalStory = overrides?.story || app.story_structure || 'split';
       const finalFlow = overrides?.flow || app.content_flow || 'classic';
-      const finalPlan = overrides?.plan || app.selected_plan || 'foundation';
+      const finalPlan = overrides?.plan || app.selected_plan || 'standard';
 
-      // Initialize the Timeline directly in the JSONB column
       const initialLogs = [
         {
           id: crypto.randomUUID(),
@@ -163,7 +159,6 @@ export async function updateApplicationStatus(id: string, newStatus: 'BUILDING' 
         }
       ];
 
-      // 1. Create the storefront
       const { error: insertError } = await supabase.from('storefronts').insert([{
         business_name: app.business_name,
         contact_email: app.contact_email || app.applicant_email, 
@@ -187,12 +182,11 @@ export async function updateApplicationStatus(id: string, newStatus: 'BUILDING' 
         about_bio: app.business_description || 'Dedicated to providing top-tier services and products to the community. Check out the gallery to see recent work!',
         social_url: app.existing_domain || '',
         gallery_items: [],
-        audit_notes: initialLogs // <-- Injected directly here
+        audit_notes: initialLogs
       }]);
       
       if (insertError) throw new Error("Storefront Creation Blocked by Database: " + insertError.message);
 
-      // 2. Create the Client Profile
       const { error: clientError } = await supabase.from('clients').insert([{
         id: finalSlug,
         name: app.business_name,
