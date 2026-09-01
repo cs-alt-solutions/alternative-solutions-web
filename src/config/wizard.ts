@@ -4,7 +4,7 @@ export const WIZARD_COPY = {
   PROGRESS_BAR: [
     { num: 1, label: 'Basics' },
     { num: 2, label: 'Network' },
-    { num: 3, label: 'Scope' }
+    { num: 3, label: 'Launch' }
   ],
 
   STEP_1: {
@@ -51,78 +51,68 @@ export const WIZARD_COPY = {
 
   STEP_3: {
     TITLE_MAIN: "The ",
-    TITLE_HIGHLIGHT: "Scope.",
-    SUBTITLE_START: "Last step! Review the infrastructure plans below. ",
-    SUBTITLE_HIGHLIGHT: "You are not paying for anything today.",
-    SUBTITLE_END: " I'm just getting a feel for what you want to establish. I will build a prototype, and you don't pay a dime until you see it and say, 'Yeah, this is pretty cool. Let's go.'",
+    TITLE_HIGHLIGHT: "Launch.",
+    SUBTITLE_START: "Last step! Choose your build lane. ",
+    SUBTITLE_HIGHLIGHT: "Everyone gets the same high-performance engine.",
+    SUBTITLE_END: " The only difference is how fast you want it.",
     EMPTY_PLANS: "No active plans found in the database.",
     
-    PLANS: [
+    LANES: [
       {
         id: 'standard',
-        name: "The Standard",
-        price: "$5",
-        suffix: " a month",
-        description: "The complete storefront engine. Built to scale your business.",
+        name: "The Prototype",
+        price: "$0",
+        suffix: " today",
+        description: "I want to see a working draft before I pay anything. Put me in the standard build queue.",
         features: [
-          "Pre-engineered Next.js multi-page architecture",
-          "Direct lead routing straight to your email",
-          "Curated brand accents & layout frameworks",
-          "Forever Legacy Rate Lock guarantee"
+          "No upfront payment",
+          "Standard queue priority",
+          "Pay only after you approve the draft"
+        ],
+        available: true,
+      },
+      {
+        id: 'priority',
+        name: "The Fast-Track",
+        price: "$5",
+        suffix: " / mo",
+        // 🚀 UPDATED: Set the 72-hour expectation for the checkout link
+        description: "I'm ready to build. Jump me to the front of the line. I will receive a secure portal and checkout link within 72 hours.",
+        features: [
+          "Bypass the standard queue",
+          "Portal setup within 72 hours",
+          "Priority build turnaround"
         ],
         available: true,
         recommended: true
-      },
-      {
-        id: 'professional',
-        name: "The Professional",
-        price: "$15",
-        suffix: " a month",
-        description: "Everyone starts at Standard. I will email you when this unlocks.",
-        features: [
-          "Everything in The Standard",
-          "Custom Domain Connection (yourname.com)",
-          "Priority support queue"
-        ],
-        available: false,
-        comingSoonText: "Under Construction"
       }
     ],
 
-    DOMAIN: {
-      TITLE: "Domain Connection",
-      PLACEHOLDER: "e.g., myawesomebrand.com"
-    },
-    PRIORITY: {
-      BADGE: "Not Needed",
-      TITLE: "Priority Build Queue",
-      DESC: "Fast-track your setup for just $1. I will jump your file to the front of the line."
-    },
-
-    // 🚀 NEW: The embedded Pledge Pillars
     PILLARS_TITLE: "Rules of Engagement",
     PILLARS: [
-      {
-        title: "Zero Upfront Cost",
-        body: "You don't pay today. Once I review your details, I'll build a working preview. We only lock in your subscription when you look at it and say, <em>'Yeah, this is pretty cool. Let's go.'</em>"
-      },
       {
         title: "The Reality Check",
         body: "Alternative Solutions is an active, evolving tech lab. These are the beginning stages—things might be a little clunky or have some digital dust at first. Bear with me; it works, and if something looks wonky, I fix it immediately."
       },
       {
         title: "The Forever Rate",
-        body: "Once you approve your prototype, your legacy pricing is locked in forever. As long as your subscription remains active, your monthly rate for your selected plan will never increase."
+        body: "Your legacy pricing is locked in forever for the specific tier you select today. As long as your subscription stays active, your foundational rate won't increase when public prices go up. (If you upgrade to a higher tier later or require massive database scaling, standard upgrade rates will apply to those new features)."
+      },
+      {
+        title: "The Turnaround",
+        body: "Fast-Track builds jump directly to the front of the line. Standard queue builds are processed as quickly as possible in the order they are received."
       }
     ],
 
     PLEDGE: {
-      CHECKBOX_LABEL: "I understand I'm not paying anything today, and I'm ready to see a prototype."
+      CHECKBOX_LABEL: "I understand the rules of engagement and I'm ready to build."
     },
     ACTIONS: {
       BACK: "Back",
-      SUBMIT_LOADING: "Transmitting...",
-      SUBMIT: "Send It"
+      SUBMIT_STANDARD: "Submit Application",
+      // 🚀 UPDATED: Changed from "Proceed to Checkout" to match the new logic
+      SUBMIT_PRIORITY: "Request Fast-Track",
+      SUBMIT_LOADING: "Transmitting..."
     },
     ALERTS: {
       SUCCESS: "Sweet! Your application is locked in. I'm taking over the heavy lifting.",

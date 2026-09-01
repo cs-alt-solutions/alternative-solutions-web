@@ -3,29 +3,31 @@
 import React from 'react';
 import { useWizard } from './WizardContext'; 
 import { Check } from 'lucide-react';
+import { WIZARD_COPY } from '@/config/wizard'; 
 
 export default function WizardProgress() {
   const { currentStep, totalSteps } = useWizard();
 
-  // 🚀 Renamed back to Basics!
-  const steps = [
-    { num: 1, label: 'Basics' },
-    { num: 2, label: 'Network' },
-    { num: 3, label: 'Scope' }
-  ];
-
+  const steps = WIZARD_COPY.PROGRESS_BAR;
   const progressPercentage = ((currentStep - 1) / (totalSteps - 1)) * 100;
 
   return (
     <div className="w-full mb-12 relative px-2 sm:px-8">
-      <div className="absolute top-1/2 left-2 sm:left-8 right-2 sm:right-8 h-0.5 bg-zinc-800/80 -translate-y-1/2 rounded-full" />
-      
-      <div 
-        className="absolute top-1/2 left-2 sm:left-8 h-0.5 bg-cyan-400 -translate-y-1/2 rounded-full transition-all duration-700 ease-out shadow-[0_0_15px_rgba(34,211,238,0.5)]"
-        style={{ width: `calc(${progressPercentage}% - ${progressPercentage === 100 ? '2rem' : '0px'})` }}
-      />
-
       <div className="relative flex justify-between w-full">
+        
+        {/* 🚀 FIXED: Inner Track Wrapper - Inset exactly half the width of the nodes to prevent overshooting! */}
+        <div className="absolute top-1/2 left-4 right-4 md:left-5 md:right-5 -translate-y-1/2 z-0">
+          {/* Background Track */}
+          <div className="w-full h-0.5 bg-zinc-800/80 rounded-full" />
+          
+          {/* Glowing Progress Line */}
+          <div 
+            className="absolute top-0 left-0 h-0.5 bg-cyan-400 rounded-full transition-all duration-700 ease-out shadow-[0_0_15px_rgba(34,211,238,0.5)]"
+            style={{ width: `${progressPercentage}%` }}
+          />
+        </div>
+
+        {/* Step Nodes */}
         {steps.map((step) => {
           const isCompleted = step.num < currentStep;
           const isActive = step.num === currentStep;

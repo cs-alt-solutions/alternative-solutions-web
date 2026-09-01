@@ -15,6 +15,9 @@ export default function StorefrontConfirmationEmail({
   selectedPlan = 'Standard'
 }: StorefrontConfirmationEmailProps) {
   const copy = EMAIL_COPY.STOREFRONT_CONFIRMATION;
+  
+  // 🚀 Isolate the first name so it's casual
+  const firstName = name.split(' ')[0];
 
   return (
     <BaseEmailLayout>
@@ -24,7 +27,7 @@ export default function StorefrontConfirmationEmail({
           {copy.HEADER}
         </Text>
         <Heading className="text-white text-2xl md:text-3xl font-black tracking-tight uppercase m-0">
-          {copy.TITLE_START}{name}.
+          {copy.TITLE_START}{firstName}.
         </Heading>
       </Section>
       

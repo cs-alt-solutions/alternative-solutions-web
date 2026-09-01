@@ -7,7 +7,7 @@ import StorefrontIntakePanel, { ApplicationItem } from '@/components/dashboard/o
 import PriorityQueuePanel from '@/components/dashboard/overview/PriorityQueuePanel';
 import PlatformTrackerPanel from '@/components/dashboard/overview/PlatformTrackerPanel';
 
-// 🚀 NEW: Self-fetching data components
+// Self-fetching data components
 import TelemetryRow from '@/components/dashboard/overview/TelemetryRow';
 import NetworkPulse from '@/components/dashboard/overview/NetworkPulse';
 
@@ -25,8 +25,10 @@ export default async function DashboardOverview() {
       .from('storefront_applications') 
       .select('*')
       .eq('status', 'PENDING')
+      // 🚀 UPDATED: Sort by priority FIRST, then by date!
+      .order('is_priority', { ascending: false, nullsFirst: false })
       .order('created_at', { ascending: false })
-      .limit(5);
+      .limit(6); // Bumped to 6 to match the UI screenshot capacity
 
     if (!error && applications) {
       recentLeads = applications.map((app) => ({
@@ -34,7 +36,9 @@ export default async function DashboardOverview() {
         type: 'LEAD',
         title: app.business_name || 'New Application',
         subtitle: app.contact_email,
-        created_at: app.created_at, // <--- Add this line to satisfy the interface requirement
+        created_at: app.created_at,
+        // 🚀 UPDATED: Pass the flag to the UI component so it knows to glow amber
+        is_priority: app.is_priority, 
         link: `/dashboard/storefronts?application=${app.id}`
       }));
     }
@@ -59,13 +63,13 @@ export default async function DashboardOverview() {
         </div>
       </div>
 
-      {/* 🚀 NEW: TELEMETRY ROW (Self-Fetching) */}
+      {/* TELEMETRY ROW (Self-Fetching) */}
       <TelemetryRow />
 
       {/* THE MAIN GRID ARCHITECTURE */}
       <div className="grid grid-cols-1 xl:grid-cols-12 gap-6">
         
-        {/* LEFT COLUMN: The Primary Focus (Storefront Applications & Active Network) */}
+        {/* LEFT COLUMN: The Primary Focus */}
         <div className="xl:col-span-8 space-y-6">
           <div className="bg-zinc-950 border border-zinc-800 rounded-2xl overflow-hidden shadow-2xl relative">
             <div className="absolute top-0 left-0 w-full h-1 bg-linear-to-r from-fuchsia-500 to-cyan-500" />
@@ -73,7 +77,6 @@ export default async function DashboardOverview() {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {/* 🚀 NEW: Network Pulse replaces the old Engineering panel */}
             <NetworkPulse />
             <PriorityQueuePanel queue={[]} copy={WEBSITE_COPY.DASHBOARD.BETA_COMMAND} commonCopy={WEBSITE_COPY.DASHBOARD.COMMON} />
           </div>

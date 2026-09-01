@@ -2,18 +2,17 @@
 
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { ArrowLeft, CheckCircle2, Globe, Zap, ShieldCheck, Lock, Loader2, Shield, Wallet, Terminal } from 'lucide-react';
+import { ArrowLeft, CheckCircle2, ShieldCheck, Loader2, Shield, Wallet, Terminal, Zap } from 'lucide-react';
 import { WIZARD_COPY } from '@/config/wizard';
 import { useWizard } from './core/WizardContext';
 import { submitStorefrontApplication } from '@/app/actions/storefront_applications';
 
-type PlanItem = { id: string; name: string; price: string; suffix: string; description: string; features: string[]; available: boolean; recommended?: boolean; comingSoonText?: string; };
+type LaneItem = { id: string; name: string; price: string; suffix: string; description: string; features: string[]; available: boolean; recommended?: boolean; };
 
-// Icons for our new Pledge Pillars
 const PILLAR_ICONS = [
-  { Icon: Wallet, color: "text-emerald-400" },
   { Icon: Terminal, color: "text-amber-400" },
-  { Icon: Shield, color: "text-cyan-400" }
+  { Icon: Wallet, color: "text-emerald-400" },
+  { Icon: Zap, color: "text-cyan-400" }
 ];
 
 export default function Step3Scope() {
@@ -22,21 +21,19 @@ export default function Step3Scope() {
   
   const copy = WIZARD_COPY.STEP_3;
   
-  const [selectedPlanId, setSelectedPlanId] = useState<string>(formData.targetPlan || 'standard');
-  const [hasCustomDomain, setHasCustomDomain] = useState(Boolean(formData.customDomain));
-  const [priorityQueue, setPriorityQueue] = useState(Boolean(formData.priorityQueue));
+  const [selectedLaneId, setSelectedLaneId] = useState<string>('standard');
   const [isPledged, setIsPledged] = useState(Boolean(formData.isPledged));
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const canProceed = selectedPlanId !== '' && isPledged;
+  const canProceed = selectedLaneId !== '' && isPledged;
 
   const handleSubmit = async () => {
     setIsSubmitting(true);
+    const isPriority = selectedLaneId === 'priority';
     
     updateForm({
-      targetPlan: selectedPlanId,
-      customDomain: selectedPlanId === 'professional' && hasCustomDomain ? formData.customDomain : '',
-      priorityQueue: selectedPlanId === 'professional' ? priorityQueue : false,
+      targetPlan: 'standard', // Universal base tier
+      priorityQueue: isPriority,
       isPledged: true
     });
 
@@ -46,24 +43,26 @@ export default function Step3Scope() {
       payload.append('email', formData.email || '');
       payload.append('phone', formData.phone || ''); 
       payload.append('projectName', formData.businessName || '');
-      payload.append('description', ''); 
       payload.append('socials', JSON.stringify(formData.socialHandles || {}));
       
+      payload.append('selectedPlan', 'standard'); 
+      payload.append('priorityQueue', isPriority ? 'true' : 'false');
+      
+      // Sending blank deprecation values to satisfy database constraints
+      payload.append('description', ''); 
       payload.append('selectedVibe', 'clueless'); 
       payload.append('brandColor', 'cyan'); 
       payload.append('heroLayout', 'centered'); 
       payload.append('storyLayout', 'classic-split'); 
       payload.append('contentLayout', 'stacked'); 
-      
-      payload.append('selectedPlan', selectedPlanId);
       payload.append('tagline', ''); 
       payload.append('wantsCustom', 'false'); 
-      payload.append('existingDomain', selectedPlanId === 'professional' && hasCustomDomain ? (formData.customDomain || '') : '');
-      payload.append('priorityQueue', priorityQueue ? 'true' : 'false');
+      payload.append('existingDomain', '');
       
       const result = await submitStorefrontApplication(payload);
       
       if (result.success) {
+        // 🚀 Both lanes now just submit the application and show success
         alert(copy.ALERTS?.SUCCESS || "Application successfully submitted!");
         setTimeout(() => router.push('/'), 1500);
       } else {
@@ -89,28 +88,25 @@ export default function Step3Scope() {
       </div>
 
       <div className="space-y-8 w-full">
-        {/* THE PRICING PLANS */}
+        {/* THE BUILD LANES */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 lg:gap-8 max-w-3xl mx-auto">
-          {(copy.PLANS || []).map((plan: PlanItem) => {
-            const isSelected = selectedPlanId === plan.id;
-            const isAvailable = plan.available !== false;
+          {(copy.LANES || []).map((lane: LaneItem) => {
+            const isSelected = selectedLaneId === lane.id;
             
             return (
               <div 
-                key={plan.id}
-                onClick={() => isAvailable && setSelectedPlanId(plan.id)}
-                className={`relative flex flex-col rounded-2xl p-6 transition-all duration-300 ${
-                  !isAvailable 
-                    ? 'bg-zinc-950/40 border border-zinc-800/50 opacity-60 cursor-not-allowed grayscale' 
-                    : isSelected 
-                      ? 'bg-zinc-900 border-2 border-cyan-400 shadow-[0_0_30px_rgba(34,211,238,0.15)] scale-[1.02] z-10 cursor-pointer' 
-                      : 'bg-zinc-950/80 border border-zinc-800 hover:border-zinc-600 hover:bg-zinc-900/50 cursor-pointer'
+                key={lane.id}
+                onClick={() => setSelectedLaneId(lane.id)}
+                className={`relative flex flex-col rounded-2xl p-6 transition-all duration-300 cursor-pointer ${
+                  isSelected 
+                    ? 'bg-zinc-900 border-2 border-cyan-400 shadow-[0_0_30px_rgba(34,211,238,0.15)] scale-[1.02] z-10' 
+                    : 'bg-zinc-950/80 border border-zinc-800 hover:border-zinc-600 hover:bg-zinc-900/50'
                 }`}
               >
-                {plan.recommended && isAvailable && (
+                {lane.recommended && (
                   <div className="absolute -top-3 inset-x-0 flex justify-center z-20">
                     <span className="bg-cyan-400 text-zinc-950 text-[10px] font-black uppercase tracking-widest px-3 py-1 rounded-full shadow-md">
-                      Most Popular
+                      Fast Pass
                     </span>
                   </div>
                 )}
@@ -119,28 +115,18 @@ export default function Step3Scope() {
                     <CheckCircle2 className="w-6 h-6 fill-cyan-400/20" />
                   </div>
                 )}
-                {!isAvailable && (
-                  <div className="absolute top-4 right-4 text-zinc-600"><Lock className="w-5 h-5" /></div>
-                )}
                 <div className="mb-6">
-                  <h3 className={`text-xl font-black uppercase tracking-wide ${isSelected ? 'text-white' : 'text-zinc-300'}`}>{plan.name}</h3>
+                  <h3 className={`text-xl font-black uppercase tracking-wide ${isSelected ? 'text-white' : 'text-zinc-300'}`}>{lane.name}</h3>
                   <div className="mt-2 flex items-baseline gap-1">
-                    <span className={`text-4xl font-black ${!isAvailable ? 'text-zinc-500' : isSelected ? 'text-cyan-400' : 'text-white'}`}>
-                      {plan.price}
+                    <span className={`text-4xl font-black ${isSelected ? 'text-cyan-400' : 'text-white'}`}>
+                      {lane.price}
                     </span>
-                    <span className="text-xs text-zinc-500 font-medium uppercase tracking-widest">{plan.suffix}</span>
+                    <span className="text-xs text-zinc-500 font-medium uppercase tracking-widest">{lane.suffix}</span>
                   </div>
-                  {!isAvailable && (
-                    <div className="mt-3">
-                      <span className="text-[10px] font-bold text-amber-500 uppercase tracking-widest bg-amber-500/10 px-2 py-1 rounded border border-amber-500/20">
-                        {plan.comingSoonText}
-                      </span>
-                    </div>
-                  )}
-                  <p className={`text-xs mt-4 leading-relaxed h-10 ${!isAvailable ? 'text-fuchsia-400 font-bold' : 'text-zinc-400'}`}>{plan.description}</p>
+                  <p className="text-xs text-zinc-400 mt-4 leading-relaxed h-10">{lane.description}</p>
                 </div>
                 <div className="flex-1 space-y-3 pt-6 border-t border-zinc-800/60">
-                  {plan.features.map((feature: string, idx: number) => (
+                  {lane.features.map((feature: string, idx: number) => (
                     <div key={idx} className="flex items-start gap-2.5 text-xs text-zinc-300">
                       <ShieldCheck className={`w-4 h-4 shrink-0 ${isSelected ? 'text-cyan-400' : 'text-zinc-600'}`} />
                       <span className="leading-tight">{feature}</span>
@@ -151,50 +137,9 @@ export default function Step3Scope() {
             );
           })}
         </div>
-
-        {/* PRO ADD-ONS */}
-        {selectedPlanId === 'professional' && (
-          <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
-            <div className="bg-zinc-900/40 border border-zinc-800 rounded-2xl p-6 space-y-4">
-              <div className="flex items-center justify-between">
-                <label className="text-sm font-bold text-white flex items-center gap-2 cursor-pointer">
-                  <Globe className="w-4 h-4 text-cyan-400" /> <span>{copy.DOMAIN.TITLE}</span>
-                </label>
-                <input 
-                  type="checkbox" checked={hasCustomDomain} onChange={(e) => setHasCustomDomain(e.target.checked)}
-                  className="w-4 h-4 rounded border-zinc-700 bg-zinc-950 text-cyan-400 focus:ring-cyan-400 cursor-pointer"
-                />
-              </div>
-              {hasCustomDomain && (
-                <div className="animate-in fade-in slide-in-from-top-2 duration-300 pt-2">
-                  <input 
-                    type="text" value={formData.customDomain || ''} onChange={(e) => updateForm({ customDomain: e.target.value })}
-                    placeholder={copy.DOMAIN.PLACEHOLDER}
-                    className="w-full bg-zinc-950 border border-zinc-800 focus:border-cyan-400 rounded-xl px-4 py-3 text-sm text-white outline-none transition-all placeholder:text-zinc-600 font-mono"
-                  />
-                </div>
-              )}
-            </div>
-            
-            <div className="bg-zinc-900/40 border border-zinc-800 rounded-2xl p-6 flex items-center justify-between">
-              <div className="space-y-1 pr-4">
-                <div className="flex items-center gap-2">
-                  <Zap className="w-4 h-4 text-amber-400" />
-                  <h4 className="text-sm font-bold text-white">{copy.PRIORITY.TITLE}</h4>
-                  <span className="text-[10px] font-mono bg-zinc-800 text-zinc-400 px-2 py-0.5 rounded-full uppercase tracking-widest">{copy.PRIORITY.BADGE}</span>
-                </div>
-                <p className="text-xs text-zinc-400 font-normal leading-relaxed">{copy.PRIORITY.DESC}</p>
-              </div>
-              <input 
-                type="checkbox" checked={priorityQueue} onChange={(e) => setPriorityQueue(e.target.checked)}
-                className="w-5 h-5 rounded border-zinc-700 bg-zinc-950 text-cyan-400 focus:ring-cyan-400 cursor-pointer shrink-0"
-              />
-            </div>
-          </div>
-        )}
       </div>
 
-      {/* 🚀 NEW: THE EMBEDDED PLEDGE PILLARS */}
+      {/* RULES OF ENGAGEMENT */}
       <div className="max-w-3xl mx-auto w-full pt-4 animate-in fade-in duration-500">
         <h3 className="text-sm font-black text-cyan-400 uppercase tracking-widest mb-4 pl-2">{copy.PILLARS_TITLE}</h3>
         <div className="flex flex-col gap-3">
@@ -256,7 +201,10 @@ export default function Step3Scope() {
           {isSubmitting ? (
             <><Loader2 className="w-4 h-4 animate-spin" /> {copy.ACTIONS.SUBMIT_LOADING}</>
           ) : (
-            <><Shield className="w-4 h-4" /> {copy.ACTIONS.SUBMIT}</>
+            <>
+              <Shield className="w-4 h-4" /> 
+              {selectedLaneId === 'priority' ? copy.ACTIONS.SUBMIT_PRIORITY : copy.ACTIONS.SUBMIT_STANDARD}
+            </>
           )}
         </button>
       </div>
