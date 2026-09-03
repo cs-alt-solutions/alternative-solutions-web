@@ -17,7 +17,6 @@ interface ApplicationReviewModalProps {
   handleClose?: () => void;
 }
 
-// 🚀 Smart parser to convert raw handles (e.g. "@username" or "sd") into actual clickable URLs
 const formatSocialData = (platform: string, handle: string) => {
   if (handle.startsWith('http')) {
     let display = handle.replace(/^https?:\/\/(www\.)?/, '').replace(/\/$/, '');
@@ -26,7 +25,7 @@ const formatSocialData = (platform: string, handle: string) => {
   }
   
   const cleanHandle = handle.replace(/^@/, '');
-  let url = `https://${cleanHandle}`; // Fallback for 'Other'
+  let url = `https://${cleanHandle}`; 
   
   if (platform === 'Instagram') url = `https://instagram.com/${cleanHandle}`;
   else if (platform === 'X / Twitter') url = `https://twitter.com/${cleanHandle}`;
@@ -45,6 +44,7 @@ export default function ApplicationReviewModal({
   handleClose 
 }: ApplicationReviewModalProps) {
   const [isProcessing, setIsProcessing] = useState(false);
+  const [isProvisioned, setIsProvisioned] = useState(false); // 🚀 NEW: Tracks successful builds
   const router = useRouter();
 
   const targetApp = app || application || {};
@@ -77,7 +77,8 @@ export default function ApplicationReviewModal({
       const result = await updateApplicationStatus(targetApp.id, 'BUILDING', payloadOverrides);
       
       if (result && result.success) {
-        triggerClose();
+        // 🚀 NEW: Show the success screen instead of closing
+        setIsProvisioned(true);
         router.refresh();
       } else {
         alert(`Database Error: ${result?.error || 'Unknown failure'}`);
@@ -130,6 +131,43 @@ export default function ApplicationReviewModal({
     { name: 'Other', value: safeSocials.other, icon: LinkIcon, color: 'text-teal-400', border: 'border-teal-500/20 bg-teal-500/5' },
   ].filter(s => !!s.value);
 
+
+  // 🚀 THE POST-APPROVAL SUCCESS SCREEN
+  if (isProvisioned) {
+    return (
+      <div className="fixed inset-0 z-50 flex items-center justify-center p-4 md:p-6 bg-black/85 backdrop-blur-md animate-in fade-in duration-200">
+        <div className="bg-zinc-950 border border-emerald-500/30 rounded-2xl w-full max-w-md overflow-hidden shadow-[0_0_50px_rgba(16,185,129,0.15)] flex flex-col text-center p-8">
+          
+          <div className="w-16 h-16 bg-emerald-500/10 text-emerald-400 rounded-full flex items-center justify-center mx-auto mb-5 border border-emerald-500/20 shadow-[0_0_30px_rgba(16,185,129,0.2)]">
+            <Rocket size={32} className="ml-1" />
+          </div>
+          
+          <h2 className="text-2xl font-black text-white uppercase tracking-tight mb-2">Storefront Built</h2>
+          <p className="text-sm text-zinc-400 mb-8 leading-relaxed">
+            The database architecture is fully provisioned. Do you want to jump over to their file right now and start uploading the assets you pulled from their socials?
+          </p>
+          
+          <div className="flex flex-col gap-3">
+            <button
+              onClick={() => { triggerClose(); router.push('/dashboard/storefronts'); }}
+              className="w-full py-4 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-zinc-950 font-black tracking-widest uppercase transition-all shadow-[0_0_20px_rgba(16,185,129,0.3)] hover:scale-[1.02]"
+            >
+              Go to Storefronts
+            </button>
+            <button
+              onClick={triggerClose}
+              className="w-full py-4 rounded-xl border border-zinc-800 bg-zinc-900/50 hover:bg-zinc-800 text-zinc-400 hover:text-white font-bold text-xs tracking-widest uppercase transition-all"
+            >
+              Back to Command Center
+            </button>
+          </div>
+
+        </div>
+      </div>
+    );
+  }
+
+  // 🚀 THE STANDARD REVIEW MODAL
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 md:p-6 bg-black/85 backdrop-blur-md animate-in fade-in duration-200">
       <div className="bg-zinc-950 border border-zinc-800 rounded-2xl w-full max-w-5xl max-h-[90vh] overflow-hidden shadow-[0_0_50px_rgba(0,0,0,0.8)] flex flex-col">
@@ -166,7 +204,7 @@ export default function ApplicationReviewModal({
         <div className="p-6 overflow-y-auto custom-scrollbar flex-1">
           <div className="flex flex-col gap-6">
             
-            {/* 🚀 1. THE BUILD LANE BANNER (Full Width) */}
+            {/* THE BUILD LANE BANNER */}
             <div className={`p-5 rounded-2xl border transition-all flex items-center justify-between overflow-hidden relative ${
               isPriority 
                 ? 'bg-amber-500/10 border-amber-500/30 shadow-[0_0_20px_rgba(245,158,11,0.15)]' 
@@ -195,7 +233,7 @@ export default function ApplicationReviewModal({
               </div>
             </div>
 
-            {/* 🚀 2. THE THREE-COLUMN DATA GRID */}
+            {/* THE THREE-COLUMN DATA GRID */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               
               {/* APPLICANT */}
@@ -228,10 +266,10 @@ export default function ApplicationReviewModal({
                 </div>
               </div>
 
-              {/* DIGITAL FOOTPRINT */}
+              {/* 🚀 SOCIAL LINKS */}
               <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-5">
                 <h3 className="text-[10px] font-black text-zinc-400 uppercase tracking-widest flex items-center gap-2 mb-4">
-                  <Share2 size={13} className="text-indigo-400" /> Digital Footprint
+                  <Share2 size={13} className="text-indigo-400" /> Social Links
                 </h3>
                 {socialProfiles.length > 0 ? (
                   <div className="space-y-2">
