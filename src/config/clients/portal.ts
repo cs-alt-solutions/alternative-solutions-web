@@ -27,16 +27,15 @@ export const PORTAL_COPY = {
       }
     }
   },
-  // 🚀 NEW: Global Help Guide
   helpGuide: {
-    title: "Quick Start Guide",
-    subtitle: "Workspace Navigation",
-    intro: "Pardon the digital dust while we get the engines running! Here is a quick breakdown of how to navigate your command center:",
+    title: "Quick Tour",
+    subtitle: "Where everything lives",
+    intro: "Here is a quick breakdown of where everything is in your workspace. If you can't find something, just hit me up in the Support tab!",
     sections: [
       {
         id: "storefront",
         title: "Live Storefront",
-        desc: "Your portal to edit copy and media. The live editor is locked by default to prevent accidental breaks. Request the keys to temporarily unlock it, or shoot me a message."
+        desc: "Your portal to edit copy and media. I keep the live editor locked by default to prevent accidental breaks, but you can request edits to any section here."
       },
       {
         id: "vault",
@@ -46,33 +45,32 @@ export const PORTAL_COPY = {
       {
         id: "support",
         title: "Support Desk",
-        desc: "Got a question, found a glitch, or want to scope out a new feature? Drop it here. It acts as a direct, permanent pipeline to my inbox."
+        desc: "Got a question, found a glitch, or want to add a new feature? Drop it here. It acts as a direct pipeline to my inbox."
       },
       {
         id: "billing",
         title: "Billing & Plans",
-        desc: "Manage your active subscription tier, safely update your payment methods, or download historical tax receipts."
+        desc: "Manage your active subscription tier, safely update your payment methods, or download tax receipts."
       }
     ]
   },
   vault: {
     title: "Media Vault",
     subtitle: "Raw Assets & Documents",
-    retentionNotice: "To keep our workspace optimized, raw files in this vault that are not actively attached to your live storefront are automatically purged after 30 days.",
+    retentionNotice: "Just a heads up: this vault is a shared staging area for us to pass files back and forth, not where your live website images are hosted! Drop your raw photos here, and I'll wire them up to your live storefront on my end. To keep things clean, unused raw files are purged after 30 days.",
     uploadBtn: "Upload Files",
     dragDrop: "Drag & Drop",
     emptyState: "No raw files in the vault."
   },
   storefront: {
-    // 🚀 RESTORED KEYS
-    lockedTitle: "Want to make an edit or change the vibe?",
-    lockedBody: "I keep the live storefront locked by default so we don't accidentally break your layout. If you need to update text, swap out some images, or completely shift the visual aesthetic, just request the keys!",
-    
-    vibeCheckTitle: "Need a different vibe?",
-    vibeCheckBody: "This command center gives you absolute control over your words and media. But if you want to restructure your layout, add brand new sections, or completely change the design aesthetic—just shoot me an email! I will custom-architect the code for you.",
-    requestKeysBtn: "Request The Keys",
-    keysRequested: "Keys Requested",
-    keysPendingBody: "I've been pinged! I'll unlock your edit window shortly."
+    // 🚀 REFINED COPY
+    vibeCheckTitle: "Looking for a bigger change?",
+    vibeCheckBody: "This control center is designed for standard content swaps. If you want to fundamentally restructure your layout, add brand new pages, or completely shift the design aesthetic, we need to map out a custom expansion. Shoot me an email to get started.",
+    lockedTitle: "Want to make an edit?",
+    lockedBody: "To keep your layout pixel-perfect, the structural editor is locked. But updating your site is easy—just select the section below and drop your new text or image requests. I'll get it updated for you!",
+    requestKeysBtn: "Send Request",
+    keysRequested: "Update Request Sent",
+    keysPendingBody: "I've got your request! I'll review your notes and get those updates pushed to your live site shortly."
   },
   support: {
     title: "Help & Support",
