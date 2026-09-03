@@ -2,9 +2,8 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { User, Mail, Shield, Save, CheckCircle2, ImagePlus, Loader2, Settings, Lock, Info, Building2 } from 'lucide-react';
+import { User, Shield, Save, CheckCircle2, ImagePlus, Loader2, Settings, Lock, Info, Building2 } from 'lucide-react';
 import { supabase } from '@/utils/supabase';
-import SecureTransfer from './secure-transfer/SecureTransfer';
 
 export default function SettingsModule({ clientId }: { clientId: string }) {
   const [isSaving, setIsSaving] = useState(false);
@@ -78,17 +77,15 @@ export default function SettingsModule({ clientId }: { clientId: string }) {
   return (
     <div className="max-w-6xl mx-auto animate-in fade-in duration-500 pb-12 mt-2">
       
-      {/* HEADER */}
       <div className="mb-8 border-b border-white/5 pb-6">
         <h2 className="text-xl font-black text-white uppercase tracking-widest flex items-center gap-3">
           <Settings size={20} className="text-cyan-500" /> Workspace Settings
         </h2>
-        <p className="text-xs text-slate-500 mt-1 uppercase tracking-widest font-mono">Manage your identity and secured documents.</p>
+        <p className="text-xs text-slate-500 mt-1 uppercase tracking-widest font-mono">Manage your identity and profile.</p>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         
-        {/* LEFT COLUMN: IDENTITY FORM */}
         <div className="lg:col-span-2 space-y-6">
           <form onSubmit={handleSave} className="bg-zinc-950 border border-white/5 rounded-3xl p-6 md:p-8 shadow-xl flex flex-col h-full">
             <h3 className="text-sm font-bold text-white uppercase tracking-widest mb-6 border-b border-white/5 pb-4 flex items-center gap-2">
@@ -97,7 +94,6 @@ export default function SettingsModule({ clientId }: { clientId: string }) {
             
             <div className="space-y-8 flex-1">
               
-              {/* LOCKED IDENTITY FIELDS */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6 p-6 bg-black/40 rounded-2xl border border-dashed border-zinc-800">
                 <div>
                   <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest mb-1 flex items-center gap-1.5">
@@ -121,7 +117,6 @@ export default function SettingsModule({ clientId }: { clientId: string }) {
                 </div>
               </div>
 
-              {/* EDITABLE PERSONAL FIELDS */}
               <div>
                 <label className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest mb-2 block">Account Owner Name</label>
                 <div className="relative">
@@ -147,10 +142,7 @@ export default function SettingsModule({ clientId }: { clientId: string }) {
           </form>
         </div>
 
-        {/* RIGHT COLUMN: LOGO & SECURITY */}
         <div className="space-y-6">
-          
-          {/* BRAND LOGO CARD */}
           <div className="bg-zinc-950 border border-white/5 rounded-3xl p-6 shadow-xl flex flex-col items-center justify-center relative min-h-65">
             <div className="absolute top-5 left-5 right-5 flex items-center justify-between">
               <span className="text-[10px] font-black text-white uppercase tracking-widest">Brand Logo</span>
@@ -172,7 +164,6 @@ export default function SettingsModule({ clientId }: { clientId: string }) {
             </div>
           </div>
 
-          {/* AUTHENTICATION CARD */}
           <div className="bg-zinc-950 border border-white/5 rounded-3xl p-6 shadow-xl">
             <h3 className="text-sm font-bold text-white uppercase tracking-widest mb-3 flex items-center gap-2">
               <Shield className="w-4 h-4 text-emerald-500" /> Authentication
@@ -183,13 +174,7 @@ export default function SettingsModule({ clientId }: { clientId: string }) {
           </div>
           
         </div>
-
       </div>
-
-      <div className="mt-12 pt-12 border-t border-white/5">
-        <SecureTransfer clientId={clientId} />
-      </div>
-
     </div>
   );
 }

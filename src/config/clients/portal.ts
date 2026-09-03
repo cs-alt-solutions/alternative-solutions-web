@@ -11,33 +11,61 @@ export const PORTAL_COPY = {
   },
   dashboard: {
     welcomeTitle: "Welcome to your Workspace",
-    guideTitle: "Quick Start Guide",
-    guideSubtitle: "Welcome to your command center",
-    intro: "I am super pumped that we are finally here. Pardon the digital dust while we get the engines running! Here is a quick breakdown of how to navigate your new workspace:",
-    steps: [
-      {
-        name: "Live Storefront",
-        desc: "Your portal to edit copy and media. Note that to prevent accidental breaks, the live editor is locked by default. If you need to make structural changes, just request the keys to temporarily unlock it, or shoot me a message to handle it for you."
+    welcomeSubtitle: "This is dope. Let's get building.",
+    messages: {
+      welcome: {
+        id: 'msg-1',
+        sender: "Courtney",
+        time: "Just now",
+        body: "Hey, I am so pumped you're here. I'm still getting the final pieces put together behind the scenes, so if a button looks weird or something doesn't load right, just let me know. You can drop a note in the Support tab, or just text me if you have my number. Poke around your Live Storefront, add some photos, and let's get this going!"
       },
-      // 🚀 NEW: Added the Billing & Plans explanation
-      {
-        name: "Billing & Plans",
-        desc: "Manage your active subscription tier, safely update your payment methods, download historical tax receipts, and view upcoming auto-pay dates directly through the secure Stripe portal."
-      },
-      {
-        name: "Support Desk",
-        desc: "Got a question, found a glitch, or want to scope out a new feature? Drop it in the Support tab. It acts as a direct, permanent pipeline to my inbox so nothing gets lost in email threads."
-      },
-      {
-        name: "Settings & Vault",
-        desc: "Manage your core identity, update your brand logo, and drop high-res files directly into the secure transfer vault."
+      returning: {
+        id: 'msg-2',
+        sender: "Courtney",
+        time: "Just now",
+        body: "Hey, nothing new today! Just wanted to say hi and see how it's going. Hope you're having a great day. Let me know if you need anything!"
       }
-    ],
-    signOff: "— Courtney"
+    }
+  },
+  // 🚀 NEW: Global Help Guide
+  helpGuide: {
+    title: "Quick Start Guide",
+    subtitle: "Workspace Navigation",
+    intro: "Pardon the digital dust while we get the engines running! Here is a quick breakdown of how to navigate your command center:",
+    sections: [
+      {
+        id: "storefront",
+        title: "Live Storefront",
+        desc: "Your portal to edit copy and media. The live editor is locked by default to prevent accidental breaks. Request the keys to temporarily unlock it, or shoot me a message."
+      },
+      {
+        id: "vault",
+        title: "Media Vault",
+        desc: "Drop high-res files, brand assets, and documents directly into this secure transfer vault so we have everything in one place."
+      },
+      {
+        id: "support",
+        title: "Support Desk",
+        desc: "Got a question, found a glitch, or want to scope out a new feature? Drop it here. It acts as a direct, permanent pipeline to my inbox."
+      },
+      {
+        id: "billing",
+        title: "Billing & Plans",
+        desc: "Manage your active subscription tier, safely update your payment methods, or download historical tax receipts."
+      }
+    ]
+  },
+  vault: {
+    title: "Media Vault",
+    subtitle: "Raw Assets & Documents",
+    retentionNotice: "To keep our workspace optimized, raw files in this vault that are not actively attached to your live storefront are automatically purged after 30 days.",
+    uploadBtn: "Upload Files",
+    dragDrop: "Drag & Drop",
+    emptyState: "No raw files in the vault."
   },
   storefront: {
-    lockedTitle: "Want to make an edit or change the vibe?",
-    lockedBody: "I keep the live storefront locked by default so we don't accidentally break your layout. If you need to update text, swap out some images, or completely shift the visual aesthetic, just request the keys!",
+    vibeCheckTitle: "Need a different vibe?",
+    vibeCheckBody: "This command center gives you absolute control over your words and media. But if you want to restructure your layout, add brand new sections, or completely change the design aesthetic—just shoot me an email! I will custom-architect the code for you.",
     requestKeysBtn: "Request The Keys",
     keysRequested: "Keys Requested",
     keysPendingBody: "I've been pinged! I'll unlock your edit window shortly."

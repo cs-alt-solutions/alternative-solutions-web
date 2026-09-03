@@ -5,7 +5,7 @@ import React, { useState, useEffect } from 'react';
 import { supabase } from '@/utils/supabase';
 import { 
   CreditCard, Receipt, Loader2, ShieldCheck, Zap, 
-  Download, Calendar, Lock, Globe, AlertTriangle, ExternalLink 
+  Download, Calendar, Globe, AlertTriangle, ExternalLink 
 } from 'lucide-react';
 import { createCustomerPortalSession, getClientInvoices, getUpcomingInvoice, createProTierCheckout } from '@/app/actions/billing';
 
@@ -15,8 +15,6 @@ export default function BillingModule({ clientId }: { clientId: string }) {
   const [upcoming, setUpcoming] = useState<{ amount: string, date: string } | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isRedirecting, setIsRedirecting] = useState(false);
-  
-  // NEW: State for the Professional Tier Upgrade
   const [isUpgrading, setIsUpgrading] = useState(false);
 
   useEffect(() => {
@@ -51,10 +49,8 @@ export default function BillingModule({ clientId }: { clientId: string }) {
     else { alert("Failed to connect to billing portal."); setIsRedirecting(false); }
   };
 
-  // 🚀 ZERO-FRICTION UPGRADE EXECUTION
   const handleProUpgrade = async () => {
     setIsUpgrading(true);
-    // Pass an empty string for the domain for now; they will set it up AFTER upgrading.
     const { url, error } = await createProTierCheckout(clientId, store?.contact_email || '', '');
     
     if (url) {
@@ -72,7 +68,7 @@ export default function BillingModule({ clientId }: { clientId: string }) {
         <span className="text-xs font-mono text-emerald-500 uppercase tracking-widest animate-pulse">Syncing Ledger...</span>
       </div>
     );
-  }
+  } // <--- Added the missing closing bracket here
 
   return (
     <div className="h-full max-w-6xl mx-auto animate-in fade-in duration-500 pb-12 mt-2">
@@ -111,7 +107,6 @@ export default function BillingModule({ clientId }: { clientId: string }) {
                 <span className="text-sm font-bold text-zinc-500 uppercase tracking-widest">/ month</span>
               </div>
 
-              {/* Auto-Pay Display with Fallback State */}
               {upcoming ? (
                 <div className="bg-emerald-500/5 border border-emerald-500/20 rounded-xl p-4 mb-6 flex items-center gap-4">
                   <div className="p-2 bg-emerald-500/10 rounded-lg"><Calendar className="w-4 h-4 text-emerald-400" /></div>
@@ -144,7 +139,6 @@ export default function BillingModule({ clientId }: { clientId: string }) {
             </div>
           </div>
           
-          {/* THE UPDATED STRIPE PORTAL CONNECTOR */}
           <div className="bg-zinc-950 border border-zinc-800/80 rounded-3xl p-6 md:p-8 flex flex-col md:flex-row md:items-center justify-between group gap-6 shadow-xl">
             <div className="flex-1">
               <h3 className="text-sm font-bold text-white tracking-widest uppercase mb-2">Manage Subscription & Billing</h3>
@@ -166,7 +160,6 @@ export default function BillingModule({ clientId }: { clientId: string }) {
             </button>
           </div>
 
-          {/* 🚀 THE UNLOCKED PROFESSIONAL UPGRADE TIER (FRICTION-FREE) */}
           <div className="pt-4">
             <h3 className="text-xs font-black text-cyan-500 uppercase tracking-widest mb-4 pl-2">Available Upgrades</h3>
             <div className="relative flex flex-col rounded-3xl p-6 md:p-8 bg-zinc-950 border border-cyan-500/30 shadow-[0_0_20px_rgba(6,182,212,0.05)] overflow-hidden transition-all">
@@ -183,7 +176,6 @@ export default function BillingModule({ clientId }: { clientId: string }) {
                 </p>
               </div>
 
-              {/* 🚀 ZERO-FRICTION UPGRADE BUTTON */}
               <div className="relative z-10">
                 <button 
                   onClick={handleProUpgrade}
@@ -207,7 +199,6 @@ export default function BillingModule({ clientId }: { clientId: string }) {
               </div>
             </div>
           </div>
-
         </div>
 
         {/* RIGHT COL: Native Invoice Table */}

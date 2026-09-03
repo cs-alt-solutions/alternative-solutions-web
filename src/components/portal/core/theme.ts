@@ -1,5 +1,4 @@
 /* src/components/portal/core/theme.ts */
-
 export const PORTAL_THEMES = {
   client: {
     badge: 'ACTIVE CLIENT',
@@ -21,20 +20,15 @@ export const PORTAL_THEMES = {
     text: 'text-fuchsia-400',
     border: 'border-fuchsia-500/20',
     hoverText: 'hover:text-fuchsia-400',
-  }
+  } // <--- Added the missing closing bracket here
 } as const;
 
 export type PortalTier = keyof typeof PORTAL_THEMES;
 
-/**
- * Helper function to determine the user's tier based on their clientId
- * and return the exact Tailwind classes for their theme.
- */
 export function getPortalTheme(clientId: string) {
   let tier: PortalTier = 'client';
-  
   if (clientId === 'luckystrike') tier = 'beta';
-  if (clientId === 'division') tier = 'internal'; 
+  if (clientId === 'division') tier = 'internal';
   
   return PORTAL_THEMES[tier];
 }
