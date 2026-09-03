@@ -1,4 +1,4 @@
-// src/config/dashboard.ts
+/* src/config/dashboard.ts */
 
 export const DASHBOARD_COPY = {
   COMMON: { BRAND_VERSION: "Alternative Solutions Workspace", STATUS_ONLINE: "All Systems Go", ACTION_REVIEW: "Review" },
@@ -13,9 +13,9 @@ export const DASHBOARD_COPY = {
     BROADCAST: "Emails & Updates",
     MEMBERS: "Members & Access",
     CLIENTS: "Client HQ",
-    SUPPORT_DESK: "Support Desk", // 🚀 FIX: Added for the missing Support error
+    SUPPORT_DESK: "Support Desk", 
     TASKS: "Tasks",
-    ANALYTICS: "Live Traffic",    // 🚀 NEW: Added for the Vercel Analytics route
+    ANALYTICS: "Live Traffic", 
     INFRASTRUCTURE: "Infrastructure",
     CONFIG: "Settings",
     EXIT: "  Back to Website"
@@ -239,11 +239,10 @@ export const DASHBOARD_COPY = {
     options: "Options",
     unnamed: "Unnamed Item"
   },
-  // --- THE NEW STAGING GLOSSARY BLOCK ---
   STAGING: {
     TITLE: "Interactive Staging",
     DESC: "Dispatch the interactive review layer to the client for final sign-off.",
-    ROUTING_LABEL: "Target Routing",
+    ROUTE_LABEL: "Target Routing",
     STATUS_LABEL: "Current Status",
     MISSING_EMAIL: "Missing Email",
     BTN_DISPATCH: "Dispatch Review Link",
@@ -259,7 +258,6 @@ export const DASHBOARD_COPY = {
   }
 };
 
-// 🚀 ADDED THE NEW STOREFRONT ENGINE COPY 
 export const STOREFRONT_ENGINE_COPY = {
   HEADER: {
     TITLE: "Storefront Engine",
@@ -284,5 +282,36 @@ export const STOREFRONT_ENGINE_COPY = {
     TIMELINE: "Timeline",
     ACTIONS: "System Actions",
     EMPTY: "No matching records found."
+  }
+};
+
+// 🚀 ADDED THE NEW SUPPORT DESK UI COPY 
+export const SUPPORT_DESK_COPY = {
+  HEADER: {
+    TITLE: "Support Desk",
+    SUBTITLE: "Global Triage & Client Requests"
+  },
+  TABS: {
+    OPEN: "Needs Action",
+    RESOLVED: "Resolved",
+    CANCELED: "Canceled"
+  },
+  ACTIONS: {
+    SYNC: "Sync Queue",
+    RESOLVE: "Resolve",
+    CANCEL: "Trash",
+    SEND: "Send Message",
+    SENDING: "Sending...",
+    RESOLVING: "Mark as Resolved"
+  },
+  EMPTY_STATES: {
+    OPEN: "Inbox is zero. No active requests.",
+    RESOLVED: "No resolved tickets yet.",
+    CANCELED: "No canceled tickets in the archive."
+  },
+  LABELS: {
+    CLIENT: "Client Request:",
+    RESPONSE: "Your Response:",
+    CANCEL_REASON: "Admin Override / Cancel Reason:"
   }
 };

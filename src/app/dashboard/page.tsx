@@ -41,17 +41,35 @@ export default async function DashboardOverview() {
     console.error("Failed to fetch pending applications:", err);
   }
 
+  // The Two-Step Manual Join
   let activeRequests: any[] = [];
   try {
     const { data: tickets, error } = await supabase
       .from('support_tickets')
-      .select('*, storefronts(business_name)')
+      .select('*')
       .eq('status', 'OPEN')
       .order('created_at', { ascending: false })
       .limit(5);
       
-    if (!error && tickets) {
-      activeRequests = tickets;
+    if (error) throw error;
+
+    if (tickets && tickets.length > 0) {
+      const storefrontIds = [...new Set(tickets.map(t => t.storefront_id))];
+
+      const { data: storefrontsData } = await supabase
+        .from('storefronts')
+        .select('id, business_name')
+        .in('id', storefrontIds);
+
+      const storefrontMap = storefrontsData?.reduce((acc: any, curr: any) => {
+        acc[curr.id] = curr.business_name;
+        return acc;
+      }, {});
+
+      activeRequests = tickets.map(t => ({
+        ...t,
+        storefronts: { business_name: storefrontMap?.[t.storefront_id] || 'Client Workspace' }
+      }));
     }
   } catch (err) {
     console.error("Failed to fetch client requests:", err);
@@ -77,14 +95,8 @@ export default async function DashboardOverview() {
 
       <div className="grid grid-cols-1 xl:grid-cols-12 gap-6">
         
+        {/* LEFT COLUMN: The Primary Focus */}
         <div className="xl:col-span-8 space-y-6">
-          
-          {/* 🚀 FIXED: Removed the activeRequests.length condition so it ALWAYS renders */}
-          <div className="bg-zinc-950 border border-amber-500/30 rounded-2xl overflow-hidden shadow-2xl relative animate-in fade-in slide-in-from-top-4">
-            <div className="absolute top-0 left-0 w-full h-1 bg-linear-to-r from-amber-500 to-orange-500" />
-            <ActiveClientRequests requests={activeRequests} />
-          </div>
-
           <div className="bg-zinc-950 border border-zinc-800 rounded-2xl overflow-hidden shadow-2xl relative">
             <div className="absolute top-0 left-0 w-full h-1 bg-linear-to-r from-fuchsia-500 to-cyan-500" />
             <StorefrontIntakePanel items={recentLeads} copy={copy.DIRECTIVE} />
@@ -96,7 +108,15 @@ export default async function DashboardOverview() {
           </div>
         </div>
 
+        {/* RIGHT COLUMN: Infrastructure & Radars */}
         <div className="xl:col-span-4 space-y-6">
+          
+          {/* 🚀 MOVED: Client Request Radar */}
+          <div className="bg-zinc-950 border border-amber-500/30 rounded-2xl overflow-hidden shadow-2xl relative animate-in fade-in slide-in-from-top-4">
+            <div className="absolute top-0 left-0 w-full h-1 bg-linear-to-r from-amber-500 to-orange-500" />
+            <ActiveClientRequests requests={activeRequests} />
+          </div>
+
           <PlatformTrackerPanel copy={copy.INFRASTRUCTURE} />
         </div>
 
