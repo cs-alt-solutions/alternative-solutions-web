@@ -18,39 +18,10 @@ export default function GlobalHelp({
 }) {
   const router = useRouter();
   const currentTheme = getPortalTheme(clientId);
-  
-  // Bulletproof fallback so a missing dictionary never crashes the app
-  const copy = PORTAL_COPY.helpGuide || {
-    title: "Quick Start Guide",
-    subtitle: "Workspace Navigation",
-    intro: "Pardon the digital dust while we get the engines running! Here is a quick breakdown of how to navigate your command center:",
-    sections: [
-      {
-        id: "storefront",
-        title: "Live Storefront",
-        desc: "Your portal to edit copy and media. The live editor is locked by default to prevent accidental breaks. Request the keys to temporarily unlock it, or shoot me a message."
-      },
-      {
-        id: "vault",
-        title: "Media Vault",
-        desc: "Drop high-res files, brand assets, and documents directly into this secure transfer vault so we have everything in one place."
-      },
-      {
-        id: "support",
-        title: "Support Desk",
-        desc: "Got a question, found a glitch, or want to scope out a new feature? Drop it here. It acts as a direct, permanent pipeline to my inbox."
-      },
-      {
-        id: "billing",
-        title: "Billing & Plans",
-        desc: "Manage your active subscription tier, safely update your payment methods, or download historical tax receipts."
-      }
-    ]
-  };
+  const copy = PORTAL_COPY.helpGuide;
 
   if (!isOpen) return null;
 
-  // Icon mapping for the help guide
   const renderGuideIcon = (id: string) => {
     switch (id) {
       case 'storefront': return <Store size={18} className={currentTheme.text} />;
@@ -61,7 +32,6 @@ export default function GlobalHelp({
     }
   };
 
-  // The Interactive "Show Me" Logic
   const handleShowMe = (id: string) => {
     onClose(); 
     
@@ -76,7 +46,6 @@ export default function GlobalHelp({
     if (target) {
       router.push(target.path);
       
-      // Visually pulse the target in the sidebar so they learn where it is
       setTimeout(() => {
         const el = document.getElementById(target.navId);
         if (el) {
@@ -135,12 +104,14 @@ export default function GlobalHelp({
                   </div>
                   <h4 className="text-xs font-bold text-white uppercase tracking-widest">{section.title}</h4>
                 </div>
-                <p className="text-xs text-zinc-400 leading-relaxed pl-[42px] mb-6 flex-1">
+                {/* 🚀 FIXED: pl-10.5 instead of pl-[42px] */}
+                <p className="text-xs text-zinc-400 leading-relaxed pl-10.5 mb-6 flex-1">
                   {section.desc}
                 </p>
+                {/* 🚀 FIXED: ml-10.5 instead of ml-[42px] */}
                 <button 
                   onClick={() => handleShowMe(section.id)}
-                  className={`mt-auto ml-[42px] flex items-center gap-2 text-[10px] font-black uppercase tracking-widest transition-all w-max hover:translate-x-1 ${currentTheme.text} cursor-pointer`}
+                  className={`mt-auto ml-10.5 flex items-center gap-2 text-[10px] font-black uppercase tracking-widest transition-all w-max hover:translate-x-1 ${currentTheme.text} cursor-pointer`}
                 >
                   Show Me <ArrowRight size={12} />
                 </button>
