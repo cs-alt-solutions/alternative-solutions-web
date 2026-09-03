@@ -3,9 +3,9 @@
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { 
-  X, Rocket, XCircle, CreditCard, User, Globe, 
+  X, Rocket, XCircle, User, Globe, 
   Share2, Instagram, Twitter, Linkedin, Zap,
-  Facebook, Hash, Link as LinkIcon
+  Facebook, Hash, Link as LinkIcon, Clock
 } from 'lucide-react';
 import { updateApplicationStatus } from '@/app/actions/storefront_applications';
 
@@ -16,6 +16,26 @@ interface ApplicationReviewModalProps {
   closeModal?: () => void;
   handleClose?: () => void;
 }
+
+// 🚀 Smart parser to convert raw handles (e.g. "@username" or "sd") into actual clickable URLs
+const formatSocialData = (platform: string, handle: string) => {
+  if (handle.startsWith('http')) {
+    let display = handle.replace(/^https?:\/\/(www\.)?/, '').replace(/\/$/, '');
+    if (display.length > 22) display = display.substring(0, 22) + '...';
+    return { url: handle, display };
+  }
+  
+  const cleanHandle = handle.replace(/^@/, '');
+  let url = `https://${cleanHandle}`; // Fallback for 'Other'
+  
+  if (platform === 'Instagram') url = `https://instagram.com/${cleanHandle}`;
+  else if (platform === 'X / Twitter') url = `https://twitter.com/${cleanHandle}`;
+  else if (platform === 'LinkedIn') url = `https://linkedin.com/in/${cleanHandle}`;
+  else if (platform === 'Facebook') url = `https://facebook.com/${cleanHandle}`;
+  else if (platform === 'TikTok') url = `https://tiktok.com/@${cleanHandle}`;
+  
+  return { url, display: `@${cleanHandle}` };
+};
 
 export default function ApplicationReviewModal({ 
   app, 
@@ -28,9 +48,6 @@ export default function ApplicationReviewModal({
   const router = useRouter();
 
   const targetApp = app || application || {};
-
-  // We only need to potentially override the plan tier now
-  const [overridePlan, setOverridePlan] = useState((targetApp.selected_plan || 'standard').toLowerCase());
 
   const triggerClose = () => {
     if (onClose) onClose();
@@ -47,9 +64,8 @@ export default function ApplicationReviewModal({
     
     setIsProcessing(true);
     
-    // Pass the standard architectural defaults so the database doesn't complain
     const payloadOverrides = {
-      plan: overridePlan,
+      plan: 'standard',
       vibe: 'clueless',
       brandColor: 'cyan',
       hero: 'centered',
@@ -114,15 +130,12 @@ export default function ApplicationReviewModal({
     { name: 'Other', value: safeSocials.other, icon: LinkIcon, color: 'text-teal-400', border: 'border-teal-500/20 bg-teal-500/5' },
   ].filter(s => !!s.value);
 
-  let planBadgeStyle = overridePlan.includes('pro') ? 'border-cyan-500/30 bg-cyan-500/10 text-cyan-400 shadow-[0_0_15px_rgba(6,182,212,0.15)]' :
-                       overridePlan.includes('custom') ? 'border-fuchsia-500/30 bg-fuchsia-500/10 text-fuchsia-400 shadow-[0_0_15px_rgba(217,70,239,0.15)]' :
-                       'border-emerald-500/30 bg-emerald-500/10 text-emerald-400 shadow-[0_0_15px_rgba(16,185,129,0.15)]';
-
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 md:p-6 bg-black/85 backdrop-blur-md animate-in fade-in duration-200">
-      <div className="bg-zinc-950 border border-zinc-800 rounded-2xl w-full max-w-4xl max-h-[90vh] overflow-hidden shadow-[0_0_50px_rgba(0,0,0,0.8)] flex flex-col">
+      <div className="bg-zinc-950 border border-zinc-800 rounded-2xl w-full max-w-5xl max-h-[90vh] overflow-hidden shadow-[0_0_50px_rgba(0,0,0,0.8)] flex flex-col">
         
-        <div className="h-1 w-full bg-linear-to-r from-cyan-500 via-fuchsia-500 to-indigo-500 shrink-0" />
+        {/* DYNAMIC HEADER BAR */}
+        <div className={`h-1 w-full shrink-0 ${isPriority ? 'bg-amber-500 shadow-[0_0_15px_rgba(245,158,11,0.5)]' : 'bg-linear-to-r from-cyan-500 via-fuchsia-500 to-indigo-500'}`} />
         
         {/* HEADER */}
         <div className="flex justify-between items-center p-6 border-b border-zinc-800/80 bg-zinc-900/40 shrink-0">
@@ -135,7 +148,7 @@ export default function ApplicationReviewModal({
               
               {isPriority && (
                 <span className="px-2 py-0.5 rounded text-[9px] font-black uppercase tracking-widest bg-amber-500/10 text-amber-400 border border-amber-500/20 flex items-center gap-1">
-                  <Zap size={10} /> Priority
+                  <Zap size={10} /> Fast Track
                 </span>
               )}
             </div>
@@ -151,75 +164,84 @@ export default function ApplicationReviewModal({
 
         {/* BODY */}
         <div className="p-6 overflow-y-auto custom-scrollbar flex-1">
-          <div className="flex flex-col lg:flex-row gap-8">
+          <div className="flex flex-col gap-6">
             
-            {/* LEFT COLUMN: THE HUMAN */}
-            <div className="flex-1 space-y-6">
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div className="flex items-start gap-3">
-                  <div className="p-2.5 rounded-lg bg-zinc-900 border border-zinc-800 text-zinc-400 shrink-0">
-                    <User size={16} />
-                  </div>
+            {/* 🚀 1. THE BUILD LANE BANNER (Full Width) */}
+            <div className={`p-5 rounded-2xl border transition-all flex items-center justify-between overflow-hidden relative ${
+              isPriority 
+                ? 'bg-amber-500/10 border-amber-500/30 shadow-[0_0_20px_rgba(245,158,11,0.15)]' 
+                : 'bg-zinc-900 border-zinc-800'
+            }`}>
+              <div className="relative z-10">
+                <h3 className="text-[10px] font-black uppercase tracking-widest flex items-center gap-2 mb-2 text-zinc-400">
+                  {isPriority ? <Zap size={13} className="text-amber-400" /> : <Clock size={13} className="text-cyan-400" />}
+                  Build Lane Selection
+                </h3>
+                
+                {isPriority ? (
                   <div>
-                    <p className="text-[10px] font-black uppercase tracking-widest text-zinc-500">Applicant</p>
-                    <p className="text-sm font-bold text-white">{applicantName}</p>
-                    <div className="flex flex-col gap-0.5 mt-1">
-                      <a href={`mailto:${applicantEmail}`} className="text-xs font-mono text-cyan-400 hover:underline">{applicantEmail}</a>
-                      {applicantPhone && <a href={`tel:${applicantPhone}`} className="text-xs font-mono text-zinc-400 hover:text-white">{applicantPhone}</a>}
-                    </div>
+                    <h4 className="text-xl sm:text-2xl font-black text-amber-400 uppercase tracking-tight mb-1">Fast-Track Request</h4>
+                    <p className="text-xs sm:text-sm text-amber-400/80 leading-relaxed font-medium">This client bypassed the standard queue and is awaiting their secure portal and checkout link.</p>
                   </div>
-                </div>
-
-                <div className="flex items-start gap-3">
-                  <div className="p-2.5 rounded-lg bg-zinc-900 border border-zinc-800 text-zinc-400 shrink-0">
-                    <Globe size={16} />
-                  </div>
+                ) : (
                   <div>
-                    <p className="text-[10px] font-black uppercase tracking-widest text-zinc-500">Existing Domain</p>
-                    {existingDomain ? (
-                      <a href={existingDomain.startsWith('http') ? existingDomain : `https://${existingDomain}`} target="_blank" rel="noreferrer" className="text-sm font-mono font-bold text-cyan-400 hover:text-cyan-300 hover:underline break-all">
-                        {existingDomain}
-                      </a>
-                    ) : (
-                      <p className="text-sm font-mono text-zinc-600">None Provided</p>
-                    )}
+                    <h4 className="text-xl sm:text-2xl font-black text-white uppercase tracking-tight mb-1">Standard Queue</h4>
+                    <p className="text-xs sm:text-sm text-zinc-500 leading-relaxed font-medium">This client requested a free working draft before locking in their subscription.</p>
                   </div>
-                </div>
+                )}
+              </div>
+              <div className="hidden sm:block absolute right-6 opacity-[0.03] pointer-events-none">
+                {isPriority ? <Zap size={120} className="text-amber-400" /> : <Clock size={120} className="text-white" />}
               </div>
             </div>
 
-            {/* RIGHT COLUMN: SPECS & DIGITAL FOOTPRINT */}
-            <div className="w-full lg:w-80 flex flex-col gap-6 shrink-0">
-              <div className={`p-4 rounded-2xl border transition-colors ${planBadgeStyle}`}>
-                <div className="flex items-center justify-between mb-2">
-                  <span className="text-[10px] uppercase font-black tracking-widest flex items-center gap-1.5 opacity-80">
-                    <CreditCard size={13} /> Target Infrastructure
-                  </span>
+            {/* 🚀 2. THE THREE-COLUMN DATA GRID */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              
+              {/* APPLICANT */}
+              <div className="bg-zinc-900/40 border border-zinc-800 rounded-2xl p-5">
+                <h3 className="text-[10px] font-black text-zinc-500 uppercase tracking-widest flex items-center gap-2 mb-4">
+                  <User size={13} /> Applicant
+                </h3>
+                <div>
+                  <p className="text-sm font-bold text-white mb-2">{applicantName}</p>
+                  <div className="flex flex-col gap-1.5">
+                    <a href={`mailto:${applicantEmail}`} className="text-xs font-mono text-cyan-400 hover:underline">{applicantEmail}</a>
+                    {applicantPhone && <a href={`tel:${applicantPhone}`} className="text-xs font-mono text-zinc-400 hover:text-white">{applicantPhone}</a>}
+                  </div>
                 </div>
-                <select 
-                  value={overridePlan}
-                  onChange={(e) => setOverridePlan(e.target.value)}
-                  className="w-full bg-transparent font-black tracking-tight text-white uppercase text-xl focus:outline-none appearance-none cursor-pointer"
-                >
-                  <option value="standard" className="text-zinc-900">Standard</option>
-                  <option value="professional" className="text-zinc-900">Professional</option>
-                </select>
               </div>
 
-              <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-5 space-y-4">
-                <h3 className="text-[10px] font-black text-zinc-400 uppercase tracking-widest flex items-center gap-2">
+              {/* DOMAIN */}
+              <div className="bg-zinc-900/40 border border-zinc-800 rounded-2xl p-5">
+                <h3 className="text-[10px] font-black text-zinc-500 uppercase tracking-widest flex items-center gap-2 mb-4">
+                  <Globe size={13} /> Existing Domain
+                </h3>
+                <div>
+                  {existingDomain ? (
+                    <a href={existingDomain.startsWith('http') ? existingDomain : `https://${existingDomain}`} target="_blank" rel="noreferrer" className="text-sm font-mono font-bold text-cyan-400 hover:text-cyan-300 hover:underline break-all">
+                      {existingDomain.replace(/^https?:\/\/(www\.)?/, '')}
+                    </a>
+                  ) : (
+                    <p className="text-sm font-mono text-zinc-600">None Provided</p>
+                  )}
+                </div>
+              </div>
+
+              {/* DIGITAL FOOTPRINT */}
+              <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-5">
+                <h3 className="text-[10px] font-black text-zinc-400 uppercase tracking-widest flex items-center gap-2 mb-4">
                   <Share2 size={13} className="text-indigo-400" /> Digital Footprint
                 </h3>
-                
                 {socialProfiles.length > 0 ? (
                   <div className="space-y-2">
                     {socialProfiles.map((social, idx) => {
-                      const url = social.value.startsWith('http') ? social.value : `https://${social.value}`;
+                      const { url, display } = formatSocialData(social.name, social.value);
                       return (
-                        <a key={idx} href={url} target="_blank" rel="noreferrer" className={`flex items-center gap-3 p-2.5 rounded-lg border ${social.border} transition-all group`}>
+                        <a key={idx} href={url} target="_blank" rel="noreferrer" className={`flex items-center gap-3 p-2.5 rounded-lg border ${social.border} hover:bg-zinc-800 transition-all group`}>
                           <social.icon size={14} className={social.color} />
                           <span className="text-xs font-mono text-zinc-300 truncate group-hover:text-white transition-colors">
-                            {social.value.replace(/^https?:\/\/(www\.)?/, '')}
+                            {display}
                           </span>
                         </a>
                       );
@@ -231,6 +253,7 @@ export default function ApplicationReviewModal({
                   </div>
                 )}
               </div>
+
             </div>
           </div>
         </div>

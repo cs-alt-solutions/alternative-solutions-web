@@ -25,10 +25,11 @@ export default async function DashboardOverview() {
       .from('storefront_applications') 
       .select('*')
       .eq('status', 'PENDING')
-      // 🚀 UPDATED: Sort by priority FIRST, then by date!
+      // 🚀 Fast-Track first
       .order('is_priority', { ascending: false, nullsFirst: false })
-      .order('created_at', { ascending: false })
-      .limit(6); // Bumped to 6 to match the UI screenshot capacity
+      // 🚀 Oldest first (FIFO) so you can work top-to-bottom
+      .order('created_at', { ascending: true })
+      .limit(6); 
 
     if (!error && applications) {
       recentLeads = applications.map((app) => ({
@@ -37,7 +38,6 @@ export default async function DashboardOverview() {
         title: app.business_name || 'New Application',
         subtitle: app.contact_email,
         created_at: app.created_at,
-        // 🚀 UPDATED: Pass the flag to the UI component so it knows to glow amber
         is_priority: app.is_priority, 
         link: `/dashboard/storefronts?application=${app.id}`
       }));
