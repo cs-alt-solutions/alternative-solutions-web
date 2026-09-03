@@ -64,6 +64,10 @@ export const PORTAL_COPY = {
     emptyState: "No raw files in the vault."
   },
   storefront: {
+    // 🚀 RESTORED KEYS
+    lockedTitle: "Want to make an edit or change the vibe?",
+    lockedBody: "I keep the live storefront locked by default so we don't accidentally break your layout. If you need to update text, swap out some images, or completely shift the visual aesthetic, just request the keys!",
+    
     vibeCheckTitle: "Need a different vibe?",
     vibeCheckBody: "This command center gives you absolute control over your words and media. But if you want to restructure your layout, add brand new sections, or completely change the design aesthetic—just shoot me an email! I will custom-architect the code for you.",
     requestKeysBtn: "Request The Keys",

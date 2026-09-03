@@ -19,7 +19,7 @@ export default function GlobalHelp({
   const router = useRouter();
   const currentTheme = getPortalTheme(clientId);
   
-  // Bulletproof fallback so a missing dictionary never crashes the app again
+  // Bulletproof fallback so a missing dictionary never crashes the app
   const copy = PORTAL_COPY.helpGuide || {
     title: "Quick Start Guide",
     subtitle: "Workspace Navigation",
@@ -135,12 +135,12 @@ export default function GlobalHelp({
                   </div>
                   <h4 className="text-xs font-bold text-white uppercase tracking-widest">{section.title}</h4>
                 </div>
-                <p className="text-xs text-zinc-400 leading-relaxed pl-10.5 mb-6 flex-1">
+                <p className="text-xs text-zinc-400 leading-relaxed pl-[42px] mb-6 flex-1">
                   {section.desc}
                 </p>
                 <button 
                   onClick={() => handleShowMe(section.id)}
-                  className={`mt-auto ml-10.5 flex items-center gap-2 text-[10px] font-black uppercase tracking-widest transition-all w-max hover:translate-x-1 ${currentTheme.text} cursor-pointer`}
+                  className={`mt-auto ml-[42px] flex items-center gap-2 text-[10px] font-black uppercase tracking-widest transition-all w-max hover:translate-x-1 ${currentTheme.text} cursor-pointer`}
                 >
                   Show Me <ArrowRight size={12} />
                 </button>
