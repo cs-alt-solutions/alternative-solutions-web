@@ -3,14 +3,20 @@
 
 import React from 'react';
 import Link from 'next/link';
-import { MessageSquare, ArrowRight, Clock, AlertCircle, CheckCircle2 } from 'lucide-react';
+import { MessageSquare, ArrowRight, Clock, AlertCircle, CheckCircle2, FileUp } from 'lucide-react';
 
 export default function ActiveClientRequests({ requests }: { requests: any[] }) {
   const now = new Date().getTime();
+  const msIn48Hours = 48 * 60 * 60 * 1000;
   
-  // High-Level Triage Math
-  const newLast24h = requests.filter(t => (now - new Date(t.created_at).getTime()) < 86400000).length;
-  const olderTickets = requests.filter(t => (now - new Date(t.created_at).getTime()) > (7 * 86400000)).length;
+  // 1. Separate Media Drops from standard Support Tickets
+  const mediaTickets = requests.filter(t => t.category === 'System Alert');
+  const supportTickets = requests.filter(t => t.category !== 'System Alert');
+
+  // 2. High-Level Triage Math (Closing the Black Hole)
+  const recentSupport = supportTickets.filter(t => (now - new Date(t.created_at).getTime()) <= msIn48Hours).length;
+  const agingSupport = supportTickets.filter(t => (now - new Date(t.created_at).getTime()) > msIn48Hours).length;
+  const pendingMedia = mediaTickets.length;
 
   return (
     <div className="p-5">
@@ -28,18 +34,33 @@ export default function ActiveClientRequests({ requests }: { requests: any[] }) 
           <p className="text-[10px] font-mono uppercase tracking-widest">Inbox Zero</p>
         </div>
       ) : (
-        <div className="grid grid-cols-2 gap-3 mb-5">
-          <div className="bg-black/40 border border-white/5 rounded-xl p-3 flex flex-col items-center justify-center text-center">
-            <Clock size={16} className="text-cyan-500 mb-1.5" />
-            <span className="text-xl font-black text-white">{newLast24h}</span>
-            <span className="text-[8px] font-bold text-zinc-500 uppercase tracking-widest mt-1">New (24hrs)</span>
+        <div className="space-y-3 mb-5">
+          {/* ROW 1: Standard Support Triaging */}
+          <div className="grid grid-cols-2 gap-3">
+            <div className="bg-black/40 border border-white/5 rounded-xl p-3 flex flex-col items-center justify-center text-center">
+              <Clock size={16} className="text-cyan-500 mb-1.5" />
+              <span className="text-xl font-black text-white">{recentSupport}</span>
+              <span className="text-[8px] font-bold text-zinc-500 uppercase tracking-widest mt-1">Recent (&lt;48h)</span>
+            </div>
+            
+            <div className={`bg-black/40 border rounded-xl p-3 flex flex-col items-center justify-center text-center transition-colors ${agingSupport > 0 ? 'border-rose-500/30 shadow-[0_0_15px_rgba(244,63,94,0.1)]' : 'border-white/5'}`}>
+              <AlertCircle size={16} className={`${agingSupport > 0 ? "text-rose-500 animate-pulse" : "text-zinc-600"} mb-1.5`} />
+              <span className="text-xl font-black text-white">{agingSupport}</span>
+              <span className="text-[8px] font-bold text-zinc-500 uppercase tracking-widest mt-1">Aging (48h+)</span>
+            </div>
           </div>
-          
-          <div className={`bg-black/40 border rounded-xl p-3 flex flex-col items-center justify-center text-center transition-colors ${olderTickets > 0 ? 'border-rose-500/30' : 'border-white/5'}`}>
-            {/* 🚀 FIXED: Tucked mb-1.5 safely inside the template literal */}
-            <AlertCircle size={16} className={`${olderTickets > 0 ? "text-rose-500" : "text-zinc-600"} mb-1.5`} />
-            <span className="text-xl font-black text-white">{olderTickets}</span>
-            <span className="text-[8px] font-bold text-zinc-500 uppercase tracking-widest mt-1">Older (7+ Days)</span>
+
+          {/* ROW 2: Media Asset Drops */}
+          <div className={`bg-black/40 border rounded-xl p-3 flex items-center justify-between transition-colors ${pendingMedia > 0 ? 'border-amber-500/30 shadow-[0_0_15px_rgba(245,158,11,0.05)]' : 'border-white/5'}`}>
+            <div className="flex items-center gap-3">
+              <div className={`p-2 rounded-lg ${pendingMedia > 0 ? 'bg-amber-500/10 text-amber-500' : 'bg-zinc-900 text-zinc-600'}`}>
+                <FileUp size={14} />
+              </div>
+              <span className="text-[9px] font-bold text-zinc-400 uppercase tracking-widest">Media Vault Drops</span>
+            </div>
+            <span className={`text-lg font-black ${pendingMedia > 0 ? 'text-amber-500' : 'text-zinc-600'}`}>
+              {pendingMedia}
+            </span>
           </div>
         </div>
       )}

@@ -1,5 +1,4 @@
 /* src/config/clients/portal.ts */
-
 export const PORTAL_COPY = {
   header: {
     signOut: "SIGN OUT",
@@ -63,11 +62,10 @@ export const PORTAL_COPY = {
     emptyState: "No raw files in the vault."
   },
   storefront: {
-    // 🚀 REFINED COPY
     vibeCheckTitle: "Looking for a bigger change?",
     vibeCheckBody: "This control center is designed for standard content swaps. If you want to fundamentally restructure your layout, add brand new pages, or completely shift the design aesthetic, we need to map out a custom expansion. Shoot me an email to get started.",
     lockedTitle: "Want to make an edit?",
-    lockedBody: "To keep your layout pixel-perfect, the structural editor is locked. But updating your site is easy—just select the section below and drop your new text or image requests. I'll get it updated for you!",
+    lockedBody: "To keep your layout pixel-perfect, the structural editor is locked. But updating your site is easy just select the section below and drop your new text or image requests. I'll get it updated for you!",
     requestKeysBtn: "Send Request",
     keysRequested: "Update Request Sent",
     keysPendingBody: "I've got your request! I'll review your notes and get those updates pushed to your live site shortly."
@@ -80,7 +78,9 @@ export const PORTAL_COPY = {
     categories: [
       { id: 'question', label: 'Just a Question', description: 'General inquiries, minor content updates, or "how-to" help.' },
       { id: 'broken', label: 'Something Broke', description: 'Glitches, display errors, or something is malfunctioning.' },
-      { id: 'idea', label: 'Big New Idea', description: 'Scope out a custom upgrade, new page, or structural shift.' }
+      { id: 'idea', label: 'Big New Idea', description: 'Scope out a custom upgrade, new page, or structural shift.' },
+      // 🚀 NEW: The Positivity Channel
+      { id: 'update', label: 'Business Update', description: 'Share a win, a milestone, or just tell me how things are going!' } 
     ],
     topics: [
       'Live Storefront',

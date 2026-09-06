@@ -9,13 +9,11 @@ import { supabase } from '@/utils/supabase';
 
 export default function SupportModule({ clientId }: { clientId: string }) {
   const currentTheme = getPortalTheme(clientId);
-  
   const [subject, setSubject] = useState('');
   const [message, setMessage] = useState('');
   const [priority, setPriority] = useState(PORTAL_COPY.support.categories[0].label);
   const [isSending, setIsSending] = useState(false);
   const [isSent, setIsSent] = useState(false);
-  
   const [tickets, setTickets] = useState<any[]>([]);
 
   useEffect(() => {
@@ -25,7 +23,7 @@ export default function SupportModule({ clientId }: { clientId: string }) {
         .select('*')
         .eq('storefront_id', clientId)
         .order('created_at', { ascending: false });
-      
+        
       if (data) setTickets(data);
     };
     fetchTickets();
@@ -38,7 +36,6 @@ export default function SupportModule({ clientId }: { clientId: string }) {
     if (!subject || !message.trim()) return;
     
     setIsSending(true);
-
     try {
       const { error } = await supabase.from('support_tickets').insert([{
         storefront_id: clientId,
@@ -58,8 +55,8 @@ export default function SupportModule({ clientId }: { clientId: string }) {
         status: 'OPEN',
         created_at: new Date().toISOString()
       };
-      setTickets([newTicket, ...tickets]);
 
+      setTickets([newTicket, ...tickets]);
       setIsSent(true);
       setSubject('');
       setMessage('');
@@ -108,13 +105,13 @@ export default function SupportModule({ clientId }: { clientId: string }) {
             <div className="space-y-8 flex-1">
               <div>
                 <label className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest mb-3 block">Request Category</label>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mb-3">
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-3">
                   {PORTAL_COPY.support.categories.map((cat) => (
                     <button
                       key={cat.id}
                       type="button"
                       onClick={() => setPriority(cat.label)}
-                      className={`py-3 px-4 rounded-xl text-xs font-bold uppercase tracking-widest transition-all border ${
+                      className={`py-3 px-2 rounded-xl text-[10px] font-bold uppercase tracking-widest transition-all border ${
                         priority === cat.label 
                           ? `${currentTheme.bg} ${currentTheme.text} ${currentTheme.border}` 
                           : 'bg-zinc-900 border-zinc-800 text-zinc-500 hover:text-white hover:bg-zinc-800'
@@ -162,7 +159,7 @@ export default function SupportModule({ clientId }: { clientId: string }) {
             <div className="mt-8 pt-6 border-t border-white/5 flex justify-end">
               <button 
                 type="submit" 
-                disabled={isSending || !subject || !message.trim()} 
+                disabled={isSending || !subject || !message.trim()}
                 className={`flex items-center gap-2 px-6 py-3 rounded-xl text-xs font-black uppercase tracking-widest transition-all disabled:opacity-50 ${
                   isSent ? 'bg-emerald-500 text-emerald-950' : 'bg-white text-black hover:bg-zinc-200'
                 }`}
@@ -172,7 +169,7 @@ export default function SupportModule({ clientId }: { clientId: string }) {
             </div>
           </form>
 
-          {/* 🚀 NEW: RE-STYLED MESSAGE HISTORY */}
+          {/* MESSAGE HISTORY (Text Thread Style) */}
           <div className="bg-black/40 border border-white/5 rounded-3xl p-6 md:p-8 shadow-xl">
             <div className="flex items-center gap-3 mb-6 pb-4 border-b border-white/5">
               <History className="w-5 h-5 text-zinc-500" />
@@ -186,18 +183,16 @@ export default function SupportModule({ clientId }: { clientId: string }) {
                 <p className="text-sm text-zinc-500">{PORTAL_COPY.support.historyEmpty}</p>
               </div>
             ) : (
-              <div className="space-y-4">
+              <div className="space-y-8">
                 {tickets.map(ticket => (
-                  <div key={ticket.id} className="bg-zinc-950/50 border border-white/5 rounded-2xl p-5 shadow-md flex flex-col gap-3 transition-colors hover:border-zinc-700/50">
-                    <div className="flex justify-between items-start">
+                  <div key={ticket.id} className="bg-zinc-950/50 border border-white/5 rounded-2xl p-5 shadow-md flex flex-col gap-3">
+                    <div className="flex justify-between items-start border-b border-white/5 pb-3">
                       <div>
                         <span className={`text-[10px] font-black uppercase tracking-widest ${currentTheme.text}`}>
                           {ticket.category}
                         </span>
                         <h4 className="text-sm font-bold text-white mt-0.5">{ticket.topic}</h4>
                       </div>
-                      
-                      {/* 🚀 Status badge updated to sound more human */}
                       <span className={`text-[9px] font-black uppercase tracking-widest px-2.5 py-1 rounded-md border ${
                         ticket.status === 'OPEN' 
                           ? 'bg-amber-500/10 text-amber-500 border-amber-500/20' 
@@ -206,16 +201,29 @@ export default function SupportModule({ clientId }: { clientId: string }) {
                         {ticket.status === 'OPEN' ? 'In Review' : 'Resolved'}
                       </span>
                     </div>
-                    
-                    {/* 🚀 The message box now looks like a clean chat block */}
-                    <p className="text-sm text-zinc-300 leading-relaxed pt-1">
-                      {ticket.details}
-                    </p>
-                    
-                    {/* 🚀 Date format updated: Slashes removed, standard text added */}
-                    <div className="text-xs text-zinc-500 font-medium flex items-center gap-1.5 mt-2 pt-3 border-t border-zinc-800/50">
-                      <Clock size={12} className="text-zinc-600" />
-                      {new Date(ticket.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })} at {new Date(ticket.created_at).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })}
+
+                    <div className="flex flex-col gap-4 mt-2">
+                      {/* Client Bubble */}
+                      <div className="flex justify-end">
+                        <div className="bg-zinc-800/80 border border-zinc-700 rounded-2xl rounded-tr-sm p-4 max-w-[85%]">
+                          <p className="text-sm text-zinc-300 whitespace-pre-wrap leading-relaxed">{ticket.details}</p>
+                          <span className="text-[9px] text-zinc-500 font-mono mt-2 block text-right">
+                            You • {new Date(ticket.created_at).toLocaleDateString()} at {new Date(ticket.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                          </span>
+                        </div>
+                      </div>
+
+                      {/* Admin Bubble (Now they can actually see your reply!) */}
+                      {ticket.admin_reply && (
+                        <div className="flex justify-start">
+                          <div className="bg-cyan-500/10 border border-cyan-500/20 rounded-2xl rounded-tl-sm p-4 max-w-[85%] shadow-[0_0_15px_rgba(6,182,212,0.05)]">
+                            <p className="text-sm text-cyan-50 whitespace-pre-wrap leading-relaxed">{ticket.admin_reply}</p>
+                            <span className="text-[9px] text-cyan-500/60 font-mono mt-2 block">
+                              Courtney • Alternative Solutions
+                            </span>
+                          </div>
+                        </div>
+                      )}
                     </div>
                   </div>
                 ))}

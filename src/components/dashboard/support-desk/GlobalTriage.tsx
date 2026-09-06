@@ -3,8 +3,8 @@
 
 import React, { useState, useEffect } from 'react';
 import { supabase } from '@/utils/supabase';
-import { Clock, AlertTriangle, CheckCircle2, Inbox, CheckSquare, RefreshCw, Paintbrush, Settings, Lightbulb, MessageSquare, Send, Store, ChevronDown, ChevronUp, Trash2, XCircle } from 'lucide-react';
-import { SUPPORT_DESK_COPY } from '@/config/dashboard'; // Adjust import path if needed
+import { Clock, AlertTriangle, CheckCircle2, Inbox, CheckSquare, RefreshCw, Paintbrush, Settings, Lightbulb, MessageSquare, Send, Store, ChevronDown, ChevronUp, Trash2, XCircle, Sparkles } from 'lucide-react';
+import { SUPPORT_DESK_COPY } from '@/config/dashboard';
 
 export default function GlobalTriage() {
   const [tickets, setTickets] = useState<any[]>([]);
@@ -87,12 +87,11 @@ export default function GlobalTriage() {
     if (expandedTicketId === ticketId) setExpandedTicketId(null);
   };
 
-  // 🚀 NEW: Admin Cancel / Trash Workflow
   const handleCancelTicket = async (ticketId: string, e: React.MouseEvent) => {
     e.stopPropagation();
     const reason = window.prompt("Enter cancellation reason (e.g., 'Just testing'):");
     
-    if (reason === null) return; // User clicked cancel on the prompt
+    if (reason === null) return; 
     
     const resolvedAt = new Date().toISOString();
     const finalReason = reason.trim() || "Admin Override";
@@ -118,6 +117,8 @@ export default function GlobalTriage() {
       case 'System Request': return { bg: 'bg-fuchsia-500/10', text: 'text-fuchsia-400', border: 'border-fuchsia-500/20', icon: Settings };
       case 'Something Broke': return { bg: 'bg-rose-500/10', text: 'text-rose-400', border: 'border-rose-500/20', icon: AlertTriangle };
       case 'Big New Idea': return { bg: 'bg-amber-500/10', text: 'text-amber-400', border: 'border-amber-500/20', icon: Lightbulb };
+      // 🚀 NEW: The Positivity Channel Configuration
+      case 'Business Update': return { bg: 'bg-emerald-500/10', text: 'text-emerald-400', border: 'border-emerald-500/20', icon: Sparkles };
       default: return { bg: 'bg-zinc-500/10', text: 'text-zinc-400', border: 'border-zinc-500/20', icon: MessageSquare };
     }
   };
@@ -296,49 +297,55 @@ export default function GlobalTriage() {
                             </div>
                           </div>
 
-                          {/* Expanded Thread Body */}
+                          {/* Expanded Thread Body (Text Message Style) */}
                           {isExpanded && (
                             <div className="p-5 border-t border-white/5 bg-zinc-900/40">
                               
-                              {/* Client Message */}
-                              <div className="mb-6">
-                                <p className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest mb-2">{copy.LABELS.CLIENT}</p>
-                                <div className="bg-black/40 border border-white/5 rounded-xl p-4">
-                                  <p className="text-sm text-zinc-300 whitespace-pre-wrap leading-relaxed">{ticket.details}</p>
+                              <div className="flex flex-col gap-6 mb-6">
+                                
+                                {/* Client Message Bubble */}
+                                <div className="flex justify-start">
+                                  <div className="bg-black border border-white/5 rounded-2xl rounded-tl-sm p-4 max-w-[85%] shadow-sm">
+                                    <p className="text-sm text-zinc-300 whitespace-pre-wrap leading-relaxed">{ticket.details}</p>
+                                    {/* 🚀 ADDED EXACT TIMESTAMP */}
+                                    <span className="text-[9px] text-zinc-500 font-mono mt-2 block">
+                                      Client • {new Date(ticket.created_at).toLocaleDateString()} at {new Date(ticket.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                    </span>
+                                  </div>
                                 </div>
-                              </div>
 
-                              {/* Cancellation Reason (If Canceled) */}
-                              {ticket.status === 'CANCELED' && ticket.cancel_reason && (
-                                <div className="mb-6 flex justify-end">
-                                  <div className="w-11/12 sm:w-5/6">
-                                    <p className="text-[10px] font-bold text-rose-500 uppercase tracking-widest mb-2 text-right">{copy.LABELS.CANCEL_REASON}</p>
-                                    <div className="bg-rose-500/10 border border-rose-500/20 rounded-xl p-4">
+                                {/* Cancellation Reason (If Canceled) */}
+                                {ticket.status === 'CANCELED' && ticket.cancel_reason && (
+                                  <div className="flex justify-end">
+                                    <div className="bg-rose-500/10 border border-rose-500/20 rounded-2xl rounded-tr-sm p-4 max-w-[85%]">
                                       <p className="text-sm text-rose-200 whitespace-pre-wrap leading-relaxed italic">"{ticket.cancel_reason}"</p>
+                                      <span className="text-[9px] text-rose-500/60 font-mono mt-2 block text-right">
+                                        System Override Log
+                                      </span>
                                     </div>
                                   </div>
-                                </div>
-                              )}
+                                )}
 
-                              {/* Admin Reply History */}
-                              {ticket.admin_reply && ticket.status !== 'CANCELED' && (
-                                <div className="mb-6 flex justify-end">
-                                  <div className="w-11/12 sm:w-5/6">
-                                    <p className="text-[10px] font-bold text-cyan-500 uppercase tracking-widest mb-2 text-right">{copy.LABELS.RESPONSE}</p>
-                                    <div className="bg-cyan-500/10 border border-cyan-500/20 rounded-xl p-4">
-                                      <p className="text-sm text-cyan-100 whitespace-pre-wrap leading-relaxed">{ticket.admin_reply}</p>
+                                {/* Admin Reply Bubble */}
+                                {ticket.admin_reply && ticket.status !== 'CANCELED' && (
+                                  <div className="flex justify-end">
+                                    <div className="bg-cyan-500/10 border border-cyan-500/20 rounded-2xl rounded-tr-sm p-4 max-w-[85%] shadow-[0_0_15px_rgba(6,182,212,0.05)]">
+                                      <p className="text-sm text-cyan-50 whitespace-pre-wrap leading-relaxed">{ticket.admin_reply}</p>
+                                      <span className="text-[9px] text-cyan-500/60 font-mono mt-2 block text-right">
+                                        You • Sent
+                                      </span>
                                     </div>
                                   </div>
-                                </div>
-                              )}
+                                )}
+                              </div>
 
                               {/* Action Area */}
                               {ticket.status === 'OPEN' && (
-                                <div className="flex flex-col gap-3">
+                                <div className="flex flex-col gap-3 border-t border-white/5 pt-4">
                                   <textarea 
                                     value={replyText[ticket.id] || ''}
                                     onChange={(e) => setReplyText(prev => ({ ...prev, [ticket.id]: e.target.value }))}
-                                    placeholder="Draft a response..."
+                                    placeholder="Draft a response to the client..."
                                     className="w-full bg-zinc-950 border border-zinc-800 rounded-xl p-3 text-sm text-white placeholder:text-zinc-600 focus:outline-none focus:border-cyan-500/50 resize-none min-h-[80px]"
                                   />
                                   <div className="flex items-center justify-between mt-1">

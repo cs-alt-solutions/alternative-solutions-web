@@ -1,4 +1,4 @@
-// src/app/dashboard/storefronts/[id]/page.tsx
+/* src/app/dashboard/storefronts/[id]/page.tsx */
 'use client';
 
 import React, { useState, useEffect } from 'react';
@@ -22,7 +22,8 @@ import {
   PanelLeftOpen,
   Lock,
   ShieldAlert,
-  Unlock // Added for the override button
+  Unlock,
+  FileUp // 🚀 ADDED: Icon for the new Vault tab
 } from 'lucide-react';
 
 import CoreTab from '@/components/dashboard/storefronts/editor/CoreTab';
@@ -30,6 +31,7 @@ import VisualArchitecture from '@/components/dashboard/storefronts/editor/core/V
 import MediaTab from '@/components/dashboard/storefronts/editor/MediaTab';
 import CapabilitiesTab from '@/components/dashboard/storefronts/editor/CapabilitiesTab';
 import GridTab from '@/components/dashboard/storefronts/editor/GridTab';
+import VaultTab from '@/components/dashboard/storefronts/editor/VaultTab'; // 🚀 ADDED: Import the new Drop Vault component
 import { deleteStorefront } from '@/app/actions/storefronts';
 
 export default function TenantCommandHub() {
@@ -38,8 +40,8 @@ export default function TenantCommandHub() {
   
   const [formData, setFormData] = useState<any>(null);
   
-  // NOTE: Staging is officially removed from the array!
-  const [activeTab, setActiveTab] = useState<'canvas' | 'grid'>('canvas');
+  // 🚀 ADDED: 'vault' added to the activeTab state
+  const [activeTab, setActiveTab] = useState<'canvas' | 'grid' | 'vault'>('canvas');
   const [editorTab, setEditorTab] = useState<'content' | 'design' | 'media' | 'services'>('content');
   const [controlsExpanded, setControlsExpanded] = useState(true);
   
@@ -193,6 +195,13 @@ export default function TenantCommandHub() {
         >
           <Server size={14} className="md:w-4 md:h-4" /> The Grid
         </button>
+        {/* 🚀 ADDED: The new Vault Tab button */}
+        <button 
+          onClick={() => setActiveTab('vault')}
+          className={`flex items-center gap-2 py-3 md:py-4 text-[10px] md:text-xs font-bold uppercase tracking-widest border-b-2 transition-colors cursor-pointer ${activeTab === 'vault' ? 'border-amber-400 text-amber-400' : 'border-transparent text-zinc-500 hover:text-zinc-300'}`}
+        >
+          <FileUp size={14} className="md:w-4 md:h-4" /> Drop Vault
+        </button>
       </nav>
 
       {/* DYNAMIC WORKSPACE */}
@@ -276,8 +285,16 @@ export default function TenantCommandHub() {
            <GridTab formData={formData} setFormData={setFormData} onTerminate={handleStorefrontTermination} />
         )}
 
+        {/* 🚀 TAB 3: THE VAULT */}
+        {activeTab === 'vault' && (
+          <div className="flex-1 overflow-y-auto w-full relative custom-scrollbar">
+            <VaultTab storeId={formData.id} />
+          </div>
+        )}
+
         {/* 🚨 THE GLOBAL SYSTEM LOCK SHIELD 🚨 */}
-        {['IN REVIEW', 'APPROVED', 'LIVE', 'CHANGES_REQUESTED'].includes(formData.status) && activeTab !== 'grid' && !isUnlocked && (
+        {/* 🚀 FIXED: The lock now ONLY blocks the 'canvas' tab so you can safely access the Grid and Vault */}
+        {['IN REVIEW', 'APPROVED', 'LIVE', 'CHANGES_REQUESTED'].includes(formData.status) && activeTab === 'canvas' && !isUnlocked && (
           <div className="absolute inset-0 z-100 bg-black/60 backdrop-blur-md flex flex-col items-center justify-center border border-cyan-500/20 shadow-[inset_0_0_100px_rgba(6,182,212,0.05)] transition-all duration-500 animate-in fade-in zoom-in-95">
             
             <div className="bg-zinc-950/90 border border-zinc-800 p-8 rounded-2xl flex flex-col items-center max-w-sm text-center shadow-2xl">
@@ -298,7 +315,6 @@ export default function TenantCommandHub() {
               </p>
               
               <div className="flex flex-col gap-3 w-full">
-                {/* OVERRIDE 1: SILENT ADMIN BYPASS */}
                 <button 
                   onClick={() => setIsUnlocked(true)}
                   className="w-full flex items-center justify-center gap-2 bg-cyan-500 hover:bg-cyan-400 text-zinc-950 font-black py-3 px-4 rounded-md text-[10px] uppercase tracking-widest transition-all shadow-[0_0_15px_rgba(6,182,212,0.4)] cursor-pointer"
@@ -306,7 +322,6 @@ export default function TenantCommandHub() {
                   <Unlock size={14} /> Silent Admin Override
                 </button>
 
-                {/* OVERRIDE 2: PIPELINE RESET */}
                 <button 
                   onClick={() => setFormData({ ...formData, status: 'BUILDING' })}
                   className="w-full flex items-center justify-center gap-2 bg-zinc-900 hover:bg-zinc-800 text-zinc-300 border border-zinc-700 hover:border-amber-500/50 py-3 px-4 rounded-md text-[10px] font-black uppercase tracking-widest transition-all group cursor-pointer"

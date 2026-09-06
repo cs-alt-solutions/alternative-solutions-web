@@ -1,113 +1,59 @@
 /* src/components/portal/dashboard/IncomingMessage.tsx */
-'use client';
+import React from 'react';
+import { Radio, Zap, CheckCircle2 } from 'lucide-react';
 
-import React, { useState, useEffect, useRef } from 'react';
-import { MessageCircle, CheckCheck, MessageSquare } from 'lucide-react';
-import { PORTAL_COPY } from '@/config/clients/portal';
-
-export default function IncomingMessage({ clientId }: { clientId: string }) {
-  const [history, setHistory] = useState<any[]>([]);
-  const [isTyping, setIsTyping] = useState(false);
-  
-  const scrollContainerRef = useRef<HTMLDivElement>(null);
-  const { messages } = PORTAL_COPY.dashboard;
-
-  useEffect(() => {
-    if (scrollContainerRef.current) {
-      scrollContainerRef.current.scrollTo({
-        top: scrollContainerRef.current.scrollHeight,
-        behavior: 'smooth'
-      });
-    }
-  }, [history, isTyping]);
-
-  useEffect(() => {
-    const visitKey = `portal_visit_count_${clientId}`;
-    const visits = parseInt(localStorage.getItem(visitKey) || '0');
-
-    if (visits === 0) {
-      // First visit ever: Type the welcome message
-      const typingTimer = setTimeout(() => setIsTyping(true), 800);
-      const deliveryTimer = setTimeout(() => {
-        setIsTyping(false);
-        setHistory([messages.welcome]);
-        localStorage.setItem(visitKey, '1');
-      }, 3500); 
-
-      return () => { clearTimeout(typingTimer); clearTimeout(deliveryTimer); };
-    } else if (visits === 1) {
-      // Second visit: Load welcome immediately, live-type the returning message
-      setHistory([messages.welcome]);
-      const typingTimer = setTimeout(() => setIsTyping(true), 1200);
-      const deliveryTimer = setTimeout(() => {
-        setIsTyping(false);
-        setHistory([messages.welcome, messages.returning]);
-        localStorage.setItem(visitKey, '2');
-      }, 4000); 
-
-      return () => { clearTimeout(typingTimer); clearTimeout(deliveryTimer); };
-    } else {
-      // Third+ visit: Instantly load all history, no typing animation
-      setHistory([messages.welcome, messages.returning]);
-    }
-  }, [clientId, messages]);
+export default function IncomingMessage({ update }: { update: any }) {
+  if (!update) {
+    return (
+      <div className="bg-linear-to-br from-cyan-950/30 to-zinc-950 border border-cyan-500/20 rounded-3xl p-6 flex flex-col shadow-xl backdrop-blur-sm h-full">
+        <div className="flex items-center gap-3 mb-5 pb-4 border-b border-cyan-500/20">
+          <Radio size={16} className="text-cyan-500/50" />
+          <h2 className="text-sm font-bold text-cyan-50 uppercase tracking-widest">Platform Dispatch</h2>
+        </div>
+        <div className="flex-1 flex flex-col items-center justify-center text-center py-6 border border-dashed border-cyan-500/20 rounded-2xl bg-cyan-950/20">
+          <CheckCircle2 size={24} className="text-cyan-500/50 mb-2" />
+          <p className="text-xs text-cyan-200/50 font-mono uppercase tracking-widest">All systems nominal.</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
-    <div className="bg-zinc-950/80 border border-cyan-500/20 rounded-3xl p-6 shadow-xl backdrop-blur-sm h-full flex flex-col relative overflow-hidden">
+    <div className="bg-linear-to-br from-cyan-950/40 via-zinc-950 to-zinc-950 border border-cyan-500/40 rounded-3xl p-6 flex flex-col shadow-[0_0_30px_rgba(6,182,212,0.15)] backdrop-blur-md h-full relative overflow-hidden group">
       
-      <div className="flex items-center justify-between mb-4 pb-4 border-b border-cyan-500/10 shrink-0">
-        <div className="flex items-center gap-2">
-          <MessageSquare size={14} className="text-cyan-400" />
-          <span className="text-[10px] font-bold text-cyan-400 uppercase tracking-widest">Direct Messages</span>
+      {/* Stronger Background Glows */}
+      <div className="absolute -top-20 -right-20 w-56 h-56 bg-cyan-500/20 rounded-full blur-[50px] pointer-events-none group-hover:bg-cyan-400/30 transition-colors duration-700" />
+      <div className="absolute -bottom-20 -left-20 w-48 h-48 bg-blue-500/10 rounded-full blur-[50px] pointer-events-none" />
+
+      <div className="flex items-center justify-between mb-5 pb-4 border-b border-cyan-500/20 relative z-10">
+        <div className="flex items-center gap-3">
+          <div className="p-1.5 bg-cyan-500/20 rounded-md text-cyan-300 border border-cyan-500/30 shadow-[0_0_15px_rgba(6,182,212,0.3)]">
+            <Radio size={14} className="animate-pulse" />
+          </div>
+          <h2 className="text-sm font-bold text-white uppercase tracking-widest text-shadow-sm">Platform Dispatch</h2>
         </div>
-        <div className="w-2 h-2 rounded-full bg-cyan-400 animate-pulse" />
+        <span className="text-[9px] font-black uppercase tracking-widest text-cyan-300 bg-cyan-500/20 px-2 py-0.5 rounded border border-cyan-500/30 shadow-[0_0_10px_rgba(6,182,212,0.2)]">
+          Global
+        </span>
       </div>
       
-      <div ref={scrollContainerRef} className="flex-1 overflow-y-auto custom-scrollbar pr-2 flex flex-col gap-6 min-h-0">
-        {history.length === 0 && !isTyping && (
-          <div className="flex-1 flex items-center justify-center">
-            <span className="text-[10px] font-mono text-cyan-500/50 uppercase tracking-widest animate-pulse">
-              Connecting...
-            </span>
+      <div className="flex-1 flex flex-col relative z-10">
+        <h3 className="text-sm font-black text-white mb-3 leading-snug">
+          {update.title}
+        </h3>
+        <p className="text-[13px] text-cyan-100/70 leading-relaxed flex-1">
+          {update.body}
+        </p>
+        
+        <div className="mt-5 pt-4 border-t border-cyan-500/20 flex items-center justify-between">
+          <div className="flex items-center gap-1.5 text-cyan-400/60">
+            <Zap size={12} className="text-cyan-400" />
+            <span className="text-[9px] font-mono uppercase tracking-widest text-cyan-300">Architect Release</span>
           </div>
-        )}
-
-        {history.map((msg) => (
-          <div key={msg.id} className="flex flex-col animate-in fade-in slide-in-from-bottom-2 duration-500">
-            <div className="flex items-center gap-2 mb-2">
-              <div className="w-6 h-6 rounded-full bg-cyan-500/20 border border-cyan-500/40 flex items-center justify-center shrink-0">
-                <MessageCircle size={10} className="text-cyan-400" />
-              </div>
-              <span className="text-xs font-bold text-white tracking-wide">{msg.sender}</span>
-              <span className="text-[9px] text-zinc-500 uppercase tracking-widest font-mono ml-auto">{msg.time}</span>
-            </div>
-            
-            <div className="bg-zinc-900/80 border border-zinc-800 rounded-2xl rounded-tl-sm p-4 text-xs text-zinc-300 leading-relaxed font-light shadow-sm">
-              {msg.body}
-            </div>
-            
-            <div className="flex items-center gap-1.5 mt-2 ml-1 opacity-70">
-              <CheckCheck size={12} className="text-cyan-500" />
-              <span className="text-[9px] font-mono text-cyan-500 uppercase tracking-widest">Delivered</span>
-            </div>
-          </div>
-        ))}
-
-        {isTyping && (
-          <div className="flex flex-col animate-in fade-in duration-300">
-            <div className="flex items-center gap-2 mb-2">
-              <div className="w-6 h-6 rounded-full bg-cyan-500/20 border border-cyan-500/40 flex items-center justify-center shrink-0">
-                <MessageCircle size={10} className="text-cyan-400" />
-              </div>
-              <span className="text-xs font-bold text-white tracking-wide">{messages.welcome.sender}</span>
-            </div>
-            <div className="flex items-center gap-1.5 px-4 py-3.5 bg-zinc-900/80 border border-zinc-800 rounded-2xl rounded-tl-sm w-fit shadow-sm">
-              <div className="w-1.5 h-1.5 bg-cyan-500/70 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
-              <div className="w-1.5 h-1.5 bg-cyan-500/70 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
-              <div className="w-1.5 h-1.5 bg-cyan-500/70 rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
-            </div>
-          </div>
-        )}
+          <span className="text-[9px] font-mono text-cyan-500/60 uppercase tracking-widest">
+            {new Date(update.created_at).toLocaleDateString()}
+          </span>
+        </div>
       </div>
     </div>
   );

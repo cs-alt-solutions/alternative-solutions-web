@@ -16,10 +16,8 @@ export default function MediaVaultModule({ clientId }: { clientId: string }) {
   const [activeFilter, setActiveFilter] = useState<FilterType>('ALL');
   const [renamingFile, setRenamingFile] = useState<string | null>(null);
   const [newName, setNewName] = useState<string>('');
-
   const bucketName = 'client-assets';
-  
-  // THE FIX: Bulletproof fallback so it never crashes if the config cache is stale
+
   const copy = PORTAL_COPY.vault || {
     title: "Media Vault",
     subtitle: "Raw Assets & Documents",
@@ -42,7 +40,6 @@ export default function MediaVaultModule({ clientId }: { clientId: string }) {
         .list(clientId, { sortBy: { column: 'created_at', order: 'desc' } });
 
       if (!filesError && filesData) {
-        // Exclude live storefront images from the raw vault view
         const justFiles = filesData.filter(f => f.id && f.name !== '.emptyFolderPlaceholder' && !f.name.includes('live-'));
         setVaultFiles(justFiles);
       }
@@ -59,15 +56,26 @@ export default function MediaVaultModule({ clientId }: { clientId: string }) {
     
     setIsUploading(true);
     setUploadStatus(`Processing ${files.length} file(s)...`);
-
+    
     try {
       for (let i = 0; i < files.length; i++) {
         const file = files[i];
         const cleanName = file.name.replace(/[^a-zA-Z0-9.-]/g, '_');
         const filePath = `${clientId}/${Date.now()}-${cleanName}`;
+        
         const { error } = await supabase.storage.from(bucketName).upload(filePath, file);
         if (error) throw error;
       }
+
+      // 🚀 RADAR PING: Silently log the upload to the Support Desk as a System Alert
+      await supabase.from('support_tickets').insert([{
+        storefront_id: clientId,
+        category: 'System Alert',
+        topic: `Media Vault Drop: ${files.length} New Asset(s)`,
+        details: `Client uploaded ${files.length} new raw file(s) into their staging vault.`,
+        status: 'OPEN'
+      }]);
+
       setUploadStatus('Vault Transfer Complete.');
       fetchVaultData();
     } catch (error: any) {
@@ -95,6 +103,7 @@ export default function MediaVaultModule({ clientId }: { clientId: string }) {
         `${clientId}/${finalName}`
       );
       if (error) throw error;
+      
       fetchVaultData();
     } catch (err) {
       console.error("Rename failed", err);
@@ -213,7 +222,6 @@ export default function MediaVaultModule({ clientId }: { clientId: string }) {
         </div>
       )}
 
-      {/* THE FIX: Restored the Toast Notification for active uploads */}
       {uploadStatus && (
         <div className="fixed bottom-8 right-8 bg-amber-500 text-amber-950 px-6 py-3 rounded-xl shadow-[0_0_30px_rgba(245,158,11,0.4)] flex items-center gap-3 animate-in slide-in-from-bottom-4 z-50">
           {isUploading ? <Upload size={16} className="animate-bounce" /> : <ShieldCheck size={16} />}
