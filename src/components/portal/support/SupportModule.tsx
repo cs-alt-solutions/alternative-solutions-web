@@ -7,6 +7,24 @@ import { PORTAL_COPY } from '@/config/clients/portal';
 import { getPortalTheme } from '../core/theme';
 import { supabase } from '@/utils/supabase';
 
+// 🚀 Helper to parse and upgrade JSON arrays
+const parseAdminReplies = (replyString: string | null, fallbackDate: string) => {
+  if (!replyString) return [];
+  try {
+    const parsed = JSON.parse(replyString);
+    if (Array.isArray(parsed)) {
+      return parsed.map((msg: any) => ({
+        ...msg,
+        id: msg.id || Math.random().toString(36).substr(2, 9),
+        read: msg.read || false
+      }));
+    }
+    return [{ id: 'legacy-1', text: replyString, date: fallbackDate, read: true }];
+  } catch (e) {
+    return [{ id: 'legacy-2', text: replyString, date: fallbackDate, read: true }];
+  }
+};
+
 export default function SupportModule({ clientId }: { clientId: string }) {
   const currentTheme = getPortalTheme(clientId);
   const [subject, setSubject] = useState('');
@@ -24,7 +42,27 @@ export default function SupportModule({ clientId }: { clientId: string }) {
         .eq('storefront_id', clientId)
         .order('created_at', { ascending: false });
         
-      if (data) setTickets(data);
+      if (data) {
+        // 🚀 Read Receipt Sweep: Automatically mark new admin messages as read when they open the page
+        let needsUpdate = false;
+        const processedData = data.map(ticket => {
+          if (ticket.admin_reply && ticket.status === 'OPEN') {
+            const replies = parseAdminReplies(ticket.admin_reply, ticket.created_at);
+            const hasUnread = replies.some((r: any) => !r.read);
+            
+            if (hasUnread) {
+              needsUpdate = true;
+              const marked = replies.map((r: any) => ({ ...r, read: true }));
+              const stringified = JSON.stringify(marked);
+              // Fire off background update to DB
+              supabase.from('support_tickets').update({ admin_reply: stringified }).eq('id', ticket.id).then();
+              return { ...ticket, admin_reply: stringified };
+            }
+          }
+          return ticket;
+        });
+        setTickets(processedData);
+      }
     };
     fetchTickets();
   }, [clientId]);
@@ -70,12 +108,11 @@ export default function SupportModule({ clientId }: { clientId: string }) {
   };
 
   return (
-    <div className="max-w-6xl mx-auto animate-in fade-in duration-500 pb-12 mt-2 h-full">
+    <div className="max-w-7xl mx-auto animate-in fade-in duration-500 pb-12 mt-2 h-full flex flex-col">
       
-      {/* HEADER */}
       <div className="mb-8 border-b border-white/5 pb-6">
         <h2 className="text-xl font-black text-white uppercase tracking-widest flex items-center gap-3">
-          <MessageSquare size={20} className={currentTheme.text.replace('text-', 'text-')} /> 
+          <MessageSquare size={20} className={currentTheme.text} /> 
           {PORTAL_COPY.support.title}
         </h2>
         <p className="text-xs text-slate-500 mt-1 uppercase tracking-widest font-mono">
@@ -83,58 +120,50 @@ export default function SupportModule({ clientId }: { clientId: string }) {
         </p>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+      <div className="flex flex-col lg:flex-row gap-8 items-start">
         
-        {/* LEFT COLUMN: Ticket System & History */}
-        <div className="lg:col-span-2 space-y-6">
-          
-          {/* THE FORM */}
-          <form onSubmit={handleSendTicket} className="bg-zinc-950 border border-white/5 rounded-3xl p-6 md:p-8 shadow-xl flex flex-col">
-            <div className="flex items-start gap-3 mb-6 pb-4 border-b border-white/5">
-              <Mail className={`w-5 h-5 shrink-0 mt-0.5 ${currentTheme.text}`} />
-              <div>
-                <h3 className="text-sm font-bold text-white uppercase tracking-widest mb-1.5">
-                  {PORTAL_COPY.support.ticketTitle}
-                </h3>
-                <p className="text-xs text-zinc-400 leading-relaxed">
-                  {PORTAL_COPY.support.ticketBody}
-                </p>
-              </div>
+        <div className="w-full lg:w-[400px] shrink-0 space-y-6 flex flex-col">
+          <form onSubmit={handleSendTicket} className="bg-zinc-950/80 border border-white/5 rounded-3xl p-6 shadow-xl flex flex-col backdrop-blur-sm relative overflow-hidden group">
+            <div className={`absolute -top-32 -right-32 w-64 h-64 ${currentTheme.bg} rounded-full blur-[80px] pointer-events-none opacity-10 group-hover:opacity-20 transition-opacity`} />
+            
+            <div className="flex items-center gap-3 mb-6 pb-4 border-b border-white/5 relative z-10">
+              <Mail className={`w-5 h-5 ${currentTheme.text}`} />
+              <h3 className="text-sm font-bold text-white uppercase tracking-widest">
+                New Message
+              </h3>
             </div>
 
-            <div className="space-y-8 flex-1">
+            <div className="space-y-6 flex-1 relative z-10">
               <div>
-                <label className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest mb-3 block">Request Category</label>
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-3">
+                <label className="text-[9px] font-bold text-zinc-500 uppercase tracking-widest mb-2 block">Category</label>
+                <div className="grid grid-cols-2 gap-2 mb-2">
                   {PORTAL_COPY.support.categories.map((cat) => (
                     <button
                       key={cat.id}
                       type="button"
                       onClick={() => setPriority(cat.label)}
-                      className={`py-3 px-2 rounded-xl text-[10px] font-bold uppercase tracking-widest transition-all border ${
+                      className={`py-2.5 px-2 rounded-xl text-[9px] font-bold uppercase tracking-widest transition-all border ${
                         priority === cat.label 
-                          ? `${currentTheme.bg} ${currentTheme.text} ${currentTheme.border}` 
-                          : 'bg-zinc-900 border-zinc-800 text-zinc-500 hover:text-white hover:bg-zinc-800'
+                          ? `${currentTheme.bg} ${currentTheme.text} ${currentTheme.border} shadow-md` 
+                          : 'bg-black/40 border-white/5 text-zinc-500 hover:text-white hover:bg-white/10'
                       }`}
                     >
                       {cat.label}
                     </button>
                   ))}
                 </div>
-                <div className="bg-zinc-900/30 border border-zinc-800/50 rounded-lg p-3">
-                  <p className="text-xs text-zinc-400 italic">
-                    {activeCategoryDesc}
-                  </p>
-                </div>
+                <p className="text-[10px] text-zinc-500 font-medium leading-relaxed px-1">
+                  {activeCategoryDesc}
+                </p>
               </div>
 
               <div>
-                <label className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest mb-2 block">Related Area</label>
+                <label className="text-[9px] font-bold text-zinc-500 uppercase tracking-widest mb-2 block">Related Area</label>
                 <div className="relative">
                   <select 
                     value={subject}
                     onChange={(e) => setSubject(e.target.value)}
-                    className="w-full bg-zinc-900/50 border border-zinc-800 rounded-xl py-3 pl-4 pr-10 text-sm text-white focus:outline-none focus:border-cyan-500/50 transition-colors appearance-none cursor-pointer"
+                    className="w-full bg-black/40 border border-white/10 rounded-xl py-3 pl-4 pr-10 text-sm text-white focus:outline-none focus:border-cyan-500/50 transition-colors appearance-none cursor-pointer shadow-inner"
                   >
                     <option value="" disabled>Select an area...</option>
                     {PORTAL_COPY.support.topics.map(topic => (
@@ -146,22 +175,22 @@ export default function SupportModule({ clientId }: { clientId: string }) {
               </div>
 
               <div className="flex-1 flex flex-col">
-                <label className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest mb-2 block">Details</label>
+                <label className="text-[9px] font-bold text-zinc-500 uppercase tracking-widest mb-2 block">Message</label>
                 <textarea 
                   value={message}
                   onChange={(e) => setMessage(e.target.value)}
                   placeholder="What's going on?"
-                  className="w-full flex-1 min-h-40 bg-zinc-900/50 border border-zinc-800 rounded-xl py-3 px-4 text-sm text-white focus:outline-none focus:border-cyan-500/50 transition-colors placeholder:text-zinc-700 resize-none" 
+                  className="w-full min-h-32 bg-black/40 border border-white/10 rounded-xl py-3 px-4 text-sm text-white focus:outline-none focus:border-cyan-500/50 transition-colors placeholder:text-zinc-700 resize-none shadow-inner" 
                 />
               </div>
             </div>
 
-            <div className="mt-8 pt-6 border-t border-white/5 flex justify-end">
+            <div className="mt-6 pt-5 border-t border-white/5 relative z-10">
               <button 
                 type="submit" 
                 disabled={isSending || !subject || !message.trim()}
-                className={`flex items-center gap-2 px-6 py-3 rounded-xl text-xs font-black uppercase tracking-widest transition-all disabled:opacity-50 ${
-                  isSent ? 'bg-emerald-500 text-emerald-950' : 'bg-white text-black hover:bg-zinc-200'
+                className={`w-full flex items-center justify-center gap-2 px-6 py-3.5 rounded-xl text-xs font-black uppercase tracking-widest transition-all disabled:opacity-50 cursor-pointer ${
+                  isSent ? 'bg-emerald-500 text-emerald-950 shadow-[0_0_15px_rgba(16,185,129,0.4)]' : 'bg-white text-black hover:bg-zinc-200 hover:shadow-[0_0_15px_rgba(255,255,255,0.2)]'
                 }`}
               >
                 {isSending ? PORTAL_COPY.support.btnSending : isSent ? <><CheckCircle2 className="w-4 h-4" /> {PORTAL_COPY.support.btnSent}</> : <><Send className="w-4 h-4" /> {PORTAL_COPY.support.btnSend}</>}
@@ -169,9 +198,38 @@ export default function SupportModule({ clientId }: { clientId: string }) {
             </div>
           </form>
 
-          {/* MESSAGE HISTORY (Text Thread Style) */}
-          <div className="bg-black/40 border border-white/5 rounded-3xl p-6 md:p-8 shadow-xl">
-            <div className="flex items-center gap-3 mb-6 pb-4 border-b border-white/5">
+          <div className="bg-zinc-950/80 border border-white/5 rounded-3xl p-6 shadow-xl relative overflow-hidden group">
+            <div className="flex items-center gap-3 mb-3 relative z-10">
+              <div className={`p-1.5 ${currentTheme.bg} border ${currentTheme.border} rounded-md ${currentTheme.text}`}>
+                <Clock size={14} />
+              </div>
+              <h3 className="text-xs font-bold text-white uppercase tracking-widest">
+                {PORTAL_COPY.support.expectTitle}
+              </h3>
+            </div>
+            <p className="text-[11px] text-zinc-400 leading-relaxed relative z-10">
+              {PORTAL_COPY.support.expectBody}
+            </p>
+          </div>
+
+          <div className="bg-rose-950/10 border border-rose-500/10 rounded-3xl p-6 shadow-xl">
+            <div className="flex items-center gap-3 mb-3">
+              <div className="p-1.5 bg-rose-500/10 border border-rose-500/20 rounded-md text-rose-400">
+                <AlertTriangle size={14} />
+              </div>
+              <h3 className="text-xs font-bold text-white uppercase tracking-widest">
+                {PORTAL_COPY.support.emergencyTitle}
+              </h3>
+            </div>
+            <p className="text-[11px] text-zinc-400 leading-relaxed">
+              {PORTAL_COPY.support.emergencyBody}
+            </p>
+          </div>
+        </div>
+
+        <div className="flex-1 flex flex-col min-w-0">
+          <div className="bg-zinc-950/80 border border-white/5 rounded-3xl p-6 md:p-8 shadow-xl backdrop-blur-sm flex-1">
+            <div className="flex items-center gap-3 mb-6 pb-4 border-b border-white/5 shrink-0">
               <History className="w-5 h-5 text-zinc-500" />
               <h3 className="text-sm font-bold text-white uppercase tracking-widest">
                 {PORTAL_COPY.support.historyTitle}
@@ -179,21 +237,22 @@ export default function SupportModule({ clientId }: { clientId: string }) {
             </div>
             
             {tickets.length === 0 ? (
-              <div className="text-center py-12 border border-dashed border-zinc-800/50 rounded-2xl bg-zinc-950/30">
-                <p className="text-sm text-zinc-500">{PORTAL_COPY.support.historyEmpty}</p>
+              <div className="text-center py-16 border border-dashed border-white/5 rounded-2xl bg-black/20">
+                <p className="text-xs font-mono text-zinc-500 uppercase tracking-widest">{PORTAL_COPY.support.historyEmpty}</p>
               </div>
             ) : (
-              <div className="space-y-8">
+              <div className="space-y-6">
                 {tickets.map(ticket => (
-                  <div key={ticket.id} className="bg-zinc-950/50 border border-white/5 rounded-2xl p-5 shadow-md flex flex-col gap-3">
-                    <div className="flex justify-between items-start border-b border-white/5 pb-3">
+                  <div key={ticket.id} className="bg-black/40 border border-white/5 rounded-2xl p-5 shadow-inner flex flex-col gap-3 transition-colors hover:border-white/10">
+                    
+                    <div className="flex justify-between items-start border-b border-white/5 pb-4 mb-2">
                       <div>
-                        <span className={`text-[10px] font-black uppercase tracking-widest ${currentTheme.text}`}>
+                        <span className={`text-[9px] font-black uppercase tracking-widest ${currentTheme.text}`}>
                           {ticket.category}
                         </span>
-                        <h4 className="text-sm font-bold text-white mt-0.5">{ticket.topic}</h4>
+                        <h4 className="text-base font-bold text-white mt-1">{ticket.topic}</h4>
                       </div>
-                      <span className={`text-[9px] font-black uppercase tracking-widest px-2.5 py-1 rounded-md border ${
+                      <span className={`text-[8px] font-black uppercase tracking-widest px-2 py-0.5 rounded border ${
                         ticket.status === 'OPEN' 
                           ? 'bg-amber-500/10 text-amber-500 border-amber-500/20' 
                           : 'bg-emerald-500/10 text-emerald-500 border-emerald-500/20'
@@ -202,66 +261,44 @@ export default function SupportModule({ clientId }: { clientId: string }) {
                       </span>
                     </div>
 
-                    <div className="flex flex-col gap-4 mt-2">
-                      {/* Client Bubble */}
+                    <div className="flex flex-col gap-4">
                       <div className="flex justify-end">
-                        <div className="bg-zinc-800/80 border border-zinc-700 rounded-2xl rounded-tr-sm p-4 max-w-[85%]">
-                          <p className="text-sm text-zinc-300 whitespace-pre-wrap leading-relaxed">{ticket.details}</p>
-                          <span className="text-[9px] text-zinc-500 font-mono mt-2 block text-right">
+                        <div className="bg-zinc-800 border border-zinc-700 rounded-2xl rounded-tr-sm p-4 max-w-[90%] md:max-w-[80%] shadow-md">
+                          <p className="text-[13px] text-zinc-200 whitespace-pre-wrap leading-relaxed">{ticket.details}</p>
+                          <span className="text-[9px] text-zinc-500 font-mono mt-2 block text-right uppercase tracking-widest">
                             You • {new Date(ticket.created_at).toLocaleDateString()} at {new Date(ticket.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                           </span>
                         </div>
                       </div>
 
-                      {/* Admin Bubble (Now they can actually see your reply!) */}
-                      {ticket.admin_reply && (
+                      {ticket.status === 'CANCELED' && ticket.cancel_reason && (
                         <div className="flex justify-start">
-                          <div className="bg-cyan-500/10 border border-cyan-500/20 rounded-2xl rounded-tl-sm p-4 max-w-[85%] shadow-[0_0_15px_rgba(6,182,212,0.05)]">
-                            <p className="text-sm text-cyan-50 whitespace-pre-wrap leading-relaxed">{ticket.admin_reply}</p>
-                            <span className="text-[9px] text-cyan-500/60 font-mono mt-2 block">
-                              Courtney • Alternative Solutions
+                          <div className="bg-rose-500/10 border border-rose-500/20 rounded-2xl rounded-tl-sm p-4 max-w-[90%] md:max-w-[80%]">
+                            <p className="text-[13px] text-rose-200 whitespace-pre-wrap leading-relaxed italic">"{ticket.cancel_reason}"</p>
+                            <span className="text-[9px] text-rose-500/60 font-mono mt-2 block uppercase tracking-widest">
+                              System Auto-Reply
                             </span>
                           </div>
                         </div>
+                      )}
+
+                      {ticket.admin_reply && ticket.status !== 'CANCELED' && (
+                        parseAdminReplies(ticket.admin_reply, ticket.created_at).map((reply: any, index: number) => (
+                          <div key={reply.id || index} className="flex justify-start">
+                            <div className={`bg-cyan-500/10 border border-cyan-500/20 rounded-2xl rounded-tl-sm p-4 max-w-[90%] md:max-w-[80%] shadow-[0_0_15px_rgba(6,182,212,0.05)]`}>
+                              <p className="text-[13px] text-cyan-50 whitespace-pre-wrap leading-relaxed">{reply.text}</p>
+                              <span className="text-[9px] text-cyan-500/60 font-mono mt-2 block uppercase tracking-widest">
+                                Alternative Solutions • {new Date(reply.date).toLocaleDateString()} at {new Date(reply.date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                              </span>
+                            </div>
+                          </div>
+                        ))
                       )}
                     </div>
                   </div>
                 ))}
               </div>
             )}
-          </div>
-
-        </div>
-
-        {/* RIGHT COLUMN: Service Expectations */}
-        <div className="space-y-6">
-          <div className="bg-zinc-950 border border-white/5 rounded-3xl p-6 shadow-xl relative overflow-hidden group">
-            <div className={`absolute top-0 right-0 w-32 h-32 ${currentTheme.bg} rounded-full blur-[60px] pointer-events-none opacity-50`} />
-            <div className="flex items-center gap-3 mb-4 relative z-10">
-              <div className={`p-2 ${currentTheme.bg} border ${currentTheme.border} rounded-lg ${currentTheme.text}`}>
-                <Clock size={18} />
-              </div>
-              <h3 className="text-sm font-bold text-white uppercase tracking-widest">
-                {PORTAL_COPY.support.expectTitle}
-              </h3>
-            </div>
-            <p className="text-xs text-zinc-400 leading-relaxed relative z-10">
-              {PORTAL_COPY.support.expectBody}
-            </p>
-          </div>
-
-          <div className="bg-zinc-950 border border-white/5 rounded-3xl p-6 shadow-xl">
-            <div className="flex items-center gap-3 mb-4">
-              <div className="p-2 bg-rose-500/10 border border-rose-500/20 rounded-lg text-rose-400">
-                <AlertTriangle size={18} />
-              </div>
-              <h3 className="text-sm font-bold text-white uppercase tracking-widest">
-                {PORTAL_COPY.support.emergencyTitle}
-              </h3>
-            </div>
-            <p className="text-xs text-zinc-400 leading-relaxed mb-4">
-              {PORTAL_COPY.support.emergencyBody}
-            </p>
           </div>
         </div>
 

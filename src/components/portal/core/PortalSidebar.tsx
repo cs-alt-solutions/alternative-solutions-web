@@ -9,10 +9,21 @@ import { supabase } from '@/utils/supabase';
 import { PORTAL_COPY } from '@/config/clients/portal'; 
 import { getPortalTheme } from './theme'; 
 
+const parseAdminReplies = (replyString: string | null) => {
+  if (!replyString) return [];
+  try {
+    const parsed = JSON.parse(replyString);
+    return Array.isArray(parsed) ? parsed : [];
+  } catch (e) {
+    return [];
+  }
+};
+
 export default function PortalSidebar({ clientId }: { clientId: string }) { 
   const pathname = usePathname(); 
   const [isOpen, setIsOpen] = useState(false); 
   const [showSwitchWorkspace, setShowSwitchWorkspace] = useState(false); 
+  const [hasUnreadSupport, setHasUnreadSupport] = useState(false);
   
   const [brandData, setBrandData] = useState<{ logo: string | null, name: string }>({ logo: null, name: PORTAL_COPY.sidebar.title });
 
@@ -41,10 +52,38 @@ export default function PortalSidebar({ clientId }: { clientId: string }) {
         setBrandData({ logo: store.brand_logo, name: store.business_name || PORTAL_COPY.sidebar.title }); 
       } 
     }; 
+
+    const fetchUnreadStatus = async () => {
+      const { data } = await supabase
+        .from('support_tickets')
+        .select('admin_reply')
+        .eq('storefront_id', clientId)
+        .eq('status', 'OPEN')
+        .not('admin_reply', 'is', null);
+
+      if (data) {
+        const hasUnread = data.some(ticket => {
+          const replies = parseAdminReplies(ticket.admin_reply);
+          return replies.some((r: any) => r.read === false);
+        });
+        setHasUnreadSupport(hasUnread);
+      }
+    };
+
     initSidebar(); 
+    fetchUnreadStatus();
+
+    // 🚀 Instantly syncs the Sidebar dot with the auto-sweep function
+    const channel = supabase
+      .channel('sidebar-notifications')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'support_tickets', filter: `storefront_id=eq.${clientId}` }, () => {
+        fetchUnreadStatus();
+      })
+      .subscribe();
+
+    return () => { supabase.removeChannel(channel); };
   }, [clientId]);
 
-  // ADDED: unique 'id' strings so the interactive tour guide can find them
   const navItems = [ 
     { id: 'nav-dashboard', name: 'Dashboard', icon: TerminalSquare, href: `/portal/${clientId}` }, 
     { id: 'nav-storefront', name: 'Live Storefront', icon: Store, href: `/portal/${clientId}/storefront` }, 
@@ -52,6 +91,8 @@ export default function PortalSidebar({ clientId }: { clientId: string }) {
     { id: 'nav-tools', name: 'Developer Tools', icon: Box, href: `/portal/${clientId}/prototypes` }, 
     { id: 'nav-support', name: 'Support Desk', icon: MessageSquare, href: `/portal/${clientId}/support` }
   ];
+
+  const badgeColor = currentTheme.text.replace('text-', 'bg-');
 
   return ( 
     <> 
@@ -96,7 +137,7 @@ export default function PortalSidebar({ clientId }: { clientId: string }) {
             return ( 
               <Link 
                 key={item.name} 
-                id={item.id} // <-- Added ID for DOM targeting
+                id={item.id}
                 href={item.href} 
                 onClick={() => setIsOpen(false)} 
                 className={`flex items-center gap-3 px-3 py-3 rounded-xl transition-all duration-300 ${ 
@@ -105,7 +146,13 @@ export default function PortalSidebar({ clientId }: { clientId: string }) {
                     : `text-zinc-500 border border-transparent hover:text-white hover:bg-white/5` 
                 }`} 
               > 
-                <item.icon className="w-4 h-4 shrink-0" /> 
+                <div className="relative">
+                  <item.icon className="w-4 h-4 shrink-0" /> 
+                  {/* 🚀 The Glowing Indicator Badge */}
+                  {item.id === 'nav-support' && hasUnreadSupport && (
+                    <span className={`absolute -top-1 -right-1 w-2 h-2 rounded-full ${badgeColor} animate-pulse shadow-md border border-zinc-950`} />
+                  )}
+                </div>
                 <span className="text-xs font-bold uppercase tracking-wider">{item.name}</span> 
               </Link> 
             ); 

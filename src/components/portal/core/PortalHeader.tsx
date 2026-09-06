@@ -2,13 +2,25 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
-import { Bell, User, LogOut, Settings, CreditCard, ChevronDown, HelpCircle, ShieldAlert, Check } from 'lucide-react';
+import { Bell, User, LogOut, Settings, CreditCard, ChevronDown, HelpCircle, ShieldAlert, ArrowRight } from 'lucide-react';
 import { supabase } from '@/utils/supabase';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { PORTAL_COPY } from '@/config/clients/portal';
 import { getPortalTheme } from './theme';
 import GlobalHelp from './GlobalHelp';
+
+// 🚀 Helper to parse the JSON array and find unread replies
+const parseAdminReplies = (replyString: string | null, fallbackDate: string) => {
+  if (!replyString) return [];
+  try {
+    const parsed = JSON.parse(replyString);
+    if (Array.isArray(parsed)) return parsed;
+    return [{ id: 'legacy', text: replyString, date: fallbackDate, read: true }];
+  } catch (e) {
+    return [{ id: 'legacy', text: replyString, date: fallbackDate, read: true }];
+  }
+};
 
 export default function PortalHeader({ clientId }: { clientId: string }) {
   const [contactEmail, setContactEmail] = useState('Initializing...');
@@ -42,19 +54,33 @@ export default function PortalHeader({ clientId }: { clientId: string }) {
     };
     
     const fetchNotifications = async () => {
+      // 🚀 FIX: Changed updated_at to created_at so the query succeeds!
       const { data } = await supabase
         .from('support_tickets')
-        .select('id, topic, admin_reply, updated_at')
+        .select('id, topic, admin_reply, created_at')
         .eq('storefront_id', clientId)
-        .eq('client_read', false)
+        .eq('status', 'OPEN')
         .not('admin_reply', 'is', null)
-        .order('updated_at', { ascending: false });
+        .order('created_at', { ascending: false });
 
-      if (data) setUnreadReplies(data);
+      if (data) {
+        const unread = data.filter(ticket => {
+          const replies = parseAdminReplies(ticket.admin_reply, ticket.created_at);
+          return replies.some((r: any) => r.read === false);
+        });
+        setUnreadReplies(unread);
+      }
     };
 
     fetchUser();
     fetchNotifications();
+
+    const channel = supabase
+      .channel('header-notifications')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'support_tickets', filter: `storefront_id=eq.${clientId}` }, () => { 
+        fetchNotifications(); 
+      })
+      .subscribe();
 
     const handleClickOutside = (event: MouseEvent) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
@@ -65,7 +91,11 @@ export default function PortalHeader({ clientId }: { clientId: string }) {
       }
     };
     document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
+    
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+      supabase.removeChannel(channel);
+    };
   }, [clientId]);
 
   const handleSignOut = async () => {
@@ -74,18 +104,7 @@ export default function PortalHeader({ clientId }: { clientId: string }) {
     router.push('/');
   };
 
-  const markAsRead = async (ticketId: string) => {
-    // 1. Clear it from the local UI instantly so it feels responsive
-    setUnreadReplies(prev => prev.filter(t => t.id !== ticketId));
-
-    // 2. GHOST MODE GUARD: Only update the actual database if we are NOT impersonating
-    if (!isAdminMode) {
-      await supabase
-        .from('support_tickets')
-        .update({ client_read: true })
-        .eq('id', ticketId);
-    }
-  };
+  const badgeColor = currentTheme.text.replace('text-', 'bg-');
 
   return (
     <>
@@ -108,7 +127,7 @@ export default function PortalHeader({ clientId }: { clientId: string }) {
             >
               <Bell className="w-5 h-5" />
               {unreadReplies.length > 0 && (
-                <span className={`absolute top-1.5 right-1.5 w-2.5 h-2.5 rounded-full ${currentTheme.bg.replace('/10', '')} shadow-[0_0_10px_rgba(6,182,212,0.8)] border-2 border-zinc-950 animate-pulse`}></span>
+                <span className={`absolute top-1.5 right-1.5 w-2.5 h-2.5 rounded-full ${badgeColor} shadow-[0_0_10px_rgba(255,255,255,0.3)] border-2 border-zinc-950 animate-pulse`}></span>
               )}
             </button>
 
@@ -119,27 +138,34 @@ export default function PortalHeader({ clientId }: { clientId: string }) {
                   <span className={`text-[10px] font-black ${currentTheme.text}`}>{unreadReplies.length} New</span>
                 </div>
                 
-                <div className="max-h-64 overflow-y-auto custom-scrollbar">
+                <div className="max-h-80 overflow-y-auto custom-scrollbar">
                   {unreadReplies.length === 0 ? (
                     <div className="p-6 text-center text-zinc-600 text-xs font-mono uppercase tracking-widest">
-                      All caught up.
+                      Inbox Zero.
                     </div>
                   ) : (
                     <div className="flex flex-col">
-                      {unreadReplies.map(ticket => (
-                        <div key={ticket.id} className="p-4 border-b border-zinc-800/50 hover:bg-zinc-900/50 transition-colors group">
-                          <p className="text-xs font-bold text-white mb-1">{ticket.topic}</p>
-                          <p className="text-xs text-zinc-400 line-clamp-2 leading-relaxed mb-3">
-                            {ticket.admin_reply}
-                          </p>
-                          <button 
-                            onClick={() => markAsRead(ticket.id)}
-                            className="flex items-center gap-1.5 text-[9px] font-black uppercase tracking-widest text-zinc-500 group-hover:text-emerald-400 transition-colors"
+                      {unreadReplies.map(ticket => {
+                        const replies = parseAdminReplies(ticket.admin_reply, ticket.created_at);
+                        const latestUnread = replies.filter((r: any) => r.read === false).pop();
+                        
+                        return (
+                          <Link 
+                            href={`/portal/${clientId}/support`} 
+                            key={ticket.id} 
+                            onClick={() => setIsBellOpen(false)}
+                            className="p-4 border-b border-zinc-800/50 hover:bg-zinc-900/80 transition-colors group block cursor-pointer"
                           >
-                            <Check size={12} /> Dismiss Alert
-                          </button>
-                        </div>
-                      ))}
+                            <p className="text-xs font-bold text-white mb-1">{ticket.topic}</p>
+                            <p className="text-xs text-zinc-400 line-clamp-2 leading-relaxed mb-3">
+                              {latestUnread?.text || "New message received."}
+                            </p>
+                            <span className={`flex items-center gap-1.5 text-[9px] font-black uppercase tracking-widest text-zinc-500 group-hover:${currentTheme.text} transition-colors`}>
+                              View Thread <ArrowRight size={10} />
+                            </span>
+                          </Link>
+                        );
+                      })}
                     </div>
                   )}
                 </div>

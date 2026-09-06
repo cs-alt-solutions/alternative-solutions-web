@@ -40,7 +40,6 @@ export default async function DashboardModule({ clientId }: { clientId: string }
   return (
     <div className="p-4 md:p-8 max-w-7xl mx-auto w-full animate-in fade-in duration-500 pb-12 flex flex-col gap-6">
       
-      {/* ROW 1: THE WELCOME BANNER (Full Width) */}
       <div className="relative bg-zinc-950 border border-white/10 rounded-3xl p-8 lg:p-12 overflow-hidden shadow-2xl flex flex-col justify-center">
         <div className="absolute -top-32 -right-32 w-96 h-96 bg-cyan-500/20 rounded-full blur-[100px] pointer-events-none" />
         <div className="absolute -bottom-32 -left-32 w-96 h-96 bg-fuchsia-500/20 rounded-full blur-[100px] pointer-events-none" />
@@ -77,7 +76,6 @@ export default async function DashboardModule({ clientId }: { clientId: string }
         </div>
       </div>
 
-      {/* ROW 2: QUICK ACTIONS (3 Columns) */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <Link href={`/portal/${clientId}/storefront`} className="bg-zinc-950/80 border border-white/5 hover:border-cyan-500/30 rounded-2xl p-5 flex items-center justify-between group transition-all shadow-md backdrop-blur-sm">
           <div className="flex items-center gap-3">
@@ -108,15 +106,12 @@ export default async function DashboardModule({ clientId }: { clientId: string }
         </Link>
       </div>
 
-      {/* ROW 3: MAIN SPLIT CONTENT (Dispatch on Left, Utilities Stacked on Right) */}
       <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
         
-        {/* LEFT MAIN: Platform Dispatch */}
         <div className="xl:col-span-2 h-full">
           <IncomingMessage history={dispatchHistory || []} />
         </div>
 
-        {/* RIGHT SIDEBAR: Utilities Stack (Status & Support) */}
         <div className="xl:col-span-1 flex flex-col gap-6 h-full">
           
           <div className="bg-zinc-950/80 border border-white/5 rounded-3xl p-6 md:p-8 flex flex-col shadow-xl backdrop-blur-sm relative overflow-hidden flex-1">
@@ -167,9 +162,10 @@ export default async function DashboardModule({ clientId }: { clientId: string }
                 </div>
               ) : (
                 tickets.map(t => (
-                  <div key={t.id} className="flex items-center justify-between p-3 bg-black/40 border border-white/5 rounded-2xl hover:border-zinc-700 transition-colors">
+                  // 🚀 Replaced div with Link so the hover effect isn't a false affordance!
+                  <Link href={`/portal/${clientId}/support`} key={t.id} className="flex items-center justify-between p-3 bg-black/40 border border-white/5 rounded-2xl hover:border-zinc-700 transition-colors cursor-pointer group">
                     <div className="flex-1 min-w-0 pr-3">
-                      <span className={`text-[8px] font-black uppercase tracking-widest block mb-0.5 ${t.category === 'Business Update' ? 'text-emerald-400' : 'text-fuchsia-400'}`}>
+                      <span className={`text-[8px] font-black uppercase tracking-widest block mb-0.5 group-hover:brightness-125 transition-all ${t.category === 'Business Update' ? 'text-emerald-400' : 'text-fuchsia-400'}`}>
                         {t.category}
                       </span>
                       <p className="text-[11px] font-bold text-white truncate">{t.topic}</p>
@@ -181,7 +177,7 @@ export default async function DashboardModule({ clientId }: { clientId: string }
                     }`}>
                       {t.status === 'OPEN' ? 'In Review' : 'Resolved'}
                     </span>
-                  </div>
+                  </Link>
                 ))
               )}
             </div>

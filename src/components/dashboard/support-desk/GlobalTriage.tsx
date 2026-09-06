@@ -6,6 +6,24 @@ import { supabase } from '@/utils/supabase';
 import { Clock, AlertTriangle, CheckCircle2, Inbox, CheckSquare, RefreshCw, Paintbrush, Settings, Lightbulb, MessageSquare, Send, Store, ChevronDown, ChevronUp, Trash2, XCircle, Sparkles } from 'lucide-react';
 import { SUPPORT_DESK_COPY } from '@/config/dashboard';
 
+// 🚀 Helper to parse and ensure legacy messages get the new properties
+const parseAdminReplies = (replyString: string | null, fallbackDate: string) => {
+  if (!replyString) return [];
+  try {
+    const parsed = JSON.parse(replyString);
+    if (Array.isArray(parsed)) {
+      return parsed.map((msg: any) => ({
+        ...msg,
+        id: msg.id || Math.random().toString(36).substr(2, 9),
+        read: msg.read || false
+      }));
+    }
+    return [{ id: 'legacy-1', text: replyString, date: fallbackDate, read: true }];
+  } catch (e) {
+    return [{ id: 'legacy-2', text: replyString, date: fallbackDate, read: true }];
+  }
+};
+
 export default function GlobalTriage() {
   const [tickets, setTickets] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -74,9 +92,41 @@ export default function GlobalTriage() {
       return;
     }
     
-    setTickets(prev => prev.map(t => t.id === ticketId ? { ...t, admin_reply: adminMessage } : t));
-    await supabase.from('support_tickets').update({ admin_reply: adminMessage }).eq('id', ticketId);
+    const ticket = tickets.find(t => t.id === ticketId);
+    if (!ticket) return;
+
+    const existingReplies = parseAdminReplies(ticket.admin_reply, ticket.created_at);
+    // 🚀 Inject the unique ID and the read receipt status
+    const newReply = { 
+      id: Date.now().toString(), 
+      text: adminMessage, 
+      date: new Date().toISOString(),
+      read: false 
+    };
+    
+    const updatedReplies = [...existingReplies, newReply];
+    const payloadString = JSON.stringify(updatedReplies);
+    
+    setTickets(prev => prev.map(t => t.id === ticketId ? { ...t, admin_reply: payloadString } : t));
+    setReplyText(prev => ({ ...prev, [ticketId]: '' }));
+    
+    await supabase.from('support_tickets').update({ admin_reply: payloadString }).eq('id', ticketId);
     setIsReplying(null);
+  };
+
+  // 🚀 New function to recall an unread message
+  const handleRecallMessage = async (ticketId: string, messageId: string) => {
+    if (!window.confirm("Recall this message before the client reads it?")) return;
+    
+    const ticket = tickets.find(t => t.id === ticketId);
+    if (!ticket) return;
+
+    const existingReplies = parseAdminReplies(ticket.admin_reply, ticket.created_at);
+    const filteredReplies = existingReplies.filter((reply: any) => reply.id !== messageId);
+    const payloadString = filteredReplies.length > 0 ? JSON.stringify(filteredReplies) : null;
+
+    setTickets(prev => prev.map(t => t.id === ticketId ? { ...t, admin_reply: payloadString } : t));
+    await supabase.from('support_tickets').update({ admin_reply: payloadString }).eq('id', ticketId);
   };
 
   const handleMarkResolved = async (ticketId: string, e: React.MouseEvent) => {
@@ -117,7 +167,6 @@ export default function GlobalTriage() {
       case 'System Request': return { bg: 'bg-fuchsia-500/10', text: 'text-fuchsia-400', border: 'border-fuchsia-500/20', icon: Settings };
       case 'Something Broke': return { bg: 'bg-rose-500/10', text: 'text-rose-400', border: 'border-rose-500/20', icon: AlertTriangle };
       case 'Big New Idea': return { bg: 'bg-amber-500/10', text: 'text-amber-400', border: 'border-amber-500/20', icon: Lightbulb };
-      // 🚀 NEW: The Positivity Channel Configuration
       case 'Business Update': return { bg: 'bg-emerald-500/10', text: 'text-emerald-400', border: 'border-emerald-500/20', icon: Sparkles };
       default: return { bg: 'bg-zinc-500/10', text: 'text-zinc-400', border: 'border-zinc-500/20', icon: MessageSquare };
     }
@@ -145,7 +194,6 @@ export default function GlobalTriage() {
   return (
     <div className="space-y-6 animate-in fade-in duration-500">
       
-      {/* HEADER & TABS */}
       <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 pb-6 border-b border-white/5">
         <div>
           <h1 className="text-2xl font-black text-white uppercase tracking-tight">{copy.HEADER.TITLE}</h1>
@@ -199,7 +247,6 @@ export default function GlobalTriage() {
         
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
           
-          {/* LEFT SIDEBAR: Client Tabs */}
           <div className="lg:col-span-4 flex flex-col gap-2">
             <h3 className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest mb-2 pl-2">Active Workspaces</h3>
             {clientsWithTickets.map(clientId => {
@@ -232,7 +279,6 @@ export default function GlobalTriage() {
             })}
           </div>
 
-          {/* RIGHT PANE: The Studio Board */}
           <div className="lg:col-span-8 flex flex-col gap-8">
             {!selectedClientId ? (
                <div className="p-12 text-center text-zinc-600 border border-dashed border-white/10 rounded-2xl">
@@ -263,7 +309,6 @@ export default function GlobalTriage() {
                       return (
                         <div key={ticket.id} className={`bg-zinc-950 border rounded-xl overflow-hidden transition-all duration-300 ${isExpanded ? 'border-zinc-600 shadow-xl' : 'border-white/5 hover:border-white/10'}`}>
                           
-                          {/* Closed Row Summary */}
                           <div 
                             onClick={() => setExpandedTicketId(isExpanded ? null : ticket.id)}
                             className="p-4 flex items-center justify-between cursor-pointer group"
@@ -297,49 +342,62 @@ export default function GlobalTriage() {
                             </div>
                           </div>
 
-                          {/* Expanded Thread Body (Text Message Style) */}
                           {isExpanded && (
                             <div className="p-5 border-t border-white/5 bg-zinc-900/40">
                               
                               <div className="flex flex-col gap-6 mb-6">
                                 
-                                {/* Client Message Bubble */}
                                 <div className="flex justify-start">
                                   <div className="bg-black border border-white/5 rounded-2xl rounded-tl-sm p-4 max-w-[85%] shadow-sm">
                                     <p className="text-sm text-zinc-300 whitespace-pre-wrap leading-relaxed">{ticket.details}</p>
-                                    {/* 🚀 ADDED EXACT TIMESTAMP */}
                                     <span className="text-[9px] text-zinc-500 font-mono mt-2 block">
                                       Client • {new Date(ticket.created_at).toLocaleDateString()} at {new Date(ticket.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                                     </span>
                                   </div>
                                 </div>
 
-                                {/* Cancellation Reason (If Canceled) */}
                                 {ticket.status === 'CANCELED' && ticket.cancel_reason && (
-                                  <div className="flex justify-end">
+                                  <div className="flex justify-end mt-4">
                                     <div className="bg-rose-500/10 border border-rose-500/20 rounded-2xl rounded-tr-sm p-4 max-w-[85%]">
                                       <p className="text-sm text-rose-200 whitespace-pre-wrap leading-relaxed italic">"{ticket.cancel_reason}"</p>
-                                      <span className="text-[9px] text-rose-500/60 font-mono mt-2 block text-right">
+                                      <span className="text-[9px] text-rose-500/60 font-mono mt-2 block text-right uppercase tracking-widest">
                                         System Override Log
                                       </span>
                                     </div>
                                   </div>
                                 )}
 
-                                {/* Admin Reply Bubble */}
-                                {ticket.admin_reply && ticket.status !== 'CANCELED' && (
-                                  <div className="flex justify-end">
-                                    <div className="bg-cyan-500/10 border border-cyan-500/20 rounded-2xl rounded-tr-sm p-4 max-w-[85%] shadow-[0_0_15px_rgba(6,182,212,0.05)]">
-                                      <p className="text-sm text-cyan-50 whitespace-pre-wrap leading-relaxed">{ticket.admin_reply}</p>
-                                      <span className="text-[9px] text-cyan-500/60 font-mono mt-2 block text-right">
-                                        You • Sent
-                                      </span>
+                                {ticket.admin_reply && (
+                                  parseAdminReplies(ticket.admin_reply, ticket.created_at).map((reply: any, index: number) => (
+                                    <div key={reply.id || index} className="flex justify-end mt-2">
+                                      <div className="bg-cyan-500/10 border border-cyan-500/20 rounded-2xl rounded-tr-sm p-4 max-w-[85%] shadow-[0_0_15px_rgba(6,182,212,0.05)]">
+                                        <p className="text-sm text-cyan-50 whitespace-pre-wrap leading-relaxed">{reply.text}</p>
+                                        
+                                        {/* 🚀 Read Receipt & Recall Button UI */}
+                                        <div className="flex items-center justify-end mt-2">
+                                          <span className="text-[9px] text-cyan-500/60 font-mono uppercase tracking-widest flex items-center gap-2">
+                                            {reply.read ? (
+                                              <>Read • {new Date(reply.date).toLocaleDateString()}</>
+                                            ) : (
+                                              <>
+                                                Delivered • {new Date(reply.date).toLocaleDateString()}
+                                                <button 
+                                                  onClick={() => handleRecallMessage(ticket.id, reply.id)} 
+                                                  className="text-rose-400 hover:text-rose-300 ml-1 border-l border-cyan-500/30 pl-2 cursor-pointer transition-colors"
+                                                >
+                                                  Unsend
+                                                </button>
+                                              </>
+                                            )}
+                                          </span>
+                                        </div>
+
+                                      </div>
                                     </div>
-                                  </div>
+                                  ))
                                 )}
                               </div>
 
-                              {/* Action Area */}
                               {ticket.status === 'OPEN' && (
                                 <div className="flex flex-col gap-3 border-t border-white/5 pt-4">
                                   <textarea 
