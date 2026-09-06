@@ -2,11 +2,19 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { Upload, ShieldCheck, Trash2, FileText, Edit2, Check, CloudUpload, Info } from 'lucide-react';
+import { Upload, ShieldCheck, Trash2, FileText, Edit2, Check, CloudUpload, Info, X, MessageSquare } from 'lucide-react';
 import { supabase } from '@/utils/supabase';
 import { PORTAL_COPY } from '@/config/clients/portal';
 
 type FilterType = 'ALL' | 'IMAGES' | 'DOCS';
+
+const UPLOAD_INTENTS = [
+  'Update Brand Logo',
+  'New Product Imagery',
+  'Replace Background',
+  'General Assets',
+  'Other / Custom Request'
+];
 
 export default function MediaVaultModule({ clientId }: { clientId: string }) {
   const [isUploading, setIsUploading] = useState(false);
@@ -17,6 +25,11 @@ export default function MediaVaultModule({ clientId }: { clientId: string }) {
   const [renamingFile, setRenamingFile] = useState<string | null>(null);
   const [newName, setNewName] = useState<string>('');
   const bucketName = 'client-assets';
+
+  // 🚀 New Staging States
+  const [stagedFiles, setStagedFiles] = useState<File[]>([]);
+  const [uploadIntent, setUploadIntent] = useState(UPLOAD_INTENTS[3]); // Defaults to General Assets
+  const [uploadNotes, setUploadNotes] = useState('');
 
   const copy = PORTAL_COPY.vault || {
     title: "Media Vault",
@@ -50,16 +63,31 @@ export default function MediaVaultModule({ clientId }: { clientId: string }) {
     }
   };
 
-  const handleVaultUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+  // 🚀 1. Intercept the files and hold them in staging
+  const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
     const files = event.target.files;
     if (!files || files.length === 0) return;
+    setStagedFiles(Array.from(files));
+    setUploadIntent(UPLOAD_INTENTS[3]); // Reset to default
+    setUploadNotes('');
+  };
+
+  const cancelUpload = () => {
+    setStagedFiles([]);
+    setUploadIntent(UPLOAD_INTENTS[3]);
+    setUploadNotes('');
+  };
+
+  // 🚀 2. Execute the upload and fire the smart ticket
+  const confirmAndUpload = async () => {
+    if (stagedFiles.length === 0) return;
     
     setIsUploading(true);
-    setUploadStatus(`Processing ${files.length} file(s)...`);
+    setUploadStatus(`Processing ${stagedFiles.length} file(s)...`);
     
     try {
-      for (let i = 0; i < files.length; i++) {
-        const file = files[i];
+      for (let i = 0; i < stagedFiles.length; i++) {
+        const file = stagedFiles[i];
         const cleanName = file.name.replace(/[^a-zA-Z0-9.-]/g, '_');
         const filePath = `${clientId}/${Date.now()}-${cleanName}`;
         
@@ -67,12 +95,14 @@ export default function MediaVaultModule({ clientId }: { clientId: string }) {
         if (error) throw error;
       }
 
-      // 🚀 RADAR PING: Silently log the upload to the Support Desk as a System Alert
+      // Generate the contextual payload for the Support Desk
+      const ticketDetails = `Client uploaded ${stagedFiles.length} new raw file(s) into their staging vault.\n\nContext: ${uploadIntent}\nNotes: ${uploadNotes.trim() || 'No additional notes provided.'}`;
+
       await supabase.from('support_tickets').insert([{
         storefront_id: clientId,
-        category: 'System Alert',
-        topic: `Media Vault Drop: ${files.length} New Asset(s)`,
-        details: `Client uploaded ${files.length} new raw file(s) into their staging vault.`,
+        category: 'Content Update', // Automatically routes to the Content Update channel
+        topic: `Media Drop: ${uploadIntent}`,
+        details: ticketDetails,
         status: 'OPEN'
       }]);
 
@@ -81,6 +111,7 @@ export default function MediaVaultModule({ clientId }: { clientId: string }) {
     } catch (error: any) {
       setUploadStatus('Transmission Error.');
     } finally {
+      setStagedFiles([]); // Clear staging
       setIsUploading(false);
       setTimeout(() => setUploadStatus(null), 3000);
     }
@@ -127,7 +158,7 @@ export default function MediaVaultModule({ clientId }: { clientId: string }) {
   });
 
   return (
-    <div className="max-w-7xl mx-auto p-4 md:p-8 animate-in fade-in duration-500 pb-12 w-full h-full">
+    <div className="max-w-7xl mx-auto p-4 md:p-8 animate-in fade-in duration-500 pb-12 w-full h-full relative">
       
       {/* HEADER */}
       <div className="flex items-center gap-4 mb-8 border-b border-white/5 pb-6">
@@ -154,7 +185,7 @@ export default function MediaVaultModule({ clientId }: { clientId: string }) {
           <span className="text-xs font-mono uppercase tracking-widest">Scanning Secure Vault...</span>
         </div>
       ) : (
-        <div className="bg-zinc-950/80 border border-white/5 rounded-3xl p-6 md:p-8 shadow-xl backdrop-blur-sm">
+        <div className="bg-zinc-950/80 border border-white/5 rounded-3xl p-6 md:p-8 shadow-xl backdrop-blur-sm relative z-10">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
             <h3 className="text-sm font-black text-white uppercase tracking-widest">Raw Uploads</h3>
             <div className="flex items-center bg-black/40 p-1 rounded-xl border border-white/5 w-full sm:w-auto">
@@ -165,13 +196,14 @@ export default function MediaVaultModule({ clientId }: { clientId: string }) {
           </div>
 
           <div className="grid grid-cols-2 md:grid-cols-4 xl:grid-cols-5 gap-4">
+            {/* 🚀 Updated Input trigger */}
             <label className="bg-amber-500/5 border border-amber-500/20 border-dashed rounded-2xl flex flex-col items-center justify-center p-6 text-center cursor-pointer hover:bg-amber-500/10 hover:border-amber-500/50 transition-all h-48 group shadow-inner">
               <div className="bg-amber-500/10 p-3 rounded-full mb-3 group-hover:scale-110 transition-transform">
                 <Upload className="text-amber-400 w-6 h-6" />
               </div>
               <span className="text-xs font-bold text-amber-400 uppercase tracking-widest">{copy.uploadBtn}</span>
               <span className="text-[10px] text-amber-500/60 mt-1 font-mono">{copy.dragDrop}</span>
-              <input type="file" className="hidden" onChange={handleVaultUpload} multiple />
+              <input type="file" className="hidden" onChange={handleFileSelect} multiple />
             </label>
 
             {filteredAssets.map((file) => {
@@ -216,15 +248,94 @@ export default function MediaVaultModule({ clientId }: { clientId: string }) {
           
           {filteredAssets.length === 0 && (
              <div className="text-center mt-6 pt-6 border-t border-white/5">
-                <p className="text-xs text-zinc-600 font-mono uppercase tracking-widest">{copy.emptyState}</p>
+               <p className="text-xs text-zinc-600 font-mono uppercase tracking-widest">{copy.emptyState}</p>
              </div>
           )}
         </div>
       )}
 
-      {uploadStatus && (
+      {/* 🚀 THE INTENT CAPTURE MODAL */}
+      {stagedFiles.length > 0 && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-in fade-in">
+          <div className="bg-zinc-950 border-2 border-amber-500/30 w-full max-w-xl rounded-3xl shadow-[0_0_50px_rgba(245,158,11,0.15)] overflow-hidden flex flex-col relative">
+            <div className="absolute -top-32 -right-32 w-64 h-64 bg-amber-500/20 rounded-full blur-[80px] pointer-events-none" />
+            
+            <header className="p-6 md:p-8 border-b border-white/5 flex items-center justify-between relative z-10">
+              <div className="flex items-center gap-3">
+                <div className="p-2 bg-amber-500/10 rounded-lg text-amber-500 border border-amber-500/20">
+                  <CloudUpload size={18} />
+                </div>
+                <div>
+                  <h2 className="text-lg font-black uppercase text-white tracking-widest">Confirm Upload</h2>
+                  <span className="text-[10px] font-mono text-amber-500/70 uppercase tracking-widest block mt-0.5">
+                    {stagedFiles.length} file(s) staged
+                  </span>
+                </div>
+              </div>
+              <button onClick={cancelUpload} className="text-zinc-500 hover:text-white transition-colors cursor-pointer bg-zinc-900 p-2 rounded-lg border border-zinc-800">
+                <X size={16} />
+              </button>
+            </header>
+
+            <div className="p-6 md:p-8 space-y-6 relative z-10">
+              <div>
+                <label className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest mb-3 block flex items-center gap-2">
+                  <MessageSquare size={12} className="text-amber-500" /> What are these files for?
+                </label>
+                <div className="flex flex-wrap gap-2">
+                  {UPLOAD_INTENTS.map(intent => (
+                    <button
+                      key={intent}
+                      onClick={() => setUploadIntent(intent)}
+                      className={`px-3 py-2 rounded-xl text-[10px] font-bold uppercase tracking-widest transition-all cursor-pointer border ${
+                        uploadIntent === intent 
+                          ? 'bg-amber-500/20 text-amber-400 border-amber-500/40 shadow-inner' 
+                          : 'bg-black/40 text-zinc-500 border-white/5 hover:border-white/10 hover:text-zinc-300'
+                      }`}
+                    >
+                      {intent}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <div className="flex-1 flex flex-col">
+                <label className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest mb-2 block">
+                  Additional Notes (Optional)
+                </label>
+                <textarea 
+                  value={uploadNotes}
+                  onChange={(e) => setUploadNotes(e.target.value)}
+                  placeholder="e.g., 'Please replace the logo on the contact page with this new transparent version.'"
+                  className="w-full min-h-24 bg-black/40 border border-zinc-800 focus:border-amber-500/50 rounded-xl p-4 text-sm text-zinc-300 outline-none custom-scrollbar resize-none font-medium leading-relaxed shadow-inner"
+                />
+              </div>
+            </div>
+
+            <footer className="p-6 border-t border-white/5 bg-black/20 flex justify-end gap-3 relative z-10">
+              <button 
+                onClick={cancelUpload}
+                disabled={isUploading}
+                className="px-6 py-3 rounded-xl text-xs font-black text-zinc-400 hover:text-white uppercase tracking-widest transition-colors"
+              >
+                Cancel
+              </button>
+              <button 
+                onClick={confirmAndUpload}
+                disabled={isUploading}
+                className="flex items-center gap-2 bg-amber-500 hover:bg-amber-400 text-amber-950 px-6 py-3 rounded-xl font-mono text-[11px] uppercase font-black tracking-widest transition-all shadow-[0_0_15px_rgba(245,158,11,0.3)] hover:shadow-[0_0_25px_rgba(245,158,11,0.5)] disabled:opacity-50 cursor-pointer"
+              >
+                {isUploading ? 'Uploading...' : 'Confirm & Upload'}
+              </button>
+            </footer>
+          </div>
+        </div>
+      )}
+
+      {/* SUCCESS TOAST */}
+      {uploadStatus && !isUploading && (
         <div className="fixed bottom-8 right-8 bg-amber-500 text-amber-950 px-6 py-3 rounded-xl shadow-[0_0_30px_rgba(245,158,11,0.4)] flex items-center gap-3 animate-in slide-in-from-bottom-4 z-50">
-          {isUploading ? <Upload size={16} className="animate-bounce" /> : <ShieldCheck size={16} />}
+          <ShieldCheck size={16} />
           <span className="text-xs font-black uppercase tracking-widest">{uploadStatus}</span>
         </div>
       )}
