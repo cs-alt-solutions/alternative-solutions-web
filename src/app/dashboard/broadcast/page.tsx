@@ -6,6 +6,10 @@ import DispatchManager from '@/components/dashboard/broadcast/DispatchManager';
 
 export const revalidate = 0;
 
+export const metadata = {
+  title: 'Platform Dispatch | System Admin'
+};
+
 export default async function BroadcastHub() {
   const supabase = await createClient();
   
