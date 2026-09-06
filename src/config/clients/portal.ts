@@ -83,12 +83,13 @@ export const PORTAL_COPY = {
       { id: 'update', label: 'Business Update', description: 'Share a win, a milestone, or just tell me how things are going!' } 
     ],
     topics: [
-      'Live Storefront',
-      'Client Portal',
-      'Billing & Subscription',
-      'Custom Upgrade / Expansion',
-      'Other'
-    ],
+  'Live Storefront Edits',
+  'Media Vault & Assets',
+  'Billing & Subscriptions',
+  'New Feature Request',
+  'General Strategy & Check-in',
+  'Reporting a Bug'
+],
     btnSend: "Send Message",
     btnSending: "Sending...",
     btnSent: "Message Sent!",

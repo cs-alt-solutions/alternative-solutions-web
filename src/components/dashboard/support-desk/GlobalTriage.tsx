@@ -6,7 +6,6 @@ import { supabase } from '@/utils/supabase';
 import { Clock, AlertTriangle, CheckCircle2, Inbox, CheckSquare, RefreshCw, Paintbrush, Settings, Lightbulb, MessageSquare, Send, Store, ChevronDown, ChevronUp, Trash2, XCircle, Sparkles } from 'lucide-react';
 import { SUPPORT_DESK_COPY } from '@/config/dashboard';
 
-// 🚀 Helper to parse and ensure legacy messages get the new properties
 const parseAdminReplies = (replyString: string | null, fallbackDate: string) => {
   if (!replyString) return [];
   try {
@@ -15,7 +14,8 @@ const parseAdminReplies = (replyString: string | null, fallbackDate: string) => 
       return parsed.map((msg: any) => ({
         ...msg,
         id: msg.id || Math.random().toString(36).substr(2, 9),
-        read: msg.read || false
+        read: msg.read || false,
+        isResolutionRequest: msg.isResolutionRequest || false
       }));
     }
     return [{ id: 'legacy-1', text: replyString, date: fallbackDate, read: true }];
@@ -96,12 +96,12 @@ export default function GlobalTriage() {
     if (!ticket) return;
 
     const existingReplies = parseAdminReplies(ticket.admin_reply, ticket.created_at);
-    // 🚀 Inject the unique ID and the read receipt status
     const newReply = { 
       id: Date.now().toString(), 
       text: adminMessage, 
       date: new Date().toISOString(),
-      read: false 
+      read: false,
+      isResolutionRequest: false
     };
     
     const updatedReplies = [...existingReplies, newReply];
@@ -114,7 +114,30 @@ export default function GlobalTriage() {
     setIsReplying(null);
   };
 
-  // 🚀 New function to recall an unread message
+  // 🚀 The new "Propose Close" function
+  const handleProposeResolution = async (ticketId: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    const ticket = tickets.find(t => t.id === ticketId);
+    if (!ticket) return;
+
+    const resolutionText = "I believe we have this fully resolved! If everything looks good on your end, go ahead and close out this ticket below. If you still need help, just drop another reply and we will keep working on it.";
+
+    const existingReplies = parseAdminReplies(ticket.admin_reply, ticket.created_at);
+    const newReply = { 
+      id: Date.now().toString(), 
+      text: resolutionText, 
+      date: new Date().toISOString(),
+      read: false,
+      isResolutionRequest: true 
+    };
+    
+    const updatedReplies = [...existingReplies, newReply];
+    const payloadString = JSON.stringify(updatedReplies);
+    
+    setTickets(prev => prev.map(t => t.id === ticketId ? { ...t, admin_reply: payloadString } : t));
+    await supabase.from('support_tickets').update({ admin_reply: payloadString }).eq('id', ticketId);
+  };
+
   const handleRecallMessage = async (ticketId: string, messageId: string) => {
     if (!window.confirm("Recall this message before the client reads it?")) return;
     
@@ -127,14 +150,6 @@ export default function GlobalTriage() {
 
     setTickets(prev => prev.map(t => t.id === ticketId ? { ...t, admin_reply: payloadString } : t));
     await supabase.from('support_tickets').update({ admin_reply: payloadString }).eq('id', ticketId);
-  };
-
-  const handleMarkResolved = async (ticketId: string, e: React.MouseEvent) => {
-    e.stopPropagation();
-    const resolvedAt = new Date().toISOString();
-    setTickets(prev => prev.map(t => t.id === ticketId ? { ...t, status: 'RESOLVED', resolved_at: resolvedAt } : t));
-    await supabase.from('support_tickets').update({ status: 'RESOLVED', resolved_at: resolvedAt }).eq('id', ticketId);
-    if (expandedTicketId === ticketId) setExpandedTicketId(null);
   };
 
   const handleCancelTicket = async (ticketId: string, e: React.MouseEvent) => {
@@ -331,10 +346,10 @@ export default function GlobalTriage() {
                                     <Trash2 size={12} /> {copy.ACTIONS.CANCEL}
                                   </button>
                                   <button 
-                                    onClick={(e) => handleMarkResolved(ticket.id, e)}
+                                    onClick={(e) => handleProposeResolution(ticket.id, e)}
                                     className="flex items-center gap-1.5 text-[9px] font-black uppercase tracking-widest text-emerald-500 bg-emerald-500/10 border border-emerald-500/20 px-2 py-1 rounded transition-all hover:bg-emerald-500/20"
                                   >
-                                    <CheckCircle2 size={12} /> {copy.ACTIONS.RESOLVE}
+                                    <CheckCircle2 size={12} /> Propose Close
                                   </button>
                                 </div>
                               )}
@@ -369,29 +384,29 @@ export default function GlobalTriage() {
 
                                 {ticket.admin_reply && (
                                   parseAdminReplies(ticket.admin_reply, ticket.created_at).map((reply: any, index: number) => (
-                                    <div key={reply.id || index} className="flex justify-end mt-2">
-                                      <div className="bg-cyan-500/10 border border-cyan-500/20 rounded-2xl rounded-tr-sm p-4 max-w-[85%] shadow-[0_0_15px_rgba(6,182,212,0.05)]">
-                                        <p className="text-sm text-cyan-50 whitespace-pre-wrap leading-relaxed">{reply.text}</p>
-                                        
-                                        {/* 🚀 Read Receipt & Recall Button UI */}
-                                        <div className="flex items-center justify-end mt-2">
-                                          <span className="text-[9px] text-cyan-500/60 font-mono uppercase tracking-widest flex items-center gap-2">
-                                            {reply.read ? (
-                                              <>Read • {new Date(reply.date).toLocaleDateString()}</>
-                                            ) : (
-                                              <>
-                                                Delivered • {new Date(reply.date).toLocaleDateString()}
-                                                <button 
-                                                  onClick={() => handleRecallMessage(ticket.id, reply.id)} 
-                                                  className="text-rose-400 hover:text-rose-300 ml-1 border-l border-cyan-500/30 pl-2 cursor-pointer transition-colors"
-                                                >
-                                                  Unsend
-                                                </button>
-                                              </>
-                                            )}
-                                          </span>
+                                    <div key={reply.id || index} className="flex flex-col gap-2 mt-2">
+                                      <div className="flex justify-end">
+                                        <div className="bg-cyan-500/10 border border-cyan-500/20 rounded-2xl rounded-tr-sm p-4 max-w-[85%] shadow-[0_0_15px_rgba(6,182,212,0.05)]">
+                                          <p className="text-sm text-cyan-50 whitespace-pre-wrap leading-relaxed">{reply.text}</p>
+                                          
+                                          <div className="flex items-center justify-end mt-2">
+                                            <span className="text-[9px] text-cyan-500/60 font-mono uppercase tracking-widest flex items-center gap-2">
+                                              {reply.read ? (
+                                                <>Read • {new Date(reply.date).toLocaleDateString()}</>
+                                              ) : (
+                                                <>
+                                                  Delivered • {new Date(reply.date).toLocaleDateString()}
+                                                  <button 
+                                                    onClick={() => handleRecallMessage(ticket.id, reply.id)} 
+                                                    className="text-rose-400 hover:text-rose-300 ml-1 border-l border-cyan-500/30 pl-2 cursor-pointer transition-colors"
+                                                  >
+                                                    Unsend
+                                                  </button>
+                                                </>
+                                              )}
+                                            </span>
+                                          </div>
                                         </div>
-
                                       </div>
                                     </div>
                                   ))
@@ -415,10 +430,10 @@ export default function GlobalTriage() {
                                         <Trash2 size={14} /> {copy.ACTIONS.CANCEL}
                                       </button>
                                       <button 
-                                        onClick={(e) => handleMarkResolved(ticket.id, e)}
+                                        onClick={(e) => handleProposeResolution(ticket.id, e)}
                                         className="flex items-center gap-2 bg-zinc-900 hover:bg-emerald-500/10 border border-zinc-800 hover:border-emerald-500/30 text-zinc-400 hover:text-emerald-400 px-4 py-2 rounded-lg text-[10px] font-black uppercase tracking-widest transition-colors cursor-pointer"
                                       >
-                                        <CheckCircle2 size={14} /> {copy.ACTIONS.RESOLVING}
+                                        <CheckCircle2 size={14} /> Propose Close
                                       </button>
                                     </div>
                                     <button 
