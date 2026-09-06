@@ -1,43 +1,37 @@
 /* src/app/dashboard/broadcast/page.tsx */
 import React from 'react';
-import { supabase } from '@/utils/supabase';
-import { WEBSITE_COPY } from '@/utils/glossary';
+import { createClient } from '@/utils/supabase/server';
 import { Radio } from 'lucide-react';
-
-import BroadcastTabs from '@/components/dashboard/broadcast/BroadcastTabs';
+import DispatchManager from '@/components/dashboard/broadcast/DispatchManager';
 
 export const revalidate = 0;
 
 export default async function BroadcastHub() {
-  const hubCopy = WEBSITE_COPY.DASHBOARD.MEDIA_HUB;
+  const supabase = await createClient();
   
-  // Fetch data ONCE on the initial server load
-  const { data: episodes } = await supabase
-    .from('audio_logs')
+  // Fetch all global platform updates
+  const { data: updates } = await supabase
+    .from('platform_updates')
     .select('*')
     .order('created_at', { ascending: false });
 
-  const activeCount = episodes?.filter(e => e.status === 'ACTIVE').length || 0;
-
   return (
-    <div className="p-8 relative max-w-6xl mx-auto">
-      <header className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-10 border-b border-white/5 pb-8">
+    <div className="p-4 md:p-8 relative max-w-7xl mx-auto w-full animate-in fade-in duration-500 pb-24">
+      <header className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-8 border-b border-white/5 pb-8">
         <div>
           <div className="flex items-center gap-2 mb-2">
-            <Radio className="text-brand-primary animate-pulse" size={16} />
-            <span className="text-xs font-mono tracking-[0.2em] text-brand-primary uppercase">
-              {hubCopy.SUBTITLE}
+            <Radio className="text-cyan-400 animate-pulse" size={16} />
+            <span className="text-xs font-mono tracking-[0.2em] text-cyan-400 uppercase">
+              Global Notifications
             </span>
           </div>
-          <h1 className="text-4xl font-black tracking-tighter text-white uppercase">
-            {hubCopy.TITLE}
+          <h1 className="text-3xl md:text-4xl font-black tracking-tighter text-white uppercase">
+            Platform Dispatch
           </h1>
         </div>
       </header>
 
-      {/* Pure Client-Side Tab Switching for Instant Performance */}
-      <BroadcastTabs episodes={episodes || []} activeCount={activeCount} />
-      
+      <DispatchManager initialUpdates={updates || []} />
     </div>
   );
 }

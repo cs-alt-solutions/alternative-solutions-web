@@ -346,7 +346,7 @@ export default function GlobalTriage() {
                                     value={replyText[ticket.id] || ''}
                                     onChange={(e) => setReplyText(prev => ({ ...prev, [ticket.id]: e.target.value }))}
                                     placeholder="Draft a response to the client..."
-                                    className="w-full bg-zinc-950 border border-zinc-800 rounded-xl p-3 text-sm text-white placeholder:text-zinc-600 focus:outline-none focus:border-cyan-500/50 resize-none min-h-[80px]"
+                                    className="w-full bg-zinc-950 border border-zinc-800 rounded-xl p-3 text-sm text-white placeholder:text-zinc-600 focus:outline-none focus:border-cyan-500/50 resize-none min-h-20"
                                   />
                                   <div className="flex items-center justify-between mt-1">
                                     <div className="flex items-center gap-2">

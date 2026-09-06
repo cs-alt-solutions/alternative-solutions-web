@@ -139,7 +139,7 @@ export default async function DashboardModule({ clientId }: { clientId: string }
             
             <div className="bg-black/40 border border-white/5 rounded-xl p-4 flex items-center justify-between">
               <p className="text-[10px] text-zinc-500 font-bold uppercase tracking-widest">Web Address</p>
-              <p className="text-[10px] md:text-xs font-black text-white truncate max-w-[150px]">{store?.custom_domain || 'Pending Setup'}</p>
+              <p className="text-[10px] md:text-xs font-black text-white truncate max-w-37.5">{store?.custom_domain || 'Pending Setup'}</p>
             </div>
             
             <div className="bg-black/40 border border-white/5 rounded-xl p-4 flex items-center justify-between">
