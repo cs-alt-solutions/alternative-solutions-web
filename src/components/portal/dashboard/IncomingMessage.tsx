@@ -113,7 +113,7 @@ export default function IncomingMessage({ history }: { history: any[] }) {
 
   if (history.length === 0) {
     return (
-      <div className="bg-zinc-950/80 border border-white/5 rounded-3xl p-6 flex flex-col shadow-xl backdrop-blur-sm w-full h-[650px] relative">
+      <div className="bg-zinc-950/80 border border-white/5 rounded-3xl p-6 flex flex-col shadow-xl backdrop-blur-sm w-full h-162.5 relative">
         <div className="flex items-center gap-3 mb-5 pb-4 border-b border-white/5">
           <Radio size={16} className="text-zinc-500" />
           <h2 className="text-sm font-bold text-white uppercase tracking-widest">Platform Dispatch</h2>
@@ -127,7 +127,7 @@ export default function IncomingMessage({ history }: { history: any[] }) {
   }
 
   return (
-    <div className={`border rounded-3xl p-6 md:p-8 flex flex-col backdrop-blur-md w-full h-[650px] relative overflow-hidden group ${activeTheme.container}`}>
+    <div className={`border rounded-3xl p-6 md:p-8 flex flex-col backdrop-blur-md w-full h-162.5 relative overflow-hidden group ${activeTheme.container}`}>
       
       {/* Clean, subtle ambient glow - restricted to top right */}
       <div className={`absolute -top-32 -right-32 w-96 h-96 rounded-full blur-[80px] pointer-events-none opacity-40 ${activeTheme.glowTop}`} />
