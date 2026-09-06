@@ -6,76 +6,73 @@ import { Radio, CheckCircle2, LayoutList, Zap } from 'lucide-react';
 
 const THEMES = {
   'QUICK COMMS': {
-    container: 'from-cyan-900/40 via-cyan-950/20 to-zinc-950 border-cyan-500/40 shadow-[0_0_50px_rgba(6,182,212,0.2)]',
-    glowTop: 'bg-cyan-500/30',
-    glowBottom: 'bg-blue-500/20',
-    headerBorder: 'border-cyan-500/30',
-    iconWrap: 'bg-cyan-500/30 text-cyan-200 border-cyan-500/40 shadow-[0_0_20px_rgba(6,182,212,0.4)]',
-    icon: 'text-cyan-100',
-    toggleActive: 'bg-cyan-500/30 text-cyan-100 shadow-[0_0_15px_rgba(6,182,212,0.3)]',
-    toggleInactive: 'text-cyan-500/60 hover:text-cyan-300',
-    badge: 'text-cyan-200 bg-cyan-500/30 border-cyan-500/40',
-    version: 'text-cyan-300 border-cyan-500/30',
+    container: 'bg-zinc-950/80 border-white/5 shadow-xl',
+    glowTop: 'bg-cyan-500/10',
+    headerBorder: 'border-white/5',
+    iconWrap: 'bg-cyan-500/10 text-cyan-400 border-cyan-500/20',
+    icon: 'text-cyan-400',
+    toggleActive: 'bg-cyan-500/10 text-cyan-400 border border-cyan-500/20 shadow-[0_0_10px_rgba(34,211,238,0.1)]',
+    toggleInactive: 'text-zinc-500 hover:text-cyan-400',
+    badge: 'text-cyan-400 bg-cyan-500/10 border-cyan-500/20',
+    version: 'text-cyan-500 border-cyan-500/20',
     title: 'text-cyan-50',
-    body: 'text-cyan-100/90',
-    bulletWrap: 'bg-cyan-950/40 border-cyan-500/30 shadow-[inset_0_0_15px_rgba(6,182,212,0.1)]',
-    bulletDotOuter: 'bg-cyan-500/20 border-cyan-500/40',
-    bulletDotInner: 'bg-cyan-400 shadow-[0_0_8px_rgba(34,211,238,1)]',
+    body: 'text-cyan-100/70',
+    bulletWrap: 'bg-black/40 border-white/5',
+    bulletDotOuter: 'bg-cyan-500/10 border-cyan-500/30',
+    bulletDotInner: 'bg-cyan-400 shadow-[0_0_8px_rgba(34,211,238,0.8)]',
     bulletText: 'text-cyan-50',
-    date: 'text-cyan-500/70',
-    feedLine: 'border-cyan-500/30',
-    feedDotActive: 'bg-cyan-400 shadow-[0_0_12px_rgba(34,211,238,0.9)]',
-    feedDotInactive: 'bg-cyan-900',
-    feedDate: 'text-cyan-400/60',
-    feedBadge: 'text-cyan-200/70 bg-cyan-500/20 border-cyan-500/30'
+    date: 'text-zinc-500',
+    feedLine: 'border-white/10',
+    feedDotActive: 'bg-cyan-400 shadow-[0_0_10px_rgba(34,211,238,0.6)]',
+    feedDotInactive: 'bg-zinc-800',
+    feedDate: 'text-zinc-500',
+    feedBadge: 'text-cyan-400/80 bg-cyan-500/10 border-cyan-500/20'
   },
   'FEATURE DROP': {
-    container: 'from-emerald-900/40 via-emerald-950/20 to-zinc-950 border-emerald-500/40 shadow-[0_0_50px_rgba(16,185,129,0.2)]',
-    glowTop: 'bg-emerald-500/30',
-    glowBottom: 'bg-teal-500/20',
-    headerBorder: 'border-emerald-500/30',
-    iconWrap: 'bg-emerald-500/30 text-emerald-200 border-emerald-500/40 shadow-[0_0_20px_rgba(16,185,129,0.4)]',
-    icon: 'text-emerald-100',
-    toggleActive: 'bg-emerald-500/30 text-emerald-100 shadow-[0_0_15px_rgba(16,185,129,0.3)]',
-    toggleInactive: 'text-emerald-500/60 hover:text-emerald-300',
-    badge: 'text-emerald-200 bg-emerald-500/30 border-emerald-500/40',
-    version: 'text-emerald-300 border-emerald-500/30',
+    container: 'bg-zinc-950/80 border-white/5 shadow-xl',
+    glowTop: 'bg-emerald-500/10',
+    headerBorder: 'border-white/5',
+    iconWrap: 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20',
+    icon: 'text-emerald-400',
+    toggleActive: 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 shadow-[0_0_10px_rgba(16,185,129,0.1)]',
+    toggleInactive: 'text-zinc-500 hover:text-emerald-400',
+    badge: 'text-emerald-400 bg-emerald-500/10 border-emerald-500/20',
+    version: 'text-emerald-500 border-emerald-500/20',
     title: 'text-emerald-50',
-    body: 'text-emerald-100/90',
-    bulletWrap: 'bg-emerald-950/40 border-emerald-500/30 shadow-[inset_0_0_15px_rgba(16,185,129,0.1)]',
-    bulletDotOuter: 'bg-emerald-500/20 border-emerald-500/40',
-    bulletDotInner: 'bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,1)]',
+    body: 'text-emerald-100/70',
+    bulletWrap: 'bg-black/40 border-white/5',
+    bulletDotOuter: 'bg-emerald-500/10 border-emerald-500/30',
+    bulletDotInner: 'bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.8)]',
     bulletText: 'text-emerald-50',
-    date: 'text-emerald-500/70',
-    feedLine: 'border-emerald-500/30',
-    feedDotActive: 'bg-emerald-400 shadow-[0_0_12px_rgba(52,211,153,0.9)]',
-    feedDotInactive: 'bg-emerald-900',
-    feedDate: 'text-emerald-400/60',
-    feedBadge: 'text-emerald-200/70 bg-emerald-500/20 border-emerald-500/30'
+    date: 'text-zinc-500',
+    feedLine: 'border-white/10',
+    feedDotActive: 'bg-emerald-400 shadow-[0_0_10px_rgba(52,211,153,0.6)]',
+    feedDotInactive: 'bg-zinc-800',
+    feedDate: 'text-zinc-500',
+    feedBadge: 'text-emerald-400/80 bg-emerald-500/10 border-emerald-500/20'
   },
   'ARCHITECTURE': {
-    container: 'from-amber-900/40 via-amber-950/20 to-zinc-950 border-amber-500/40 shadow-[0_0_50px_rgba(245,158,11,0.2)]',
-    glowTop: 'bg-amber-500/30',
-    glowBottom: 'bg-orange-500/20',
-    headerBorder: 'border-amber-500/30',
-    iconWrap: 'bg-amber-500/30 text-amber-200 border-amber-500/40 shadow-[0_0_20px_rgba(245,158,11,0.4)]',
-    icon: 'text-amber-100',
-    toggleActive: 'bg-amber-500/30 text-amber-100 shadow-[0_0_15px_rgba(245,158,11,0.3)]',
-    toggleInactive: 'text-amber-500/60 hover:text-amber-300',
-    badge: 'text-amber-200 bg-amber-500/30 border-amber-500/40',
-    version: 'text-amber-300 border-amber-500/30',
+    container: 'bg-zinc-950/80 border-white/5 shadow-xl',
+    glowTop: 'bg-amber-500/10',
+    headerBorder: 'border-white/5',
+    iconWrap: 'bg-amber-500/10 text-amber-400 border-amber-500/20',
+    icon: 'text-amber-400',
+    toggleActive: 'bg-amber-500/10 text-amber-400 border border-amber-500/20 shadow-[0_0_10px_rgba(245,158,11,0.1)]',
+    toggleInactive: 'text-zinc-500 hover:text-amber-400',
+    badge: 'text-amber-400 bg-amber-500/10 border-amber-500/20',
+    version: 'text-amber-500 border-amber-500/20',
     title: 'text-amber-50',
-    body: 'text-amber-100/90',
-    bulletWrap: 'bg-amber-950/40 border-amber-500/30 shadow-[inset_0_0_15px_rgba(245,158,11,0.1)]',
-    bulletDotOuter: 'bg-amber-500/20 border-amber-500/40',
-    bulletDotInner: 'bg-amber-400 shadow-[0_0_8px_rgba(251,191,36,1)]',
+    body: 'text-amber-100/70',
+    bulletWrap: 'bg-black/40 border-white/5',
+    bulletDotOuter: 'bg-amber-500/10 border-amber-500/30',
+    bulletDotInner: 'bg-amber-400 shadow-[0_0_8px_rgba(251,191,36,0.8)]',
     bulletText: 'text-amber-50',
-    date: 'text-amber-500/70',
-    feedLine: 'border-amber-500/30',
-    feedDotActive: 'bg-amber-400 shadow-[0_0_12px_rgba(251,191,36,0.9)]',
-    feedDotInactive: 'bg-amber-900',
-    feedDate: 'text-amber-400/60',
-    feedBadge: 'text-amber-200/70 bg-amber-500/20 border-amber-500/30'
+    date: 'text-zinc-500',
+    feedLine: 'border-white/10',
+    feedDotActive: 'bg-amber-400 shadow-[0_0_10px_rgba(251,191,36,0.6)]',
+    feedDotInactive: 'bg-zinc-800',
+    feedDate: 'text-zinc-500',
+    feedBadge: 'text-amber-400/80 bg-amber-500/10 border-amber-500/20'
   }
 };
 
@@ -116,25 +113,24 @@ export default function IncomingMessage({ history }: { history: any[] }) {
 
   if (history.length === 0) {
     return (
-      <div className="bg-linear-to-br from-cyan-900/30 via-cyan-950/10 to-zinc-950 border-2 border-cyan-500/30 rounded-3xl p-6 flex flex-col shadow-[0_0_40px_rgba(6,182,212,0.15)] backdrop-blur-sm w-full h-[650px] relative">
-        <div className="flex items-center gap-3 mb-5 pb-4 border-b border-cyan-500/30">
-          <Radio size={16} className="text-cyan-400" />
-          <h2 className="text-sm font-bold text-cyan-50 uppercase tracking-widest">Platform Dispatch</h2>
+      <div className="bg-zinc-950/80 border border-white/5 rounded-3xl p-6 flex flex-col shadow-xl backdrop-blur-sm w-full h-[650px] relative">
+        <div className="flex items-center gap-3 mb-5 pb-4 border-b border-white/5">
+          <Radio size={16} className="text-zinc-500" />
+          <h2 className="text-sm font-bold text-white uppercase tracking-widest">Platform Dispatch</h2>
         </div>
-        <div className="flex-1 flex flex-col items-center justify-center text-center py-6 border border-dashed border-cyan-500/30 rounded-2xl bg-cyan-950/30">
-          <CheckCircle2 size={24} className="text-cyan-400 mb-2" />
-          <p className="text-xs text-cyan-200/60 font-mono uppercase tracking-widest">All systems nominal.</p>
+        <div className="flex-1 flex flex-col items-center justify-center text-center py-6 border border-dashed border-white/5 rounded-2xl bg-black/20">
+          <CheckCircle2 size={24} className="text-zinc-600 mb-2" />
+          <p className="text-xs text-zinc-500 font-mono uppercase tracking-widest">All systems nominal.</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className={`bg-linear-to-br border-2 rounded-3xl p-6 md:p-8 flex flex-col backdrop-blur-md w-full h-[650px] relative overflow-hidden group ${activeTheme.container}`}>
+    <div className={`border rounded-3xl p-6 md:p-8 flex flex-col backdrop-blur-md w-full h-[650px] relative overflow-hidden group ${activeTheme.container}`}>
       
-      {/* Dynamic Ambient Background Glows */}
-      <div className={`absolute -top-20 -right-20 w-64 h-64 rounded-full blur-[60px] pointer-events-none ${activeTheme.glowTop}`} />
-      <div className={`absolute -bottom-20 -left-20 w-56 h-56 rounded-full blur-[60px] pointer-events-none ${activeTheme.glowBottom}`} />
+      {/* Clean, subtle ambient glow - restricted to top right */}
+      <div className={`absolute -top-32 -right-32 w-96 h-96 rounded-full blur-[80px] pointer-events-none opacity-40 ${activeTheme.glowTop}`} />
 
       {/* WIDGET HEADER & TOGGLE */}
       <div className={`flex items-center justify-between mb-6 pb-4 border-b relative z-10 shrink-0 ${activeTheme.headerBorder}`}>
@@ -145,7 +141,7 @@ export default function IncomingMessage({ history }: { history: any[] }) {
           <h2 className="text-sm font-black text-white uppercase tracking-widest text-shadow-sm">Platform Dispatch</h2>
         </div>
         
-        <div className="flex bg-black/50 p-1 rounded-lg border border-white/5">
+        <div className="flex bg-black/40 p-1 rounded-lg border border-white/5">
           <button 
             onClick={() => setViewMode('latest')}
             className={`px-3 py-1.5 text-[9px] font-black uppercase tracking-widest rounded transition-all cursor-pointer flex items-center gap-1.5 ${viewMode === 'latest' ? activeTheme.toggleActive : activeTheme.toggleInactive}`}
@@ -182,7 +178,8 @@ export default function IncomingMessage({ history }: { history: any[] }) {
               {activeUpdate.title}
             </h3>
             
-            <div className="flex-1 overflow-y-auto custom-scrollbar pr-4 pb-2">
+            {/* Added pt-4 here to ensure no top-edge clipping */}
+            <div className="flex-1 overflow-y-auto custom-scrollbar pr-4 pt-4 pb-2 -mt-4">
               <div className="flex flex-col gap-1">
                 {renderTransmissionBody(activeUpdate.body, activeTheme)}
               </div>
@@ -198,13 +195,14 @@ export default function IncomingMessage({ history }: { history: any[] }) {
 
         {/* VIEW 2: SCROLLABLE FEED */}
         {viewMode === 'feed' && (
-          <div className="flex-1 overflow-y-auto custom-scrollbar pr-4 space-y-6 animate-in fade-in duration-300">
+          <div className="flex-1 overflow-y-auto custom-scrollbar pr-4 pt-4 pb-4 -mt-4 space-y-8 animate-in fade-in duration-300">
             {history.map((log) => {
               const logCategory = (log.category?.toUpperCase() || 'QUICK COMMS') as ThemeKey;
               const logTheme = THEMES[logCategory] || THEMES['QUICK COMMS'];
 
               return (
                 <div key={log.id} className={`relative pl-6 border-l ml-2 pb-2 ${logTheme.feedLine}`}>
+                  {/* The absolute dot will no longer be clipped because of the pt-4 on the parent container */}
                   <div className={`absolute -left-1.5 top-0 w-3 h-3 rounded-full border-2 border-zinc-950 ${log.is_active ? logTheme.feedDotActive : logTheme.feedDotInactive}`} />
                   
                   <div className="flex flex-wrap items-center gap-2 mb-2 -mt-1">
