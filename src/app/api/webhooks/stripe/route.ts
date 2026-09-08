@@ -164,7 +164,7 @@ export async function POST(req: Request) {
             // 🚨 2. NEW: DISPATCH THE HYPE EMAIL TO YOU (THE ADMIN) 🚨
             await resend.emails.send({
               from: process.env.RESEND_FROM_EMAIL || "portal@alternativesolutions.io",
-              to: [process.env.ADMIN_EMAIL || 'courtney@alternativesolutions.io'], // Sends to your admin email
+              to: [process.env.ADMIN_EMAIL || 'courtney@alternativesolutions.io'],
               subject: `💰 NEW SUBSCRIBER: ${storeData.business_name || 'A Client'} just paid!`,
               html: `
                 <div style="font-family: monospace; background-color: #09090b; color: #10b981; padding: 30px; border-radius: 10px; border: 1px solid #047857;">

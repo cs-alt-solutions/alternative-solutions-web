@@ -5,10 +5,10 @@ import React, { useState, useEffect } from 'react';
 import { supabase } from '@/utils/supabase';
 import { 
   CreditCard, Receipt, Loader2, ShieldCheck, Zap, 
-  Download, Calendar, Globe, AlertTriangle, ExternalLink, CheckCircle2, Server
+  Download, Calendar, Globe, AlertTriangle, ExternalLink, Server, Unlink
 } from 'lucide-react';
 import { createCustomerPortalSession, getClientInvoices, getUpcomingInvoice, createProTierCheckout } from '@/app/actions/billing';
-import { addCustomDomainToVercel } from '@/app/actions/domains'; // 🚀 Import the domain action
+import { addCustomDomainToVercel, removeCustomDomainFromVercel } from '@/app/actions/domains';
 
 export default function BillingModule({ clientId }: { clientId: string }) {
   const [store, setStore] = useState<any>(null);
@@ -18,19 +18,14 @@ export default function BillingModule({ clientId }: { clientId: string }) {
   const [isRedirecting, setIsRedirecting] = useState(false);
   const [isUpgrading, setIsUpgrading] = useState(false);
 
-  // 🚀 New Domain Setup States
   const [customDomain, setCustomDomain] = useState('');
   const [isConnectingDomain, setIsConnectingDomain] = useState(false);
+  const [isRemovingDomain, setIsRemovingDomain] = useState(false);
   const [domainError, setDomainError] = useState<string | null>(null);
 
   useEffect(() => {
     const init = async () => {
-      const { data: storeData } = await supabase
-        .from('storefronts')
-        .select('*')
-        .eq('id', clientId)
-        .single();
-        
+      const { data: storeData } = await supabase.from('storefronts').select('*').eq('id', clientId).single();
       setStore(storeData);
 
       if (storeData?.stripe_customer_id) {
@@ -58,44 +53,44 @@ export default function BillingModule({ clientId }: { clientId: string }) {
   const handleProUpgrade = async () => {
     setIsUpgrading(true);
     const { url, error } = await createProTierCheckout(clientId, store?.contact_email || '', '');
-    
-    if (url) {
-      window.location.href = url;
-    } else {
-      alert(`Checkout failed: ${error}`);
-      setIsUpgrading(false);
-    }
+    if (url) window.location.href = url;
+    else { alert(`Checkout failed: ${error}`); setIsUpgrading(false); }
   };
 
-  // 🚀 Execute the Vercel Domain Connection
   const handleConnectDomain = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!customDomain.trim()) return;
-    
     setIsConnectingDomain(true);
     setDomainError(null);
 
     const result = await addCustomDomainToVercel(clientId, customDomain);
     
     if (result.success) {
-      // Update local state to immediately show the connected UI
       setStore({ ...store, custom_domain: result.data });
       setCustomDomain('');
     } else {
       setDomainError(result.error || "Failed to route domain. Please try again.");
     }
-    
     setIsConnectingDomain(false);
   };
 
-  if (isLoading) {
-    return (
-      <div className="h-full min-h-[60vh] flex flex-col items-center justify-center">
-        <Loader2 className="w-8 h-8 text-emerald-500 animate-spin mb-4" />
-        <span className="text-xs font-mono text-emerald-500 uppercase tracking-widest animate-pulse">Syncing Ledger...</span>
-      </div>
-    );
-  }
+  // 🚀 Disconnect Domain Handler
+  const handleRemoveDomain = async () => {
+    if (!store?.custom_domain) return;
+    if (!window.confirm(`Are you sure you want to disconnect ${store.custom_domain}? This will take your storefront offline.`)) return;
+
+    setIsRemovingDomain(true);
+    const result = await removeCustomDomainFromVercel(clientId, store.custom_domain);
+
+    if (result.success) {
+      setStore({ ...store, custom_domain: null });
+    } else {
+      alert(result.error || "Failed to disconnect domain.");
+    }
+    setIsRemovingDomain(false);
+  };
+
+  if (isLoading) return <div className="h-full min-h-[60vh] flex flex-col items-center justify-center"><Loader2 className="w-8 h-8 text-emerald-500 animate-spin mb-4" /><span className="text-xs font-mono text-emerald-500 uppercase tracking-widest animate-pulse">Syncing Ledger...</span></div>;
 
   const isPro = store?.plan_tier?.toLowerCase() === 'professional';
   const hasDomain = !!store?.custom_domain;
@@ -103,7 +98,6 @@ export default function BillingModule({ clientId }: { clientId: string }) {
   return (
     <div className="h-full max-w-6xl mx-auto animate-in fade-in duration-500 pb-12 mt-2">
       
-      {/* Header */}
       <div className="flex items-center gap-4 border-b border-white/5 pb-6 mb-8">
         <div className="w-12 h-12 rounded-full bg-emerald-500/10 flex items-center justify-center border border-emerald-500/20 shrink-0">
           <CreditCard className="text-emerald-500 w-6 h-6" />
@@ -115,8 +109,6 @@ export default function BillingModule({ clientId }: { clientId: string }) {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-        
-        {/* LEFT COL: Active Plan & Upgrades */}
         <div className="lg:col-span-7 space-y-6">
           
           <div className="bg-black/40 border border-emerald-500/20 rounded-3xl p-8 shadow-[0_0_30px_rgba(16,185,129,0.05)] relative overflow-hidden">
@@ -194,40 +186,63 @@ export default function BillingModule({ clientId }: { clientId: string }) {
             </button>
           </div>
 
-          {/* 🚀 CONDITIONAL RENDER: Domain Setup vs Upsell */}
           <div className="pt-4">
             <h3 className="text-xs font-black text-cyan-500 uppercase tracking-widest mb-4 pl-2">
               {isPro ? 'Domain Architecture' : 'Available Upgrades'}
             </h3>
             
             {isPro ? (
-              // THE PRO DOMAIN DASHBOARD
               <div className="relative flex flex-col rounded-3xl p-6 md:p-8 bg-zinc-950 border border-cyan-500/30 shadow-[0_0_20px_rgba(6,182,212,0.05)] overflow-hidden transition-all">
                 <div className="absolute top-0 right-0 w-32 h-32 bg-cyan-500/10 rounded-full blur-[60px] pointer-events-none" />
                 
                 {hasDomain ? (
                   <div className="relative z-10 animate-in fade-in">
-                    <div className="flex items-center gap-3 mb-6">
-                      <div className="p-2 bg-cyan-500/10 rounded-lg text-cyan-400 border border-cyan-500/20"><Globe size={18} /></div>
-                      <div>
-                        <h3 className="text-sm font-bold text-white uppercase tracking-widest">Domain Connected</h3>
-                        <p className="text-xs text-cyan-500 font-mono mt-0.5">{store.custom_domain}</p>
+                    <div className="flex items-start justify-between gap-4 mb-6">
+                      <div className="flex items-center gap-3">
+                        <div className="p-2 bg-cyan-500/10 rounded-lg text-cyan-400 border border-cyan-500/20"><Globe size={18} /></div>
+                        <div>
+                          <h3 className="text-sm font-bold text-white uppercase tracking-widest">Domain Connected</h3>
+                          <p className="text-xs text-cyan-500 font-mono mt-0.5">{store.custom_domain}</p>
+                        </div>
                       </div>
+                      
+                      {/* 🚀 The Disconnect Button */}
+                      <button 
+                        onClick={handleRemoveDomain}
+                        disabled={isRemovingDomain}
+                        className="p-2 text-zinc-500 hover:text-rose-400 bg-zinc-900/50 hover:bg-rose-500/10 rounded-lg border border-zinc-800 hover:border-rose-500/30 transition-all disabled:opacity-50 cursor-pointer"
+                        title="Disconnect Domain"
+                      >
+                        {isRemovingDomain ? <Loader2 size={16} className="animate-spin" /> : <Unlink size={16} />}
+                      </button>
                     </div>
                     
                     <div className="bg-black/40 border border-white/5 p-5 rounded-2xl">
                       <h4 className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest mb-3">DNS Configuration Required</h4>
                       <p className="text-xs text-zinc-400 leading-relaxed mb-4">
-                        To push your storefront live, log into your domain registrar (GoDaddy, Namecheap, etc.) and create an <strong>A Record</strong> pointing to our enterprise network IP:
+                        To push your storefront live, log into your domain registrar (GoDaddy, Namecheap, etc.) and create these two records:
                       </p>
-                      <div className="flex items-center justify-between bg-zinc-900 border border-zinc-700 p-3 rounded-xl">
-                        <div className="flex items-center gap-3">
-                          <Server size={14} className="text-cyan-500" />
-                          <span className="text-sm font-mono text-white tracking-wider">76.76.21.21</span>
+                      
+                      {/* 🚀 Both DNS Records */}
+                      <div className="space-y-2">
+                        <div className="flex items-center justify-between bg-zinc-900 border border-zinc-700 p-3 rounded-xl">
+                          <div className="flex items-center gap-3">
+                            <Server size={14} className="text-cyan-500" />
+                            <span className="text-sm font-mono text-white tracking-wider">76.76.21.21</span>
+                          </div>
+                          <span className="text-[9px] font-black text-cyan-500 uppercase tracking-widest bg-cyan-500/10 px-2 py-1 rounded">A Record (Root)</span>
                         </div>
-                        <span className="text-[9px] font-black text-cyan-500 uppercase tracking-widest bg-cyan-500/10 px-2 py-1 rounded">A Record</span>
+                        
+                        <div className="flex items-center justify-between bg-zinc-900 border border-zinc-700 p-3 rounded-xl">
+                          <div className="flex items-center gap-3">
+                            <Globe size={14} className="text-cyan-500" />
+                            <span className="text-sm font-mono text-white tracking-wider truncate max-w-[150px] sm:max-w-none">cname.vercel-dns.com</span>
+                          </div>
+                          <span className="text-[9px] font-black text-cyan-500 uppercase tracking-widest bg-cyan-500/10 px-2 py-1 rounded">CNAME (www)</span>
+                        </div>
                       </div>
-                      <p className="text-[10px] text-zinc-500 italic mt-3">Note: DNS propagation can take 24-48 hours to complete globally.</p>
+                      
+                      <p className="text-[10px] text-zinc-500 italic mt-4">Note: DNS propagation can take 24-48 hours to complete globally.</p>
                     </div>
                   </div>
                 ) : (
@@ -255,7 +270,7 @@ export default function BillingModule({ clientId }: { clientId: string }) {
                       <button 
                         type="submit"
                         disabled={isConnectingDomain || !customDomain.trim()}
-                        className="flex items-center justify-center gap-2 w-full bg-cyan-600 hover:bg-cyan-500 text-zinc-950 font-black text-[10px] uppercase tracking-widest px-8 py-3.5 rounded-xl transition-all disabled:opacity-50 cursor-pointer"
+                        className="flex items-center justify-center gap-2 w-full bg-cyan-600 hover:bg-cyan-500 text-zinc-950 font-black text-[10px] uppercase tracking-widest px-8 py-3.5 rounded-xl transition-all disabled:opacity-50 cursor-pointer shadow-lg"
                       >
                         {isConnectingDomain ? <Loader2 size={16} className="animate-spin" /> : <Globe size={16} />}
                         {isConnectingDomain ? 'Connecting Network...' : 'Bind Domain to Workspace'}
@@ -265,7 +280,6 @@ export default function BillingModule({ clientId }: { clientId: string }) {
                 )}
               </div>
             ) : (
-              // THE UPSELL CARD
               <div className="relative flex flex-col rounded-3xl p-6 md:p-8 bg-zinc-950 border border-cyan-500/30 shadow-[0_0_20px_rgba(6,182,212,0.05)] overflow-hidden transition-all">
                 <div className="absolute top-0 right-0 w-32 h-32 bg-cyan-500/10 rounded-full blur-[60px] pointer-events-none" />
                 
@@ -304,7 +318,6 @@ export default function BillingModule({ clientId }: { clientId: string }) {
           </div>
         </div>
 
-        {/* RIGHT COL: Native Invoice Table */}
         <div className="lg:col-span-5 flex flex-col">
           <div className="bg-zinc-950 border border-zinc-800/80 rounded-3xl p-6 md:p-8 flex flex-col h-full overflow-hidden shadow-xl min-h-100">
             <div className="flex items-center gap-3 mb-6 pb-4 border-b border-white/5">
