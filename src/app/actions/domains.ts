@@ -1,7 +1,9 @@
 // src/app/actions/domains.ts
 'use server';
 
-export async function addCustomDomainToVercel(domain: string) {
+import { createClient } from '@/utils/supabase/server';
+
+export async function addCustomDomainToVercel(clientId: string, domain: string) {
   try {
     // 1. Validate environment variables
     const projectId = process.env.VERCEL_PROJECT_ID;
@@ -33,7 +35,18 @@ export async function addCustomDomainToVercel(domain: string) {
       throw new Error(data.error?.message || "Failed to attach domain to Vercel network.");
     }
 
-    return { success: true, data };
+    // 4. If Vercel succeeds, lock it into the client's Supabase record
+    const supabase = await createClient();
+    const { error: dbError } = await supabase
+      .from('storefronts')
+      .update({ custom_domain: cleanDomain })
+      .eq('id', clientId);
+
+    if (dbError) {
+      throw new Error("Domain attached to network, but failed to save to database.");
+    }
+
+    return { success: true, data: cleanDomain };
   } catch (error: any) {
     console.error("Vercel Domain Pipeline Error:", error);
     return { success: false, error: error.message };

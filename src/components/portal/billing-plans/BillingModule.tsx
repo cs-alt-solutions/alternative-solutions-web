@@ -5,9 +5,10 @@ import React, { useState, useEffect } from 'react';
 import { supabase } from '@/utils/supabase';
 import { 
   CreditCard, Receipt, Loader2, ShieldCheck, Zap, 
-  Download, Calendar, Globe, AlertTriangle, ExternalLink 
+  Download, Calendar, Globe, AlertTriangle, ExternalLink, CheckCircle2, Server
 } from 'lucide-react';
 import { createCustomerPortalSession, getClientInvoices, getUpcomingInvoice, createProTierCheckout } from '@/app/actions/billing';
+import { addCustomDomainToVercel } from '@/app/actions/domains'; // 🚀 Import the domain action
 
 export default function BillingModule({ clientId }: { clientId: string }) {
   const [store, setStore] = useState<any>(null);
@@ -16,6 +17,11 @@ export default function BillingModule({ clientId }: { clientId: string }) {
   const [isLoading, setIsLoading] = useState(true);
   const [isRedirecting, setIsRedirecting] = useState(false);
   const [isUpgrading, setIsUpgrading] = useState(false);
+
+  // 🚀 New Domain Setup States
+  const [customDomain, setCustomDomain] = useState('');
+  const [isConnectingDomain, setIsConnectingDomain] = useState(false);
+  const [domainError, setDomainError] = useState<string | null>(null);
 
   useEffect(() => {
     const init = async () => {
@@ -61,6 +67,27 @@ export default function BillingModule({ clientId }: { clientId: string }) {
     }
   };
 
+  // 🚀 Execute the Vercel Domain Connection
+  const handleConnectDomain = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!customDomain.trim()) return;
+    
+    setIsConnectingDomain(true);
+    setDomainError(null);
+
+    const result = await addCustomDomainToVercel(clientId, customDomain);
+    
+    if (result.success) {
+      // Update local state to immediately show the connected UI
+      setStore({ ...store, custom_domain: result.data });
+      setCustomDomain('');
+    } else {
+      setDomainError(result.error || "Failed to route domain. Please try again.");
+    }
+    
+    setIsConnectingDomain(false);
+  };
+
   if (isLoading) {
     return (
       <div className="h-full min-h-[60vh] flex flex-col items-center justify-center">
@@ -68,7 +95,10 @@ export default function BillingModule({ clientId }: { clientId: string }) {
         <span className="text-xs font-mono text-emerald-500 uppercase tracking-widest animate-pulse">Syncing Ledger...</span>
       </div>
     );
-  } // <--- Added the missing closing bracket here
+  }
+
+  const isPro = store?.plan_tier?.toLowerCase() === 'professional';
+  const hasDomain = !!store?.custom_domain;
 
   return (
     <div className="h-full max-w-6xl mx-auto animate-in fade-in duration-500 pb-12 mt-2">
@@ -98,12 +128,11 @@ export default function BillingModule({ clientId }: { clientId: string }) {
                 </span>
                 <ShieldCheck className="text-emerald-500/50 w-6 h-6" />
               </div>
-
               <h2 className="text-3xl font-black text-white uppercase tracking-wider mb-2">
                 The {store?.plan_tier || 'Foundation'} Plan
               </h2>
               <div className="flex items-baseline gap-1 mb-6">
-                <span className="text-4xl font-black text-emerald-400">$5</span>
+                <span className="text-4xl font-black text-emerald-400">${isPro ? '15' : '5'}</span>
                 <span className="text-sm font-bold text-zinc-500 uppercase tracking-widest">/ month</span>
               </div>
 
@@ -135,6 +164,11 @@ export default function BillingModule({ clientId }: { clientId: string }) {
                 <div className="flex items-center gap-3 text-sm text-zinc-300">
                   <Zap className="w-4 h-4 text-emerald-500 shrink-0" /><span>Forever Legacy Rate Lock</span>
                 </div>
+                {isPro && (
+                  <div className="flex items-center gap-3 text-sm text-zinc-300 animate-in fade-in">
+                    <Globe className="w-4 h-4 text-emerald-500 shrink-0" /><span>Custom Domain & SSL Architecture</span>
+                  </div>
+                )}
               </div>
             </div>
           </div>
@@ -160,44 +194,113 @@ export default function BillingModule({ clientId }: { clientId: string }) {
             </button>
           </div>
 
+          {/* 🚀 CONDITIONAL RENDER: Domain Setup vs Upsell */}
           <div className="pt-4">
-            <h3 className="text-xs font-black text-cyan-500 uppercase tracking-widest mb-4 pl-2">Available Upgrades</h3>
-            <div className="relative flex flex-col rounded-3xl p-6 md:p-8 bg-zinc-950 border border-cyan-500/30 shadow-[0_0_20px_rgba(6,182,212,0.05)] overflow-hidden transition-all">
-              <div className="absolute top-0 right-0 w-32 h-32 bg-cyan-500/10 rounded-full blur-[60px] pointer-events-none" />
-              
-              <div className="mb-6 relative z-10">
-                <h3 className="text-xl font-black uppercase tracking-wide text-white">The Professional</h3>
-                <div className="mt-2 flex items-baseline gap-1">
-                  <span className="text-4xl font-black text-cyan-400">$15</span>
-                  <span className="text-xs text-zinc-500 font-medium uppercase tracking-widest">/ month</span>
-                </div>
-                <p className="text-xs text-zinc-400 font-medium mt-4 leading-relaxed max-w-md">
-                  Upgrade your architecture to support your own custom domain (e.g., yourname.com). Whether you already own one, or need help securing the perfect fit, this tier unlocks the enterprise routing required to host it.
-                </p>
+            <h3 className="text-xs font-black text-cyan-500 uppercase tracking-widest mb-4 pl-2">
+              {isPro ? 'Domain Architecture' : 'Available Upgrades'}
+            </h3>
+            
+            {isPro ? (
+              // THE PRO DOMAIN DASHBOARD
+              <div className="relative flex flex-col rounded-3xl p-6 md:p-8 bg-zinc-950 border border-cyan-500/30 shadow-[0_0_20px_rgba(6,182,212,0.05)] overflow-hidden transition-all">
+                <div className="absolute top-0 right-0 w-32 h-32 bg-cyan-500/10 rounded-full blur-[60px] pointer-events-none" />
+                
+                {hasDomain ? (
+                  <div className="relative z-10 animate-in fade-in">
+                    <div className="flex items-center gap-3 mb-6">
+                      <div className="p-2 bg-cyan-500/10 rounded-lg text-cyan-400 border border-cyan-500/20"><Globe size={18} /></div>
+                      <div>
+                        <h3 className="text-sm font-bold text-white uppercase tracking-widest">Domain Connected</h3>
+                        <p className="text-xs text-cyan-500 font-mono mt-0.5">{store.custom_domain}</p>
+                      </div>
+                    </div>
+                    
+                    <div className="bg-black/40 border border-white/5 p-5 rounded-2xl">
+                      <h4 className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest mb-3">DNS Configuration Required</h4>
+                      <p className="text-xs text-zinc-400 leading-relaxed mb-4">
+                        To push your storefront live, log into your domain registrar (GoDaddy, Namecheap, etc.) and create an <strong>A Record</strong> pointing to our enterprise network IP:
+                      </p>
+                      <div className="flex items-center justify-between bg-zinc-900 border border-zinc-700 p-3 rounded-xl">
+                        <div className="flex items-center gap-3">
+                          <Server size={14} className="text-cyan-500" />
+                          <span className="text-sm font-mono text-white tracking-wider">76.76.21.21</span>
+                        </div>
+                        <span className="text-[9px] font-black text-cyan-500 uppercase tracking-widest bg-cyan-500/10 px-2 py-1 rounded">A Record</span>
+                      </div>
+                      <p className="text-[10px] text-zinc-500 italic mt-3">Note: DNS propagation can take 24-48 hours to complete globally.</p>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="relative z-10 animate-in fade-in">
+                    <h3 className="text-xl font-black uppercase tracking-wide text-white mb-2">Connect Your Domain</h3>
+                    <p className="text-xs text-zinc-400 font-medium leading-relaxed max-w-md mb-6">
+                      Enter the custom domain you own (e.g., yourbusiness.com). We will bind it to your storefront and generate the required DNS records for you to connect.
+                    </p>
+                    
+                    <form onSubmit={handleConnectDomain} className="space-y-4">
+                      <div>
+                        <input 
+                          type="text"
+                          value={customDomain}
+                          onChange={(e) => setCustomDomain(e.target.value)}
+                          placeholder="e.g., mybusiness.com"
+                          className="w-full bg-zinc-900 border border-zinc-700 focus:border-cyan-500/50 rounded-xl px-4 py-3.5 text-sm text-white outline-none transition-colors"
+                        />
+                        {domainError && (
+                          <p className="text-[10px] text-rose-400 font-bold uppercase tracking-widest mt-2 flex items-center gap-1.5">
+                            <AlertTriangle size={12} /> {domainError}
+                          </p>
+                        )}
+                      </div>
+                      <button 
+                        type="submit"
+                        disabled={isConnectingDomain || !customDomain.trim()}
+                        className="flex items-center justify-center gap-2 w-full bg-cyan-600 hover:bg-cyan-500 text-zinc-950 font-black text-[10px] uppercase tracking-widest px-8 py-3.5 rounded-xl transition-all disabled:opacity-50 cursor-pointer"
+                      >
+                        {isConnectingDomain ? <Loader2 size={16} className="animate-spin" /> : <Globe size={16} />}
+                        {isConnectingDomain ? 'Connecting Network...' : 'Bind Domain to Workspace'}
+                      </button>
+                    </form>
+                  </div>
+                )}
               </div>
-
-              <div className="relative z-10">
-                <button 
-                  onClick={handleProUpgrade}
-                  disabled={isUpgrading}
-                  className="w-full sm:w-auto bg-cyan-600 hover:bg-cyan-500 text-zinc-950 font-black text-[10px] uppercase tracking-widest px-8 py-4 rounded-xl transition-all disabled:opacity-50 disabled:grayscale cursor-pointer shadow-lg"
-                >
-                  {isUpgrading ? 'Generating Secure Checkout...' : 'Upgrade to Professional'}
-                </button>
-                <p className="text-[9px] text-zinc-500 font-mono tracking-widest uppercase mt-3 pl-1">
-                  Once active, you will unlock the domain setup dashboard.
-                </p>
-              </div>
-
-              <div className="space-y-3 pt-6 mt-6 border-t border-white/5 relative z-10">
-                <div className="flex items-start gap-2.5 text-xs text-zinc-400">
-                  <ShieldCheck className="w-4 h-4 shrink-0 text-cyan-500" /><span>Everything in The Foundation</span>
+            ) : (
+              // THE UPSELL CARD
+              <div className="relative flex flex-col rounded-3xl p-6 md:p-8 bg-zinc-950 border border-cyan-500/30 shadow-[0_0_20px_rgba(6,182,212,0.05)] overflow-hidden transition-all">
+                <div className="absolute top-0 right-0 w-32 h-32 bg-cyan-500/10 rounded-full blur-[60px] pointer-events-none" />
+                
+                <div className="mb-6 relative z-10">
+                  <h3 className="text-xl font-black uppercase tracking-wide text-white">The Professional</h3>
+                  <div className="mt-2 flex items-baseline gap-1">
+                    <span className="text-4xl font-black text-cyan-400">$15</span>
+                    <span className="text-xs text-zinc-500 font-medium uppercase tracking-widest">/ month</span>
+                  </div>
+                  <p className="text-xs text-zinc-400 font-medium mt-4 leading-relaxed max-w-md">
+                    Upgrade your architecture to support your own custom domain (e.g., yourname.com). Whether you already own one, or need help securing the perfect fit, this tier unlocks the enterprise routing required to host it.
+                  </p>
                 </div>
-                <div className="flex items-start gap-2.5 text-xs text-zinc-400">
-                  <Globe className="w-4 h-4 shrink-0 text-cyan-500" /><span>Automated Edge SSL & Vercel Network Routing</span>
+                <div className="relative z-10">
+                  <button 
+                    onClick={handleProUpgrade}
+                    disabled={isUpgrading}
+                    className="w-full sm:w-auto bg-cyan-600 hover:bg-cyan-500 text-zinc-950 font-black text-[10px] uppercase tracking-widest px-8 py-4 rounded-xl transition-all disabled:opacity-50 disabled:grayscale cursor-pointer shadow-lg"
+                  >
+                    {isUpgrading ? 'Generating Secure Checkout...' : 'Upgrade to Professional'}
+                  </button>
+                  <p className="text-[9px] text-zinc-500 font-mono tracking-widest uppercase mt-3 pl-1">
+                    Once active, you will unlock the domain setup dashboard.
+                  </p>
+                </div>
+                <div className="space-y-3 pt-6 mt-6 border-t border-white/5 relative z-10">
+                  <div className="flex items-start gap-2.5 text-xs text-zinc-400">
+                    <ShieldCheck className="w-4 h-4 shrink-0 text-cyan-500" /><span>Everything in The Foundation</span>
+                  </div>
+                  <div className="flex items-start gap-2.5 text-xs text-zinc-400">
+                    <Globe className="w-4 h-4 shrink-0 text-cyan-500" /><span>Automated Edge SSL & Vercel Network Routing</span>
+                  </div>
                 </div>
               </div>
-            </div>
+            )}
           </div>
         </div>
 
@@ -239,7 +342,6 @@ export default function BillingModule({ clientId }: { clientId: string }) {
             </div>
           </div>
         </div>
-
       </div>
     </div>
   );
