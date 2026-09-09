@@ -236,7 +236,7 @@ export default function BillingModule({ clientId }: { clientId: string }) {
                         <div className="flex items-center justify-between bg-zinc-900 border border-zinc-700 p-3 rounded-xl">
                           <div className="flex items-center gap-3">
                             <Globe size={14} className="text-cyan-500" />
-                            <span className="text-sm font-mono text-white tracking-wider truncate max-w-[150px] sm:max-w-none">cname.vercel-dns.com</span>
+                            <span className="text-sm font-mono text-white tracking-wider truncate max-w-37.5 sm:max-w-none">cname.vercel-dns.com</span>
                           </div>
                           <span className="text-[9px] font-black text-cyan-500 uppercase tracking-widest bg-cyan-500/10 px-2 py-1 rounded">CNAME (www)</span>
                         </div>

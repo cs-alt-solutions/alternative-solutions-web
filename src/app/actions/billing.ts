@@ -16,6 +16,11 @@ export async function createStorefrontCheckout(storefrontId: string, customerEma
     const session = await stripe.checkout.sessions.create({
       payment_method_types: ['card'],
       customer_email: customerEmail || undefined,
+      
+      // 🚀 THE FIX: Attach the ID to the root session so the webhook catches it instantly
+      client_reference_id: storefrontId,
+      metadata: { storefront_id: storefrontId },
+
       line_items: [
         {
           price: process.env.STRIPE_PRICE_ID_FOUNDATION, 
@@ -181,6 +186,11 @@ export async function createProTierCheckout(storefrontId: string, customerEmail:
     const session = await stripe.checkout.sessions.create({
       payment_method_types: ['card'],
       customer_email: customerEmail || undefined,
+      
+      // 🚀 THE FIX: Attach the ID to the root session here as well
+      client_reference_id: storefrontId,
+      metadata: { storefront_id: storefrontId },
+
       line_items: [
         {
           price: process.env.STRIPE_PRICE_ID_PROFESSIONAL, // Your new $15 Live Key!

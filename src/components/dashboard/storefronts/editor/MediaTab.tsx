@@ -1,4 +1,3 @@
-/* src/components/dashboard/storefronts/editor/MediaTab.tsx */
 'use client';
 
 import React, { useState, useRef, startTransition } from 'react';
@@ -45,7 +44,11 @@ export default function MediaTab({ formData, setFormData, onReload }: { formData
     uploadData.set('hero_position', formData.hero_position || 'center');
     
     try {
-      await updateStorefrontMedia(formData.id, formData.slug, uploadData);
+      const response = await updateStorefrontMedia(formData.id, formData.slug, uploadData);
+      
+      if (response?.updatedMedia) {
+        setFormData((prev: any) => ({ ...prev, ...response.updatedMedia }));
+      }
       
       if (coreFormRef.current) {
         const fileInputs = coreFormRef.current.querySelectorAll('input[type="file"]');
@@ -55,8 +58,8 @@ export default function MediaTab({ formData, setFormData, onReload }: { formData
       }
       
       if (onReload) onReload(); 
-    } catch (e) {
-      alert("Upload failed. Check storage permissions.");
+    } catch (e: any) {
+      alert(e.message || "Upload failed. Check storage permissions.");
     } finally {
       setIsUploadingCore(false);
     }
@@ -73,7 +76,6 @@ export default function MediaTab({ formData, setFormData, onReload }: { formData
     const uploadData = new FormData();
     files.forEach(file => uploadData.append('images', file));
     try {
-      // 🚀 INJECTION FIX: Captures returned array from server
       const response = await updateStorefrontGallery(formData.id, formData.slug, uploadData);
       setFiles([]);
       

@@ -2,7 +2,7 @@
 'use client';
 
 import { useState, useEffect } from 'react'; 
-import { Box, MessageSquare, TerminalSquare, Menu, X, ArrowLeft, Store, FileUp } from 'lucide-react'; 
+import { Box, MessageSquare, TerminalSquare, Menu, X, ArrowLeft, Store, FileUp, Network } from 'lucide-react'; 
 import Link from 'next/link'; 
 import { usePathname } from 'next/navigation'; 
 import { supabase } from '@/utils/supabase'; 
@@ -89,6 +89,7 @@ export default function PortalSidebar({ clientId }: { clientId: string }) {
     { id: 'nav-storefront', name: 'Live Storefront', icon: Store, href: `/portal/${clientId}/storefront` }, 
     { id: 'nav-vault', name: 'Media Vault', icon: FileUp, href: `/portal/${clientId}/vault` }, 
     { id: 'nav-tools', name: 'Developer Tools', icon: Box, href: `/portal/${clientId}/prototypes` }, 
+    { id: 'nav-network', name: 'The Network', icon: Network, href: `/portal/${clientId}/network` }, 
     { id: 'nav-support', name: 'Support Desk', icon: MessageSquare, href: `/portal/${clientId}/support` }
   ];
 

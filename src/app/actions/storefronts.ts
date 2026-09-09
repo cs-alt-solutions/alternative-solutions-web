@@ -52,7 +52,7 @@ export async function createStorefront(formData: FormData) {
     gallery_items: [],
     logo_size: 'large',
     industry_tag: formData.get('industry_tag') || 'General',
-    audit_notes: [] // Initializes the empty flight recorder
+    audit_notes: []
   };
 
   const { error } = await supabase.from('storefronts').insert(storefrontData);
@@ -105,12 +105,16 @@ export async function updateStorefrontMedia(id: string, slug: string, formData: 
   const supabase = await createClient();
   
   async function uploadFile(file: File | null, prefix: string) {
-    if (!file || file.size === 0) return null;
+    if (!file || typeof file === 'string' || file.size === 0) return null;
     const fileExt = file.name.split('.').pop();
     const filePath = `${slug}/${prefix}-${Date.now()}.${fileExt}`;
     
     const { error } = await supabase.storage.from('client-assets').upload(filePath, file);
-    if (error) return null;
+    
+    if (error) {
+      console.error(`Storage Upload Error (${prefix}):`, error.message);
+      throw new Error(`Failed to upload ${prefix} image. Check RLS policies.`);
+    }
     
     const { data } = supabase.storage.from('client-assets').getPublicUrl(filePath);
     return data.publicUrl;
@@ -121,6 +125,7 @@ export async function updateStorefrontMedia(id: string, slug: string, formData: 
   const logoFile = formData.get('logo_file') as File;
   
   const logoSize = formData.get('logo_size') as string;
+  const heroPosition = formData.get('hero_position') as string;
 
   const heroUrl = await uploadFile(heroFile, 'hero');
   const aboutUrl = await uploadFile(aboutFile, 'about');
@@ -132,14 +137,17 @@ export async function updateStorefrontMedia(id: string, slug: string, formData: 
   if (logoUrl) updateData.brand_logo = logoUrl;
   
   if (logoSize) updateData.logo_size = logoSize;
+  if (heroPosition) updateData.hero_position = heroPosition;
 
   if (Object.keys(updateData).length > 0) {
     const { error } = await supabase.from('storefronts').update(updateData).eq('id', id);
-    if (error) throw new Error(error.message);
+    if (error) throw new Error(`Database Update Error: ${error.message}`);
   }
 
   revalidatePath('/dashboard/storefronts', 'layout');
   revalidatePath('/', 'layout'); 
+
+  return { success: true, updatedMedia: updateData };
 }
 
 export async function updateStorefrontCapabilities(id: string, capabilities: any[]) {
@@ -329,11 +337,9 @@ export async function quickToggleStorefrontFlags(id: string, payload: { is_publi
   return { success: true };
 }
 
-// 🚀 NEW: The Universal Audit Logger
 export async function addStorefrontAuditLog(storeId: string, author: string, type: string, message: string) {
   const supabase = await createClient();
   
-  // 1. Fetch current logs
   const { data: store, error: fetchError } = await supabase
     .from('storefronts')
     .select('audit_notes')
@@ -342,7 +348,6 @@ export async function addStorefrontAuditLog(storeId: string, author: string, typ
 
   if (fetchError || !store) throw new Error("Storefront not found in database.");
 
-  // 2. Create the new timestamped event
   const newLog = {
     id: crypto.randomUUID(),
     timestamp: new Date().toISOString(),
@@ -351,7 +356,6 @@ export async function addStorefrontAuditLog(storeId: string, author: string, typ
     message
   };
 
-  // 3. Append and save
   const updatedLogs = [...(store.audit_notes || []), newLog];
 
   const { error: updateError } = await supabase
