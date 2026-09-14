@@ -2,13 +2,13 @@ export const PUBLIC_SITE = {
   HOME: {
     HERO: {
         TAG: "SYSTEM ONLINE",
-        TITLE_1: "REAL DIGITAL STOREFRONTS.",
-        TITLE_2: "BUILT FOR INDEPENDENT BUSINESS.",
-        SUBHEAD_LEAD: "Stop fighting fragile do-it-yourself builders and bloated monthly subscription traps.",
-        SUBHEAD_BODY: "I engineer professional digital storefronts for independent operators with a simple, flat-rate build fee and just $5 a month to keep everything running fast. You focus on your business; I handle the code.",
+        TITLE_1: "YOU DON'T NEED ANOTHER SOCIAL MEDIA PAGE.",
+        TITLE_2: "YOU NEED A REAL WEBSITE.",
+        SUBHEAD_LEAD: "Instagram and Facebook are amazing for marketing, but building your entire business there means you are building on rented land.",
+        SUBHEAD_BODY: "I build clean, fast websites that give you a permanent digital home. Bypass the algorithm, connect directly with your customers, and get found instantly on Google.",
         CTA_PRIMARY: "Start Your Build",
         CTA_PRIMARY_LINK: "/sector-zero",
-        CTA_SECONDARY: "View The Architecture",
+        CTA_SECONDARY: "Read The Story",
         CTA_SECONDARY_LINK: "/founder",
         MICRO_COPY: "No Bloated Templates. Just Clean, Hand-Coded Foundations." 
       },
@@ -17,22 +17,22 @@ export const PUBLIC_SITE = {
       TITLE: "HOW I BUILD",
       STEPS: [
         { title: "Discovery", desc: "I map out your business needs and identify the biggest points of friction." },
-        { title: "Architecture", desc: "I wire up a high-performance system using enterprise-grade tech." },
+        { title: "Architecture", desc: "I wire up a high-performance system using professional, reliable code—no fragile plugins." },
         { title: "Deployment", desc: "Your engine goes live, lightning-fast and ready to scale." }
       ]
     },
     PROBLEM_STATEMENT: {
       TAG: "THE REALITY CHECK",
-      TITLE: "STOP RUNNING A BUSINESS ON TOP OF YOUR BUSINESS.",
-      DESC: "You started this to create, not to be an accountant. Stop guessing your profit margins, ditch the fragmented browser tabs, and connect your raw materials, daily builds, and finances into one intelligent command center."
+      TITLE: "STOP RENTING YOUR DIGITAL PRESENCE.",
+      DESC: "If the algorithm shifts, your posts get buried and your customers can't find you. A real website changes that. It gives you a direct, unfiltered connection to your audience—keeping your brand visible, your services easy to book, and your customers happy, no matter what social media decides to do today."
     },
     AUTHORITY_BANNER: {
-      TEXT: "BUILT ON ENTERPRISE-GRADE INFRASTRUCTURE",
+      TEXT: "BUILT ON INDUSTRIAL-GRADE FOUNDATIONS. NO CORPORATE BLOAT.",
       STACK: [
         { name: "NEXT.JS", desc: "The engine. Makes the whole ecosystem load lightning fast." },
         { name: "SUPABASE", desc: "The Warehouse. Where all your data is locked down and secured." },
         { name: "VERCEL", desc: "The grid. Keeps the system online 24/7 without a hiccup." },
-        { name: "STRIPE", desc: "The bank. Enterprise-grade checkout so you get paid safely." },
+        { name: "STRIPE", desc: "The bank. Professional-grade checkout so you get paid safely." },
         { name: "GITHUB", desc: "The blueprint room. Where every line of code history is stored." },
         { name: "VS CODE", desc: "The workbench. Where the actual architecture is written." }
       ]
@@ -62,7 +62,7 @@ export const PUBLIC_SITE = {
       BETA: { 
         TAG: "SECTOR ZERO", 
         TITLE: "START YOUR BUILD.", 
-        DESC: "Stop fighting fragile DIY templates and subscription traps. Get a clean, professional digital storefront built for you for a flat-rate setup and just $5/mo. You run the business; I handle the code.", 
+        DESC: "Stop fighting fragile DIY templates and subscription traps. Get a clean, professional website built for you for a flat-rate setup and just $5/mo. You run the business; I handle the code.", 
         CTA: "Start Your Build", 
         LINK: "/sector-zero" 
       },
