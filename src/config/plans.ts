@@ -13,7 +13,7 @@ export const SUBSCRIPTION_PLANS: SubscriptionPlan[] = [
   {
     id: 'standard',
     name: 'The Standard',
-    price: '5',
+    price: '$5',
     stripeLink: 'https://support.alternativesolutions.io/b/standard_5',
     description: 'Get your business online today without the DIY headache.',
     features: [
@@ -26,7 +26,7 @@ export const SUBSCRIPTION_PLANS: SubscriptionPlan[] = [
   {
     id: 'professional',
     name: 'The Professional',
-    price: '15',
+    price: '$15',
     stripeLink: 'https://support.alternativesolutions.io/b/professional_15',
     description: 'Advanced setup with direct connection to your own custom web address.',
     features: [

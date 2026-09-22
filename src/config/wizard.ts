@@ -6,7 +6,6 @@ export const WIZARD_COPY = {
     { num: 2, label: 'Network' },
     { num: 3, label: 'Launch' }
   ],
-
   STEP_1: {
     HEADER: {
       TITLE_MAIN: "Let's Build",
@@ -29,7 +28,6 @@ export const WIZARD_COPY = {
       NEXT: "Continue"
     }
   },
-
   STEP_2: {
     TITLE_MAIN: "Your ",
     TITLE_HIGHLIGHT: "Network",
@@ -48,12 +46,11 @@ export const WIZARD_COPY = {
       BACK: "Back"
     }
   },
-
   STEP_3: {
     TITLE_MAIN: "The ",
     TITLE_HIGHLIGHT: "Launch.",
     SUBTITLE_START: "Last step! Choose your build lane. ",
-    SUBTITLE_HIGHLIGHT: "Everyone gets the same high-performance engine.",
+    SUBTITLE_HIGHLIGHT: "You get the same high-performance engine.",
     SUBTITLE_END: " The only difference is how fast you want it.",
     EMPTY_PLANS: "No active plans found in the database.",
     
@@ -76,7 +73,6 @@ export const WIZARD_COPY = {
         name: "The Fast-Track",
         price: "$5",
         suffix: " / mo",
-        // 🚀 UPDATED: Set the 72-hour expectation for the checkout link
         description: "I'm ready to build. Jump me to the front of the line. I will receive a secure portal and checkout link within 72 hours.",
         features: [
           "Bypass the standard queue",
@@ -87,7 +83,6 @@ export const WIZARD_COPY = {
         recommended: true
       }
     ],
-
     PILLARS_TITLE: "Rules of Engagement",
     PILLARS: [
       {
@@ -103,14 +98,12 @@ export const WIZARD_COPY = {
         body: "Fast-Track builds jump directly to the front of the line. Standard queue builds are processed as quickly as possible in the order they are received."
       }
     ],
-
     PLEDGE: {
       CHECKBOX_LABEL: "I understand the rules of engagement and I'm ready to build."
     },
     ACTIONS: {
       BACK: "Back",
       SUBMIT_STANDARD: "Submit Application",
-      // 🚀 UPDATED: Changed from "Proceed to Checkout" to match the new logic
       SUBMIT_PRIORITY: "Request Fast-Track",
       SUBMIT_LOADING: "Transmitting..."
     },
@@ -119,7 +112,6 @@ export const WIZARD_COPY = {
       ERROR: "Whoops, transmission failed. Check the console."
     }
   },
-
   SUCCESS: {
     TITLE_START: "All right, cool. ",
     TITLE_HIGHLIGHT: "Locked in.",

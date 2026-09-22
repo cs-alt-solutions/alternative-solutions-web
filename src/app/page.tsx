@@ -62,10 +62,10 @@ export default function HomePage() {
                     
                     {/* BULLET POINTS */}
                     <ul className="space-y-4 flex-1">
-                      {tier.perks.map((perk: string, pIdx: number) => (
+                      {tier.features.map((feature: string, pIdx: number) => (
                         <li key={pIdx} className="text-sm text-slate-300 flex items-start gap-3 font-light leading-snug">
                           <Zap size={16} className="text-cyan-400 shrink-0 mt-0.5" />
-                          <span>{perk}</span>
+                          <span>{feature}</span>
                         </li>
                       ))}
                     </ul>

@@ -1,3 +1,4 @@
+/* src/config/marketing.ts */
 import { NAV, GLOBAL_FOOTER, GATEWAY } from './marketing/global';
 import { PUBLIC_SITE } from './marketing/home';
 import { ECOSYSTEM, GLITCHBOT_PAGE, PUBLIC_LOGS } from './marketing/ecosystem';
