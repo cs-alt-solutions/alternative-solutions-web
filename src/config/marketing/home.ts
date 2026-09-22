@@ -64,7 +64,7 @@ export const PUBLIC_SITE = {
          TITLE: "START YOUR BUILD.",
          DESC: "Stop fighting fragile DIY templates and subscription traps. Get a clean, professional storefront built directly onto our proprietary platform for a flat-rate setup and just $5/mo. You run the business; the platform handles the tech.",
          CTA: "Start Your Build",
-         LINK: "/sector-zero"
+         LINK: "/storefronts"
        },
       TECH: {
          TAG: "INTERNAL WIRING",

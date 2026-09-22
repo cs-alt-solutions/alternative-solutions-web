@@ -1,9 +1,10 @@
+/* src/components/JoinForm.tsx */
 'use client';
+
 import React, { useRef, useState, useEffect } from 'react';
 import { WEBSITE_COPY } from '@/utils/glossary';
-// --- NEW IMPORT PATHS ---
 import { joinWaitlist } from '@/app/actions/foundation';
-import { submitSectorZeroIntake } from '@/app/actions/sector_zero';
+import { submitStorefrontIntake } from '@/app/actions/storefront_intake'; // 🚀 UPDATED
 import { ArrowRight, CheckCircle2, Loader2, RefreshCw } from 'lucide-react';
 
 export default function JoinForm({ source }: { source: string }) {
@@ -12,37 +13,28 @@ export default function JoinForm({ source }: { source: string }) {
   const [message, setMessage] = useState('');
   const formRef = useRef<HTMLFormElement>(null);
 
-  // --- THE SMART CHECK: Auto-detect existing access ---
   useEffect(() => {
     if (typeof window !== 'undefined' && localStorage.getItem('alt_solutions_access') === 'true') {
       setStatus('success');
       setMessage(WEBSITE_COPY.JOIN_PAGE.SUCCESS_MSG);
     }
   }, []);
-  // --------------------------------------------------
 
-  // CHANGED: Switching to standard React event to stop the page refresh
   const handleSubmission = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault(); // <-- THIS IS THE LOCK. Stops the page from reloading!
-    setStatus('loading'); // 1. Fire the loading UI!
+    e.preventDefault(); 
+    setStatus('loading'); 
     
     try {
-      // Manually pull the form data out of the event
       const formData = new FormData(e.currentTarget);
-      
-      // 2. Log them in the Database (Waitlist/Supporters table)
       const dbRes = await joinWaitlist(formData);
       
-      // 3. Fire the Email Alert to your inbox!
-      const emailRes = await submitSectorZeroIntake(formData);
+      // 🚀 UPDATED FUNCTION CALL
+      const emailRes = await submitStorefrontIntake(formData);
 
       if (dbRes?.success) {
-        // Set Access in Browser
         localStorage.setItem('alt_solutions_access', 'true');
-        
-        // Notify Navbar to show links immediately
         window.dispatchEvent(new Event('accessGranted'));
-        setStatus('success'); // Stop spinner, show checkmark
+        setStatus('success'); 
         
         if (dbRes.isNew) setMessage(WEBSITE_COPY.ACCESS_HOOK.AUTO_SIGNUP);
         else setMessage(WEBSITE_COPY.ACCESS_HOOK.SUCCESS_MSG);
@@ -74,7 +66,6 @@ export default function JoinForm({ source }: { source: string }) {
 
   return (
     <div className="w-full">
-      {/* CHANGED: Using onSubmit instead of action */}
       <form ref={formRef} onSubmit={handleSubmission} className="flex flex-col gap-5 w-full text-left animate-in fade-in duration-500">
         <input type="hidden" name="source" value={source} />
         
@@ -91,8 +82,8 @@ export default function JoinForm({ source }: { source: string }) {
               </div>
             </div>
             <div className="space-y-1.5">
-               <label className="text-[10px] font-mono text-text-muted uppercase tracking-widest pl-2">{copy.FIELDS.PHONE}</label>
-               <input type="tel" name="phone" className="w-full bg-black/50 border border-white/10 rounded-lg px-4 py-3 text-sm focus:outline-none focus:border-brand-primary/50 transition-colors text-white" />
+              <label className="text-[10px] font-mono text-text-muted uppercase tracking-widest pl-2">{copy.FIELDS.PHONE}</label>
+              <input type="tel" name="phone" className="w-full bg-black/50 border border-white/10 rounded-lg px-4 py-3 text-sm focus:outline-none focus:border-brand-primary/50 transition-colors text-white" />
             </div>
           </>
         ) : (

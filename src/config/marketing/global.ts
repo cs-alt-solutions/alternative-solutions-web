@@ -1,3 +1,4 @@
+/* src/config/marketing/global.ts */
 export const NAV = {
   BRAND: "Alternative Solutions",
   ECOSYSTEM: "The Ecosystem",
@@ -12,9 +13,9 @@ export const GLOBAL_FOOTER = {
   TAGLINE: "Built by a Human.",
   CTA: {
     TITLE: "CHOOSE YOUR PATH.",
-    DESC: "The foundation is being poured. Grab a seat in Sector Zero, become a monthly backer, or throw some fuel in the tank.",
-    BTN_TEXT: "ENTER SECTOR ZERO",
-    LINK: "/sector-zero" 
+    DESC: "The foundation is being poured. Start your application, become a monthly backer, or throw some fuel in the tank.",
+    BTN_TEXT: "START YOUR BUILD",
+    LINK: "/storefronts" // 🚀 UPDATED
   }
 };
 

@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import PrototypeCard from './PrototypeCard';
-import { STOREFRONTS } from '@/config/marketing/sector-zero';
+import { STOREFRONTS } from '@/config/marketing/storefronts';
 import { Sparkles, TerminalSquare } from 'lucide-react';
 
 const VIBE_KEYWORDS: Record<string, string[]> = {

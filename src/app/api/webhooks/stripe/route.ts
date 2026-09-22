@@ -1,10 +1,13 @@
 import { headers } from 'next/headers';
 import { NextResponse } from 'next/server';
-import { createClient } from '@supabase/supabase-js'; 
+import { createClient } from '@supabase/supabase-js';
 import Stripe from 'stripe';
 import { Resend } from 'resend';
 import * as React from 'react';
 import PortalInviteEmail from '@/components/emails/PortalInviteEmail';
+import { X, Send, UserPlus } from 'lucide-react'; // Added UserPlus here!
+
+const resend = new Resend(process.env.RESEND_API_KEY!);
 
 export async function POST(req: Request) {
   const secretKey = process.env.STRIPE_SECRET_KEY;
@@ -15,13 +18,13 @@ export async function POST(req: Request) {
 
   // 1. Initialize Stripe
   const stripe = new Stripe(secretKey, {
-    apiVersion: '2026-02-25.clover', 
+    apiVersion: '2026-02-25.clover', // Update this if your Stripe version differs
   });
 
   // 2. Initialize a secure Supabase Admin connection (Bypasses RLS)
   const supabaseAdmin = createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL as string,
-    process.env.SUPABASE_SERVICE_ROLE_KEY as string 
+    process.env.SUPABASE_SERVICE_ROLE_KEY as string
   );
 
   const body = await req.text();
@@ -55,7 +58,7 @@ export async function POST(req: Request) {
 
   if (existingWebhook) {
     console.log(`Duplicate webhook ignored: ${event.id}`);
-    return NextResponse.json({ received: true }); 
+    return NextResponse.json({ received: true });
   }
 
   // Log the new webhook to lock it down
@@ -78,7 +81,7 @@ export async function POST(req: Request) {
     }
 
     // ------------------------------------------------------------------
-    // PATH A: THE STOREFRONT SAAS ENGINE 
+    // PATH A: THE STOREFRONT SAAS ENGINE
     // ------------------------------------------------------------------
     if (targetIdentifier) {
       console.log(`💳 Processing SaaS Payment for Storefront: ${targetIdentifier}`);
@@ -90,7 +93,7 @@ export async function POST(req: Request) {
       // 1. Fetch the existing storefront to grab the current audit_notes
       const { data: storeData, error: fetchError } = await supabaseAdmin
         .from('storefronts')
-        .select('audit_notes, contact_email, business_name, contact_name')
+        .select('id, audit_notes, contact_email, business_name, contact_name')
         .eq(queryColumn, targetIdentifier)
         .single();
 
@@ -100,91 +103,75 @@ export async function POST(req: Request) {
       }
 
       const clientEmail = session.customer_details?.email || storeData?.contact_email;
+      const clientName = storeData?.contact_name || session.customer_details?.name || 'Operator';
+      const origin = process.env.NEXT_PUBLIC_SITE_URL || 'https://alternativesolutions.io';
 
-      // 2. Create the new Payment Log
-      const paymentLog = {
-        id: crypto.randomUUID(),
-        timestamp: new Date().toISOString(),
-        author: "SYSTEM",
-        type: "PAYMENT_CLEARED",
-        message: `Subscription activated via Stripe. Payment cleared for ${clientEmail}. System upgraded to ACTIVE.`
-      };
+      try {
+        // Automatically upgrade Storefront to ACTIVE and save their customer ID
+        await supabaseAdmin
+          .from('storefronts')
+          .update({ 
+             status: 'ACTIVE',
+             stripe_customer_id: session.customer as string 
+          })
+          .eq('id', storeData.id);
 
-      const currentLogs = storeData?.audit_notes || [];
-      const updatedLogs = [...currentLogs, paymentLog];
+        // Generate the Supabase Magic Link
+        const magicLinkResponse = await supabaseAdmin.auth.admin.generateLink({
+           type: 'magiclink',
+           email: clientEmail,
+           options: { redirectTo: `${origin}/api/auth/callback` }
+        });
 
-      // 3. Update the Storefront with the new status and the log
-      const { error: storeError } = await supabaseAdmin
-        .from('storefronts')
-        .update({ 
-          status: 'ACTIVE', 
-          stripe_customer_id: session.customer as string,
-          stripe_subscription_id: session.subscription as string,
-          audit_notes: updatedLogs
-        })
-        .eq(queryColumn, targetIdentifier); 
+        const magicLink = magicLinkResponse.data?.properties?.action_link || `${origin}/login`;
 
-      if (storeError) {
-        console.error("Storefront Database Update Failed:", storeError);
-        return new NextResponse('Database Error', { status: 500 });
-      } 
-      
-      // ------------------------------------------------------------------
-      // 4. THE MAGIC LINK GENERATOR & PORTAL INVITE DISPATCH
-      // ------------------------------------------------------------------
-      if (clientEmail) {
-        try {
-          // Generate the passwordless login URL directly into their portal
-          const { data: linkData, error: linkError } = await supabaseAdmin.auth.admin.generateLink({
-            type: 'magiclink',
+        // Upsert Profile so they exist natively in the DB
+        if (magicLinkResponse.data?.user?.id) {
+          await supabaseAdmin.from('profiles').upsert({
+            id: magicLinkResponse.data.user.id,
             email: clientEmail,
-            options: {
-              redirectTo: `${process.env.NEXT_PUBLIC_BASE_URL || 'https://storefronts.alternativesolutions.io'}/portal/${targetIdentifier}`
-            }
-          });
-
-          if (linkError) throw linkError;
-
-          if (linkData?.properties?.action_link) {
-            const resend = new Resend(process.env.RESEND_API_KEY);
-            
-            // Dispatch the sleek invite email with the Magic Link attached
-            await resend.emails.send({
-              from: process.env.RESEND_FROM_EMAIL || "portal@alternativesolutions.io",
-              to: [clientEmail],
-              subject: `Welcome to your Workspace: ${storeData.business_name || 'Storefront'}`,
-              react: React.createElement(PortalInviteEmail, {
-                workspaceName: storeData.business_name || 'Your Storefront',
-                magicLink: linkData.properties.action_link,
-                clientName: storeData.contact_name || 'Client',
-              })
-            });
-            console.log(`✉️ Portal Invite with Magic Link dispatched to ${clientEmail}`);
-
-            // 🚨 2. NEW: DISPATCH THE HYPE EMAIL TO YOU (THE ADMIN) 🚨
-            await resend.emails.send({
-              from: process.env.RESEND_FROM_EMAIL || "portal@alternativesolutions.io",
-              to: [process.env.ADMIN_EMAIL || 'courtney@alternativesolutions.io'],
-              subject: `💰 NEW SUBSCRIBER: ${storeData.business_name || 'A Client'} just paid!`,
-              html: `
-                <div style="font-family: monospace; background-color: #09090b; color: #10b981; padding: 30px; border-radius: 10px; border: 1px solid #047857;">
-                  <h1 style="color: #34d399; text-transform: uppercase;">Payment Cleared!</h1>
-                  <p style="color: #a1a1aa; font-size: 16px;">Hell yes. <strong>${storeData.business_name}</strong> (${clientEmail}) just locked in their subscription.</p>
-                  <ul style="color: #d4d4d8; padding-left: 20px;">
-                    <li><strong>Status:</strong> Upgraded to ACTIVE</li>
-                    <li><strong>Portal:</strong> Unlocked & Magic Link Sent</li>
-                    <li><strong>Action Required:</strong> Log into your Admin Dashboard and begin final deployment prep.</li>
-                  </ul>
-                  <a href="${process.env.NEXT_PUBLIC_SITE_URL || 'https://alternativesolutions.io'}/dashboard/storefronts" style="display: inline-block; margin-top: 20px; padding: 12px 24px; background-color: #10b981; color: #000; text-decoration: none; font-weight: bold; border-radius: 6px; text-transform: uppercase;">Open Command Center</a>
-                </div>
-              `
-            });
-            console.log(`🚨 Admin Alert dispatched to HQ for ${storeData.business_name}`);
-          }
-        } catch (emailErr) {
-          // We catch this so an email failure doesn't crash the Stripe 200 OK response
-          console.error("Failed to generate or send Magic Link:", emailErr);
+            full_name: clientName,
+            role: 'CLIENT_OWNER',
+            workspace_id: storeData.id
+          }, { onConflict: 'id' });
         }
+
+        // 🚨 DISPATCH 1: FIRE THE CLIENT WELCOME EMAIL (With the newly corrected props!)
+        await resend.emails.send({
+          from: process.env.EMAIL_FROM_ADDRESS || 'Alternative Solutions <system@alternativesolutions.io>',
+          to: clientEmail,
+          subject: 'Access Granted: Secure Workspace',
+          react: React.createElement(PortalInviteEmail, {
+            clientName: clientName,
+            workspaceName: storeData.business_name || 'Your Workspace',
+            magicLink: magicLink,
+            role: 'Client Owner'
+          })
+        });
+
+        // 🚨 DISPATCH 2: FIRE THE HYPE EMAIL TO YOU (THE ADMIN)
+        await resend.emails.send({
+          from: process.env.RESEND_FROM_EMAIL || "portal@alternativesolutions.io",
+          to: [process.env.ADMIN_EMAIL || 'courtney@alternativesolutions.io'], // Sends to your admin email
+          subject: `💰 NEW SUBSCRIBER: ${storeData.business_name || 'A Client'} just paid!`,
+          html: `
+            <div style="font-family: monospace; background-color: #09090b; color: #10b981; padding: 30px; border-radius: 10px; border: 1px solid #047857;">
+              <h1 style="color: #34d399; text-transform: uppercase;">Payment Cleared!</h1>
+              <p style="color: #a1a1aa; font-size: 16px;">Hell yes. <strong>${storeData.business_name}</strong> (${clientEmail}) just locked in their subscription.</p>
+              <ul style="color: #d4d4d8; padding-left: 20px;">
+                <li><strong>Status:</strong> Upgraded to ACTIVE</li>
+                <li><strong>Portal:</strong> Unlocked & Magic Link Sent</li>
+                <li><strong>Action Required:</strong> Log into your Admin Dashboard and begin final deployment prep.</li>
+              </ul>
+              <a href="${origin}/dashboard/storefronts" style="display: inline-block; margin-top: 20px; padding: 12px 24px; background-color: #10b981; color: #000; text-decoration: none; font-weight: bold; border-radius: 6px; text-transform: uppercase;">Open Command Center</a>
+            </div>
+          `
+        });
+
+        console.log(`🚨 Admin Alert dispatched to HQ for ${storeData.business_name}`);
+      } catch (emailErr) {
+        // We catch this so an email failure doesn't crash the Stripe 200 OK response
+        console.error("Failed to generate or send Magic Link:", emailErr);
       }
 
       console.log(`✅ Storefront [${targetIdentifier}] successfully activated and logged!`);
@@ -192,7 +179,7 @@ export async function POST(req: Request) {
     }
 
     // ------------------------------------------------------------------
-    // PATH B: GRASSROOTS FOUNDATION SUPPORTERS 
+    // PATH B: GRASSROOTS FOUNDATION SUPPORTERS
     // ------------------------------------------------------------------
     console.log(`🌱 Processing General Supporter Payment (No Storefront Slug found).`);
     
@@ -222,35 +209,22 @@ export async function POST(req: Request) {
     if (customerEmail) {
       let tier = isSubscription ? (amountTotal === 5 ? 'BUILDER' : 'BACKER') : 'BOOST';
       if (!isSubscription && projectField) {
-        tier = 'CLIENT'; 
+        tier = 'CLIENT';
       }
-
-      const { data: existingUser } = await supabaseAdmin
-        .from('supporters')
-        .select('origin_tier')
-        .eq('email', customerEmail)
-        .maybeSingle();
-
-      const { error } = await supabaseAdmin
-        .from('supporters')
-        .upsert({
-          email: customerEmail,
-          name: customerName || null,
-          display_name: finalDisplayName,
-          tier: tier,
-          status: 'ACTIVE',
-          amount: amountTotal,
-          source: projectName,
-          origin_tier: existingUser?.origin_tier || tier
-        }, { onConflict: 'email' });
-
-      if (error) {
-        console.error('Error logging to Supabase supporters:', error);
-        return new NextResponse('Database Error', { status: 500 });
-      }
-      console.log(`✅ Supporter ${customerEmail} logged successfully!`);
+      
+      // Log the grassroots supporter into the database
+      await supabaseAdmin.from('supporters').insert([{
+         name: finalDisplayName,
+         email: customerEmail,
+         amount: amountTotal,
+         tier: tier,
+         project_name: projectName,
+         is_subscription: isSubscription
+      }]);
+      
+      console.log(`✅ Logged ${tier} contribution from ${finalDisplayName}`);
     }
   }
 
-  return new NextResponse('Webhook Received', { status: 200 });
+  return NextResponse.json({ received: true });
 }

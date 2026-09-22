@@ -3,7 +3,7 @@ import React from 'react';
 import { TerminalSquare } from 'lucide-react';
 import { createClient } from '@/utils/supabase/server';
 import PrototypeGrid from './PrototypeGrid'; // 🚀 Plug in the new clean grid
-import { STOREFRONTS } from '@/config/marketing/sector-zero';
+import { STOREFRONTS } from '@/config/marketing/storefronts';
 
 export default async function LivePrototypes() {
   const supabase = await createClient();

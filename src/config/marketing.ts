@@ -3,7 +3,7 @@ import { NAV, GLOBAL_FOOTER, GATEWAY } from './marketing/global';
 import { PUBLIC_SITE } from './marketing/home';
 import { ECOSYSTEM, GLITCHBOT_PAGE, PUBLIC_LOGS } from './marketing/ecosystem';
 import { FOUNDER } from './marketing/founder';
-import { STOREFRONTS } from './marketing/sector-zero';
+import { STOREFRONTS } from './marketing/storefronts'; // 🚀 UPDATED
 import { SHIFT_STUDIO_PAGE } from './marketing/shift-studio';
 import { ACCESS_HOOK, JOIN_PAGE, SUPPORT_MODULE, FOUNDING_MEMBER } from './marketing/campaigns';
 

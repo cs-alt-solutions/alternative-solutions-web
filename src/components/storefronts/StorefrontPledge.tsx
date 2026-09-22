@@ -1,10 +1,11 @@
+/* src/components/storefronts/StorefrontPledge.tsx */
 'use client';
 
 import React from 'react';
 import { WEBSITE_COPY } from '@/utils/glossary';
 import { Settings2, Server, Globe, Sparkles } from 'lucide-react';
 
-export default function SectorZeroPledge() {
+export default function StorefrontPledge() {
   const copy = WEBSITE_COPY.STOREFRONTS;
 
   const getTheme = (index: number) => {
@@ -48,7 +49,7 @@ export default function SectorZeroPledge() {
           </div>
         </div>
 
-        {/* BOTTOM HALF: Static 3-Column Grid (No more Accordions) */}
+        {/* BOTTOM HALF: Static 3-Column Grid */}
         <div className="relative">
           <h3 className="text-sm font-mono text-white/50 uppercase tracking-[0.3em] mb-8 flex items-center gap-3">
             <Sparkles size={16} className="text-brand-primary" /> {copy.REWARDS.TITLE}

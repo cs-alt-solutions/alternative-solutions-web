@@ -8,7 +8,8 @@ import { logPulse } from './pulse';
 const resend = new Resend(process.env.RESEND_API_KEY);
 const fromEmail = process.env.NEXT_PUBLIC_COMPANY_EMAIL || 'hello@alternativesolutions.io';
 
-export async function submitSectorZeroIntake(formData: FormData) {
+// 🚀 RENAMED: Matches the new import in JoinForm.tsx
+export async function submitStorefrontIntake(formData: FormData) {
   const name = formData.get('name') as string;
   const email = formData.get('email') as string;
   const businessName = formData.get('businessName') as string;
@@ -25,8 +26,10 @@ export async function submitSectorZeroIntake(formData: FormData) {
     const supabase = await createClient();
     
     const uniqueHash = Math.random().toString(36).substring(2, 7).toUpperCase();
-    const appId = `SZ-${uniqueHash}`;
+    // 🚀 UPDATED: Generates "SF-XXXXX" instead of "SZ-XXXXX"
+    const appId = `SF-${uniqueHash}`;
 
+    // 🔒 HARD BOUNDARY: We leave this table name alone until you migrate your Supabase database!
     const { error: dbError } = await supabase.from('sector_zero_leads').insert([{
       app_id: appId,
       name: name,
@@ -46,7 +49,6 @@ export async function submitSectorZeroIntake(formData: FormData) {
       return { success: false, error: "Database error. Please try again." };
     }
 
-    // 🚀 FULLY SATISFIED TYPESCRIPT CONTRACT
     await resend.emails.send({
       from: `Alternative Solutions <${fromEmail}>`, 
       to: ['courtney@alternativesolutions.io'], 
@@ -73,7 +75,8 @@ export async function submitSectorZeroIntake(formData: FormData) {
           <div style="max-width: 600px; margin: 0 auto; background-color: #0a0a0a; border: 1px solid #1f2937; border-radius: 12px; overflow: hidden; box-shadow: 0 0 30px rgba(6, 182, 212, 0.1);">
             <div style="background-color: #111827; padding: 30px; border-bottom: 2px solid #06b6d4; text-align: center;">
               <h2 style="color: #06b6d4; margin: 0; font-size: 22px; text-transform: uppercase; letter-spacing: 2px;">Website Application Received</h2>
-              <p style="color: #94a3b8; font-size: 11px; margin-top: 8px; text-transform: uppercase; letter-spacing: 2px;">Sector Zero Foundation</p>
+              <!-- 🚀 UPDATED: Removed Sector Zero -->
+              <p style="color: #94a3b8; font-size: 11px; margin-top: 8px; text-transform: uppercase; letter-spacing: 2px;">Storefront Architecture</p>
             </div>
             <div style="padding: 30px;">
               <p>Hey ${name.split(' ')[0]},</p>
@@ -100,7 +103,8 @@ export async function submitSectorZeroIntake(formData: FormData) {
       `
     });
 
-    await logPulse('SECTOR_ZERO', `App ${appId} logged for ${businessName || name}`);
+    // 🚀 UPDATED: Changed the internal pulse log category
+    await logPulse('STOREFRONT', `App ${appId} logged for ${businessName || name}`);
     
     return { success: true };
 
