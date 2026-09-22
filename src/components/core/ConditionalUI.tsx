@@ -1,3 +1,4 @@
+/* src/components/core/ConditionalUI.tsx */
 'use client';
 
 import React from 'react';
@@ -13,9 +14,13 @@ export default function ConditionalUI({
   footer: React.ReactNode;
 }) {
   const pathname = usePathname();
-  
-  // If the URL starts with /division or /sandbox, hide the marketing navigation
-  const isAppRoute = pathname?.startsWith('/division') || pathname?.startsWith('/sandbox');
+
+  // 🚀 FIXED: Purged dead '/division' and '/sandbox' routes. 
+  // Now accurately targets your actual application environments.
+  const isAppRoute = 
+    pathname?.startsWith('/dashboard') || 
+    pathname?.startsWith('/portal') || 
+    pathname?.startsWith('/login');
 
   return (
     <>

@@ -1,3 +1,4 @@
+/* src/components/core/GlobalWatermark.tsx */
 'use client';
 
 import React from 'react';
@@ -6,11 +7,10 @@ import { usePathname } from 'next/navigation';
 export default function GlobalWatermark() {
   const pathname = usePathname();
 
-  // Hide in command environments
+  // 🚀 FIXED: Removed the dead '/sandbox' route to match reality
   if (
     pathname.startsWith('/dashboard') || 
     pathname.startsWith('/login') || 
-    pathname.startsWith('/sandbox') || 
     pathname.startsWith('/portal')
   ) {
     return null;
@@ -22,8 +22,8 @@ export default function GlobalWatermark() {
     <div className="fixed inset-0 pointer-events-none select-none touch-none z-10 flex items-center justify-center overflow-hidden">
       
       {/* 
-        FIX: Replaced invalid w-200 classes with hardcoded pixel locks (w-[800px] & w-[1200px]). 
-        This mathematically prevents the browser from scaling the image on scroll.
+         FIX: Replaced invalid w-200 classes with hardcoded pixel locks (w-[800px] & w-[1200px]). 
+         This mathematically prevents the browser from scaling the image on scroll.
       */}
       <div className="relative w-200 h-200 md:w-300 md:h-300 opacity-15">
         <img 
