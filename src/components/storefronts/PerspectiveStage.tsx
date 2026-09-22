@@ -22,12 +22,17 @@ interface PerspectiveStageProps {
 
 export default function PerspectiveStage({ prototypes }: PerspectiveStageProps) {
   const { GALLERY } = STOREFRONTS;
-  const [activeCategory, setActiveCategory] = useState(GALLERY.VIBES[0]);
+  
+  // 🚀 FIXED: Pointing to AESTHETICS instead of VIBES
+  const [activeCategory, setActiveCategory] = useState(GALLERY.AESTHETICS[0]);
   const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
   const [isPaused, setIsPaused] = useState(false);
 
-  const isAllVibes = activeCategory === GALLERY.VIBES[0];
-  const activeDescription = GALLERY.VIBE_DESCRIPTIONS?.[activeCategory as keyof typeof GALLERY.VIBE_DESCRIPTIONS] || "";
+  // 🚀 FIXED: Pointing to AESTHETICS instead of VIBES
+  const isAllVibes = activeCategory === GALLERY.AESTHETICS[0];
+  
+  // 🚀 FIXED: Pointing to AESTHETIC_DESCRIPTIONS
+  const activeDescription = GALLERY.AESTHETIC_DESCRIPTIONS?.[activeCategory as keyof typeof GALLERY.AESTHETIC_DESCRIPTIONS] || "";
 
   const filteredPrototypes = isAllVibes 
     ? prototypes 
@@ -39,7 +44,7 @@ export default function PerspectiveStage({ prototypes }: PerspectiveStageProps) 
           site.vibe,
           site.category
         ].filter(Boolean).join(" ").toLowerCase();
-
+        
         return keywords.some(kw => combinedDbString.includes(kw));
       });
 
@@ -69,7 +74,6 @@ export default function PerspectiveStage({ prototypes }: PerspectiveStageProps) 
             </div>
             <h3 className="text-white font-black uppercase tracking-widest text-base mb-2">
               {GALLERY.SECTOR_EMPTY_PRE}{" "}
-              {/* 🚀 ANIMATED EMPTY STATE KEYWORD */}
               <span className="text-transparent bg-clip-text bg-linear-to-r from-cyan-400 via-fuchsia-400 to-cyan-300 animate-text-gradient font-bold drop-shadow-[0_0_15px_rgba(34,211,238,0.4)]">
                 {activeCategory}
               </span>{" "}
@@ -81,7 +85,7 @@ export default function PerspectiveStage({ prototypes }: PerspectiveStageProps) 
           </div>
         ) : (
           <div className={`
-            flex py-6
+            flex py-6 
             ${isAllVibes 
               ? `w-max animate-[marquee_45s_linear_infinite] hover:[animation-play-state:paused] ${(hoveredIndex !== null || isPaused) ? '[animation-play-state:paused]' : ''} pl-4` 
               : 'w-full justify-center items-center px-4 flex-wrap md:flex-nowrap gap-4 md:gap-0'}
@@ -98,7 +102,7 @@ export default function PerspectiveStage({ prototypes }: PerspectiveStageProps) 
                   onMouseLeave={() => setHoveredIndex(null)}
                   onTouchStart={() => setHoveredIndex(index)}
                   className={`
-                    w-90 md:w-115 lg:w-125 shrink-0 transition-all duration-500 ease-out cursor-pointer -mx-3 md:-mx-5
+                    w-90 md:w-115 lg:w-125 shrink-0 transition-all duration-500 ease-out cursor-pointer -mx-3 md:-mx-5 
                     ${isHovered ? 'z-40 opacity-100 shadow-[0_30px_70px_rgba(34,211,238,0.25)] transform-[rotateY(0deg)_scale(1.05)_translateZ(40px)]' : ''}
                     ${isLeft ? 'opacity-65 transform-[rotateY(25deg)_scale(0.88)]' : ''}
                     ${isRight ? 'opacity-65 transform-[rotateY(-25deg)_scale(0.88)]' : ''}
@@ -116,23 +120,23 @@ export default function PerspectiveStage({ prototypes }: PerspectiveStageProps) 
         )}
       </div>
 
-      {/* 🚀 DYNAMIC VIBE BRIEFING: Boxless, zero slashes, animated gradient keyword */}
+      {/* DYNAMIC VIBE BRIEFING */}
       {activeDescription && (
         <div className="mb-4 px-6 max-w-2xl text-center animate-in fade-in slide-in-from-bottom-2 duration-300">
           <p className="text-xs md:text-sm font-medium tracking-wide flex flex-wrap items-center justify-center gap-2">
             <span className="text-transparent bg-clip-text bg-linear-to-r from-cyan-400 via-fuchsia-400 to-cyan-300 animate-text-gradient font-black uppercase tracking-widest flex items-center gap-1.5 drop-shadow-[0_0_15px_rgba(34,211,238,0.4)]">
               <Sparkles size={14} className="text-cyan-400 shrink-0" />
               <span>{activeCategory}</span>
-              <span className="text-zinc-600">•</span>
+              <span className="text-zinc-600">|</span>
             </span>
             <span className="text-zinc-300 font-normal">{activeDescription}</span>
           </p>
         </div>
       )}
 
-      {/* Interactive 8-Vibe Category Dock */}
+      {/* 🚀 FIXED: Pointing to AESTHETICS instead of VIBES */}
       <div className="mt-2 px-6 py-3 rounded-full bg-zinc-950/90 border border-zinc-800/80 flex flex-wrap justify-center items-center gap-2 md:gap-3 shadow-2xl backdrop-blur-md z-30 max-w-5xl">
-        {GALLERY.VIBES.map((category) => {
+        {GALLERY.AESTHETICS.map((category) => {
           const isActive = activeCategory === category;
           return (
             <button
@@ -142,11 +146,6 @@ export default function PerspectiveStage({ prototypes }: PerspectiveStageProps) 
                 setHoveredIndex(null);
                 setIsPaused(false);
               }}
-              /* 
-                🚀 NEON CYBERPUNK DOCK BUTTONS:
-                - Active: Layered neon shadows, crisp border, and animated color-shifting gradient!
-                - Inactive: Responsive cyan border glow on hover!
-              */
               className={`
                 px-5 py-2.5 rounded-full text-xs md:text-sm font-bold tracking-wider uppercase transition-all duration-300
                 ${isActive 
