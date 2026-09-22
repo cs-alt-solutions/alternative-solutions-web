@@ -1,41 +1,35 @@
 "use client";
-
 /* src/app/products/page.tsx */
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { supabase } from '@/utils/supabase';
-import { WEBSITE_COPY } from '@/utils/glossary';
+import { WEBSITE_COPY, ROUTES } from '@/utils/glossary';
 import { Activity, Database, Lock, Terminal as TerminalIcon, Bot, User, Beaker } from 'lucide-react';
 import AppShowcaseCard from '@/components/products/AppShowcaseCard';
 import TerminalTab from '@/components/core/TerminalTab';
 
 export default function ProductsPage() {
-  // CHANGED: Defaulting to 'LAB' (Prototypes) instead of 'COMMERCE'
   const [activeTab, setActiveTab] = useState<'COMMERCE' | 'LAB' | 'PIPELINE'>('LAB');
   const [liveProducts, setLiveProducts] = useState<any[]>([]);
-  
   const copy = WEBSITE_COPY.ECOSYSTEM;
 
-  // FETCH FROM DATABASE
   useEffect(() => {
     const fetchEcosystem = async () => {
       const { data, error } = await supabase
         .from('products')
         .select('*')
-        .eq('is_public', true) // ONLY show things toggled "ON" in your dashboard
+        .eq('is_public', true) 
         .order('created_at', { ascending: false });
-      
+        
       if (data) setLiveProducts(data);
     };
     fetchEcosystem();
   }, []);
 
-  // Filter products by the active tab
   const getProductsForTab = (tabName: string) => {
     return liveProducts.filter(p => p.status === tabName);
   };
 
-  // --- MOCKUP ENGINE ---
   const renderMockup = (mockupId: string) => {
     if (mockupId === 'shift_studio') {
       return (
@@ -62,7 +56,6 @@ export default function ProductsPage() {
         </div>
       );
     }
-
     if (mockupId === 'glitchbot') {
       return (
         <div className="w-full max-w-lg bg-[#13091c] border border-fuchsia-900/50 rounded-xl overflow-hidden shadow-[0_20px_50px_rgba(0,0,0,0.5)] group-hover:scale-[1.02] group-hover:border-fuchsia-500/50 transition-all duration-500 relative z-10">
@@ -81,8 +74,6 @@ export default function ProductsPage() {
         </div>
       );
     }
-
-    // Default Blank Wireframe for new projects
     return (
       <div className="w-full max-w-lg bg-black/50 border border-slate-800 rounded-xl aspect-video flex items-center justify-center relative overflow-hidden group-hover:border-brand-primary/50 transition-colors">
         <Database className="w-12 h-12 text-slate-800 group-hover:text-brand-primary/50 transition-colors" />
@@ -117,20 +108,22 @@ export default function ProductsPage() {
         <div className="min-h-125 animate-in fade-in duration-500">
           <div className="animate-in fade-in zoom-in-95 duration-500">
             {getProductsForTab(activeTab).length === 0 ? (
+               // 🚀 FIXED: Removed "SECTOR" ghost
                <div className="text-center py-20 border border-dashed border-slate-800 rounded-3xl text-slate-500 font-mono text-xs uppercase tracking-widest">
-                 NO DATA SYNCED TO THIS SECTOR.
+                 NO DATA SYNCED TO THIS MODULE.
                </div>
             ) : (
                getProductsForTab(activeTab).map((product) => (
                  <AppShowcaseCard 
                    key={product.id}
                    title={product.name || "UNTITLED"}
-                   status={product.tagline || `LIVE SYNC • SECTOR 0${activeTab === 'COMMERCE' ? '1' : activeTab === 'LAB' ? '2' : '3'}`}
+                   // 🚀 FIXED: Removed "SECTOR" ghost
+                   status={product.tagline || `LIVE SYNC // MODULE 0${activeTab === 'COMMERCE' ? '1' : activeTab === 'LAB' ? '2' : '3'}`}
                    description={product.description || "System overview currently unavailable."}
                    linkHref={product.link_href || "#"}
                    linkText={activeTab === 'PIPELINE' ? "VIEW BLUEPRINT" : "INITIALIZE APP"}
                    uiMockup={renderMockup(product.mockup_id)}
-                   images={product.media_assets?.carousel || []} 
+                   images={product.media_assets?.carousel || []}
                  />
                ))
             )}
@@ -140,7 +133,6 @@ export default function ProductsPage() {
         {/* CO-OP SECTOR */}
         <div className="mt-24 bg-bg-app/90 border border-amber-500/30 rounded-3xl p-12 md:p-20 relative overflow-hidden shadow-[0_0_50px_rgba(245,158,11,0.1)]">
           <div className="absolute -top-10 -right-10 w-96 h-96 bg-amber-500/10 rounded-full blur-[100px] pointer-events-none animate-pulse"></div>
-
           <div className="grid md:grid-cols-2 gap-16 items-center relative z-10">
             <div>
               <h2 className="text-4xl md:text-5xl font-black text-white mb-6 leading-tight">
@@ -163,8 +155,8 @@ export default function ProductsPage() {
               <h3 className="text-2xl text-white font-bold mb-4">{copy.CO_OP.CARD_TITLE}</h3>
               <p className="text-amber-200/70 text-sm mb-8">{copy.CO_OP.CARD_DESC}</p>
               
-              {/* CHANGED: Dynamically pulling the correct link to intake form */}
-              <Link href={copy.CO_OP.LINK || '/sector-zero/apply'} className="block w-full text-center bg-amber-500/20 text-amber-400 border border-amber-500/50 font-black uppercase tracking-widest py-4 rounded hover:bg-amber-400 hover:text-black transition-all shadow-[0_0_15px_rgba(245,158,11,0.3)]">
+              {/* 🚀 FIXED: Replaced sector-zero fallback with the proper ROUTES registry */}
+              <Link href={copy.CO_OP.LINK || ROUTES.PUBLIC.STOREFRONTS.APPLY} className="block w-full text-center bg-amber-500/20 text-amber-400 border border-amber-500/50 font-black uppercase tracking-widest py-4 rounded hover:bg-amber-400 hover:text-black transition-all shadow-[0_0_15px_rgba(245,158,11,0.3)]">
                 {copy.CO_OP.CTA}
               </Link>
             </div>

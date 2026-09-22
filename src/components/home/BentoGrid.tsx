@@ -1,3 +1,4 @@
+/* src/components/home/BentoGrid.tsx */
 import React from 'react';
 import Link from 'next/link';
 import { WEBSITE_COPY } from '@/utils/glossary';
@@ -10,7 +11,7 @@ export default function BentoGrid() {
   return (
     <div className="grid grid-cols-1 md:grid-cols-12 gap-6 px-6 animate-in fade-in duration-1000 delay-500">
       
-      {/* 1. THE ORIGIN STORY CARD (6 Cols) - Security Vault Aesthetic */}
+      {/* 1. THE ORIGIN STORY CARD (6 Cols) */}
       <Link 
         href={BENTO.STORY.LINK} 
         className="md:col-span-12 lg:col-span-6 group relative bg-[#0a050f] border border-fuchsia-500/20 hover:border-fuchsia-500/60 rounded-3xl p-8 overflow-hidden transition-all duration-500 shadow-[0_0_30px_rgba(232,121,249,0.05)] hover:shadow-[0_0_60px_rgba(232,121,249,0.2)] flex flex-col justify-between min-h-80"
@@ -39,7 +40,7 @@ export default function BentoGrid() {
         </div>
       </Link>
 
-      {/* 2. THE ECOSYSTEM DIRECTORY (6 Cols) - Matrix Terminal Aesthetic */}
+      {/* 2. THE ECOSYSTEM DIRECTORY (6 Cols) */}
       <Link 
         href={BENTO.PRODUCT.LINK}
         className="md:col-span-12 lg:col-span-6 group relative bg-[#050a0f] border border-brand-primary/20 hover:border-brand-primary/60 rounded-3xl p-8 overflow-hidden transition-all duration-500 shadow-[0_0_30px_rgba(6,182,212,0.05)] hover:shadow-[0_0_60px_rgba(6,182,212,0.2)] flex flex-col justify-between min-h-80"
@@ -68,7 +69,7 @@ export default function BentoGrid() {
         </div>
       </Link>
 
-      {/* 3. SECTOR ZERO (7 Cols) - Live Radar Aesthetic */}
+      {/* 3. THE FOUNDATION (7 Cols) */}
       <Link
         href={BENTO.BETA.LINK}
         className="md:col-span-12 lg:col-span-7 group relative bg-[#050f0a] border border-emerald-500/30 hover:border-emerald-500/60 rounded-3xl p-8 overflow-hidden transition-all duration-500 shadow-[0_0_30px_rgba(52,211,153,0.1)] hover:shadow-[0_0_60px_rgba(52,211,153,0.3)] flex flex-col justify-between min-h-64"
@@ -87,8 +88,8 @@ export default function BentoGrid() {
                </div>
             </div>
             
-            {/* The New Core Component! */}
-            <LiveStatusBadge label="Taking New Builds" />
+            {/* 🚀 DYNAMIC: Pulled from config */}
+            <LiveStatusBadge label={BENTO.BETA.BADGE || "Active"} />
             
           </div>
           
@@ -111,7 +112,7 @@ export default function BentoGrid() {
         </div>
       </Link>
 
-      {/* 4. AI PHILOSOPHY CARD (5 Cols) - Neural Node Aesthetic */}
+      {/* 4. AI PHILOSOPHY CARD (5 Cols) */}
       <div className="md:col-span-12 lg:col-span-5 bg-[#080d14] border border-blue-500/30 rounded-3xl p-8 backdrop-blur-md flex flex-col relative overflow-hidden group hover:border-blue-500/60 transition-all duration-500 shadow-[0_0_30px_rgba(59,130,246,0.1)] hover:shadow-[0_0_60px_rgba(59,130,246,0.2)] min-h-64">
         
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full h-full bg-blue-500/10 rounded-full blur-[80px] pointer-events-none group-hover:bg-blue-500/20 transition-colors duration-700" />
@@ -137,7 +138,6 @@ export default function BentoGrid() {
           </div>
         </div>
       </div>
-
     </div>
   );
 }

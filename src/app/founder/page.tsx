@@ -1,7 +1,7 @@
 /* src/app/founder/page.tsx */
 import React from 'react';
 import Link from 'next/link';
-import { WEBSITE_COPY } from '@/utils/glossary';
+import { WEBSITE_COPY, ROUTES } from '@/utils/glossary';
 import { Zap, BrainCircuit, Code, Coffee, Cat, Network, Cpu, ShieldAlert } from 'lucide-react';
 
 export default function FounderPage() {
@@ -13,7 +13,7 @@ export default function FounderPage() {
       <div className="absolute inset-0 bg-[url('/grid.svg')] bg-center mask-[linear-gradient(180deg,white,rgba(255,255,255,0))] opacity-10 pointer-events-none" />
       <div className="absolute top-0 right-0 w-150 h-150 bg-fuchsia-600/10 rounded-full blur-[150px] pointer-events-none animate-pulse" />
       <div className="absolute bottom-1/4 left-0 w-125 h-125 bg-brand-primary/10 rounded-full blur-[150px] pointer-events-none" />
-
+      
       <div className="relative max-w-7xl mx-auto px-6">
         
         {/* HEADER */}
@@ -53,7 +53,7 @@ export default function FounderPage() {
              <h3 className="font-mono text-brand-primary text-xs tracking-[0.2em] mb-10 uppercase flex items-center gap-2">
                <Code size={16} /> {copy.STATS.TITLE}
              </h3>
-
+             
              <div className="space-y-8">
                <div className="border-b border-white/5 pb-4">
                  <div className="text-[10px] font-mono text-white/50 uppercase tracking-widest mb-2">DESIGNATION</div>
@@ -130,17 +130,15 @@ export default function FounderPage() {
               </div>
             </div>
           </div>
-
         </div>
 
-        {/* CTA */}
+        {/* 🚀 FIXED: Wrapped CTA in a Link so it actually navigates */}
         <div className="text-center pt-16 border-t border-white/10">
             <h2 className="text-3xl font-black text-white mb-8 tracking-tight uppercase">{copy.FOOTER.TITLE}</h2>
-            <button className="bg-brand-primary hover:bg-brand-primary/90 text-black font-black uppercase tracking-widest px-10 py-5 rounded-xl transition-all shadow-[0_0_30px_rgba(6,182,212,0.3)]">
+            <Link href={ROUTES.PUBLIC.PRODUCTS.ROOT} className="inline-block bg-brand-primary hover:bg-brand-primary/90 text-black font-black uppercase tracking-widest px-10 py-5 rounded-xl transition-all shadow-[0_0_30px_rgba(6,182,212,0.3)] hover:scale-105">
               {copy.FOOTER.CTA}
-            </button>
+            </Link>
         </div>
-
       </div>
     </main>
   );

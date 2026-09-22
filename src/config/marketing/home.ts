@@ -10,7 +10,12 @@ export const PUBLIC_SITE = {
         CTA_PRIMARY_LINK: "/sector-zero",
         CTA_SECONDARY: "Read The Story",
         CTA_SECONDARY_LINK: "/founder",
-        MICRO_COPY: "No Bloated Templates. Just A Clean, Custom-Built Engine."
+        MICRO_COPY: "No Bloated Templates. Just A Clean, Custom-Built Engine.",
+        // 🚀 NEW: Adding the Pedestal variables
+        PEDESTAL: {
+          TITLE: "Adaptive",
+          STATUS: "Awaiting Identity"
+        }
        },
     METHODOLOGY: {
       TAG: "THE ARCHITECT'S APPROACH",
@@ -60,11 +65,13 @@ export const PUBLIC_SITE = {
          LINK: "/founder"
        },
       BETA: {
-         TAG: "SECTOR ZERO",
+         TAG: "THE FOUNDATION",
          TITLE: "START YOUR BUILD.",
          DESC: "Stop fighting fragile DIY templates and subscription traps. Get a clean, professional storefront built directly onto our proprietary platform for a flat-rate setup and just $5/mo. You run the business; the platform handles the tech.",
          CTA: "Start Your Build",
-         LINK: "/storefronts"
+         LINK: "/storefronts",
+         // 🚀 NEW: Adding the Badge variable
+         BADGE: "Taking New Builds"
        },
       TECH: {
          TAG: "INTERNAL WIRING",

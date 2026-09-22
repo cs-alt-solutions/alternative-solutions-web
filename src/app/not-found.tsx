@@ -12,7 +12,7 @@ export default function NotFound() {
 
       {/* The 404 Terminal */}
       <div className="relative z-10 w-full max-w-lg text-center">
-        
+         
         {/* GlitchBot Warning Avatar */}
         <div className="relative w-24 h-24 bg-bg-app border-2 border-amber-500 rounded-2xl flex items-center justify-center shadow-[inset_0_0_30px_rgba(245,158,11,0.2)] mx-auto mb-10 group transition-all duration-300 hover:shadow-[inset_0_0_50px_rgba(245,158,11,0.4)]">
           {/* Flashing "Eye" */}
@@ -23,9 +23,9 @@ export default function NotFound() {
           </div>
         </div>
 
-        {/* System Error Tag */}
+        {/* 🚀 FIXED: Removed "SECTOR" ghost */}
         <div className="inline-block border border-amber-500/40 bg-amber-950/30 px-4 py-1.5 rounded-full font-mono text-amber-400 text-[10px] tracking-[0.3em] mb-6 uppercase shadow-[0_0_20px_rgba(245,158,11,0.2)]">
-          404 // SECTOR NOT FOUND
+          404 // DIRECTIVE NOT FOUND
         </div>
 
         <h1 className="text-4xl md:text-5xl font-black tracking-tighter text-white uppercase mb-8 drop-shadow-[0_0_15px_rgba(255,255,255,0.2)]">
@@ -42,8 +42,8 @@ export default function NotFound() {
 
         {/* Escape Route */}
         <Link 
-          href="/" 
-          className="inline-flex items-center justify-center gap-3 bg-amber-500/10 text-amber-400 border border-amber-500/50 hover:bg-amber-400 hover:text-black font-black uppercase tracking-widest px-8 py-4 rounded-lg transition-all shadow-[0_0_30px_rgba(245,158,11,0.15)] hover:shadow-[0_0_40px_rgba(245,158,11,0.4)]"
+           href="/" 
+           className="inline-flex items-center justify-center gap-3 bg-amber-500/10 text-amber-400 border border-amber-500/50 hover:bg-amber-400 hover:text-black font-black uppercase tracking-widest px-8 py-4 rounded-lg transition-all shadow-[0_0_30px_rgba(245,158,11,0.15)] hover:shadow-[0_0_40px_rgba(245,158,11,0.4)]"
         >
           Return to the Grid
         </Link>
