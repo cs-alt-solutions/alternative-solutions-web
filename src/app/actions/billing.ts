@@ -90,6 +90,7 @@ export async function getClientInvoices(customerId: string) {
       amount: (inv.amount_paid / 100).toFixed(2),
       status: inv.status,
       pdfUrl: inv.invoice_pdf, 
+      hostedUrl: inv.hosted_invoice_url,
     }));
 
     return { success: true, invoices: formattedInvoices };
@@ -122,30 +123,31 @@ export async function getUpcomingInvoice(customerId: string) {
   }
 }
 
-// 🚀 Fetch Master Global Invoices
 export async function getGlobalInvoices() {
   try {
     const invoices = await stripe.invoices.list({
       limit: 100,
-      // Removed status: 'paid' so you can see pending/open invoices too if Stripe is lagging
     });
 
     const formattedInvoices = invoices.data.map((inv: any) => {
-      // 🚀 RESTORED THE MISSING DATA
-      const lineItemDesc = inv.lines?.data?.[0]?.description || 'Storefront Subscription';
+      const rawLineItem = inv.lines?.data?.[0]?.description || 'Storefront Subscription';
       
+      // 🚀 THE FIX: Clean up Stripe's verbose line items (removes "1 × " and "(at $5.00 / month)")
+      const cleanLineItem = rawLineItem.split(' (at')[0].replace(/^1\s*[xX]\s*/, '').trim();
+
       return {
         id: inv.id,
         date: new Date(inv.created * 1000).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
         amount: (inv.amount_paid / 100).toFixed(2),
-        subtotal: (inv.subtotal / 100).toFixed(2), // Fixed missing subtotal for promo math!
+        subtotal: (inv.subtotal / 100).toFixed(2),
         status: inv.status,
         customerEmail: inv.customer_email || 'Unknown Client',
         customerName: inv.customer_name || 'No Name',
         customerId: typeof inv.customer === 'string' ? inv.customer : inv.customer?.id || '',
         subscriptionId: typeof inv.subscription === 'string' ? inv.subscription : inv.subscription?.id || '',
         pdfUrl: inv.invoice_pdf,
-        lineItem: lineItemDesc // Restored Line Item Text
+        hostedUrl: inv.hosted_invoice_url,
+        lineItem: cleanLineItem
       };
     });
 
