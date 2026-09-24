@@ -5,7 +5,6 @@ import Stripe from 'stripe';
 import { Resend } from 'resend';
 import * as React from 'react';
 import PortalInviteEmail from '@/components/emails/PortalInviteEmail';
-import { X, Send, UserPlus } from 'lucide-react'; // Added UserPlus here!
 
 const resend = new Resend(process.env.RESEND_API_KEY!);
 
@@ -107,12 +106,13 @@ export async function POST(req: Request) {
       const origin = process.env.NEXT_PUBLIC_SITE_URL || 'https://alternativesolutions.io';
 
       try {
-        // Automatically upgrade Storefront to ACTIVE and save their customer ID
+        // Automatically upgrade Storefront to ACTIVE and save their customer AND subscription IDs
         await supabaseAdmin
           .from('storefronts')
           .update({ 
              status: 'ACTIVE',
-             stripe_customer_id: session.customer as string 
+             stripe_customer_id: session.customer as string,
+             stripe_subscription_id: session.subscription as string // 🚀 THE FIX: Tell Supabase to save this!
           })
           .eq('id', storeData.id);
 
@@ -136,7 +136,7 @@ export async function POST(req: Request) {
           }, { onConflict: 'id' });
         }
 
-        // 🚨 DISPATCH 1: FIRE THE CLIENT WELCOME EMAIL (With the newly corrected props!)
+        // 🚨 DISPATCH 1: FIRE THE CLIENT WELCOME EMAIL 
         await resend.emails.send({
           from: process.env.EMAIL_FROM_ADDRESS || 'Alternative Solutions <system@alternativesolutions.io>',
           to: clientEmail,
