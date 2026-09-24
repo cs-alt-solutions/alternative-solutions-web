@@ -74,7 +74,6 @@ export default function BillingModule({ clientId }: { clientId: string }) {
     setIsConnectingDomain(false);
   };
 
-  // 🚀 Disconnect Domain Handler
   const handleRemoveDomain = async () => {
     if (!store?.custom_domain) return;
     if (!window.confirm(`Are you sure you want to disconnect ${store.custom_domain}? This will take your storefront offline.`)) return;
@@ -206,7 +205,6 @@ export default function BillingModule({ clientId }: { clientId: string }) {
                         </div>
                       </div>
                       
-                      {/* 🚀 The Disconnect Button */}
                       <button 
                         onClick={handleRemoveDomain}
                         disabled={isRemovingDomain}
@@ -223,7 +221,6 @@ export default function BillingModule({ clientId }: { clientId: string }) {
                         To push your storefront live, log into your domain registrar (GoDaddy, Namecheap, etc.) and create these two records:
                       </p>
                       
-                      {/* 🚀 Both DNS Records */}
                       <div className="space-y-2">
                         <div className="flex items-center justify-between bg-zinc-900 border border-zinc-700 p-3 rounded-xl">
                           <div className="flex items-center gap-3">
@@ -318,6 +315,7 @@ export default function BillingModule({ clientId }: { clientId: string }) {
           </div>
         </div>
 
+        {/* RIGHT COL: Native Invoice Table */}
         <div className="lg:col-span-5 flex flex-col">
           <div className="bg-zinc-950 border border-zinc-800/80 rounded-3xl p-6 md:p-8 flex flex-col h-full overflow-hidden shadow-xl min-h-100">
             <div className="flex items-center gap-3 mb-6 pb-4 border-b border-white/5">

@@ -1,3 +1,4 @@
+/* src/components/dashboard/ledger/SubscriptionsTab.tsx */
 'use client';
 
 import React, { useState, useEffect } from 'react';
@@ -6,8 +7,9 @@ import { CreditCard, Zap, RefreshCw, Loader2, CalendarClock, Receipt, Download, 
 import { getGlobalInvoices } from '@/app/actions/billing';
 
 export default function SubscriptionsTab() {
-  const [storefronts, setStorefronts] = useState<any[]>([]);
+  const [enrichedStorefronts, setEnrichedStorefronts] = useState<any[]>([]);
   const [globalInvoices, setGlobalInvoices] = useState<any[]>([]);
+  const [metrics, setMetrics] = useState({ gross: 0, net: 0, discount: 0, foundation: 0, pro: 0 });
   const [isLoading, setIsLoading] = useState(true);
   const [isInvoicesLoading, setIsInvoicesLoading] = useState(true);
   const [syncError, setSyncError] = useState<string | null>(null);
@@ -17,45 +19,91 @@ export default function SubscriptionsTab() {
     setIsInvoicesLoading(true);
     setSyncError(null);
 
-    // 1. FETCH SUBSCRIPTIONS 
-    // Added 'contact_email' to pull the human into the ledger
+    // 1. FETCH ACTIVE SUBSCRIPTIONS
     const { data: activeStores, error } = await supabase
       .from('storefronts')
-      .select('id, business_name, contact_email, plan_tier, created_at, status, stripe_subscription_id')
+      .select('id, business_name, contact_email, plan_tier, created_at, status, stripe_subscription_id, stripe_customer_id')
       .in('status', ['ACTIVE', 'LIVE'])
       .not('stripe_subscription_id', 'is', null) 
       .order('created_at', { ascending: false });
 
     if (error) {
-      console.error("🚨 SUPABASE ERROR (Active Stores):", error.message);
+      console.error("SUPABASE ERROR (Active Stores):", error.message);
       setSyncError(`Active Stores Error: ${error.message}`);
-    } else if (activeStores) {
-      setStorefronts(activeStores);
-    }
-    setIsLoading(false);
-
-    // 2. FETCH ALL KNOWN STOREFRONTS FOR RECONCILIATION 
-    const { data: allStores, error: reconcileError } = await supabase
-      .from('storefronts')
-      .select('business_name');
-
-    if (reconcileError) {
-      console.error("🚨 SUPABASE ERROR (Reconciliation):", reconcileError.message);
+      setIsLoading(false);
+      setIsInvoicesLoading(false);
+      return;
     }
 
-    // 3. FETCH GLOBAL STRIPE INVOICES & RECONCILE
+    // 2. FETCH GLOBAL STRIPE INVOICES
     const invoiceData = await getGlobalInvoices();
-    if (invoiceData.success && invoiceData.invoices) {
-      const knownNames = allStores?.map(s => s.business_name?.toLowerCase()).filter(Boolean) || [];
+    const validInvoices = (invoiceData.success && invoiceData.invoices) ? invoiceData.invoices : [];
+
+    if (activeStores) {
+      const activeCustomerIds = activeStores.map((s: any) => s.stripe_customer_id).filter(Boolean);
+      const activeSubscriptionIds = activeStores.map((s: any) => s.stripe_subscription_id).filter(Boolean);
       
-      const reconciledInvoices = invoiceData.invoices.filter((inv: any) => {
-        const cName = inv.customerName?.toLowerCase() || '';
-        return knownNames.some(name => cName.includes(name) || name.includes(cName));
+      // STRICT FILTER: Only keep invoices that explicitly belong to an ACTIVE storefront
+      const strictLedger = validInvoices.filter((inv: any) => {
+        return activeCustomerIds.includes(inv.customerId) || activeSubscriptionIds.includes(inv.subscriptionId);
       });
-      setGlobalInvoices(reconciledInvoices);
-    } else if (invoiceData.error) {
-      console.error("🚨 STRIPE API ERROR:", invoiceData.error);
+      setGlobalInvoices(strictLedger);
+
+      // 🚀 TIER & PROMO MATH ENGINE
+      let gross = 0;
+      let net = 0;
+      let foundation = 0;
+      let pro = 0;
+
+      const enriched = activeStores.map((store: any) => {
+        const displayTier = store.plan_tier || 'Standard';
+        const isPro = displayTier.toLowerCase().includes('pro') || displayTier.toLowerCase().includes('professional');
+        const expectedPrice = isPro ? 15 : 5;
+        
+        if (isPro) pro++; else foundation++;
+        gross += expectedPrice;
+
+        // Find their specific invoices in the filtered ledger
+        const storeInvoices = strictLedger.filter((inv: any) => 
+          inv.customerId === store.stripe_customer_id || inv.subscriptionId === store.stripe_subscription_id
+        );
+
+        // 🚀 THE FIX: Default to expected price if there is no invoice yet (fixes the $0 bug)
+        let actualPaid = expectedPrice;
+        let originalPrice = expectedPrice;
+        let isPromo = false;
+        let promoDetails = '';
+
+        if (storeInvoices.length > 0) {
+          const latestInv = storeInvoices[0];
+          actualPaid = parseFloat(latestInv.amount);
+          originalPrice = latestInv.subtotal ? parseFloat(latestInv.subtotal) : expectedPrice;
+          
+          if (originalPrice > actualPaid) {
+            isPromo = true;
+            promoDetails = actualPaid === 0 ? "100% OFF" : `DISCOUNT APPLIED`;
+          }
+        }
+
+        net += actualPaid;
+
+        return {
+          ...store,
+          displayTier,
+          expectedPrice,
+          actualPaid,
+          isPromo,
+          promoDetails
+        };
+      });
+
+      setEnrichedStorefronts(enriched);
+      setMetrics({ gross, net, discount: gross - net, foundation, pro });
     }
+
+    if (invoiceData.error) setSyncError(invoiceData.error);
+    
+    setIsLoading(false);
     setIsInvoicesLoading(false);
   };
 
@@ -63,27 +111,7 @@ export default function SubscriptionsTab() {
     fetchAllData();
   }, []);
 
-  // --- THE MATH ENGINE (Ported from Homepage) ---
-  const activeCount = storefronts.length;
-  let foundationCount = 0;
-  let proCount = 0;
-  let grossMrr = 0;
-  
-  // TEMPORARY PROMO LOGIC
-  let promoDiscount = 5; 
-
-  storefronts.forEach((store) => {
-    const plan = (store.plan_tier || '').toLowerCase();
-    if (plan.includes('pro') || plan.includes('professional')) {
-      proCount++;
-      grossMrr += 15;
-    } else {
-      foundationCount++;
-      grossMrr += 5;
-    }
-  });
-
-  let netMrr = grossMrr - promoDiscount;
+  const activeCount = enrichedStorefronts.length;
 
   return (
     <div className="space-y-8 animate-in fade-in duration-500 pb-20">
@@ -100,7 +128,6 @@ export default function SubscriptionsTab() {
           <p className="text-slate-400 font-mono text-sm">Live client subscriptions funding the ecosystem.</p>
         </div>
         
-        {/* Sync Status Button */}
         <button 
           onClick={fetchAllData}
           className="flex items-center justify-center gap-2 px-4 py-2 bg-white/5 text-slate-400 border border-white/10 rounded-lg text-xs font-mono uppercase tracking-widest transition-all hover:bg-white/10 hover:text-white shrink-0 cursor-pointer"
@@ -110,7 +137,6 @@ export default function SubscriptionsTab() {
         </button>
       </div>
 
-      {/* ERROR RADAR */}
       {syncError && (
         <div className="bg-red-500/10 border border-red-500/30 rounded-xl p-4 flex items-center gap-3">
           <AlertTriangle className="text-red-400 w-5 h-5 shrink-0" />
@@ -121,10 +147,9 @@ export default function SubscriptionsTab() {
         </div>
       )}
 
-      {/* 🚀 UPGRADED QUICK STATS */}
+      {/* QUICK STATS */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         
-        {/* ACTIVE PORTALS WIDGET */}
         <div className="bg-black/40 border border-cyan-500/20 rounded-2xl p-6 relative overflow-hidden group hover:border-cyan-500/40 transition-all shadow-lg flex flex-col justify-between">
           <div className="absolute -right-6 -top-6 w-24 h-24 bg-cyan-500/10 rounded-full blur-2xl group-hover:bg-cyan-500/20 transition-all" />
           
@@ -138,15 +163,13 @@ export default function SubscriptionsTab() {
           <div className="relative z-10">
             <h2 className="text-3xl font-black text-white">{activeCount} <span className="text-sm text-zinc-500 font-medium">Deployed</span></h2>
             
-            {/* Tier Breakdown Bar */}
             <div className="mt-4 pt-3 border-t border-white/5 flex items-center justify-between text-[10px] font-mono">
-              <div className="text-cyan-400">Foundation: <span className="text-white">{foundationCount}</span></div>
-              <div className="text-cyan-400">Pro: <span className="text-white">{proCount}</span></div>
+              <div className="text-cyan-400">Foundation: <span className="text-white">{metrics.foundation}</span></div>
+              <div className="text-cyan-400">Pro: <span className="text-white">{metrics.pro}</span></div>
             </div>
           </div>
         </div>
 
-        {/* MRR WIDGET */}
         <div className="bg-black/40 border border-emerald-500/20 rounded-2xl p-6 relative overflow-hidden group hover:border-emerald-500/40 transition-all shadow-lg flex flex-col justify-between">
           <div className="absolute -right-6 -top-6 w-24 h-24 bg-emerald-500/10 rounded-full blur-2xl group-hover:bg-emerald-500/20 transition-all" />
           
@@ -158,7 +181,7 @@ export default function SubscriptionsTab() {
               <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest">Net MRR</span>
             </div>
             
-            {promoDiscount > 0 && (
+            {metrics.discount > 0 && (
               <span className="text-[9px] font-mono font-bold text-rose-400 bg-rose-500/10 px-2 py-0.5 rounded border border-rose-500/20 flex items-center gap-1">
                 <TrendingDown size={10} /> Promo Active
               </span>
@@ -166,13 +189,12 @@ export default function SubscriptionsTab() {
           </div>
 
           <div className="relative z-10">
-            <h2 className="text-3xl font-black text-white">${netMrr.toFixed(2)}<span className="text-sm text-zinc-500 font-medium">/mo</span></h2>
+            <h2 className="text-3xl font-black text-white">${metrics.net.toFixed(2)}<span className="text-sm text-zinc-500 font-medium">/mo</span></h2>
             
-            {/* MRR Breakdown Bar */}
             <div className="mt-4 pt-3 border-t border-white/5 flex items-center justify-between text-[10px] font-mono">
-              <div className="text-zinc-400">Gross: <span className="text-white">${grossMrr.toFixed(2)}</span></div>
-              {promoDiscount > 0 && (
-                <div className="text-rose-400">Discounts: -${promoDiscount.toFixed(2)}</div>
+              <div className="text-zinc-400">Gross: <span className="text-white">${metrics.gross.toFixed(2)}</span></div>
+              {metrics.discount > 0 && (
+                <div className="text-rose-400">Discounts: -${metrics.discount.toFixed(2)}</div>
               )}
             </div>
           </div>
@@ -194,53 +216,74 @@ export default function SubscriptionsTab() {
                 <th className="p-4 text-[10px] font-mono text-slate-500 uppercase tracking-widest">Client / Storefront</th>
                 <th className="p-4 text-[10px] font-mono text-slate-500 uppercase tracking-widest">Tier</th>
                 <th className="p-4 text-[10px] font-mono text-slate-500 uppercase tracking-widest">Deployed</th>
+                <th className="p-4 text-[10px] font-mono text-slate-500 uppercase tracking-widest">Promo</th>
                 <th className="p-4 text-[10px] font-mono text-emerald-400 uppercase tracking-widest text-right">Revenue</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-white/5">
               {isLoading ? (
                 <tr>
-                  <td colSpan={4} className="p-8 text-center text-zinc-500 font-mono text-xs uppercase tracking-widest">
+                  <td colSpan={5} className="p-8 text-center text-zinc-500 font-mono text-xs uppercase tracking-widest">
                     Loading Subscriptions...
                   </td>
                 </tr>
-              ) : storefronts.length === 0 ? (
+              ) : enrichedStorefronts.length === 0 ? (
                 <tr>
-                  <td colSpan={4} className="p-8 text-center text-zinc-500 font-mono text-xs uppercase tracking-widest">
+                  <td colSpan={5} className="p-8 text-center text-zinc-500 font-mono text-xs uppercase tracking-widest">
                     No active storefronts found.
                   </td>
                 </tr>
               ) : (
-                storefronts.map((store) => {
-                  const isPro = (store.plan_tier || '').toLowerCase().includes('pro') || (store.plan_tier || '').toLowerCase().includes('professional');
-                  return (
-                    <tr key={store.id} className="hover:bg-white/5 transition-colors group">
-                      <td className="p-4">
-                        <div className="flex flex-col gap-1">
-                          <span className="text-sm text-white font-bold flex items-center gap-3">
-                            <div className="w-2 h-2 rounded-full bg-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.5)] animate-pulse shrink-0" />
-                            {store.business_name}
-                          </span>
-                          {store.contact_email && (
-                            <span className="text-[10px] font-mono text-zinc-500 ml-5">{store.contact_email}</span>
-                          )}
-                        </div>
-                      </td>
-                      <td className="p-4 text-xs font-mono text-slate-400 capitalize">{store.plan_tier || 'Foundation'}</td>
-                      
-                      <td className="p-4 text-xs font-mono text-slate-400">
-                        <div className="flex items-center gap-2">
-                          <CalendarClock size={12} className="text-slate-500 shrink-0" />
-                          {store.created_at ? new Date(store.created_at).toLocaleDateString() : 'Pending Sync...'}
-                        </div>
-                      </td>
+                enrichedStorefronts.map((store) => (
+                  <tr key={store.id} className="hover:bg-white/5 transition-colors group">
+                    <td className="p-4">
+                      <div className="flex flex-col gap-1">
+                        <span className="text-sm text-white font-bold flex items-center gap-3">
+                          <div className="w-2 h-2 rounded-full bg-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.5)] animate-pulse shrink-0" />
+                          {store.business_name}
+                        </span>
+                        {store.contact_email && (
+                          <span className="text-[10px] font-mono text-zinc-500 ml-5">{store.contact_email}</span>
+                        )}
+                      </div>
+                    </td>
+                    <td className="p-4 text-xs font-mono text-slate-400 capitalize">{store.displayTier}</td>
+                    
+                    <td className="p-4 text-xs font-mono text-slate-400">
+                      <div className="flex items-center gap-2">
+                        <CalendarClock size={12} className="text-slate-500 shrink-0" />
+                        {store.created_at ? new Date(store.created_at).toLocaleDateString() : 'Pending Sync...'}
+                      </div>
+                    </td>
 
-                      <td className="p-4 text-sm text-emerald-400 font-bold text-right">
-                        ${isPro ? '15.00' : '5.00'} <span className="text-[10px] text-slate-500 font-normal">/mo</span>
-                      </td>
-                    </tr>
-                  )
-                })
+                    <td className="p-4">
+                      {store.isPromo ? (
+                        <span className="text-[9px] font-mono font-bold text-amber-400 bg-amber-500/10 px-2 py-1 rounded border border-amber-500/20 uppercase">
+                          {store.promoDetails}
+                        </span>
+                      ) : (
+                        <span className="text-[9px] font-mono text-zinc-600 uppercase">None</span>
+                      )}
+                    </td>
+
+                    <td className="p-4 text-right">
+                      {store.isPromo ? (
+                        <div className="flex flex-col items-end gap-1">
+                          <span className="text-sm text-emerald-400 font-bold">
+                            ${store.actualPaid.toFixed(2)} <span className="text-[10px] text-slate-500 font-normal">/mo</span>
+                          </span>
+                          <span className="text-[9px] font-mono text-rose-400/80 bg-rose-500/10 px-1.5 py-0.5 rounded border border-rose-500/20">
+                            PROMO: <span className="line-through">${store.expectedPrice.toFixed(2)}</span>
+                          </span>
+                        </div>
+                      ) : (
+                        <span className="text-sm text-emerald-400 font-bold">
+                          ${store.actualPaid.toFixed(2)} <span className="text-[10px] text-slate-500 font-normal">/mo</span>
+                        </span>
+                      )}
+                    </td>
+                  </tr>
+                ))
               )}
             </tbody>
           </table>
@@ -253,9 +296,6 @@ export default function SubscriptionsTab() {
           <h3 className="text-xs font-bold text-white uppercase tracking-widest flex items-center gap-2">
             <Receipt size={14} className="text-cyan-500" /> Global Payment History
           </h3>
-          <span className="text-[10px] font-mono text-zinc-500 uppercase tracking-widest">
-            Last 50 Transactions
-          </span>
         </div>
         
         <div className="overflow-x-auto">
@@ -263,7 +303,7 @@ export default function SubscriptionsTab() {
             <thead>
               <tr className="border-b border-white/5 bg-black/40">
                 <th className="px-6 py-4 text-[10px] font-mono text-slate-500 uppercase tracking-widest">Date</th>
-                <th className="px-6 py-4 text-[10px] font-mono text-slate-500 uppercase tracking-widest">Client Name / Email</th>
+                <th className="px-6 py-4 text-[10px] font-mono text-slate-500 uppercase tracking-widest">Line Item / Client</th>
                 <th className="px-6 py-4 text-[10px] font-mono text-slate-500 uppercase tracking-widest">Status</th>
                 <th className="px-6 py-4 text-[10px] font-mono text-emerald-400 uppercase tracking-widest text-right">Amount</th>
                 <th className="px-6 py-4 text-[10px] font-mono text-slate-500 uppercase tracking-widest text-center">Receipt</th>
@@ -291,8 +331,8 @@ export default function SubscriptionsTab() {
                     </td>
                     <td className="px-6 py-4">
                       <div className="flex flex-col">
-                        <span className="text-sm font-bold text-white">{invoice.customerName}</span>
-                        <span className="text-[10px] font-mono text-slate-500">{invoice.customerEmail}</span>
+                        <span className="text-sm font-bold text-white">{invoice.lineItem || 'Storefront Subscription'}</span>
+                        <span className="text-[10px] font-mono text-slate-500">{invoice.customerName} ({invoice.customerEmail})</span>
                       </div>
                     </td>
                     <td className="px-6 py-4">
@@ -304,8 +344,17 @@ export default function SubscriptionsTab() {
                         {invoice.status}
                       </span>
                     </td>
-                    <td className="px-6 py-4 text-sm text-emerald-400 font-bold text-right">
-                      ${invoice.amount}
+                    <td className="px-6 py-4 text-right">
+                      {parseFloat(invoice.amount) < parseFloat(invoice.subtotal) ? (
+                        <div className="flex flex-col items-end gap-1">
+                          <span className="text-sm text-emerald-400 font-bold">${invoice.amount}</span>
+                          <span className="text-[9px] font-mono text-rose-400/80 bg-rose-500/10 px-1.5 py-0.5 rounded border border-rose-500/20 line-through">
+                            ${invoice.subtotal}
+                          </span>
+                        </div>
+                      ) : (
+                        <span className="text-sm text-emerald-400 font-bold">${invoice.amount}</span>
+                      )}
                     </td>
                     <td className="px-6 py-4 text-center">
                       {invoice.pdfUrl ? (

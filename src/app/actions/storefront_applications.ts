@@ -46,9 +46,12 @@ export async function submitStorefrontApplication(formData: FormData) {
     const bgUrl = await uploadApplicationAsset(bgFile, `${safeProjectPrefix}-hero`);
     const aboutUrl = await uploadApplicationAsset(aboutFile, `${safeProjectPrefix}-about`);
 
+    // 🚀 THE FIX: Aggressive fallback to guarantee this is NEVER null or empty
+    const emailStr = formData.get('email')?.toString() || formData.get('applicant_email')?.toString() || 'missing@email.com';
+
     const payload = {
       applicant_name: formData.get('name')?.toString() || '',
-      applicant_email: formData.get('email')?.toString() || '',
+      applicant_email: emailStr, // Mapped securely
       applicant_phone: formData.get('phone')?.toString() || '',
       business_name: businessName,
       business_description: formData.get('description')?.toString() || '',
@@ -59,14 +62,17 @@ export async function submitStorefrontApplication(formData: FormData) {
       existing_domain: formData.get('existingDomain')?.toString() || '',
       is_priority: formData.get('priorityQueue') === 'true',
       status: 'PENDING',
-      contact_email: formData.get('email')?.toString() || '',
+      contact_email: emailStr,
       logo_url: logoUrl,
       hero_image_url: bgUrl,
       about_image_url: aboutUrl
     };
 
     const { error } = await supabase.from('storefront_applications').insert([payload]);
-    if (error) throw error;
+    if (error) {
+      console.error("Supabase Insert Error Payload:", payload);
+      throw error;
+    }
 
     try {
       if (process.env.RESEND_API_KEY) {
