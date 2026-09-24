@@ -5,7 +5,7 @@ import React, { useState, useEffect } from 'react';
 import { supabase } from '@/utils/supabase';
 import { 
   CreditCard, Zap, RefreshCw, Loader2, CalendarClock, Receipt, 
-  Download, AlertTriangle, TrendingDown, Eye, Filter, ChevronDown, ChevronUp, X, ExternalLink 
+  Download, AlertTriangle, TrendingDown, Eye, Filter, ChevronDown, ChevronUp, ExternalLink 
 } from 'lucide-react';
 import { getGlobalInvoices } from '@/app/actions/billing';
 
@@ -20,7 +20,6 @@ export default function SubscriptionsTab() {
 
   // 🚀 NEW UI STATES
   const [expandedStoreId, setExpandedStoreId] = useState<string | null>(null);
-  const [previewReceiptUrl, setPreviewReceiptUrl] = useState<string | null>(null);
 
   const fetchAllData = async () => {
     setIsLoading(true);
@@ -105,7 +104,7 @@ export default function SubscriptionsTab() {
           actualPaid,
           isPromo,
           promoDetails,
-          invoices: storeInvoices // 🚀 Attached for the Accordion Drill-Down
+          invoices: storeInvoices // Attached for the Accordion Drill-Down
         };
       });
 
@@ -324,12 +323,14 @@ export default function SubscriptionsTab() {
                                         <div className="flex items-center gap-4">
                                           <span className="text-sm font-bold text-emerald-400">${inv.amount}</span>
                                           {inv.hostedUrl && (
-                                            <button 
-                                              onClick={() => setPreviewReceiptUrl(inv.hostedUrl)} 
+                                            <a 
+                                              href={inv.hostedUrl}
+                                              target="_blank"
+                                              rel="noopener noreferrer"
                                               className="text-[10px] font-bold text-cyan-400 hover:text-cyan-300 uppercase tracking-widest flex items-center gap-1.5 transition-colors"
                                             >
                                               <Eye size={12}/> View
-                                            </button>
+                                            </a>
                                           )}
                                         </div>
                                       </div>
@@ -408,7 +409,6 @@ export default function SubscriptionsTab() {
                     <tr key={invoice.id} className="hover:bg-white/5 transition-colors group">
                       <td className="px-4 py-4">
                         <div className="flex flex-col gap-1">
-                          {/* 🚀 THE CONNECTION FIX: Shows Split Chick Grill instead of just Bethany */}
                           <span className="text-sm font-bold text-white truncate max-w-[150px]">{invoice.storefrontName}</span>
                           <span className="text-[10px] font-mono text-slate-500 truncate max-w-[150px]">{invoice.customerName} ({invoice.customerEmail})</span>
                           <span className="text-[9px] font-mono text-zinc-600 mt-1">{invoice.date}</span>
@@ -431,13 +431,15 @@ export default function SubscriptionsTab() {
                       <td className="px-4 py-4 text-center">
                         <div className="flex items-center justify-center gap-2 opacity-60 group-hover:opacity-100 transition-opacity">
                           {invoice.hostedUrl && (
-                            <button 
-                              onClick={() => setPreviewReceiptUrl(invoice.hostedUrl)}
+                            <a 
+                              href={invoice.hostedUrl}
+                              target="_blank"
+                              rel="noopener noreferrer"
                               className="p-2 bg-cyan-500/10 text-cyan-400 hover:text-white hover:bg-cyan-500 rounded-lg transition-colors border border-cyan-500/20 cursor-pointer" 
                               title="View Web Invoice"
                             >
                               <Eye size={14} />
-                            </button>
+                            </a>
                           )}
                           {invoice.pdfUrl && (
                             <a 
@@ -461,39 +463,6 @@ export default function SubscriptionsTab() {
         </div>
 
       </div>
-
-      {/* 🚀 THE POPUP RECEIPT MODAL */}
-      {previewReceiptUrl && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 sm:p-8 bg-black/80 backdrop-blur-sm animate-in fade-in duration-200">
-          <div className="bg-zinc-950 border border-zinc-800 w-full max-w-4xl h-[85vh] rounded-2xl shadow-2xl flex flex-col overflow-hidden relative">
-            <div className="flex items-center justify-between p-4 border-b border-zinc-800 bg-zinc-900/50">
-              <h3 className="text-xs font-bold text-white uppercase tracking-widest flex items-center gap-2">
-                <Receipt size={14} className="text-cyan-500" /> Stripe Invoice
-              </h3>
-              <div className="flex items-center gap-2">
-                <a 
-                  href={previewReceiptUrl} 
-                  target="_blank" 
-                  rel="noopener noreferrer" 
-                  className="p-2 text-zinc-400 hover:text-cyan-400 transition-colors bg-black/40 rounded-lg border border-zinc-800"
-                  title="Open in new tab"
-                >
-                  <ExternalLink size={14} />
-                </a>
-                <button 
-                  onClick={() => setPreviewReceiptUrl(null)} 
-                  className="p-2 text-zinc-400 hover:text-rose-400 transition-colors bg-black/40 rounded-lg border border-zinc-800 cursor-pointer"
-                >
-                  <X size={14} />
-                </button>
-              </div>
-            </div>
-            {/* White background so the Stripe UI looks clean */}
-            <iframe src={previewReceiptUrl} className="w-full flex-1 bg-white" />
-          </div>
-        </div>
-      )}
-
     </div>
   );
 }
