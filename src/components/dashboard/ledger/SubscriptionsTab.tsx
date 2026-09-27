@@ -3,23 +3,22 @@
 
 import React, { useState, useEffect } from 'react';
 import { supabase } from '@/utils/supabase';
-import { 
-  CreditCard, Zap, RefreshCw, Loader2, CalendarClock, Receipt, 
-  Download, AlertTriangle, TrendingDown, Eye, Filter, ChevronDown, ChevronUp, ExternalLink 
-} from 'lucide-react';
+import { CreditCard, Zap, RefreshCw, Loader2, CalendarClock, Receipt, AlertTriangle, TrendingDown, ChevronDown, ChevronUp, X, ExternalLink, Eye } from 'lucide-react';
 import { getGlobalInvoices } from '@/app/actions/billing';
+import GlobalPaymentHistory from './feed/GlobalPaymentHistory';
 
 export default function SubscriptionsTab() {
   const [enrichedStorefronts, setEnrichedStorefronts] = useState<any[]>([]);
   const [globalInvoices, setGlobalInvoices] = useState<any[]>([]);
-  const [historyFilter, setHistoryFilter] = useState<'ALL' | 'PROMO' | 'FOUNDATION' | 'PRO'>('ALL');
   const [metrics, setMetrics] = useState({ gross: 0, net: 0, discount: 0, foundation: 0, pro: 0 });
+  const [diagnostics, setDiagnostics] = useState({ env: 'UNKNOWN', count: 0 });
   const [isLoading, setIsLoading] = useState(true);
   const [isInvoicesLoading, setIsInvoicesLoading] = useState(true);
   const [syncError, setSyncError] = useState<string | null>(null);
 
-  // 🚀 NEW UI STATES
+  // 🚀 UI STATES
   const [expandedStoreId, setExpandedStoreId] = useState<string | null>(null);
+  const [previewReceiptUrl, setPreviewReceiptUrl] = useState<string | null>(null);
 
   const fetchAllData = async () => {
     setIsLoading(true);
@@ -43,24 +42,29 @@ export default function SubscriptionsTab() {
     const invoiceData = await getGlobalInvoices();
     const validInvoices = (invoiceData.success && invoiceData.invoices) ? invoiceData.invoices : [];
 
+    if (invoiceData.success && invoiceData.diagnostics) {
+      setDiagnostics({ env: invoiceData.diagnostics.environment, count: invoiceData.diagnostics.rawCount });
+    }
+
     if (activeStores) {
       const activeCustomerIds = activeStores.map((s: any) => s.stripe_customer_id).filter(Boolean);
       const activeSubscriptionIds = activeStores.map((s: any) => s.stripe_subscription_id).filter(Boolean);
       
-      const strictLedger = validInvoices.filter((inv: any) => {
-        return activeCustomerIds.includes(inv.customerId) || activeSubscriptionIds.includes(inv.subscriptionId);
-      });
-
-      // 🚀 THE CONNECTION FIX: Attach the actual Storefront Name to the Global Invoice
-      const connectedLedger = strictLedger.map((inv: any) => {
+      // 🚀 THE FIX: Instead of throwing away unmatched invoices, we tag them!
+      const allLedger = validInvoices.map((inv: any) => {
         const matchedStore = activeStores.find((s: any) => s.stripe_customer_id === inv.customerId || s.stripe_subscription_id === inv.subscriptionId);
         return {
           ...inv,
-          storefrontName: matchedStore ? matchedStore.business_name : 'Unknown Storefront'
+          storefrontName: matchedStore ? matchedStore.business_name : 'Unlinked Stripe Payment',
+          isMatched: !!matchedStore
         };
       });
 
-      setGlobalInvoices(connectedLedger);
+      // Pass EVERYTHING to the Global Feed so the Matrix blooms
+      setGlobalInvoices(allLedger);
+
+      // But ONLY use real matched clients for the Active Subscriptions table & MRR Math
+      const strictLedger = allLedger.filter((inv: any) => inv.isMatched);
 
       let gross = 0;
       let net = 0;
@@ -75,7 +79,7 @@ export default function SubscriptionsTab() {
         if (isPro) pro++; else foundation++;
         gross += expectedPrice;
 
-        const storeInvoices = connectedLedger.filter((inv: any) => 
+        const storeInvoices = strictLedger.filter((inv: any) => 
           inv.customerId === store.stripe_customer_id || inv.subscriptionId === store.stripe_subscription_id
         );
 
@@ -104,7 +108,7 @@ export default function SubscriptionsTab() {
           actualPaid,
           isPromo,
           promoDetails,
-          invoices: storeInvoices // Attached for the Accordion Drill-Down
+          invoices: storeInvoices 
         };
       });
 
@@ -124,13 +128,6 @@ export default function SubscriptionsTab() {
 
   const activeCount = enrichedStorefronts.length;
 
-  const displayHistory = globalInvoices.filter(inv => {
-    if (historyFilter === 'PROMO') return parseFloat(inv.amount) < parseFloat(inv.subtotal);
-    if (historyFilter === 'FOUNDATION') return inv.lineItem.toLowerCase().includes('foundation');
-    if (historyFilter === 'PRO') return inv.lineItem.toLowerCase().includes('pro') || inv.lineItem.toLowerCase().includes('professional');
-    return true;
-  });
-
   return (
     <div className="space-y-8 animate-in fade-in duration-500 pb-20 relative">
       
@@ -146,13 +143,26 @@ export default function SubscriptionsTab() {
           <p className="text-slate-400 font-mono text-sm">Live client subscriptions funding the ecosystem.</p>
         </div>
         
-        <button 
-          onClick={fetchAllData}
-          className="flex items-center justify-center gap-2 px-4 py-2 bg-white/5 text-slate-400 border border-white/10 rounded-lg text-xs font-mono uppercase tracking-widest transition-all hover:bg-white/10 hover:text-white shrink-0 cursor-pointer"
-        >
-          {isLoading || isInvoicesLoading ? <Loader2 size={14} className="animate-spin" /> : <RefreshCw size={14} />} 
-          Sync Stripe
-        </button>
+        {/* 🚀 THE RESTORED STRIPE RADAR */}
+        <div className="flex items-center gap-2">
+          {!isInvoicesLoading && (
+            <>
+              <span className={`text-[10px] font-mono font-bold uppercase tracking-widest px-2 py-1 rounded border ${diagnostics.env === 'LIVE MODE' ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' : 'bg-amber-500/10 text-amber-400 border-amber-500/20'}`}>
+                {diagnostics.env}
+              </span>
+              <span className="text-[10px] font-mono text-slate-500 uppercase tracking-widest px-2 py-1 rounded border border-white/10 bg-black/40 hidden sm:inline-block">
+                INVOICES: {diagnostics.count}
+              </span>
+            </>
+          )}
+          <button 
+            onClick={fetchAllData}
+            className="flex items-center justify-center gap-2 px-4 py-2 bg-white/5 text-slate-400 border border-white/10 rounded-lg text-xs font-mono uppercase tracking-widest transition-all hover:bg-white/10 hover:text-white shrink-0 cursor-pointer"
+          >
+            {isLoading || isInvoicesLoading ? <Loader2 size={14} className="animate-spin" /> : <RefreshCw size={14} />} 
+            Sync Stripe
+          </button>
+        </div>
       </div>
 
       {syncError && (
@@ -209,10 +219,10 @@ export default function SubscriptionsTab() {
 
       </div>
 
-      {/* 🚀 NEW SIDE-BY-SIDE LAYOUT */}
+      {/* 🚀 SIDE-BY-SIDE LAYOUT */}
       <div className="grid grid-cols-1 xl:grid-cols-12 gap-8 mt-4">
         
-        {/* LEFT COLUMN: ACTIVE SUBSCRIPTIONS (Col 7) */}
+        {/* LEFT COLUMN: ACTIVE SUBSCRIPTIONS */}
         <div className="xl:col-span-7 bg-bg-surface-100 border border-white/5 rounded-2xl overflow-hidden shadow-xl flex flex-col">
           <div className="p-4 border-b border-white/5 bg-black/20 shrink-0">
             <h3 className="text-xs font-bold text-white uppercase tracking-widest flex items-center gap-2">
@@ -248,7 +258,6 @@ export default function SubscriptionsTab() {
 
                     return (
                       <React.Fragment key={store.id}>
-                        {/* 🚀 Main Row (Now Clickable) */}
                         <tr 
                           onClick={() => setExpandedStoreId(isExpanded ? null : store.id)}
                           className={`transition-colors group cursor-pointer ${isExpanded ? 'bg-white/5' : 'hover:bg-white/5'}`}
@@ -297,7 +306,6 @@ export default function SubscriptionsTab() {
                           </td>
                         </tr>
 
-                        {/* 🚀 The Accordion Drill-Down */}
                         {isExpanded && (
                           <tr className="bg-black/20 border-b border-white/5 animate-in fade-in slide-in-from-top-2">
                             <td colSpan={4} className="p-0">
@@ -323,14 +331,12 @@ export default function SubscriptionsTab() {
                                         <div className="flex items-center gap-4">
                                           <span className="text-sm font-bold text-emerald-400">${inv.amount}</span>
                                           {inv.hostedUrl && (
-                                            <a 
-                                              href={inv.hostedUrl}
-                                              target="_blank"
-                                              rel="noopener noreferrer"
-                                              className="text-[10px] font-bold text-cyan-400 hover:text-cyan-300 uppercase tracking-widest flex items-center gap-1.5 transition-colors"
+                                            <button 
+                                              onClick={() => setPreviewReceiptUrl(inv.hostedUrl)} 
+                                              className="text-[10px] font-bold text-cyan-400 hover:text-cyan-300 uppercase tracking-widest flex items-center gap-1.5 transition-colors cursor-pointer"
                                             >
                                               <Eye size={12}/> View
-                                            </a>
+                                            </button>
                                           )}
                                         </div>
                                       </div>
@@ -350,119 +356,49 @@ export default function SubscriptionsTab() {
           </div>
         </div>
 
-        {/* RIGHT COLUMN: GLOBAL PAYMENT HISTORY (Col 5) */}
-        <div className="xl:col-span-5 bg-bg-surface-100 border border-white/5 rounded-2xl overflow-hidden shadow-xl flex flex-col">
-          <div className="p-4 border-b border-white/5 bg-black/20 flex flex-col gap-4 shrink-0">
-            <div className="flex items-center gap-3">
-              <Receipt size={16} className="text-cyan-500" />
-              <h3 className="text-xs font-bold text-white uppercase tracking-widest">
-                Global Feed
-              </h3>
-            </div>
-            
-            <div className="flex bg-black/40 p-1 rounded-lg border border-white/5">
-              <button 
-                onClick={() => setHistoryFilter('ALL')}
-                className={`flex-1 py-1.5 text-[9px] font-black uppercase tracking-widest rounded transition-all cursor-pointer flex items-center justify-center gap-1.5 ${historyFilter === 'ALL' ? 'bg-zinc-800 text-white shadow-md' : 'text-zinc-500 hover:text-white'}`}
-              >
-                All
-              </button>
-              <button 
-                onClick={() => setHistoryFilter('PROMO')}
-                className={`flex-1 py-1.5 text-[9px] font-black uppercase tracking-widest rounded transition-all cursor-pointer flex items-center justify-center gap-1.5 ${historyFilter === 'PROMO' ? 'bg-amber-500/20 text-amber-400 border border-amber-500/20 shadow-md' : 'text-zinc-500 hover:text-amber-400'}`}
-              >
-                Promos
-              </button>
-              <button 
-                onClick={() => setHistoryFilter('FOUNDATION')}
-                className={`flex-1 py-1.5 text-[9px] font-black uppercase tracking-widest rounded transition-all cursor-pointer flex items-center justify-center gap-1.5 ${historyFilter === 'FOUNDATION' ? 'bg-cyan-500/20 text-cyan-400 border border-cyan-500/20 shadow-md' : 'text-zinc-500 hover:text-cyan-400'}`}
-              >
-                Found.
-              </button>
-            </div>
-          </div>
-          
-          <div className="overflow-x-auto flex-1">
-            <table className="w-full text-left border-collapse whitespace-nowrap">
-              <thead>
-                <tr className="border-b border-white/5 bg-black/40">
-                  <th className="px-4 py-4 text-[10px] font-mono text-slate-500 uppercase tracking-widest">Date / Storefront</th>
-                  <th className="px-4 py-4 text-[10px] font-mono text-emerald-400 uppercase tracking-widest text-right">Total</th>
-                  <th className="px-4 py-4 text-[10px] font-mono text-slate-500 uppercase tracking-widest text-center">View</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-white/5">
-                {isInvoicesLoading ? (
-                  <tr>
-                    <td colSpan={3} className="p-12 text-center">
-                      <Loader2 size={24} className="animate-spin text-cyan-500 mx-auto mb-3" />
-                    </td>
-                  </tr>
-                ) : displayHistory.length === 0 ? (
-                  <tr>
-                    <td colSpan={3} className="p-12 text-center text-zinc-500 font-mono text-xs uppercase tracking-widest">
-                      No history found.
-                    </td>
-                  </tr>
-                ) : (
-                  displayHistory.map((invoice) => (
-                    <tr key={invoice.id} className="hover:bg-white/5 transition-colors group">
-                      <td className="px-4 py-4">
-                        <div className="flex flex-col gap-1">
-                          <span className="text-sm font-bold text-white truncate max-w-[150px]">{invoice.storefrontName}</span>
-                          <span className="text-[10px] font-mono text-slate-500 truncate max-w-[150px]">{invoice.customerName} ({invoice.customerEmail})</span>
-                          <span className="text-[9px] font-mono text-zinc-600 mt-1">{invoice.date}</span>
-                        </div>
-                      </td>
-
-                      <td className="px-4 py-4 text-right">
-                        {parseFloat(invoice.amount) < parseFloat(invoice.subtotal) ? (
-                          <div className="flex flex-col items-end gap-1">
-                            <span className="text-sm text-emerald-400 font-bold">${invoice.amount}</span>
-                            <span className="text-[9px] font-mono text-rose-400/80 bg-rose-500/10 px-1.5 py-0.5 rounded border border-rose-500/20 line-through">
-                              ${invoice.subtotal}
-                            </span>
-                          </div>
-                        ) : (
-                          <span className="text-sm text-emerald-400 font-bold">${invoice.amount}</span>
-                        )}
-                      </td>
-
-                      <td className="px-4 py-4 text-center">
-                        <div className="flex items-center justify-center gap-2 opacity-60 group-hover:opacity-100 transition-opacity">
-                          {invoice.hostedUrl && (
-                            <a 
-                              href={invoice.hostedUrl}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="p-2 bg-cyan-500/10 text-cyan-400 hover:text-white hover:bg-cyan-500 rounded-lg transition-colors border border-cyan-500/20 cursor-pointer" 
-                              title="View Web Invoice"
-                            >
-                              <Eye size={14} />
-                            </a>
-                          )}
-                          {invoice.pdfUrl && (
-                            <a 
-                              href={invoice.pdfUrl} 
-                              target="_blank" 
-                              rel="noopener noreferrer" 
-                              className="p-2 bg-zinc-800 text-zinc-400 hover:text-white hover:bg-zinc-700 rounded-lg transition-colors border border-zinc-700" 
-                              title="Download PDF Receipt"
-                            >
-                              <Download size={14} />
-                            </a>
-                          )}
-                        </div>
-                      </td>
-                    </tr>
-                  ))
-                )}
-              </tbody>
-            </table>
-          </div>
+        {/* RIGHT COLUMN: 🚀 THE NEW MODULARIZED MONTHLY FEED */}
+        <div className="xl:col-span-5">
+          <GlobalPaymentHistory 
+            globalInvoices={globalInvoices} 
+            isInvoicesLoading={isInvoicesLoading} 
+            onViewReceipt={setPreviewReceiptUrl} 
+          />
         </div>
 
       </div>
+
+      {/* 🚀 THE POPUP RECEIPT MODAL */}
+      {previewReceiptUrl && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 sm:p-8 bg-black/80 backdrop-blur-sm animate-in fade-in duration-200">
+          <div className="bg-zinc-950 border border-zinc-800 w-full max-w-4xl h-[85vh] rounded-2xl shadow-2xl flex flex-col overflow-hidden relative">
+            <div className="flex items-center justify-between p-4 border-b border-zinc-800 bg-zinc-900/50">
+              <h3 className="text-xs font-bold text-white uppercase tracking-widest flex items-center gap-2">
+                <Receipt size={14} className="text-cyan-500" /> Stripe Invoice
+              </h3>
+              <div className="flex items-center gap-2">
+                <a 
+                  href={previewReceiptUrl} 
+                  target="_blank" 
+                  rel="noopener noreferrer" 
+                  className="p-2 text-zinc-400 hover:text-cyan-400 transition-colors bg-black/40 rounded-lg border border-zinc-800"
+                  title="Open in new tab"
+                >
+                  <ExternalLink size={14} />
+                </a>
+                <button 
+                  onClick={() => setPreviewReceiptUrl(null)} 
+                  className="p-2 text-zinc-400 hover:text-rose-400 transition-colors bg-black/40 rounded-lg border border-zinc-800 cursor-pointer"
+                >
+                  <X size={14} />
+                </button>
+              </div>
+            </div>
+            {/* White background so the Stripe UI looks clean */}
+            <iframe src={previewReceiptUrl} className="w-full flex-1 bg-white" />
+          </div>
+        </div>
+      )}
+
     </div>
   );
 }
