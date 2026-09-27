@@ -9,7 +9,6 @@ export default function PwaInstallBanner() {
   const [isInstalled, setIsInstalled] = useState(false);
 
   useEffect(() => {
-    // Listen for Chrome's native install readiness event
     const handleBeforeInstallPrompt = (e: Event) => {
       e.preventDefault();
       setDeferredPrompt(e);
@@ -17,7 +16,6 @@ export default function PwaInstallBanner() {
 
     window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
 
-    // Check if the app is already running in standalone PWA mode
     if (window.matchMedia('(display-mode: standalone)').matches) {
       setIsInstalled(true);
     }
@@ -28,24 +26,24 @@ export default function PwaInstallBanner() {
   }, []);
 
   const handleInstallClick = async () => {
-    if (!deferredPrompt) {
-      alert("Installation criteria is loading or already active. Try refreshing or check your browser menu.");
-      return;
+    if (deferredPrompt) {
+      // 1. If Chrome caught the event natively, fire it
+      deferredPrompt.prompt();
+      const { outcome } = await deferredPrompt.userChoice;
+      if (outcome === 'accepted') {
+        setIsInstalled(true);
+      }
+      setDeferredPrompt(null);
+    } else {
+      // 2. Fallback instructions if Chrome is still holding back the event
+      alert(
+        "Android Chrome PWA Tip:\n\n" +
+        "If the automatic prompt doesn't pop up instantly, tap Chrome's three-dot menu in the top right and select 'Install app' or 'Add to Home screen'."
+      );
     }
-
-    // Show the native system prompt
-    deferredPrompt.prompt();
-
-    // Wait for the user's choice
-    const { outcome } = await deferredPrompt.userChoice;
-    if (outcome === 'accepted') {
-      setIsInstalled(true);
-    }
-    setDeferredPrompt(null);
   };
 
-  // If already installed as a PWA app, don't show the banner
-  if (isInstalled || !deferredPrompt) return null;
+  if (isInstalled) return null;
 
   return (
     <div className="w-full bg-linear-to-r from-cyan-950/80 via-zinc-950 to-zinc-950 border border-cyan-500/30 rounded-3xl p-6 mb-8 flex flex-col sm:flex-row items-center justify-between gap-6 shadow-[0_0_30px_rgba(34,211,238,0.1)] relative overflow-hidden animate-in fade-in slide-in-from-top-4">
@@ -58,7 +56,7 @@ export default function PwaInstallBanner() {
         <div>
           <h3 className="text-sm font-black text-white uppercase tracking-widest mb-1">Install Command Center App</h3>
           <p className="text-xs text-zinc-400 leading-relaxed font-light">
-            Launch directly from your home screen with biometric access and zero browser UI.
+            Pin this workspace directly to your device home screen for fullscreen mobile management.
           </p>
         </div>
       </div>
