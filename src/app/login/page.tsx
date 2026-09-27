@@ -1,3 +1,4 @@
+/* src/app/login/page.tsx */
 'use client';
 
 import React, { useState } from 'react';
@@ -36,8 +37,6 @@ export default function GatewayPage() {
     const cleanEmail = sanitizeEmail(email);
 
     try {
-      // 1. DISPATCH: We removed the old profile check here. 
-      // Supabase securely handles the dispatch for us.
       const { error } = await supabase.auth.signInWithOtp({
         email: cleanEmail,
         options: {
@@ -62,7 +61,6 @@ export default function GatewayPage() {
     const cleanEmail = sanitizeEmail(email);
 
     try {
-      // Verify the 6-digit code typed in by the user
       const { data, error } = await supabase.auth.verifyOtp({
         email: cleanEmail,
         token: otp.trim(),
@@ -71,9 +69,7 @@ export default function GatewayPage() {
 
       if (error) throw error;
 
-      // 2. THE HANDOFF: The Smart Router
       if (data.user) {
-        // Fetch their live profile to check security clearance
         const { data: profile } = await supabase
           .from('profiles')
           .select('role, workspace_id')
@@ -81,13 +77,10 @@ export default function GatewayPage() {
           .single();
 
         if (profile?.role === 'ADMIN' || profile?.role === 'STAFF') {
-          // Executives go to the Command Center
           router.push('/dashboard');
         } else if (profile?.workspace_id && profile.workspace_id !== 'NONE') {
-          // Clients with assigned workspaces go to their specific sandbox
           router.push(`/portal/${profile.workspace_id}`);
         } else {
-          // Unassigned clients go to the generic portal lobby
           router.push('/portal');
         }
       }
