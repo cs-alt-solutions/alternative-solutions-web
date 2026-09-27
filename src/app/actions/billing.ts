@@ -16,6 +16,8 @@ export async function createStorefrontCheckout(storefrontId: string, customerEma
     const session = await stripe.checkout.sessions.create({
       payment_method_types: ['card'],
       customer_email: customerEmail || undefined,
+      client_reference_id: storefrontId,
+      metadata: { storefront_id: storefrontId },
       line_items: [{ price: process.env.STRIPE_PRICE_ID_FOUNDATION, quantity: 1 }],
       mode: 'subscription',
       subscription_data: {
@@ -28,7 +30,6 @@ export async function createStorefrontCheckout(storefrontId: string, customerEma
 
     return { url: session.url };
   } catch (error: any) {
-    console.error("STRIPE CHECKOUT ERROR:", error);
     return { error: error.message };
   }
 }
@@ -41,6 +42,8 @@ export async function createProTierCheckout(storefrontId: string, customerEmail:
     const session = await stripe.checkout.sessions.create({
       payment_method_types: ['card'],
       customer_email: customerEmail || undefined,
+      client_reference_id: storefrontId,
+      metadata: { storefront_id: storefrontId },
       line_items: [{ price: process.env.STRIPE_PRICE_ID_PROFESSIONAL, quantity: 1 }],
       mode: 'subscription',
       subscription_data: {
@@ -53,7 +56,6 @@ export async function createProTierCheckout(storefrontId: string, customerEmail:
 
     return { url: session.url };
   } catch (error: any) {
-    console.error("STRIPE PRO CHECKOUT ERROR:", error);
     return { error: error.message };
   }
 }
@@ -70,7 +72,6 @@ export async function createCustomerPortalSession(customerId: string, storefront
 
     return { url: session.url };
   } catch (error: any) {
-    console.error('Stripe Portal Error:', error);
     return { error: error.message };
   }
 }
@@ -79,10 +80,7 @@ export async function getClientInvoices(customerId: string) {
   try {
     if (!customerId) return { success: false, error: "No Customer ID provided." };
 
-    const invoices = await stripe.invoices.list({
-      customer: customerId,
-      limit: 12, 
-    });
+    const invoices = await stripe.invoices.list({ customer: customerId, limit: 12 });
 
     const formattedInvoices = invoices.data.map(inv => ({
       id: inv.id,
@@ -90,27 +88,20 @@ export async function getClientInvoices(customerId: string) {
       amount: (inv.amount_paid / 100).toFixed(2),
       status: inv.status,
       pdfUrl: inv.invoice_pdf, 
+      hostedUrl: inv.hosted_invoice_url,
     }));
 
     return { success: true, invoices: formattedInvoices };
   } catch (error: any) {
-    console.error("STRIPE API ERROR:", error);
     return { success: false, error: error.message };
   }
 }
 
 export async function getUpcomingInvoice(customerId: string) {
   try {
-    const upcoming = await (stripe.invoices as any).retrieveUpcoming({
-      customer: customerId,
-    });
-
-    const targetDate = upcoming.created || upcoming.period_end;
-    const formattedDate = new Date(targetDate * 1000).toLocaleDateString('en-US', { 
-      month: 'short', 
-      day: 'numeric', 
-      year: 'numeric' 
-    });
+    const upcoming = await stripe.invoices.createPreview({ customer: customerId });
+    const targetDate = upcoming.next_payment_attempt || upcoming.period_end || upcoming.created;
+    const formattedDate = new Date(targetDate * 1000).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
 
     return { 
       success: true, 
@@ -122,34 +113,44 @@ export async function getUpcomingInvoice(customerId: string) {
   }
 }
 
-// 🚀 Fetch Master Global Invoices
 export async function getGlobalInvoices() {
   try {
+    const isTestMode = process.env.STRIPE_SECRET_KEY?.includes('sk_test');
+    
+    // We grab all invoices so the Frontend bouncer can do the filtering
     const invoices = await stripe.invoices.list({
       limit: 100,
-      // Removed status: 'paid' so you can see pending/open invoices too if Stripe is lagging
+      expand: ['data.customer', 'data.subscription'], 
     });
 
     const formattedInvoices = invoices.data.map((inv: any) => {
-      // 🚀 RESTORED THE MISSING DATA
-      const lineItemDesc = inv.lines?.data?.[0]?.description || 'Storefront Subscription';
-      
+      const rawLineItem = inv.lines?.data?.[0]?.description || 'Storefront Subscription';
+      const cleanLineItem = rawLineItem.split(' (at')[0].replace(/^1\s*[xX]\s*/, '').trim();
+
       return {
         id: inv.id,
         date: new Date(inv.created * 1000).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
         amount: (inv.amount_paid / 100).toFixed(2),
-        subtotal: (inv.subtotal / 100).toFixed(2), // Fixed missing subtotal for promo math!
+        subtotal: (inv.subtotal / 100).toFixed(2), // 🚀 RESTORED
         status: inv.status,
-        customerEmail: inv.customer_email || 'Unknown Client',
-        customerName: inv.customer_name || 'No Name',
+        customerEmail: inv.customer_email || inv.customer?.email || 'Unknown Client',
+        customerName: inv.customer_name || inv.customer?.name || 'No Name',
         customerId: typeof inv.customer === 'string' ? inv.customer : inv.customer?.id || '',
         subscriptionId: typeof inv.subscription === 'string' ? inv.subscription : inv.subscription?.id || '',
         pdfUrl: inv.invoice_pdf,
-        lineItem: lineItemDesc // Restored Line Item Text
+        hostedUrl: inv.hosted_invoice_url,
+        lineItem: cleanLineItem
       };
     });
 
-    return { success: true, invoices: formattedInvoices };
+    return { 
+      success: true, 
+      invoices: formattedInvoices,
+      diagnostics: {
+        environment: isTestMode ? 'TEST MODE' : 'LIVE MODE',
+        rawCount: invoices.data.length
+      }
+    };
   } catch (error: any) {
     console.error("STRIPE GLOBAL API ERROR:", error);
     return { success: false, error: error.message };

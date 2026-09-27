@@ -3,7 +3,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { supabase } from '@/utils/supabase';
-import { CreditCard, Zap, RefreshCw, Loader2, CalendarClock, Receipt, AlertTriangle, TrendingDown, ChevronDown, ChevronUp, X, ExternalLink, Eye } from 'lucide-react';
+import { CreditCard, Zap, RefreshCw, Loader2, CalendarClock, Receipt, AlertTriangle, TrendingDown, ChevronDown, ChevronUp, ExternalLink, Eye } from 'lucide-react';
 import { getGlobalInvoices } from '@/app/actions/billing';
 import GlobalPaymentHistory from './feed/GlobalPaymentHistory';
 
@@ -18,7 +18,16 @@ export default function SubscriptionsTab() {
 
   // 🚀 UI STATES
   const [expandedStoreId, setExpandedStoreId] = useState<string | null>(null);
-  const [previewReceiptUrl, setPreviewReceiptUrl] = useState<string | null>(null);
+
+  // 🚀 THE SECURE POPUP HANDLER
+  // Opens a floating browser window instead of an iframe to bypass Stripe's security block
+  const handleOpenPopup = (url: string) => {
+    const width = 800;
+    const height = 900;
+    const left = (window.innerWidth - width) / 2;
+    const top = (window.innerHeight - height) / 2;
+    window.open(url, 'StripeReceipt', `width=${width},height=${height},top=${top},left=${left},scrollbars=yes`);
+  };
 
   const fetchAllData = async () => {
     setIsLoading(true);
@@ -47,10 +56,6 @@ export default function SubscriptionsTab() {
     }
 
     if (activeStores) {
-      const activeCustomerIds = activeStores.map((s: any) => s.stripe_customer_id).filter(Boolean);
-      const activeSubscriptionIds = activeStores.map((s: any) => s.stripe_subscription_id).filter(Boolean);
-      
-      // 🚀 THE FIX: Instead of throwing away unmatched invoices, we tag them!
       const allLedger = validInvoices.map((inv: any) => {
         const matchedStore = activeStores.find((s: any) => s.stripe_customer_id === inv.customerId || s.stripe_subscription_id === inv.subscriptionId);
         return {
@@ -60,10 +65,8 @@ export default function SubscriptionsTab() {
         };
       });
 
-      // Pass EVERYTHING to the Global Feed so the Matrix blooms
       setGlobalInvoices(allLedger);
 
-      // But ONLY use real matched clients for the Active Subscriptions table & MRR Math
       const strictLedger = allLedger.filter((inv: any) => inv.isMatched);
 
       let gross = 0;
@@ -104,7 +107,7 @@ export default function SubscriptionsTab() {
         return {
           ...store,
           displayTier,
-          expectedPrice,
+          expectedPrice: originalPrice,
           actualPaid,
           isPromo,
           promoDetails,
@@ -143,7 +146,6 @@ export default function SubscriptionsTab() {
           <p className="text-slate-400 font-mono text-sm">Live client subscriptions funding the ecosystem.</p>
         </div>
         
-        {/* 🚀 THE RESTORED STRIPE RADAR */}
         <div className="flex items-center gap-2">
           {!isInvoicesLoading && (
             <>
@@ -177,7 +179,6 @@ export default function SubscriptionsTab() {
 
       {/* QUICK STATS */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        
         <div className="bg-black/40 border border-cyan-500/20 rounded-2xl p-6 relative overflow-hidden group hover:border-cyan-500/40 transition-all shadow-lg flex flex-col justify-between">
           <div className="absolute -right-6 -top-6 w-24 h-24 bg-cyan-500/10 rounded-full blur-2xl group-hover:bg-cyan-500/20 transition-all" />
           <div className="flex items-center gap-3 mb-2 relative z-10">
@@ -216,10 +217,9 @@ export default function SubscriptionsTab() {
             </div>
           </div>
         </div>
-
       </div>
 
-      {/* 🚀 SIDE-BY-SIDE LAYOUT */}
+      {/* SIDE-BY-SIDE LAYOUT */}
       <div className="grid grid-cols-1 xl:grid-cols-12 gap-8 mt-4">
         
         {/* LEFT COLUMN: ACTIVE SUBSCRIPTIONS */}
@@ -306,6 +306,7 @@ export default function SubscriptionsTab() {
                           </td>
                         </tr>
 
+                        {/* ACCORDION DRILL-DOWN */}
                         {isExpanded && (
                           <tr className="bg-black/20 border-b border-white/5 animate-in fade-in slide-in-from-top-2">
                             <td colSpan={4} className="p-0">
@@ -332,7 +333,7 @@ export default function SubscriptionsTab() {
                                           <span className="text-sm font-bold text-emerald-400">${inv.amount}</span>
                                           {inv.hostedUrl && (
                                             <button 
-                                              onClick={() => setPreviewReceiptUrl(inv.hostedUrl)} 
+                                              onClick={() => handleOpenPopup(inv.hostedUrl)} 
                                               className="text-[10px] font-bold text-cyan-400 hover:text-cyan-300 uppercase tracking-widest flex items-center gap-1.5 transition-colors cursor-pointer"
                                             >
                                               <Eye size={12}/> View
@@ -356,49 +357,16 @@ export default function SubscriptionsTab() {
           </div>
         </div>
 
-        {/* RIGHT COLUMN: 🚀 THE NEW MODULARIZED MONTHLY FEED */}
+        {/* RIGHT COLUMN: MODULARIZED MONTHLY FEED */}
         <div className="xl:col-span-5">
           <GlobalPaymentHistory 
             globalInvoices={globalInvoices} 
             isInvoicesLoading={isInvoicesLoading} 
-            onViewReceipt={setPreviewReceiptUrl} 
+            onViewReceipt={handleOpenPopup} 
           />
         </div>
 
       </div>
-
-      {/* 🚀 THE POPUP RECEIPT MODAL */}
-      {previewReceiptUrl && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 sm:p-8 bg-black/80 backdrop-blur-sm animate-in fade-in duration-200">
-          <div className="bg-zinc-950 border border-zinc-800 w-full max-w-4xl h-[85vh] rounded-2xl shadow-2xl flex flex-col overflow-hidden relative">
-            <div className="flex items-center justify-between p-4 border-b border-zinc-800 bg-zinc-900/50">
-              <h3 className="text-xs font-bold text-white uppercase tracking-widest flex items-center gap-2">
-                <Receipt size={14} className="text-cyan-500" /> Stripe Invoice
-              </h3>
-              <div className="flex items-center gap-2">
-                <a 
-                  href={previewReceiptUrl} 
-                  target="_blank" 
-                  rel="noopener noreferrer" 
-                  className="p-2 text-zinc-400 hover:text-cyan-400 transition-colors bg-black/40 rounded-lg border border-zinc-800"
-                  title="Open in new tab"
-                >
-                  <ExternalLink size={14} />
-                </a>
-                <button 
-                  onClick={() => setPreviewReceiptUrl(null)} 
-                  className="p-2 text-zinc-400 hover:text-rose-400 transition-colors bg-black/40 rounded-lg border border-zinc-800 cursor-pointer"
-                >
-                  <X size={14} />
-                </button>
-              </div>
-            </div>
-            {/* White background so the Stripe UI looks clean */}
-            <iframe src={previewReceiptUrl} className="w-full flex-1 bg-white" />
-          </div>
-        </div>
-      )}
-
     </div>
   );
 }
