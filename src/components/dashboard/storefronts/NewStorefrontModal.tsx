@@ -42,7 +42,8 @@ const HERO_LAYOUTS = [
   { name: 'Centered Focus', value: 'center' },
   { name: 'Bold Left Split', value: 'split-left' },
   { name: 'Bold Right Split', value: 'split-right' },
-  { name: 'Full Cinematic', value: 'cinematic' }
+  { name: 'Full Cinematic', value: 'cinematic' },
+  { name: 'Frosted Glass', value: 'glass' }
 ];
 
 const CONTENT_LAYOUTS = [
@@ -50,7 +51,8 @@ const CONTENT_LAYOUTS = [
   { name: 'Bento Grid', value: 'bento' },
   { name: 'Sticky Scroll', value: 'sticky' },
   { name: 'Editorial Hover', value: 'editorial' },
-  { name: 'Accordion Flow', value: 'accordion' }
+  { name: 'Accordion Flow', value: 'accordion' },
+  { name: 'Culinary Menu', value: 'menu' } // 🚀 ADDED 'menu'
 ];
 
 export default function NewStorefrontModal() {
@@ -59,6 +61,7 @@ export default function NewStorefrontModal() {
   const [businessName, setBusinessName] = useState('');
   const [slug, setSlug] = useState('');
   const [isTemplate, setIsTemplate] = useState(false);
+  
   const formRef = useRef<HTMLFormElement>(null);
 
   const handleNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -86,8 +89,6 @@ export default function NewStorefrontModal() {
 
   return (
     <div className="flex flex-wrap items-center gap-3">
-      
-      {/* 🚀 THE NEW POS IGNITION SWITCH */}
       <Link 
         href="/storefronts/apply"
         target="_blank"
@@ -99,7 +100,6 @@ export default function NewStorefrontModal() {
         <span className="sm:hidden">POS</span>
       </Link>
 
-      {/* ORIGINAL MANUAL PROVISION BUTTON */}
       <button 
         onClick={() => setIsOpen(true)}
         className="flex items-center gap-2 bg-cyan-600 hover:bg-cyan-500 text-zinc-950 font-bold px-4 py-2.5 rounded-md transition-all duration-300 transform hover:scale-105 shadow-[0_0_15px_rgba(8,145,178,0.4)]"
@@ -132,7 +132,6 @@ export default function NewStorefrontModal() {
               
               <input type="hidden" name="is_template" value={isTemplate.toString()} />
 
-              {/* ROW 1: Identity */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="space-y-2">
                   <label className="text-xs font-bold text-zinc-400 uppercase tracking-widest flex items-center gap-2">
@@ -164,7 +163,6 @@ export default function NewStorefrontModal() {
                 </div>
               </div>
 
-              {/* ROW 2: The Hook & Prototype Toggle */}
               <div className="grid grid-cols-1 md:grid-cols-12 gap-6">
                 <div className="space-y-2 md:col-span-8">
                   <label className="text-xs font-bold text-zinc-400 uppercase tracking-widest">
@@ -194,7 +192,6 @@ export default function NewStorefrontModal() {
                 </div>
               </div>
 
-              {/* ROW 3: Architecture & Vibe */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-6 border-t border-zinc-800/50">
                 <div className="space-y-2">
                   <label className="text-xs font-bold text-zinc-400 uppercase tracking-widest flex items-center gap-2">
@@ -224,7 +221,6 @@ export default function NewStorefrontModal() {
                 </div>
               </div>
 
-              {/* ROW 4: Layout Flows */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="space-y-2">
                   <label className="text-xs font-bold text-zinc-400 uppercase tracking-widest flex items-center gap-2">
@@ -254,7 +250,6 @@ export default function NewStorefrontModal() {
                 </div>
               </div>
 
-              {/* ROW 5: File Uploaders */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-6 border-t border-zinc-800/50">
                 <div className="space-y-2">
                   <label className="text-xs font-bold text-zinc-400 uppercase tracking-widest flex items-center gap-2">
@@ -298,6 +293,7 @@ export default function NewStorefrontModal() {
                   {isSubmitting ? 'PROVISIONING...' : 'DEPLOY STOREFRONT'}
                 </button>
               </div>
+
             </form>
           </div>
         </div>

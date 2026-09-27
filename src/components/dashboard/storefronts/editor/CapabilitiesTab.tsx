@@ -1,3 +1,4 @@
+// src/components/dashboard/storefronts/editor/CapabilitiesTab.tsx
 'use client';
 
 import React, { useState, useEffect } from 'react';
@@ -18,6 +19,9 @@ export default function CapabilitiesTab({
   const [localCaps, setLocalCaps] = useState<any[]>([]);
   const [isSaving, setIsSaving] = useState(false);
 
+  // 🚀 Checks if we are currently building a menu layout
+  const isMenuMode = formData?.content_layout === 'menu';
+
   useEffect(() => {
     if (formData.capabilities) {
       const normalized = formData.capabilities.map((c: any) => 
@@ -37,7 +41,6 @@ export default function CapabilitiesTab({
     setLocalCaps(updated);
   };
 
-  // --- NEW BULLET POINT LOGIC ---
   const addBullet = (serviceIndex: number) => {
     const updated = [...localCaps];
     if (!updated[serviceIndex].bullets) updated[serviceIndex].bullets = [];
@@ -56,7 +59,6 @@ export default function CapabilitiesTab({
     updated[serviceIndex].bullets.splice(bulletIndex, 1);
     setLocalCaps(updated);
   };
-  // ------------------------------
 
   const removeCap = (index: number) => {
     setLocalCaps(localCaps.filter((_, i) => i !== index));
@@ -87,10 +89,9 @@ export default function CapabilitiesTab({
       setFormData((prev: any) => ({ ...prev, capabilities: localCaps }));
       router.refresh();
       
-      // Fire the canvas reload so the iframe instantly updates
       if (onReload) onReload();
     } catch (err) {
-      alert("Failed to save services.");
+      alert("Failed to save data.");
     } finally {
       setIsSaving(false);
     }
@@ -102,17 +103,21 @@ export default function CapabilitiesTab({
       <div className="flex items-center justify-between border-b border-zinc-800 pb-3">
         <div className="flex items-center gap-2">
           <Layers className="w-4 h-4 text-fuchsia-500" />
-          <h2 className="text-sm font-black text-white uppercase tracking-widest">Service Matrix</h2>
+          <h2 className="text-sm font-black text-white uppercase tracking-widest">
+            {isMenuMode ? 'Menu Architecture' : 'Service Matrix'}
+          </h2>
         </div>
         <button onClick={addCapability} className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-widest text-fuchsia-400 hover:text-fuchsia-300 transition-colors">
-          <Plus className="w-3 h-3" /> Add Service
+          <Plus className="w-3 h-3" /> {isMenuMode ? 'Add Category' : 'Add Service'}
         </button>
       </div>
 
       <div className="space-y-4">
         {localCaps.length === 0 ? (
           <div className="text-center py-10 border border-dashed border-zinc-800 rounded-xl bg-zinc-900/30">
-            <p className="text-xs text-zinc-500 font-mono tracking-widest uppercase">No services defined.</p>
+            <p className="text-xs text-zinc-500 font-mono tracking-widest uppercase">
+              {isMenuMode ? 'No menu categories defined.' : 'No services defined.'}
+            </p>
           </div>
         ) : (
           localCaps.map((cap, index) => {
@@ -129,22 +134,22 @@ export default function CapabilitiesTab({
                     type="text" 
                     value={cap.title} 
                     onChange={(e) => updateCap(index, 'title', e.target.value)} 
-                    placeholder="Service Name (e.g., Commercial Photography)" 
+                    placeholder={isMenuMode ? 'Category Name (e.g., Smash Burgers)' : 'Service Name (e.g., Commercial Photography)'}
                     className="w-full bg-black/50 border border-zinc-800 rounded-lg px-3 py-2 text-sm text-white font-bold outline-none focus:border-fuchsia-500 transition-colors"
                   />
                   <textarea 
                     value={cap.description} 
                     onChange={(e) => updateCap(index, 'description', e.target.value)} 
-                    placeholder="Short description of this capability..." 
+                    placeholder={isMenuMode ? 'Short description of this category...' : 'Short description of this capability...'}
                     rows={2}
                     className="w-full bg-black/50 border border-zinc-800 rounded-lg px-3 py-2 text-xs text-zinc-300 outline-none focus:border-fuchsia-500 transition-colors resize-none"
                   />
 
-                  {/* --- DYNAMIC BULLETS SECTION --- */}
+                  {/* DYNAMIC BULLETS SECTION */}
                   <div className="pt-2 border-t border-zinc-800/50">
                     <div className="flex justify-between items-end mb-3">
                       <label className="text-[10px] font-bold text-fuchsia-500 uppercase tracking-widest flex items-center gap-2">
-                        <List size={12} /> Detail Bullets
+                        <List size={12} /> {isMenuMode ? 'Menu Items & Prices' : 'Detail Bullets'}
                       </label>
                     </div>
 
@@ -155,7 +160,7 @@ export default function CapabilitiesTab({
                           <input 
                             value={bullet}
                             onChange={(e) => updateBullet(index, bIndex, e.target.value)}
-                            placeholder="Detail or feature..."
+                            placeholder={isMenuMode ? 'Item Name - $Price (e.g. Smashed Burger - $12)' : 'Detail or feature...'}
                             className="flex-1 bg-transparent border-b border-zinc-800 focus:border-fuchsia-500/50 py-1.5 text-xs text-zinc-300 focus:outline-none transition-colors"
                           />
                           <button 
@@ -172,11 +177,11 @@ export default function CapabilitiesTab({
                       onClick={() => addBullet(index)}
                       className="text-[10px] font-bold text-zinc-500 hover:text-fuchsia-400 uppercase tracking-widest flex items-center gap-1.5 transition-colors"
                     >
-                      <Plus size={12} /> Add Bullet Point
+                      <Plus size={12} /> {isMenuMode ? 'Add Menu Item' : 'Add Bullet Point'}
                     </button>
                   </div>
-
                 </div>
+
                 <button onClick={() => removeCap(index)} className="shrink-0 p-2 text-zinc-600 hover:text-rose-400 transition-colors self-start">
                   <X className="w-4 h-4" />
                 </button>
@@ -192,7 +197,7 @@ export default function CapabilitiesTab({
         className="w-full flex items-center justify-center gap-2 bg-fuchsia-600 hover:bg-fuchsia-500 text-white font-black tracking-widest text-[10px] uppercase py-3 rounded-lg transition-all shadow-[0_0_10px_rgba(192,38,211,0.2)] disabled:opacity-50 mt-4 cursor-pointer"
       >
         {isSaving ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Save className="w-3.5 h-3.5" />} 
-        {isSaving ? 'SYNCING MATRIX...' : 'SAVE SERVICES LIST'}
+        {isSaving ? (isMenuMode ? 'SYNCING MENU...' : 'SYNCING MATRIX...') : (isMenuMode ? 'SAVE MENU LAYOUT' : 'SAVE SERVICES LIST')}
       </button>
 
     </div>

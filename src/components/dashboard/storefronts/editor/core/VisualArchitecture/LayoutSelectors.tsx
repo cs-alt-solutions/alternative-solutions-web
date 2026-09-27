@@ -43,6 +43,7 @@ export function HeroSelector({ formData, setFormData, allowedLayouts }: any) {
           </div>
           <span className={`text-[11px] font-bold uppercase tracking-wider ${formData.hero_layout === 'center' || !formData.hero_layout ? 'text-fuchsia-400' : 'text-zinc-500'}`}>Centered</span>
         </button>
+
         <button disabled={!allowedLayouts.hero.includes('split-left')} onClick={() => handleSelect('split-left')} className={`flex flex-col items-center justify-center p-3 border-2 rounded-xl transition-all disabled:opacity-20 disabled:cursor-not-allowed ${formData.hero_layout === 'split-left' ? 'border-fuchsia-500 bg-fuchsia-500/10' : 'border-zinc-800 bg-zinc-950 hover:border-zinc-700'}`}>
           <div className="w-full h-10 border border-zinc-700 bg-zinc-900 mb-2 flex items-center p-1 gap-1.5 rounded">
             <div className="w-1/2 h-full flex flex-col justify-center gap-0.5 pl-0.5"><div className="w-full h-1 bg-zinc-400 rounded" /><div className="w-2/3 h-0.5 bg-zinc-600 rounded" /><div className="w-1/2 h-1 bg-fuchsia-500 rounded mt-0.5" /></div>
@@ -50,6 +51,7 @@ export function HeroSelector({ formData, setFormData, allowedLayouts }: any) {
           </div>
           <span className={`text-[11px] font-bold uppercase tracking-wider ${formData.hero_layout === 'split-left' ? 'text-fuchsia-400' : 'text-zinc-500'}`}>Split Left</span>
         </button>
+
         <button disabled={!allowedLayouts.hero.includes('split-right')} onClick={() => handleSelect('split-right')} className={`flex flex-col items-center justify-center p-3 border-2 rounded-xl transition-all disabled:opacity-20 disabled:cursor-not-allowed ${formData.hero_layout === 'split-right' ? 'border-fuchsia-500 bg-fuchsia-500/10' : 'border-zinc-800 bg-zinc-950 hover:border-zinc-700'}`}>
           <div className="w-full h-10 border border-zinc-700 bg-zinc-900 mb-2 flex items-center p-1 gap-1.5 rounded">
             <div className="w-1/2 h-full bg-zinc-700 rounded-sm" />
@@ -57,6 +59,7 @@ export function HeroSelector({ formData, setFormData, allowedLayouts }: any) {
           </div>
           <span className={`text-[11px] font-bold uppercase tracking-wider ${formData.hero_layout === 'split-right' ? 'text-fuchsia-400' : 'text-zinc-500'}`}>Split Right</span>
         </button>
+
         <button disabled={!allowedLayouts.hero.includes('cinematic')} onClick={() => handleSelect('cinematic')} className={`flex flex-col items-center justify-center p-3 border-2 rounded-xl transition-all disabled:opacity-20 disabled:cursor-not-allowed ${formData.hero_layout === 'cinematic' ? 'border-fuchsia-500 bg-fuchsia-500/10' : 'border-zinc-800 bg-zinc-950 hover:border-zinc-700'}`}>
           <div className="w-full h-10 border border-zinc-700 bg-zinc-700 mb-2 flex items-end p-1.5 relative overflow-hidden rounded">
             <div className="absolute inset-0 bg-linear-to-t from-zinc-950 to-transparent" />
@@ -90,6 +93,7 @@ export function AboutSelector({ formData, setFormData, allowedLayouts }: any) {
     <div className="space-y-3 pt-6 border-t border-zinc-800/60">
       <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest flex items-center gap-1.5"><BookOpen size={10} /> 3. About Section</label>
       <div className="grid grid-cols-2 gap-3">
+        
         <button disabled={!allowedLayouts.about.includes('split')} onClick={() => handleSelect('split')} className={`flex flex-col items-center justify-center p-3 border-2 rounded-xl transition-all disabled:opacity-20 disabled:cursor-not-allowed ${formData.about_layout === 'split' || !formData.about_layout ? 'border-fuchsia-500 bg-fuchsia-500/10' : 'border-zinc-800 bg-zinc-950 hover:border-zinc-700'}`}>
           <div className="w-full h-10 border border-zinc-700 bg-zinc-900 mb-2 flex items-center p-1 gap-1.5 rounded">
              <div className="w-1/2 h-full bg-zinc-700 rounded-sm" />
@@ -97,6 +101,7 @@ export function AboutSelector({ formData, setFormData, allowedLayouts }: any) {
           </div>
           <span className={`text-[11px] font-bold uppercase tracking-wider ${formData.about_layout === 'split' || !formData.about_layout ? 'text-fuchsia-400' : 'text-zinc-500'}`}>Classic Split</span>
         </button>
+
         <button disabled={!allowedLayouts.about.includes('editorial')} onClick={() => handleSelect('editorial')} className={`flex flex-col items-center justify-center p-3 border-2 rounded-xl transition-all disabled:opacity-20 disabled:cursor-not-allowed ${formData.about_layout === 'editorial' ? 'border-fuchsia-500 bg-fuchsia-500/10' : 'border-zinc-800 bg-zinc-950 hover:border-zinc-700'}`}>
           <div className="w-full h-10 border border-zinc-700 bg-zinc-900 mb-2 flex items-center justify-center p-1 rounded relative">
              <div className="absolute left-1.5 top-1.5 w-1/2 h-6 bg-zinc-700 rounded-sm z-0" />
@@ -104,12 +109,14 @@ export function AboutSelector({ formData, setFormData, allowedLayouts }: any) {
           </div>
           <span className={`text-[11px] font-bold uppercase tracking-wider ${formData.about_layout === 'editorial' ? 'text-fuchsia-400' : 'text-zinc-500'}`}>Editorial</span>
         </button>
+
         <button disabled={!allowedLayouts.about.includes('minimal')} onClick={() => handleSelect('minimal')} className={`flex flex-col items-center justify-center p-3 border-2 rounded-xl transition-all disabled:opacity-20 disabled:cursor-not-allowed ${formData.about_layout === 'minimal' ? 'border-fuchsia-500 bg-fuchsia-500/10' : 'border-zinc-800 bg-zinc-950 hover:border-zinc-700'}`}>
           <div className="w-full h-10 border border-zinc-700 bg-zinc-900 mb-2 flex flex-col items-center justify-center gap-1 rounded">
              <div className="w-3 h-3 rounded-full bg-zinc-700" /><div className="w-1/2 h-0.5 bg-zinc-400 rounded" /><div className="w-3/4 h-px bg-zinc-600 rounded" />
           </div>
           <span className={`text-[11px] font-bold uppercase tracking-wider ${formData.about_layout === 'minimal' ? 'text-fuchsia-400' : 'text-zinc-500'}`}>Minimal</span>
         </button>
+
         <button disabled={!allowedLayouts.about.includes('card')} onClick={() => handleSelect('card')} className={`flex flex-col items-center justify-center p-3 border-2 rounded-xl transition-all disabled:opacity-20 disabled:cursor-not-allowed ${formData.about_layout === 'card' ? 'border-fuchsia-500 bg-fuchsia-500/10' : 'border-zinc-800 bg-zinc-950 hover:border-zinc-700'}`}>
           <div className="w-full h-10 border border-zinc-700 bg-zinc-800 mb-2 flex items-center justify-center p-1 rounded relative overflow-hidden">
              <div className="absolute inset-0 bg-zinc-600" />
@@ -117,6 +124,7 @@ export function AboutSelector({ formData, setFormData, allowedLayouts }: any) {
           </div>
           <span className={`text-[11px] font-bold uppercase tracking-wider ${formData.about_layout === 'card' ? 'text-fuchsia-400' : 'text-zinc-500'}`}>Glass Card</span>
         </button>
+
       </div>
       {showAdvanced && ALL_ABOUTS.length > 4 && <div className="grid grid-cols-2 gap-3 mt-3 animate-in fade-in slide-in-from-top-2 duration-200"></div>}
       <AdvancedToggle isOpen={showAdvanced} onClick={() => setShowAdvanced(!showAdvanced)} count={ALL_ABOUTS.length > 4 ? ALL_ABOUTS.length - 4 : 0} />
@@ -132,31 +140,48 @@ export function ContentSelector({ formData, setFormData, allowedLayouts }: any) 
     <div className="space-y-3 pt-6 border-t border-zinc-800/60">
       <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest flex items-center gap-1.5"><Columns size={10} /> 4. Content Flow</label>
       <div className="grid grid-cols-2 gap-3">
+        
         <button disabled={!allowedLayouts.content.includes('classic')} onClick={() => handleSelect('classic')} className={`flex flex-col items-center justify-center p-3 border-2 rounded-xl transition-all disabled:opacity-20 disabled:cursor-not-allowed ${formData.content_layout === 'classic' || !formData.content_layout ? 'border-fuchsia-500 bg-fuchsia-500/10' : 'border-zinc-800 bg-zinc-950 hover:border-zinc-700'}`}>
            <div className="w-full h-10 border border-zinc-700 bg-zinc-900 mb-2 flex flex-col p-1 gap-1 rounded"><div className="w-full h-2.5 bg-zinc-600 rounded-sm" /><div className="w-full h-2.5 bg-zinc-600 rounded-sm" /></div>
            <span className={`text-[11px] font-bold uppercase tracking-wider ${formData.content_layout === 'classic' || !formData.content_layout ? 'text-fuchsia-400' : 'text-zinc-500'}`}>Stacked</span>
         </button>
+
         <button disabled={!allowedLayouts.content.includes('bento')} onClick={() => handleSelect('bento')} className={`flex flex-col items-center justify-center p-3 border-2 rounded-xl transition-all disabled:opacity-20 disabled:cursor-not-allowed ${formData.content_layout === 'bento' ? 'border-fuchsia-500 bg-fuchsia-500/10' : 'border-zinc-800 bg-zinc-950 hover:border-zinc-700'}`}>
            <div className="w-full h-10 border border-zinc-700 bg-zinc-900 mb-2 grid grid-cols-2 gap-1 p-1 rounded"><div className="w-full h-full bg-fuchsia-500/50 rounded-sm" /><div className="w-full h-full bg-zinc-600 rounded-sm" /><div className="w-full h-full bg-zinc-600 rounded-sm" /><div className="w-full h-full bg-fuchsia-500/50 rounded-sm" /></div>
            <span className={`text-[11px] font-bold uppercase tracking-wider ${formData.content_layout === 'bento' ? 'text-fuchsia-400' : 'text-zinc-500'}`}>Bento Grid</span>
         </button>
+
         <button disabled={!allowedLayouts.content.includes('sticky')} onClick={() => handleSelect('sticky')} className={`flex flex-col items-center justify-center p-3 border-2 rounded-xl transition-all disabled:opacity-20 disabled:cursor-not-allowed ${formData.content_layout === 'sticky' ? 'border-fuchsia-500 bg-fuchsia-500/10' : 'border-zinc-800 bg-zinc-950 hover:border-zinc-700'}`}>
            <div className="w-full h-10 border border-zinc-700 bg-zinc-900 mb-2 flex p-1 gap-1 rounded"><div className="w-1/3 h-full bg-fuchsia-500/50 rounded-sm" /><div className="w-2/3 h-full flex flex-col gap-0.5"><div className="w-full h-1/2 bg-zinc-600 rounded-sm" /><div className="w-full h-1/2 bg-zinc-600 rounded-sm" /></div></div>
            <span className={`text-[11px] font-bold uppercase tracking-wider ${formData.content_layout === 'sticky' ? 'text-fuchsia-400' : 'text-zinc-500'}`}>Sticky Scroll</span>
         </button>
+
         <button disabled={!allowedLayouts.content.includes('editorial')} onClick={() => handleSelect('editorial')} className={`flex flex-col items-center justify-center p-3 border-2 rounded-xl transition-all disabled:opacity-20 disabled:cursor-not-allowed ${formData.content_layout === 'editorial' ? 'border-fuchsia-500 bg-fuchsia-500/10' : 'border-zinc-800 bg-zinc-950 hover:border-zinc-700'}`}>
            <div className="w-full h-10 border border-zinc-700 bg-zinc-900 mb-2 flex flex-col items-center justify-center gap-1 rounded relative"><div className="w-3/4 h-1 bg-fuchsia-500/80 rounded-sm z-10" /><div className="w-1/2 h-1 bg-zinc-600 rounded-sm z-10" /><div className="w-2/3 h-1 bg-zinc-600 rounded-sm z-10" /></div>
            <span className={`text-[11px] font-bold uppercase tracking-wider ${formData.content_layout === 'editorial' ? 'text-fuchsia-400' : 'text-zinc-500'}`}>Editorial</span>
         </button>
+
       </div>
+
       {showAdvanced && (
         <div className="grid grid-cols-2 gap-3 mt-3 animate-in fade-in slide-in-from-top-2 duration-200">
           <button disabled={!allowedLayouts.content.includes('accordion')} onClick={() => handleSelect('accordion')} className={`flex flex-col items-center justify-center p-3 border-2 rounded-xl transition-all disabled:opacity-20 disabled:cursor-not-allowed ${formData.content_layout === 'accordion' ? 'border-fuchsia-500 bg-fuchsia-500/10' : 'border-zinc-800 bg-zinc-950 hover:border-zinc-700'}`}>
             <div className="w-full h-10 border border-zinc-700 bg-zinc-900 mb-2 flex flex-col p-1 gap-0.5 rounded"><div className="w-full h-1.5 bg-fuchsia-500/50 rounded-sm" /><div className="w-full h-1 bg-zinc-600 rounded-sm" /><div className="w-full h-1 bg-zinc-600 rounded-sm" /><div className="w-full h-1 bg-zinc-600 rounded-sm" /></div>
             <span className={`text-[11px] font-bold uppercase tracking-wider ${formData.content_layout === 'accordion' ? 'text-fuchsia-400' : 'text-zinc-500'}`}>Accordion</span>
           </button>
+
+          {/* 🚀 ADDED 'MENU' TO ADVANCED LAYOUTS */}
+          <button disabled={!allowedLayouts.content.includes('menu')} onClick={() => handleSelect('menu')} className={`flex flex-col items-center justify-center p-3 border-2 rounded-xl transition-all disabled:opacity-20 disabled:cursor-not-allowed ${formData.content_layout === 'menu' ? 'border-fuchsia-500 bg-fuchsia-500/10' : 'border-zinc-800 bg-zinc-950 hover:border-zinc-700'}`}>
+            <div className="w-full h-10 border border-zinc-700 bg-zinc-900 mb-2 flex flex-col p-1 gap-1 rounded items-center justify-center">
+              <div className="w-2/3 h-1.5 bg-fuchsia-500/80 rounded-sm" />
+              <div className="w-full flex justify-between gap-1 px-1"><div className="w-1/2 h-1 bg-zinc-500 rounded-sm" /><div className="w-1/4 h-1 bg-zinc-400 rounded-sm" /></div>
+              <div className="w-full flex justify-between gap-1 px-1"><div className="w-1/2 h-1 bg-zinc-500 rounded-sm" /><div className="w-1/4 h-1 bg-zinc-400 rounded-sm" /></div>
+            </div>
+            <span className={`text-[11px] font-bold uppercase tracking-wider ${formData.content_layout === 'menu' ? 'text-fuchsia-400' : 'text-zinc-500'}`}>Culinary Menu</span>
+          </button>
         </div>
       )}
+
       <AdvancedToggle isOpen={showAdvanced} onClick={() => setShowAdvanced(!showAdvanced)} count={ALL_CONTENTS.length - 4} />
     </div>
   );
