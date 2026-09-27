@@ -2,7 +2,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { Download, Smartphone, CheckCircle2 } from 'lucide-react';
+import { Download, Smartphone } from 'lucide-react';
 
 export default function PwaInstallBanner() {
   const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
@@ -27,7 +27,7 @@ export default function PwaInstallBanner() {
 
   const handleInstallClick = async () => {
     if (deferredPrompt) {
-      // 1. If Chrome caught the event natively, fire it
+      // If Chrome's native event is ready, fire it
       deferredPrompt.prompt();
       const { outcome } = await deferredPrompt.userChoice;
       if (outcome === 'accepted') {
@@ -35,11 +35,14 @@ export default function PwaInstallBanner() {
       }
       setDeferredPrompt(null);
     } else {
-      // 2. Fallback instructions if Chrome is still holding back the event
-      alert(
-        "Android Chrome PWA Tip:\n\n" +
-        "If the automatic prompt doesn't pop up instantly, tap Chrome's three-dot menu in the top right and select 'Install app' or 'Add to Home screen'."
-      );
+      // Fallback action: guide mobile user straight to the menu action with explicit visual cues
+      const instructions = 
+        "📱 ANDROID INSTALLATION STEP:\n\n" +
+        "1. Tap the three dots (⋮) in the top-right corner of Chrome.\n" +
+        "2. Look down the menu and tap 'Install app' or 'Add to Home screen'.\n" +
+        "(If it says 'Create shortcut', clear your browser data or use the clean root domain!).";
+      
+      alert(instructions);
     }
   };
 
