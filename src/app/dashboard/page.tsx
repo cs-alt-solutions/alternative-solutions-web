@@ -9,6 +9,7 @@ import PlatformTrackerPanel from '@/components/dashboard/overview/PlatformTracke
 import TelemetryRow from '@/components/dashboard/overview/TelemetryRow';
 import NetworkPulse from '@/components/dashboard/overview/NetworkPulse';
 import ActiveClientRequests from '@/components/dashboard/overview/ActiveClientRequests'; 
+import PwaInstallBanner from '@/components/core/PwaInstallBanner'; // 🚀 IMPORT THE PWA INSTALL WIDGET
 
 export const dynamic = 'force-dynamic';
 
@@ -78,6 +79,9 @@ export default async function DashboardOverview() {
   return (
     <div className="p-4 md:p-8 w-full max-w-7xl mx-auto space-y-8 animate-in fade-in duration-500">
       
+      {/* 🚀 THE NATIVE PWA INSTALL BANNER */}
+      <PwaInstallBanner />
+
       <div className="flex flex-col md:flex-row items-start md:items-end justify-between gap-4 pb-6 border-b border-zinc-800">
         <div>
           <h1 className="text-3xl md:text-4xl font-black text-white tracking-tight uppercase">
@@ -111,7 +115,7 @@ export default async function DashboardOverview() {
         {/* RIGHT COLUMN: Infrastructure & Radars */}
         <div className="xl:col-span-4 space-y-6">
           
-          {/* 🚀 MOVED: Client Request Radar */}
+          {/* 🚀 Client Request Radar */}
           <div className="bg-zinc-950 border border-amber-500/30 rounded-2xl overflow-hidden shadow-2xl relative animate-in fade-in slide-in-from-top-4">
             <div className="absolute top-0 left-0 w-full h-1 bg-linear-to-r from-amber-500 to-orange-500" />
             <ActiveClientRequests requests={activeRequests} />
