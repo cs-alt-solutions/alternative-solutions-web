@@ -1,26 +1,28 @@
+/* src/components/dashboard/storefronts/editor/MediaTab.tsx */
 'use client';
 
 import React, { useState, useRef, startTransition } from 'react';
 import { useRouter } from 'next/navigation'; 
-import { UploadCloud, Image as ImageIcon, X, LayoutGrid, Trash2, Layers, Move } from 'lucide-react';
+import { UploadCloud, Image as ImageIcon, X, LayoutGrid, Trash2, Layers, Move, DollarSign } from 'lucide-react';
 import { updateStorefrontMedia, updateStorefrontGallery, removeImageFromGallery } from '@/app/actions/storefronts';
 
 export default function MediaTab({ formData, setFormData, onReload }: { formData: any, setFormData: any, onReload?: () => void }) {
-  
   const router = useRouter(); 
   const [files, setFiles] = useState<File[]>([]);
   const [isUploadingGallery, setIsUploadingGallery] = useState(false);
   const [isDeleting, setIsDeleting] = useState<string | null>(null);
   const [isUploadingCore, setIsUploadingCore] = useState(false);
+  
   const coreFormRef = useRef<HTMLFormElement>(null);
-
   const [heroPreview, setHeroPreview] = useState<string | null>(null);
   const [aboutPreview, setAboutPreview] = useState<string | null>(null);
   const [logoPreview, setLogoPreview] = useState<string | null>(null);
 
+  const isMenuMode = formData?.content_layout === 'menu';
+
   const liveGallery = (formData.gallery_items || []).map((item: any, i: number) => {
     if (typeof item === 'string') {
-      return { id: `gal-${i}`, imageUrl: item, title: '', description: '', category: '' };
+      return { id: `gal-${i}`, imageUrl: item, title: '', description: '', category: '', price: '' };
     }
     return item;
   });
@@ -29,10 +31,12 @@ export default function MediaTab({ formData, setFormData, onReload }: { formData
     const file = e.target.files?.[0];
     if (file) setHeroPreview(URL.createObjectURL(file));
   };
+
   const handleAboutSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) setAboutPreview(URL.createObjectURL(file));
   };
+
   const handleLogoSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) setLogoPreview(URL.createObjectURL(file));
@@ -75,12 +79,13 @@ export default function MediaTab({ formData, setFormData, onReload }: { formData
     setIsUploadingGallery(true);
     const uploadData = new FormData();
     files.forEach(file => uploadData.append('images', file));
+
     try {
       const response = await updateStorefrontGallery(formData.id, formData.slug, uploadData);
       setFiles([]);
       
-      if (response?.gallery_items) {
-         setFormData((prev: any) => ({ ...prev, gallery_items: response.gallery_items }));
+      if (response?.gallery_items) { 
+        setFormData((prev: any) => ({ ...prev, gallery_items: response.gallery_items }));
       }
       
       if (onReload) onReload(); 
@@ -189,7 +194,6 @@ export default function MediaTab({ formData, setFormData, onReload }: { formData
                   </select>
                 </div>
               </div>
-
             </div>
           </div>
 
@@ -239,7 +243,9 @@ export default function MediaTab({ formData, setFormData, onReload }: { formData
       <div className="space-y-4 pt-4 border-t border-zinc-800">
         <div className="flex items-center gap-2 border-b border-zinc-800 pb-3">
           <LayoutGrid className="w-4 h-4 text-emerald-500" />
-          <h2 className="text-sm font-black text-white uppercase tracking-widest">Masonry Gallery</h2>
+          <h2 className="text-sm font-black text-white uppercase tracking-widest">
+            {isMenuMode ? 'Menu Images' : 'Masonry Gallery'}
+          </h2>
         </div>
         
         <div onDragOver={(e) => e.preventDefault()} onDrop={handleDrop} className="border border-dashed border-zinc-700 p-8 rounded-xl text-center hover:border-emerald-500/50 hover:bg-emerald-500/5 transition-colors bg-zinc-900/40 cursor-pointer">
@@ -281,7 +287,23 @@ export default function MediaTab({ formData, setFormData, onReload }: { formData
                 </div>
                 
                 <div className="space-y-2">
-                  <input type="text" placeholder="Title/Name" value={item.title || ''} onChange={(e) => handleMetaChange(i, 'title', e.target.value)} className="w-full bg-black/40 border border-zinc-800 rounded-lg p-2 text-xs text-white focus:border-emerald-500 outline-none transition-colors font-bold" />
+                  <div className="flex gap-2">
+                    <input type="text" placeholder={isMenuMode ? "Menu Item Name" : "Title/Name"} value={item.title || ''} onChange={(e) => handleMetaChange(i, 'title', e.target.value)} className="w-full bg-black/40 border border-zinc-800 rounded-lg p-2 text-xs text-white focus:border-emerald-500 outline-none transition-colors font-bold" />
+                    
+                    {/* 🚀 NEW PRICE FIELD (Only shows in Menu mode) */}
+                    {isMenuMode && (
+                      <div className="relative w-32 shrink-0">
+                        <DollarSign className="w-3 h-3 text-emerald-500 absolute left-2.5 top-2.5 pointer-events-none" />
+                        <input 
+                          type="text" 
+                          placeholder="Price" 
+                          value={item.price || ''} 
+                          onChange={(e) => handleMetaChange(i, 'price', e.target.value)} 
+                          className="w-full bg-black/40 border border-zinc-800 rounded-lg pl-7 pr-2 py-2 text-xs text-white focus:border-emerald-500 outline-none transition-colors font-bold" 
+                        />
+                      </div>
+                    )}
+                  </div>
                   
                   <div className="relative">
                     <Layers className="w-3 h-3 text-emerald-500 absolute left-2.5 top-2 pointer-events-none" />
@@ -301,13 +323,14 @@ export default function MediaTab({ formData, setFormData, onReload }: { formData
                     </select>
                   </div>
                   
-                  <textarea placeholder="Description overlay text..." value={item.description || ''} onChange={(e) => handleMetaChange(i, 'description', e.target.value)} rows={2} className="w-full bg-black/40 border border-zinc-800 rounded-lg p-2 text-[11px] text-zinc-300 focus:border-emerald-500 outline-none transition-colors resize-none" />
+                  <textarea placeholder={isMenuMode ? "Short ingredient description..." : "Description overlay text..."} value={item.description || ''} onChange={(e) => handleMetaChange(i, 'description', e.target.value)} rows={2} className="w-full bg-black/40 border border-zinc-800 rounded-lg p-2 text-[11px] text-zinc-300 focus:border-emerald-500 outline-none transition-colors resize-none" />
                 </div>
               </div>
             ))}
           </div>
         )}
       </div>
+
     </div>
   );
 }
