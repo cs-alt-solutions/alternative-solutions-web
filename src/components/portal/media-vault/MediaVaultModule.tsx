@@ -26,9 +26,8 @@ export default function MediaVaultModule({ clientId }: { clientId: string }) {
   const [newName, setNewName] = useState<string>('');
   const bucketName = 'client-assets';
 
-  // 🚀 New Staging States
   const [stagedFiles, setStagedFiles] = useState<File[]>([]);
-  const [uploadIntent, setUploadIntent] = useState(UPLOAD_INTENTS[3]); // Defaults to General Assets
+  const [uploadIntent, setUploadIntent] = useState(UPLOAD_INTENTS[3]); 
   const [uploadNotes, setUploadNotes] = useState('');
 
   const copy = PORTAL_COPY.vault || {
@@ -63,12 +62,11 @@ export default function MediaVaultModule({ clientId }: { clientId: string }) {
     }
   };
 
-  // 🚀 1. Intercept the files and hold them in staging
   const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
     const files = event.target.files;
     if (!files || files.length === 0) return;
     setStagedFiles(Array.from(files));
-    setUploadIntent(UPLOAD_INTENTS[3]); // Reset to default
+    setUploadIntent(UPLOAD_INTENTS[3]); 
     setUploadNotes('');
   };
 
@@ -78,7 +76,6 @@ export default function MediaVaultModule({ clientId }: { clientId: string }) {
     setUploadNotes('');
   };
 
-  // 🚀 2. Execute the upload and fire the smart ticket
   const confirmAndUpload = async () => {
     if (stagedFiles.length === 0) return;
     
@@ -95,12 +92,11 @@ export default function MediaVaultModule({ clientId }: { clientId: string }) {
         if (error) throw error;
       }
 
-      // Generate the contextual payload for the Support Desk
       const ticketDetails = `Client uploaded ${stagedFiles.length} new raw file(s) into their staging vault.\n\nContext: ${uploadIntent}\nNotes: ${uploadNotes.trim() || 'No additional notes provided.'}`;
 
       await supabase.from('support_tickets').insert([{
         storefront_id: clientId,
-        category: 'Content Update', // Automatically routes to the Content Update channel
+        category: 'Content Update', 
         topic: `Media Drop: ${uploadIntent}`,
         details: ticketDetails,
         status: 'OPEN'
@@ -111,7 +107,7 @@ export default function MediaVaultModule({ clientId }: { clientId: string }) {
     } catch (error: any) {
       setUploadStatus('Transmission Error.');
     } finally {
-      setStagedFiles([]); // Clear staging
+      setStagedFiles([]); 
       setIsUploading(false);
       setTimeout(() => setUploadStatus(null), 3000);
     }
@@ -171,7 +167,6 @@ export default function MediaVaultModule({ clientId }: { clientId: string }) {
         </div>
       </div>
 
-      {/* RETENTION NOTICE */}
       <div className="mb-8 bg-amber-500/10 border border-amber-500/30 rounded-2xl p-4 flex items-start md:items-center gap-4">
         <Info className="w-5 h-5 text-amber-500 shrink-0 mt-0.5 md:mt-0" />
         <p className="text-xs text-amber-500/90 leading-relaxed font-medium">
@@ -196,7 +191,6 @@ export default function MediaVaultModule({ clientId }: { clientId: string }) {
           </div>
 
           <div className="grid grid-cols-2 md:grid-cols-4 xl:grid-cols-5 gap-4">
-            {/* 🚀 Updated Input trigger */}
             <label className="bg-amber-500/5 border border-amber-500/20 border-dashed rounded-2xl flex flex-col items-center justify-center p-6 text-center cursor-pointer hover:bg-amber-500/10 hover:border-amber-500/50 transition-all h-48 group shadow-inner">
               <div className="bg-amber-500/10 p-3 rounded-full mb-3 group-hover:scale-110 transition-transform">
                 <Upload className="text-amber-400 w-6 h-6" />
@@ -221,11 +215,12 @@ export default function MediaVaultModule({ clientId }: { clientId: string }) {
                       <FileText size={32} className="text-zinc-600 group-hover:text-amber-500 transition-colors" />
                     )}
                     
-                    <div className="absolute inset-0 bg-black/80 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2 backdrop-blur-sm">
-                      <button onClick={() => { setRenamingFile(file.name); setNewName(displayName.split('.')[0]); }} className="bg-zinc-800 text-zinc-300 hover:bg-zinc-700 hover:text-white p-2 rounded-lg transition-colors border border-zinc-600">
+                    {/* 🚀 THE HOVER FIX: Permanently visible on mobile (top right), hover-overlay on desktop */}
+                    <div className="absolute top-2 right-2 md:inset-0 md:bg-black/80 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-all flex items-center md:justify-center gap-2 md:backdrop-blur-sm z-20">
+                      <button onClick={() => { setRenamingFile(file.name); setNewName(displayName.split('.')[0]); }} className="bg-zinc-800/90 md:bg-zinc-800 text-zinc-300 hover:bg-zinc-700 hover:text-white p-2 rounded-lg transition-colors border border-zinc-600 shadow-md">
                         <Edit2 size={16} />
                       </button>
-                      <button onClick={() => handleDelete(file.name)} className="bg-rose-500/20 text-rose-400 hover:bg-rose-500 hover:text-white p-2 rounded-lg transition-colors border border-rose-500/30">
+                      <button onClick={() => handleDelete(file.name)} className="bg-rose-500/90 md:bg-rose-500/20 text-white md:text-rose-400 hover:bg-rose-500 hover:text-white p-2 rounded-lg transition-colors border border-rose-500/30 shadow-md">
                         <Trash2 size={16} />
                       </button>
                     </div>
@@ -254,7 +249,7 @@ export default function MediaVaultModule({ clientId }: { clientId: string }) {
         </div>
       )}
 
-      {/* 🚀 THE INTENT CAPTURE MODAL */}
+      {/* INTENT CAPTURE MODAL */}
       {stagedFiles.length > 0 && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-in fade-in">
           <div className="bg-zinc-950 border-2 border-amber-500/30 w-full max-w-xl rounded-3xl shadow-[0_0_50px_rgba(245,158,11,0.15)] overflow-hidden flex flex-col relative">
@@ -279,7 +274,7 @@ export default function MediaVaultModule({ clientId }: { clientId: string }) {
 
             <div className="p-6 md:p-8 space-y-6 relative z-10">
               <div>
-                <label className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest mb-3 block flex items-center gap-2">
+                <label className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest mb-3 block items-center gap-2">
                   <MessageSquare size={12} className="text-amber-500" /> What are these files for?
                 </label>
                 <div className="flex flex-wrap gap-2">

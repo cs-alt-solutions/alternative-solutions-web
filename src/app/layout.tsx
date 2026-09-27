@@ -1,7 +1,8 @@
-import type { Metadata } from "next";
+/* src/app/layout.tsx */
+import type { Metadata, Viewport } from "next";
 import { Inter, JetBrains_Mono } from "next/font/google";
-import { Analytics } from "@vercel/analytics/react"; // 🚀 Imported Vercel Analytics
-import './globals.css';
+import { Analytics } from "@vercel/analytics/react"; 
+import "@/app/globals.css"; // 🚀 THE FIX: Using the alias path clears the TS error
 
 // IMPORT THEM HERE ON THE SERVER
 import Navbar from '@/components/Navbar';
@@ -12,9 +13,25 @@ import GlobalWatermark from '@/components/core/GlobalWatermark';
 const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
 const jetbrains = JetBrains_Mono({ subsets: ["latin"], variable: "--font-jetbrains" });
 
+// 🚀 Locks the screen scale so inputs don't auto-zoom on iPhones
+export const viewport: Viewport = {
+  themeColor: '#09090b',
+  width: 'device-width',
+  initialScale: 1,
+  maximumScale: 1, 
+};
+
 export const metadata: Metadata = {
   title: "Alternative Solutions IO | Smarter Business Systems",
   description: "I architect custom, high-performance ecosystems driven by AI and built for scale. Stop running your business on duct tape.",
+  
+  // 🚀 The iOS App Overrides
+  appleWebApp: {
+    capable: true, // Tells iOS this is a standalone app
+    statusBarStyle: 'black-translucent', // Makes the time/battery bar blend into the dark theme
+    title: 'HQ', // The name under the icon on your phone
+  },
+
   openGraph: {
     title: "Alternative Solutions IO",
     description: "Custom, high-performance ecosystems driven by AI. Stop running your business on duct tape.",

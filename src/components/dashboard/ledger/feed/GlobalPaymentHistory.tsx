@@ -13,7 +13,6 @@ interface GlobalPaymentHistoryProps {
 export default function GlobalPaymentHistory({ globalInvoices, isInvoicesLoading, onViewReceipt }: GlobalPaymentHistoryProps) {
   const [historyFilter, setHistoryFilter] = useState<'ALL' | 'PROMO' | 'FOUNDATION' | 'PRO'>('ALL');
 
-  // 1. Filter the invoices based on the active tab
   const displayHistory = globalInvoices.filter(inv => {
     if (historyFilter === 'PROMO') return parseFloat(inv.amount) < parseFloat(inv.subtotal);
     if (historyFilter === 'FOUNDATION') return inv.lineItem.toLowerCase().includes('foundation');
@@ -21,7 +20,6 @@ export default function GlobalPaymentHistory({ globalInvoices, isInvoicesLoading
     return true;
   });
 
-  // 2. Group the filtered invoices by Month/Year
   const groupedInvoices = displayHistory.reduce((acc: any, inv: any) => {
     const dateObj = new Date(inv.date);
     const monthYear = dateObj.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
@@ -88,7 +86,6 @@ export default function GlobalPaymentHistory({ globalInvoices, isInvoicesLoading
           Object.entries(groupedInvoices).map(([month, data]: [string, any]) => (
             <div key={month} className="space-y-3 animate-in fade-in slide-in-from-bottom-4">
               
-              {/* MONTHLY BLOCK HEADER */}
               <div className="flex items-center justify-between px-2 pb-2 border-b border-white/5">
                 <h4 className="text-xs font-black text-white uppercase tracking-widest">{month}</h4>
                 <div className="flex items-center gap-2">
@@ -97,7 +94,6 @@ export default function GlobalPaymentHistory({ globalInvoices, isInvoicesLoading
                 </div>
               </div>
 
-              {/* MONTHLY INVOICE LIST */}
               <div className="rounded-xl border border-white/5 overflow-hidden bg-black/20">
                 <table className="w-full text-left border-collapse whitespace-nowrap">
                   <tbody className="divide-y divide-white/5">
@@ -125,7 +121,8 @@ export default function GlobalPaymentHistory({ globalInvoices, isInvoicesLoading
                         </td>
 
                         <td className="px-4 py-4 text-center">
-                          <div className="flex items-center justify-center gap-2 opacity-60 group-hover:opacity-100 transition-opacity">
+                          {/* 🚀 THE HOVER FIX: Opacity is 100% on mobile, 60% on desktop (reveals fully on desktop hover) */}
+                          <div className="flex items-center justify-center gap-2 opacity-100 md:opacity-60 md:group-hover:opacity-100 transition-opacity">
                             {invoice.hostedUrl && (
                               <button 
                                 onClick={() => onViewReceipt(invoice.hostedUrl)}
