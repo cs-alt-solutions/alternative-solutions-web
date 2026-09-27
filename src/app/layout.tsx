@@ -13,10 +13,9 @@ import ConditionalUI from '@/components/core/ConditionalUI';
 import GlobalWatermark from '@/components/core/GlobalWatermark';
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
-// 🚀 FIXED: Added the missing '});' right here so the file stops crashing!
 const jetbrains = JetBrains_Mono({ subsets: ["latin"], variable: "--font-jetbrains" }); 
 
-// 🚀 Locks the screen scale so inputs don't auto-zoom on iPhones
+// 🚀 Locks the screen scale so inputs don't auto-zoom on mobile devices
 export const viewport: Viewport = {
   themeColor: '#09090b',
   width: 'device-width',
@@ -28,11 +27,11 @@ export const metadata: Metadata = {
   title: "Alternative Solutions IO | Smarter Business Systems",
   description: "I architect custom, high-performance ecosystems driven by AI and built for scale. Stop running your business on duct tape.",
   
-  // 🚀 The iOS App Overrides
+  // 🚀 The iOS/Android App Overrides
   appleWebApp: {
-    capable: true, // Tells iOS this is a standalone app
-    statusBarStyle: 'black-translucent', // Makes the time/battery bar blend into the dark theme
-    title: 'HQ', // The name under the icon on your phone
+    capable: true,
+    statusBarStyle: 'black-translucent',
+    title: 'HQ',
   },
 
   openGraph: {
@@ -68,7 +67,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     > 
       <body className="antialiased bg-bg-app text-white">
         
-        {/* THE GLOBAL WATERMARK COMPONENT ADDED HERE */}
+        {/* THE GLOBAL WATERMARK COMPONENT */}
         <GlobalWatermark />
 
         {/* WE PASS THE SERVER COMPONENTS THROUGH SLOTS */}
@@ -76,8 +75,28 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           {children}
         </ConditionalUI>
         
-        {/* 🚀 VERCEL ANALYTICS ENGINE INJECTED HERE */}
+        {/* VERCEL ANALYTICS ENGINE */}
         <Analytics />
+        
+        {/* 🚀 PWA SERVICE WORKER REGISTRATION SCRIPT */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              if ('serviceWorker' in navigator) {
+                window.addEventListener('load', function() {
+                  navigator.serviceWorker.register('/sw.js').then(
+                    function(registration) {
+                      console.log('ServiceWorker registration successful');
+                    },
+                    function(err) {
+                      console.log('ServiceWorker registration failed: ', err);
+                    }
+                  );
+                });
+              }
+            `,
+          }}
+        />
         
       </body>
     </html>
