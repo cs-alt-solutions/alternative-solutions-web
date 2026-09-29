@@ -1,85 +1,161 @@
-// src/components/dashboard/storefronts/editor/CapabilitiesTab.tsx
+/* src/components/dashboard/storefronts/editor/CapabilitiesTab.tsx */
 'use client';
 
-import React, { useState, useEffect } from 'react';
-import { Plus, X, GripVertical, Save, Loader2, Layers, List } from 'lucide-react';
+import React, { useState, useEffect, startTransition } from 'react';
+import { Plus, X, GripVertical, Save, Loader2, Layers, List, UploadCloud, Trash2, DollarSign, Image as ImageIcon, ChevronDown, ChevronUp, Link as LinkIcon, Unlink } from 'lucide-react';
 import { useRouter } from 'next/navigation';
-import { updateStorefrontCapabilities } from '@/app/actions/storefronts';
+import { updateStorefrontCapabilities, updateStorefrontGallery, removeImageFromGallery } from '@/app/actions/storefronts';
 
 export default function CapabilitiesTab({ 
-  formData, 
-  setFormData,
-  onReload
-}: { 
-  formData: any; 
-  setFormData: any;
-  onReload?: () => void;
-}) {
+  formData, setFormData, onReload
+}: { formData: any; setFormData: any; onReload?: () => void; }) {
   const router = useRouter();
   const [localCaps, setLocalCaps] = useState<any[]>([]);
   const [isSaving, setIsSaving] = useState(false);
+  const [files, setFiles] = useState<File[]>([]);
+  const [isUploadingGallery, setIsUploadingGallery] = useState(false);
+  const [isDeleting, setIsDeleting] = useState<string | null>(null);
+  const [openCapIndex, setOpenCapIndex] = useState<number | null>(0);
 
-  // 🚀 Checks if we are currently building a menu layout
   const isMenuMode = formData?.content_layout === 'menu';
 
   useEffect(() => {
     if (formData.capabilities) {
       const normalized = formData.capabilities.map((c: any) => 
-        typeof c === 'string' 
-          ? { title: c, description: '', bullets: [] } 
-          : { ...c, bullets: c.bullets || [] }
+        typeof c === 'string' ? { title: c, description: '', bullets: [] } : { ...c, bullets: c.bullets || [] }
       );
       setLocalCaps(normalized);
     }
   }, [formData.capabilities]);
 
-  const addCapability = () => setLocalCaps([...localCaps, { title: '', description: '', bullets: [] }]);
+  const liveGallery = (formData.gallery_items || []).map((item: any, i: number) => {
+    if (typeof item === 'string') return { id: `gal-${i}`, imageUrl: item, title: '', description: '', category: '', price: '' };
+    return { ...item, id: item.id || `gal-${i}` };
+  });
 
+  const unassignedImages = liveGallery.filter((img: any) => !img.category || !localCaps.some(c => c.title === img.category));
+
+  // --- CATEGORY HANDLERS ---
+  const addCapability = () => {
+    setLocalCaps([...localCaps, { title: '', description: '', bullets: [] }]);
+    setOpenCapIndex(localCaps.length);
+  };
   const updateCap = (index: number, field: string, value: string) => {
-    const updated = [...localCaps];
-    updated[index][field] = value;
+    const updated = [...localCaps]; updated[index][field] = value; setLocalCaps(updated);
+  };
+  const removeCap = (index: number) => setLocalCaps(localCaps.filter((_, i) => i !== index));
+  const moveUp = (index: number) => {
+    if (index === 0) return; const updated = [...localCaps];
+    const temp = updated[index - 1]; updated[index - 1] = updated[index]; updated[index] = temp;
     setLocalCaps(updated);
   };
 
+  // --- TEXT BULLET HANDLERS ---
   const addBullet = (serviceIndex: number) => {
     const updated = [...localCaps];
     if (!updated[serviceIndex].bullets) updated[serviceIndex].bullets = [];
-    updated[serviceIndex].bullets.push('');
-    setLocalCaps(updated);
+    updated[serviceIndex].bullets.push(''); setLocalCaps(updated);
   };
-
   const updateBullet = (serviceIndex: number, bulletIndex: number, value: string) => {
-    const updated = [...localCaps];
-    updated[serviceIndex].bullets[bulletIndex] = value;
-    setLocalCaps(updated);
+    const updated = [...localCaps]; updated[serviceIndex].bullets[bulletIndex] = value; setLocalCaps(updated);
   };
-
   const removeBullet = (serviceIndex: number, bulletIndex: number) => {
-    const updated = [...localCaps];
-    updated[serviceIndex].bullets.splice(bulletIndex, 1);
-    setLocalCaps(updated);
+    const updated = [...localCaps]; updated[serviceIndex].bullets.splice(bulletIndex, 1); setLocalCaps(updated);
   };
 
-  const removeCap = (index: number) => {
-    setLocalCaps(localCaps.filter((_, i) => i !== index));
+  // --- GALLERY HANDLERS ---
+  const handleGalleryMetaChange = (id: string, field: string, value: string) => {
+    setFormData((prev: any) => ({
+      ...prev,
+      gallery_items: (prev.gallery_items || []).map((img: any, i: number) => {
+        const currentId = img.id || `gal-${i}`;
+        if (currentId === id) return { ...img, [field]: value };
+        return img;
+      })
+    }));
   };
 
-  const moveUp = (index: number) => {
-    if (index === 0) return;
-    const updated = [...localCaps];
-    const temp = updated[index - 1];
-    updated[index - 1] = updated[index];
-    updated[index] = temp;
-    setLocalCaps(updated);
+  const moveGalleryItem = (id: string, direction: 'up' | 'down') => {
+    setFormData((prev: any) => {
+      const items = [...(prev.gallery_items || [])];
+      const currentIndex = items.findIndex((img: any, idx: number) => (img.id || `gal-${idx}`) === id);
+      if (currentIndex === -1) return prev;
+      const category = items[currentIndex].category;
+      const categoryIndices = items.map((img: any, idx: number) => img.category === category ? idx : -1).filter(idx => idx !== -1);
+      const relativeIndex = categoryIndices.indexOf(currentIndex);
+
+      if (direction === 'up' && relativeIndex > 0) {
+        const swapIndex = categoryIndices[relativeIndex - 1];
+        [items[currentIndex], items[swapIndex]] = [items[swapIndex], items[currentIndex]];
+      } else if (direction === 'down' && relativeIndex < categoryIndices.length - 1) {
+        const swapIndex = categoryIndices[relativeIndex + 1];
+        [items[currentIndex], items[swapIndex]] = [items[swapIndex], items[currentIndex]];
+      }
+      return { ...prev, gallery_items: items };
+    });
   };
 
-  const moveDown = (index: number) => {
-    if (index === localCaps.length - 1) return;
-    const updated = [...localCaps];
-    const temp = updated[index + 1];
-    updated[index + 1] = updated[index];
-    updated[index] = temp;
-    setLocalCaps(updated);
+  const handleAddBlankCard = (categoryTitle: string) => {
+    const newId = `card-${Date.now()}`;
+    setFormData((prev: any) => ({
+      ...prev,
+      gallery_items: [...(prev.gallery_items || []), { id: newId, imageUrl: '', title: '', description: '', price: '', category: categoryTitle }]
+    }));
+  };
+
+  const handleAssignMedia = (unassignedImg: any, actionValue: string) => {
+    if (!actionValue) return;
+    const [actionType, payload] = actionValue.split('|');
+
+    setFormData((prev: any) => {
+      let items = [...(prev.gallery_items || [])];
+      
+      if (actionType === 'CREATE_NEW') {
+        items = items.map((img: any) => img.id === unassignedImg.id ? { ...img, category: payload } : img);
+      } else if (actionType === 'MERGE') {
+        items = items.map((img: any) => img.id === payload ? { ...img, imageUrl: unassignedImg.imageUrl } : img);
+        items = items.filter((img: any) => img.id !== unassignedImg.id);
+      }
+      return { ...prev, gallery_items: items };
+    });
+  };
+
+  const handleDetachMedia = (cardId: string, currentImageUrl: string) => {
+    if (!currentImageUrl) return;
+    setFormData((prev: any) => {
+      let items = [...(prev.gallery_items || [])];
+      items = items.map((img: any) => (img.id === cardId) ? { ...img, imageUrl: '' } : img);
+      items.push({ id: `unassigned-${Date.now()}`, imageUrl: currentImageUrl, title: '', description: '', price: '', category: '' });
+      return { ...prev, gallery_items: items };
+    });
+  };
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault(); setFiles([...files, ...Array.from(e.dataTransfer.files)]);
+  };
+
+  const handleUploadGallery = async () => {
+    setIsUploadingGallery(true);
+    const uploadData = new FormData();
+    files.forEach(file => uploadData.append('images', file));
+    try {
+      const response = await updateStorefrontGallery(formData.id, formData.slug, uploadData);
+      setFiles([]);
+      if (response?.gallery_items) setFormData((prev: any) => ({ ...prev, gallery_items: response.gallery_items }));
+      if (onReload) onReload(); 
+    } catch (e) { alert("Gallery sync failed."); } finally { setIsUploadingGallery(false); }
+  };
+
+  const handleDeleteLiveItem = async (id: string, imageUrl?: string) => {
+    if (!window.confirm("Remove this item entirely?")) return;
+    setIsDeleting(id);
+    try {
+      if (imageUrl && imageUrl.startsWith('http')) await removeImageFromGallery(formData.id, imageUrl);
+      setFormData((prev: any) => ({
+        ...prev, gallery_items: prev.gallery_items.filter((img: any, i: number) => (img.id || `gal-${i}`) !== id)
+      }));
+      startTransition(() => { router.refresh(); if (onReload) onReload(); });
+    } catch (e) { alert("Failed to remove item."); } finally { setIsDeleting(null); }
   };
 
   const handleSave = async () => {
@@ -87,14 +163,8 @@ export default function CapabilitiesTab({
     try {
       await updateStorefrontCapabilities(formData.id, localCaps);
       setFormData((prev: any) => ({ ...prev, capabilities: localCaps }));
-      router.refresh();
-      
-      if (onReload) onReload();
-    } catch (err) {
-      alert("Failed to save data.");
-    } finally {
-      setIsSaving(false);
-    }
+      router.refresh(); if (onReload) onReload();
+    } catch (err) { alert("Failed to save data."); } finally { setIsSaving(false); }
   };
 
   return (
@@ -115,76 +185,134 @@ export default function CapabilitiesTab({
       <div className="space-y-4">
         {localCaps.length === 0 ? (
           <div className="text-center py-10 border border-dashed border-zinc-800 rounded-xl bg-zinc-900/30">
-            <p className="text-xs text-zinc-500 font-mono tracking-widest uppercase">
-              {isMenuMode ? 'No menu categories defined.' : 'No services defined.'}
-            </p>
+            <p className="text-xs text-zinc-500 font-mono tracking-widest uppercase">No categories defined.</p>
           </div>
         ) : (
           localCaps.map((cap, index) => {
-            const bullets = cap.bullets || [];
+            const categoryImages = liveGallery.filter((img: any) => img.category === cap.title);
+            const isOpen = openCapIndex === index;
             
             return (
-              <div key={index} className="flex gap-3 bg-zinc-900/60 border border-zinc-800 p-3 rounded-xl group relative shadow-sm">
-                <div className="flex flex-col gap-1 items-center justify-center shrink-0 w-6 opacity-30 hover:opacity-100 transition-opacity cursor-pointer">
-                  <button type="button" onClick={() => moveUp(index)} disabled={index === 0} className="hover:text-cyan-400 disabled:opacity-0"><GripVertical className="w-4 h-4" /></button>
-                </div>
+              <div key={index} className="flex flex-col bg-zinc-900/60 border border-zinc-800 rounded-xl relative shadow-sm overflow-hidden transition-all">
                 
-                <div className="flex-1 space-y-3 pr-2">
-                  <input 
-                    type="text" 
-                    value={cap.title} 
-                    onChange={(e) => updateCap(index, 'title', e.target.value)} 
-                    placeholder={isMenuMode ? 'Category Name (e.g., Smash Burgers)' : 'Service Name (e.g., Commercial Photography)'}
-                    className="w-full bg-black/50 border border-zinc-800 rounded-lg px-3 py-2 text-sm text-white font-bold outline-none focus:border-fuchsia-500 transition-colors"
-                  />
-                  <textarea 
-                    value={cap.description} 
-                    onChange={(e) => updateCap(index, 'description', e.target.value)} 
-                    placeholder={isMenuMode ? 'Short description of this category...' : 'Short description of this capability...'}
-                    rows={2}
-                    className="w-full bg-black/50 border border-zinc-800 rounded-lg px-3 py-2 text-xs text-zinc-300 outline-none focus:border-fuchsia-500 transition-colors resize-none"
-                  />
-
-                  {/* DYNAMIC BULLETS SECTION */}
-                  <div className="pt-2 border-t border-zinc-800/50">
-                    <div className="flex justify-between items-end mb-3">
-                      <label className="text-[10px] font-bold text-fuchsia-500 uppercase tracking-widest flex items-center gap-2">
-                        <List size={12} /> {isMenuMode ? 'Menu Items & Prices' : 'Detail Bullets'}
-                      </label>
-                    </div>
-
-                    <div className="space-y-2 mb-3">
-                      {bullets.map((bullet: string, bIndex: number) => (
-                        <div key={bIndex} className="flex items-center gap-2">
-                          <div className="w-1.5 h-1.5 rounded-full bg-fuchsia-500/50 shrink-0 mt-0.5" />
-                          <input 
-                            value={bullet}
-                            onChange={(e) => updateBullet(index, bIndex, e.target.value)}
-                            placeholder={isMenuMode ? 'Item Name - $Price (e.g. Smashed Burger - $12)' : 'Detail or feature...'}
-                            className="flex-1 bg-transparent border-b border-zinc-800 focus:border-fuchsia-500/50 py-1.5 text-xs text-zinc-300 focus:outline-none transition-colors"
-                          />
-                          <button 
-                            onClick={() => removeBullet(index, bIndex)}
-                            className="text-zinc-600 hover:text-rose-400 p-1"
-                          >
-                            <X size={12} />
-                          </button>
-                        </div>
-                      ))}
-                    </div>
-
-                    <button 
-                      onClick={() => addBullet(index)}
-                      className="text-[10px] font-bold text-zinc-500 hover:text-fuchsia-400 uppercase tracking-widest flex items-center gap-1.5 transition-colors"
-                    >
-                      <Plus size={12} /> {isMenuMode ? 'Add Menu Item' : 'Add Bullet Point'}
+                {/* ACCORDION HEADER */}
+                <div 
+                  className="flex items-center justify-between p-4 cursor-pointer hover:bg-zinc-800/50 transition-colors"
+                  onClick={() => setOpenCapIndex(isOpen ? null : index)}
+                >
+                  <div className="flex items-center gap-3">
+                    <button onClick={(e) => { e.stopPropagation(); moveUp(index); }} disabled={index === 0} className="text-zinc-600 hover:text-cyan-400 disabled:opacity-0 cursor-pointer">
+                      <GripVertical className="w-4 h-4" />
+                    </button>
+                    <h3 className="font-bold text-white text-sm">{cap.title || 'Untitled Category'}</h3>
+                  </div>
+                  <div className="flex items-center gap-4">
+                    <span className="text-[10px] text-zinc-500 font-mono uppercase tracking-widest">{categoryImages.length} Items</span>
+                    <ChevronDown className={`w-4 h-4 text-zinc-500 transition-transform duration-300 ${isOpen ? 'rotate-180' : ''}`} />
+                    <button onClick={(e) => { e.stopPropagation(); removeCap(index); }} className="p-1.5 text-zinc-600 hover:text-rose-400 transition-colors">
+                      <X className="w-4 h-4" />
                     </button>
                   </div>
                 </div>
 
-                <button onClick={() => removeCap(index)} className="shrink-0 p-2 text-zinc-600 hover:text-rose-400 transition-colors self-start">
-                  <X className="w-4 h-4" />
-                </button>
+                {/* ACCORDION BODY */}
+                {isOpen && (
+                  <div className="p-4 border-t border-zinc-800/50 flex flex-col gap-6 animate-in fade-in slide-in-from-top-2 duration-200">
+                    <div className="flex-1 space-y-3">
+                      <input 
+                        type="text" 
+                        value={cap.title} 
+                        onChange={(e) => updateCap(index, 'title', e.target.value)} 
+                        placeholder={isMenuMode ? 'Category Name (e.g., Smash Burgers)' : 'Service Name'}
+                        className="w-full bg-black/50 border border-zinc-800 rounded-lg px-3 py-2 text-sm text-white font-bold outline-none focus:border-fuchsia-500 transition-colors"
+                      />
+                      <textarea 
+                        value={cap.description} 
+                        onChange={(e) => updateCap(index, 'description', e.target.value)} 
+                        placeholder="Short description of this category..."
+                        rows={2}
+                        className="w-full bg-black/50 border border-zinc-800 rounded-lg px-3 py-2 text-xs text-zinc-300 outline-none focus:border-fuchsia-500 transition-colors resize-none"
+                      />
+                    </div>
+
+                    <div className="space-y-4 pt-4 border-t border-zinc-800/30">
+                      <div className="flex items-center justify-between">
+                        <label className="text-[9px] font-bold text-fuchsia-500 uppercase tracking-widest flex items-center gap-2">
+                          <ImageIcon size={12} /> Menu Cards ({categoryImages.length})
+                        </label>
+                        <button onClick={() => handleAddBlankCard(cap.title)} className="text-[9px] font-bold text-zinc-400 hover:text-fuchsia-400 uppercase tracking-widest flex items-center gap-1.5 transition-colors">
+                          <Plus size={10} /> Add Blank Card
+                        </button>
+                      </div>
+                      
+                      {categoryImages.length === 0 ? (
+                         <p className="text-[10px] text-zinc-600 italic">Drag items from the Media Pool below or create a blank card.</p>
+                      ) : (
+                        <div className="space-y-3">
+                          {categoryImages.map((img: any, i: number) => {
+                            const currentId = img.id || `gal-${i}`;
+                            const hasImage = !!img.imageUrl;
+
+                            return (
+                              <div key={currentId} className="flex gap-4 bg-black/40 border border-zinc-800/80 p-3 rounded-xl items-start">
+                                
+                                <div className="flex flex-col gap-1 items-center justify-center shrink-0 w-4 pt-2">
+                                  <button onClick={() => moveGalleryItem(currentId, 'up')} disabled={i === 0} className="text-zinc-600 hover:text-cyan-400 disabled:opacity-0 transition-colors">
+                                    <ChevronUp size={16} />
+                                  </button>
+                                  <button onClick={() => moveGalleryItem(currentId, 'down')} disabled={i === categoryImages.length - 1} className="text-zinc-600 hover:text-cyan-400 disabled:opacity-0 transition-colors">
+                                    <ChevronDown size={16} />
+                                  </button>
+                                </div>
+
+                                <div className="relative w-20 h-20 rounded-lg overflow-hidden shrink-0 border border-zinc-700 bg-zinc-950 flex items-center justify-center group">
+                                  {hasImage ? (
+                                    /* eslint-disable-next-line @next/next/no-img-element */
+                                    <img src={img.imageUrl} alt="preview" className={`w-full h-full object-cover ${isDeleting === currentId ? 'opacity-30' : ''}`} />
+                                  ) : (
+                                    <span className="text-[9px] font-black text-zinc-600 uppercase tracking-widest text-center px-1 leading-tight">Text<br/>Card</span>
+                                  )}
+                                  <div className="absolute inset-0 bg-black/70 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
+                                    <button onClick={() => handleDeleteLiveItem(currentId, img.imageUrl)} className="text-red-400 hover:text-red-300"><Trash2 size={16} /></button>
+                                  </div>
+                                </div>
+                                <div className="flex-1 space-y-2">
+                                  <div className="flex gap-2">
+                                    <input placeholder="Name" value={img.title || ''} onChange={(e) => handleGalleryMetaChange(currentId, 'title', e.target.value)} className="w-full bg-zinc-950 border border-zinc-800 rounded-md px-3 py-1.5 text-xs text-white font-bold focus:border-fuchsia-500 outline-none" />
+                                    {isMenuMode && (
+                                      <div className="relative w-24 shrink-0">
+                                        <DollarSign className="w-3 h-3 text-fuchsia-500 absolute left-2.5 top-2 pointer-events-none" />
+                                        <input placeholder="Price" value={img.price || ''} onChange={(e) => handleGalleryMetaChange(currentId, 'price', e.target.value)} className="w-full bg-zinc-950 border border-zinc-800 rounded-md pl-7 pr-2 py-1.5 text-xs text-white font-bold focus:border-fuchsia-500 outline-none" />
+                                      </div>
+                                    )}
+                                  </div>
+                                  <textarea placeholder="Description..." value={img.description || ''} onChange={(e) => handleGalleryMetaChange(currentId, 'description', e.target.value)} rows={2} className="w-full bg-zinc-950 border border-zinc-800 rounded-md px-3 py-2 text-[11px] text-zinc-400 focus:border-fuchsia-500 outline-none resize-none" />
+                                  <div className="flex justify-between items-center pt-1">
+                                    {hasImage ? (
+                                      <button onClick={() => handleDetachMedia(currentId, img.imageUrl)} className="text-[9px] text-zinc-500 hover:text-amber-400 uppercase tracking-widest font-bold flex items-center gap-1 transition-colors">
+                                        <Unlink size={10} /> Detach Image
+                                      </button>
+                                    ) : (
+                                      <span className="text-[9px] text-zinc-600 uppercase tracking-widest font-bold">No Image Attached</span>
+                                    )}
+                                    <button onClick={() => handleDeleteLiveItem(currentId, img.imageUrl)} className="text-[9px] text-rose-500 hover:text-rose-400 uppercase tracking-widest font-bold flex items-center gap-1 transition-colors">
+                                      <Trash2 size={10} /> Delete Item
+                                    </button>
+                                  </div>
+                                </div>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      )}
+                    </div>
+
+                    <div className="space-y-3 pt-4 border-t border-zinc-800/30 hidden">
+                       {/* Legacy bullets hidden */}
+                    </div>
+
+                  </div>
+                )}
               </div>
             );
           })
@@ -194,11 +322,94 @@ export default function CapabilitiesTab({
       <button 
         onClick={handleSave} 
         disabled={isSaving} 
-        className="w-full flex items-center justify-center gap-2 bg-fuchsia-600 hover:bg-fuchsia-500 text-white font-black tracking-widest text-[10px] uppercase py-3 rounded-lg transition-all shadow-[0_0_10px_rgba(192,38,211,0.2)] disabled:opacity-50 mt-4 cursor-pointer"
+        className="w-full flex items-center justify-center gap-2 bg-fuchsia-600 hover:bg-fuchsia-500 text-white font-black tracking-widest text-[10px] uppercase py-3.5 rounded-lg transition-all shadow-[0_0_15px_rgba(192,38,211,0.2)] disabled:opacity-50 mt-4 cursor-pointer"
       >
-        {isSaving ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Save className="w-3.5 h-3.5" />} 
-        {isSaving ? (isMenuMode ? 'SYNCING MENU...' : 'SYNCING MATRIX...') : (isMenuMode ? 'SAVE MENU LAYOUT' : 'SAVE SERVICES LIST')}
+        {isSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />} 
+        {isSaving ? 'SYNCING ARCHITECTURE...' : 'SAVE ARCHITECTURE'}
       </button>
+
+      {/* --- BOTTOM MEDIA POOL --- */}
+      <div className="pt-10 mt-10 border-t border-zinc-800">
+        <div className="flex items-center gap-2 mb-4">
+          <ImageIcon className="w-4 h-4 text-emerald-500" />
+          <h3 className="text-sm font-black text-white uppercase tracking-widest">Unassigned Media Pool</h3>
+        </div>
+        
+        <div onDragOver={(e) => e.preventDefault()} onDrop={handleDrop} className="border border-dashed border-zinc-700 p-8 rounded-xl text-center hover:border-emerald-500/50 hover:bg-emerald-500/5 transition-colors bg-zinc-900/40 cursor-pointer">
+          <UploadCloud className="w-8 h-8 mx-auto text-zinc-500 mb-2" />
+          <p className="text-zinc-300 font-bold text-xs uppercase tracking-widest">Drag & Drop Photos Here</p>
+        </div>
+
+        {files.length > 0 && (
+          <div className="space-y-3 bg-zinc-900/80 border border-zinc-800 p-4 rounded-xl mt-4">
+            <h4 className="text-[9px] font-bold text-emerald-500 uppercase tracking-widest">Staging Queue ({files.length})</h4>
+            <div className="grid grid-cols-4 sm:grid-cols-6 gap-2">
+              {files.map((file, i) => (
+                <div key={i} className="relative aspect-square bg-black rounded flex items-center justify-center overflow-hidden border border-zinc-800">
+                  <span className="text-[8px] text-zinc-500 font-mono truncate px-1">{file.name}</span>
+                  <button type="button" onClick={() => setFiles(files.filter((_, idx) => idx !== i))} className="absolute top-1 right-1 bg-black/80 rounded p-1 hover:bg-red-500 transition-colors"><X className="w-3 h-3 text-white" /></button>
+                </div>
+              ))}
+            </div>
+            <button onClick={handleUploadGallery} disabled={isUploadingGallery} className="w-full bg-emerald-600 hover:bg-emerald-500 transition-colors py-2.5 font-black tracking-widest text-[10px] text-zinc-950 uppercase rounded-lg shadow-[0_0_10px_rgba(16,185,129,0.2)] disabled:opacity-50">
+              {isUploadingGallery ? 'UPLOADING...' : 'UPLOAD TO POOL'}
+            </button>
+          </div>
+        )}
+
+        {unassignedImages.length > 0 && (
+          <div className="grid grid-cols-1 gap-4 mt-6">
+            {unassignedImages.map((img: any, i: number) => {
+              const currentId = img.id || `gal-${i}`;
+              return (
+                <div key={currentId} className="flex gap-3 bg-zinc-900/60 border border-zinc-800 p-3 rounded-xl shadow-sm items-center">
+                  
+                  <div className="relative w-16 h-16 rounded-lg overflow-hidden shrink-0 border border-zinc-700 bg-black group">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img src={img.imageUrl} alt="unassigned" className={`w-full h-full object-cover ${isDeleting === currentId ? 'opacity-30' : ''}`} />
+                    <div className="absolute inset-0 bg-black/70 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
+                      <button onClick={() => handleDeleteLiveItem(currentId, img.imageUrl)} className="text-red-400 hover:text-red-300"><Trash2 size={16} /></button>
+                    </div>
+                  </div>
+                  
+                  <div className="flex-1 flex flex-col justify-center gap-2 min-w-0">
+                    
+                    <select
+                      value=""
+                      onChange={(e) => handleAssignMedia(img, e.target.value)}
+                      className="w-full bg-black/40 border border-emerald-500/30 rounded-lg px-2 py-2 text-[10px] uppercase tracking-widest font-bold text-emerald-400 hover:bg-emerald-500/5 focus:outline-none transition-colors cursor-pointer truncate"
+                    >
+                      <option value="">-- Assign Media --</option>
+                      {localCaps.map((c, idx) => {
+                        const categoryCards = liveGallery.filter((lg: any) => lg.category === c.title);
+                        return (
+                          <optgroup key={idx} label={c.title || 'Untitled Category'}>
+                            <option value={`CREATE_NEW|${c.title}`}>+ Create New Card</option>
+                            {categoryCards.map((card: any) => (
+                              <option key={card.id} value={`MERGE|${card.id}`}>
+                                Replace: {card.title || 'Untitled Item'}
+                              </option>
+                            ))}
+                          </optgroup>
+                        );
+                      })}
+                    </select>
+
+                    {/* 🚀 THE RESTORED DELETE BUTTON FOR UNASSIGNED MEDIA */}
+                    <div className="flex justify-end">
+                      <button onClick={() => handleDeleteLiveItem(currentId, img.imageUrl)} className="text-[9px] text-rose-500 hover:text-rose-400 uppercase tracking-widest font-bold flex items-center gap-1 transition-colors">
+                        <Trash2 size={10} /> Delete Image
+                      </button>
+                    </div>
+
+                  </div>
+
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </div>
 
     </div>
   );
