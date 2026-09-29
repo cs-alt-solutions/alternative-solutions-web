@@ -2,7 +2,7 @@
 'use client';
 
 import React, { useState, useEffect, startTransition } from 'react';
-import { Plus, X, GripVertical, Save, Loader2, Layers, List, UploadCloud, Trash2, DollarSign, Image as ImageIcon, ChevronDown, ChevronUp, Link as LinkIcon, Unlink } from 'lucide-react';
+import { Plus, X, GripVertical, Save, Loader2, Layers, List, UploadCloud, Trash2, DollarSign, Image as ImageIcon, ChevronDown, ChevronUp, Unlink } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { updateStorefrontCapabilities, updateStorefrontGallery, removeImageFromGallery } from '@/app/actions/storefronts';
 
@@ -99,7 +99,8 @@ export default function CapabilitiesTab({
     const newId = `card-${Date.now()}`;
     setFormData((prev: any) => ({
       ...prev,
-      gallery_items: [...(prev.gallery_items || []), { id: newId, imageUrl: '', title: '', description: '', price: '', category: categoryTitle }]
+      // 🚀 THE FIX: Push the new card to the START of the array so it drops right below the button
+      gallery_items: [{ id: newId, imageUrl: '', title: '', description: '', price: '', category: categoryTitle }, ...(prev.gallery_items || [])]
     }));
   };
 
@@ -111,7 +112,12 @@ export default function CapabilitiesTab({
       let items = [...(prev.gallery_items || [])];
       
       if (actionType === 'CREATE_NEW') {
-        items = items.map((img: any) => img.id === unassignedImg.id ? { ...img, category: payload } : img);
+        // 🚀 PROACTIVE FIX: Move freshly assigned photos to the top of their new category
+        const targetImg = items.find((img: any) => img.id === unassignedImg.id);
+        if (targetImg) {
+          items = items.filter((img: any) => img.id !== unassignedImg.id);
+          items.unshift({ ...targetImg, category: payload });
+        }
       } else if (actionType === 'MERGE') {
         items = items.map((img: any) => img.id === payload ? { ...img, imageUrl: unassignedImg.imageUrl } : img);
         items = items.filter((img: any) => img.id !== unassignedImg.id);
@@ -125,7 +131,8 @@ export default function CapabilitiesTab({
     setFormData((prev: any) => {
       let items = [...(prev.gallery_items || [])];
       items = items.map((img: any) => (img.id === cardId) ? { ...img, imageUrl: '' } : img);
-      items.push({ id: `unassigned-${Date.now()}`, imageUrl: currentImageUrl, title: '', description: '', price: '', category: '' });
+      // 🚀 PROACTIVE FIX: Put the detached photo at the top of the media pool
+      items.unshift({ id: `unassigned-${Date.now()}`, imageUrl: currentImageUrl, title: '', description: '', price: '', category: '' });
       return { ...prev, gallery_items: items };
     });
   };
@@ -307,10 +314,6 @@ export default function CapabilitiesTab({
                       )}
                     </div>
 
-                    <div className="space-y-3 pt-4 border-t border-zinc-800/30 hidden">
-                       {/* Legacy bullets hidden */}
-                    </div>
-
                   </div>
                 )}
               </div>
@@ -318,15 +321,6 @@ export default function CapabilitiesTab({
           })
         )}
       </div>
-
-      <button 
-        onClick={handleSave} 
-        disabled={isSaving} 
-        className="w-full flex items-center justify-center gap-2 bg-fuchsia-600 hover:bg-fuchsia-500 text-white font-black tracking-widest text-[10px] uppercase py-3.5 rounded-lg transition-all shadow-[0_0_15px_rgba(192,38,211,0.2)] disabled:opacity-50 mt-4 cursor-pointer"
-      >
-        {isSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />} 
-        {isSaving ? 'SYNCING ARCHITECTURE...' : 'SAVE ARCHITECTURE'}
-      </button>
 
       {/* --- BOTTOM MEDIA POOL --- */}
       <div className="pt-10 mt-10 border-t border-zinc-800">
@@ -364,9 +358,13 @@ export default function CapabilitiesTab({
               return (
                 <div key={currentId} className="flex gap-3 bg-zinc-900/60 border border-zinc-800 p-3 rounded-xl shadow-sm items-center">
                   
-                  <div className="relative w-16 h-16 rounded-lg overflow-hidden shrink-0 border border-zinc-700 bg-black group">
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img src={img.imageUrl} alt="unassigned" className={`w-full h-full object-cover ${isDeleting === currentId ? 'opacity-30' : ''}`} />
+                  <div className="relative w-16 h-16 rounded-lg overflow-hidden shrink-0 border border-zinc-700 bg-black group flex items-center justify-center">
+                    {img.imageUrl ? (
+                      /* eslint-disable-next-line @next/next/no-img-element */
+                      <img src={img.imageUrl} alt="unassigned" className={`w-full h-full object-cover ${isDeleting === currentId ? 'opacity-30' : ''}`} />
+                    ) : (
+                      <span className="text-[9px] font-black text-zinc-600 uppercase tracking-widest text-center px-1 leading-tight">Text<br/>Card</span>
+                    )}
                     <div className="absolute inset-0 bg-black/70 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
                       <button onClick={() => handleDeleteLiveItem(currentId, img.imageUrl)} className="text-red-400 hover:text-red-300"><Trash2 size={16} /></button>
                     </div>
@@ -395,7 +393,6 @@ export default function CapabilitiesTab({
                       })}
                     </select>
 
-                    {/* 🚀 THE RESTORED DELETE BUTTON FOR UNASSIGNED MEDIA */}
                     <div className="flex justify-end">
                       <button onClick={() => handleDeleteLiveItem(currentId, img.imageUrl)} className="text-[9px] text-rose-500 hover:text-rose-400 uppercase tracking-widest font-bold flex items-center gap-1 transition-colors">
                         <Trash2 size={10} /> Delete Image
