@@ -1,17 +1,14 @@
 /* src/components/dashboard/storefronts/editor/CapabilitiesTab.tsx */
 'use client';
 
-import React, { useState, useEffect, startTransition } from 'react';
-import { Plus, X, GripVertical, Save, Loader2, Layers, List, UploadCloud, Trash2, DollarSign, Image as ImageIcon, ChevronDown, ChevronUp, Unlink } from 'lucide-react';
-import { useRouter } from 'next/navigation';
-import { updateStorefrontCapabilities, updateStorefrontGallery, removeImageFromGallery } from '@/app/actions/storefronts';
+import React, { useState, useEffect } from 'react';
+import { Plus, X, GripVertical, Layers, List, UploadCloud, Trash2, DollarSign, Image as ImageIcon, ChevronDown, ChevronUp, Unlink } from 'lucide-react';
+import { updateStorefrontGallery, removeImageFromGallery } from '@/app/actions/storefronts';
 
 export default function CapabilitiesTab({ 
-  formData, setFormData, onReload
-}: { formData: any; setFormData: any; onReload?: () => void; }) {
-  const router = useRouter();
+  formData, setFormData 
+}: { formData: any; setFormData: any; }) {
   const [localCaps, setLocalCaps] = useState<any[]>([]);
-  const [isSaving, setIsSaving] = useState(false);
   const [files, setFiles] = useState<File[]>([]);
   const [isUploadingGallery, setIsUploadingGallery] = useState(false);
   const [isDeleting, setIsDeleting] = useState<string | null>(null);
@@ -37,30 +34,56 @@ export default function CapabilitiesTab({
 
   // --- CATEGORY HANDLERS ---
   const addCapability = () => {
-    setLocalCaps([...localCaps, { title: '', description: '', bullets: [] }]);
-    setOpenCapIndex(localCaps.length);
-  };
-  const updateCap = (index: number, field: string, value: string) => {
-    const updated = [...localCaps]; updated[index][field] = value; setLocalCaps(updated);
-  };
-  const removeCap = (index: number) => setLocalCaps(localCaps.filter((_, i) => i !== index));
-  const moveUp = (index: number) => {
-    if (index === 0) return; const updated = [...localCaps];
-    const temp = updated[index - 1]; updated[index - 1] = updated[index]; updated[index] = temp;
+    const updated = [...localCaps, { title: '', description: '', bullets: [] }];
     setLocalCaps(updated);
+    setFormData((prev: any) => ({ ...prev, capabilities: updated }));
+    setOpenCapIndex(updated.length - 1);
   };
 
-  // --- TEXT BULLET HANDLERS ---
-  const addBullet = (serviceIndex: number) => {
+  // 🚀 THE FIX: When a category title changes, automatically update all attached gallery items to match the new title!
+  const updateCapTitle = (index: number, newTitle: string) => {
+    const oldTitle = localCaps[index].title;
+    const updatedCaps = [...localCaps]; 
+    updatedCaps[index].title = newTitle; 
+    setLocalCaps(updatedCaps);
+
+    setFormData((prev: any) => {
+      const updatedGallery = (prev.gallery_items || []).map((item: any) => {
+        if (item.category === oldTitle) {
+          return { ...item, category: newTitle };
+        }
+        return item;
+      });
+
+      return {
+        ...prev,
+        capabilities: updatedCaps,
+        gallery_items: updatedGallery
+      };
+    });
+  };
+
+  const updateCapField = (index: number, field: string, value: string) => {
+    const updated = [...localCaps]; 
+    updated[index][field] = value; 
+    setLocalCaps(updated);
+    setFormData((prev: any) => ({ ...prev, capabilities: updated }));
+  };
+  
+  const removeCap = (index: number) => {
+    const updated = localCaps.filter((_, i) => i !== index);
+    setLocalCaps(updated);
+    setFormData((prev: any) => ({ ...prev, capabilities: updated }));
+  };
+  
+  const moveUp = (index: number) => {
+    if (index === 0) return; 
     const updated = [...localCaps];
-    if (!updated[serviceIndex].bullets) updated[serviceIndex].bullets = [];
-    updated[serviceIndex].bullets.push(''); setLocalCaps(updated);
-  };
-  const updateBullet = (serviceIndex: number, bulletIndex: number, value: string) => {
-    const updated = [...localCaps]; updated[serviceIndex].bullets[bulletIndex] = value; setLocalCaps(updated);
-  };
-  const removeBullet = (serviceIndex: number, bulletIndex: number) => {
-    const updated = [...localCaps]; updated[serviceIndex].bullets.splice(bulletIndex, 1); setLocalCaps(updated);
+    const temp = updated[index - 1]; 
+    updated[index - 1] = updated[index]; 
+    updated[index] = temp;
+    setLocalCaps(updated);
+    setFormData((prev: any) => ({ ...prev, capabilities: updated }));
   };
 
   // --- GALLERY HANDLERS ---
@@ -99,7 +122,6 @@ export default function CapabilitiesTab({
     const newId = `card-${Date.now()}`;
     setFormData((prev: any) => ({
       ...prev,
-      // 🚀 THE FIX: Push the new card to the START of the array so it drops right below the button
       gallery_items: [{ id: newId, imageUrl: '', title: '', description: '', price: '', category: categoryTitle }, ...(prev.gallery_items || [])]
     }));
   };
@@ -112,7 +134,6 @@ export default function CapabilitiesTab({
       let items = [...(prev.gallery_items || [])];
       
       if (actionType === 'CREATE_NEW') {
-        // 🚀 PROACTIVE FIX: Move freshly assigned photos to the top of their new category
         const targetImg = items.find((img: any) => img.id === unassignedImg.id);
         if (targetImg) {
           items = items.filter((img: any) => img.id !== unassignedImg.id);
@@ -131,7 +152,6 @@ export default function CapabilitiesTab({
     setFormData((prev: any) => {
       let items = [...(prev.gallery_items || [])];
       items = items.map((img: any) => (img.id === cardId) ? { ...img, imageUrl: '' } : img);
-      // 🚀 PROACTIVE FIX: Put the detached photo at the top of the media pool
       items.unshift({ id: `unassigned-${Date.now()}`, imageUrl: currentImageUrl, title: '', description: '', price: '', category: '' });
       return { ...prev, gallery_items: items };
     });
@@ -149,7 +169,6 @@ export default function CapabilitiesTab({
       const response = await updateStorefrontGallery(formData.id, formData.slug, uploadData);
       setFiles([]);
       if (response?.gallery_items) setFormData((prev: any) => ({ ...prev, gallery_items: response.gallery_items }));
-      if (onReload) onReload(); 
     } catch (e) { alert("Gallery sync failed."); } finally { setIsUploadingGallery(false); }
   };
 
@@ -161,17 +180,7 @@ export default function CapabilitiesTab({
       setFormData((prev: any) => ({
         ...prev, gallery_items: prev.gallery_items.filter((img: any, i: number) => (img.id || `gal-${i}`) !== id)
       }));
-      startTransition(() => { router.refresh(); if (onReload) onReload(); });
     } catch (e) { alert("Failed to remove item."); } finally { setIsDeleting(null); }
-  };
-
-  const handleSave = async () => {
-    setIsSaving(true);
-    try {
-      await updateStorefrontCapabilities(formData.id, localCaps);
-      setFormData((prev: any) => ({ ...prev, capabilities: localCaps }));
-      router.refresh(); if (onReload) onReload();
-    } catch (err) { alert("Failed to save data."); } finally { setIsSaving(false); }
   };
 
   return (
@@ -229,13 +238,13 @@ export default function CapabilitiesTab({
                       <input 
                         type="text" 
                         value={cap.title} 
-                        onChange={(e) => updateCap(index, 'title', e.target.value)} 
+                        onChange={(e) => updateCapTitle(index, e.target.value)} 
                         placeholder={isMenuMode ? 'Category Name (e.g., Smash Burgers)' : 'Service Name'}
                         className="w-full bg-black/50 border border-zinc-800 rounded-lg px-3 py-2 text-sm text-white font-bold outline-none focus:border-fuchsia-500 transition-colors"
                       />
                       <textarea 
                         value={cap.description} 
-                        onChange={(e) => updateCap(index, 'description', e.target.value)} 
+                        onChange={(e) => updateCapField(index, 'description', e.target.value)} 
                         placeholder="Short description of this category..."
                         rows={2}
                         className="w-full bg-black/50 border border-zinc-800 rounded-lg px-3 py-2 text-xs text-zinc-300 outline-none focus:border-fuchsia-500 transition-colors resize-none"
