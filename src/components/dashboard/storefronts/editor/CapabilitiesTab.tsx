@@ -1,13 +1,15 @@
 /* src/components/dashboard/storefronts/editor/CapabilitiesTab.tsx */
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, startTransition } from 'react';
 import { Plus, X, GripVertical, Layers, List, UploadCloud, Trash2, DollarSign, Image as ImageIcon, ChevronDown, ChevronUp, Unlink } from 'lucide-react';
+import { useRouter } from 'next/navigation';
 import { updateStorefrontGallery, removeImageFromGallery } from '@/app/actions/storefronts';
 
 export default function CapabilitiesTab({ 
-  formData, setFormData 
-}: { formData: any; setFormData: any; }) {
+  formData, setFormData, onReload
+}: { formData: any; setFormData: any; onReload?: () => void; }) {
+  const router = useRouter();
   const [localCaps, setLocalCaps] = useState<any[]>([]);
   const [files, setFiles] = useState<File[]>([]);
   const [isUploadingGallery, setIsUploadingGallery] = useState(false);
@@ -39,8 +41,7 @@ export default function CapabilitiesTab({
     setFormData((prev: any) => ({ ...prev, capabilities: updated }));
     setOpenCapIndex(updated.length - 1);
   };
-
-  // 🚀 THE FIX: When a category title changes, automatically update all attached gallery items to match the new title!
+  
   const updateCapTitle = (index: number, newTitle: string) => {
     const oldTitle = localCaps[index].title;
     const updatedCaps = [...localCaps]; 
@@ -82,6 +83,29 @@ export default function CapabilitiesTab({
     const temp = updated[index - 1]; 
     updated[index - 1] = updated[index]; 
     updated[index] = temp;
+    setLocalCaps(updated);
+    setFormData((prev: any) => ({ ...prev, capabilities: updated }));
+  };
+
+  // --- TEXT BULLET HANDLERS ---
+  const addBullet = (serviceIndex: number) => {
+    const updated = [...localCaps];
+    if (!updated[serviceIndex].bullets) updated[serviceIndex].bullets = [];
+    updated[serviceIndex].bullets.push(''); 
+    setLocalCaps(updated);
+    setFormData((prev: any) => ({ ...prev, capabilities: updated }));
+  };
+  
+  const updateBullet = (serviceIndex: number, bulletIndex: number, value: string) => {
+    const updated = [...localCaps]; 
+    updated[serviceIndex].bullets[bulletIndex] = value; 
+    setLocalCaps(updated);
+    setFormData((prev: any) => ({ ...prev, capabilities: updated }));
+  };
+  
+  const removeBullet = (serviceIndex: number, bulletIndex: number) => {
+    const updated = [...localCaps]; 
+    updated[serviceIndex].bullets.splice(bulletIndex, 1); 
     setLocalCaps(updated);
     setFormData((prev: any) => ({ ...prev, capabilities: updated }));
   };
@@ -169,6 +193,7 @@ export default function CapabilitiesTab({
       const response = await updateStorefrontGallery(formData.id, formData.slug, uploadData);
       setFiles([]);
       if (response?.gallery_items) setFormData((prev: any) => ({ ...prev, gallery_items: response.gallery_items }));
+      if (onReload) onReload(); 
     } catch (e) { alert("Gallery sync failed."); } finally { setIsUploadingGallery(false); }
   };
 
@@ -180,6 +205,7 @@ export default function CapabilitiesTab({
       setFormData((prev: any) => ({
         ...prev, gallery_items: prev.gallery_items.filter((img: any, i: number) => (img.id || `gal-${i}`) !== id)
       }));
+      startTransition(() => { router.refresh(); if (onReload) onReload(); });
     } catch (e) { alert("Failed to remove item."); } finally { setIsDeleting(null); }
   };
 
@@ -321,6 +347,10 @@ export default function CapabilitiesTab({
                           })}
                         </div>
                       )}
+                    </div>
+
+                    <div className="space-y-3 pt-4 border-t border-zinc-800/30 hidden">
+                       {/* Legacy bullets hidden */}
                     </div>
 
                   </div>
