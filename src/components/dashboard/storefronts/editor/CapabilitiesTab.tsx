@@ -2,15 +2,16 @@
 'use client';
 
 import React, { useState, useEffect, startTransition } from 'react';
-import { Plus, X, GripVertical, Layers, List, UploadCloud, Trash2, DollarSign, Image as ImageIcon, ChevronDown, ChevronUp, Unlink } from 'lucide-react';
+import { Plus, X, GripVertical, Save, Loader2, Layers, List, UploadCloud, Trash2, DollarSign, Image as ImageIcon, ChevronDown, ChevronUp, Unlink, Eye, EyeOff } from 'lucide-react';
 import { useRouter } from 'next/navigation';
-import { updateStorefrontGallery, removeImageFromGallery } from '@/app/actions/storefronts';
+import { updateStorefrontCapabilities, updateStorefrontGallery, removeImageFromGallery } from '@/app/actions/storefronts';
 
 export default function CapabilitiesTab({ 
   formData, setFormData, onReload
 }: { formData: any; setFormData: any; onReload?: () => void; }) {
   const router = useRouter();
   const [localCaps, setLocalCaps] = useState<any[]>([]);
+  const [isSaving, setIsSaving] = useState(false);
   const [files, setFiles] = useState<File[]>([]);
   const [isUploadingGallery, setIsUploadingGallery] = useState(false);
   const [isDeleting, setIsDeleting] = useState<string | null>(null);
@@ -28,8 +29,8 @@ export default function CapabilitiesTab({
   }, [formData.capabilities]);
 
   const liveGallery = (formData.gallery_items || []).map((item: any, i: number) => {
-    if (typeof item === 'string') return { id: `gal-${i}`, imageUrl: item, title: '', description: '', category: '', price: '' };
-    return { ...item, id: item.id || `gal-${i}` };
+    if (typeof item === 'string') return { id: `gal-${i}`, imageUrl: item, title: '', description: '', category: '', price: '', isVisible: true };
+    return { ...item, id: item.id || `gal-${i}`, isVisible: item.isVisible !== false };
   });
 
   const unassignedImages = liveGallery.filter((img: any) => !img.category || !localCaps.some(c => c.title === img.category));
@@ -55,12 +56,7 @@ export default function CapabilitiesTab({
         }
         return item;
       });
-
-      return {
-        ...prev,
-        capabilities: updatedCaps,
-        gallery_items: updatedGallery
-      };
+      return { ...prev, capabilities: updatedCaps, gallery_items: updatedGallery };
     });
   };
 
@@ -87,31 +83,8 @@ export default function CapabilitiesTab({
     setFormData((prev: any) => ({ ...prev, capabilities: updated }));
   };
 
-  // --- TEXT BULLET HANDLERS ---
-  const addBullet = (serviceIndex: number) => {
-    const updated = [...localCaps];
-    if (!updated[serviceIndex].bullets) updated[serviceIndex].bullets = [];
-    updated[serviceIndex].bullets.push(''); 
-    setLocalCaps(updated);
-    setFormData((prev: any) => ({ ...prev, capabilities: updated }));
-  };
-  
-  const updateBullet = (serviceIndex: number, bulletIndex: number, value: string) => {
-    const updated = [...localCaps]; 
-    updated[serviceIndex].bullets[bulletIndex] = value; 
-    setLocalCaps(updated);
-    setFormData((prev: any) => ({ ...prev, capabilities: updated }));
-  };
-  
-  const removeBullet = (serviceIndex: number, bulletIndex: number) => {
-    const updated = [...localCaps]; 
-    updated[serviceIndex].bullets.splice(bulletIndex, 1); 
-    setLocalCaps(updated);
-    setFormData((prev: any) => ({ ...prev, capabilities: updated }));
-  };
-
   // --- GALLERY HANDLERS ---
-  const handleGalleryMetaChange = (id: string, field: string, value: string) => {
+  const handleGalleryMetaChange = (id: string, field: string, value: any) => {
     setFormData((prev: any) => ({
       ...prev,
       gallery_items: (prev.gallery_items || []).map((img: any, i: number) => {
@@ -146,7 +119,7 @@ export default function CapabilitiesTab({
     const newId = `card-${Date.now()}`;
     setFormData((prev: any) => ({
       ...prev,
-      gallery_items: [{ id: newId, imageUrl: '', title: '', description: '', price: '', category: categoryTitle }, ...(prev.gallery_items || [])]
+      gallery_items: [{ id: newId, imageUrl: '', title: '', description: '', price: '', category: categoryTitle, isVisible: true }, ...(prev.gallery_items || [])]
     }));
   };
 
@@ -161,7 +134,7 @@ export default function CapabilitiesTab({
         const targetImg = items.find((img: any) => img.id === unassignedImg.id);
         if (targetImg) {
           items = items.filter((img: any) => img.id !== unassignedImg.id);
-          items.unshift({ ...targetImg, category: payload });
+          items.unshift({ ...targetImg, category: payload, isVisible: true });
         }
       } else if (actionType === 'MERGE') {
         items = items.map((img: any) => img.id === payload ? { ...img, imageUrl: unassignedImg.imageUrl } : img);
@@ -176,7 +149,7 @@ export default function CapabilitiesTab({
     setFormData((prev: any) => {
       let items = [...(prev.gallery_items || [])];
       items = items.map((img: any) => (img.id === cardId) ? { ...img, imageUrl: '' } : img);
-      items.unshift({ id: `unassigned-${Date.now()}`, imageUrl: currentImageUrl, title: '', description: '', price: '', category: '' });
+      items.unshift({ id: `unassigned-${Date.now()}`, imageUrl: currentImageUrl, title: '', description: '', price: '', category: '', isVisible: true });
       return { ...prev, gallery_items: items };
     });
   };
@@ -294,9 +267,10 @@ export default function CapabilitiesTab({
                           {categoryImages.map((img: any, i: number) => {
                             const currentId = img.id || `gal-${i}`;
                             const hasImage = !!img.imageUrl;
+                            const isVisible = img.isVisible !== false;
 
                             return (
-                              <div key={currentId} className="flex gap-4 bg-black/40 border border-zinc-800/80 p-3 rounded-xl items-start">
+                              <div key={currentId} className={`flex gap-4 ${isVisible ? 'bg-black/40 border-zinc-800/80' : 'bg-zinc-950/50 border-dashed border-zinc-700 opacity-60'} border p-3 rounded-xl items-start transition-all`}>
                                 
                                 <div className="flex flex-col gap-1 items-center justify-center shrink-0 w-4 pt-2">
                                   <button onClick={() => moveGalleryItem(currentId, 'up')} disabled={i === 0} className="text-zinc-600 hover:text-cyan-400 disabled:opacity-0 transition-colors">
@@ -314,9 +288,6 @@ export default function CapabilitiesTab({
                                   ) : (
                                     <span className="text-[9px] font-black text-zinc-600 uppercase tracking-widest text-center px-1 leading-tight">Text<br/>Card</span>
                                   )}
-                                  <div className="absolute inset-0 bg-black/70 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
-                                    <button onClick={() => handleDeleteLiveItem(currentId, img.imageUrl)} className="text-red-400 hover:text-red-300"><Trash2 size={16} /></button>
-                                  </div>
                                 </div>
                                 <div className="flex-1 space-y-2">
                                   <div className="flex gap-2">
@@ -329,17 +300,26 @@ export default function CapabilitiesTab({
                                     )}
                                   </div>
                                   <textarea placeholder="Description..." value={img.description || ''} onChange={(e) => handleGalleryMetaChange(currentId, 'description', e.target.value)} rows={2} className="w-full bg-zinc-950 border border-zinc-800 rounded-md px-3 py-2 text-[11px] text-zinc-400 focus:border-fuchsia-500 outline-none resize-none" />
-                                  <div className="flex justify-between items-center pt-1">
-                                    {hasImage ? (
-                                      <button onClick={() => handleDetachMedia(currentId, img.imageUrl)} className="text-[9px] text-zinc-500 hover:text-amber-400 uppercase tracking-widest font-bold flex items-center gap-1 transition-colors">
-                                        <Unlink size={10} /> Detach Image
-                                      </button>
-                                    ) : (
-                                      <span className="text-[9px] text-zinc-600 uppercase tracking-widest font-bold">No Image Attached</span>
-                                    )}
-                                    <button onClick={() => handleDeleteLiveItem(currentId, img.imageUrl)} className="text-[9px] text-rose-500 hover:text-rose-400 uppercase tracking-widest font-bold flex items-center gap-1 transition-colors">
-                                      <Trash2 size={10} /> Delete Item
+                                  
+                                  <div className="flex justify-between items-center pt-1 border-t border-zinc-800/50 mt-2">
+                                    
+                                    {/* 🚀 THE FIX: New Visibility Toggle */}
+                                    <button onClick={() => handleGalleryMetaChange(currentId, 'isVisible', !isVisible)} className={`text-[9px] uppercase tracking-widest font-bold flex items-center gap-1.5 transition-colors ${isVisible ? 'text-emerald-500 hover:text-emerald-400' : 'text-amber-500 hover:text-amber-400'}`}>
+                                      {isVisible ? <><Eye size={12} /> Visible on Menu</> : <><EyeOff size={12} /> Hidden from Menu</>}
                                     </button>
+
+                                    <div className="flex items-center gap-4">
+                                      {hasImage ? (
+                                        <button onClick={() => handleDetachMedia(currentId, img.imageUrl)} className="text-[9px] text-zinc-500 hover:text-rose-400 uppercase tracking-widest font-bold flex items-center gap-1 transition-colors">
+                                          <Unlink size={10} /> Detach Image
+                                        </button>
+                                      ) : (
+                                        <span className="text-[9px] text-zinc-600 uppercase tracking-widest font-bold">No Image</span>
+                                      )}
+                                      <button onClick={() => handleDeleteLiveItem(currentId, img.imageUrl)} className="text-[9px] text-rose-500 hover:text-rose-400 uppercase tracking-widest font-bold flex items-center gap-1 transition-colors">
+                                        <Trash2 size={10} /> Delete Item
+                                      </button>
+                                    </div>
                                   </div>
                                 </div>
                               </div>
@@ -348,11 +328,6 @@ export default function CapabilitiesTab({
                         </div>
                       )}
                     </div>
-
-                    <div className="space-y-3 pt-4 border-t border-zinc-800/30 hidden">
-                       {/* Legacy bullets hidden */}
-                    </div>
-
                   </div>
                 )}
               </div>
@@ -437,16 +412,13 @@ export default function CapabilitiesTab({
                         <Trash2 size={10} /> Delete Image
                       </button>
                     </div>
-
                   </div>
-
                 </div>
               );
             })}
           </div>
         )}
       </div>
-
     </div>
   );
 }
