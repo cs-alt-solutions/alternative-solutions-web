@@ -2,7 +2,7 @@
 'use client';
 
 import React, { useState, startTransition } from 'react';
-import { ChevronUp, ChevronDown, DollarSign, Trash2, Eye, EyeOff, Unlink } from 'lucide-react';
+import { ChevronUp, ChevronDown, DollarSign, Trash2, Eye, EyeOff, Unlink, AlertCircle, Plus, X } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { removeImageFromGallery } from '@/app/actions/storefronts';
 
@@ -12,6 +12,8 @@ export default function MenuCardEditor({ img, index, categoryImagesCount, localC
   const currentId = img.id;
   const hasImage = !!img.imageUrl;
   const isVisible = img.isVisible !== false;
+  const isRaw = !!img.isRaw;
+  const addons = img.addons || [];
 
   const handleMetaChange = (field: string, value: any) => {
     setFormData((prev: any) => ({
@@ -20,6 +22,23 @@ export default function MenuCardEditor({ img, index, categoryImagesCount, localC
         (item.id === currentId) ? { ...item, [field]: value } : item
       )
     }));
+  };
+
+  // --- OPTIONS & ADD-ON HANDLERS ---
+  const handleAddAddon = () => {
+    const newAddons = [...addons, { name: '', price: '' }];
+    handleMetaChange('addons', newAddons);
+  };
+
+  const handleUpdateAddon = (addonIndex: number, field: string, value: string) => {
+    const newAddons = [...addons];
+    newAddons[addonIndex] = { ...newAddons[addonIndex], [field]: value };
+    handleMetaChange('addons', newAddons);
+  };
+
+  const handleRemoveAddon = (addonIndex: number) => {
+    const newAddons = addons.filter((_: any, idx: number) => idx !== addonIndex);
+    handleMetaChange('addons', newAddons);
   };
 
   const moveItem = (direction: 'up' | 'down') => {
@@ -47,7 +66,7 @@ export default function MenuCardEditor({ img, index, categoryImagesCount, localC
     setFormData((prev: any) => {
       let items = [...(prev.gallery_items || [])];
       items = items.map((item: any) => (item.id === currentId) ? { ...item, imageUrl: '' } : item);
-      items.unshift({ id: `unassigned-${Date.now()}`, imageUrl: img.imageUrl, title: '', description: '', price: '', category: '', isVisible: true });
+      items.unshift({ id: `unassigned-${Date.now()}`, imageUrl: img.imageUrl, title: '', description: '', price: '', category: '', isVisible: true, isRaw: false, addons: [] });
       return { ...prev, gallery_items: items };
     });
   };
@@ -96,6 +115,43 @@ export default function MenuCardEditor({ img, index, categoryImagesCount, localC
               )}
             </div>
             <textarea placeholder="Description..." value={img.description || ''} onChange={(e) => handleMetaChange('description', e.target.value)} rows={2} className="w-full bg-zinc-950 border border-zinc-800 rounded-md px-3 py-2 text-[11px] text-zinc-400 focus:border-fuchsia-500 outline-none resize-none" />
+            
+            {/* 🚀 FLEXIBLE OPTIONS & ADD-ONS MANAGER */}
+            {isMenuMode && (
+              <div className="pt-1">
+                <div className="flex items-center justify-between mb-1.5">
+                  <span className="text-[9px] font-bold text-zinc-500 uppercase tracking-widest">Options, Sizes & Add-ons</span>
+                  <button onClick={handleAddAddon} className="text-[9px] font-bold text-fuchsia-500 hover:text-fuchsia-400 flex items-center gap-1 uppercase tracking-widest transition-colors">
+                    <Plus size={10} /> Add Option
+                  </button>
+                </div>
+                {addons.length > 0 && (
+                  <div className="space-y-1.5">
+                    {addons.map((addon: any, idx: number) => (
+                      <div key={idx} className="flex gap-1.5 items-center">
+                        <input 
+                          placeholder="e.g. Half Sub or Add Bacon" 
+                          value={addon.name || ''} 
+                          onChange={(e) => handleUpdateAddon(idx, 'name', e.target.value)} 
+                          className="w-full bg-black/40 border border-zinc-800 rounded px-2.5 py-1 text-[10px] text-white focus:border-fuchsia-500 outline-none" 
+                        />
+                        <div className="w-24 shrink-0">
+                          <input 
+                            placeholder="8 or +2" 
+                            value={addon.price || ''} 
+                            onChange={(e) => handleUpdateAddon(idx, 'price', e.target.value)} 
+                            className="w-full bg-black/40 border border-zinc-800 rounded px-2 py-1 text-[10px] font-mono text-fuchsia-400 focus:border-fuchsia-500 outline-none" 
+                          />
+                        </div>
+                        <button onClick={() => handleRemoveAddon(idx)} className="text-zinc-600 hover:text-rose-400 p-1 transition-colors">
+                          <X size={12} />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
           </div>
         </div>
         
@@ -114,8 +170,10 @@ export default function MenuCardEditor({ img, index, categoryImagesCount, localC
             </select>
           </div>
 
-          <div className="flex items-center gap-1.5 shrink-0">
-            {/* 🚀 THE FIX: whitespace-nowrap and shrink-0 guarantees the button won't squish or break lines! */}
+          <div className="flex items-center gap-1.5 shrink-0 overflow-x-auto hide-scrollbar">
+            <button onClick={() => handleMetaChange('isRaw', !isRaw)} className={`shrink-0 whitespace-nowrap p-1.5 px-2 rounded-md border transition-colors flex items-center gap-1.5 ${isRaw ? 'bg-rose-500/10 border-rose-500/20 text-rose-400 hover:bg-rose-500/20' : 'bg-zinc-950 border-zinc-800 text-zinc-500 hover:text-zinc-300 hover:border-zinc-700'}`} title="Flag as Raw/Undercooked">
+              <AlertCircle size={12}/> <span className="text-[9px] font-bold uppercase hidden sm:inline">Raw Warning</span>
+            </button>
             <button onClick={() => handleMetaChange('isVisible', !isVisible)} className={`shrink-0 whitespace-nowrap p-1.5 px-2 rounded-md border transition-colors flex items-center gap-1.5 ${isVisible ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-400 hover:bg-emerald-500/20' : 'bg-amber-500/10 border-amber-500/20 text-amber-500 hover:bg-amber-500/20'}`} title={isVisible ? "Currently Visible (Click to Hide)" : "Currently Hidden (Click to Show)"}>
               {isVisible ? <><Eye size={12}/> <span className="text-[9px] font-bold uppercase">Visible</span></> : <><EyeOff size={12}/> <span className="text-[9px] font-bold uppercase">Hidden</span></>}
             </button>
