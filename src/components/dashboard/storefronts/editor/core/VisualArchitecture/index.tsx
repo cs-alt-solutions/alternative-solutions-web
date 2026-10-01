@@ -1,4 +1,4 @@
-// src/components/dashboard/storefronts/editor/core/VisualArchitecture/index.tsx
+/* src/components/dashboard/storefronts/editor/core/VisualArchitecture/index.tsx */
 import React from 'react';
 import { LayoutTemplate } from 'lucide-react';
 import { THEME_CONSTRAINTS } from './constants';
@@ -41,7 +41,14 @@ export default function VisualArchitecture({ formData, setFormData }: { formData
       <HeroSelector formData={formData} setFormData={setFormData} allowedLayouts={allowedLayouts} />
       <AboutSelector formData={formData} setFormData={setFormData} allowedLayouts={allowedLayouts} />
       <ContentSelector formData={formData} setFormData={setFormData} allowedLayouts={allowedLayouts} />
-      <ColorSelector brandColor={formData.brand_color || 'cyan-500'} onChange={(val) => setFormData((prev: any) => ({ ...prev, brand_color: val }))} />
+      
+      {/* 🚀 THE FIX: Pass secondary color logic down */}
+      <ColorSelector 
+        brandColor={formData.brand_color || 'cyan-500'} 
+        secondaryBrandColor={formData.secondary_brand_color || formData.brand_color || 'fuchsia-500'}
+        onChange={(val) => setFormData((prev: any) => ({ ...prev, brand_color: val }))} 
+        onSecondaryChange={(val) => setFormData((prev: any) => ({ ...prev, secondary_brand_color: val }))}
+      />
     </div>
   );
 }
