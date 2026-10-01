@@ -3,7 +3,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { supabase } from '@/utils/supabase';
-import { FileUp, Trash2, Download, Image as ImageIcon, FileText, Loader2, ShieldCheck, Clock, Upload, Edit2, Check, X } from 'lucide-react';
+import { FileUp, Trash2, Download, Image as ImageIcon, FileText, Loader2, ShieldCheck, Clock, X, Upload, Edit2, Check, ImageOff } from 'lucide-react';
 
 export default function VaultTab({ storeId, formData, setFormData, onReload }: { storeId: string, formData: any, setFormData: any, onReload?: () => void }) {
   const [vaultFiles, setVaultFiles] = useState<any[]>([]);
@@ -12,12 +12,13 @@ export default function VaultTab({ storeId, formData, setFormData, onReload }: {
   const [isUploading, setIsUploading] = useState(false);
   const [uploadStatus, setUploadStatus] = useState<string | null>(null);
   
-  // State to track which card has the assignment menu open or is being renamed
   const [openMenuId, setOpenMenuId] = useState<string | null>(null);
   const [renamingFile, setRenamingFile] = useState<string | null>(null);
   const [newName, setNewName] = useState<string>('');
 
   const bucketName = 'client-assets';
+  
+  const isMenuMode = formData?.content_layout === 'menu';
 
   const availableCategories = (formData.capabilities || [])
     .map((c: any) => c.title)
@@ -46,7 +47,6 @@ export default function VaultTab({ storeId, formData, setFormData, onReload }: {
     }
   };
 
-  // --- UPLOAD HANDLER ---
   const handleVaultUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const files = event.target.files;
     if (!files || files.length === 0) return;
@@ -72,7 +72,6 @@ export default function VaultTab({ storeId, formData, setFormData, onReload }: {
     }
   };
 
-  // --- RENAME HANDLER ---
   const handleRename = async (oldName: string) => {
     if (!newName.trim() || newName === oldName) {
       setRenamingFile(null);
@@ -116,17 +115,24 @@ export default function VaultTab({ storeId, formData, setFormData, onReload }: {
       let updatedGallery = [...(formData.gallery_items || [])];
 
       if (actionType === 'CREATE') {
-        const newItem = {
+        let newItem: any = {
           id: `assigned-${Date.now()}`,
           imageUrl: publicUrl,
           title: '',
           description: '',
           category: payload,
-          price: '',
           isVisible: true,
-          isRaw: false,
-          addons: []
         };
+
+        if (isMenuMode) {
+          newItem = {
+            ...newItem,
+            price: '',
+            isRaw: false,
+            addons: []
+          };
+        }
+
         updatedGallery.push(newItem);
       } else if (actionType === 'ATTACH') {
         updatedGallery = updatedGallery.map(item => 
@@ -198,7 +204,6 @@ export default function VaultTab({ storeId, formData, setFormData, onReload }: {
 
         <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4">
           
-          {/* 🚀 1. UPLOAD CARD */}
           <label className="bg-amber-500/5 border border-amber-500/20 border-dashed rounded-2xl flex flex-col items-center justify-center p-6 text-center cursor-pointer hover:bg-amber-500/10 hover:border-amber-500/50 transition-all h-48 group shadow-inner">
             <div className="bg-amber-500/10 p-3 rounded-full mb-3 group-hover:scale-110 transition-transform">
               <Upload className="text-amber-400 w-6 h-6" />
@@ -208,10 +213,14 @@ export default function VaultTab({ storeId, formData, setFormData, onReload }: {
             <input type="file" className="hidden" onChange={handleVaultUpload} multiple disabled={isUploading} />
           </label>
 
-          {/* 2. UNASSIGNED FILE CARDS */}
-          {unassignedFiles.map((file) => {
+          {/* 🚀 THE FIX: Adding strict fallback keys to the map loop */}
+          {unassignedFiles.map((file, fileIdx) => {
             const { data: publicUrlData } = supabase.storage.from(bucketName).getPublicUrl(`${storeId}/${file.name}`);
-            const isImage = file.metadata?.mimetype?.includes('image');
+            
+            const mimeType = file.metadata?.mimetype?.toLowerCase() || '';
+            const isImage = mimeType.includes('image');
+            const isWebSafeImage = isImage && !mimeType.includes('heic') && !mimeType.includes('heif') && !mimeType.includes('tiff');
+            
             const displayName = file.name.replace(/^[0-9]+[-_]/, '');
             const isMenuOpen = openMenuId === file.name;
             const isRenaming = renamingFile === file.name;
@@ -222,7 +231,7 @@ export default function VaultTab({ storeId, formData, setFormData, onReload }: {
             const isUrgent = daysLeft <= 7;
 
             return (
-              <div key={file.name} className="bg-black/40 border border-zinc-800 rounded-2xl overflow-hidden group hover:border-amber-500/40 transition-all flex flex-col relative h-48 shadow-lg">
+              <div key={file.id || file.name || `uf-${fileIdx}`} className="bg-black/40 border border-zinc-800 rounded-2xl overflow-hidden group hover:border-amber-500/40 transition-all flex flex-col relative h-48 shadow-lg">
                 
                 <div className="flex-1 flex items-center justify-center relative overflow-hidden bg-zinc-950/50">
                   
@@ -235,14 +244,18 @@ export default function VaultTab({ storeId, formData, setFormData, onReload }: {
                     </span>
                   </div>
 
-                  {isImage ? (
+                  {isWebSafeImage ? (
                     <img 
                       src={publicUrlData.publicUrl} 
                       alt={displayName} 
+                      loading="lazy"
                       className="w-full h-full object-cover opacity-70 group-hover:scale-105 transition-transform" 
                     />
                   ) : (
-                    <FileText size={32} className="text-zinc-700 group-hover:text-amber-500 transition-colors" />
+                    <div className="flex flex-col items-center justify-center text-zinc-700 group-hover:text-amber-500 transition-colors">
+                      {isImage ? <ImageOff size={32} className="mb-2" /> : <FileText size={32} className="mb-2" />}
+                      {isImage && <span className="text-[8px] font-bold uppercase tracking-widest text-center leading-tight">Raw / HEIC<br/>No Preview</span>}
+                    </div>
                   )}
                   
                   <div className={`absolute inset-0 bg-black/85 transition-opacity flex flex-col justify-between p-2 backdrop-blur-md z-20 ${isMenuOpen ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}`}>
@@ -288,11 +301,12 @@ export default function VaultTab({ storeId, formData, setFormData, onReload }: {
                         </div>
                         
                         <div className="flex-1 overflow-y-auto custom-scrollbar p-1.5 space-y-3">
-                          {availableCategories.map((cat: string) => {
+                          {/* 🚀 THE FIX: Added index fallbacks for nested loops */}
+                          {availableCategories.map((cat: string, catIdx: number) => {
                             const existingCards = (formData.gallery_items || []).filter((item: any) => item.category === cat);
                             
                             return (
-                              <div key={cat} className="space-y-1">
+                              <div key={cat || `cat-${catIdx}`} className="space-y-1">
                                 <div className="px-2 py-1 bg-fuchsia-500/10 border border-fuchsia-500/20 rounded text-[9px] font-black text-fuchsia-400 uppercase tracking-widest sticky top-0 backdrop-blur-md z-10 shadow-sm">
                                   {cat}
                                 </div>
@@ -302,9 +316,9 @@ export default function VaultTab({ storeId, formData, setFormData, onReload }: {
                                 >
                                   + Create New Card
                                 </button>
-                                {existingCards.map((card: any) => (
+                                {existingCards.map((card: any, cardIdx: number) => (
                                   <button
-                                    key={card.id}
+                                    key={card.id || `card-${catIdx}-${cardIdx}`}
                                     onClick={() => handleAssignToService(file.name, publicUrlData.publicUrl, `ATTACH|${card.id}`)}
                                     className="w-full text-left px-2 py-1.5 rounded text-zinc-400 hover:bg-zinc-800 hover:text-white text-[9px] font-medium transition-colors flex items-center gap-1.5 truncate cursor-pointer"
                                     title={card.title || 'Untitled Card'}
