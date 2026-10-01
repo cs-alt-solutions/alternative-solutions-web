@@ -1,3 +1,4 @@
+/* src/app/api/webhooks/stripe/route.ts */
 import { headers } from 'next/headers';
 import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
@@ -65,16 +66,19 @@ export async function POST(req: Request) {
   if (event.type === 'checkout.session.completed') {
     const session = event.data.object as Stripe.Checkout.Session;
     
-    // THE GOLD STANDARD: Look for the Storefront ID/Slug in the URL reference
+    // Look for the Storefront ID/Slug AND the Plan Tier
     let targetIdentifier = session.client_reference_id || session.metadata?.storefront_id;
+    let planTier = session.metadata?.tier;
     
-    if (!targetIdentifier && session.subscription) {
+    // Always check the subscription object as a fallback for metadata
+    if (session.subscription) {
        const subscription = await stripe.subscriptions.retrieve(session.subscription as string);
-       targetIdentifier = subscription.metadata?.storefront_id;
+       targetIdentifier = targetIdentifier || subscription.metadata?.storefront_id;
+       planTier = planTier || subscription.metadata?.tier;
     }
 
     // ------------------------------------------------------------------
-    // THE STOREFRONT SAAS ENGINE
+    // PATH A: THE STOREFRONT SAAS ENGINE
     // ------------------------------------------------------------------
     if (targetIdentifier) {
       console.log(`💳 Processing SaaS Payment for Storefront: ${targetIdentifier}`);
@@ -84,7 +88,7 @@ export async function POST(req: Request) {
 
       const { data: storeData, error: fetchError } = await supabaseAdmin
         .from('storefronts')
-        .select('id, audit_notes, contact_email, business_name, contact_name')
+        .select('id, audit_notes, contact_email, business_name, contact_name, plan_tier') // Fetched plan_tier
         .eq(queryColumn, targetIdentifier)
         .single();
 
@@ -98,12 +102,14 @@ export async function POST(req: Request) {
       const origin = process.env.NEXT_PUBLIC_SITE_URL || 'https://alternativesolutions.io';
 
       try {
+        // 🚀 UPGRADE: Ensure plan_tier is updated correctly
         await supabaseAdmin
           .from('storefronts')
           .update({ 
              status: 'ACTIVE',
              stripe_customer_id: session.customer as string,
-             stripe_subscription_id: session.subscription as string 
+             stripe_subscription_id: session.subscription as string,
+             plan_tier: planTier || storeData.plan_tier || 'Foundation' 
           })
           .eq('id', storeData.id);
 
@@ -147,6 +153,7 @@ export async function POST(req: Request) {
               <p style="color: #a1a1aa; font-size: 16px;">Hell yes. <strong>${storeData.business_name}</strong> (${clientEmail}) just locked in their subscription.</p>
               <ul style="color: #d4d4d8; padding-left: 20px;">
                 <li><strong>Status:</strong> Upgraded to ACTIVE</li>
+                <li><strong>Plan Tier:</strong> ${planTier || storeData.plan_tier || 'Foundation'}</li>
                 <li><strong>Portal:</strong> Unlocked & Magic Link Sent</li>
                 <li><strong>Action Required:</strong> Log into your Admin Dashboard and begin final deployment prep.</li>
               </ul>
@@ -165,9 +172,64 @@ export async function POST(req: Request) {
     }
 
     // ------------------------------------------------------------------
-    // UNMATCHED PAYMENTS (THE FIX: Path B Gutted)
+    // PATH B: GRASSROOTS FOUNDATION SUPPORTERS
     // ------------------------------------------------------------------
-    console.log(`⚠️ Unmatched Checkout: Stripe checkout completed, but no Storefront ID was attached. Ignoring record.`);
+    console.log(`🌱 Processing General Supporter Payment (No Storefront Slug found).`);
+    
+    const projectField = session.custom_fields?.find(f => f.key === 'project_name');
+    const projectName = projectField?.text?.value || 'Organic';
+    
+    const displayField = session.custom_fields?.find(f => 
+      f.label.custom?.toLowerCase().includes('display') || 
+      f.label.custom?.toLowerCase().includes('anonymous')
+    );
+    
+    const customDisplayName = displayField?.text?.value;
+    const customerEmail = session.customer_details?.email?.toLowerCase().trim();
+    const customerName = session.customer_details?.name;
+    const amountTotal = (session.amount_total || 0) / 100;
+    const isSubscription = session.mode === 'subscription';
+
+    let finalDisplayName = 'Anonymous Builder';
+    if (customDisplayName && customDisplayName.toLowerCase() !== 'anonymous') {
+      finalDisplayName = customDisplayName;
+    } else if (customDisplayName?.toLowerCase() === 'anonymous') {
+      finalDisplayName = 'Anonymous';
+    } else if (customerName) {
+      finalDisplayName = customerName;
+    }
+
+    if (customerEmail) {
+      let tier = isSubscription ? (amountTotal === 5 ? 'BUILDER' : 'BACKER') : 'BOOST';
+      if (!isSubscription && projectField) {
+        tier = 'CLIENT';
+      }
+
+      const { data: existingUser } = await supabaseAdmin
+        .from('supporters')
+        .select('origin_tier')
+        .eq('email', customerEmail)
+        .maybeSingle();
+
+      const { error } = await supabaseAdmin
+        .from('supporters')
+        .upsert({
+          email: customerEmail,
+          name: customerName || null,
+          display_name: finalDisplayName,
+          tier: tier,
+          status: 'ACTIVE',
+          amount: amountTotal,
+          source: projectName,
+          origin_tier: existingUser?.origin_tier || tier
+        }, { onConflict: 'email' });
+
+      if (error) {
+        console.error('Error logging to Supabase supporters:', error);
+        return new NextResponse('Database Error', { status: 500 });
+      }
+      console.log(`✅ Supporter ${customerEmail} logged successfully!`);
+    }
   }
 
   return NextResponse.json({ received: true });
