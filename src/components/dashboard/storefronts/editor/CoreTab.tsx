@@ -17,7 +17,6 @@ export default function CoreTab({
   setFormData: any; 
   onReload?: () => void; 
 }) {
-  
   // The global state handles the master data. We just need to handle local input changes!
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     setFormData((prev: any) => ({ ...prev, [e.target.name]: e.target.value }));

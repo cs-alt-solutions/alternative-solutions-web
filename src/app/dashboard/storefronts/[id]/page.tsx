@@ -23,7 +23,7 @@ import {
   Lock,
   ShieldAlert,
   Unlock,
-  FileUp // 🚀 ADDED: Icon for the new Vault tab
+  FileUp
 } from 'lucide-react';
 
 import CoreTab from '@/components/dashboard/storefronts/editor/CoreTab';
@@ -31,7 +31,7 @@ import VisualArchitecture from '@/components/dashboard/storefronts/editor/core/V
 import MediaTab from '@/components/dashboard/storefronts/editor/MediaTab';
 import CapabilitiesTab from '@/components/dashboard/storefronts/editor/CapabilitiesTab';
 import GridTab from '@/components/dashboard/storefronts/editor/GridTab';
-import VaultTab from '@/components/dashboard/storefronts/editor/VaultTab'; // 🚀 ADDED: Import the new Drop Vault component
+import VaultTab from '@/components/dashboard/storefronts/editor/VaultTab';
 import { deleteStorefront } from '@/app/actions/storefronts';
 
 export default function TenantCommandHub() {
@@ -40,7 +40,6 @@ export default function TenantCommandHub() {
   
   const [formData, setFormData] = useState<any>(null);
   
-  // 🚀 ADDED: 'vault' added to the activeTab state
   const [activeTab, setActiveTab] = useState<'canvas' | 'grid' | 'vault'>('canvas');
   const [editorTab, setEditorTab] = useState<'content' | 'design' | 'media' | 'services'>('content');
   const [controlsExpanded, setControlsExpanded] = useState(true);
@@ -51,7 +50,6 @@ export default function TenantCommandHub() {
   const [saveMessage, setSaveMessage] = useState('');
   const [refreshKey, setRefreshKey] = useState(Date.now());
   
-  // THE NEW STATE: Controls the silent ghost-edit bypass
   const [isUnlocked, setIsUnlocked] = useState(false);
 
   const PREVIEW_BASE_URL = 'https://storefronts.alternativesolutions.io';
@@ -195,7 +193,6 @@ export default function TenantCommandHub() {
         >
           <Server size={14} className="md:w-4 md:h-4" /> The Grid
         </button>
-        {/* 🚀 ADDED: The new Vault Tab button */}
         <button 
           onClick={() => setActiveTab('vault')}
           className={`flex items-center gap-2 py-3 md:py-4 text-[10px] md:text-xs font-bold uppercase tracking-widest border-b-2 transition-colors cursor-pointer ${activeTab === 'vault' ? 'border-amber-400 text-amber-400' : 'border-transparent text-zinc-500 hover:text-zinc-300'}`}
@@ -285,15 +282,19 @@ export default function TenantCommandHub() {
            <GridTab formData={formData} setFormData={setFormData} onTerminate={handleStorefrontTermination} />
         )}
 
-        {/* 🚀 TAB 3: THE VAULT */}
+        {/* 🚀 TAB 3: THE VAULT (PROPS INJECTED) */}
         {activeTab === 'vault' && (
           <div className="flex-1 overflow-y-auto w-full relative custom-scrollbar">
-            <VaultTab storeId={formData.id} />
+            <VaultTab 
+              storeId={formData.id} 
+              formData={formData} 
+              setFormData={setFormData} 
+              onReload={reloadCanvas} 
+            />
           </div>
         )}
 
         {/* 🚨 THE GLOBAL SYSTEM LOCK SHIELD 🚨 */}
-        {/* 🚀 FIXED: The lock now ONLY blocks the 'canvas' tab so you can safely access the Grid and Vault */}
         {['IN REVIEW', 'APPROVED', 'LIVE', 'CHANGES_REQUESTED'].includes(formData.status) && activeTab === 'canvas' && !isUnlocked && (
           <div className="absolute inset-0 z-100 bg-black/60 backdrop-blur-md flex flex-col items-center justify-center border border-cyan-500/20 shadow-[inset_0_0_100px_rgba(6,182,212,0.05)] transition-all duration-500 animate-in fade-in zoom-in-95">
             

@@ -4,7 +4,6 @@
 import React, { useState, useEffect } from 'react';
 import { Plus, Layers } from 'lucide-react';
 import CategoryAccordion from './capabilities/CategoryAccordion';
-import MediaPool from './capabilities/MediaPool';
 
 export default function CapabilitiesTab({ 
   formData, setFormData, onReload
@@ -67,14 +66,6 @@ export default function CapabilitiesTab({
           ))
         )}
       </div>
-
-      <MediaPool 
-        formData={formData} 
-        setFormData={setFormData} 
-        localCaps={localCaps} 
-        onReload={onReload} 
-      />
-
     </div>
   );
 }
