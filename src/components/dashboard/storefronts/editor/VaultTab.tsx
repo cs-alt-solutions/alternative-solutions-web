@@ -3,7 +3,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { supabase } from '@/utils/supabase';
-import { FileUp, Trash2, Download, Image as ImageIcon, FileText, Loader2, ShieldCheck, Clock, X, Upload, Edit2, Check, ImageOff } from 'lucide-react';
+import { FileUp, Trash2, Image as ImageIcon, FileText, Loader2, ShieldCheck, Clock, X, Upload, Edit2, Check, ImageOff } from 'lucide-react';
 
 export default function VaultTab({ storeId, formData, setFormData, onReload }: { storeId: string, formData: any, setFormData: any, onReload?: () => void }) {
   const [vaultFiles, setVaultFiles] = useState<any[]>([]);
@@ -18,6 +18,7 @@ export default function VaultTab({ storeId, formData, setFormData, onReload }: {
 
   const bucketName = 'client-assets';
   
+  // 🚀 The Single Source of Truth
   const isMenuMode = formData?.content_layout === 'menu';
 
   const availableCategories = (formData.capabilities || [])
@@ -213,7 +214,6 @@ export default function VaultTab({ storeId, formData, setFormData, onReload }: {
             <input type="file" className="hidden" onChange={handleVaultUpload} multiple disabled={isUploading} />
           </label>
 
-          {/* 🚀 THE FIX: Adding strict fallback keys to the map loop */}
           {unassignedFiles.map((file, fileIdx) => {
             const { data: publicUrlData } = supabase.storage.from(bucketName).getPublicUrl(`${storeId}/${file.name}`);
             
@@ -301,12 +301,26 @@ export default function VaultTab({ storeId, formData, setFormData, onReload }: {
                         </div>
                         
                         <div className="flex-1 overflow-y-auto custom-scrollbar p-1.5 space-y-3">
-                          {/* 🚀 THE FIX: Added index fallbacks for nested loops */}
                           {availableCategories.map((cat: string, catIdx: number) => {
-                            const existingCards = (formData.gallery_items || []).filter((item: any) => item.category === cat);
                             
+                            // 🚀 THE FIX: Context-Aware Routing Logic
+                            if (!isMenuMode) {
+                              // CONTRACTOR / CLASSIC FLOW: Simple assignment buttons
+                              return (
+                                <button
+                                  key={`cat-${catIdx}`}
+                                  onClick={() => handleAssignToService(file.name, publicUrlData.publicUrl, `CREATE|${cat}`)}
+                                  className="w-full text-left px-3 py-2.5 rounded bg-zinc-900 border border-zinc-700 hover:bg-cyan-500 hover:border-cyan-400 hover:text-black text-[10px] font-bold transition-all uppercase tracking-wider text-zinc-300 shadow-sm cursor-pointer"
+                                >
+                                  {cat}
+                                </button>
+                              );
+                            }
+
+                            // RESTAURANT MENU FLOW: Complex Slot/Card Replacement Logic
+                            const existingCards = (formData.gallery_items || []).filter((item: any) => item.category === cat);
                             return (
-                              <div key={cat || `cat-${catIdx}`} className="space-y-1">
+                              <div key={`cat-${catIdx}`} className="space-y-1">
                                 <div className="px-2 py-1 bg-fuchsia-500/10 border border-fuchsia-500/20 rounded text-[9px] font-black text-fuchsia-400 uppercase tracking-widest sticky top-0 backdrop-blur-md z-10 shadow-sm">
                                   {cat}
                                 </div>
@@ -316,17 +330,23 @@ export default function VaultTab({ storeId, formData, setFormData, onReload }: {
                                 >
                                   + Create New Card
                                 </button>
-                                {existingCards.map((card: any, cardIdx: number) => (
-                                  <button
-                                    key={card.id || `card-${catIdx}-${cardIdx}`}
-                                    onClick={() => handleAssignToService(file.name, publicUrlData.publicUrl, `ATTACH|${card.id}`)}
-                                    className="w-full text-left px-2 py-1.5 rounded text-zinc-400 hover:bg-zinc-800 hover:text-white text-[9px] font-medium transition-colors flex items-center gap-1.5 truncate cursor-pointer"
-                                    title={card.title || 'Untitled Card'}
-                                  >
-                                    <span className="text-zinc-600 shrink-0">↳</span> 
-                                    <span className="truncate">{card.title || 'Untitled Card'}</span>
-                                  </button>
-                                ))}
+                                {existingCards.map((card: any, cardIdx: number) => {
+                                  const fallbackName = card.imageUrl ? card.imageUrl.split('/').pop()?.split('?')[0] : 'Empty Slot';
+                                  const displayTitle = card.title || fallbackName;
+                                  return (
+                                    <button
+                                      key={card.id || `card-${catIdx}-${cardIdx}`}
+                                      onClick={() => handleAssignToService(file.name, publicUrlData.publicUrl, `ATTACH|${card.id}`)}
+                                      className="w-full text-left px-2 py-1.5 rounded text-zinc-400 hover:bg-zinc-800 hover:text-white text-[9px] font-medium transition-colors flex items-center gap-1.5 truncate cursor-pointer"
+                                      title={displayTitle}
+                                    >
+                                      <span className="text-zinc-600 shrink-0">↳</span> 
+                                      <span className="truncate">
+                                        Replace: {displayTitle}
+                                      </span>
+                                    </button>
+                                  );
+                                })}
                               </div>
                             );
                           })}

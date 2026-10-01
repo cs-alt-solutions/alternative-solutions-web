@@ -1,18 +1,16 @@
 /* src/components/dashboard/storefronts/editor/capabilities/MenuCardEditor.tsx */
 'use client';
 
-import React, { useState, startTransition } from 'react';
+import React, { useState } from 'react';
 import { ChevronUp, ChevronDown, DollarSign, Trash2, Eye, EyeOff, Unlink, AlertCircle, Plus, X, ImagePlus, Loader2, FolderOpen } from 'lucide-react';
-import { useRouter } from 'next/navigation';
 import { removeImageFromGallery } from '@/app/actions/storefronts';
 import { supabase } from '@/utils/supabase';
 
 export default function MenuCardEditor({ img, index, categoryImagesCount, localCaps, isMenuMode, formData, setFormData, onReload }: any) {
-  const router = useRouter();
   const [isDeleting, setIsDeleting] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
   
-  // 🚀 NEW: Vault Picker State
+  // Vault Picker State
   const [showVaultPicker, setShowVaultPicker] = useState(false);
   const [vaultFiles, setVaultFiles] = useState<any[]>([]);
   const [isLoadingVault, setIsLoadingVault] = useState(false);
@@ -32,57 +30,42 @@ export default function MenuCardEditor({ img, index, categoryImagesCount, localC
     }));
   };
 
-  // --- DIRECT CARD UPLOAD ENGINE ---
   const handleDirectUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
-
     setIsUploading(true);
     try {
       const fileExt = file.name.split('.').pop();
       const filePath = `${formData.id}/gallery-${Date.now()}.${fileExt}`;
-      
       const { error: uploadError } = await supabase.storage.from('client-assets').upload(filePath, file);
       if (uploadError) throw uploadError;
-      
       const { data } = supabase.storage.from('client-assets').getPublicUrl(filePath);
       
       handleMetaChange('imageUrl', data.publicUrl);
     } catch (error) {
-      console.error("Direct upload failed:", error);
       alert("Failed to upload image.");
     } finally {
       setIsUploading(false);
     }
   };
 
-  // 🚀 --- VAULT PICKER ENGINE ---
   const openVaultPicker = async () => {
     setShowVaultPicker(true);
     setIsLoadingVault(true);
     try {
-      const { data, error } = await supabase.storage
-        .from('client-assets')
-        .list(formData.id, { sortBy: { column: 'created_at', order: 'desc' } });
-
+      const { data, error } = await supabase.storage.from('client-assets').list(formData.id, { sortBy: { column: 'created_at', order: 'desc' } });
       if (data && !error) {
         const assignedUrls = (formData.gallery_items || []).map((item: any) => item.imageUrl);
-        
         const rawFiles = data.filter(f => {
-          // Ignore placeholders and core architecture files
           if (f.name === '.emptyFolderPlaceholder' || f.name.includes('live-')) return false;
-          // Ensure it's an image
           if (!f.metadata?.mimetype?.includes('image')) return false;
-          
-          // Check if the URL is already mapped to an active card
           const { data: pubData } = supabase.storage.from('client-assets').getPublicUrl(`${formData.id}/${f.name}`);
           return !assignedUrls.includes(pubData.publicUrl);
         });
-        
         setVaultFiles(rawFiles);
       }
     } catch (err) {
-      console.error("Vault fetch failed:", err);
+      console.error("Vault fetch failed");
     } finally {
       setIsLoadingVault(false);
     }
@@ -94,18 +77,15 @@ export default function MenuCardEditor({ img, index, categoryImagesCount, localC
     setShowVaultPicker(false);
   };
 
-  // --- OPTIONS & ADD-ON HANDLERS ---
   const handleAddAddon = () => {
     const newAddons = [...addons, { name: '', price: '' }];
     handleMetaChange('addons', newAddons);
   };
-
   const handleUpdateAddon = (addonIndex: number, field: string, value: string) => {
     const newAddons = [...addons];
     newAddons[addonIndex] = { ...newAddons[addonIndex], [field]: value };
     handleMetaChange('addons', newAddons);
   };
-
   const handleRemoveAddon = (addonIndex: number) => {
     const newAddons = addons.filter((_: any, idx: number) => idx !== addonIndex);
     handleMetaChange('addons', newAddons);
@@ -135,13 +115,12 @@ export default function MenuCardEditor({ img, index, categoryImagesCount, localC
   const detachMedia = () => {
     setFormData((prev: any) => {
       let items = [...(prev.gallery_items || [])];
-      // This clears the image off the card. Because the file still exists in storage, 
-      // the Drop Vault automatically detects it's unassigned and places it back in the Vault!
       items = items.map((item: any) => (item.id === currentId) ? { ...item, imageUrl: '' } : item);
       return { ...prev, gallery_items: items };
     });
   };
 
+  // 🚀 THE FIX: Removed router.refresh() that caused the entire page to freeze and glitch!
   const deleteItem = async () => {
     if (!window.confirm("Remove this item entirely?")) return;
     setIsDeleting(true);
@@ -150,8 +129,11 @@ export default function MenuCardEditor({ img, index, categoryImagesCount, localC
       setFormData((prev: any) => ({
         ...prev, gallery_items: prev.gallery_items.filter((item: any) => item.id !== currentId)
       }));
-      startTransition(() => { router.refresh(); if (onReload) onReload(); });
-    } catch (e) { alert("Failed to remove item."); } finally { setIsDeleting(false); }
+    } catch (e) { 
+      alert("Failed to remove item."); 
+    } finally { 
+      setIsDeleting(false); 
+    }
   };
 
   return (
@@ -169,11 +151,8 @@ export default function MenuCardEditor({ img, index, categoryImagesCount, localC
         <div className="flex gap-3 items-start">
           
           <div className="relative w-16 h-16 rounded-lg overflow-hidden shrink-0 border border-zinc-700 bg-zinc-950 flex flex-col items-center justify-center group shadow-inner">
-            
-            {/* Primary Direct Upload Target */}
             <label className="absolute inset-0 cursor-pointer flex flex-col items-center justify-center hover:border-fuchsia-500 transition-colors z-0">
               <input type="file" accept="image/*" className="hidden" onChange={handleDirectUpload} disabled={isUploading || isDeleting} />
-              
               {isUploading ? (
                 <Loader2 size={16} className="text-fuchsia-500 animate-spin" />
               ) : hasImage ? (
@@ -191,7 +170,6 @@ export default function MenuCardEditor({ img, index, categoryImagesCount, localC
               )}
             </label>
 
-            {/* 🚀 NEW: The Vault Button Overlay */}
             {!hasImage && !isUploading && (
               <button
                 onClick={(e) => { e.preventDefault(); e.stopPropagation(); openVaultPicker(); }}
@@ -215,7 +193,6 @@ export default function MenuCardEditor({ img, index, categoryImagesCount, localC
             </div>
             <textarea placeholder="Description..." value={img.description || ''} onChange={(e) => handleMetaChange('description', e.target.value)} rows={2} className="w-full bg-zinc-950 border border-zinc-800 rounded-md px-3 py-2 text-[11px] text-zinc-400 focus:border-fuchsia-500 outline-none resize-none" />
             
-            {/* ADD-ONS MANAGER */}
             {isMenuMode && (
               <div className="pt-1">
                 <div className="flex items-center justify-between mb-1.5">
@@ -270,9 +247,11 @@ export default function MenuCardEditor({ img, index, categoryImagesCount, localC
           </div>
 
           <div className="flex items-center gap-1.5 shrink-0 overflow-x-auto hide-scrollbar">
-            <button onClick={() => handleMetaChange('isRaw', !isRaw)} className={`shrink-0 whitespace-nowrap p-1.5 px-2 rounded-md border transition-colors flex items-center gap-1.5 ${isRaw ? 'bg-rose-500/10 border-rose-500/20 text-rose-400 hover:bg-rose-500/20' : 'bg-zinc-950 border-zinc-800 text-zinc-500 hover:text-zinc-300 hover:border-zinc-700'}`} title="Flag as Raw/Undercooked">
-              <AlertCircle size={12}/> <span className="text-[9px] font-bold uppercase hidden sm:inline">Raw Warning</span>
-            </button>
+            {isMenuMode && (
+              <button onClick={() => handleMetaChange('isRaw', !isRaw)} className={`shrink-0 whitespace-nowrap p-1.5 px-2 rounded-md border transition-colors flex items-center gap-1.5 ${isRaw ? 'bg-rose-500/10 border-rose-500/20 text-rose-400 hover:bg-rose-500/20' : 'bg-zinc-950 border-zinc-800 text-zinc-500 hover:text-zinc-300 hover:border-zinc-700'}`} title="Flag as Raw/Undercooked">
+                <AlertCircle size={12}/> <span className="text-[9px] font-bold uppercase hidden sm:inline">Raw Warning</span>
+              </button>
+            )}
             <button onClick={() => handleMetaChange('isVisible', !isVisible)} className={`shrink-0 whitespace-nowrap p-1.5 px-2 rounded-md border transition-colors flex items-center gap-1.5 ${isVisible ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-400 hover:bg-emerald-500/20' : 'bg-amber-500/10 border-amber-500/20 text-amber-500 hover:bg-amber-500/20'}`} title={isVisible ? "Currently Visible (Click to Hide)" : "Currently Hidden (Click to Show)"}>
               {isVisible ? <><Eye size={12}/> <span className="text-[9px] font-bold uppercase">Visible</span></> : <><EyeOff size={12}/> <span className="text-[9px] font-bold uppercase">Hidden</span></>}
             </button>
@@ -287,10 +266,8 @@ export default function MenuCardEditor({ img, index, categoryImagesCount, localC
             </button>
           </div>
         </div>
-
       </div>
 
-      {/* 🚀 THE VAULT PICKER MODAL */}
       {showVaultPicker && (
         <div className="fixed inset-0 z-100 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 animate-in fade-in zoom-in-95 duration-200">
           <div className="w-full max-w-3xl bg-zinc-950 border border-zinc-800 rounded-3xl overflow-hidden shadow-2xl flex flex-col max-h-[80vh]">
