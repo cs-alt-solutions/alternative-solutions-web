@@ -2,7 +2,6 @@
 import React from 'react';
 import { Store, Link as LinkIcon, Mail, Tag, MessageSquareText, MapPin, Utensils } from 'lucide-react';
 
-// 🧠 THE TAXONOMY DICTIONARY
 const INDUSTRY_CATEGORIES = [
   { id: 'E-Commerce', label: 'E-Commerce', description: 'Online stores, physical products, merch, and apparel.' },
   { id: 'Automotive', label: 'Automotive', description: 'Mechanics, detailing, custom shops, and dealerships.' },
@@ -16,7 +15,6 @@ const INDUSTRY_CATEGORIES = [
   { id: 'General', label: 'General / Other', description: 'Standard business operations that do not easily fit above.' }
 ];
 
-// 🚀 STANDARD LEAD OPTIONS
 const STANDARD_INQUIRY_TYPES = [
   "General Inquiry",
   "Request a Quote",
@@ -29,10 +27,8 @@ export default function BrandIdentity({ formData, handleChange, setFormData }: {
   const currentCategory = INDUSTRY_CATEGORIES.find(c => c.id === (formData.industry_tag || 'General')) 
     || INDUSTRY_CATEGORIES[INDUSTRY_CATEGORIES.length - 1];
 
-  // Safely grab the selected types or default to basic ones
   const selectedInquiries = formData.lead_inquiry_types || ["General Inquiry", "Request a Quote"];
 
-  // 🚀 The click handler to toggle options in the array
   const toggleInquiryType = (type: string) => {
     let updated = [...selectedInquiries];
     if (updated.includes(type)) {
@@ -42,6 +38,9 @@ export default function BrandIdentity({ formData, handleChange, setFormData }: {
     }
     setFormData((prev: any) => ({ ...prev, lead_inquiry_types: updated }));
   };
+
+  // 🚀 THE FIX: Check if the industry is Culinary
+  const isCulinary = formData.industry_tag === 'Culinary';
 
   return (
     <div className="bg-zinc-900/50 border border-zinc-800 p-6 rounded-2xl space-y-6 shadow-xl">
@@ -54,25 +53,21 @@ export default function BrandIdentity({ formData, handleChange, setFormData }: {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {/* Business Name */}
         <div className="space-y-2">
           <label className="text-[9px] font-bold text-zinc-500 uppercase tracking-widest">Business Name</label>
           <input name="business_name" value={formData.business_name || ''} onChange={handleChange} className="w-full bg-black/40 p-3 rounded-xl border border-white/5 text-white text-sm outline-none focus:border-cyan-500 transition-colors" />
         </div>
 
-        {/* Routing Slug */}
         <div className="space-y-2">
           <label className="text-[9px] font-bold text-zinc-500 uppercase tracking-widest flex items-center gap-1"><LinkIcon size={10} /> Routing Slug</label>
           <input name="slug" value={formData.slug || ''} onChange={handleChange} className="w-full bg-black/40 p-3 rounded-xl border border-white/5 text-cyan-400 font-mono text-sm outline-none focus:border-cyan-500 transition-colors" />
         </div>
 
-        {/* Public Email */}
         <div className="space-y-2">
           <label className="text-[9px] font-bold text-zinc-500 uppercase tracking-widest flex items-center gap-1"><Mail size={10} /> Public Email</label>
           <input name="contact_email" value={formData.contact_email || ''} onChange={handleChange} className="w-full bg-black/40 p-3 rounded-xl border border-white/5 text-white text-sm outline-none focus:border-cyan-500 transition-colors" placeholder="hello@example.com" />
         </div>
 
-        {/* Industry Dropdown */}
         <div className="space-y-2">
           <label className="text-[9px] font-bold text-zinc-500 uppercase tracking-widest flex items-center gap-1">
             <Tag size={10} /> Industry Category
@@ -94,7 +89,6 @@ export default function BrandIdentity({ formData, handleChange, setFormData }: {
           </p>
         </div>
 
-        {/* 🚀 GOOGLE MAPS EMBED */}
         <div className="space-y-2 md:col-span-2 pt-2 border-t border-zinc-800/50">
           <label className="text-[9px] font-bold text-zinc-500 uppercase tracking-widest flex items-center gap-1">
             <MapPin size={10} className="text-cyan-400" /> Google Maps Embed URL
@@ -111,24 +105,25 @@ export default function BrandIdentity({ formData, handleChange, setFormData }: {
           </p>
         </div>
         
-        {/* 🚀 ONLINE ORDERING / TOAST LINK */}
-        <div className="space-y-2 md:col-span-2 pt-2 border-t border-zinc-800/50">
-          <label className="text-[9px] font-bold text-zinc-500 uppercase tracking-widest flex items-center gap-1">
-            <Utensils size={10} className="text-cyan-400" /> Online Ordering URL (Toast, Square, etc.)
-          </label>
-          <input 
-            name="ordering_url" 
-            value={formData.ordering_url || ''} 
-            onChange={handleChange} 
-            className="w-full bg-black/40 p-3 rounded-xl border border-white/5 text-white text-sm outline-none focus:border-cyan-500 transition-colors placeholder:text-zinc-700" 
-            placeholder="https://order.toasttab.com/online/..." 
-          />
-          <p className="text-[10px] text-zinc-500 italic mt-1 leading-tight">
-            If provided, an "Order Online" button will display on the storefront to funnel customers directly to their external checkout.
-          </p>
-        </div>
+        {/* 🚀 THE FIX: Conditionally render based on the isCulinary flag */}
+        {isCulinary && (
+          <div className="space-y-2 md:col-span-2 pt-2 border-t border-zinc-800/50 animate-in fade-in duration-300">
+            <label className="text-[9px] font-bold text-zinc-500 uppercase tracking-widest flex items-center gap-1">
+              <Utensils size={10} className="text-cyan-400" /> Online Ordering URL (Toast, Square, etc.)
+            </label>
+            <input 
+              name="ordering_url" 
+              value={formData.ordering_url || ''} 
+              onChange={handleChange} 
+              className="w-full bg-black/40 p-3 rounded-xl border border-white/5 text-white text-sm outline-none focus:border-cyan-500 transition-colors placeholder:text-zinc-700" 
+              placeholder="https://order.toasttab.com/online/..." 
+            />
+            <p className="text-[10px] text-zinc-500 italic mt-1 leading-tight">
+              If provided, an &quot;Order Online&quot; button will display on the storefront to funnel customers directly to their external checkout.
+            </p>
+          </div>
+        )}
 
-        {/* CLICKABLE LEAD INQUIRY TYPES */}
         <div className="space-y-3 md:col-span-2 pt-4 border-t border-zinc-800/50">
           <label className="text-[9px] font-bold text-zinc-500 uppercase tracking-widest flex items-center gap-1">
             <MessageSquareText size={10} className="text-cyan-400" /> Form Options
