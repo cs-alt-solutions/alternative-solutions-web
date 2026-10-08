@@ -68,11 +68,11 @@ export async function updateStorefrontCore(id: string, formData: FormData) {
   const updateData: any = {};
 
   const fields = [
-    'business_name', 'slug', 'tagline', 'subtext', 'primary_cta', 'secondary_cta',
-    'brand_color', 'theme_style', 'hero_layout', 'content_layout', 'about_layout',
-    'about_heading', 'about_bio', 'capabilities_heading', 'gallery_heading', 'contact_email',
-    'logo_size', 'industry_tag', 'custom_domain'
-  ];
+  'business_name', 'slug', 'tagline', 'subtext', 'primary_cta', 'secondary_cta',
+  'brand_color', 'theme_style', 'hero_layout', 'content_layout', 'about_layout',
+  'about_heading', 'about_bio', 'capabilities_heading', 'gallery_heading', 'contact_email',
+  'logo_size', 'industry_tag', 'map_embed_url', 'lead_inquiry_types', 'ordering_url' // 🚀 Added
+];
 
   fields.forEach(field => {
     if (formData.has(field)) {

@@ -1,6 +1,6 @@
 // src/components/dashboard/storefronts/editor/core/BrandIdentity.tsx
 import React from 'react';
-import { Store, Link as LinkIcon, Mail, Tag, MessageSquareText, MapPin } from 'lucide-react';
+import { Store, Link as LinkIcon, Mail, Tag, MessageSquareText, MapPin, Utensils } from 'lucide-react';
 
 // 🧠 THE TAXONOMY DICTIONARY
 const INDUSTRY_CATEGORIES = [
@@ -94,7 +94,7 @@ export default function BrandIdentity({ formData, handleChange, setFormData }: {
           </p>
         </div>
 
-        {/* 🚀 THE MISSING PIECE: GOOGLE MAPS EMBED */}
+        {/* 🚀 GOOGLE MAPS EMBED */}
         <div className="space-y-2 md:col-span-2 pt-2 border-t border-zinc-800/50">
           <label className="text-[9px] font-bold text-zinc-500 uppercase tracking-widest flex items-center gap-1">
             <MapPin size={10} className="text-cyan-400" /> Google Maps Embed URL
@@ -108,6 +108,23 @@ export default function BrandIdentity({ formData, handleChange, setFormData }: {
           />
           <p className="text-[10px] text-zinc-500 italic mt-1 leading-tight">
             Leave this blank if this business operates remotely or does not have a public headquarters.
+          </p>
+        </div>
+        
+        {/* 🚀 ONLINE ORDERING / TOAST LINK */}
+        <div className="space-y-2 md:col-span-2 pt-2 border-t border-zinc-800/50">
+          <label className="text-[9px] font-bold text-zinc-500 uppercase tracking-widest flex items-center gap-1">
+            <Utensils size={10} className="text-cyan-400" /> Online Ordering URL (Toast, Square, etc.)
+          </label>
+          <input 
+            name="ordering_url" 
+            value={formData.ordering_url || ''} 
+            onChange={handleChange} 
+            className="w-full bg-black/40 p-3 rounded-xl border border-white/5 text-white text-sm outline-none focus:border-cyan-500 transition-colors placeholder:text-zinc-700" 
+            placeholder="https://order.toasttab.com/online/..." 
+          />
+          <p className="text-[10px] text-zinc-500 italic mt-1 leading-tight">
+            If provided, an "Order Online" button will display on the storefront to funnel customers directly to their external checkout.
           </p>
         </div>
 
