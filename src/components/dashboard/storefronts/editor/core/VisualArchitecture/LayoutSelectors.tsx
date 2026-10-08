@@ -170,7 +170,6 @@ export function ContentSelector({ formData, setFormData, allowedLayouts }: any) 
             <span className={`text-[11px] font-bold uppercase tracking-wider ${formData.content_layout === 'accordion' ? 'text-fuchsia-400' : 'text-zinc-500'}`}>Accordion</span>
           </button>
 
-          {/* 🚀 ADDED 'MENU' TO ADVANCED LAYOUTS */}
           <button disabled={!allowedLayouts.content.includes('menu')} onClick={() => handleSelect('menu')} className={`flex flex-col items-center justify-center p-3 border-2 rounded-xl transition-all disabled:opacity-20 disabled:cursor-not-allowed ${formData.content_layout === 'menu' ? 'border-fuchsia-500 bg-fuchsia-500/10' : 'border-zinc-800 bg-zinc-950 hover:border-zinc-700'}`}>
             <div className="w-full h-10 border border-zinc-700 bg-zinc-900 mb-2 flex flex-col p-1 gap-1 rounded items-center justify-center">
               <div className="w-2/3 h-1.5 bg-fuchsia-500/80 rounded-sm" />
@@ -179,10 +178,22 @@ export function ContentSelector({ formData, setFormData, allowedLayouts }: any) 
             </div>
             <span className={`text-[11px] font-bold uppercase tracking-wider ${formData.content_layout === 'menu' ? 'text-fuchsia-400' : 'text-zinc-500'}`}>Culinary Menu</span>
           </button>
+          
+          {/* 🚀 UNLOCKED 'LOOKBOOK' FOR ALL FOUNDING CLIENTS */}
+          <button 
+            onClick={() => handleSelect('lookbook')} 
+            className={`flex flex-col items-center justify-center p-3 border-2 rounded-xl transition-all ${formData.content_layout === 'lookbook' ? 'border-fuchsia-500 bg-fuchsia-500/10' : 'border-zinc-800 bg-zinc-950 hover:border-zinc-700'}`}
+          >
+            <div className="w-full h-10 border border-zinc-700 bg-zinc-900 mb-2 flex p-1 gap-1 rounded items-start justify-center">
+              <div className="w-1/2 flex flex-col gap-1"><div className="w-full h-6 bg-fuchsia-500/50 rounded-sm" /><div className="w-full h-3 bg-zinc-600 rounded-sm" /></div>
+              <div className="w-1/2 flex flex-col gap-1"><div className="w-full h-3 bg-zinc-600 rounded-sm" /><div className="w-full h-6 bg-fuchsia-500/50 rounded-sm" /></div>
+            </div>
+            <span className={`text-[11px] font-bold uppercase tracking-wider ${formData.content_layout === 'lookbook' ? 'text-fuchsia-400' : 'text-zinc-500'}`}>Lookbook</span>
+          </button>
         </div>
       )}
 
-      <AdvancedToggle isOpen={showAdvanced} onClick={() => setShowAdvanced(!showAdvanced)} count={ALL_CONTENTS.length - 4} />
+      <AdvancedToggle isOpen={showAdvanced} onClick={() => setShowAdvanced(!showAdvanced)} count={ALL_CONTENTS.length > 4 ? ALL_CONTENTS.length - 4 : 0} />
     </div>
   );
 }

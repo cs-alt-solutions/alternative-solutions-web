@@ -1,15 +1,16 @@
 /* src/components/dashboard/storefronts/editor/capabilities/CategoryAccordion.tsx */
 'use client';
-
 import React, { useState } from 'react';
 import { GripVertical, ChevronDown, X, Plus, Image as ImageIcon, List, Loader2, Trash2 } from 'lucide-react';
 import { supabase } from '@/utils/supabase';
 import MenuCardEditor from './MenuCardEditor';
 
 export default function CategoryAccordion({ cap, index, isOpen, setOpenCapIndex, localCaps, setLocalCaps, formData, setFormData, onReload }: any) {
-  
   const [isUploading, setIsUploading] = useState(false);
+  
   const isMenuMode = formData?.content_layout === 'menu';
+  // 🚀 THE FIX: Detect if the user is building for the Creative Industry
+  const isCreativeMode = formData?.industry_tag === 'Creative';
 
   const liveGallery = (formData.gallery_items || []).map((item: any, i: number) => {
     if (typeof item === 'string') return { id: `gal-${i}`, imageUrl: item, title: '', description: '', category: '', price: '', isVisible: true };
@@ -74,14 +75,15 @@ export default function CategoryAccordion({ cap, index, isOpen, setOpenCapIndex,
     if (!updated[index].bullets) updated[index].bullets = [];
     updated[index].bullets.push(''); setLocalCaps(updated);
   };
+
   const updateBullet = (bulletIndex: number, value: string) => {
     const updated = [...localCaps]; updated[index].bullets[bulletIndex] = value; setLocalCaps(updated);
   };
+
   const removeBullet = (bulletIndex: number) => {
     const updated = [...localCaps]; updated[index].bullets.splice(bulletIndex, 1); setLocalCaps(updated);
   };
 
-  // 🚀 FAST UPLOAD FOR CONTRACTOR GRID
   const handleGridUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
     if (!files || files.length === 0) return;
@@ -127,7 +129,9 @@ export default function CategoryAccordion({ cap, index, isOpen, setOpenCapIndex,
           <button onClick={(e) => { e.stopPropagation(); moveUp(); }} disabled={index === 0} className="text-zinc-600 hover:text-cyan-400 disabled:opacity-0 cursor-pointer">
             <GripVertical className="w-4 h-4" />
           </button>
-          <h3 className="font-bold text-white text-sm">{cap.title || (isMenuMode ? 'Untitled Category' : 'Untitled Service')}</h3>
+          <h3 className="font-bold text-white text-sm">
+            {cap.title || (isMenuMode ? 'Untitled Category' : isCreativeMode ? 'Untitled Package' : 'Untitled Service')}
+          </h3>
         </div>
         <div className="flex items-center gap-4">
           {(isMenuMode || categoryImages.length > 0) && (
@@ -143,17 +147,32 @@ export default function CategoryAccordion({ cap, index, isOpen, setOpenCapIndex,
       {isOpen && (
         <div className="p-4 border-t border-zinc-800/50 flex flex-col gap-6 animate-in fade-in slide-in-from-top-2 duration-200">
           <div className="flex-1 space-y-3">
-            <input 
-              type="text" 
-              value={cap.title} 
-              onChange={(e) => updateTitle(e.target.value)} 
-              placeholder={isMenuMode ? 'Category Name (e.g., Smash Burgers)' : 'Service Name (e.g., Roof Replacement)'}
-              className="w-full bg-black/50 border border-zinc-800 rounded-lg px-3 py-2 text-sm text-white font-bold outline-none focus:border-cyan-500 transition-colors"
-            />
+            
+            {/* 🚀 THE FIX: Dynamic Inputs for Creative Pricing */}
+            <div className="flex gap-2 w-full">
+              <input 
+                type="text" 
+                value={cap.title} 
+                onChange={(e) => updateTitle(e.target.value)} 
+                placeholder={isMenuMode ? 'Category Name (e.g., Smash Burgers)' : isCreativeMode ? 'Package Name (e.g., The Elopement)' : 'Service Name (e.g., Roof Replacement)'}
+                className="flex-1 bg-black/50 border border-zinc-800 rounded-lg px-3 py-2 text-sm text-white font-bold outline-none focus:border-cyan-500 transition-colors"
+              />
+              
+              {isCreativeMode && (
+                <input 
+                  type="text" 
+                  value={cap.price || ''} 
+                  onChange={(e) => updateField('price', e.target.value)} 
+                  placeholder="Price (e.g. $1,200)"
+                  className="w-1/3 bg-black/50 border border-zinc-800 rounded-lg px-3 py-2 text-sm text-fuchsia-400 font-bold outline-none focus:border-fuchsia-500 transition-colors placeholder:text-zinc-600"
+                />
+              )}
+            </div>
+
             <textarea 
               value={cap.description} 
               onChange={(e) => updateField('description', e.target.value)} 
-              placeholder={`Short description of this ${isMenuMode ? 'category' : 'service'}...`}
+              placeholder={`Short description of this ${isMenuMode ? 'category' : isCreativeMode ? 'package' : 'service'}...`}
               rows={2}
               className="w-full bg-black/50 border border-zinc-800 rounded-lg px-3 py-2 text-xs text-zinc-300 outline-none focus:border-cyan-500 transition-colors resize-none"
             />
@@ -161,8 +180,8 @@ export default function CategoryAccordion({ cap, index, isOpen, setOpenCapIndex,
 
           <div className={`space-y-3 pt-4 border-t border-zinc-800/30 ${isMenuMode ? 'opacity-70 hover:opacity-100 transition-opacity' : ''}`}>
             <label className="text-[9px] font-bold text-zinc-500 uppercase tracking-widest flex items-center gap-2">
-              <List size={12} className={isMenuMode ? 'text-zinc-500' : 'text-cyan-500'} /> 
-              {isMenuMode ? 'Legacy Simple Text (No Image)' : 'Scope of Work (Detail Bullets)'}
+              <List size={12} className={isMenuMode ? 'text-zinc-500' : isCreativeMode ? 'text-fuchsia-500' : 'text-cyan-500'} /> 
+              {isMenuMode ? 'Legacy Simple Text (No Image)' : isCreativeMode ? 'Package Deliverables' : 'Scope of Work (Detail Bullets)'}
             </label>
             <div className="space-y-2">
               {(cap.bullets || []).map((bullet: string, bIndex: number) => (
@@ -171,22 +190,22 @@ export default function CategoryAccordion({ cap, index, isOpen, setOpenCapIndex,
                   <input 
                     value={bullet}
                     onChange={(e) => updateBullet(bIndex, e.target.value)}
-                    placeholder={isMenuMode ? 'Item Name - $Price' : 'Deliverable or feature...'}
-                    className="flex-1 bg-transparent border-b border-zinc-800 focus:border-fuchsia-500/50 py-1 text-xs text-zinc-300 focus:outline-none transition-colors"
+                    placeholder={isMenuMode ? 'Item Name - $Price' : isCreativeMode ? 'e.g. 8 Hours of Coverage' : 'Deliverable or feature...'}
+                    className={`flex-1 bg-transparent border-b border-zinc-800 py-1 text-xs text-zinc-300 focus:outline-none transition-colors ${isCreativeMode ? 'focus:border-fuchsia-500' : 'focus:border-cyan-500'}`}
                   />
                   <button onClick={() => removeBullet(bIndex)} className="text-zinc-600 hover:text-rose-400"><X size={12} /></button>
                 </div>
               ))}
             </div>
             <button onClick={addBullet} className="text-[9px] font-bold text-zinc-500 hover:text-cyan-400 uppercase tracking-widest flex items-center gap-1.5 mt-2">
-              <Plus size={10} /> Add {isMenuMode ? 'Simple Item' : 'Scope Detail'}
+              <Plus size={10} /> Add {isMenuMode ? 'Simple Item' : isCreativeMode ? 'Deliverable' : 'Scope Detail'}
             </button>
           </div>
 
           <div className="space-y-4 pt-4 border-t border-zinc-800/30">
             <div className="flex items-center justify-between">
-              <label className={`text-[9px] font-bold uppercase tracking-widest flex items-center gap-2 ${isMenuMode ? 'text-fuchsia-500' : 'text-cyan-500'}`}>
-                <ImageIcon size={12} /> {isMenuMode ? 'Menu Cards' : 'Proof of Work Gallery'} ({categoryImages.length})
+              <label className={`text-[9px] font-bold uppercase tracking-widest flex items-center gap-2 ${isMenuMode || isCreativeMode ? 'text-fuchsia-500' : 'text-cyan-500'}`}>
+                <ImageIcon size={12} /> {isMenuMode ? 'Menu Cards' : isCreativeMode ? 'Package Cover & Gallery' : 'Proof of Work Gallery'} ({categoryImages.length})
               </label>
               {isMenuMode && (
                 <button onClick={addBlankCard} className="text-[9px] font-bold text-zinc-400 hover:text-fuchsia-400 uppercase tracking-widest flex items-center gap-1.5 transition-colors">
@@ -196,9 +215,8 @@ export default function CategoryAccordion({ cap, index, isOpen, setOpenCapIndex,
             </div>
             
             {isMenuMode ? (
-              // MENU MODE: Complex Text/Price Cards
-              categoryImages.length === 0 ? (
-                 <p className="text-[10px] text-zinc-600 italic">Drag items from the Drop Vault or create a blank card.</p>
+              categoryImages.length === 0 ? ( 
+                <p className="text-[10px] text-zinc-600 italic">Drag items from the Drop Vault or create a blank card.</p>
               ) : (
                 <div className="space-y-3">
                   {categoryImages.map((img: any, i: number) => (
@@ -217,7 +235,6 @@ export default function CategoryAccordion({ cap, index, isOpen, setOpenCapIndex,
                 </div>
               )
             ) : (
-              // 🚀 CONTRACTOR MODE: Clean Photo Grid
               <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-3">
                 {categoryImages.map((img: any, i: number) => {
                   const currentId = img.id || `gal-${i}`;
@@ -241,21 +258,19 @@ export default function CategoryAccordion({ cap, index, isOpen, setOpenCapIndex,
                   );
                 })}
                 
-                {/* Upload Button */}
-                <label className="aspect-square rounded-xl border-2 border-dashed border-zinc-800 hover:border-cyan-500/50 bg-black/20 hover:bg-cyan-500/10 flex flex-col items-center justify-center cursor-pointer transition-all group">
+                <label className={`aspect-square rounded-xl border-2 border-dashed border-zinc-800 flex flex-col items-center justify-center cursor-pointer transition-all group ${isCreativeMode ? 'hover:border-fuchsia-500/50 bg-black/20 hover:bg-fuchsia-500/10' : 'hover:border-cyan-500/50 bg-black/20 hover:bg-cyan-500/10'}`}>
                   {isUploading ? (
-                    <Loader2 className="w-5 h-5 text-cyan-500 animate-spin" />
+                    <Loader2 className={`w-5 h-5 animate-spin ${isCreativeMode ? 'text-fuchsia-500' : 'text-cyan-500'}`} />
                   ) : (
                     <>
-                      <Plus className="w-5 h-5 text-zinc-600 group-hover:text-cyan-400 mb-1 transition-colors" />
-                      <span className="text-[8px] font-black uppercase tracking-widest text-zinc-500 group-hover:text-cyan-400 transition-colors">Add Photo</span>
+                      <Plus className={`w-5 h-5 text-zinc-600 mb-1 transition-colors ${isCreativeMode ? 'group-hover:text-fuchsia-400' : 'group-hover:text-cyan-400'}`} />
+                      <span className={`text-[8px] font-black uppercase tracking-widest text-zinc-500 transition-colors ${isCreativeMode ? 'group-hover:text-fuchsia-400' : 'group-hover:text-cyan-400'}`}>Add Photo</span>
                     </>
                   )}
                   <input type="file" multiple accept="image/*" className="hidden" onChange={handleGridUpload} disabled={isUploading} />
                 </label>
               </div>
             )}
-
           </div>
         </div>
       )}
