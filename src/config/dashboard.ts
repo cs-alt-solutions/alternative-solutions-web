@@ -1,4 +1,4 @@
-/* src/config/dashboard.ts */
+/* src/config/dashboard.ts */ 
 
 export const DASHBOARD_COPY = {
   COMMON: { BRAND_VERSION: "Alternative Solutions Workspace", STATUS_ONLINE: "All Systems Go", ACTION_REVIEW: "Review" },
@@ -6,19 +6,17 @@ export const DASHBOARD_COPY = {
     GROUPS: { WORKSPACE: "My Workspace", HUMAN_MANAGEMENT: "Human Management", LOGISTICS: "Life & Logistics", SYSTEM: "System Admin" },
     OVERVIEW: "Home",
     FOUNDATION: "The Drafting Table",
-    STOREFRONTS: "Storefronts",
+    STOREFRONTS: "Storefronts", 
     LEDGER: "The Ledger",
     ECOSYSTEM_MANAGER: "My Products",
     BETA_COMMAND: "Beta Command",
     BROADCAST: "Emails & Updates",
     MEMBERS: "Members & Access",
     CLIENTS: "Client HQ",
-    SUPPORT_DESK: "Support Desk", 
     TASKS: "Tasks",
-    ANALYTICS: "Live Traffic", 
     INFRASTRUCTURE: "Infrastructure",
     CONFIG: "Settings",
-    EXIT: "  Back to Website"
+    EXIT: "← Back to Website"
   },
   CLIENT_PORTAL: {
     WELCOME_TITLE: "Welcome to your Workspace",
@@ -196,13 +194,13 @@ export const DASHBOARD_COPY = {
   INFRASTRUCTURE_HUB: { TITLE: "Under the Hood", DESC: "Quick links to your hosting, database, and billing.", CATEGORIES: { CORE: "Core Tech", FINANCE: "Money & Billing", CODE: "Codebase" } },
   PROJECT_BOARD: { NOT_FOUND: "Project Not Found", ADD_TASK: "Add Task", COLUMNS: { TODO: "To Do", IN_PROGRESS: "Doing", REVIEW: "Review", DONE: "Done" } },
   OVERVIEW: {
-    TITLE: "Command Center",
+    TITLE: "Home",
     DIRECTIVE: {
-      TITLE: "Pending Applications",
-      SUBTITLE: "New requests awaiting your review",
+      TITLE: "Project Intake",
+      SUBTITLE: "Applications awaiting your authorization",
       EMPTY: "Pipeline clear. No pending applications.",
-      TYPES: { LEAD: "Storefront App", TASK: "Task" },
-      ACTIONS: { PROCESS: "Review Application", EXECUTE: "Initialize" }
+      TYPES: { LEAD: "Sector Zero App", TASK: "Task" },
+      ACTIONS: { PROCESS: "Review Dossier", EXECUTE: "Do It" }
     },
     LIVE_FEED: { TITLE: "Recent Activity", NEW_BETA: "Checking..." },
     INFRASTRUCTURE: { TITLE: "Tech Status", SUBTITLE: "Are we online?", PLATFORMS: { GITHUB: "GitHub", VERCEL: "Vercel", SUPABASE: "Supabase" } },
@@ -285,7 +283,6 @@ export const STOREFRONT_ENGINE_COPY = {
   }
 };
 
-// 🚀 ADDED THE NEW SUPPORT DESK UI COPY 
 export const SUPPORT_DESK_COPY = {
   HEADER: {
     TITLE: "Support Desk",
@@ -313,5 +310,38 @@ export const SUPPORT_DESK_COPY = {
     CLIENT: "Client Request:",
     RESPONSE: "Your Response:",
     CANCEL_REASON: "Admin Override / Cancel Reason:"
+  }
+};
+
+// 🚀 ADDED: Dedicated Editor Configuration for the Tenant Command Hub
+export const STOREFRONT_EDITOR_COPY = {
+  INDUSTRIES: [
+    { id: 'E-Commerce', label: 'E-Commerce' },
+    { id: 'Automotive', label: 'Automotive' },
+    { id: 'Culinary', label: 'Culinary' },
+    { id: 'Wellness', label: 'Wellness' },
+    { id: 'Creative', label: 'Creative' },
+    { id: 'Contracting', label: 'Contracting' },
+    { id: 'Consulting', label: 'Consulting' },
+    { id: 'Tech & SaaS', label: 'Tech & SaaS' },
+    { id: 'Local Services', label: 'Local Services' },
+    { id: 'General', label: 'General / Other' }
+  ],
+  DYNAMIC_TABS: {
+    CULINARY: "Menu Builder",
+    CREATIVE: "Portfolio Engine",
+    CONTRACTING: "Scope & Proof",
+    DEFAULT: "Services"
+  },
+  TERMINATION: {
+    CONFIRM_PREFIX: "Are you absolutely sure you want to permanently delete \"",
+    CONFIRM_SUFFIX: "\"? This will obliterate client data and cannot be reversed."
+  },
+  SYSTEM_LOCK: {
+    TITLE: "System Locked",
+    STATUS_PREFIX: "STATUS:",
+    BODY: "The architecture is currently secured for client review or active deployment. The Canvas and all Editor configurations are strictly read-only to prevent accidental data contamination.",
+    BTN_OVERRIDE: "Silent Admin Override",
+    BTN_REVERT: "Revert to Building"
   }
 };

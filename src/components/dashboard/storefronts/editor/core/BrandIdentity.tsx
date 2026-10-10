@@ -1,164 +1,118 @@
 // src/components/dashboard/storefronts/editor/core/BrandIdentity.tsx
-import React from 'react';
-import { Store, Link as LinkIcon, Mail, Tag, MessageSquareText, MapPin, Utensils } from 'lucide-react';
+import React, { useState } from 'react';
+import { Store, Link as LinkIcon, Mail, Tag, MessageSquareText, MapPin, Utensils, Unplug, ChevronDown, HelpCircle } from 'lucide-react';
+import { STOREFRONT_EDITOR_COPY } from '@/config/dashboard';
+import EditorAccordion from '../shared/EditorAccordion';
 
-const INDUSTRY_CATEGORIES = [
-  { id: 'E-Commerce', label: 'E-Commerce', description: 'Online stores, physical products, merch, and apparel.' },
-  { id: 'Automotive', label: 'Automotive', description: 'Mechanics, detailing, custom shops, and dealerships.' },
-  { id: 'Culinary', label: 'Culinary', description: 'Restaurants, coffee shops, bakeries, and meal prep.' },
-  { id: 'Wellness', label: 'Wellness', description: 'Apothecaries, salons, fitness, spas, and therapists.' },
-  { id: 'Creative', label: 'Creative', description: 'Photographers, designers, portfolios, and agencies.' },
-  { id: 'Contracting', label: 'Contracting', description: 'Construction, landscaping, HVAC, and home services.' },
-  { id: 'Consulting', label: 'Consulting', description: 'B2B services, coaching, legal, and financial advisors.' },
-  { id: 'Tech & SaaS', label: 'Tech & SaaS', description: 'Software, mobile apps, and digital tools.' },
-  { id: 'Local Services', label: 'Local Services', description: 'Cleaning, moving, pet care, and event planning.' },
-  { id: 'General', label: 'General / Other', description: 'Standard business operations that do not easily fit above.' }
-];
+const STANDARD_INQUIRY_TYPES = ["General Inquiry", "Request a Quote", "Job Application / Hiring", "Other"];
 
-const STANDARD_INQUIRY_TYPES = [
-  "General Inquiry",
-  "Request a Quote",
-  "Job Application / Hiring",
-  "Other"
-];
+// 🚀 NEW: Reusable Tooltip Label Component for Brand Identity
+const TooltipLabel = ({ label, icon: Icon, tooltip, iconColor = "text-zinc-500", tooltipColor = "text-zinc-300" }: any) => (
+  <div className="flex items-center gap-1.5 relative group w-fit mb-1.5">
+    {Icon && <Icon size={10} className={iconColor} />}
+    <label className="text-[9px] font-bold text-zinc-500 uppercase tracking-widest pl-0.5">{label}</label>
+    {tooltip && <HelpCircle size={12} className="text-zinc-600 hover:text-white cursor-help transition-colors ml-1" />}
+    
+    {tooltip && (
+      <div className={`absolute left-full ml-2 top-1/2 -translate-y-1/2 w-48 p-2.5 bg-zinc-900 border border-zinc-700 rounded-lg shadow-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-50 pointer-events-none`}>
+        <p className={`text-[10px] ${tooltipColor} normal-case tracking-normal font-medium leading-relaxed`}>
+          {tooltip}
+        </p>
+      </div>
+    )}
+  </div>
+);
 
 export default function BrandIdentity({ formData, handleChange, setFormData }: { formData: any, handleChange: any, setFormData: any }) {
-  
-  const currentCategory = INDUSTRY_CATEGORIES.find(c => c.id === (formData.industry_tag || 'General')) 
-    || INDUSTRY_CATEGORIES[INDUSTRY_CATEGORIES.length - 1];
+  const [openSection, setOpenSection] = useState<'core' | 'integrations' | 'lead' | null>(null);
+
+  const toggleSection = (section: 'core' | 'integrations' | 'lead') => {
+    setOpenSection(prev => prev === section ? null : section);
+  };
 
   const selectedInquiries = formData.lead_inquiry_types || ["General Inquiry", "Request a Quote"];
+  const isCulinary = formData.industry_tag === 'Culinary';
 
   const toggleInquiryType = (type: string) => {
     let updated = [...selectedInquiries];
-    if (updated.includes(type)) {
-      updated = updated.filter((t: string) => t !== type);
-    } else {
-      updated.push(type);
-    }
+    if (updated.includes(type)) updated = updated.filter((t: string) => t !== type);
+    else updated.push(type);
     setFormData((prev: any) => ({ ...prev, lead_inquiry_types: updated }));
   };
 
-  // 🚀 THE FIX: Check if the industry is Culinary
-  const isCulinary = formData.industry_tag === 'Culinary';
+  const getCoreProgress = () => {
+    const fields = [formData.business_name, formData.slug, formData.contact_email];
+    return Math.round((((fields.filter(f => f && f.trim() !== '').length) + 1) / 4) * 100);
+  };
+
+  const getIntegrationsProgress = () => {
+    let fields = [formData.map_embed_url];
+    if (isCulinary) fields.push(formData.ordering_url);
+    return Math.round((fields.filter(f => f && f.trim() !== '').length / fields.length) * 100);
+  };
+
+  const getLeadProgress = () => selectedInquiries.length > 0 ? 100 : 0;
 
   return (
-    <div className="bg-zinc-900/50 border border-zinc-800 p-6 rounded-2xl space-y-6 shadow-xl">
-      
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-2">
-        <div className="flex items-center gap-3 text-cyan-400">
-          <Store size={18} />
-          <h3 className="text-xs font-black uppercase tracking-[0.2em]">Brand Identity</h3>
-        </div>
-      </div>
-
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div className="space-y-2">
-          <label className="text-[9px] font-bold text-zinc-500 uppercase tracking-widest">Business Name</label>
-          <input name="business_name" value={formData.business_name || ''} onChange={handleChange} className="w-full bg-black/40 p-3 rounded-xl border border-white/5 text-white text-sm outline-none focus:border-cyan-500 transition-colors" />
-        </div>
-
-        <div className="space-y-2">
-          <label className="text-[9px] font-bold text-zinc-500 uppercase tracking-widest flex items-center gap-1"><LinkIcon size={10} /> Routing Slug</label>
-          <input name="slug" value={formData.slug || ''} onChange={handleChange} className="w-full bg-black/40 p-3 rounded-xl border border-white/5 text-cyan-400 font-mono text-sm outline-none focus:border-cyan-500 transition-colors" />
-        </div>
-
-        <div className="space-y-2">
-          <label className="text-[9px] font-bold text-zinc-500 uppercase tracking-widest flex items-center gap-1"><Mail size={10} /> Public Email</label>
-          <input name="contact_email" value={formData.contact_email || ''} onChange={handleChange} className="w-full bg-black/40 p-3 rounded-xl border border-white/5 text-white text-sm outline-none focus:border-cyan-500 transition-colors" placeholder="hello@example.com" />
-        </div>
-
-        <div className="space-y-2">
-          <label className="text-[9px] font-bold text-zinc-500 uppercase tracking-widest flex items-center gap-1">
-            <Tag size={10} /> Industry Category
-          </label>
-          <select 
-            name="industry_tag" 
-            value={formData.industry_tag || 'General'} 
-            onChange={handleChange}
-            className="w-full bg-black/40 p-3 rounded-xl border border-white/5 text-white text-sm outline-none focus:border-cyan-500 transition-colors appearance-none cursor-pointer"
-          >
-            {INDUSTRY_CATEGORIES.map(category => (
-              <option key={category.id} value={category.id} className="bg-zinc-900 text-white">
-                {category.label}
-              </option>
-            ))}
-          </select>
-          <p className="text-[10px] text-zinc-500 italic mt-1 leading-tight">
-            i.e., {currentCategory.description}
-          </p>
-        </div>
-
-        <div className="space-y-2 md:col-span-2 pt-2 border-t border-zinc-800/50">
-          <label className="text-[9px] font-bold text-zinc-500 uppercase tracking-widest flex items-center gap-1">
-            <MapPin size={10} className="text-cyan-400" /> Google Maps Embed URL
-          </label>
-          <input 
-            name="map_embed_url" 
-            value={formData.map_embed_url || ''} 
-            onChange={handleChange} 
-            className="w-full bg-black/40 p-3 rounded-xl border border-white/5 text-white text-sm outline-none focus:border-cyan-500 transition-colors placeholder:text-zinc-700" 
-            placeholder='Paste the <iframe src="..."> code or Google Maps URL here' 
-          />
-          <p className="text-[10px] text-zinc-500 italic mt-1 leading-tight">
-            Leave this blank if this business operates remotely or does not have a public headquarters.
-          </p>
-        </div>
-        
-        {/* 🚀 THE FIX: Conditionally render based on the isCulinary flag */}
-        {isCulinary && (
-          <div className="space-y-2 md:col-span-2 pt-2 border-t border-zinc-800/50 animate-in fade-in duration-300">
-            <label className="text-[9px] font-bold text-zinc-500 uppercase tracking-widest flex items-center gap-1">
-              <Utensils size={10} className="text-cyan-400" /> Online Ordering URL (Toast, Square, etc.)
-            </label>
-            <input 
-              name="ordering_url" 
-              value={formData.ordering_url || ''} 
-              onChange={handleChange} 
-              className="w-full bg-black/40 p-3 rounded-xl border border-white/5 text-white text-sm outline-none focus:border-cyan-500 transition-colors placeholder:text-zinc-700" 
-              placeholder="https://order.toasttab.com/online/..." 
-            />
-            <p className="text-[10px] text-zinc-500 italic mt-1 leading-tight">
-              If provided, an &quot;Order Online&quot; button will display on the storefront to funnel customers directly to their external checkout.
-            </p>
+    <div className="space-y-4">
+      <EditorAccordion title="Core Identity" icon={Store} accentColor="cyan" progress={getCoreProgress()} isOpen={openSection === 'core'} onToggle={() => toggleSection('core')}>
+        <div className="flex flex-col gap-4">
+          <div>
+            <TooltipLabel label="Business Name" />
+            <input name="business_name" value={formData.business_name || ''} onChange={handleChange} className="w-full bg-zinc-950 px-3 py-2.5 rounded-lg border border-zinc-800 text-white text-xs outline-none focus:border-cyan-500 transition-colors" placeholder="e.g. Blaze & Bloom" />
           </div>
-        )}
+          <div>
+            <TooltipLabel label="Routing Slug" icon={LinkIcon} iconColor="text-cyan-500/70" />
+            <input name="slug" value={formData.slug || ''} onChange={handleChange} className="w-full bg-zinc-950 px-3 py-2.5 rounded-lg border border-zinc-800 text-cyan-400 font-mono text-xs outline-none focus:border-cyan-500 transition-colors" />
+          </div>
+          <div>
+            <TooltipLabel label="Public Email" icon={Mail} iconColor="text-cyan-500/70" />
+            <input name="contact_email" value={formData.contact_email || ''} onChange={handleChange} className="w-full bg-zinc-950 px-3 py-2.5 rounded-lg border border-zinc-800 text-white text-xs outline-none focus:border-cyan-500 transition-colors" placeholder="hello@example.com" />
+          </div>
+          <div>
+            <TooltipLabel label="Industry Category" icon={Tag} iconColor="text-cyan-500/70" />
+            <select name="industry_tag" value={formData.industry_tag || 'General'} onChange={handleChange} className="w-full bg-zinc-950 px-3 py-2.5 rounded-lg border border-zinc-800 text-white text-xs outline-none focus:border-cyan-500 transition-colors appearance-none cursor-pointer">
+              {STOREFRONT_EDITOR_COPY.INDUSTRIES.map((category: any) => (
+                <option key={category.id} value={category.id} className="bg-zinc-900 text-white">{category.label}</option>
+              ))}
+            </select>
+          </div>
+        </div>
+      </EditorAccordion>
 
-        <div className="space-y-3 md:col-span-2 pt-4 border-t border-zinc-800/50">
-          <label className="text-[9px] font-bold text-zinc-500 uppercase tracking-widest flex items-center gap-1">
-            <MessageSquareText size={10} className="text-cyan-400" /> Form Options
-          </label>
-          <div className="flex flex-wrap gap-2">
+      <EditorAccordion title="Integrations" icon={Unplug} accentColor="emerald" progress={getIntegrationsProgress()} isOpen={openSection === 'integrations'} onToggle={() => toggleSection('integrations')}>
+        <div className="flex flex-col gap-4">
+          <div>
+            <TooltipLabel label="Google Maps Embed" icon={MapPin} iconColor="text-emerald-500/70" tooltip="Leave blank if you operate remotely or don't have a public headquarters." tooltipColor="text-emerald-400" />
+            <input name="map_embed_url" value={formData.map_embed_url || ''} onChange={handleChange} className="w-full bg-zinc-950 px-3 py-2.5 rounded-lg border border-zinc-800 text-white text-xs outline-none focus:border-emerald-500 transition-colors placeholder:text-zinc-700" placeholder='Paste <iframe src="..."> here' />
+          </div>
+          {isCulinary && (
+            <div className="animate-in fade-in slide-in-from-top-2 duration-300">
+              <TooltipLabel label="Online Ordering URL" icon={Utensils} iconColor="text-emerald-500/70" tooltip="If provided, an 'Order Online' button will display on the storefront to funnel customers directly to external checkout." tooltipColor="text-emerald-400" />
+              <input name="ordering_url" value={formData.ordering_url || ''} onChange={handleChange} className="w-full bg-zinc-950 px-3 py-2.5 rounded-lg border border-zinc-800 text-white text-xs outline-none focus:border-emerald-500 transition-colors placeholder:text-zinc-700" placeholder="https://order.toasttab.com/..." />
+            </div>
+          )}
+        </div>
+      </EditorAccordion>
+
+      <EditorAccordion title="Lead Capture" icon={MessageSquareText} accentColor="fuchsia" progress={getLeadProgress()} isOpen={openSection === 'lead'} onToggle={() => toggleSection('lead')}>
+        <div>
+          <TooltipLabel label="Form Routing Options" tooltip="Select the options you want to appear in this storefront's lead capture modal dropdown." tooltipColor="text-fuchsia-400" />
+          <div className="flex flex-col gap-2 mt-2">
             {STANDARD_INQUIRY_TYPES.map(type => {
               const isChecked = selectedInquiries.includes(type);
               return (
-                <label 
-                  key={type} 
-                  className={`flex items-center gap-2.5 px-4 py-2.5 rounded-xl cursor-pointer transition-all border ${
-                    isChecked 
-                      ? 'bg-cyan-500/10 border-cyan-500/30 shadow-[0_0_15px_rgba(34,211,238,0.1)]' 
-                      : 'bg-black/40 border-white/5 hover:border-white/20'
-                  }`}
-                >
-                  <input 
-                    type="checkbox" 
-                    checked={isChecked} 
-                    onChange={() => toggleInquiryType(type)} 
-                    className="w-3.5 h-3.5 accent-cyan-500 cursor-pointer" 
-                  />
-                  <span className={`text-xs font-bold ${isChecked ? 'text-cyan-400' : 'text-zinc-400'}`}>
-                    {type}
-                  </span>
+                <label key={type} className={`flex items-center gap-3 px-3 py-2.5 rounded-lg cursor-pointer transition-all border ${isChecked ? 'bg-fuchsia-500/10 border-fuchsia-500/30' : 'bg-zinc-950 border-zinc-800 hover:border-zinc-700'}`}>
+                  <div className={`w-3.5 h-3.5 rounded flex items-center justify-center border transition-all ${isChecked ? 'bg-fuchsia-500 border-fuchsia-500' : 'bg-black border-zinc-600'}`}>
+                    {isChecked && <div className="w-1.5 h-1.5 bg-black rounded-sm" />}
+                  </div>
+                  <span className={`text-[11px] font-bold uppercase tracking-wider ${isChecked ? 'text-fuchsia-400' : 'text-zinc-400'}`}>{type}</span>
                 </label>
               );
             })}
           </div>
-          <p className="text-[10px] text-zinc-500 italic mt-1 leading-tight">
-            Select the options you want to appear in this storefront's lead capture modal.
-          </p>
         </div>
-
-      </div>
+      </EditorAccordion>
     </div>
   );
 }

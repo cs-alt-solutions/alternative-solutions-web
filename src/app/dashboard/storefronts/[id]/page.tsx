@@ -23,7 +23,8 @@ import {
   Lock,
   ShieldAlert,
   Unlock,
-  FileUp
+  FileUp,
+  Tag
 } from 'lucide-react';
 
 import CoreTab from '@/components/dashboard/storefronts/editor/CoreTab';
@@ -33,6 +34,7 @@ import CapabilitiesTab from '@/components/dashboard/storefronts/editor/Capabilit
 import GridTab from '@/components/dashboard/storefronts/editor/GridTab';
 import VaultTab from '@/components/dashboard/storefronts/editor/VaultTab';
 import { deleteStorefront } from '@/app/actions/storefronts';
+import { STOREFRONT_EDITOR_COPY } from '@/config/dashboard';
 
 export default function TenantCommandHub() {
   const { id } = useParams();
@@ -48,7 +50,9 @@ export default function TenantCommandHub() {
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [saveMessage, setSaveMessage] = useState('');
-  const [refreshKey, setRefreshKey] = useState(Date.now());
+  
+  // 🚀 THE FIX: This stops the hydration crash and compiling freeze!
+  const [refreshKey, setRefreshKey] = useState(0); 
   
   const [isUnlocked, setIsUnlocked] = useState(false);
 
@@ -89,23 +93,28 @@ export default function TenantCommandHub() {
     setSaveMessage('');
     try {
       const { error } = await supabase.from('storefronts').update(formData).eq('id', formData.id);
-      if (error) throw error;
+      
+      if (error) {
+        console.error("Supabase Rejected Save:", error.message || error.details || error);
+        throw new Error(error.message || "Database rejected the payload.");
+      }
       
       setSaveMessage('SYSTEM SAVED');
       router.refresh();
       reloadCanvas();
       
       setTimeout(() => setSaveMessage(''), 3000);
-    } catch (err) {
-      console.error("Save error:", err);
-      setSaveMessage('SAVE ERROR');
+    } catch (err: any) {
+      console.error("Save error caught:", err);
+      setSaveMessage(err.message?.substring(0, 30) + '...' || 'SAVE ERROR');
     } finally {
       setIsSaving(false);
     }
   };
 
   const handleStorefrontTermination = async () => {
-    if (!window.confirm(`Are you absolutely sure you want to permanently delete "${formData.business_name}"? This will obliterate client data and cannot be reversed.`)) return;
+    const warningText = `${STOREFRONT_EDITOR_COPY.TERMINATION.CONFIRM_PREFIX}${formData.business_name}${STOREFRONT_EDITOR_COPY.TERMINATION.CONFIRM_SUFFIX}`;
+    if (!window.confirm(warningText)) return;
 
     try {
       await deleteStorefront(formData.id);
@@ -127,10 +136,15 @@ export default function TenantCommandHub() {
 
   if (!formData) return <div className={`fixed top-0 right-0 bottom-0 left-0 transition-all duration-300 ${isSidebarCollapsed ? 'md:left-20' : 'md:left-64'} z-40 p-8 text-white bg-black`}>Tenant not found.</div>;
 
+  const industryTag = formData.industry_tag || 'General';
+  let servicesTabLabel = STOREFRONT_EDITOR_COPY.DYNAMIC_TABS.DEFAULT;
+  if (industryTag === 'Culinary') servicesTabLabel = STOREFRONT_EDITOR_COPY.DYNAMIC_TABS.CULINARY;
+  if (industryTag === 'Creative') servicesTabLabel = STOREFRONT_EDITOR_COPY.DYNAMIC_TABS.CREATIVE;
+  if (industryTag === 'Contracting') servicesTabLabel = STOREFRONT_EDITOR_COPY.DYNAMIC_TABS.CONTRACTING;
+
   return (
     <div className={`fixed top-0 right-0 bottom-0 left-0 transition-all duration-300 ${isSidebarCollapsed ? 'md:left-20' : 'md:left-64'} z-40 bg-black flex flex-col overflow-hidden animate-in fade-in duration-300`}>
       
-      {/* HUB HEADER */}
       <header className="border-b border-white/5 bg-zinc-950 px-4 md:px-6 py-4 flex items-center justify-between shrink-0">
         <div className="flex items-center gap-4">
           <Link 
@@ -179,7 +193,6 @@ export default function TenantCommandHub() {
         </div>
       </header>
 
-      {/* COMMAND NAVIGATION */}
       <nav className="flex items-center gap-4 md:gap-6 px-4 md:px-6 border-b border-zinc-800 bg-zinc-950 shrink-0">
         <button 
           onClick={() => setActiveTab('canvas')}
@@ -201,14 +214,32 @@ export default function TenantCommandHub() {
         </button>
       </nav>
 
-      {/* DYNAMIC WORKSPACE */}
       <div className="flex-1 flex overflow-hidden w-full relative">
-        
-        {/* TAB 1: THE CANVAS */}
         {activeTab === 'canvas' && (
           <div className="flex w-full h-full">
             {controlsExpanded && (
               <div className="w-full lg:w-96 xl:w-md flex flex-col border-r border-zinc-800 bg-zinc-950 z-10 shrink-0 animate-in slide-in-from-left-4 duration-300">
+                
+                <div className="p-4 border-b border-zinc-800 bg-zinc-900/40 shrink-0">
+                  <div className="bg-zinc-900 border border-zinc-800 rounded-lg p-2.5 flex items-center gap-3 shadow-inner">
+                    <div className="p-1.5 bg-zinc-800 rounded text-cyan-400">
+                      <Tag size={12} />
+                    </div>
+                    <div className="flex-1">
+                      <label className="text-[9px] font-bold text-zinc-500 uppercase tracking-widest block mb-0.5">Industry Category</label>
+                      <select 
+                        value={industryTag}
+                        onChange={(e) => setFormData({ ...formData, industry_tag: e.target.value })}
+                        className="w-full bg-transparent text-xs text-white font-bold outline-none cursor-pointer appearance-none"
+                      >
+                        {STOREFRONT_EDITOR_COPY.INDUSTRIES.map((cat: { id: string, label: string }) => (
+                          <option key={cat.id} value={cat.id} className="bg-zinc-900 text-white">{cat.label}</option>
+                        ))}
+                      </select>
+                    </div>
+                  </div>
+                </div>
+
                 <div className="flex items-center gap-1 p-2 border-b border-zinc-800 bg-zinc-900/50">
                   <button onClick={() => setEditorTab('content')} className={`flex-1 flex items-center justify-center gap-1.5 py-2 rounded-md text-[9px] md:text-[10px] font-bold tracking-widest uppercase transition-all cursor-pointer ${editorTab === 'content' ? 'bg-zinc-800 text-white shadow-sm' : 'text-zinc-500 hover:text-zinc-300 hover:bg-zinc-800/50'}`}>
                     <PenTool className="w-3.5 h-3.5 hidden sm:block" /> Content
@@ -220,7 +251,7 @@ export default function TenantCommandHub() {
                     <ImageIcon className="w-3.5 h-3.5 hidden sm:block" /> Media
                   </button>
                   <button onClick={() => setEditorTab('services')} className={`flex-1 flex items-center justify-center gap-1.5 py-2 rounded-md text-[9px] md:text-[10px] font-bold tracking-widest uppercase transition-all cursor-pointer ${editorTab === 'services' ? 'bg-zinc-800 text-white shadow-sm' : 'text-zinc-500 hover:text-zinc-300 hover:bg-zinc-800/50'}`}>
-                    <Layers className="w-3.5 h-3.5 hidden sm:block" /> Services
+                    <Layers className="w-3.5 h-3.5 hidden sm:block" /> {servicesTabLabel.split(' ')[0]}
                   </button>
                 </div>
 
@@ -277,12 +308,10 @@ export default function TenantCommandHub() {
           </div>
         )}
 
-        {/* TAB 2: THE GRID */}
         {activeTab === 'grid' && (
            <GridTab formData={formData} setFormData={setFormData} onTerminate={handleStorefrontTermination} />
         )}
 
-        {/* 🚀 TAB 3: THE VAULT (PROPS INJECTED) */}
         {activeTab === 'vault' && (
           <div className="flex-1 overflow-y-auto w-full relative custom-scrollbar">
             <VaultTab 
@@ -294,7 +323,6 @@ export default function TenantCommandHub() {
           </div>
         )}
 
-        {/* 🚨 THE GLOBAL SYSTEM LOCK SHIELD 🚨 */}
         {['IN REVIEW', 'APPROVED', 'LIVE', 'CHANGES_REQUESTED'].includes(formData.status) && activeTab === 'canvas' && !isUnlocked && (
           <div className="absolute inset-0 z-100 bg-black/60 backdrop-blur-md flex flex-col items-center justify-center border border-cyan-500/20 shadow-[inset_0_0_100px_rgba(6,182,212,0.05)] transition-all duration-500 animate-in fade-in zoom-in-95">
             
@@ -304,15 +332,15 @@ export default function TenantCommandHub() {
               </div>
               
               <h2 className="text-lg font-black text-white tracking-[0.2em] uppercase mb-2">
-                System Locked
+                {STOREFRONT_EDITOR_COPY.SYSTEM_LOCK.TITLE}
               </h2>
               
               <div className="text-[10px] font-mono font-bold text-cyan-400 bg-cyan-500/10 px-3 py-1 rounded border border-cyan-500/20 mb-4 tracking-widest uppercase">
-                STATUS: {formData.status}
+                {STOREFRONT_EDITOR_COPY.SYSTEM_LOCK.STATUS_PREFIX} {formData.status}
               </div>
               
               <p className="text-[11px] text-zinc-400 leading-relaxed font-medium mb-8 px-4">
-                The architecture is currently secured for client review or active deployment. The Canvas and all Editor configurations are strictly read-only to prevent accidental data contamination.
+                {STOREFRONT_EDITOR_COPY.SYSTEM_LOCK.BODY}
               </p>
               
               <div className="flex flex-col gap-3 w-full">
@@ -320,7 +348,7 @@ export default function TenantCommandHub() {
                   onClick={() => setIsUnlocked(true)}
                   className="w-full flex items-center justify-center gap-2 bg-cyan-500 hover:bg-cyan-400 text-zinc-950 font-black py-3 px-4 rounded-md text-[10px] uppercase tracking-widest transition-all shadow-[0_0_15px_rgba(6,182,212,0.4)] cursor-pointer"
                 >
-                  <Unlock size={14} /> Silent Admin Override
+                  <Unlock size={14} /> {STOREFRONT_EDITOR_COPY.SYSTEM_LOCK.BTN_OVERRIDE}
                 </button>
 
                 <button 
@@ -328,7 +356,7 @@ export default function TenantCommandHub() {
                   className="w-full flex items-center justify-center gap-2 bg-zinc-900 hover:bg-zinc-800 text-zinc-300 border border-zinc-700 hover:border-amber-500/50 py-3 px-4 rounded-md text-[10px] font-black uppercase tracking-widest transition-all group cursor-pointer"
                 >
                   <ShieldAlert size={12} className="group-hover:text-amber-400 transition-colors" />
-                  Revert to Building
+                  {STOREFRONT_EDITOR_COPY.SYSTEM_LOCK.BTN_REVERT}
                 </button>
               </div>
             </div>
