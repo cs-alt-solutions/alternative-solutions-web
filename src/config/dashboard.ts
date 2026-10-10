@@ -6,14 +6,16 @@ export const DASHBOARD_COPY = {
     GROUPS: { WORKSPACE: "My Workspace", HUMAN_MANAGEMENT: "Human Management", LOGISTICS: "Life & Logistics", SYSTEM: "System Admin" },
     OVERVIEW: "Home",
     FOUNDATION: "The Drafting Table",
-    STOREFRONTS: "Storefronts", 
+    STOREFRONTS: "Storefronts",
     LEDGER: "The Ledger",
     ECOSYSTEM_MANAGER: "My Products",
     BETA_COMMAND: "Beta Command",
     BROADCAST: "Emails & Updates",
     MEMBERS: "Members & Access",
     CLIENTS: "Client HQ",
+    SUPPORT_DESK: "Support Desk",
     TASKS: "Tasks",
+    ANALYTICS: "Live Traffic",
     INFRASTRUCTURE: "Infrastructure",
     CONFIG: "Settings",
     EXIT: "← Back to Website"
@@ -313,7 +315,6 @@ export const SUPPORT_DESK_COPY = {
   }
 };
 
-// 🚀 ADDED: Dedicated Editor Configuration for the Tenant Command Hub
 export const STOREFRONT_EDITOR_COPY = {
   INDUSTRIES: [
     { id: 'E-Commerce', label: 'E-Commerce' },
