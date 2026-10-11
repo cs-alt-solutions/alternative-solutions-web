@@ -28,9 +28,12 @@ export default async function LiveStorefrontPage({
   }
 
   // 🚨 SMART ENVIRONMENT ROUTING 🚨
-  // If you are testing locally, tell the iframe to look at your local Template Engine (Port 3001)
   const isDev = process.env.NODE_ENV === 'development';
-  const templateBaseUrl = isDev ? 'http://localhost:3001' : 'https://storefronts.alternativesolutions.io';
+  
+  // This looks at your .env.local first. If it's missing, it defaults to port 3000.
+  const templateBaseUrl = isDev 
+    ? (process.env.NEXT_PUBLIC_ENGINE_URL || 'http://localhost:3000') 
+    : 'https://storefronts.alternativesolutions.io';
 
   const liveUrl = (store.custom_domain && !isDev) 
     ? `https://${store.custom_domain}` 
