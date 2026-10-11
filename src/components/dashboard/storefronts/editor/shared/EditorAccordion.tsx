@@ -60,7 +60,7 @@ export default function EditorAccordion({
         <ChevronDown size={16} className={`text-zinc-500 transition-transform duration-300 ${isOpen ? `rotate-180 ${theme.text}` : ''}`} />
       </button>
 
-      <div className={`transition-all duration-300 ease-in-out ${isOpen ? 'max-h-[1200px] opacity-100' : 'max-h-0 opacity-0'}`}>
+      <div className={`transition-all duration-300 ease-in-out ${isOpen ? 'max-h-300 opacity-100' : 'max-h-0 opacity-0'}`}>
         <div className="p-4 bg-black/40 border-t border-zinc-800/50">
           {children}
         </div>
