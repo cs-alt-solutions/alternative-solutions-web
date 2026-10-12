@@ -1,10 +1,9 @@
-// src/app/actions/emails.ts
+/* src/app/actions/emails.ts */
 'use server';
 
 import { Resend } from 'resend';
 import React from 'react';
 
-// Import our Templates
 import StagingReviewEmail from '@/components/emails/StagingReviewEmail';
 import StagingAuditReceiptEmail from '@/components/emails/StagingAuditReceiptEmail';
 import StorefrontConfirmationEmail from '@/components/emails/StorefrontConfirmationEmail';
@@ -13,8 +12,6 @@ import PortalInviteEmail from '@/components/emails/PortalInviteEmail';
 import SubscriptionActivationEmail from '@/components/emails/SubscriptionActivationEmail';
 
 const resend = new Resend(process.env.RESEND_API_KEY);
-
-// 🚨 THE FIX: Replaced markdown formatting with standard angle brackets for SMTP compliance
 const SENDER_IDENTITY = 'Courtney | Alternative Solutions <hello@alternativesolutions.io>'; 
 
 type EmailType = 
@@ -34,6 +31,11 @@ interface DispatchPayload {
 export async function dispatchSystemEmail({ to, subject, type, data }: DispatchPayload) {
   try {
     let emailComponent: React.ReactElement;
+
+    // 🚀 THE INTERCEPTOR: Overrides the 'to' address if running locally
+    const isLocal = process.env.NODE_ENV === 'development';
+    const testEmail = process.env.LOCAL_TEST_EMAIL;
+    const finalRecipient = (isLocal && testEmail) ? testEmail : to;
 
     switch (type) {
       case 'STAGING_REVIEW':
@@ -57,8 +59,8 @@ export async function dispatchSystemEmail({ to, subject, type, data }: DispatchP
 
     const { data: resendData, error } = await resend.emails.send({
       from: SENDER_IDENTITY,
-      to,
-      subject,
+      to: finalRecipient, // Uses the intercepted address
+      subject: isLocal ? `[TEST] ${subject}` : subject, // Tags the subject line so you know it's a test
       react: emailComponent,
     });
 
@@ -75,14 +77,16 @@ export async function dispatchSystemEmail({ to, subject, type, data }: DispatchP
   }
 }
 
-// 🚨 THE NEW CHECKOUT TRIGGER FUNCTION 🚨
 export async function sendCheckoutEmail(email: string, clientName: string, projectName: string, checkoutUrl: string) {
   try {
+    const isLocal = process.env.NODE_ENV === 'development';
+    const testEmail = process.env.LOCAL_TEST_EMAIL;
+    const finalRecipient = (isLocal && testEmail) ? testEmail : email;
+
     const { data, error } = await resend.emails.send({
       from: SENDER_IDENTITY,
-      to: email,
-      subject: 'Action Required: Activate Your Storefront',
-      // Using React.createElement for Next.js compiler safety!
+      to: finalRecipient,
+      subject: isLocal ? '[TEST] Action Required: Activate Your Storefront' : 'Action Required: Activate Your Storefront',
       react: React.createElement(SubscriptionActivationEmail, {
         clientName,
         projectName,
