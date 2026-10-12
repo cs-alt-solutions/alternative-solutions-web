@@ -2,16 +2,39 @@
 'use client';
 
 import React, { useState, useRef } from 'react';
-import { UploadCloud, Image as ImageIcon, Move } from 'lucide-react';
+import { UploadCloud, Image as ImageIcon, Move, Store, Link as LinkIcon, Mail, Tag, MapPin, Utensils, Unplug, HelpCircle } from 'lucide-react';
 import { updateStorefrontMedia } from '@/app/actions/storefronts';
+import { STOREFRONT_EDITOR_COPY } from '@/config/dashboard';
+
+const TooltipLabel = ({ label, icon: Icon, tooltip, iconColor = "text-zinc-500", tooltipColor = "text-zinc-300" }: any) => (
+  <div className="flex items-center gap-1.5 relative group w-fit mb-1.5">
+    {Icon && <Icon size={10} className={iconColor} />}
+    <label className="text-[9px] font-bold text-zinc-500 uppercase tracking-widest pl-0.5">{label}</label>
+    {tooltip && <HelpCircle size={12} className="text-zinc-600 hover:text-white cursor-help transition-colors ml-1" />}
+    
+    {tooltip && (
+      <div className="absolute left-full ml-2 top-1/2 -translate-y-1/2 w-48 p-2.5 bg-zinc-900 border border-zinc-700 rounded-lg shadow-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-50 pointer-events-none">
+        <p className={`text-[10px] ${tooltipColor} normal-case tracking-normal font-medium leading-relaxed`}>
+          {tooltip}
+        </p>
+      </div>
+    )}
+  </div>
+);
 
 export default function MediaTab({ formData, setFormData, onReload }: { formData: any, setFormData: any, onReload?: () => void }) {
   const [isUploadingCore, setIsUploadingCore] = useState(false);
   const coreFormRef = useRef<HTMLFormElement>(null);
-  
+
   const [heroPreview, setHeroPreview] = useState<string | null>(null);
   const [aboutPreview, setAboutPreview] = useState<string | null>(null);
   const [logoPreview, setLogoPreview] = useState<string | null>(null);
+
+  const isCulinary = formData.industry_tag === 'Culinary';
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+    setFormData((prev: any) => ({ ...prev, [e.target.name]: e.target.value }));
+  };
 
   const handleHeroSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -62,10 +85,66 @@ export default function MediaTab({ formData, setFormData, onReload }: { formData
 
   return (
     <div className="space-y-10 pb-12 pt-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
+      
+      {/* SECTOR 1: GLOBAL IDENTITY SETTINGS */}
+      <div className="space-y-4">
+        <div className="flex items-center gap-2 border-b border-zinc-800 pb-3">
+          <Store className="w-4 h-4 text-cyan-500" />
+          <h2 className="text-sm font-black text-white uppercase tracking-widest">Global Identity</h2>
+        </div>
+        <div className="bg-zinc-900/60 border border-zinc-800 p-4 rounded-xl space-y-4 shadow-sm">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <TooltipLabel label="Business Name" />
+              <input name="business_name" value={formData.business_name || ''} onChange={handleChange} className="w-full bg-zinc-950 px-3 py-2.5 rounded-lg border border-zinc-800 text-white text-xs outline-none focus:border-cyan-500 transition-colors" placeholder="e.g. Blaze & Bloom" />
+            </div>
+            <div>
+              <TooltipLabel label="Routing Slug" icon={LinkIcon} iconColor="text-cyan-500/70" />
+              <input name="slug" value={formData.slug || ''} onChange={handleChange} className="w-full bg-zinc-950 px-3 py-2.5 rounded-lg border border-zinc-800 text-cyan-400 font-mono text-xs outline-none focus:border-cyan-500 transition-colors" />
+            </div>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <TooltipLabel label="Public Email" icon={Mail} iconColor="text-cyan-500/70" />
+              <input name="contact_email" value={formData.contact_email || ''} onChange={handleChange} className="w-full bg-zinc-950 px-3 py-2.5 rounded-lg border border-zinc-800 text-white text-xs outline-none focus:border-cyan-500 transition-colors" placeholder="hello@example.com" />
+            </div>
+            <div>
+              <TooltipLabel label="Industry Category" icon={Tag} iconColor="text-cyan-500/70" />
+              <select name="industry_tag" value={formData.industry_tag || 'General'} onChange={handleChange} className="w-full bg-zinc-950 px-3 py-2.5 rounded-lg border border-zinc-800 text-white text-xs outline-none focus:border-cyan-500 transition-colors appearance-none cursor-pointer">
+                {STOREFRONT_EDITOR_COPY.INDUSTRIES?.map((category: any) => (
+                  <option key={category.id} value={category.id} className="bg-zinc-900 text-white">{category.label}</option>
+                ))}
+              </select>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* SECTOR 2: INTEGRATIONS */}
+      <div className="space-y-4">
+        <div className="flex items-center gap-2 border-b border-zinc-800 pb-3">
+          <Unplug className="w-4 h-4 text-emerald-500" />
+          <h2 className="text-sm font-black text-white uppercase tracking-widest">Integrations</h2>
+        </div>
+        <div className="bg-zinc-900/60 border border-zinc-800 p-4 rounded-xl space-y-4 shadow-sm">
+          <div>
+            <TooltipLabel label="Google Maps Embed" icon={MapPin} iconColor="text-emerald-500/70" tooltip="Leave blank if you operate remotely or don't have a public headquarters." tooltipColor="text-emerald-400" />
+            <input name="map_embed_url" value={formData.map_embed_url || ''} onChange={handleChange} className="w-full bg-zinc-950 px-3 py-2.5 rounded-lg border border-zinc-800 text-white text-xs outline-none focus:border-emerald-500 transition-colors placeholder:text-zinc-700" placeholder='Paste <iframe src="..."> here' />
+          </div>
+          {isCulinary && (
+            <div className="animate-in fade-in slide-in-from-top-2 duration-300">
+              <TooltipLabel label="Online Ordering URL" icon={Utensils} iconColor="text-emerald-500/70" tooltip="If provided, an 'Order Online' button will display on the storefront to funnel customers directly to external checkout." tooltipColor="text-emerald-400" />
+              <input name="ordering_url" value={formData.ordering_url || ''} onChange={handleChange} className="w-full bg-zinc-950 px-3 py-2.5 rounded-lg border border-zinc-800 text-white text-xs outline-none focus:border-emerald-500 transition-colors placeholder:text-zinc-700" placeholder="https://order.toasttab.com/..." />
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* SECTOR 3: MEDIA ASSETS */}
       <div className="space-y-4">
         <div className="flex items-center gap-2 border-b border-zinc-800 pb-3">
           <ImageIcon className="w-4 h-4 text-cyan-500" />
-          <h2 className="text-sm font-black text-white uppercase tracking-widest">Core Brand Assets</h2>
+          <h2 className="text-sm font-black text-white uppercase tracking-widest">Brand Visuals</h2>
         </div>
         
         <form 
@@ -142,7 +221,7 @@ export default function MediaTab({ formData, setFormData, onReload }: { formData
           </div>
 
           <button type="submit" disabled={isUploadingCore} className="w-full flex items-center justify-center gap-2 bg-cyan-600 hover:bg-cyan-500 text-zinc-950 font-black tracking-widest text-[10px] uppercase py-3 rounded-lg transition-all shadow-[0_0_10px_rgba(8,145,178,0.2)] disabled:opacity-50 mt-2">
-            <UploadCloud className="w-3.5 h-3.5" /> {isUploadingCore ? 'UPLOADING...' : 'SAVE CORE ASSETS'}
+            <UploadCloud className="w-3.5 h-3.5" /> {isUploadingCore ? 'UPLOADING...' : 'SAVE MEDIA ASSETS'}
           </button>
         </form>
       </div>

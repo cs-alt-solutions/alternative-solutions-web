@@ -1,12 +1,11 @@
-// src/components/dashboard/storefronts/editor/core/BrandIdentity.tsx
+/* src/components/dashboard/storefronts/editor/core/BrandIdentity.tsx */
 import React, { useState } from 'react';
-import { Store, Link as LinkIcon, Mail, Tag, MessageSquareText, MapPin, Utensils, Unplug, ChevronDown, HelpCircle } from 'lucide-react';
+import { Store, Link as LinkIcon, Mail, Tag, MessageSquareText, MapPin, Utensils, Unplug, HelpCircle } from 'lucide-react';
 import { STOREFRONT_EDITOR_COPY } from '@/config/dashboard';
 import EditorAccordion from '../shared/EditorAccordion';
 
 const STANDARD_INQUIRY_TYPES = ["General Inquiry", "Request a Quote", "Job Application / Hiring", "Other"];
 
-// 🚀 NEW: Reusable Tooltip Label Component for Brand Identity
 const TooltipLabel = ({ label, icon: Icon, tooltip, iconColor = "text-zinc-500", tooltipColor = "text-zinc-300" }: any) => (
   <div className="flex items-center gap-1.5 relative group w-fit mb-1.5">
     {Icon && <Icon size={10} className={iconColor} />}
@@ -24,9 +23,9 @@ const TooltipLabel = ({ label, icon: Icon, tooltip, iconColor = "text-zinc-500",
 );
 
 export default function BrandIdentity({ formData, handleChange, setFormData }: { formData: any, handleChange: any, setFormData: any }) {
-  const [openSection, setOpenSection] = useState<'core' | 'integrations' | 'lead' | null>(null);
+  const [openSection, setOpenSection] = useState<'core' | 'integrations' | null>(null);
 
-  const toggleSection = (section: 'core' | 'integrations' | 'lead') => {
+  const toggleSection = (section: 'core' | 'integrations') => {
     setOpenSection(prev => prev === section ? null : section);
   };
 
@@ -50,8 +49,6 @@ export default function BrandIdentity({ formData, handleChange, setFormData }: {
     if (isCulinary) fields.push(formData.ordering_url);
     return Math.round((fields.filter(f => f && f.trim() !== '').length / fields.length) * 100);
   };
-
-  const getLeadProgress = () => selectedInquiries.length > 0 ? 100 : 0;
 
   return (
     <div className="space-y-4">
@@ -95,8 +92,16 @@ export default function BrandIdentity({ formData, handleChange, setFormData }: {
         </div>
       </EditorAccordion>
 
-      <EditorAccordion title="Lead Capture" icon={MessageSquareText} accentColor="fuchsia" progress={getLeadProgress()} isOpen={openSection === 'lead'} onToggle={() => toggleSection('lead')}>
-        <div>
+      {/* Static Lead Capture Card (Replaces the Accordion) */}
+      <div className="bg-zinc-900/30 border border-zinc-800/80 border-t-2 border-t-fuchsia-500/50 rounded-xl overflow-hidden shadow-sm flex flex-col mt-4">
+        <div className="flex items-center gap-4 w-full p-4 border-b border-zinc-800/50">
+          <div className="p-2 rounded-lg bg-fuchsia-500/10 text-fuchsia-400 shrink-0">
+            <MessageSquareText size={14} />
+          </div>
+          <span className="text-[10px] font-black uppercase tracking-[0.2em] text-white">Lead Capture</span>
+        </div>
+        
+        <div className="p-4 bg-black/40">
           <TooltipLabel label="Form Routing Options" tooltip="Select the options you want to appear in this storefront's lead capture modal dropdown." tooltipColor="text-fuchsia-400" />
           <div className="flex flex-col gap-2 mt-2">
             {STANDARD_INQUIRY_TYPES.map(type => {
@@ -112,7 +117,7 @@ export default function BrandIdentity({ formData, handleChange, setFormData }: {
             })}
           </div>
         </div>
-      </EditorAccordion>
+      </div>
     </div>
   );
 }

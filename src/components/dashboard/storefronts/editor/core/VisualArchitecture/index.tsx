@@ -1,7 +1,7 @@
 // src/components/dashboard/storefronts/editor/core/VisualArchitecture/index.tsx
 import React, { useState } from 'react';
 import { LayoutTemplate, MonitorPlay, Layers, BookOpen, Palette } from 'lucide-react';
-import { THEME_CONSTRAINTS } from './constants';
+import { VISUAL_ARCH_COPY, THEME_CONSTRAINTS } from '@/config/dashboard/editor';
 import VibeSelector from './VibeSelector';
 import { HeroSelector, AboutSelector, ContentSelector } from './LayoutSelectors';
 import ColorSelector from './ColorSelector';
@@ -12,9 +12,9 @@ export default function VisualArchitecture({ formData, setFormData }: { formData
   
   const currentTheme = formData.theme_style || 'industrial';
   const allowedLayouts = THEME_CONSTRAINTS[currentTheme] || THEME_CONSTRAINTS['industrial'];
-
+  
   const toggleZone = (zone: string) => setOpenZone(prev => prev === zone ? null : zone);
-
+  
   const handleThemeSwitch = (newTheme: string) => {
     const constraints = THEME_CONSTRAINTS[newTheme] || THEME_CONSTRAINTS['industrial'];
     let newHero = formData.hero_layout;
@@ -31,10 +31,10 @@ export default function VisualArchitecture({ formData, setFormData }: { formData
   return (
     <div className="space-y-4">
       <EditorAccordion 
-        title="Foundation Vibe" 
+        title={VISUAL_ARCH_COPY.ACCORDIONS.VIBE}
         icon={LayoutTemplate} 
         accentColor="cyan" 
-        hidePercentage={true} // 🚀 FIXED: Disables the percentage numbers!
+        hidePercentage={true}
         isOpen={openZone === 'vibe'} 
         onToggle={() => toggleZone('vibe')}
       >
@@ -42,7 +42,7 @@ export default function VisualArchitecture({ formData, setFormData }: { formData
       </EditorAccordion>
 
       <EditorAccordion 
-        title="Hero Structure" 
+        title={VISUAL_ARCH_COPY.ACCORDIONS.HERO}
         icon={MonitorPlay} 
         accentColor="fuchsia" 
         hidePercentage={true}
@@ -53,7 +53,7 @@ export default function VisualArchitecture({ formData, setFormData }: { formData
       </EditorAccordion>
 
       <EditorAccordion 
-        title="Content Flow" 
+        title={VISUAL_ARCH_COPY.ACCORDIONS.CONTENT}
         icon={Layers} 
         accentColor="emerald" 
         hidePercentage={true}
@@ -64,7 +64,7 @@ export default function VisualArchitecture({ formData, setFormData }: { formData
       </EditorAccordion>
 
       <EditorAccordion 
-        title="Story Architecture" 
+        title={VISUAL_ARCH_COPY.ACCORDIONS.STORY}
         icon={BookOpen} 
         accentColor="amber" 
         hidePercentage={true}
@@ -75,7 +75,7 @@ export default function VisualArchitecture({ formData, setFormData }: { formData
       </EditorAccordion>
 
       <EditorAccordion 
-        title="Color Mapping" 
+        title={VISUAL_ARCH_COPY.ACCORDIONS.COLORS}
         icon={Palette} 
         accentColor="indigo" 
         hidePercentage={true}
