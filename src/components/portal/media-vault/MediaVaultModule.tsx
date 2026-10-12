@@ -6,7 +6,7 @@ import { supabase } from '@/utils/supabase';
 import { Loader2 } from 'lucide-react';
 
 // 🚀 SINGLE SOURCE OF TRUTH: Import the exact Admin Dashboard component
-import VaultTab from '@/components/dashboard/storefronts/editor/VaultTab';
+import VaultTab from '@/components/dashboard/storefronts/editor/vault/VaultTab';
 
 export default function MediaVaultModule({ clientId }: { clientId: string }) {
   const [formData, setFormData] = useState<any>(null);

@@ -1,0 +1,53 @@
+/* src/config/dashboard/vault.ts */
+
+export const VAULT_COPY = {
+  ACTIVE_PORTFOLIOS: {
+    TITLE: "Active Portfolios",
+    SUBTITLE: "Manage organized project folders",
+    BTN_NEW_FOLDER: "New Folder",
+    EMPTY_STATE: "No project folders created yet.",
+    IMAGES_COUNT: "Images",
+  },
+  DROP_VAULT: {
+    TITLE: "Drop Vault",
+    SUBTITLE: "Unassigned Client Uploads & Staging",
+    ISOLATED_STORAGE: "Isolated Storage",
+    PURGE_NOTICE: "*Unassigned raw files purge automatically after 30 days.",
+    UPLOAD_TITLE: "Upload Files",
+    UPLOAD_SUBTITLE: "Drag & Drop",
+    PURGE_BADGE: "Purging",
+    DAYS_LEFT: "D",
+    NO_PREVIEW: "Raw / HEIC",
+    NO_PREVIEW_SUB: "No Preview",
+    BTN_RENAME: "Rename File",
+    BTN_DELETE: "Delete Asset",
+    BTN_ROUTING: "ROUTING...",
+    BTN_ASSIGN_SERVICE: "ASSIGN TO SERVICE",
+    BTN_ASSIGN_FOLDER: "ASSIGN TO FOLDER",
+    ROUTE_MEDIA_TITLE: "Route Media",
+    BTN_CREATE_CARD: "+ Create New Card",
+    REPLACE_LABEL: "Replace:",
+  },
+  FOLDER_VIEW: {
+    BTN_BACK: "Back to Portfolios",
+    IMAGES_IN_PORTFOLIO: "Images in Portfolio",
+    BTN_RENAME_FOLDER: "Rename Folder",
+    BTN_DELETE_FOLDER: "Delete Folder",
+    BTN_UPLOAD_DIRECT: "Upload Directly Here",
+    EMPTY_STATE: "This folder is currently empty.",
+    BTN_REMOVE_IMAGE: "Remove from Folder",
+    PLACEHOLDER_TITLE: "Image Title / Caption",
+    PLACEHOLDER_DESC: "Detailed description...",
+  },
+  ALERTS: {
+    SCANNING: "Scanning Drop Vault...",
+    PROMPT_NEW_FOLDER: "Enter new folder name:",
+    PROMPT_RENAME_FOLDER: "Enter new folder name:",
+    CONFIRM_DELETE_FILE: "Permanently delete this file from the vault?",
+    CONFIRM_DELETE_FOLDER_PREFIX: "Delete",
+    CONFIRM_DELETE_FOLDER_SUFFIX: "and remove all its images from the storefront?",
+    UPLOAD_COMPLETE: "Upload Complete.",
+    UPLOAD_ERROR: "Transmission Error.",
+    ROUTE_ERROR: "Failed to route media.",
+  }
+};

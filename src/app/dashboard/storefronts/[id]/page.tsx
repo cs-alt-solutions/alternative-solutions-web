@@ -32,7 +32,7 @@ import VisualArchitecture from '@/components/dashboard/storefronts/editor/core/V
 import MediaTab from '@/components/dashboard/storefronts/editor/MediaTab';
 import CapabilitiesTab from '@/components/dashboard/storefronts/editor/CapabilitiesTab';
 import GridTab from '@/components/dashboard/storefronts/editor/GridTab';
-import VaultTab from '@/components/dashboard/storefronts/editor/VaultTab';
+import VaultTab from '@/components/dashboard/storefronts/editor/vault/VaultTab';
 import { deleteStorefront } from '@/app/actions/storefronts';
 import { STOREFRONT_EDITOR_COPY } from '@/config/dashboard';
 
