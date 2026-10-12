@@ -19,8 +19,9 @@ const TooltipLabel = ({ label, tooltip }: { label: string, tooltip: string }) =>
 export default function ContactSection({ formData, handleChange }: { formData: any, handleChange: any }) {
   const [isOpen, setIsOpen] = useState(false);
 
-  const fields = [formData.capabilities_heading, formData.primary_cta, formData.secondary_cta];
-  const progress = Math.round((fields.filter(f => f && f.trim() !== '').length / 3) * 100);
+  // Added gallery_heading to the progress math
+  const fields = [formData.capabilities_heading, formData.gallery_heading, formData.primary_cta, formData.secondary_cta];
+  const progress = Math.round((fields.filter(f => f && f.trim() !== '').length / 4) * 100);
 
   return (
     <EditorAccordion 
@@ -64,11 +65,11 @@ export default function ContactSection({ formData, handleChange }: { formData: a
         </div>
 
         {/* CUSTOM SECTION HEADINGS */}
-        <div className="pt-4 border-t border-zinc-800/50">
+        <div className="pt-4 border-t border-zinc-800/50 grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
             <TooltipLabel 
-              label="Services / Portfolio Heading" 
-              tooltip="The massive title directly above your packages or capabilities grid. (Currently says 'Exclusive Services')" 
+              label="Services Heading" 
+              tooltip="The massive title directly above your packages or capabilities grid." 
             />
             <input 
               name="capabilities_heading" 
@@ -76,6 +77,19 @@ export default function ContactSection({ formData, handleChange }: { formData: a
               onChange={handleChange} 
               className="w-full bg-zinc-950 p-3.5 rounded-xl border border-zinc-800 text-white focus:border-indigo-500 outline-none transition-all text-xs" 
               placeholder="e.g. Exclusive Services" 
+            />
+          </div>
+          <div>
+            <TooltipLabel 
+              label="Gallery Heading" 
+              tooltip="The massive title directly above your project portfolio grid." 
+            />
+            <input 
+              name="gallery_heading" 
+              value={formData.gallery_heading || ''} 
+              onChange={handleChange} 
+              className="w-full bg-zinc-950 p-3.5 rounded-xl border border-zinc-800 text-white focus:border-indigo-500 outline-none transition-all text-xs" 
+              placeholder="e.g. Featured Work" 
             />
           </div>
         </div>
