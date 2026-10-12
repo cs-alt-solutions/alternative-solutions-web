@@ -152,10 +152,23 @@ export default function VaultTab({ storeId, formData, setFormData, onReload }: {
     if (onReload) onReload();
   };
 
-  const assignedUrls = galleryItems.map((item: any) => item.imageUrl);
+  // 🚀 THE FIX: Gather ALL active URLs across the entire storefront
+  const assignedUrls = [
+    ...(formData.gallery_items || []).map((item: any) => item.imageUrl),
+    ...(formData.capabilities || []).map((cap: any) => cap.coverImage), // Protect package covers
+    formData.hero_image,
+    formData.about_image,
+    formData.brand_logo
+  ].filter(Boolean); // Filter out empty/null values
+
   const unassignedFiles = vaultFiles.filter(file => {
     const { data: pUrl } = supabase.storage.from(bucketName).getPublicUrl(`${storeId}/${file.name}`);
-    return !assignedUrls.includes(pUrl.publicUrl) && !file.name.includes('live-');
+    
+    const isAssigned = assignedUrls.includes(pUrl.publicUrl);
+    // 🚀 THE FIX: Also explicitly hide files labeled as live assets or covers
+    const isProtectedPrefix = file.name.includes('live-') || file.name.includes('cover-');
+    
+    return !isAssigned && !isProtectedPrefix;
   });
 
   if (isLoading) {
