@@ -1,3 +1,4 @@
+/* src/app/actions/storefronts.ts */
 'use server';
 
 import { revalidatePath } from 'next/cache';
@@ -68,11 +69,11 @@ export async function updateStorefrontCore(id: string, formData: FormData) {
   const updateData: any = {};
 
   const fields = [
-  'business_name', 'slug', 'tagline', 'subtext', 'primary_cta', 'secondary_cta',
-  'brand_color', 'theme_style', 'hero_layout', 'content_layout', 'about_layout',
-  'about_heading', 'about_bio', 'capabilities_heading', 'gallery_heading', 'contact_email',
-  'logo_size', 'industry_tag', 'map_embed_url', 'lead_inquiry_types', 'ordering_url' // 🚀 Added
-];
+    'business_name', 'slug', 'tagline', 'subtext', 'primary_cta', 'secondary_cta',
+    'brand_color', 'theme_style', 'hero_layout', 'content_layout', 'about_layout',
+    'about_heading', 'about_bio', 'capabilities_heading', 'gallery_heading', 'contact_email',
+    'logo_size', 'industry_tag', 'map_embed_url', 'lead_inquiry_types', 'ordering_url'
+  ];
 
   fields.forEach(field => {
     if (formData.has(field)) {
@@ -82,6 +83,10 @@ export async function updateStorefrontCore(id: string, formData: FormData) {
 
   if (formData.has('capabilities')) {
     updateData.capabilities = JSON.parse(formData.get('capabilities') as string);
+  }
+
+  if (formData.has('operational_terms')) {
+    updateData.operational_terms = JSON.parse(formData.get('operational_terms') as string);
   }
 
   if (formData.has('is_template')) {
