@@ -1,14 +1,10 @@
-/* src/components/portal/billing-plans/BillingModule.tsx */
 'use client';
 
 import React, { useState, useEffect } from 'react';
 import { supabase } from '@/utils/supabase';
-import { 
-  CreditCard, Receipt, Loader2, ShieldCheck, Zap, 
-  Download, Calendar, Globe, AlertTriangle, ExternalLink, Server, Unlink
-} from 'lucide-react';
+import { CreditCard, Receipt, Loader2, ShieldCheck, Zap, Download, Calendar, ExternalLink, Globe } from 'lucide-react';
 import { createCustomerPortalSession, getClientInvoices, getUpcomingInvoice, createProTierCheckout } from '@/app/actions/billing';
-import { addCustomDomainToVercel, removeCustomDomainFromVercel } from '@/app/actions/domains';
+import DomainConcierge from './DomainConcierge';
 
 export default function BillingModule({ clientId }: { clientId: string }) {
   const [store, setStore] = useState<any>(null);
@@ -17,11 +13,6 @@ export default function BillingModule({ clientId }: { clientId: string }) {
   const [isLoading, setIsLoading] = useState(true);
   const [isRedirecting, setIsRedirecting] = useState(false);
   const [isUpgrading, setIsUpgrading] = useState(false);
-
-  const [customDomain, setCustomDomain] = useState('');
-  const [isConnectingDomain, setIsConnectingDomain] = useState(false);
-  const [isRemovingDomain, setIsRemovingDomain] = useState(false);
-  const [domainError, setDomainError] = useState<string | null>(null);
 
   useEffect(() => {
     const init = async () => {
@@ -57,42 +48,9 @@ export default function BillingModule({ clientId }: { clientId: string }) {
     else { alert(`Checkout failed: ${error}`); setIsUpgrading(false); }
   };
 
-  const handleConnectDomain = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!customDomain.trim()) return;
-    setIsConnectingDomain(true);
-    setDomainError(null);
-
-    const result = await addCustomDomainToVercel(clientId, customDomain);
-    
-    if (result.success) {
-      setStore({ ...store, custom_domain: result.data });
-      setCustomDomain('');
-    } else {
-      setDomainError(result.error || "Failed to route domain. Please try again.");
-    }
-    setIsConnectingDomain(false);
-  };
-
-  const handleRemoveDomain = async () => {
-    if (!store?.custom_domain) return;
-    if (!window.confirm(`Are you sure you want to disconnect ${store.custom_domain}? This will take your storefront offline.`)) return;
-
-    setIsRemovingDomain(true);
-    const result = await removeCustomDomainFromVercel(clientId, store.custom_domain);
-
-    if (result.success) {
-      setStore({ ...store, custom_domain: null });
-    } else {
-      alert(result.error || "Failed to disconnect domain.");
-    }
-    setIsRemovingDomain(false);
-  };
-
-  if (isLoading) return <div className="h-full min-h-[60vh] flex flex-col items-center justify-center"><Loader2 className="w-8 h-8 text-emerald-500 animate-spin mb-4" /><span className="text-xs font-mono text-emerald-500 uppercase tracking-widest animate-pulse">Syncing Ledger...</span></div>;
+  if (isLoading) return <div className="h-full min-h-[60vh] flex flex-col items-center justify-center"><Loader2 className="w-8 h-8 text-emerald-500 animate-spin mb-4" /></div>;
 
   const isPro = store?.plan_tier?.toLowerCase() === 'professional';
-  const hasDomain = !!store?.custom_domain;
 
   return (
     <div className="h-full max-w-6xl mx-auto animate-in fade-in duration-500 pb-12 mt-2">
@@ -110,6 +68,7 @@ export default function BillingModule({ clientId }: { clientId: string }) {
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
         <div className="lg:col-span-7 space-y-6">
           
+          {/* SUBSCRIPTION STATUS CARD */}
           <div className="bg-black/40 border border-emerald-500/20 rounded-3xl p-8 shadow-[0_0_30px_rgba(16,185,129,0.05)] relative overflow-hidden">
             <div className="absolute -top-24 -right-24 w-64 h-64 bg-emerald-500/10 rounded-full blur-[80px] pointer-events-none" />
             <div className="relative z-10">
@@ -144,44 +103,23 @@ export default function BillingModule({ clientId }: { clientId: string }) {
                   </div>
                 </div>
               )}
-
-              <div className="space-y-4 pt-6 border-t border-white/5">
-                <div className="flex items-center gap-3 text-sm text-zinc-300">
-                  <Zap className="w-4 h-4 text-emerald-500 shrink-0" /><span>Enterprise Next.js Hosting & Edge Delivery</span>
-                </div>
-                <div className="flex items-center gap-3 text-sm text-zinc-300">
-                  <Zap className="w-4 h-4 text-emerald-500 shrink-0" /><span>Content Management Portal Access</span>
-                </div>
-                <div className="flex items-center gap-3 text-sm text-zinc-300">
-                  <Zap className="w-4 h-4 text-emerald-500 shrink-0" /><span>Forever Legacy Rate Lock</span>
-                </div>
-                {isPro && (
-                  <div className="flex items-center gap-3 text-sm text-zinc-300 animate-in fade-in">
-                    <Globe className="w-4 h-4 text-emerald-500 shrink-0" /><span>Custom Domain & SSL Architecture</span>
-                  </div>
-                )}
-              </div>
             </div>
           </div>
           
-          <div className="bg-zinc-950 border border-zinc-800/80 rounded-3xl p-6 md:p-8 flex flex-col md:flex-row md:items-center justify-between group gap-6 shadow-xl">
+          <div className="bg-zinc-950 border border-zinc-800/80 rounded-3xl p-6 flex flex-col md:flex-row md:items-center justify-between gap-6 shadow-xl">
             <div className="flex-1">
               <h3 className="text-sm font-bold text-white tracking-widest uppercase mb-2">Manage Subscription & Billing</h3>
               <p className="text-xs text-zinc-400 leading-relaxed mb-4 max-w-md">
-                Securely update your credit card, download historical tax receipts, or cancel your active subscription directly through our Stripe portal.
+                Securely update your credit card or download historical tax receipts directly through our Stripe portal.
               </p>
-              <div className="flex items-center gap-2 text-[10px] font-mono text-zinc-500 uppercase tracking-widest">
-                <AlertTriangle size={12} className="text-amber-500/60" />
-                <span>Cancellations take effect at the end of your billing cycle.</span>
-              </div>
             </div>
             <button
               onClick={handlePortalRedirect}
               disabled={isRedirecting || !store?.stripe_customer_id}
-              className="shrink-0 px-6 py-4 bg-zinc-900 border border-zinc-700 hover:border-emerald-500/50 hover:text-emerald-400 hover:bg-zinc-800 text-white rounded-xl text-[10px] font-bold uppercase tracking-widest transition-all disabled:opacity-50 flex items-center justify-center gap-2 w-full md:w-auto cursor-pointer"
+              className="shrink-0 px-6 py-4 bg-zinc-900 border border-zinc-700 hover:border-emerald-500/50 hover:text-emerald-400 hover:bg-zinc-800 text-white rounded-xl text-[10px] font-bold uppercase tracking-widest transition-all cursor-pointer"
             >
-              {isRedirecting ? <Loader2 size={14} className="animate-spin" /> : <ExternalLink size={14} />}
-              {isRedirecting ? 'Connecting...' : 'Open Billing Portal'}
+              {isRedirecting ? <Loader2 size={14} className="animate-spin inline mr-2" /> : <ExternalLink size={14} className="inline mr-2" />}
+              Open Portal
             </button>
           </div>
 
@@ -191,93 +129,9 @@ export default function BillingModule({ clientId }: { clientId: string }) {
             </h3>
             
             {isPro ? (
-              <div className="relative flex flex-col rounded-3xl p-6 md:p-8 bg-zinc-950 border border-cyan-500/30 shadow-[0_0_20px_rgba(6,182,212,0.05)] overflow-hidden transition-all">
-                <div className="absolute top-0 right-0 w-32 h-32 bg-cyan-500/10 rounded-full blur-[60px] pointer-events-none" />
-                
-                {hasDomain ? (
-                  <div className="relative z-10 animate-in fade-in">
-                    <div className="flex items-start justify-between gap-4 mb-6">
-                      <div className="flex items-center gap-3">
-                        <div className="p-2 bg-cyan-500/10 rounded-lg text-cyan-400 border border-cyan-500/20"><Globe size={18} /></div>
-                        <div>
-                          <h3 className="text-sm font-bold text-white uppercase tracking-widest">Domain Connected</h3>
-                          <p className="text-xs text-cyan-500 font-mono mt-0.5">{store.custom_domain}</p>
-                        </div>
-                      </div>
-                      
-                      <button 
-                        onClick={handleRemoveDomain}
-                        disabled={isRemovingDomain}
-                        className="p-2 text-zinc-500 hover:text-rose-400 bg-zinc-900/50 hover:bg-rose-500/10 rounded-lg border border-zinc-800 hover:border-rose-500/30 transition-all disabled:opacity-50 cursor-pointer"
-                        title="Disconnect Domain"
-                      >
-                        {isRemovingDomain ? <Loader2 size={16} className="animate-spin" /> : <Unlink size={16} />}
-                      </button>
-                    </div>
-                    
-                    <div className="bg-black/40 border border-white/5 p-5 rounded-2xl">
-                      <h4 className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest mb-3">DNS Configuration Required</h4>
-                      <p className="text-xs text-zinc-400 leading-relaxed mb-4">
-                        To push your storefront live, log into your domain registrar (GoDaddy, Namecheap, etc.) and create these two records:
-                      </p>
-                      
-                      <div className="space-y-2">
-                        <div className="flex items-center justify-between bg-zinc-900 border border-zinc-700 p-3 rounded-xl">
-                          <div className="flex items-center gap-3">
-                            <Server size={14} className="text-cyan-500" />
-                            <span className="text-sm font-mono text-white tracking-wider">76.76.21.21</span>
-                          </div>
-                          <span className="text-[9px] font-black text-cyan-500 uppercase tracking-widest bg-cyan-500/10 px-2 py-1 rounded">A Record (Root)</span>
-                        </div>
-                        
-                        <div className="flex items-center justify-between bg-zinc-900 border border-zinc-700 p-3 rounded-xl">
-                          <div className="flex items-center gap-3">
-                            <Globe size={14} className="text-cyan-500" />
-                            <span className="text-sm font-mono text-white tracking-wider truncate max-w-37.5 sm:max-w-none">cname.vercel-dns.com</span>
-                          </div>
-                          <span className="text-[9px] font-black text-cyan-500 uppercase tracking-widest bg-cyan-500/10 px-2 py-1 rounded">CNAME (www)</span>
-                        </div>
-                      </div>
-                      
-                      <p className="text-[10px] text-zinc-500 italic mt-4">Note: DNS propagation can take 24-48 hours to complete globally.</p>
-                    </div>
-                  </div>
-                ) : (
-                  <div className="relative z-10 animate-in fade-in">
-                    <h3 className="text-xl font-black uppercase tracking-wide text-white mb-2">Connect Your Domain</h3>
-                    <p className="text-xs text-zinc-400 font-medium leading-relaxed max-w-md mb-6">
-                      Enter the custom domain you own (e.g., yourbusiness.com). We will bind it to your storefront and generate the required DNS records for you to connect.
-                    </p>
-                    
-                    <form onSubmit={handleConnectDomain} className="space-y-4">
-                      <div>
-                        <input 
-                          type="text"
-                          value={customDomain}
-                          onChange={(e) => setCustomDomain(e.target.value)}
-                          placeholder="e.g., mybusiness.com"
-                          className="w-full bg-zinc-900 border border-zinc-700 focus:border-cyan-500/50 rounded-xl px-4 py-3.5 text-sm text-white outline-none transition-colors"
-                        />
-                        {domainError && (
-                          <p className="text-[10px] text-rose-400 font-bold uppercase tracking-widest mt-2 flex items-center gap-1.5">
-                            <AlertTriangle size={12} /> {domainError}
-                          </p>
-                        )}
-                      </div>
-                      <button 
-                        type="submit"
-                        disabled={isConnectingDomain || !customDomain.trim()}
-                        className="flex items-center justify-center gap-2 w-full bg-cyan-600 hover:bg-cyan-500 text-zinc-950 font-black text-[10px] uppercase tracking-widest px-8 py-3.5 rounded-xl transition-all disabled:opacity-50 cursor-pointer shadow-lg"
-                      >
-                        {isConnectingDomain ? <Loader2 size={16} className="animate-spin" /> : <Globe size={16} />}
-                        {isConnectingDomain ? 'Connecting Network...' : 'Bind Domain to Workspace'}
-                      </button>
-                    </form>
-                  </div>
-                )}
-              </div>
+              <DomainConcierge clientId={clientId} store={store} onUpdate={setStore} />
             ) : (
-              <div className="relative flex flex-col rounded-3xl p-6 md:p-8 bg-zinc-950 border border-cyan-500/30 shadow-[0_0_20px_rgba(6,182,212,0.05)] overflow-hidden transition-all">
+              <div className="relative flex flex-col rounded-3xl p-6 md:p-8 bg-zinc-950 border border-cyan-500/30 shadow-xl overflow-hidden transition-all">
                 <div className="absolute top-0 right-0 w-32 h-32 bg-cyan-500/10 rounded-full blur-[60px] pointer-events-none" />
                 
                 <div className="mb-6 relative z-10">
@@ -287,37 +141,26 @@ export default function BillingModule({ clientId }: { clientId: string }) {
                     <span className="text-xs text-zinc-500 font-medium uppercase tracking-widest">/ month</span>
                   </div>
                   <p className="text-xs text-zinc-400 font-medium mt-4 leading-relaxed max-w-md">
-                    Upgrade your architecture to support your own custom domain (e.g., yourname.com). Whether you already own one, or need help securing the perfect fit, this tier unlocks the enterprise routing required to host it.
+                    Upgrade your architecture to support your own custom domain (e.g., yourname.com).
                   </p>
                 </div>
                 <div className="relative z-10">
                   <button 
                     onClick={handleProUpgrade}
                     disabled={isUpgrading}
-                    className="w-full sm:w-auto bg-cyan-600 hover:bg-cyan-500 text-zinc-950 font-black text-[10px] uppercase tracking-widest px-8 py-4 rounded-xl transition-all disabled:opacity-50 disabled:grayscale cursor-pointer shadow-lg"
+                    className="w-full sm:w-auto bg-cyan-600 hover:bg-cyan-500 text-zinc-950 font-black text-[10px] uppercase tracking-widest px-8 py-4 rounded-xl transition-all shadow-lg cursor-pointer"
                   >
-                    {isUpgrading ? 'Generating Secure Checkout...' : 'Upgrade to Professional'}
+                    {isUpgrading ? 'Generating Checkout...' : 'Upgrade to Professional'}
                   </button>
-                  <p className="text-[9px] text-zinc-500 font-mono tracking-widest uppercase mt-3 pl-1">
-                    Once active, you will unlock the domain setup dashboard.
-                  </p>
-                </div>
-                <div className="space-y-3 pt-6 mt-6 border-t border-white/5 relative z-10">
-                  <div className="flex items-start gap-2.5 text-xs text-zinc-400">
-                    <ShieldCheck className="w-4 h-4 shrink-0 text-cyan-500" /><span>Everything in The Foundation</span>
-                  </div>
-                  <div className="flex items-start gap-2.5 text-xs text-zinc-400">
-                    <Globe className="w-4 h-4 shrink-0 text-cyan-500" /><span>Automated Edge SSL & Vercel Network Routing</span>
-                  </div>
                 </div>
               </div>
             )}
           </div>
         </div>
 
-        {/* RIGHT COL: Native Invoice Table */}
+        {/* RIGHT COL: Invoice Table (Unchanged) */}
         <div className="lg:col-span-5 flex flex-col">
-          <div className="bg-zinc-950 border border-zinc-800/80 rounded-3xl p-6 md:p-8 flex flex-col h-full overflow-hidden shadow-xl min-h-100">
+          <div className="bg-zinc-950 border border-zinc-800/80 rounded-3xl p-6 md:p-8 flex flex-col h-full shadow-xl">
             <div className="flex items-center gap-3 mb-6 pb-4 border-b border-white/5">
               <Receipt className="text-emerald-500 w-5 h-5" />
               <h3 className="text-sm font-bold text-white uppercase tracking-widest">Billing History</h3>
@@ -325,27 +168,22 @@ export default function BillingModule({ clientId }: { clientId: string }) {
             
             <div className="flex-1 overflow-y-auto pr-2 custom-scrollbar">
               {invoices.length === 0 ? (
-                <div className="text-center py-12 border-2 border-dashed border-zinc-800/50 rounded-2xl bg-zinc-900/20 h-full flex flex-col items-center justify-center">
-                  <p className="text-xs text-zinc-500 font-mono tracking-widest uppercase">No invoices generated yet.</p>
+                <div className="text-center py-12 border-2 border-dashed border-zinc-800/50 rounded-2xl bg-zinc-900/20 flex flex-col items-center justify-center">
+                  <p className="text-xs text-zinc-500 font-mono tracking-widest uppercase">No invoices yet.</p>
                 </div>
               ) : (
                 <div className="space-y-3">
-                  {invoices.map((invoice) => (
-                    <div key={invoice.id} className="flex items-center justify-between p-4 rounded-2xl bg-zinc-900/50 border border-zinc-800 hover:border-emerald-500/30 transition-colors group">
+                  {invoices.map((inv) => (
+                    <div key={inv.id} className="flex items-center justify-between p-4 rounded-2xl bg-zinc-900/50 border border-zinc-800">
                       <div>
-                        <div className="text-sm font-bold text-white mb-1">${invoice.amount}</div>
-                        <div className="text-[10px] font-mono text-zinc-500 uppercase tracking-widest">{invoice.date}</div>
+                        <div className="text-sm font-bold text-white mb-1">${inv.amount}</div>
+                        <div className="text-[10px] font-mono text-zinc-500">{inv.date}</div>
                       </div>
-                      <div className="flex items-center gap-4">
-                        <span className={`text-[9px] font-black uppercase tracking-widest px-2 py-1 rounded border ${invoice.status === 'paid' ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' : 'bg-amber-500/10 text-amber-400 border-amber-500/20'}`}>
-                          {invoice.status}
-                        </span>
-                        {invoice.pdfUrl && (
-                          <a href={invoice.pdfUrl} target="_blank" rel="noopener noreferrer" className="p-2 bg-zinc-800 text-zinc-400 hover:text-white hover:bg-zinc-700 rounded-lg transition-colors" title="Download PDF Receipt">
-                            <Download size={14} />
-                          </a>
-                        )}
-                      </div>
+                      {inv.pdfUrl && (
+                        <a href={inv.pdfUrl} target="_blank" rel="noopener noreferrer" className="p-2 bg-zinc-800 text-zinc-400 hover:text-white rounded-lg">
+                          <Download size={14} />
+                        </a>
+                      )}
                     </div>
                   ))}
                 </div>
