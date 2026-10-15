@@ -27,6 +27,11 @@ export const metadata: Metadata = {
   title: "Alternative Solutions IO | Smarter Business Systems",
   description: "I architect custom, high-performance ecosystems driven by AI and built for scale. Stop running your business on duct tape.",
   
+  // 🚀 Namecheap Affiliate Ownership Verification Tag
+  other: {
+    'impact-site-verification': 'ddc889a0-746c-4f8e-bdcc-4990ee131995',
+  },
+
   // 🚀 The iOS/Android App Overrides
   appleWebApp: {
     capable: true,
