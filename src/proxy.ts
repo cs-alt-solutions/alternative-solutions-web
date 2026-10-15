@@ -6,6 +6,12 @@ export async function proxy(request: NextRequest) {
   const url = request.nextUrl;
   const hostname = request.headers.get('host') || '';
 
+  // 🚀 THE FIX: Prevent the proxy from double-rewriting the path!
+  // This stops the infinite /domain/blazenbloomstudios.com/domain/ loop
+  if (url.pathname.startsWith('/domain/')) {
+    return NextResponse.next({ request: { headers: request.headers } });
+  }
+
   // 1. Identify your core platform domains
   const isPlatformDomain = hostname.includes('alternativesolutions.io') || hostname.includes('localhost');
 
@@ -49,7 +55,7 @@ export async function proxy(request: NextRequest) {
 
   // --- CORE PLATFORM SECURITY ---
   
-  // 🚀 THE FIX: We added hard fallbacks so you NEVER get locked out, 
+  // We added hard fallbacks so you NEVER get locked out, 
   // even if your local env variables fail to load!
   const adminEmails = [
     process.env.ADMIN_EMAIL, 
