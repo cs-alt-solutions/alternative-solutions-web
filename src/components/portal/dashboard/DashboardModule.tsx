@@ -17,8 +17,8 @@ export default async function DashboardModule({ clientId }: { clientId: string }
     .single();
 
   const businessName = store?.business_name || 'My Workspace';
-  const statusKey = (store?.status as StorefrontStatus) || 'PENDING';
-  const statusConfig = STOREFRONT_LIFECYCLE[statusKey] || STOREFRONT_LIFECYCLE['PENDING'];
+  const statusKey = (store?.status as StorefrontStatus) || 'PENDING_BUILD';
+  const statusConfig = STOREFRONT_LIFECYCLE[statusKey] || STOREFRONT_LIFECYCLE['PENDING_BUILD'];
   const planName = store?.plan_tier || 'Standard';
   const planPrice = planName.toLowerCase() === 'professional' ? '15' : '5';
 

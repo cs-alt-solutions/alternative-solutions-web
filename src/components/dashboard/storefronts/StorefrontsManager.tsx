@@ -102,7 +102,7 @@ export default function StorefrontsManager({ initialData }: { initialData: any[]
   };
 
   const renderTableRow = (store: any) => {
-    const status = (store.status || 'BUILDING') as StorefrontStatus;
+    const status = (store.status || 'PENDING_BUILD') as StorefrontStatus;
     const config = STOREFRONT_LIFECYCLE[status] || { 
       label: store.status || 'UNKNOWN', 
       badgeColor: 'bg-zinc-800 text-zinc-400 border-zinc-700',

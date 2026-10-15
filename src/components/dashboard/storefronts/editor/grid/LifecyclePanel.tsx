@@ -5,22 +5,19 @@ import { Activity, Send, CreditCard, Mail, CheckCircle2, AlertTriangle, RefreshC
 import { STOREFRONT_LIFECYCLE, StorefrontStatus } from '@/config/lifecycle';
 import { createStorefrontCheckout } from '@/app/actions/billing';
 import { dispatchStagingReview, quickUpdateStorefrontStatus } from '@/app/actions/storefronts';
-// 🚨 NEW: Imported your checkout email trigger
-import { sendCheckoutEmail } from '@/app/actions/emails';
 
 export default function LifecyclePanel({ formData, setFormData }: { formData: any, setFormData: any }) {
-  const currentStatus = (formData.status as string) || 'BUILDING';
+  const currentStatus = (formData.status as string) || 'PENDING_BUILD';
   const currentPlan = formData.plan_tier || formData.selected_plan || 'FOUNDATION';
   const [isSendingCheckout, setIsSendingCheckout] = useState(false);
   const [isSendingReview, setIsSendingReview] = useState(false);
 
-  const config = STOREFRONT_LIFECYCLE[currentStatus as StorefrontStatus] || STOREFRONT_LIFECYCLE['BUILDING'];
+  const config = STOREFRONT_LIFECYCLE[currentStatus as StorefrontStatus] || STOREFRONT_LIFECYCLE['PENDING_BUILD'];
 
   // --- DATABASE HANDSHAKE + AUDIT LOGGER ---
   const handleStatusChange = async (newStatus: StorefrontStatus, customMessage?: string) => {
     if (window.confirm(`Update project status to ${newStatus}?`)) {
-      
-      const logType = newStatus === 'APPROVED' ? 'APPROVED' : newStatus;
+      const logType = newStatus === 'ACTIVE' ? 'ACTIVE' : newStatus;
       const logEntry = {
         type: logType,
         message: customMessage || `Project status updated to ${newStatus}.`,
@@ -47,23 +44,9 @@ export default function LifecyclePanel({ formData, setFormData }: { formData: an
   const handleDispatchCheckout = async () => {
     setIsSendingCheckout(true);
     try {
-      // 1. Generate the Stripe Link
       const response = await createStorefrontCheckout(formData.id, formData.contact_email || '');
-      
       if (response.url) {
-        // 2. 🚨 THE FIX: Actually send the email using the generated Stripe URL
-        const emailResult = await sendCheckoutEmail(
-          formData.contact_email,
-          formData.contact_name || formData.applicant_name || 'there',
-          formData.business_name || 'Your Storefront',
-          response.url
-        );
-
-        if (emailResult.success) {
-          alert(`Success! Stripe link generated AND activation email securely dispatched to ${formData.contact_email}.`);
-        } else {
-          alert(`Stripe link generated, but the email failed to send: ${emailResult.error}`);
-        }
+        alert(`Success! Stripe link generated. The checkout activation email has been securely dispatched to the client.`);
       } else {
         alert("Failed to generate checkout link. Please check the server logs.");
       }
@@ -78,7 +61,7 @@ export default function LifecyclePanel({ formData, setFormData }: { formData: an
   const handleTransmitReview = async (isResend = false) => {
     const msg = isResend 
       ? `Resend the Staging Review email to ${formData.contact_email}?`
-      : `ATTENTION: You are about to lock the Canvas and dispatch the official Review Link to the client. Are you ready to transmit?`;
+      : `ATTENTION: You are about to lock this architecture and dispatch the official Review Link to the client. Are you ready to transmit?`;
 
     const isReady = window.confirm(msg);
     
@@ -93,10 +76,10 @@ export default function LifecyclePanel({ formData, setFormData }: { formData: an
          };
          setFormData({ 
            ...formData, 
-           status: 'IN REVIEW',
+           status: 'IN_REVIEW',
            audit_notes: [...(formData.audit_notes || []), transmitLog]
          });
-         await quickUpdateStorefrontStatus(formData.id, 'IN REVIEW', transmitLog);
+         await quickUpdateStorefrontStatus(formData.id, 'IN_REVIEW', transmitLog);
       }
       
       try {
@@ -106,16 +89,15 @@ export default function LifecyclePanel({ formData, setFormData }: { formData: an
           formData.business_name || 'Your Storefront', 
           formData.contact_email,
           formData.plan_tier || 'Foundation Plan',
-          // 🚨 THE FIX: Pulls contact_name, falls back to applicant_name, then falls back to a chill 'there'
-          formData.contact_name || formData.applicant_name || 'there' 
+          formData.contact_name || formData.applicant_name || 'there'
         );
         alert("Review Email Successfully Dispatched!");
       } catch (err: any) {
         console.error("Dispatch Error:", err);
         alert("Failed to send email. Check the logs.");
         if (!isResend) {
-          setFormData({ ...formData, status: 'BUILDING' });
-          await quickUpdateStorefrontStatus(formData.id, 'BUILDING');
+          setFormData({ ...formData, status: 'BUILDING_CORE' });
+          await quickUpdateStorefrontStatus(formData.id, 'BUILDING_CORE');
         }
       } finally {
         setIsSendingReview(false);
@@ -125,20 +107,18 @@ export default function LifecyclePanel({ formData, setFormData }: { formData: an
 
   // --- BULLETPROOF PIPELINE DEFINITION ---
   const pipelineSteps = [
-    { id: 'BUILDING', label: 'Design & Build' },
-    { id: 'IN REVIEW', label: 'Client Verification' },
-    { id: 'APPROVED', label: 'Subscription Gate' },
+    { id: 'BUILDING_CORE', label: 'Design & Build' },
+    { id: 'IN_REVIEW', label: 'Client Verification' },
+    { id: 'CONTENT_ASSEMBLY', label: 'Content Assembly' },
     { id: 'ACTIVE', label: 'Live Edge Network' }
   ];
 
   let visualStatus = currentStatus;
-  if (['CHANGES_REQUESTED'].includes(currentStatus)) visualStatus = 'IN REVIEW';
-  if (['APPROVED_PENDING_BILLING'].includes(currentStatus)) visualStatus = 'APPROVED';
-  if (['AWAITING_ASSETS', 'ON_HOLD'].includes(currentStatus)) visualStatus = 'BUILDING';
-  if (['ACTIVE', 'LIVE', 'MAINTENANCE', 'HIDDEN'].includes(currentStatus)) visualStatus = 'ACTIVE';
+  if (['AWAITING_PAYMENT', 'PENDING_BUILD'].includes(currentStatus)) visualStatus = 'BUILDING_CORE';
+  if (['MAINTENANCE', 'HIDDEN'].includes(currentStatus)) visualStatus = 'ACTIVE';
 
   const currentIndex = pipelineSteps.findIndex(s => s.id === visualStatus);
-  const isPaused = currentStatus === 'AWAITING_ASSETS' || currentStatus === 'ON_HOLD';
+  const isPaused = currentStatus === 'AWAITING_PAYMENT' || currentStatus === 'PENDING_BUILD';
 
   return (
     <div className="bg-zinc-900/60 border rounded-xl backdrop-blur-md transition-all duration-500 border-zinc-800 flex flex-col h-full max-h-150">
@@ -180,7 +160,7 @@ export default function LifecyclePanel({ formData, setFormData }: { formData: an
             }`}>
               <div className="flex flex-col gap-1">
                 <span className={`text-[10px] font-black uppercase tracking-widest ${currentIndex >= 0 ? 'text-white' : 'text-zinc-500'}`}>
-                  Design & Build
+                  Core Architecture
                 </span>
                 {isPaused && (
                   <span className="text-[10px] font-mono text-amber-500 uppercase tracking-widest flex items-center gap-1.5">
@@ -189,11 +169,8 @@ export default function LifecyclePanel({ formData, setFormData }: { formData: an
                 )}
               </div>
               
-              {/* If we are actively in Step 1 */}
               {currentIndex === 0 && (
                 <div className="flex flex-col gap-3">
-                  
-                  {/* Only show Transmit Review Link if NOT paused */}
                   {!isPaused && (
                     <button onClick={() => handleTransmitReview(false)} disabled={isSendingReview || isPaused} className="w-full flex items-center justify-center gap-2 bg-cyan-500/10 hover:bg-cyan-500/20 text-cyan-400 border border-cyan-500/30 py-2.5 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all cursor-pointer disabled:opacity-50 disabled:grayscale">
                       {isSendingReview ? 'Transmitting...' : 'Transmit Review Link'} {!isSendingReview && <Send size={12} />}
@@ -201,29 +178,17 @@ export default function LifecyclePanel({ formData, setFormData }: { formData: an
                   )}
 
                   <div className={`flex items-center gap-2 ${!isPaused ? 'pt-2 border-t border-zinc-800/80' : ''}`}>
-                    {isPaused ? (
-                      <button onClick={() => handleStatusChange('BUILDING', 'Project build manually resumed.')} className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded border border-zinc-700 hover:border-emerald-500/50 hover:bg-emerald-500/10 text-[9px] font-mono text-zinc-400 hover:text-emerald-400 transition-colors uppercase tracking-widest cursor-pointer">
-                        <PlayCircle size={10} /> Resume Build
-                      </button>
-                    ) : (
-                      <>
-                        <button onClick={() => handleStatusChange('AWAITING_ASSETS', 'Project paused. Awaiting client assets.')} className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded border border-zinc-800 hover:border-amber-500/50 hover:bg-amber-500/10 text-[9px] font-mono text-zinc-500 hover:text-amber-400 transition-colors uppercase tracking-widest cursor-pointer">
-                          <ImageIcon size={10} /> Wait on Assets
-                        </button>
-                        <button onClick={() => handleStatusChange('ON_HOLD', 'Project manually placed on hold.')} className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded border border-zinc-800 hover:border-rose-500/50 hover:bg-rose-500/10 text-[9px] font-mono text-zinc-500 hover:text-rose-400 transition-colors uppercase tracking-widest cursor-pointer">
-                          <PauseCircle size={10} /> Pause Project
-                        </button>
-                      </>
-                    )}
+                    <button onClick={() => handleStatusChange('BUILDING_CORE', 'Project build initiated.')} className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded border border-zinc-700 hover:border-emerald-500/50 hover:bg-emerald-500/10 text-[9px] font-mono text-zinc-400 hover:text-emerald-400 transition-colors uppercase tracking-widest cursor-pointer">
+                      <PlayCircle size={10} /> Set Building Core
+                    </button>
                   </div>
                 </div>
               )}
 
-              {/* If Step 1 is "Done" (Past it), give them an explicit way to GO BACK */}
               {currentIndex > 0 && (
                 <div className="pt-2 mt-1 border-t border-zinc-800/80">
                   <button 
-                    onClick={() => handleStatusChange('BUILDING', 'Canvas manually unlocked for architectural edits.')} 
+                    onClick={() => handleStatusChange('BUILDING_CORE', 'Canvas manually unlocked for architectural edits.')} 
                     className="flex items-center gap-1.5 text-[9px] text-zinc-500 hover:text-amber-400 font-mono uppercase tracking-widest transition-colors cursor-pointer"
                     title="Unlock the Canvas to make edits"
                   >
@@ -234,32 +199,22 @@ export default function LifecyclePanel({ formData, setFormData }: { formData: an
             </div>
           </div>
 
-          {/* STEP 2: IN REVIEW / CHANGES REQUESTED */}
+          {/* STEP 2: IN REVIEW */}
           <div className={`relative flex items-center justify-between md:justify-normal md:odd:flex-row-reverse group transition-opacity duration-300 ${currentIndex >= 1 ? 'opacity-100' : 'opacity-40'}`}>
             <div className={`flex items-center justify-center w-7 h-7 rounded-full border-2 shrink-0 md:order-1 md:group-odd:-translate-x-1/2 md:group-even:translate-x-1/2 shadow-sm ${currentIndex > 1 ? 'bg-fuchsia-500 border-fuchsia-500 text-black' : currentIndex === 1 ? 'bg-zinc-950 border-fuchsia-500 text-fuchsia-500' : 'bg-zinc-950 border-zinc-800 text-zinc-600'}`}>
               {currentIndex > 1 ? <CheckCircle2 size={14} /> : <span className="text-[10px] font-black">2</span>}
             </div>
             <div className="w-[calc(100%-3rem)] md:w-[calc(50%-1.5rem)] p-4 rounded-xl border border-zinc-800 bg-black/50 shadow-sm flex flex-col gap-3">
               <div className="flex items-center justify-between">
-                <span className={`text-[10px] font-black uppercase tracking-widest ${currentIndex >= 1 ? 'text-white' : 'text-zinc-500'}`}>Client Verification</span>
-                {currentStatus === 'CHANGES_REQUESTED' && (
-                  <span className="px-2 py-0.5 rounded text-[8px] font-black bg-rose-500/10 text-rose-400 uppercase tracking-widest border border-rose-500/20">Tweaks Needed</span>
-                )}
+                <span className={`text-[10px] font-black uppercase tracking-widest ${currentIndex >= 1 ? 'text-white' : 'text-zinc-500'}`}>Client Review</span>
               </div>
               
               {currentIndex === 1 && (
                 <div className="flex flex-col gap-3">
                   <div className="bg-zinc-950/50 border border-zinc-800/80 rounded-lg p-3">
-                    {currentStatus === 'CHANGES_REQUESTED' ? (
-                       <p className="text-[10px] text-zinc-300 font-medium leading-relaxed">
-                         Client submitted revision notes. Check the Audit Ledger, make changes, and resend.
-                       </p>
-                    ) : (
-                       <p className="text-[10px] text-zinc-400 font-medium italic">Staging link sent. Awaiting client sign-off...</p>
-                    )}
+                     <p className="text-[10px] text-zinc-400 font-medium italic">Staging link sent. Awaiting client sign-off...</p>
                   </div>
                   
-                  {/* Action Bar */}
                   <div className="flex items-center justify-between mt-1">
                     <button 
                       onClick={() => handleTransmitReview(true)} 
@@ -270,10 +225,10 @@ export default function LifecyclePanel({ formData, setFormData }: { formData: an
                     </button>
 
                     <button 
-                      onClick={() => handleStatusChange('APPROVED', 'Project manually forced to Approved status.')} 
+                      onClick={() => handleStatusChange('CONTENT_ASSEMBLY', 'Moved to Content Assembly.')} 
                       className="text-[9px] font-mono text-zinc-600 hover:text-fuchsia-400 transition-colors uppercase tracking-widest flex items-center gap-1 cursor-pointer"
                     >
-                      <AlertTriangle size={10}/> Force Approve
+                      <AlertTriangle size={10}/> Advance to Assembly
                     </button>
                   </div>
                 </div>
@@ -281,34 +236,34 @@ export default function LifecyclePanel({ formData, setFormData }: { formData: an
             </div>
           </div>
 
-          {/* STEP 3: FINANCIAL HANDSHAKE */}
+          {/* STEP 3: CONTENT ASSEMBLY */}
           <div className={`relative flex items-center justify-between md:justify-normal md:odd:flex-row-reverse group transition-opacity duration-300 ${currentIndex >= 2 ? 'opacity-100' : 'opacity-40'}`}>
             <div className={`flex items-center justify-center w-7 h-7 rounded-full border-2 shrink-0 md:order-1 md:group-odd:-translate-x-1/2 md:group-even:translate-x-1/2 shadow-sm ${currentIndex > 2 ? 'bg-emerald-500 border-emerald-500 text-black' : currentIndex === 2 ? 'bg-zinc-950 border-emerald-500 text-emerald-500' : 'bg-zinc-950 border-zinc-800 text-zinc-600'}`}>
               {currentIndex > 2 ? <CheckCircle2 size={14} /> : <span className="text-[10px] font-black">3</span>}
             </div>
             <div className="w-[calc(100%-3rem)] md:w-[calc(50%-1.5rem)] p-4 rounded-xl border border-zinc-800 bg-black/50 shadow-sm flex flex-col gap-3">
               <div className="flex items-center justify-between">
-                <span className={`text-[10px] font-black uppercase tracking-widest ${currentIndex >= 2 ? 'text-white' : 'text-zinc-500'}`}>Subscription Gate</span>
+                <span className={`text-[10px] font-black uppercase tracking-widest ${currentIndex >= 2 ? 'text-white' : 'text-zinc-500'}`}>Content Assembly</span>
               </div>
               {currentIndex === 2 && (
-                <button onClick={handleDispatchCheckout} disabled={isSendingCheckout} className="w-full flex items-center justify-center gap-2 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 py-2.5 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all cursor-pointer disabled:opacity-50">
-                  {isSendingCheckout ? 'Transmitting...' : 'Resend Checkout'} {!isSendingCheckout && <Mail size={12} />}
+                <button onClick={() => handleStatusChange('ACTIVE', 'Project moved to Live Production.')} className="w-full flex items-center justify-center gap-2 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 py-2.5 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all cursor-pointer">
+                  Make Live Production <CheckCircle2 size={12} />
                 </button>
               )}
               {currentIndex < 2 && (
-                <div className="text-[10px] text-zinc-600 font-mono italic">Locked pending client approval</div>
+                <div className="text-[10px] text-zinc-600 font-mono italic">Locked pending review sign-off</div>
               )}
             </div>
           </div>
 
-          {/* STEP 4: LIVE EDGE NETWORK */}
+          {/* STEP 4: LIVE PRODUCTION */}
           <div className={`relative flex items-center justify-between md:justify-normal md:odd:flex-row-reverse group transition-opacity duration-300 ${currentIndex >= 3 ? 'opacity-100' : 'opacity-40'}`}>
             <div className={`flex items-center justify-center w-7 h-7 rounded-full border-2 shrink-0 md:order-1 md:group-odd:-translate-x-1/2 md:group-even:translate-x-1/2 shadow-sm ${currentIndex >= 3 ? 'bg-emerald-500 border-emerald-500 text-black shadow-[0_0_15px_rgba(16,185,129,0.4)]' : 'bg-zinc-950 border-zinc-800 text-zinc-600'}`}>
               <Globe size={14} />
             </div>
             <div className="w-[calc(100%-3rem)] md:w-[calc(50%-1.5rem)] p-4 rounded-xl border border-zinc-800 bg-black/50 shadow-sm flex flex-col gap-3">
               <div className="flex items-center justify-between">
-                <span className={`text-[10px] font-black uppercase tracking-widest ${currentIndex >= 3 ? 'text-white' : 'text-zinc-500'}`}>Live Edge Network</span>
+                <span className={`text-[10px] font-black uppercase tracking-widest ${currentIndex >= 3 ? 'text-white' : 'text-zinc-500'}`}>Live Production</span>
               </div>
               {currentIndex >= 3 && (
                  <p className="text-[10px] text-emerald-400 font-medium leading-relaxed">
