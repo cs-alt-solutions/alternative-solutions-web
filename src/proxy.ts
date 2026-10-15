@@ -64,9 +64,15 @@ export async function proxy(request: NextRequest) {
   // 5. Check if they are logged in
   const { data: { user } } = await supabase.auth.getUser();
 
-  // Pull the Admin email securely from Vercel / .env.local
-  const adminEmail = process.env.ADMIN_EMAIL;
-  const isAdmin = user && user.email === adminEmail;
+  // 🚀 THE FIX: We added hard fallbacks so you NEVER get locked out, 
+  // even if your local env variables fail to load!
+  const adminEmails = [
+    process.env.ADMIN_EMAIL, 
+    'courtney@alternativesolutions.io', 
+    'courtneysulenski@gmail.com'
+  ].filter(Boolean);
+  
+  const isAdmin = user && adminEmails.includes(user.email || '');
 
   // LOCAL DEVELOPMENT BYPASS
   if (process.env.NODE_ENV === 'development') {
