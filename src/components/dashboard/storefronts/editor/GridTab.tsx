@@ -20,8 +20,8 @@ export default function GridTab({
 }) {
   
   // Safely grab the configuration for the current state to check if we are locked
-  const currentStatus = (formData.status as StorefrontStatus) || 'BUILDING';
-  const config = STOREFRONT_LIFECYCLE[currentStatus] || STOREFRONT_LIFECYCLE['BUILDING'];
+  const currentStatus = (formData.status as string) || 'PENDING_BUILD';
+  const config = STOREFRONT_LIFECYCLE[currentStatus as StorefrontStatus] || STOREFRONT_LIFECYCLE['PENDING_BUILD'];
 
   return (
     <div className="w-full p-4 sm:p-6 lg:p-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
