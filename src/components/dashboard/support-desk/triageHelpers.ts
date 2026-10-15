@@ -1,5 +1,5 @@
 /* src/components/dashboard/support-desk/triageHelpers.ts */
-import { Paintbrush, Settings, AlertTriangle, Lightbulb, Sparkles, MessageSquare } from 'lucide-react';
+import { Paintbrush, Settings, AlertTriangle, Lightbulb, Sparkles, MessageSquare, Image as ImageIcon } from 'lucide-react';
 
 export const parseAdminReplies = (replyString: string | null, fallbackDate: string) => {
   if (!replyString) return [];
@@ -36,6 +36,7 @@ export const getCategoryConfig = (category: string) => {
     case 'Something Broke': return { bg: 'bg-rose-500/10', text: 'text-rose-400', border: 'border-rose-500/20', icon: AlertTriangle };
     case 'Big New Idea': return { bg: 'bg-amber-500/10', text: 'text-amber-400', border: 'border-amber-500/20', icon: Lightbulb };
     case 'Business Update': return { bg: 'bg-emerald-500/10', text: 'text-emerald-400', border: 'border-emerald-500/20', icon: Sparkles };
+    case 'Asset Deliveries': return { bg: 'bg-indigo-500/10', text: 'text-indigo-400', border: 'border-indigo-500/20', icon: ImageIcon };
     default: return { bg: 'bg-zinc-500/10', text: 'text-zinc-400', border: 'border-zinc-500/20', icon: MessageSquare };
   }
 };

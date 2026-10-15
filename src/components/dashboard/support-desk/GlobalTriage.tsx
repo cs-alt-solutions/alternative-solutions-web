@@ -3,7 +3,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { supabase } from '@/utils/supabase';
-import { CheckCircle2, Inbox, CheckSquare, RefreshCw, XCircle } from 'lucide-react';
+import { CheckCircle2, Inbox, CheckSquare, RefreshCw, XCircle, LayoutGrid, MessageSquare } from 'lucide-react';
 import { SUPPORT_DESK_COPY } from '@/config/dashboard';
 import { parseAdminReplies, getCategoryConfig } from './triageHelpers';
 import TriageSidebar from './TriageSidebar';
@@ -16,6 +16,7 @@ export default function GlobalTriage() {
   const [activeTab, setActiveTab] = useState<'OPEN' | 'RESOLVED' | 'CANCELED'>('OPEN');
   
   const [selectedClientId, setSelectedClientId] = useState<string | null>(null);
+  const [boardView, setBoardView] = useState<'COMMS' | 'ASSETS'>('COMMS');
   const [replyText, setReplyText] = useState<Record<string, string>>({});
   const [isReplying, setIsReplying] = useState<string | null>(null);
   const [expandedTicketId, setExpandedTicketId] = useState<string | null>(null);
@@ -52,7 +53,6 @@ export default function GlobalTriage() {
     setIsRefreshing(false);
   };
 
-  // 🚀 Updated to accept an instant override text for Fast Replies
   const handleSendReply = async (ticketId: string, overrideText?: string) => {
     setIsReplying(ticketId);
     const adminMessage = overrideText || replyText[ticketId];
@@ -67,7 +67,6 @@ export default function GlobalTriage() {
     
     setTickets(prev => prev.map(t => t.id === ticketId ? { ...t, admin_reply: payloadString } : t));
     
-    // Only clear the text box if we didn't use a Fast Reply
     if (!overrideText) {
       setReplyText(prev => ({ ...prev, [ticketId]: '' }));
     }
@@ -115,6 +114,15 @@ export default function GlobalTriage() {
     if (expandedTicketId === ticketId) setExpandedTicketId(null);
   };
 
+  // Instant Force Close for Media Drops
+  const handleForceClose = async (ticketId: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    const resolvedAt = new Date().toISOString();
+    setTickets(prev => prev.map(t => t.id === ticketId ? { ...t, status: 'RESOLVED', resolved_at: resolvedAt } : t));
+    await supabase.from('support_tickets').update({ status: 'RESOLVED', resolved_at: resolvedAt }).eq('id', ticketId);
+    if (expandedTicketId === ticketId) setExpandedTicketId(null);
+  };
+
   const filteredTickets = tickets.filter(t => t.status === activeTab);
   const clientsWithTickets = [...new Set(filteredTickets.map(t => t.storefront_id))];
   
@@ -129,7 +137,14 @@ export default function GlobalTriage() {
   });
 
   const activeClientTickets = filteredTickets.filter(t => t.storefront_id === selectedClientId);
-  const groupedTickets = activeClientTickets.reduce((acc: any, ticket) => {
+  
+  // Separate standard comms from media drops
+  const commsTickets = activeClientTickets.filter(t => !t.topic.startsWith('Media Drop:'));
+  const assetTickets = activeClientTickets.filter(t => t.topic.startsWith('Media Drop:')).map(t => ({...t, category: 'Asset Deliveries'}));
+
+  const displayTickets = boardView === 'COMMS' ? commsTickets : assetTickets;
+
+  const groupedTickets = displayTickets.reduce((acc: any, ticket) => {
     const cat = ticket.category || 'General';
     if (!acc[cat]) acc[cat] = [];
     acc[cat].push(ticket);
@@ -171,38 +186,57 @@ export default function GlobalTriage() {
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
           <TriageSidebar sortedClients={sortedClients} tickets={tickets} selectedClientId={selectedClientId} setSelectedClientId={setSelectedClientId} setExpandedTicketId={setExpandedTicketId} />
           
-          <div className="lg:col-span-8 flex flex-col gap-8">
+          <div className="lg:col-span-8 flex flex-col gap-6">
             {!selectedClientId ? (
                <div className="p-12 text-center text-zinc-600 border border-dashed border-white/10 rounded-2xl">Select a workspace to view their board.</div>
             ) : (
-              Object.entries(groupedTickets).map(([category, categoryTickets]: [string, any]) => {
-                const config = getCategoryConfig(category);
-                return (
-                  <div key={category} className="flex flex-col gap-3">
-                    <div className="flex items-center gap-3 border-b border-white/5 pb-2">
-                      <span className={`inline-flex items-center justify-center px-2.5 py-1 rounded text-[9px] font-black uppercase border ${config.bg} ${config.text} ${config.border}`}>
-                        <config.icon size={12} className="mr-1.5" /> {category} ({categoryTickets.length})
-                      </span>
-                    </div>
+              <>
+                {/* 🚀 INNER TAB TOGGLE */}
+                <div className="flex gap-2 border-b border-white/5 pb-4">
+                  <button onClick={() => setBoardView('COMMS')} className={`flex items-center gap-2 px-4 py-2 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all ${boardView === 'COMMS' ? 'bg-cyan-500/10 text-cyan-400 border border-cyan-500/20' : 'text-zinc-500 hover:text-white hover:bg-white/5'}`}>
+                    <MessageSquare size={14} /> Requests ({commsTickets.length})
+                  </button>
+                  <button onClick={() => setBoardView('ASSETS')} className={`flex items-center gap-2 px-4 py-2 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all ${boardView === 'ASSETS' ? 'bg-indigo-500/10 text-indigo-400 border border-indigo-500/20' : 'text-zinc-500 hover:text-white hover:bg-white/5'}`}>
+                    <LayoutGrid size={14} /> Asset Vault Drops ({assetTickets.length})
+                  </button>
+                </div>
 
-                    {categoryTickets.map((ticket: any) => (
-                      <TicketThread 
-                        key={ticket.id} 
-                        ticket={ticket} 
-                        isExpanded={expandedTicketId === ticket.id} 
-                        setExpandedTicketId={setExpandedTicketId} 
-                        replyText={replyText[ticket.id] || ''} 
-                        setReplyText={(val) => setReplyText(prev => ({ ...prev, [ticket.id]: val }))} 
-                        isReplying={isReplying === ticket.id} 
-                        handleSendReply={handleSendReply} 
-                        handleProposeResolution={handleProposeResolution} 
-                        handleRecallMessage={handleRecallMessage} 
-                        handleCancelTicket={handleCancelTicket} 
-                      />
-                    ))}
+                {displayTickets.length === 0 ? (
+                  <div className="p-8 text-center text-zinc-600 border border-dashed border-white/5 rounded-2xl text-[10px] uppercase tracking-widest">
+                    No active items in this view.
                   </div>
-                );
-              })
+                ) : (
+                  Object.entries(groupedTickets).map(([category, categoryTickets]: [string, any]) => {
+                    const config = getCategoryConfig(category);
+                    return (
+                      <div key={category} className="flex flex-col gap-3">
+                        <div className="flex items-center gap-3 border-b border-white/5 pb-2">
+                          <span className={`inline-flex items-center justify-center px-2.5 py-1 rounded text-[9px] font-black uppercase border ${config.bg} ${config.text} ${config.border}`}>
+                            <config.icon size={12} className="mr-1.5" /> {category} ({categoryTickets.length})
+                          </span>
+                        </div>
+
+                        {categoryTickets.map((ticket: any) => (
+                          <TicketThread 
+                            key={ticket.id} 
+                            ticket={ticket} 
+                            isExpanded={expandedTicketId === ticket.id} 
+                            setExpandedTicketId={setExpandedTicketId} 
+                            replyText={replyText[ticket.id] || ''} 
+                            setReplyText={(val) => setReplyText(prev => ({ ...prev, [ticket.id]: val }))} 
+                            isReplying={isReplying === ticket.id} 
+                            handleSendReply={handleSendReply} 
+                            handleProposeResolution={handleProposeResolution} 
+                            handleRecallMessage={handleRecallMessage} 
+                            handleCancelTicket={handleCancelTicket}
+                            handleForceClose={handleForceClose}
+                          />
+                        ))}
+                      </div>
+                    );
+                  })
+                )}
+              </>
             )}
           </div>
         </div>

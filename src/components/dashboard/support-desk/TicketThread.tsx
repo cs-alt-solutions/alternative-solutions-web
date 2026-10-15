@@ -15,6 +15,7 @@ interface TicketThreadProps {
   handleProposeResolution: (id: string, e: React.MouseEvent) => void;
   handleRecallMessage: (ticketId: string, messageId: string) => void;
   handleCancelTicket: (id: string, e: React.MouseEvent) => void;
+  handleForceClose: (id: string, e: React.MouseEvent) => void;
 }
 
 const QUICK_REPLIES = [
@@ -25,7 +26,7 @@ const QUICK_REPLIES = [
 
 export default function TicketThread({ 
   ticket, isExpanded, setExpandedTicketId, replyText, setReplyText, isReplying, 
-  handleSendReply, handleProposeResolution, handleRecallMessage, handleCancelTicket 
+  handleSendReply, handleProposeResolution, handleRecallMessage, handleCancelTicket, handleForceClose 
 }: TicketThreadProps) {
   
   const copy = SUPPORT_DESK_COPY;
@@ -35,11 +36,15 @@ export default function TicketThread({
     ? `Resolved: ${getSLA(ticket.created_at, ticket.resolved_at)}`
     : `Canceled: ${getSLA(ticket.created_at, ticket.resolved_at)}`;
 
-  // 🚀 Logic to parse Media Drops into a visual card instead of a text string
   const isMediaDrop = ticket.topic.startsWith('Media Drop:');
   const dropParts = isMediaDrop ? ticket.details.split('\n\n') : [];
   const dropHeader = dropParts[0] || '';
-  const dropBody = dropParts[1] || '';
+  
+  // 🚀 Extract URLs directly out of the payload
+  const urlRegex = /(https?:\/\/[^\s]+)/g;
+  const dropBody = dropParts[1] || ticket.details;
+  const mediaUrls = dropBody.match(urlRegex) || [];
+  const cleanBody = dropBody.replace(urlRegex, '').trim();
 
   return (
     <div className={`bg-zinc-950 border rounded-xl overflow-hidden transition-all duration-300 ${isExpanded ? 'border-zinc-600 shadow-xl' : 'border-white/5 hover:border-white/10'}`}>
@@ -59,9 +64,17 @@ export default function TicketThread({
               <button onClick={(e) => handleCancelTicket(ticket.id, e)} className="flex items-center gap-1.5 text-[9px] font-black uppercase tracking-widest text-rose-500 bg-rose-500/10 border border-rose-500/20 px-2 py-1 rounded transition-all hover:bg-rose-500/20">
                 <Trash2 size={12} /> {copy.ACTIONS.CANCEL}
               </button>
-              <button onClick={(e) => handleProposeResolution(ticket.id, e)} className="flex items-center gap-1.5 text-[9px] font-black uppercase tracking-widest text-emerald-500 bg-emerald-500/10 border border-emerald-500/20 px-2 py-1 rounded transition-all hover:bg-emerald-500/20">
-                <CheckCircle2 size={12} /> Propose Close
-              </button>
+              
+              {/* Force Close for Assets vs Propose for Comms */}
+              {isMediaDrop ? (
+                <button onClick={(e) => handleForceClose(ticket.id, e)} className="flex items-center gap-1.5 text-[9px] font-black uppercase tracking-widest text-indigo-400 bg-indigo-500/10 border border-indigo-500/20 px-2 py-1 rounded transition-all hover:bg-indigo-500/20">
+                  <CheckCircle2 size={12} /> Log & Archive
+                </button>
+              ) : (
+                <button onClick={(e) => handleProposeResolution(ticket.id, e)} className="flex items-center gap-1.5 text-[9px] font-black uppercase tracking-widest text-emerald-500 bg-emerald-500/10 border border-emerald-500/20 px-2 py-1 rounded transition-all hover:bg-emerald-500/20">
+                  <CheckCircle2 size={12} /> Propose Close
+                </button>
+              )}
             </div>
           )}
           {isExpanded ? <ChevronUp size={16} className="text-zinc-500" /> : <ChevronDown size={16} className="text-zinc-500" />}
@@ -72,42 +85,40 @@ export default function TicketThread({
         <div className="p-5 border-t border-white/5 bg-zinc-900/40">
           <div className="flex flex-col gap-6 mb-6">
             
-            {/* The Client's Opening Message Bubble */}
             <div className="flex justify-start">
-              <div className="bg-black border border-white/5 rounded-2xl rounded-tl-sm p-4 max-w-[85%] shadow-sm">
+              <div className="bg-black border border-white/5 rounded-2xl rounded-tl-sm p-4 max-w-[85%] shadow-sm w-full">
                 
-                {/* 🚀 Custom UI for Asset Drops */}
                 {isMediaDrop ? (
                   <div className="flex flex-col gap-3">
-                    <div className="flex items-center gap-2 text-amber-400 bg-amber-500/10 px-3 py-1.5 rounded-lg border border-amber-500/20 w-max shadow-inner">
+                    <div className="flex items-center gap-2 text-indigo-400 bg-indigo-500/10 px-3 py-1.5 rounded-lg border border-indigo-500/20 w-max shadow-inner">
                       <CloudUpload size={14} />
                       <span className="text-[10px] font-black uppercase tracking-widest">{dropHeader}</span>
                     </div>
-                    <div className="bg-zinc-900/50 border border-white/5 p-3 rounded-xl border-l-2 border-l-amber-500/50 shadow-inner">
-                      <p className="text-xs text-zinc-300 whitespace-pre-wrap leading-relaxed font-medium">{dropBody}</p>
-                    </div>
+                    {cleanBody && (
+                      <div className="bg-zinc-900/50 border border-white/5 p-3 rounded-xl border-l-2 border-l-indigo-500/50 shadow-inner">
+                        <p className="text-xs text-zinc-300 whitespace-pre-wrap leading-relaxed font-medium">{cleanBody}</p>
+                      </div>
+                    )}
+                    {/* 🚀 THE VISUAL ASSET GRID */}
+                    {mediaUrls.length > 0 && (
+                      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mt-2">
+                        {mediaUrls.map((url: string, idx: number) => (
+                          <a key={idx} href={url} target="_blank" rel="noreferrer" className="relative aspect-square rounded-lg overflow-hidden border border-white/10 hover:border-indigo-500/50 block group bg-zinc-900">
+                            <img src={url} alt={`Asset ${idx}`} className="object-cover w-full h-full group-hover:scale-105 transition-transform" />
+                          </a>
+                        ))}
+                      </div>
+                    )}
                   </div>
                 ) : (
                   <p className="text-sm text-zinc-300 whitespace-pre-wrap leading-relaxed">{ticket.details}</p>
                 )}
 
-                <span className="text-[9px] text-zinc-500 font-mono mt-2 block">
+                <span className="text-[9px] text-zinc-500 font-mono mt-3 block">
                   Client • {new Date(ticket.created_at).toLocaleDateString()} at {new Date(ticket.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                 </span>
               </div>
             </div>
-
-            {/* Admin Replies Map */}
-            {ticket.status === 'CANCELED' && ticket.cancel_reason && (
-              <div className="flex justify-end mt-4">
-                <div className="bg-rose-500/10 border border-rose-500/20 rounded-2xl rounded-tr-sm p-4 max-w-[85%]">
-                  <p className="text-sm text-rose-200 whitespace-pre-wrap leading-relaxed italic">"{ticket.cancel_reason}"</p>
-                  <span className="text-[9px] text-rose-500/60 font-mono mt-2 block text-right uppercase tracking-widest">
-                    System Override Log
-                  </span>
-                </div>
-              </div>
-            )}
 
             {ticket.admin_reply && (
               parseAdminReplies(ticket.admin_reply, ticket.created_at).map((reply: any, index: number) => (
@@ -137,11 +148,9 @@ export default function TicketThread({
             )}
           </div>
 
-          {/* Reply Composition Area */}
           {ticket.status === 'OPEN' && (
             <div className="flex flex-col gap-3 border-t border-white/5 pt-4">
               
-              {/* 🚀 Fast Replies Ribbon */}
               <div className="flex items-center gap-2 overflow-x-auto custom-scrollbar pb-2">
                 <span className="text-[9px] font-black text-zinc-500 uppercase tracking-widest shrink-0 flex items-center gap-1.5 mr-1">
                   <Zap size={10} className="text-amber-500" /> Fast Reply:
@@ -168,9 +177,17 @@ export default function TicketThread({
                   <button onClick={(e) => handleCancelTicket(ticket.id, e)} className="flex items-center gap-2 bg-zinc-900 hover:bg-rose-500/10 border border-zinc-800 hover:border-rose-500/30 text-zinc-400 hover:text-rose-400 px-4 py-2 rounded-lg text-[10px] font-black uppercase tracking-widest transition-colors cursor-pointer">
                     <Trash2 size={14} /> {copy.ACTIONS.CANCEL}
                   </button>
-                  <button onClick={(e) => handleProposeResolution(ticket.id, e)} className="flex items-center gap-2 bg-zinc-900 hover:bg-emerald-500/10 border border-zinc-800 hover:border-emerald-500/30 text-zinc-400 hover:text-emerald-400 px-4 py-2 rounded-lg text-[10px] font-black uppercase tracking-widest transition-colors cursor-pointer">
-                    <CheckCircle2 size={14} /> Propose Close
-                  </button>
+                  
+                  {/* Dynamic Action Button inside Expanded View */}
+                  {isMediaDrop ? (
+                    <button onClick={(e) => handleForceClose(ticket.id, e)} className="flex items-center gap-2 bg-zinc-900 hover:bg-indigo-500/10 border border-zinc-800 hover:border-indigo-500/30 text-zinc-400 hover:text-indigo-400 px-4 py-2 rounded-lg text-[10px] font-black uppercase tracking-widest transition-colors cursor-pointer">
+                      <CheckCircle2 size={14} /> Log & Archive
+                    </button>
+                  ) : (
+                    <button onClick={(e) => handleProposeResolution(ticket.id, e)} className="flex items-center gap-2 bg-zinc-900 hover:bg-emerald-500/10 border border-zinc-800 hover:border-emerald-500/30 text-zinc-400 hover:text-emerald-400 px-4 py-2 rounded-lg text-[10px] font-black uppercase tracking-widest transition-colors cursor-pointer">
+                      <CheckCircle2 size={14} /> Propose Close
+                    </button>
+                  )}
                 </div>
                 <button onClick={() => handleSendReply(ticket.id)} disabled={isReplying || !replyText} className="flex items-center gap-2 bg-cyan-500/10 hover:bg-cyan-500/20 border border-cyan-500/20 text-cyan-400 px-6 py-2.5 rounded-xl text-xs font-black uppercase tracking-widest transition-colors cursor-pointer disabled:opacity-50">
                   <Send size={14} /> 
