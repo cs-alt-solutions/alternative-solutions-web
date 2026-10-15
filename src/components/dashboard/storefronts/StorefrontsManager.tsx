@@ -5,15 +5,18 @@ import React, { useState } from 'react';
 import Link from 'next/link';
 import { 
   Settings, Globe, ShieldAlert, Search, Users, FlaskConical, 
-  LayoutGrid, ArrowUpDown, Filter, ChevronUp, ChevronDown, User, Eye 
+  LayoutGrid, ArrowUpDown, Filter, ChevronUp, ChevronDown, User, Eye, Trash2, Loader2 
 } from 'lucide-react';
 import { STOREFRONT_LIFECYCLE, StorefrontStatus } from '@/config/lifecycle';
+import { deleteStorefront } from '@/app/actions/storefronts';
 import NewStorefrontModal from './NewStorefrontModal';
 
 export default function StorefrontsManager({ initialData }: { initialData: any[] }) {
   const [search, setSearch] = useState('');
+  // 🚀 Automatically defaults to Active Clients on load
   const [activeTab, setActiveTab] = useState<'ALL' | 'CLIENTS' | 'PROTOTYPES'>('CLIENTS');
   const [storefronts, setStorefronts] = useState(initialData);
+  const [isDeleting, setIsDeleting] = useState<string | null>(null);
 
   const [sortConfig, setSortConfig] = useState<{ key: string; direction: 'asc' | 'desc' } | null>({ key: 'created_at', direction: 'desc' });
   const [statusFilter, setStatusFilter] = useState<string>('ALL'); 
@@ -22,8 +25,6 @@ export default function StorefrontsManager({ initialData }: { initialData: any[]
 
   const availableStatuses = Object.keys(STOREFRONT_LIFECYCLE);
   const availablePlans = Array.from(new Set(storefronts.map(s => s.plan_tier || s.selected_plan).filter(Boolean))) as string[];
-  
-  // 🚀 FIXED: Properly referencing industry_tag alongside legacy fallbacks
   const availableCategories = Array.from(new Set(storefronts.map(s => s.industry_tag || s.category || s.industry).filter(Boolean))) as string[];
 
   const requestSort = (key: string) => {
@@ -32,6 +33,20 @@ export default function StorefrontsManager({ initialData }: { initialData: any[]
       direction = 'desc';
     }
     setSortConfig({ key, direction });
+  };
+
+  const handleDelete = async (id: string, name: string) => {
+    if (!window.confirm(`Are you absolutely sure you want to permanently delete "${name}"? This action cannot be undone.`)) return;
+    setIsDeleting(id);
+    try {
+      await deleteStorefront(id);
+      setStorefronts(prev => prev.filter(store => store.id !== id));
+    } catch (err: any) {
+      console.error("Delete failed:", err);
+      alert(err.message || "Failed to delete storefront.");
+    } finally {
+      setIsDeleting(null);
+    }
   };
 
   let processedData = storefronts.filter(store => 
@@ -49,7 +64,6 @@ export default function StorefrontsManager({ initialData }: { initialData: any[]
     processedData = processedData.filter(store => (store.plan_tier === planFilter) || (store.selected_plan === planFilter));
   }
   if (categoryFilter !== 'ALL') {
-    // 🚀 FIXED: Included industry_tag in the filter evaluation
     processedData = processedData.filter(store => (store.industry_tag === categoryFilter) || (store.category === categoryFilter) || (store.industry === categoryFilter));
   }
 
@@ -59,7 +73,6 @@ export default function StorefrontsManager({ initialData }: { initialData: any[]
       let bValue = b[sortConfig.key] || '';
 
       if (sortConfig.key === 'category') {
-        // 🚀 FIXED: Included industry_tag in the sort evaluation
         aValue = a.industry_tag || a.category || a.industry || '';
         bValue = b.industry_tag || b.category || b.industry || '';
       }
@@ -89,19 +102,18 @@ export default function StorefrontsManager({ initialData }: { initialData: any[]
   };
 
   const renderTableRow = (store: any) => {
-    const status = store.status as StorefrontStatus;
+    const status = (store.status || 'BUILDING') as StorefrontStatus;
     const config = STOREFRONT_LIFECYCLE[status] || { 
       label: store.status || 'UNKNOWN', 
       badgeColor: 'bg-zinc-800 text-zinc-400 border-zinc-700',
       isPubliclyVisible: false
     };
 
-    const isOffline = status === 'MAINTENANCE' || status === 'HIDDEN' || status === 'CANCELED';
-    const isPortalActive = status === 'ACTIVE' || status === 'LIVE';
-    
-    // 🚀 NEW: Differentiating between truly Live and just Staging Preview
-    const isLive = status === 'ACTIVE' || status === 'LIVE';
-    const isPreview = status === 'IN REVIEW' || status === 'APPROVED';
+    const rawStatus = status as string;
+    const isOffline = rawStatus === 'MAINTENANCE' || rawStatus === 'HIDDEN' || rawStatus === 'CANCELED' || rawStatus === 'ON_HOLD';
+    const isPortalActive = rawStatus === 'ACTIVE' || rawStatus === 'LIVE';
+    const isLive = rawStatus === 'ACTIVE' || rawStatus === 'LIVE';
+    const isPreview = rawStatus === 'IN REVIEW' || rawStatus === 'APPROVED' || rawStatus === 'IN_REVIEW';
     const hasExternalLink = isLive || isPreview;
 
     const formattedDate = new Date(store.created_at).toLocaleDateString('en-US', {
@@ -110,7 +122,6 @@ export default function StorefrontsManager({ initialData }: { initialData: any[]
       year: 'numeric'
     });
 
-    // 🚀 FIXED: Pointing directly to industry_tag
     const displayCategory = store.industry_tag || store.category || store.industry || '--';
     const displayPlan = store.plan_tier || store.selected_plan || '--';
 
@@ -121,6 +132,7 @@ export default function StorefrontsManager({ initialData }: { initialData: any[]
           <div className="flex items-center gap-4">
             <div className="w-10 h-10 rounded-md bg-zinc-900 border border-zinc-800 flex items-center justify-center shrink-0 overflow-hidden">
               {store.brand_logo ? (
+                // eslint-disable-next-line @next/next/no-img-element
                 <img src={store.brand_logo} alt="Logo" className="w-full h-full object-cover" />
               ) : (
                 <span className="font-bold text-sm text-zinc-600 uppercase">
@@ -149,7 +161,7 @@ export default function StorefrontsManager({ initialData }: { initialData: any[]
           </span>
         </td>
         
-        <td className="px-6 py-4 hidden sm:table-cell">
+        <td className="px-6 py-4">
           <span className={`inline-flex items-center px-2.5 py-1 rounded-md text-[10px] font-black uppercase tracking-widest border ${config.badgeColor}`}>
             {config.label}
           </span>
@@ -173,7 +185,6 @@ export default function StorefrontsManager({ initialData }: { initialData: any[]
               </Link>
             )}
 
-            {/* 🚀 FIXED: Compact, accurate External Link Button */}
             {hasExternalLink ? (
                <a 
                 href={`https://storefronts.alternativesolutions.io/${store.slug}`}
@@ -204,6 +215,15 @@ export default function StorefrontsManager({ initialData }: { initialData: any[]
             >
               <Settings size={14} />
             </Link>
+
+            <button 
+              onClick={() => handleDelete(store.id, store.business_name)}
+              disabled={isDeleting === store.id}
+              className="p-1.5 rounded-md text-rose-400 bg-rose-500/10 hover:bg-rose-500/20 border border-rose-500/20 transition-all flex items-center justify-center disabled:opacity-50 cursor-pointer"
+              title="Delete Storefront"
+            >
+              {isDeleting === store.id ? <Loader2 size={14} className="animate-spin" /> : <Trash2 size={14} />}
+            </button>
           </div>
         </td>
       </tr>
@@ -213,6 +233,7 @@ export default function StorefrontsManager({ initialData }: { initialData: any[]
   return (
     <div className="max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-6 space-y-6">
       
+      {/* HEADER */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-zinc-800/50">
         <div>
           <h1 className="text-2xl font-black text-white uppercase tracking-tight">Storefront Engine</h1>
@@ -221,8 +242,8 @@ export default function StorefrontsManager({ initialData }: { initialData: any[]
         <NewStorefrontModal />
       </div>
 
+      {/* CONTROLS & FILTERS */}
       <div className="flex flex-col space-y-3">
-        
         <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
           <div className="flex flex-wrap items-center gap-2 bg-zinc-900/50 p-1 rounded-lg border border-zinc-800">
             <button 
@@ -257,8 +278,8 @@ export default function StorefrontsManager({ initialData }: { initialData: any[]
           </div>
         </div>
 
+        {/* DROPDOWN FILTERS */}
         <div className="flex flex-wrap items-center justify-start lg:justify-end gap-3 pt-2">
-          
           <div className="relative flex-1 sm:flex-none">
             <Filter className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-zinc-500 pointer-events-none" />
             <select
@@ -300,10 +321,10 @@ export default function StorefrontsManager({ initialData }: { initialData: any[]
               ))}
             </select>
           </div>
-
         </div>
       </div>
 
+      {/* TABLE VIEW */}
       <div className="bg-stardust border border-zinc-800/80 rounded-xl shadow-xl p-4 sm:p-6">
         <div className="overflow-x-auto rounded-lg border border-zinc-800/50 bg-zinc-950/50">
           {processedData.length === 0 ? (
@@ -314,7 +335,6 @@ export default function StorefrontsManager({ initialData }: { initialData: any[]
             <table className="w-full text-left border-collapse whitespace-nowrap select-none">
               <thead>
                 <tr className="border-b border-zinc-800 bg-zinc-900/30 text-[10px] font-black uppercase tracking-widest text-zinc-500">
-                  
                   <th 
                     className="px-6 py-4 cursor-pointer hover:bg-zinc-800/50 transition-colors group"
                     onClick={() => requestSort('business_name')}
@@ -346,7 +366,7 @@ export default function StorefrontsManager({ initialData }: { initialData: any[]
                   </th>
 
                   <th 
-                    className="px-6 py-4 hidden sm:table-cell cursor-pointer hover:bg-zinc-800/50 transition-colors group"
+                    className="px-6 py-4 cursor-pointer hover:bg-zinc-800/50 transition-colors group"
                     onClick={() => requestSort('status')}
                   >
                     <div className="flex items-center gap-2">
