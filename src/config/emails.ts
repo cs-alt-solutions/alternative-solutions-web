@@ -1,5 +1,3 @@
-// src/config/emails.ts
-
 export const EMAIL_ASSETS = {
   LOGO_URL: 'https://alternativesolutions.io/logo.png', // Update to full CDN URL for production
 };
@@ -11,7 +9,6 @@ export const BRAND_CLASSES = {
   TEXT_MUTED: 'text-zinc-500 text-xs text-center',
 };
 
-// Single Source of Truth for the Sign-off
 const STANDARD_SIGNATURE = {
   SIGN_OFF: "Talk soon,",
   NAME: "Courtney",
@@ -22,35 +19,32 @@ export const EMAIL_COPY = {
   
   // 1. THE INTAKE PIPELINE
   STOREFRONT_CONFIRMATION: {
-    HEADER: "Application Received",
-    TITLE_START: "Let's build, ",
-    BODY_START: "I've got your details for ",
-    BODY_END: ". I'm diving in and starting to piece things together.",
+    HEADER: "Application Locked In",
+    TITLE_START: "Sweet. Let's do this, ",
+    BODY_START: "I've got your application for ",
+    BODY_END: " safe and sound. First off, I am super pumped you reached out.",
     RECEIPT_TITLE: "Quick Summary",
-    REC_INFRA: "Selected Plan:",
-    PLEDGE_TITLE: "Just A Heads Up",
-    PLEDGE_BODY: "As a reminder, you aren't paying for anything today. I'm going to build a working prototype based on the info you sent over. We only lock in your subscription when you review the draft and say, 'Yeah, this is pretty cool. Let's go.'",
+    PLEDGE_TITLE: "How I Operate",
+    PLEDGE_BODY: "I am a solo architect. There is no giant corporate team behind a curtain reading these—it's literally just me. I review every single submission personally to make sure my foundation is the exact right fit for your business.",
     NEXT_TITLE: "What Happens Next?",
-    NEXT_BODY: "Hang tight. I'm looking over your links and laying down the groundwork. I'll reach out shortly with a private link for you to check out.",
+    NEXT_BODY: "As mentioned on the launch page, my drafting table is currently at maximum capacity, so you are officially in the priority wait queue. The exact moment a build slot opens up, I will pull your file, review your details, and reach out to get started.",
+    PREP_TITLE: "Your Homework",
+    PREP_BODY: "While you wait, you can start gathering your raw materials. Create a folder on your computer and drop in your highest resolution logo, a photo of yourself (for the founder bio), and your core business details (hours, location). When your build slot opens, you will unlock a secure Media Vault to drop those files directly into my engineering pipeline.",
     ...STANDARD_SIGNATURE
   },
   
   ADMIN_INTAKE: {
     SUBJECT: "🚨 New Application: {businessName}",
-    HEADER_TITLE: "NEW STOREFRONT INTAKE",
-    GREETING: "A new prospect has submitted their basic details.",
-    BODY: "Review their identity and footprint below before logging into the Command Center to initiate the discovery phase.",
+    HEADER_TITLE: "NEW LEAD ALERT",
+    GREETING: "Sweet! A new application just dropped.",
+    BODY: "Here is everything they sent over. They are currently hanging out in the wait queue until you are ready to review and approve their build.",
     SECTIONS: {
-      IDENTITY: "Identity & Routing",
-      PRIORITY_WARNING: "⚠️ Priority Queue Fast-Track Requested ($1 Upgrade)"
+      IDENTITY: "The Details",
     },
     LABELS: {
       BUSINESS_NAME: "Business Name:",
       CONTACT: "Point of Contact:",
       EMAIL: "Email Routing:",
-      PHONE: "Phone Number:",
-      TIER: "Requested Tier:",
-      DOMAIN: "Existing Domain:",
       SOCIALS: "Digital Footprint & Socials:"
     }
   },

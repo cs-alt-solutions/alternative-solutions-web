@@ -5,24 +5,16 @@ import React, { createContext, useContext, useState } from 'react';
 export interface WizardData {
   name: string;
   email: string;
-  phone: string;
   businessName: string;
-  description?: string; 
-  headlineMode: 'custom' | 'delegate' | null;
-  tagline: string;
-  subtext: string;
-  originStory: string; 
+  
+  // Step 2: Network
   activeSocials: Record<string, boolean>;
   socialHandles: Record<string, string>;
-  themeStyle: string;
-  brandColor: string;
-  heroLayout: string;
-  storyLayout: string;
-  contentLayout: string;
+
+  // Step 3: Scope
   targetPlan: string;
   customDomain: string; 
   priorityQueue: boolean; 
-  finalNotes: string; 
   isPledged: boolean; 
 }
 
@@ -40,15 +32,18 @@ const WizardContext = createContext<WizardContextType | undefined>(undefined);
 
 export function WizardProvider({ children }: { children: React.ReactNode }) {
   const [currentStep, setCurrentStep] = useState(1);
-  const totalSteps = 3; // 🚀 REDUCED DOWN TO 3 STEPS!
+  const totalSteps = 3; 
   
   const [formData, setFormData] = useState<WizardData>({
-    name: '', email: '', phone: '', businessName: '', description: '', 
-    headlineMode: 'custom', tagline: '', subtext: '', originStory: '',
-    activeSocials: {}, socialHandles: {},
-    themeStyle: 'industrial', brandColor: 'cyan', heroLayout: 'centered', 
-    storyLayout: 'classic-split', contentLayout: 'stacked', targetPlan: 'standard',
-    customDomain: '', priorityQueue: false, finalNotes: '', isPledged: false,
+    name: '', 
+    email: '', 
+    businessName: '', 
+    activeSocials: {}, 
+    socialHandles: {},
+    targetPlan: 'standard',
+    customDomain: '', 
+    priorityQueue: false, 
+    isPledged: false,
   });
 
   const updateForm = (updates: Partial<WizardData>) => {

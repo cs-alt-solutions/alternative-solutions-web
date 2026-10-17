@@ -46,12 +46,11 @@ export async function submitStorefrontApplication(formData: FormData) {
     const bgUrl = await uploadApplicationAsset(bgFile, `${safeProjectPrefix}-hero`);
     const aboutUrl = await uploadApplicationAsset(aboutFile, `${safeProjectPrefix}-about`);
 
-    // 🚀 THE FIX: Aggressive fallback to guarantee this is NEVER null or empty
     const emailStr = formData.get('email')?.toString() || formData.get('applicant_email')?.toString() || 'missing@email.com';
 
     const payload = {
       applicant_name: formData.get('name')?.toString() || '',
-      applicant_email: emailStr, // Mapped securely
+      applicant_email: emailStr, 
       applicant_phone: formData.get('phone')?.toString() || '',
       business_name: businessName,
       business_description: formData.get('description')?.toString() || '',
@@ -82,8 +81,7 @@ export async function submitStorefrontApplication(formData: FormData) {
           subject: `Application received: ${payload.business_name}`,
           react: StorefrontConfirmationEmail({ 
             name: payload.applicant_name, 
-            projectName: payload.business_name,
-            selectedPlan: payload.selected_plan
+            projectName: payload.business_name
           })
         });
 
@@ -94,12 +92,8 @@ export async function submitStorefrontApplication(formData: FormData) {
           react: AdminIntakeEmail({
             name: payload.applicant_name,
             email: payload.applicant_email,
-            phone: payload.applicant_phone,
-            socials: formData.get('socials')?.toString() || '',
-            existingWebsite: payload.existing_domain,
-            businessName: payload.business_name,
-            selectedPlan: payload.selected_plan,
-            isPriority: payload.is_priority
+            socials: formData.get('socials')?.toString() || 'None provided',
+            businessName: payload.business_name
           })
         });
       }

@@ -49,40 +49,15 @@ export const WIZARD_COPY = {
   STEP_3: {
     TITLE_MAIN: "The ",
     TITLE_HIGHLIGHT: "Launch.",
-    SUBTITLE_START: "Last step! Choose your build lane. ",
-    SUBTITLE_HIGHLIGHT: "You get the same high-performance engine.",
-    SUBTITLE_END: " The only difference is how fast you want it.",
-    EMPTY_PLANS: "No active plans found in the database.",
+    SUBTITLE_START: "Last step. ",
+    SUBTITLE_HIGHLIGHT: "Review the rules of engagement.",
+    SUBTITLE_END: " You are not paying for anything today. This is strictly an application to see if we are a good fit.",
     
-    LANES: [
-      {
-        id: 'standard',
-        name: "The Prototype",
-        price: "$0",
-        suffix: " today",
-        description: "I want to see a working draft before I pay anything. Put me in the standard build queue.",
-        features: [
-          "No upfront payment",
-          "Standard queue priority",
-          "Pay only after you approve the draft"
-        ],
-        available: true,
-      },
-      {
-        id: 'priority',
-        name: "The Fast-Track",
-        price: "$5",
-        suffix: " / mo",
-        description: "I'm ready to build. Jump me to the front of the line. I will receive a secure portal and checkout link within 72 hours.",
-        features: [
-          "Bypass the standard queue",
-          "Portal setup within 72 hours",
-          "Priority build turnaround"
-        ],
-        available: true,
-        recommended: true
-      }
-    ],
+    CAPACITY_BANNER: {
+      STATUS: "LIVE ENGINE STATUS: AT CAPACITY",
+      BODY: "My drafting table is currently full with active client builds. Please still submit your application! You will be placed in a brief wait queue, and I will pull your file the exact moment a build slot opens."
+    },
+    
     PILLARS_TITLE: "Rules of Engagement",
     PILLARS: [
       {
@@ -91,24 +66,23 @@ export const WIZARD_COPY = {
       },
       {
         title: "The Forever Rate",
-        body: "Your legacy pricing is locked in forever for the specific tier you select today. As long as your subscription stays active, your foundational rate won't increase when public prices go up. (If you upgrade to a higher tier later or require massive database scaling, standard upgrade rates will apply to those new features)."
+        body: "If your application is approved, your legacy pricing is locked in forever. As long as your subscription stays active, your foundational rate won't increase when public prices go up."
       },
       {
-        title: "The Turnaround",
-        body: "Fast-Track builds jump directly to the front of the line. Standard queue builds are processed as quickly as possible in the order they are received."
+        title: "The Waitlist & Capacity",
+        body: "To ensure absolute quality, I strictly cap my active build queue. If my drafting table is currently full, your application will be placed on the waitlist until a slot opens."
       }
     ],
     PLEDGE: {
-      CHECKBOX_LABEL: "I understand the rules of engagement and I'm ready to build."
+      CHECKBOX_LABEL: "I understand the rules of engagement and want to submit my project for review."
     },
     ACTIONS: {
       BACK: "Back",
-      SUBMIT_STANDARD: "Submit Application",
-      SUBMIT_PRIORITY: "Request Fast-Track",
+      SUBMIT: "Submit Application",
       SUBMIT_LOADING: "Transmitting..."
     },
     ALERTS: {
-      SUCCESS: "Sweet! Your application is locked in. I'm taking over the heavy lifting.",
+      SUCCESS: "Sweet! Your application is in the queue. I'll review it and reach out shortly.",
       ERROR: "Whoops, transmission failed. Check the console."
     }
   },

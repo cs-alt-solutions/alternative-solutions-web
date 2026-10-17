@@ -1,4 +1,3 @@
-/* src/app/actions/emails.ts */
 'use server';
 
 import { Resend } from 'resend';
@@ -32,7 +31,7 @@ export async function dispatchSystemEmail({ to, subject, type, data }: DispatchP
   try {
     let emailComponent: React.ReactElement;
 
-    // 🚀 THE INTERCEPTOR: Overrides the 'to' address if running locally
+    // THE INTERCEPTOR: Overrides the 'to' address if running locally
     const isLocal = process.env.NODE_ENV === 'development';
     const testEmail = process.env.LOCAL_TEST_EMAIL;
     const finalRecipient = (isLocal && testEmail) ? testEmail : to;

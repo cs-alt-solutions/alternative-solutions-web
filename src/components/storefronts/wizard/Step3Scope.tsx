@@ -2,12 +2,10 @@
 
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { ArrowLeft, CheckCircle2, ShieldCheck, Loader2, Shield, Wallet, Terminal, Zap } from 'lucide-react';
+import { ArrowLeft, CheckCircle2, Loader2, Shield, Wallet, Terminal, Zap, AlertTriangle } from 'lucide-react';
 import { WIZARD_COPY } from '@/config/wizard';
 import { useWizard } from './core/WizardContext';
 import { submitStorefrontApplication } from '@/app/actions/storefront_applications';
-
-type LaneItem = { id: string; name: string; price: string; suffix: string; description: string; features: string[]; available: boolean; recommended?: boolean; };
 
 const PILLAR_ICONS = [
   { Icon: Terminal, color: "text-amber-400" },
@@ -18,51 +16,34 @@ const PILLAR_ICONS = [
 export default function Step3Scope() {
   const router = useRouter();
   const { formData, updateForm, prevStep } = useWizard();
-  
   const copy = WIZARD_COPY.STEP_3;
   
-  const [selectedLaneId, setSelectedLaneId] = useState<string>('standard');
   const [isPledged, setIsPledged] = useState(Boolean(formData.isPledged));
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const canProceed = selectedLaneId !== '' && isPledged;
-
   const handleSubmit = async () => {
     setIsSubmitting(true);
-    const isPriority = selectedLaneId === 'priority';
     
     updateForm({
-      targetPlan: 'standard', // Universal base tier
-      priorityQueue: isPriority,
+      targetPlan: 'standard', 
+      priorityQueue: false,
       isPledged: true
     });
 
     try {
       const payload = new FormData();
+      
       payload.append('name', formData.name || '');
       payload.append('email', formData.email || '');
-      payload.append('phone', formData.phone || ''); 
       payload.append('projectName', formData.businessName || '');
       payload.append('socials', JSON.stringify(formData.socialHandles || {}));
       
       payload.append('selectedPlan', 'standard'); 
-      payload.append('priorityQueue', isPriority ? 'true' : 'false');
-      
-      // Sending blank deprecation values to satisfy database constraints
-      payload.append('description', ''); 
-      payload.append('selectedVibe', 'clueless'); 
-      payload.append('brandColor', 'cyan'); 
-      payload.append('heroLayout', 'centered'); 
-      payload.append('storyLayout', 'classic-split'); 
-      payload.append('contentLayout', 'stacked'); 
-      payload.append('tagline', ''); 
-      payload.append('wantsCustom', 'false'); 
-      payload.append('existingDomain', '');
+      payload.append('priorityQueue', 'false');
       
       const result = await submitStorefrontApplication(payload);
       
       if (result.success) {
-        // 🚀 Both lanes now just submit the application and show success
         alert(copy.ALERTS?.SUCCESS || "Application successfully submitted!");
         setTimeout(() => router.push('/'), 1500);
       } else {
@@ -78,6 +59,7 @@ export default function Step3Scope() {
   return (
     <div className="w-full max-w-4xl mx-auto animate-in fade-in duration-500 flex flex-col space-y-10 pb-12">
       
+      {/* HEADER */}
       <div className="space-y-4 text-center">
         <h1 className="text-4xl md:text-5xl font-black tracking-tight text-white uppercase leading-none drop-shadow-md">
           {copy.TITLE_MAIN} <span className="text-cyan-400">{copy.TITLE_HIGHLIGHT}</span>
@@ -87,55 +69,24 @@ export default function Step3Scope() {
         </p>
       </div>
 
-      <div className="space-y-8 w-full">
-        {/* THE BUILD LANES */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 lg:gap-8 max-w-3xl mx-auto">
-          {(copy.LANES || []).map((lane: LaneItem) => {
-            const isSelected = selectedLaneId === lane.id;
-            
-            return (
-              <div 
-                key={lane.id}
-                onClick={() => setSelectedLaneId(lane.id)}
-                className={`relative flex flex-col rounded-2xl p-6 transition-all duration-300 cursor-pointer ${
-                  isSelected 
-                    ? 'bg-zinc-900 border-2 border-cyan-400 shadow-[0_0_30px_rgba(34,211,238,0.15)] scale-[1.02] z-10' 
-                    : 'bg-zinc-950/80 border border-zinc-800 hover:border-zinc-600 hover:bg-zinc-900/50'
-                }`}
-              >
-                {lane.recommended && (
-                  <div className="absolute -top-3 inset-x-0 flex justify-center z-20">
-                    <span className="bg-cyan-400 text-zinc-950 text-[10px] font-black uppercase tracking-widest px-3 py-1 rounded-full shadow-md">
-                      Fast Pass
-                    </span>
-                  </div>
-                )}
-                {isSelected && (
-                  <div className="absolute top-4 right-4 text-cyan-400 animate-in zoom-in duration-200">
-                    <CheckCircle2 className="w-6 h-6 fill-cyan-400/20" />
-                  </div>
-                )}
-                <div className="mb-6">
-                  <h3 className={`text-xl font-black uppercase tracking-wide ${isSelected ? 'text-white' : 'text-zinc-300'}`}>{lane.name}</h3>
-                  <div className="mt-2 flex items-baseline gap-1">
-                    <span className={`text-4xl font-black ${isSelected ? 'text-cyan-400' : 'text-white'}`}>
-                      {lane.price}
-                    </span>
-                    <span className="text-xs text-zinc-500 font-medium uppercase tracking-widest">{lane.suffix}</span>
-                  </div>
-                  <p className="text-xs text-zinc-400 mt-4 leading-relaxed h-10">{lane.description}</p>
-                </div>
-                <div className="flex-1 space-y-3 pt-6 border-t border-zinc-800/60">
-                  {lane.features.map((feature: string, idx: number) => (
-                    <div key={idx} className="flex items-start gap-2.5 text-xs text-zinc-300">
-                      <ShieldCheck className={`w-4 h-4 shrink-0 ${isSelected ? 'text-cyan-400' : 'text-zinc-600'}`} />
-                      <span className="leading-tight">{feature}</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            );
-          })}
+      {/* THE LIVE CAPACITY BANNER (Krispy Kreme Style) */}
+      <div className="max-w-3xl mx-auto w-full animate-in slide-in-from-bottom-4 duration-500">
+        <div className="bg-amber-500/10 border border-amber-500/30 rounded-2xl p-6 flex flex-col sm:flex-row items-center sm:items-start gap-5 shadow-[0_0_30px_rgba(245,158,11,0.1)] relative overflow-hidden">
+          {/* Subtle glow effect behind the icon */}
+          <div className="absolute top-0 left-0 w-32 h-32 bg-amber-500/20 rounded-full blur-[50px] -translate-x-1/2 -translate-y-1/2 pointer-events-none" />
+          
+          <div className="p-3 bg-amber-500/20 rounded-xl shrink-0 border border-amber-500/40 relative z-10">
+            <AlertTriangle className="text-amber-400 w-6 h-6 animate-pulse" />
+          </div>
+          
+          <div className="text-center sm:text-left relative z-10">
+            <h3 className="text-sm font-black text-amber-400 uppercase tracking-widest mb-1">
+              {copy.CAPACITY_BANNER?.STATUS || "LIVE ENGINE STATUS: AT CAPACITY"}
+            </h3>
+            <p className="text-xs text-amber-100/70 leading-relaxed font-medium">
+              {copy.CAPACITY_BANNER?.BODY || "My drafting table is currently full with active client builds. Please still submit your application! You will be placed in a brief wait queue, and I will pull your file the exact moment a build slot opens."}
+            </p>
+          </div>
         </div>
       </div>
 
@@ -191,9 +142,9 @@ export default function Step3Scope() {
         </button>
         
         <button 
-          type="button" onClick={handleSubmit} disabled={!canProceed || isSubmitting}
+          type="button" onClick={handleSubmit} disabled={!isPledged || isSubmitting}
           className={`px-10 py-4 rounded-full font-black text-xs uppercase tracking-widest flex items-center justify-center gap-3 transition-all ${
-            canProceed
+            isPledged
               ? 'text-zinc-950 bg-emerald-500 hover:bg-emerald-400 shadow-[0_0_20px_rgba(16,185,129,0.4)] hover:scale-[1.05] cursor-pointer' 
               : 'bg-zinc-900 border border-zinc-800 text-zinc-600 cursor-not-allowed'
           }`}
@@ -203,7 +154,7 @@ export default function Step3Scope() {
           ) : (
             <>
               <Shield className="w-4 h-4" /> 
-              {selectedLaneId === 'priority' ? copy.ACTIONS.SUBMIT_PRIORITY : copy.ACTIONS.SUBMIT_STANDARD}
+              {copy.ACTIONS.SUBMIT}
             </>
           )}
         </button>

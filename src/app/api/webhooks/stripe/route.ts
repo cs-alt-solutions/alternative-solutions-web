@@ -4,8 +4,6 @@ import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import Stripe from 'stripe';
 import { Resend } from 'resend';
-import * as React from 'react';
-import PortalInviteEmail from '@/components/emails/PortalInviteEmail';
 
 const resend = new Resend(process.env.RESEND_API_KEY!);
 
@@ -16,15 +14,13 @@ export async function POST(req: Request) {
     return new NextResponse('Configuration Error', { status: 500 });
   }
 
-  // 1. Initialize Stripe
   const stripe = new Stripe(secretKey, {
-    apiVersion: '2026-02-25.clover', 
+    apiVersion: '2026-02-25.clover',
   });
 
-  // 2. Initialize a secure Supabase Admin connection (Bypasses RLS)
   const supabaseAdmin = createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL as string,
-    process.env.SUPABASE_SERVICE_ROLE_KEY as string
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!
   );
 
   const body = await req.text();
@@ -37,14 +33,13 @@ export async function POST(req: Request) {
     if (!signature || !process.env.STRIPE_WEBHOOK_SECRET) {
       throw new Error('Missing Stripe signature or webhook secret.');
     }
-    
     event = stripe.webhooks.constructEvent(body, signature, process.env.STRIPE_WEBHOOK_SECRET);
   } catch (error: any) {
     console.error('Webhook signature verification failed.', error.message);
     return new NextResponse(`Webhook Error: ${error.message}`, { status: 400 });
   }
 
-  // 3. IDEMPOTENCY CHECK
+  // Idempotency: Ignore duplicate Stripe deliveries
   const { data: existingWebhook } = await supabaseAdmin
     .from('processed_webhooks')
     .select('id')
@@ -52,7 +47,6 @@ export async function POST(req: Request) {
     .maybeSingle();
 
   if (existingWebhook) {
-    console.log(`Duplicate webhook ignored: ${event.id}`);
     return NextResponse.json({ received: true });
   }
 
@@ -61,175 +55,169 @@ export async function POST(req: Request) {
   ]);
 
   // ====================================================================
-  // THE TRAFFIC DIRECTOR
+  // 1. INITIAL CHECKOUT (Client Pays Upfront)
   // ====================================================================
   if (event.type === 'checkout.session.completed') {
     const session = event.data.object as Stripe.Checkout.Session;
-    
-    // Look for the Storefront ID/Slug AND the Plan Tier
     let targetIdentifier = session.client_reference_id || session.metadata?.storefront_id;
-    let planTier = session.metadata?.tier;
-    
-    // Always check the subscription object as a fallback for metadata
-    if (session.subscription) {
-       const subscription = await stripe.subscriptions.retrieve(session.subscription as string);
-       targetIdentifier = targetIdentifier || subscription.metadata?.storefront_id;
-       planTier = planTier || subscription.metadata?.tier;
+
+    if (!targetIdentifier && session.subscription) {
+      const subscription = await stripe.subscriptions.retrieve(session.subscription as string);
+      targetIdentifier = subscription.metadata?.storefront_id;
     }
 
-    // ------------------------------------------------------------------
-    // PATH A: THE STOREFRONT SAAS ENGINE
-    // ------------------------------------------------------------------
     if (targetIdentifier) {
-      console.log(`💳 Processing SaaS Payment for Storefront: ${targetIdentifier}`);
-      
       const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(targetIdentifier);
       const queryColumn = isUUID ? 'id' : 'slug';
 
-      const { data: storeData, error: fetchError } = await supabaseAdmin
+      const { data: storeData } = await supabaseAdmin
         .from('storefronts')
-        .select('id, audit_notes, contact_email, business_name, contact_name, plan_tier') // Fetched plan_tier
+        .select('*')
         .eq(queryColumn, targetIdentifier)
         .single();
 
-      if (fetchError) {
-        console.error("Storefront Database Fetch Failed:", fetchError);
-        return new NextResponse('Database Error', { status: 500 });
-      }
+      if (storeData) {
+        const clientEmail = session.customer_details?.email || storeData.contact_email;
+        const requestedTier = session.metadata?.tier || storeData.plan_tier || 'Standard';
 
-      const clientEmail = session.customer_details?.email || storeData?.contact_email;
-      const clientName = storeData?.contact_name || session.customer_details?.name || 'Operator';
-      const origin = process.env.NEXT_PUBLIC_SITE_URL || 'https://alternativesolutions.io';
-
-      try {
-        // 🚀 UPGRADE: Ensure plan_tier is updated correctly
+        // Update Storefront: Advance to Work Queue (PENDING_BUILD)
         await supabaseAdmin
           .from('storefronts')
-          .update({ 
-             status: 'ACTIVE',
-             stripe_customer_id: session.customer as string,
-             stripe_subscription_id: session.subscription as string,
-             plan_tier: planTier || storeData.plan_tier || 'Foundation' 
+          .update({
+            status: 'PENDING_BUILD',
+            plan_tier: requestedTier,
+            stripe_customer_id: session.customer as string,
+            stripe_subscription_id: session.subscription as string,
+            updated_at: new Date().toISOString()
           })
-          .eq('id', storeData.id);
+          .eq(queryColumn, targetIdentifier);
 
-        const magicLinkResponse = await supabaseAdmin.auth.admin.generateLink({
-           type: 'magiclink',
-           email: clientEmail,
-           options: { redirectTo: `${origin}/api/auth/callback` }
-        });
+        // Send Welcome Magic Link to Client
+        if (clientEmail) {
+          try {
+            const { data: linkData } = await supabaseAdmin.auth.admin.generateLink({
+              type: 'magiclink',
+              email: clientEmail,
+              options: {
+                redirectTo: `${process.env.NEXT_PUBLIC_BASE_URL || 'https://alternativesolutions.io'}/portal/${storeData.id}`
+              }
+            });
 
-        const magicLink = magicLinkResponse.data?.properties?.action_link || `${origin}/login`;
-
-        if (magicLinkResponse.data?.user?.id) {
-          await supabaseAdmin.from('profiles').upsert({
-            id: magicLinkResponse.data.user.id,
-            email: clientEmail,
-            full_name: clientName,
-            role: 'CLIENT_OWNER',
-            workspace_id: storeData.id
-          }, { onConflict: 'id' });
+            if (linkData?.properties?.action_link) {
+              await resend.emails.send({
+                from: process.env.RESEND_FROM_EMAIL || "portal@alternativesolutions.io",
+                to: [clientEmail],
+                subject: `Workspace Activated: ${storeData.business_name}`,
+                html: `
+                  <div style="font-family: sans-serif; background-color: #09090b; color: #ffffff; padding: 32px; border-radius: 12px;">
+                    <h2 style="color: #22d3ee; margin-top: 0;">Payment Cleared!</h2>
+                    <p style="color: #a1a1aa;">Your subscription for <strong>${storeData.business_name}</strong> is confirmed and your build is officially in the queue.</p>
+                    <a href="${linkData.properties.action_link}" style="display: inline-block; background-color: #22d3ee; color: #000000; font-weight: bold; padding: 12px 24px; border-radius: 8px; text-decoration: none; margin-top: 16px;">Enter Your Workspace</a>
+                  </div>
+                `
+              });
+            }
+          } catch (e) {
+            console.error('Magic link dispatch error:', e);
+          }
         }
 
-        await resend.emails.send({
-          from: process.env.EMAIL_FROM_ADDRESS || 'Alternative Solutions <system@alternativesolutions.io>',
-          to: clientEmail,
-          subject: 'Access Granted: Secure Workspace',
-          react: React.createElement(PortalInviteEmail, {
-            clientName: clientName,
-            workspaceName: storeData.business_name || 'Your Workspace',
-            magicLink: magicLink,
-            role: 'Client Owner'
-          })
-        });
-
+        // Notify Admin: Telemetry Alert
         await resend.emails.send({
           from: process.env.RESEND_FROM_EMAIL || "portal@alternativesolutions.io",
           to: [process.env.ADMIN_EMAIL || 'courtney@alternativesolutions.io'],
-          subject: `💰 NEW SUBSCRIBER: ${storeData.business_name || 'A Client'} just paid!`,
+          subject: `💳 PAID INTAKE: ${storeData.business_name} ($${session.amount_total ? session.amount_total / 100 : '5'}/mo)`,
           html: `
-            <div style="font-family: monospace; background-color: #09090b; color: #10b981; padding: 30px; border-radius: 10px; border: 1px solid #047857;">
-              <h1 style="color: #34d399; text-transform: uppercase;">Payment Cleared!</h1>
-              <p style="color: #a1a1aa; font-size: 16px;">Hell yes. <strong>${storeData.business_name}</strong> (${clientEmail}) just locked in their subscription.</p>
-              <ul style="color: #d4d4d8; padding-left: 20px;">
-                <li><strong>Status:</strong> Upgraded to ACTIVE</li>
-                <li><strong>Plan Tier:</strong> ${planTier || storeData.plan_tier || 'Foundation'}</li>
-                <li><strong>Portal:</strong> Unlocked & Magic Link Sent</li>
-                <li><strong>Action Required:</strong> Log into your Admin Dashboard and begin final deployment prep.</li>
-              </ul>
-              <a href="${origin}/dashboard/storefronts" style="display: inline-block; margin-top: 20px; padding: 12px 24px; background-color: #10b981; color: #000; text-decoration: none; font-weight: bold; border-radius: 6px; text-transform: uppercase;">Open Command Center</a>
+            <div style="font-family: monospace; background-color: #09090b; color: #10b981; padding: 24px; border-radius: 8px; border: 1px solid #059669;">
+              <h2 style="color: #34d399; margin: 0 0 12px 0;">New Paid Client in Work Queue</h2>
+              <p><strong>Business:</strong> ${storeData.business_name}</p>
+              <p><strong>Client:</strong> ${storeData.primary_contact || clientEmail}</p>
+              <p><strong>Tier:</strong> ${requestedTier}</p>
+              <p><strong>Status:</strong> PENDING_BUILD</p>
+              <a href="${process.env.NEXT_PUBLIC_BASE_URL || 'https://alternativesolutions.io'}/dashboard/storefronts" style="display: inline-block; margin-top: 16px; background-color: #10b981; color: #000000; font-weight: bold; padding: 10px 20px; border-radius: 6px; text-decoration: none;">View Work Queue</a>
             </div>
           `
         });
-
-        console.log(`🚨 Admin Alert dispatched to HQ for ${storeData.business_name}`);
-      } catch (emailErr) {
-        console.error("Failed to generate or send Magic Link:", emailErr);
       }
-
-      console.log(`✅ Storefront [${targetIdentifier}] successfully activated and logged!`);
       return NextResponse.json({ received: true });
     }
+  }
 
-    // ------------------------------------------------------------------
-    // PATH B: GRASSROOTS FOUNDATION SUPPORTERS
-    // ------------------------------------------------------------------
-    console.log(`🌱 Processing General Supporter Payment (No Storefront Slug found).`);
-    
-    const projectField = session.custom_fields?.find(f => f.key === 'project_name');
-    const projectName = projectField?.text?.value || 'Organic';
-    
-    const displayField = session.custom_fields?.find(f => 
-      f.label.custom?.toLowerCase().includes('display') || 
-      f.label.custom?.toLowerCase().includes('anonymous')
-    );
-    
-    const customDisplayName = displayField?.text?.value;
-    const customerEmail = session.customer_details?.email?.toLowerCase().trim();
-    const customerName = session.customer_details?.name;
-    const amountTotal = (session.amount_total || 0) / 100;
-    const isSubscription = session.mode === 'subscription';
+  // ====================================================================
+  // 2. SUBSCRIPTION UPDATES (Tier Switches: $5 -> $15, Cancellations)
+  // ====================================================================
+  if (event.type === 'customer.subscription.updated' || event.type === 'customer.subscription.deleted') {
+    const subscription = event.data.object as Stripe.Subscription;
+    const customerId = subscription.customer as string;
 
-    let finalDisplayName = 'Anonymous Builder';
-    if (customDisplayName && customDisplayName.toLowerCase() !== 'anonymous') {
-      finalDisplayName = customDisplayName;
-    } else if (customDisplayName?.toLowerCase() === 'anonymous') {
-      finalDisplayName = 'Anonymous';
-    } else if (customerName) {
-      finalDisplayName = customerName;
-    }
+    const { data: store } = await supabaseAdmin
+      .from('storefronts')
+      .select('*')
+      .eq('stripe_customer_id', customerId)
+      .maybeSingle();
 
-    if (customerEmail) {
-      let tier = isSubscription ? (amountTotal === 5 ? 'BUILDER' : 'BACKER') : 'BOOST';
-      if (!isSubscription && projectField) {
-        tier = 'CLIENT';
+    if (store) {
+      const priceId = subscription.items.data[0]?.price.id;
+      const isProfessional = priceId === process.env.STRIPE_PRICE_ID_PROFESSIONAL;
+      const updatedPlan = isProfessional ? 'Professional' : 'Standard';
+
+      const isCanceled = event.type === 'customer.subscription.deleted' || subscription.status === 'canceled';
+      const updatedStatus = isCanceled ? 'CANCELED' : store.status;
+
+      await supabaseAdmin
+        .from('storefronts')
+        .update({
+          plan_tier: updatedPlan,
+          status: updatedStatus,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', store.id);
+
+      // Alert Admin on Plan Upgrades or Churn
+      if (store.plan_tier !== updatedPlan || isCanceled) {
+        await resend.emails.send({
+          from: process.env.RESEND_FROM_EMAIL || "portal@alternativesolutions.io",
+          to: [process.env.ADMIN_EMAIL || 'courtney@alternativesolutions.io'],
+          subject: isCanceled 
+            ? `⚠️ CANCELLATION: ${store.business_name} canceled subscription`
+            : `🚀 TIER CHANGE: ${store.business_name} switched to ${updatedPlan}`,
+          html: `<p>Subscription update for <strong>${store.business_name}</strong>. Current Status: ${updatedStatus}, Tier: ${updatedPlan}.</p>`
+        });
       }
-
-      const { data: existingUser } = await supabaseAdmin
-        .from('supporters')
-        .select('origin_tier')
-        .eq('email', customerEmail)
-        .maybeSingle();
-
-      const { error } = await supabaseAdmin
-        .from('supporters')
-        .upsert({
-          email: customerEmail,
-          name: customerName || null,
-          display_name: finalDisplayName,
-          tier: tier,
-          status: 'ACTIVE',
-          amount: amountTotal,
-          source: projectName,
-          origin_tier: existingUser?.origin_tier || tier
-        }, { onConflict: 'email' });
-
-      if (error) {
-        console.error('Error logging to Supabase supporters:', error);
-        return new NextResponse('Database Error', { status: 500 });
-      }
-      console.log(`✅ Supporter ${customerEmail} logged successfully!`);
     }
+    return NextResponse.json({ received: true });
+  }
+
+  // ====================================================================
+  // 3. FAILED CHARGES (Declined Cards / Past Due)
+  // ====================================================================
+  if (event.type === 'invoice.payment_failed') {
+    const invoice = event.data.object as Stripe.Invoice;
+    const customerId = invoice.customer as string;
+
+    const { data: store } = await supabaseAdmin
+      .from('storefronts')
+      .select('*')
+      .eq('stripe_customer_id', customerId)
+      .maybeSingle();
+
+    if (store) {
+      await supabaseAdmin
+        .from('storefronts')
+        .update({
+          status: 'MAINTENANCE',
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', store.id);
+
+      await resend.emails.send({
+        from: process.env.RESEND_FROM_EMAIL || "portal@alternativesolutions.io",
+        to: [process.env.ADMIN_EMAIL || 'courtney@alternativesolutions.io'],
+        subject: `🚨 FAILED PAYMENT: ${store.business_name}`,
+        html: `<p>Payment failed for <strong>${store.business_name}</strong>. System placed site into MAINTENANCE mode.</p>`
+      });
+    }
+    return NextResponse.json({ received: true });
   }
 
   return NextResponse.json({ received: true });
