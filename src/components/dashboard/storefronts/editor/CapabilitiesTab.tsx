@@ -1,3 +1,4 @@
+/* src/components/dashboard/storefronts/editor/CapabilitiesTab.tsx */
 'use client';
 
 import React, { useState, useEffect } from 'react';
@@ -8,7 +9,8 @@ export default function CapabilitiesTab({ formData, setFormData, onReload }: { f
   const [localCaps, setLocalCaps] = useState<any[]>([]);
   const [openCapIndex, setOpenCapIndex] = useState<number | null>(0);
 
-  const isMenuMode = formData?.content_layout === 'menu';
+  // THE FIX: Trigger off the Industry Tag, not the layout constraint!
+  const isMenuMode = formData?.industry_tag === 'Culinary';
   const isCreativeMode = formData?.industry_tag === 'Creative';
 
   useEffect(() => {

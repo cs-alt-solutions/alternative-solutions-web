@@ -4,23 +4,44 @@
 import React, { useState } from 'react';
 import { GripVertical, ChevronDown, X, Plus, Image as ImageIcon, List, Loader2, UploadCloud } from 'lucide-react';
 import { supabase } from '@/utils/supabase';
+import MenuCardEditor from './MenuCardEditor';
 
 export default function CategoryAccordion({ cap, index, isOpen, setOpenCapIndex, localCaps, setLocalCaps, formData, setFormData, onReload }: any) {
   const [isUploading, setIsUploading] = useState(false);
 
+  const isMenuMode = formData?.content_layout === 'menu';
   const isAlaCarte = !!cap.isAlaCarte;
-  const isCreativeMode = formData?.industry_tag === 'Creative';
+
+  const liveGallery = (formData.gallery_items || []).map((item: any, i: number) => {
+    if (typeof item === 'string') return { id: `gal-${i}`, imageUrl: item, title: '', description: '', category: '', price: '', isVisible: true };
+    return { ...item, id: item.id || `gal-${i}`, isVisible: item.isVisible !== false };
+  });
+
+  const categoryImages = liveGallery.filter((img: any) => img.category === cap.title);
 
   const updateTitle = (newTitle: string) => {
-    const updatedCaps = [...localCaps];
-    updatedCaps[index].title = newTitle;
+    const oldTitle = localCaps[index].title;
+    const updatedCaps = [...localCaps]; 
+    updatedCaps[index].title = newTitle; 
     setLocalCaps(updatedCaps);
-    setFormData((prev: any) => ({ ...prev, capabilities: updatedCaps }));
+
+    setFormData((prev: any) => {
+      const prevCaps = prev.capabilities || [];
+      const updatedFormDataCaps = [...prevCaps];
+      if (updatedFormDataCaps[index]) {
+        updatedFormDataCaps[index] = { ...updatedFormDataCaps[index], title: newTitle };
+      }
+      const updatedGallery = (prev.gallery_items || []).map((item: any) => {
+        if (oldTitle !== undefined && item.category === oldTitle) return { ...item, category: newTitle };
+        return item;
+      });
+      return { ...prev, capabilities: updatedFormDataCaps, gallery_items: updatedGallery };
+    });
   };
 
   const updateField = (field: string, value: any) => {
-    const updated = [...localCaps];
-    updated[index][field] = value;
+    const updated = [...localCaps]; 
+    updated[index][field] = value; 
     setLocalCaps(updated);
     setFormData((prev: any) => ({ ...prev, capabilities: updated }));
   };
@@ -32,13 +53,21 @@ export default function CategoryAccordion({ cap, index, isOpen, setOpenCapIndex,
   };
 
   const moveUp = () => {
-    if (index === 0) return;
+    if (index === 0) return; 
     const updated = [...localCaps];
-    const temp = updated[index - 1];
-    updated[index - 1] = updated[index];
+    const temp = updated[index - 1]; 
+    updated[index - 1] = updated[index]; 
     updated[index] = temp;
     setLocalCaps(updated);
     setFormData((prev: any) => ({ ...prev, capabilities: updated }));
+  };
+
+  const addBlankCard = () => {
+    const newId = `card-${Date.now()}`;
+    setFormData((prev: any) => ({
+      ...prev,
+      gallery_items: [{ id: newId, imageUrl: '', title: '', description: '', price: '', category: cap.title, isVisible: true }, ...(prev.gallery_items || [])]
+    }));
   };
 
   const addBullet = () => {
@@ -93,11 +122,14 @@ export default function CategoryAccordion({ cap, index, isOpen, setOpenCapIndex,
             <GripVertical className="w-4 h-4" />
           </button>
           <h3 className={`font-bold text-sm ${isAlaCarte ? 'text-fuchsia-400' : 'text-white'}`}>
-            {cap.title || (isAlaCarte ? 'Untitled Add-on' : 'Untitled Package')}
+            {cap.title || (isAlaCarte ? 'Untitled Add-on' : isMenuMode ? 'Untitled Category' : 'Untitled Package')}
           </h3>
           {isAlaCarte && <span className="px-2 py-0.5 rounded-md text-[9px] font-bold uppercase tracking-widest bg-fuchsia-500/10 text-fuchsia-400 border border-fuchsia-500/20">Add-on</span>}
         </div>
         <div className="flex items-center gap-4">
+          {isMenuMode && (
+            <span className="text-[10px] text-zinc-500 font-mono uppercase tracking-widest">{categoryImages.length} Cards</span>
+          )}
           <ChevronDown className={`w-4 h-4 text-zinc-500 transition-transform duration-300 ${isOpen ? 'rotate-180' : ''}`} />
           <button type="button" onClick={(e) => { e.stopPropagation(); removeCap(); }} className="p-1.5 text-zinc-600 hover:text-rose-400 transition-colors cursor-pointer">
             <X className="w-4 h-4" />
@@ -114,7 +146,7 @@ export default function CategoryAccordion({ cap, index, isOpen, setOpenCapIndex,
                 type="text" 
                 value={cap.title || ''} 
                 onChange={(e) => updateTitle(e.target.value)} 
-                placeholder={isAlaCarte ? 'Add-on Name' : 'Package Name'}
+                placeholder={isAlaCarte ? 'Add-on Name' : isMenuMode ? 'Category Name (e.g., Starters)' : 'Package Name'}
                 className="flex-1 bg-black/50 border border-zinc-800 rounded-lg px-3 py-2 text-sm text-white font-bold outline-none focus:border-cyan-500 transition-colors"
               />
               <input 
@@ -134,55 +166,91 @@ export default function CategoryAccordion({ cap, index, isOpen, setOpenCapIndex,
             />
           </div>
 
-          {!isAlaCarte && (
-            <>
-              <div className="space-y-3 pt-4 border-t border-zinc-800/50">
-                <label className="text-[9px] font-bold text-zinc-500 uppercase tracking-widest flex items-center gap-2">
-                  <List size={12} className="text-cyan-500" /> Package Deliverables
+          {/* IF MENU MODE: Render Menu Card Editor mapping for gallery items under this category */}
+          {isMenuMode ? (
+            <div className="space-y-4 pt-4 border-t border-zinc-800/50">
+              <div className="flex items-center justify-between">
+                <label className="text-[9px] font-bold text-fuchsia-500 uppercase tracking-widest flex items-center gap-2">
+                  <ImageIcon size={12} /> Menu Cards ({categoryImages.length})
                 </label>
-                <div className="space-y-2">
-                  {(cap.bullets || []).map((bullet: string, bIndex: number) => (
-                    <div key={bIndex} className="flex items-center gap-2">
-                      <div className="w-1.5 h-1.5 rounded-full bg-zinc-600 shrink-0" />
-                      <input 
-                        value={bullet}
-                        onChange={(e) => updateBullet(bIndex, e.target.value)}
-                        placeholder="Deliverable..."
-                        className="flex-1 bg-transparent border-b border-zinc-800 py-1 text-xs text-zinc-300 focus:outline-none focus:border-cyan-500 transition-colors"
-                      />
-                      <button type="button" onClick={() => removeBullet(bIndex)} className="text-zinc-600 hover:text-rose-400 cursor-pointer"><X size={12} /></button>
-                    </div>
-                  ))}
-                </div>
-                <button type="button" onClick={addBullet} className="text-[9px] font-bold text-zinc-500 hover:text-cyan-400 uppercase tracking-widest flex items-center gap-1.5 mt-2 cursor-pointer">
-                  <Plus size={10} /> Add Deliverable
+                <button type="button" onClick={addBlankCard} className="text-[9px] font-bold text-zinc-400 hover:text-fuchsia-400 uppercase tracking-widest flex items-center gap-1.5 transition-colors cursor-pointer">
+                  <Plus size={10} /> Add Blank Card
                 </button>
               </div>
 
-              <div className="space-y-3 pt-4 border-t border-zinc-800/50">
-                <label className="text-[9px] font-bold text-zinc-500 uppercase tracking-widest flex items-center gap-2">
-                  <ImageIcon size={12} className="text-cyan-500" /> Package Cover Photo
-                </label>
-                
-                {cap.coverImage ? (
-                  <div className="relative w-full sm:w-48 aspect-video rounded-lg overflow-hidden border border-zinc-800 group">
-                    <img src={cap.coverImage} alt="Cover" className="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-opacity" />
-                    <button 
-                      onClick={() => updateField('coverImage', '')}
-                      className="absolute top-2 right-2 p-1.5 bg-black/70 text-rose-400 rounded-md hover:bg-rose-500 hover:text-white transition-colors"
-                    >
-                      <X size={14} />
-                    </button>
-                  </div>
-                ) : (
-                  <label className="w-full sm:w-48 aspect-video rounded-lg border-2 border-dashed border-zinc-800 flex flex-col items-center justify-center cursor-pointer hover:border-cyan-500/50 hover:bg-cyan-500/5 transition-all">
-                    {isUploading ? <Loader2 className="w-5 h-5 text-cyan-500 animate-spin" /> : <UploadCloud className="w-5 h-5 text-zinc-600 mb-2" />}
-                    <span className="text-[9px] font-bold uppercase tracking-widest text-zinc-500">Upload Cover</span>
-                    <input type="file" accept="image/*" className="hidden" onChange={handleCoverUpload} disabled={isUploading} />
+              {categoryImages.length === 0 ? (
+                <p className="text-[10px] text-zinc-600 italic">No menu cards added yet. Click above to create one.</p>
+              ) : (
+                <div className="space-y-3">
+                  {categoryImages.map((img: any, i: number) => (
+                    <MenuCardEditor 
+                      key={img.id || `gal-${i}`}
+                      img={img}
+                      index={i}
+                      categoryImagesCount={categoryImages.length}
+                      localCaps={localCaps}
+                      isMenuMode={isMenuMode}
+                      formData={formData}
+                      setFormData={setFormData}
+                      onReload={onReload}
+                    />
+                  ))}
+                </div>
+              )}
+            </div>
+          ) : (
+            /* STANDARD PACKAGE MODE: Deliverables & Cover Photo */
+            !isAlaCarte && (
+              <>
+                <div className="space-y-3 pt-4 border-t border-zinc-800/50">
+                  <label className="text-[9px] font-bold text-zinc-500 uppercase tracking-widest flex items-center gap-2">
+                    <List size={12} className="text-cyan-500" /> Package Deliverables
                   </label>
-                )}
-              </div>
-            </>
+                  <div className="space-y-2">
+                    {(cap.bullets || []).map((bullet: string, bIndex: number) => (
+                      <div key={bIndex} className="flex items-center gap-2">
+                        <div className="w-1.5 h-1.5 rounded-full bg-zinc-600 shrink-0" />
+                        <input 
+                          value={bullet}
+                          onChange={(e) => updateBullet(bIndex, e.target.value)}
+                          placeholder="Deliverable..."
+                          className="flex-1 bg-transparent border-b border-zinc-800 py-1 text-xs text-zinc-300 focus:outline-none focus:border-cyan-500 transition-colors"
+                        />
+                        <button type="button" onClick={() => removeBullet(bIndex)} className="text-zinc-600 hover:text-rose-400 cursor-pointer"><X size={12} /></button>
+                      </div>
+                    ))}
+                  </div>
+                  <button type="button" onClick={addBullet} className="text-[9px] font-bold text-zinc-500 hover:text-cyan-400 uppercase tracking-widest flex items-center gap-1.5 mt-2 cursor-pointer">
+                    <Plus size={10} /> Add Deliverable
+                  </button>
+                </div>
+
+                <div className="space-y-3 pt-4 border-t border-zinc-800/50">
+                  <label className="text-[9px] font-bold text-zinc-500 uppercase tracking-widest flex items-center gap-2">
+                    <ImageIcon size={12} className="text-cyan-500" /> Package Cover Photo
+                  </label>
+                  
+                  {cap.coverImage ? (
+                    <div className="relative w-full sm:w-48 aspect-video rounded-lg overflow-hidden border border-zinc-800 group">
+                      <img src={cap.coverImage} alt="Cover" className="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-opacity" />
+                      <button 
+                        type="button"
+                        onClick={() => updateField('coverImage', '')}
+                        className="absolute top-2 right-2 p-1.5 bg-black/70 text-rose-400 rounded-md hover:bg-rose-500 hover:text-white transition-colors cursor-pointer"
+                      >
+                        <X size={14} />
+                      </button>
+                    </div>
+                  ) : (
+                    <label className="w-full sm:w-48 aspect-video rounded-lg border-2 border-dashed border-zinc-800 flex flex-col items-center justify-center cursor-pointer hover:border-cyan-500/50 hover:bg-cyan-500/5 transition-all">
+                      {isUploading ? <Loader2 className="w-5 h-5 text-cyan-500 animate-spin" /> : <UploadCloud className="w-5 h-5 text-zinc-600 mb-2" />}
+                      <span className="text-[9px] font-bold uppercase tracking-widest text-zinc-500">Upload Cover</span>
+                      <input type="file" accept="image/*" className="hidden" onChange={handleCoverUpload} disabled={isUploading} />
+                    </label>
+                  )}
+                </div>
+              </>
+            )
           )}
 
         </div>
