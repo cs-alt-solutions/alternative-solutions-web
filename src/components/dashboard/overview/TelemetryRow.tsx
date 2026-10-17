@@ -37,16 +37,24 @@ export default function TelemetryRow() {
 
       if (storefronts) {
         storefronts.forEach((store) => {
-          // Isolate Prototypes from Client Metrics
+          // Isolate Prototypes / Demos into The Lab
           if (store.is_template || store.status === 'PROTOTYPE') {
             prototypes++;
           } else {
-            // Client Pipeline Math
-            if (['ACTIVE', 'LIVE'].includes(store.status) && store.stripe_subscription_id) {
-              deployed++;
+            // 🚀 THE FIX: MRR Math now includes EVERYONE who has paid (past AWAITING_PAYMENT)
+            const isPayingClient = ['PENDING_BUILD', 'BUILDING_CORE', 'IN_REVIEW', 'CONTENT_ASSEMBLY', 'ACTIVE', 'LIVE', 'MAINTENANCE', 'HIDDEN'].includes(store.status);
+            
+            if (isPayingClient && store.stripe_subscription_id) {
               const plan = (store.plan_tier || '').toLowerCase();
               gross += (plan.includes('pro') || plan.includes('professional')) ? 15 : 5;
             }
+
+            // Live Sites Count (Only finished sites)
+            if (['ACTIVE', 'LIVE'].includes(store.status)) {
+              deployed++;
+            }
+            
+            // Drafting Table Pipeline Math
             if (['BUILDING_CORE', 'CONTENT_ASSEMBLY'].includes(store.status)) active++;
             if (store.status === 'PENDING_BUILD') queue++;
             if (store.status === 'AWAITING_PAYMENT') payment++;
@@ -88,7 +96,6 @@ export default function TelemetryRow() {
   // Visual Math Helpers
   const netPercentage = metrics.grossMrr > 0 ? (metrics.netMrr / metrics.grossMrr) * 100 : 0;
   const promoPercentage = metrics.grossMrr > 0 ? (metrics.promoDiscount / metrics.grossMrr) * 100 : 0;
-  const capacityPercentage = (metrics.activeBuilds / 5) * 100;
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4 lg:gap-6 mb-6">
@@ -180,7 +187,7 @@ export default function TelemetryRow() {
         </div>
       </div>
 
-      {/* 3. THE LAB (Prototypes) */}
+      {/* 3. THE LAB (Prototypes & Demos) */}
       <div className="bg-black/40 border border-violet-500/20 rounded-2xl p-6 relative overflow-hidden group hover:border-violet-500/40 transition-all shadow-lg flex flex-col justify-between">
         <div className="absolute -right-6 -top-6 w-24 h-24 bg-violet-500/10 rounded-full blur-2xl group-hover:bg-violet-500/20 transition-all" />
         
@@ -196,18 +203,18 @@ export default function TelemetryRow() {
         <div className="relative z-10 mt-2 flex-1 flex flex-col justify-between">
           <div className="flex items-end gap-2">
             <h2 className="text-3xl font-black text-white drop-shadow-md">{metrics.prototypeCount}</h2>
-            <span className="text-sm text-zinc-500 font-medium mb-1.5">Sandbox Models</span>
+            <span className="text-sm text-zinc-500 font-medium mb-1.5">Models & Demos</span>
           </div>
           
           <div className="mt-4 flex flex-wrap gap-2">
             <div className="flex items-center gap-1.5 bg-violet-500/10 border border-violet-500/20 px-2.5 py-1 rounded-md text-[10px] font-bold text-violet-400 uppercase tracking-widest">
-              <Sparkles size={10} className="animate-pulse" /> Training & Demos
+              <Sparkles size={10} className="animate-pulse" /> Sandbox Active
             </div>
           </div>
         </div>
       </div>
 
-      {/* 4. REVENUE ENGINE */}
+      {/* 4. NET MRR (Revenue & Live Sites) */}
       <div className="bg-black/40 border border-emerald-500/20 rounded-2xl p-6 relative overflow-hidden group hover:border-emerald-500/40 transition-all shadow-lg flex flex-col justify-between">
         <div className="absolute -right-6 -top-6 w-24 h-24 bg-emerald-500/10 rounded-full blur-2xl group-hover:bg-emerald-500/20 transition-all" />
         

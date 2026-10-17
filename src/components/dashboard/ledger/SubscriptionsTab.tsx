@@ -1,4 +1,3 @@
-/* src/components/dashboard/ledger/SubscriptionsTab.tsx */
 'use client';
 
 import React, { useState, useEffect } from 'react';
@@ -37,7 +36,17 @@ export default function SubscriptionsTab() {
     const { data: activeStores, error } = await supabase
       .from('storefronts')
       .select('id, business_name, contact_email, plan_tier, created_at, status, stripe_subscription_id, stripe_customer_id')
-      .in('status', ['ACTIVE', 'LIVE'])
+      // 🚀 THE FIX: Now includes ALL paying lifecycle stages, catching anyone past AWAITING_PAYMENT
+      .in('status', [
+        'PENDING_BUILD', 
+        'BUILDING_CORE', 
+        'IN_REVIEW', 
+        'CONTENT_ASSEMBLY', 
+        'ACTIVE', 
+        'LIVE', 
+        'MAINTENANCE', 
+        'HIDDEN'
+      ])
       .not('stripe_subscription_id', 'is', null) 
       .order('created_at', { ascending: false });
 
