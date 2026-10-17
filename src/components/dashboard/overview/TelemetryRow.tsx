@@ -2,17 +2,19 @@
 
 import React, { useState, useEffect } from 'react';
 import { supabase } from '@/utils/supabase';
-import { CreditCard, Activity, Users, Loader2, TrendingDown } from 'lucide-react';
+import { CreditCard, Users, Loader2, TrendingDown, Hammer, Zap, CheckCircle2, Globe, Beaker, Sparkles } from 'lucide-react';
 
 export default function TelemetryRow() {
   const [metrics, setMetrics] = useState({
     grossMrr: 0,
     netMrr: 0,
     promoDiscount: 0,
-    totalPortals: 0,
-    foundationCount: 0,
-    proCount: 0,
-    pendingLeads: 0
+    totalDeployed: 0,
+    activeBuilds: 0,
+    workQueue: 0,
+    awaitingPayment: 0,
+    awaitingReview: 0,
+    prototypeCount: 0
   });
   
   const [isLoading, setIsLoading] = useState(true);
@@ -21,51 +23,52 @@ export default function TelemetryRow() {
     const fetchTelemetry = async () => {
       setIsLoading(true);
       
-      // 1. Get Active Revenue & Portals
       const { data: storefronts } = await supabase
         .from('storefronts')
-        // NOTE: In the future, you should add a 'monthly_discount' column to this table 
-        // so you can track promos dynamically per client instead of hardcoding.
-        .select('plan_tier, stripe_subscription_id')
-        .in('status', ['ACTIVE', 'LIVE'])
-        .not('stripe_subscription_id', 'is', null);
-
-      let fCount = 0;
-      let pCount = 0;
-      let calculatedGross = 0;
-      
-      // TEMPORARY PROMO LOGIC: 
-      // Hardcoding your $5 promo deduction here for now so your Net MRR reads correctly.
-      let calculatedPromo = 5; 
+        .select('status, plan_tier, stripe_subscription_id, is_template');
+        
+      let gross = 0;
+      let promo = 5; // Hardcoded promo for now
+      let deployed = 0;
+      let active = 0;
+      let queue = 0;
+      let payment = 0;
+      let prototypes = 0;
 
       if (storefronts) {
         storefronts.forEach((store) => {
-          const plan = (store.plan_tier || '').toLowerCase();
-          
-          if (plan.includes('pro') || plan.includes('professional')) {
-            pCount++;
-            calculatedGross += 15;
+          // Isolate Prototypes from Client Metrics
+          if (store.is_template || store.status === 'PROTOTYPE') {
+            prototypes++;
           } else {
-            fCount++;
-            calculatedGross += 5;
+            // Client Pipeline Math
+            if (['ACTIVE', 'LIVE'].includes(store.status) && store.stripe_subscription_id) {
+              deployed++;
+              const plan = (store.plan_tier || '').toLowerCase();
+              gross += (plan.includes('pro') || plan.includes('professional')) ? 15 : 5;
+            }
+            if (['BUILDING_CORE', 'CONTENT_ASSEMBLY'].includes(store.status)) active++;
+            if (store.status === 'PENDING_BUILD') queue++;
+            if (store.status === 'AWAITING_PAYMENT') payment++;
           }
         });
       }
       
-      // 2. Get Pending Applications
-      const { count } = await supabase
+      const { count: reviewCount } = await supabase
         .from('storefront_applications')
         .select('*', { count: 'exact', head: true })
         .eq('status', 'PENDING');
 
       setMetrics({
-        grossMrr: calculatedGross,
-        promoDiscount: calculatedPromo,
-        netMrr: calculatedGross - calculatedPromo,
-        totalPortals: storefronts ? storefronts.length : 0,
-        foundationCount: fCount,
-        proCount: pCount,
-        pendingLeads: count || 0
+        grossMrr: gross,
+        promoDiscount: promo,
+        netMrr: gross - promo,
+        totalDeployed: deployed,
+        activeBuilds: active,
+        workQueue: queue,
+        awaitingPayment: payment,
+        awaitingReview: reviewCount || 0,
+        prototypeCount: prototypes
       });
       
       setIsLoading(false);
@@ -76,16 +79,135 @@ export default function TelemetryRow() {
 
   if (isLoading) {
     return (
-      <div className="w-full flex items-center justify-center p-8 bg-black/40 border border-white/5 rounded-2xl">
+      <div className="w-full flex items-center justify-center p-8 bg-black/40 border border-white/5 rounded-2xl h-40">
         <Loader2 className="w-6 h-6 text-cyan-500 animate-spin" />
       </div>
     );
   }
 
+  // Visual Math Helpers
+  const netPercentage = metrics.grossMrr > 0 ? (metrics.netMrr / metrics.grossMrr) * 100 : 0;
+  const promoPercentage = metrics.grossMrr > 0 ? (metrics.promoDiscount / metrics.grossMrr) * 100 : 0;
+  const capacityPercentage = (metrics.activeBuilds / 5) * 100;
+
   return (
-    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 lg:gap-6">
+    <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4 lg:gap-6 mb-6">
       
-      {/* 🚀 UPGRADED MRR WIDGET */}
+      {/* 1. APPLICATION RADAR */}
+      <div className="bg-black/40 border border-fuchsia-500/20 rounded-2xl p-6 relative overflow-hidden group hover:border-fuchsia-500/40 transition-all shadow-lg flex flex-col justify-between">
+        <div className="absolute -right-6 -top-6 w-24 h-24 bg-fuchsia-500/10 rounded-full blur-2xl group-hover:bg-fuchsia-500/20 transition-all" />
+        
+        <div className="flex items-center justify-between mb-2 relative z-10">
+          <div className="flex items-center gap-3">
+            <div className="p-2 bg-fuchsia-500/10 rounded-lg text-fuchsia-400">
+              <Users size={16} />
+            </div>
+            <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest">Application Radar</span>
+          </div>
+        </div>
+        
+        <div className="relative z-10 mt-2 flex-1 flex flex-col justify-between">
+          <div className="flex items-end gap-2">
+            <h2 className="text-3xl font-black text-white drop-shadow-md">
+              {metrics.awaitingReview + metrics.awaitingPayment}
+            </h2>
+            <span className="text-sm text-zinc-500 font-medium mb-1.5">Pending Leads</span>
+          </div>
+          
+          <div className="mt-4 flex flex-wrap gap-2">
+            {metrics.awaitingReview > 0 ? (
+              <div className="flex items-center gap-1.5 bg-fuchsia-500/10 border border-fuchsia-500/20 px-2.5 py-1 rounded-md text-[10px] font-bold text-fuchsia-400 uppercase tracking-widest">
+                <Zap size={10} className="animate-pulse" /> {metrics.awaitingReview} Action Required
+              </div>
+            ) : (
+              <div className="flex items-center gap-1.5 bg-zinc-900 border border-zinc-800 px-2.5 py-1 rounded-md text-[10px] font-bold text-zinc-600 uppercase tracking-widest">
+                <CheckCircle2 size={10} /> 0 Awaiting Review
+              </div>
+            )}
+
+            {metrics.awaitingPayment > 0 ? (
+              <div className="flex items-center gap-1.5 bg-amber-500/10 border border-amber-500/20 px-2.5 py-1 rounded-md text-[10px] font-bold text-amber-400 uppercase tracking-widest">
+                <TrendingDown size={10} /> {metrics.awaitingPayment} Awaiting Payment
+              </div>
+            ) : (
+              <div className="flex items-center gap-1.5 bg-zinc-900 border border-zinc-800 px-2.5 py-1 rounded-md text-[10px] font-bold text-zinc-600 uppercase tracking-widest">
+                <CheckCircle2 size={10} /> 0 Checkout
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+
+      {/* 2. ACTIVE CAPACITY */}
+      <div className="bg-black/40 border border-cyan-500/20 rounded-2xl p-6 relative overflow-hidden group hover:border-cyan-500/40 transition-all shadow-lg flex flex-col justify-between">
+        <div className="absolute -right-6 -top-6 w-24 h-24 bg-cyan-500/10 rounded-full blur-2xl group-hover:bg-cyan-500/20 transition-all" />
+        
+        <div className="flex items-center justify-between mb-2 relative z-10">
+          <div className="flex items-center gap-3">
+            <div className="p-2 bg-cyan-500/10 rounded-lg text-cyan-400">
+              <Hammer size={16} />
+            </div>
+            <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest">Active Capacity</span>
+          </div>
+          
+          <div className="flex items-center gap-1.5 bg-zinc-900 border border-zinc-800 px-2.5 py-1 rounded-md shadow-sm">
+            <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse shadow-[0_0_8px_rgba(34,211,238,0.8)]" />
+            <span className="text-[9px] font-black text-cyan-400 tracking-widest">{metrics.activeBuilds} / 5</span>
+          </div>
+        </div>
+        
+        <div className="relative z-10 mt-2">
+          <h2 className="text-3xl font-black text-white drop-shadow-md">{metrics.activeBuilds} <span className="text-sm text-zinc-500 font-medium">In Progress</span></h2>
+          
+          <div className="mt-5 space-y-2">
+            <div className="flex gap-1.5 h-2 w-full">
+              {[...Array(5)].map((_, i) => (
+                <div 
+                  key={i} 
+                  className={`flex-1 rounded-sm transition-colors duration-500 ${
+                    i < metrics.activeBuilds 
+                      ? 'bg-cyan-400 shadow-[0_0_10px_rgba(34,211,238,0.5)]' 
+                      : 'bg-zinc-800'
+                  }`} 
+                />
+              ))}
+            </div>
+            <div className="flex justify-between text-[9px] font-mono uppercase tracking-widest text-zinc-500">
+              <span className="text-cyan-400">{5 - metrics.activeBuilds} Slots Open</span>
+              {metrics.workQueue > 0 && <span>{metrics.workQueue} In Queue</span>}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* 3. THE LAB (Prototypes) */}
+      <div className="bg-black/40 border border-violet-500/20 rounded-2xl p-6 relative overflow-hidden group hover:border-violet-500/40 transition-all shadow-lg flex flex-col justify-between">
+        <div className="absolute -right-6 -top-6 w-24 h-24 bg-violet-500/10 rounded-full blur-2xl group-hover:bg-violet-500/20 transition-all" />
+        
+        <div className="flex items-center justify-between mb-2 relative z-10">
+          <div className="flex items-center gap-3">
+            <div className="p-2 bg-violet-500/10 rounded-lg text-violet-400">
+              <Beaker size={16} />
+            </div>
+            <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest">The Lab</span>
+          </div>
+        </div>
+        
+        <div className="relative z-10 mt-2 flex-1 flex flex-col justify-between">
+          <div className="flex items-end gap-2">
+            <h2 className="text-3xl font-black text-white drop-shadow-md">{metrics.prototypeCount}</h2>
+            <span className="text-sm text-zinc-500 font-medium mb-1.5">Sandbox Models</span>
+          </div>
+          
+          <div className="mt-4 flex flex-wrap gap-2">
+            <div className="flex items-center gap-1.5 bg-violet-500/10 border border-violet-500/20 px-2.5 py-1 rounded-md text-[10px] font-bold text-violet-400 uppercase tracking-widest">
+              <Sparkles size={10} className="animate-pulse" /> Training & Demos
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* 4. REVENUE ENGINE */}
       <div className="bg-black/40 border border-emerald-500/20 rounded-2xl p-6 relative overflow-hidden group hover:border-emerald-500/40 transition-all shadow-lg flex flex-col justify-between">
         <div className="absolute -right-6 -top-6 w-24 h-24 bg-emerald-500/10 rounded-full blur-2xl group-hover:bg-emerald-500/20 transition-all" />
         
@@ -96,64 +218,26 @@ export default function TelemetryRow() {
             </div>
             <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest">Net MRR</span>
           </div>
-          
-          {metrics.promoDiscount > 0 && (
-            <span className="text-[9px] font-mono font-bold text-rose-400 bg-rose-500/10 px-2 py-0.5 rounded border border-rose-500/20 flex items-center gap-1">
-              <TrendingDown size={10} /> Promo Active
+          {metrics.totalDeployed > 0 && (
+            <span className="text-[9px] font-mono font-bold text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded border border-emerald-500/20 flex items-center gap-1 shadow-sm">
+              <Globe size={10} /> {metrics.totalDeployed} Live
             </span>
           )}
         </div>
-
-        <div className="relative z-10">
-          <h2 className="text-3xl font-black text-white">${metrics.netMrr.toFixed(2)}<span className="text-sm text-zinc-500 font-medium">/mo</span></h2>
-          
-          {/* MRR Breakdown Bar */}
-          <div className="mt-4 pt-3 border-t border-white/5 flex items-center justify-between text-[10px] font-mono">
-            <div className="text-zinc-400">Gross: <span className="text-white">${metrics.grossMrr.toFixed(2)}</span></div>
-            {metrics.promoDiscount > 0 && (
-              <div className="text-rose-400">Discounts: -${metrics.promoDiscount.toFixed(2)}</div>
-            )}
-          </div>
-        </div>
-      </div>
-
-      {/* 🚀 UPGRADED ACTIVE NODES WIDGET */}
-      <div className="bg-black/40 border border-cyan-500/20 rounded-2xl p-6 relative overflow-hidden group hover:border-cyan-500/40 transition-all shadow-lg flex flex-col justify-between">
-        <div className="absolute -right-6 -top-6 w-24 h-24 bg-cyan-500/10 rounded-full blur-2xl group-hover:bg-cyan-500/20 transition-all" />
         
-        <div className="flex items-center gap-3 mb-2 relative z-10">
-          <div className="p-2 bg-cyan-500/10 rounded-lg text-cyan-400">
-            <Activity size={16} />
-          </div>
-          <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest">Active Portals</span>
-        </div>
-        
-        <div className="relative z-10">
-          <h2 className="text-3xl font-black text-white">{metrics.totalPortals} <span className="text-sm text-zinc-500 font-medium">Deployed</span></h2>
+        <div className="relative z-10 mt-2">
+          <h2 className="text-3xl font-black text-white drop-shadow-md">${metrics.netMrr.toFixed(2)}<span className="text-sm text-zinc-500 font-medium">/mo</span></h2>
           
-          {/* Tier Breakdown Bar */}
-          <div className="mt-4 pt-3 border-t border-white/5 flex items-center justify-between text-[10px] font-mono">
-            <div className="text-cyan-400">Foundation: <span className="text-white">{metrics.foundationCount}</span></div>
-            <div className="text-cyan-400">Pro: <span className="text-white">{metrics.proCount}</span></div>
-          </div>
-        </div>
-      </div>
-
-      {/* QUEUE WIDGET */}
-      <div className="bg-black/40 border border-fuchsia-500/20 rounded-2xl p-6 relative overflow-hidden group hover:border-fuchsia-500/40 transition-all shadow-lg flex flex-col justify-between">
-        <div className="absolute -right-6 -top-6 w-24 h-24 bg-fuchsia-500/10 rounded-full blur-2xl group-hover:bg-fuchsia-500/20 transition-all" />
-        <div className="flex items-center gap-3 mb-2 relative z-10">
-          <div className="p-2 bg-fuchsia-500/10 rounded-lg text-fuchsia-400">
-            <Users size={16} />
-          </div>
-          <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest">Pending Queue</span>
-        </div>
-        
-        <div className="relative z-10">
-          <h2 className="text-3xl font-black text-white">{metrics.pendingLeads} <span className="text-sm text-zinc-500 font-medium">Leads</span></h2>
-          
-          <div className="mt-4 pt-3 border-t border-white/5 flex items-center justify-between text-[10px] font-mono text-zinc-500">
-            <span>Awaiting Review</span>
+          <div className="mt-5 space-y-2">
+            <div className="flex items-center gap-1 h-1.5 w-full bg-zinc-800 rounded-full overflow-hidden">
+              <div className="h-full bg-emerald-400 shadow-[0_0_10px_rgba(52,211,153,0.5)] transition-all duration-1000" style={{ width: `${netPercentage}%` }} />
+              <div className="h-full bg-amber-400 shadow-[0_0_10px_rgba(251,191,36,0.5)] transition-all duration-1000" style={{ width: `${promoPercentage}%` }} />
+            </div>
+            <div className="flex justify-between text-[9px] font-mono uppercase tracking-widest">
+              <span className="text-emerald-400">Net: ${metrics.netMrr}</span>
+              <span className="text-amber-400">Promo: -${metrics.promoDiscount}</span>
+              <span className="text-zinc-500">Gross: ${metrics.grossMrr}</span>
+            </div>
           </div>
         </div>
       </div>

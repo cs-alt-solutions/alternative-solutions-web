@@ -33,11 +33,11 @@ export const SIDEBAR_COPY = {
 export const OVERVIEW_COPY = {
   TITLE: "Home",
   DIRECTIVE: {
-    TITLE: "Project Intake",
-    SUBTITLE: "Applications awaiting your authorization",
+    TITLE: "Pending Applications",
+    SUBTITLE: "New leads awaiting your review and approval.",
     EMPTY: "Pipeline clear. No pending applications.",
-    TYPES: { LEAD: "Sector Zero App", TASK: "Task" },
-    ACTIONS: { PROCESS: "Review Dossier", EXECUTE: "Do It" }
+    TYPES: { LEAD: "Storefront App", TASK: "Task" },
+    ACTIONS: { PROCESS: "Review Lead", EXECUTE: "Do It" }
   },
   LIVE_FEED: { 
     TITLE: "Recent Activity", 

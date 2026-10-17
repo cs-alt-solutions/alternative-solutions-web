@@ -6,6 +6,7 @@ import { revalidatePath } from 'next/cache';
 import { Resend } from 'resend';
 import StorefrontConfirmationEmail from '@/components/emails/StorefrontConfirmationEmail';
 import AdminIntakeEmail from '@/components/emails/AdminIntakeEmail';
+import { createStorefrontCheckout } from '@/app/actions/billing';
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 
@@ -109,98 +110,137 @@ export async function submitStorefrontApplication(formData: FormData) {
   }
 }
 
-export async function updateApplicationStatus(id: string, newStatus: 'BUILDING' | 'CANCELED', overrides?: any) {
+export async function approveAndSendCheckout(id: string, overrides?: any) {
   const supabase = await createClient();
   
   try {
-    const { data: app, error: updateError } = await supabase
+    const { data: app, error: fetchError } = await supabase
+      .from('storefront_applications')
+      .select('*')
+      .eq('id', id)
+      .single();
+
+    if (fetchError || !app) throw new Error('Application not found');
+
+    // 🚀 NEW: Checks if you passed an override slug from the modal first!
+    let baseSlug = overrides?.slug || (app.business_name || 'store').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, '');
+    let finalSlug = baseSlug;
+
+    const { data: existing } = await supabase.from('storefronts').select('slug').eq('slug', finalSlug);
+    if (existing && existing.length > 0) {
+      finalSlug = `${baseSlug}-${Math.random().toString(36).substring(2, 6)}`;
+    }
+
+    const finalVibe = overrides?.vibe || app.selected_vibe || 'industrial';
+    const finalColor = overrides?.brandColor || app.brand_color || 'cyan';
+    const finalHero = overrides?.hero || app.hero_structure || 'centered';
+    const finalStory = overrides?.story || app.story_structure || 'split';
+    const finalFlow = overrides?.flow || app.content_flow || 'classic';
+    const finalPlan = overrides?.plan || app.selected_plan || 'standard';
+
+    const initialLogs = [
+      {
+        id: crypto.randomUUID(),
+        timestamp: new Date().toISOString(),
+        author: "SYSTEM",
+        type: "APPLICATION_RECEIVED",
+        message: "Client application successfully processed."
+      },
+      {
+        id: crypto.randomUUID(),
+        timestamp: new Date().toISOString(),
+        author: "ADMIN",
+        type: "AWAITING_PAYMENT",
+        message: "Application approved. Checkout link dispatched."
+      }
+    ];
+
+    const { data: newStore, error: insertError } = await supabase.from('storefronts').insert([{
+      business_name: app.business_name,
+      contact_email: app.contact_email || app.applicant_email, 
+      status: 'AWAITING_PAYMENT',
+      slug: finalSlug, 
+      plan_tier: finalPlan,
+      theme_style: finalVibe,
+      brand_color: finalColor,
+      hero_layout: finalHero,
+      content_layout: finalFlow,
+      about_layout: finalStory,
+      tagline: app.tagline && app.tagline !== 'ARCHITECT_DELEGATED' ? app.tagline : 'Welcome to your new digital storefront.',
+      subtext: app.business_description || 'Getting operations online. Stay tuned.',
+      is_template: false,
+      hero_image: app.hero_image_url || 'https://via.placeholder.com/1920x1080/000000/333333?text=NO+IMAGE',
+      about_image: app.about_image_url || 'https://via.placeholder.com/800x800/000000/333333?text=NO+IMAGE',
+      logo_url: app.logo_url || null,
+      primary_cta: 'Get Started',
+      secondary_cta: 'Learn More',
+      about_heading: 'About Us',
+      about_bio: app.business_description || 'Dedicated to providing top-tier services and products to the community. Check out the gallery to see recent work!',
+      social_url: app.existing_domain || '',
+      gallery_items: [],
+      audit_notes: initialLogs
+    }]).select().single();
+    
+    if (insertError) throw new Error("Storefront Creation Blocked by Database: " + insertError.message);
+
+    const { error: clientError } = await supabase.from('clients').insert([{
+      id: finalSlug,
+      name: app.business_name,
+      primary_contact: app.applicant_name,
+      email: app.contact_email || app.applicant_email,
+      status: 'active'
+    }]);
+
+    if (clientError) console.error('Failed to initialize client portal:', clientError);
+
+    const checkout = await createStorefrontCheckout(newStore.id, app.applicant_email);
+    if (!checkout?.url) throw new Error('Failed to create Stripe link');
+
+    if (process.env.RESEND_API_KEY) {
+      await resend.emails.send({
+        from: process.env.RESEND_FROM_EMAIL || "Courtney <hello@alternativesolutions.io>",
+        to: [app.applicant_email],
+        subject: `Application Approved: Complete Setup for ${app.business_name}`,
+        html: `
+          <div style="font-family: sans-serif; background-color: #09090b; color: #ffffff; padding: 32px; border-radius: 12px;">
+            <h2 style="color: #22d3ee; margin-top: 0;">You're Approved!</h2>
+            <p style="color: #d4d4d8;">I reviewed your application for <strong>${app.business_name}</strong> and everything looks solid. To lock in your spot in the build queue and gain access to your private portal, activate your hosting subscription below:</p>
+            <a href="${checkout.url}" style="display: inline-block; background-color: #22d3ee; color: #000000; font-weight: bold; padding: 14px 28px; border-radius: 8px; text-decoration: none; margin: 16px 0;">Activate Subscription ($5/mo)</a>
+            <p style="color: #71717a; font-size: 12px;">Once payment clears, your workspace will unlock immediately and building begins.</p>
+          </div>
+        `
+      });
+    }
+
+    await supabase
       .from('storefront_applications')
       .update({ 
-        status: newStatus,
+        status: 'APPROVED',
         ...(overrides?.plan && { selected_plan: overrides.plan }),
         ...(overrides?.vibe && { selected_vibe: overrides.vibe })
       })
-      .eq('id', id)
-      .select()
-      .single();
-
-    if (updateError) throw updateError;
-
-    if (newStatus === 'BUILDING' && app) {
-      let baseSlug = (app.business_name || 'store').toLowerCase().replace(/[^a-z0-9]+/g, '-');
-      let finalSlug = baseSlug;
-
-      const { data: existing } = await supabase.from('storefronts').select('slug').eq('slug', finalSlug);
-      if (existing && existing.length > 0) {
-        finalSlug = `${baseSlug}-${Math.random().toString(36).substring(2, 6)}`;
-      }
-
-      const finalVibe = overrides?.vibe || app.selected_vibe || 'industrial';
-      const finalColor = overrides?.brandColor || app.brand_color || 'cyan';
-      const finalHero = overrides?.hero || app.hero_structure || 'centered';
-      const finalStory = overrides?.story || app.story_structure || 'split';
-      const finalFlow = overrides?.flow || app.content_flow || 'classic';
-      const finalPlan = overrides?.plan || app.selected_plan || 'standard';
-
-      const initialLogs = [
-        {
-          id: crypto.randomUUID(),
-          timestamp: new Date().toISOString(),
-          author: "SYSTEM",
-          type: "APPLICATION_RECEIVED",
-          message: "Client application successfully processed."
-        },
-        {
-          id: crypto.randomUUID(),
-          timestamp: new Date().toISOString(),
-          author: "ADMIN",
-          type: "BUILD_INITIALIZED",
-          message: "Application approved. Architecture initialized."
-        }
-      ];
-
-      const { error: insertError } = await supabase.from('storefronts').insert([{
-        business_name: app.business_name,
-        contact_email: app.contact_email || app.applicant_email, 
-        status: 'BUILDING',
-        slug: finalSlug, 
-        plan_tier: finalPlan,
-        theme_style: finalVibe,
-        brand_color: finalColor,
-        hero_layout: finalHero,
-        content_layout: finalFlow,
-        about_layout: finalStory,
-        tagline: app.tagline && app.tagline !== 'ARCHITECT_DELEGATED' ? app.tagline : 'Welcome to your new digital storefront.',
-        subtext: app.business_description || 'Getting operations online. Stay tuned.',
-        is_template: false,
-        hero_image: app.hero_image_url || 'https://via.placeholder.com/1920x1080/000000/333333?text=NO+IMAGE',
-        about_image: app.about_image_url || 'https://via.placeholder.com/800x800/000000/333333?text=NO+IMAGE',
-        logo_url: app.logo_url || null,
-        primary_cta: 'Get Started',
-        secondary_cta: 'Learn More',
-        about_heading: 'About Us',
-        about_bio: app.business_description || 'Dedicated to providing top-tier services and products to the community. Check out the gallery to see recent work!',
-        social_url: app.existing_domain || '',
-        gallery_items: [],
-        audit_notes: initialLogs
-      }]);
-      
-      if (insertError) throw new Error("Storefront Creation Blocked by Database: " + insertError.message);
-
-      const { error: clientError } = await supabase.from('clients').insert([{
-        id: finalSlug,
-        name: app.business_name,
-        primary_contact: app.applicant_name,
-        email: app.contact_email || app.applicant_email,
-        status: 'active'
-      }]);
-
-      if (clientError) console.error('Failed to initialize client portal:', clientError);
-    }
+      .eq('id', id);
 
     revalidatePath('/dashboard/storefronts');
     revalidatePath('/dashboard/clients');
     revalidatePath('/dashboard'); 
+    return { success: true };
+  } catch (error: any) {
+    console.error('APPROVAL ERROR:', error);
+    return { success: false, error: error.message || 'Failed to approve application' };
+  }
+}
+
+export async function updateApplicationStatus(id: string, newStatus: 'CANCELED') {
+  const supabase = await createClient();
+  try {
+    const { error } = await supabase
+      .from('storefront_applications')
+      .update({ status: newStatus })
+      .eq('id', id);
+
+    if (error) throw error;
+    revalidatePath('/dashboard/storefronts');
     return { success: true };
   } catch (error: any) {
     console.error('STATUS UPDATE ERROR:', error);

@@ -51,17 +51,13 @@ export default function StorefrontConfirmationEmail({
         {copy.NEXT_BODY}
       </Text>
 
-      {/* 🚀 THE NEW HOMEWORK SECTION */}
+      {/* THE HOMEWORK SECTION */}
       <Text className="text-white font-bold text-sm uppercase tracking-wider m-0 mb-2">
         {copy.PREP_TITLE}
       </Text>
       <Text className="text-zinc-300 text-sm leading-relaxed m-0 mb-8 font-light">
         {copy.PREP_BODY}
       </Text>
-      
-      <Text className="text-zinc-400 text-sm m-0 mb-1 font-light">{copy.SIGN_OFF}</Text>
-      <Text className="text-white font-black text-base uppercase tracking-wide m-0">{copy.NAME}</Text>
-      <Text className="text-cyan-400 font-mono text-xs m-0">{copy.TITLE}</Text>
 
       <Hr className="border-zinc-800 my-8" />
     </BaseEmailLayout>

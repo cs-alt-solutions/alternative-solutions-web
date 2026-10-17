@@ -1,3 +1,5 @@
+// src/config/emails.ts
+
 export const EMAIL_ASSETS = {
   LOGO_URL: 'https://alternativesolutions.io/logo.png', // Update to full CDN URL for production
 };
@@ -29,8 +31,7 @@ export const EMAIL_COPY = {
     NEXT_TITLE: "What Happens Next?",
     NEXT_BODY: "As mentioned on the launch page, my drafting table is currently at maximum capacity, so you are officially in the priority wait queue. The exact moment a build slot opens up, I will pull your file, review your details, and reach out to get started.",
     PREP_TITLE: "Your Homework",
-    PREP_BODY: "While you wait, you can start gathering your raw materials. Create a folder on your computer and drop in your highest resolution logo, a photo of yourself (for the founder bio), and your core business details (hours, location). When your build slot opens, you will unlock a secure Media Vault to drop those files directly into my engineering pipeline.",
-    ...STANDARD_SIGNATURE
+    PREP_BODY: "While you wait, start gathering your raw materials. Create a folder on your computer for your highest resolution logo, a photo for your bio, and core business details (like your hours and location). Once your build slot opens, you'll unlock a secure Media Vault to upload those files directly to me."
   },
   
   ADMIN_INTAKE: {
