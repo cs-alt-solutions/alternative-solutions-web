@@ -15,8 +15,6 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     setIsCollapsed(storedState);
     
     // THE FIX: Instantly broadcast the state to the rest of the app.
-    // Now, your Storefront Editor will catch this event on load and instantly 
-    // drop the 64px gap without waiting for you to click the toggle!
     window.dispatchEvent(new CustomEvent('sidebar-collapse', { 
       detail: { isCollapsed: storedState } 
     }));
@@ -34,8 +32,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       {/* Explicitly passing props to satisfy SidebarProps */}
       <Sidebar isOpen={isMobileOpen} closeMenu={closeMobileMenu} />
       
-      {/* THE FIX: We swapped 'w-full' for 'min-w-0 relative'. 
-        w-full forces the box to be 100vw, which pushes content off-screen when the sidebar is open.
+      {/* 
         min-w-0 tells the flexbox to perfectly absorb whatever space the sidebar leaves it.
         relative ensures your fullscreen Storefront Editor binds perfectly to this box.
       */}
@@ -43,7 +40,10 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         <DashboardMobileHeader isOpen={isMobileOpen} toggleMenu={toggleMobileMenu} />
         
         <div className="flex-1 overflow-y-auto relative">
-          {children}
+          {/* 🚀 THE WIDE LAYOUT FIX: Applying the global width wrapper here */}
+          <div className="w-full max-w-[1600px] mx-auto h-full">
+            {children}
+          </div>
         </div>
       </main>
     </div>
