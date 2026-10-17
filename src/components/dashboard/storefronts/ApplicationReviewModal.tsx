@@ -6,7 +6,7 @@ import { supabase } from '@/utils/supabase';
 import { 
   X, Rocket, XCircle, User, AlertTriangle,
   Share2, Instagram, Twitter, Linkedin, Zap,
-  Facebook, Hash, Link as LinkIcon, Clock, ArrowRight, Settings2
+  Facebook, Hash, Link as LinkIcon, Clock, ArrowRight, Settings2, CheckCircle2
 } from 'lucide-react';
 import { approveAndSendCheckout, updateApplicationStatus } from '@/app/actions/storefront_applications';
 
@@ -45,6 +45,7 @@ export default function ApplicationReviewModal({
   handleClose 
 }: ApplicationReviewModalProps) {
   const [isProcessing, setIsProcessing] = useState(false);
+  const [isSuccess, setIsSuccess] = useState(false);
   const [activeBuildCount, setActiveBuildCount] = useState<number | null>(null);
   
   const [verifyMode, setVerifyMode] = useState(false);
@@ -53,14 +54,13 @@ export default function ApplicationReviewModal({
   const router = useRouter();
   const targetApp = app || application || {};
 
-  // 🚀 THE FIX: Matched the TelemetryRow logic exactly to exclude prototypes
   useEffect(() => {
     const fetchCapacity = async () => {
       const { count } = await supabase
         .from('storefronts')
         .select('*', { count: 'exact', head: true })
         .in('status', ['BUILDING_CORE', 'CONTENT_ASSEMBLY'])
-        .eq('is_template', false); // Ignores sandbox models!
+        .eq('is_template', false);
         
       setActiveBuildCount(count || 0);
     };
@@ -87,15 +87,21 @@ export default function ApplicationReviewModal({
   };
 
   const handleConfirmDispatch = async () => {
-    if (!targetApp.id) return;
+    if (isProcessing || !targetApp.id) return;
     setIsProcessing(true);
     
     try {
       const result = await approveAndSendCheckout(targetApp.id, { slug: customSlug });
       
       if (result && result.success) {
-        triggerClose();
-        router.refresh();
+        setIsSuccess(true);
+        router.refresh(); 
+        
+        setTimeout(() => {
+          triggerClose();
+          // 🚀 FORCE CACHE CLEAR: Ensure it instantly vanishes from the dashboard
+          window.location.href = '/dashboard';
+        }, 2000);
       } else {
         alert(`Approval Error: ${result?.error || 'Unknown failure'}`);
         setIsProcessing(false);
@@ -114,7 +120,8 @@ export default function ApplicationReviewModal({
       const result = await updateApplicationStatus(targetApp.id, 'CANCELED');
       if (result && result.success) {
         triggerClose();
-        router.refresh();
+        // 🚀 FORCE CACHE CLEAR: Ensure it instantly vanishes upon rejection
+        window.location.href = '/dashboard';
       } else {
         alert(`Database Error: ${result?.error || 'Unknown failure'}`);
         setIsProcessing(false);
@@ -141,6 +148,20 @@ export default function ApplicationReviewModal({
     { name: 'TikTok', value: safeSocials.tiktok, icon: Hash, color: 'text-purple-400', border: 'border-purple-500/20 bg-purple-500/5' },
     { name: 'Other', value: safeSocials.other, icon: LinkIcon, color: 'text-teal-400', border: 'border-teal-500/20 bg-teal-500/5' },
   ].filter(s => !!s.value);
+
+  if (isSuccess) {
+    return (
+      <div className="fixed inset-0 z-50 flex items-center justify-center p-4 md:p-6 bg-black/85 backdrop-blur-md animate-in fade-in duration-200">
+        <div className="bg-emerald-950/40 border border-emerald-500/30 rounded-2xl w-full max-w-md p-12 flex flex-col items-center justify-center text-center shadow-[0_0_50px_rgba(16,185,129,0.2)] animate-in zoom-in-95 duration-300">
+          <div className="w-20 h-20 bg-emerald-500/20 text-emerald-400 rounded-full flex items-center justify-center mb-6 border border-emerald-500/40 shadow-[0_0_30px_rgba(16,185,129,0.3)]">
+            <CheckCircle2 size={40} className="animate-pulse" />
+          </div>
+          <h2 className="text-2xl font-black text-white uppercase tracking-tight mb-2">Lead Approved</h2>
+          <p className="text-sm text-emerald-400/80 font-mono tracking-widest uppercase">Checkout Link Dispatched</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 md:p-6 bg-black/85 backdrop-blur-md animate-in fade-in duration-200">
@@ -298,23 +319,16 @@ export default function ApplicationReviewModal({
            )}
 
            <div className="flex items-center gap-3 w-full sm:w-auto">
-             {!verifyMode && (
-               <button 
-                 onClick={triggerClose} disabled={isProcessing}
-                 className="hidden sm:block px-4 py-3 text-xs font-bold uppercase tracking-widest text-zinc-500 hover:text-white transition-colors cursor-pointer"
-               >
-                 Cancel
-               </button>
-             )}
-
-             {verifyMode ? (
+             {verifyMode && (
                <button 
                  onClick={handleConfirmDispatch} disabled={isProcessing || !customSlug}
                  className="w-full sm:w-auto flex items-center justify-center gap-2 px-8 py-3 rounded-xl text-xs font-black tracking-widest uppercase transition-all shadow-[0_0_20px_rgba(8,145,178,0.3)] bg-cyan-600 hover:bg-cyan-500 text-zinc-950 cursor-pointer"
                >
                  {isProcessing ? <span>DISPATCHING...</span> : <><Rocket size={16} /> <span>Lock Routing & Dispatch</span></>}
                </button>
-             ) : (
+             )}
+             
+             {!verifyMode && (
                <button 
                  onClick={handleInitiateApproval} disabled={isProcessing || !targetApp.id || isAtCapacity}
                  className={`w-full sm:w-auto flex items-center justify-center gap-2 px-8 py-3 rounded-xl text-xs font-black tracking-widest uppercase transition-all shadow-lg cursor-pointer ${

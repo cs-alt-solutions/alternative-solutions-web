@@ -1,14 +1,12 @@
-/* src/components/dashboard/storefronts/StorefrontsManager.tsx */
 'use client';
 
 import React, { useState } from 'react';
 import Link from 'next/link';
 import { 
   Settings, Globe, ShieldAlert, Search, Users, FlaskConical, 
-  LayoutGrid, ArrowUpDown, Filter, ChevronUp, ChevronDown, User, Eye, Trash2, Loader2 
+  LayoutGrid, ArrowUpDown, Filter, ChevronUp, ChevronDown, User, Eye 
 } from 'lucide-react';
 import { STOREFRONT_LIFECYCLE, StorefrontStatus } from '@/config/lifecycle';
-import { deleteStorefront } from '@/app/actions/storefronts';
 import NewStorefrontModal from './NewStorefrontModal';
 
 export default function StorefrontsManager({ initialData }: { initialData: any[] }) {
@@ -16,7 +14,6 @@ export default function StorefrontsManager({ initialData }: { initialData: any[]
   // 🚀 Automatically defaults to Active Clients on load
   const [activeTab, setActiveTab] = useState<'ALL' | 'CLIENTS' | 'PROTOTYPES'>('CLIENTS');
   const [storefronts, setStorefronts] = useState(initialData);
-  const [isDeleting, setIsDeleting] = useState<string | null>(null);
 
   const [sortConfig, setSortConfig] = useState<{ key: string; direction: 'asc' | 'desc' } | null>({ key: 'created_at', direction: 'desc' });
   const [statusFilter, setStatusFilter] = useState<string>('ALL'); 
@@ -33,20 +30,6 @@ export default function StorefrontsManager({ initialData }: { initialData: any[]
       direction = 'desc';
     }
     setSortConfig({ key, direction });
-  };
-
-  const handleDelete = async (id: string, name: string) => {
-    if (!window.confirm(`Are you absolutely sure you want to permanently delete "${name}"? This action cannot be undone.`)) return;
-    setIsDeleting(id);
-    try {
-      await deleteStorefront(id);
-      setStorefronts(prev => prev.filter(store => store.id !== id));
-    } catch (err: any) {
-      console.error("Delete failed:", err);
-      alert(err.message || "Failed to delete storefront.");
-    } finally {
-      setIsDeleting(null);
-    }
   };
 
   let processedData = storefronts.filter(store => 
@@ -215,15 +198,6 @@ export default function StorefrontsManager({ initialData }: { initialData: any[]
             >
               <Settings size={14} />
             </Link>
-
-            <button 
-              onClick={() => handleDelete(store.id, store.business_name)}
-              disabled={isDeleting === store.id}
-              className="p-1.5 rounded-md text-rose-400 bg-rose-500/10 hover:bg-rose-500/20 border border-rose-500/20 transition-all flex items-center justify-center disabled:opacity-50 cursor-pointer"
-              title="Delete Storefront"
-            >
-              {isDeleting === store.id ? <Loader2 size={14} className="animate-spin" /> : <Trash2 size={14} />}
-            </button>
           </div>
         </td>
       </tr>
@@ -335,6 +309,7 @@ export default function StorefrontsManager({ initialData }: { initialData: any[]
             <table className="w-full text-left border-collapse whitespace-nowrap select-none">
               <thead>
                 <tr className="border-b border-zinc-800 bg-zinc-900/30 text-[10px] font-black uppercase tracking-widest text-zinc-500">
+                  
                   <th 
                     className="px-6 py-4 cursor-pointer hover:bg-zinc-800/50 transition-colors group"
                     onClick={() => requestSort('business_name')}
