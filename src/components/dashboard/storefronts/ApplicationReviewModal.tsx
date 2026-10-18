@@ -167,7 +167,7 @@ export default function ApplicationReviewModal({
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 md:p-6 bg-black/85 backdrop-blur-md animate-in fade-in duration-200">
       <div className="bg-zinc-950 border border-zinc-800 rounded-2xl w-full max-w-4xl max-h-[90vh] overflow-hidden shadow-[0_0_50px_rgba(0,0,0,0.8)] flex flex-col">
         
-        <div className={`h-1 w-full shrink-0 ${isPriority ? 'bg-amber-500 shadow-[0_0_15px_rgba(245,158,11,0.5)]' : 'bg-gradient-to-r from-cyan-500 via-fuchsia-500 to-indigo-500'}`} />
+        <div className={`h-1 w-full shrink-0 ${isPriority ? 'bg-amber-500 shadow-[0_0_15px_rgba(245,158,11,0.5)]' : 'bg-linear-to-r from-cyan-500 via-fuchsia-500 to-indigo-500'}`} />
         
         <div className="flex justify-between items-center p-6 border-b border-zinc-800/80 bg-zinc-900/40 shrink-0">
           <div>

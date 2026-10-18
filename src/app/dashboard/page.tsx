@@ -98,7 +98,7 @@ export default async function DashboardOverview() {
         {/* LEFT COLUMN: The Primary Focus */}
         <div className="xl:col-span-8 space-y-6">
           <div className="bg-zinc-950 border border-zinc-800 rounded-2xl overflow-hidden shadow-2xl relative">
-            <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-fuchsia-500 to-cyan-500" />
+            <div className="absolute top-0 left-0 w-full h-1 bg-linear-to-r from-fuchsia-500 to-cyan-500" />
             <StorefrontIntakePanel items={recentLeads} copy={copy.DIRECTIVE} />
           </div>
 
@@ -112,7 +112,7 @@ export default async function DashboardOverview() {
         <div className="xl:col-span-4 space-y-6">
           
           <div className="bg-zinc-950 border border-amber-500/30 rounded-2xl overflow-hidden shadow-2xl relative animate-in fade-in slide-in-from-top-4">
-            <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-amber-500 to-orange-500" />
+            <div className="absolute top-0 left-0 w-full h-1 bg-linear-to-r from-amber-500 to-orange-500" />
             <ActiveClientRequests requests={activeRequests} />
           </div>
 
