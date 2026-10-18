@@ -1,23 +1,34 @@
-// src/components/storefronts/LivePrototypes.tsx
+/* src/components/storefronts/LivePrototypes.tsx */
 import React from 'react';
 import { TerminalSquare } from 'lucide-react';
 import { createClient } from '@/utils/supabase/server';
 import PrototypeGrid from './PrototypeGrid'; // 🚀 Plug in the new clean grid
 import { STOREFRONTS } from '@/config/marketing/storefronts';
 
+// 🚀 KILLS CACHE: Ensures status changes in your dashboard reflect on the public site instantly
+export const revalidate = 0; 
+
 export default async function LivePrototypes() {
   const supabase = await createClient();
 
-  const { data: prototypes, error } = await supabase
+  // Fetch the active database, then cleanly filter to avoid complex PostgREST string errors
+  const { data: allStorefronts, error } = await supabase
     .from('storefronts')
     .select('*')
-    .eq('is_template', true)
-    .eq('is_published', true) // Only grab visible templates
     .order('created_at', { ascending: false });
 
   if (error) console.error("Supabase Error ->", error.message);
 
-  const activePrototypes = prototypes || [];
+  // 🚀 THE FIX: Filter to include both published templates AND clients in public states
+  const activePrototypes = (allStorefronts || []).filter(site => {
+    if (site.is_template) {
+      // Rule 1: Include Prototypes (if they are toggled to visible)
+      return site.is_published === true;
+    }
+    // Rule 2: Include Real Clients (if they are in a publicly visible state)
+    return ['ACTIVE', 'LIVE', 'IN_REVIEW', 'AWAITING_ASSETS'].includes(site.status);
+  });
+
   const { GALLERY } = STOREFRONTS;
 
   return (
