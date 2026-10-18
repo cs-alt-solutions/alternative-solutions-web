@@ -78,7 +78,9 @@ export default function StorefrontTable({
             const status = rawStatus as StorefrontStatus;
             const config = STOREFRONT_LIFECYCLE[status] || { label: rawStatus, badgeColor: 'bg-zinc-800 text-zinc-400 border-zinc-700' };
             const isOffline = rawStatus === 'MAINTENANCE' || rawStatus === 'HIDDEN' || rawStatus === 'CANCELED' || rawStatus === 'ON_HOLD';
-            const isLive = ['ACTIVE', 'MAINTENANCE', 'HIDDEN'].includes(rawStatus);
+            
+            // 🚀 THE FIX: Awaiting Assets and In Review are real, LIVE websites. 
+            const isLive = ['ACTIVE', 'MAINTENANCE', 'HIDDEN', 'AWAITING_ASSETS', 'IN_REVIEW'].includes(rawStatus);
 
             const createdDate = new Date(store.created_at);
             const formattedDate = createdDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
@@ -102,7 +104,7 @@ export default function StorefrontTable({
                           type="text" 
                           defaultValue={store.business_name} 
                           onBlur={(e) => handleRowUpdate(store.id, 'business_name', e.target.value)}
-                          className="bg-zinc-950 border border-zinc-700 text-white text-sm font-bold tracking-tight rounded px-2 py-1 w-full max-w-50 focus:border-amber-500 outline-none"
+                          className="bg-zinc-950 border border-zinc-700 text-white text-sm font-bold tracking-tight rounded px-2 py-1 w-full max-w-[200px] focus:border-amber-500 outline-none"
                         />
                       ) : (
                         <span className="text-sm font-bold text-white tracking-tight truncate max-w-50 md:max-w-xs">{store.business_name}</span>
@@ -117,7 +119,7 @@ export default function StorefrontTable({
                     <select 
                       value={store.industry_tag || store.category || store.industry || ''} 
                       onChange={(e) => handleRowUpdate(store.id, 'category', e.target.value)}
-                      className="bg-zinc-950 border border-zinc-700 text-zinc-300 text-[10px] font-black uppercase tracking-widest rounded px-2 py-1.5 focus:border-amber-500 outline-none cursor-pointer w-full max-w-37.5"
+                      className="bg-zinc-950 border border-zinc-700 text-zinc-300 text-[10px] font-black uppercase tracking-widest rounded px-2 py-1.5 focus:border-amber-500 outline-none cursor-pointer w-full max-w-[150px]"
                     >
                       <option value="" disabled>Select Category</option>
                       {availableCategories.map(cat => (
@@ -174,6 +176,7 @@ export default function StorefrontTable({
                       <User size={14} />
                     </Link>
 
+                    {/* 🚀 THE FIX: It now correctly assigns the Emerald Globe to these Live sites */}
                     <a 
                       href={`https://storefronts.alternativesolutions.io/${store.slug}`}
                       target="_blank"
