@@ -5,7 +5,8 @@ import GlobalTriage from '@/components/dashboard/support-desk/GlobalTriage';
 
 export default async function SupportDeskPage() {
   return (
-    <div className="p-8 max-w-7xl mx-auto w-full animate-in fade-in duration-500">
+    // STRIPPED: max-w-7xl mx-auto and hardcoded p-8. Added responsive padding and w-full.
+    <div className="p-4 md:p-6 lg:p-8 w-full animate-in fade-in duration-500">
       
       {/* Header */}
       <div className="flex items-center justify-between mb-8 pb-6 border-b border-white/10">

@@ -1,4 +1,4 @@
-// src/config/emails.ts
+/* src/config/emails.ts */
 
 export const EMAIL_ASSETS = {
   LOGO_URL: 'https://alternativesolutions.io/logo.png', // Update to full CDN URL for production
@@ -88,19 +88,15 @@ export const EMAIL_COPY = {
     HEADER: 'Build Progress',
     SUBHEADER: 'Staging Environment',
     GREETING: 'Hey',
-    BODY_1: "Here is a quick preview of what your digital storefront's going to look like so far. We can definitely make adjustments together, but I wanted to show you the progress before you lock in your subscription.",
+    BODY_1: "Here is what we've got going on so far. I think it's looking great, but I wanted you to review it and get your go-ahead to clear it to push live.",
     INSTRUCTIONS_TITLE: 'What happens next?',
     INSTRUCTIONS_INTRO: 'Instead of going back and forth over email, I want to get you set up in your private client portal so we can collaborate and finish this efficiently.',
-    
     INSTRUCTION_1_TITLE: '1. Take a look',
-    INSTRUCTION_1_BODY: 'Click the link, view the staging progress, and see the foundation I am building for you.',
-    
-    INSTRUCTION_2_TITLE: '2. Activate subscription',
+    INSTRUCTION_1_BODY: 'Click the link below, view the staging progress, and see the foundation I am building for you.',
+    INSTRUCTION_2_TITLE: '2. Lock it in',
     INSTRUCTION_2_BODY: 'When you are ready to proceed, click the button on the staging widget to set up your subscription.',
-    
-    INSTRUCTION_3_TITLE: '⚡ 3. Enter your portal',
+    INSTRUCTION_3_TITLE: '3. Enter your portal',
     INSTRUCTION_3_BODY: 'Once active, you unlock your portal. That is where you will upload your images and drop your specific tweaks so I can finish getting you exactly where you need to be.',
-    
     CTA_BUTTON: 'Access your staging environment',
     ...STANDARD_SIGNATURE
   },
@@ -135,6 +131,18 @@ export const EMAIL_COPY = {
     NEXT_STEPS_TITLE: 'What happens next?',
     NEXT_STEPS_BODY: "Just click the button below to lock in your secure hosting subscription. The second your payment clears, I get a ping on my end, and I'll flip the switch to put your site live. Let's get this thing out there.",
     CTA_BUTTON: 'Activate & Go Live',
+    ...STANDARD_SIGNATURE
+  },
+
+  // 🚀 THE NEW RE-ENGAGEMENT EMAIL
+  FOLLOW_UP: {
+    HEADER: 'Build Status',
+    SUBHEADER: 'Queue Check-In',
+    GREETING: 'Hey',
+    BODY_1: "I noticed your build application has been sitting in the 'Awaiting Payment' queue for a bit. My active drafting table is pretty packed right now, so I do routine sweeps to clear out inactive files and make room for the next founder on the waitlist.",
+    BODY_2: "I wanted to check in personally before I archive your project: Are you still wanting to lock in your foundation and get this built?",
+    BTN_YES: "Yes, Start My Build",
+    BTN_NO: "No, Archive My File",
     ...STANDARD_SIGNATURE
   },
 

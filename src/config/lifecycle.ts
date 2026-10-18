@@ -6,6 +6,8 @@ export type StorefrontStatus =
   | 'BUILDING_CORE' 
   | 'IN_REVIEW' 
   | 'CONTENT_ASSEMBLY' 
+  | 'AWAITING_ASSETS'
+  | 'ON_HOLD'
   | 'ACTIVE' 
   | 'MAINTENANCE' 
   | 'HIDDEN' 
@@ -56,10 +58,26 @@ export const STOREFRONT_LIFECYCLE: Record<StorefrontStatus, LifecycleConfig> = {
   'CONTENT_ASSEMBLY': {
     label: 'Content Assembly',
     badgeColor: 'bg-indigo-500/10 text-indigo-400 border-indigo-500/20',
-    isPubliclyVisible: false,
+    isPubliclyVisible: true,
     isCanvasLocked: false,
-    allowedNextStates: ['ACTIVE', 'CANCELED'],
+    allowedNextStates: ['ACTIVE', 'CANCELED', 'AWAITING_ASSETS'],
     description: 'Architecture locked. Uploading Drop Vault assets and formatting copy.'
+  },
+  'AWAITING_ASSETS': {
+    label: 'Awaiting Assets',
+    badgeColor: 'bg-violet-500/10 text-violet-400 border-violet-500/20',
+    isPubliclyVisible: true,
+    isCanvasLocked: false,
+    allowedNextStates: ['ACTIVE', 'CONTENT_ASSEMBLY', 'CANCELED'],
+    description: 'Site is active but waiting on client to upload final media or text.'
+  },
+  'ON_HOLD': {
+    label: 'On Hold',
+    badgeColor: 'bg-rose-500/10 text-rose-400 border-rose-500/20',
+    isPubliclyVisible: false,
+    isCanvasLocked: true,
+    allowedNextStates: ['BUILDING_CORE', 'CANCELED'],
+    description: 'Project frozen or paused.'
   },
   'ACTIVE': {
     label: 'Live Production',
