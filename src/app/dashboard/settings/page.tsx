@@ -8,7 +8,8 @@ export const metadata = {
 
 export default function AdminSettingsPage() {
   return (
-    <div className="p-4 md:p-8 max-w-5xl mx-auto w-full animate-in fade-in duration-500 pb-24">
+    // STRIPPED: max-w-5xl mx-auto. Added responsive padding and w-full.
+    <div className="p-4 md:p-6 lg:p-8 w-full animate-in fade-in duration-500 pb-24">
       <header className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-8 border-b border-white/5 pb-8">
         <div>
           <div className="flex items-center gap-2 mb-2">

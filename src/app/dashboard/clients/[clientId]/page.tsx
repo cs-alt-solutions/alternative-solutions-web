@@ -93,7 +93,8 @@ export default function ClientAdminProfilePage() {
   };
 
   return (
-    <div className="p-6 lg:p-8 max-w-7xl mx-auto space-y-8 animate-in fade-in duration-500 h-full overflow-y-auto">
+    // STRIPPED max-w-7xl mx-auto -> REPLACED with w-full
+    <div className="p-4 md:p-6 lg:p-8 w-full space-y-8 animate-in fade-in duration-500 h-full overflow-y-auto">
       
       <button 
         onClick={() => router.push(ROUTES.DASHBOARD.CLIENTS)}

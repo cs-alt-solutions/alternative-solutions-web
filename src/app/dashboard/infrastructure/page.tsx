@@ -14,7 +14,8 @@ export default function InfrastructurePage() {
   ];
 
   return (
-    <div className="p-8 animate-in fade-in duration-500 max-w-7xl mx-auto">
+    // STRIPPED: max-w-7xl mx-auto. Added responsive padding and w-full.
+    <div className="p-4 md:p-6 lg:p-8 w-full animate-in fade-in duration-500">
       <header className="mb-10 border-b border-white/10 pb-6">
         <h1 className="text-4xl font-black tracking-tighter uppercase text-white mb-2">
           {copy?.TITLE || "Infrastructure Command"}
@@ -55,7 +56,7 @@ export default function InfrastructurePage() {
         ))}
       </div>
 
-      <div className="mt-12 p-6 rounded-xl border border-brand-primary/20 bg-brand-primary/5 flex items-start gap-4 max-w-3xl">
+      <div className="mt-12 p-6 rounded-xl border border-brand-primary/20 bg-brand-primary/5 flex items-start gap-4 w-full xl:max-w-3xl">
         <ShieldCheck size={24} className="text-brand-primary shrink-0 mt-1" />
         <div>
           <h3 className="text-sm font-bold uppercase tracking-widest text-brand-primary mb-1">Architecture Integrity</h3>

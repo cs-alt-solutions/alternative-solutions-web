@@ -101,11 +101,13 @@ export default function ProjectWorkspace({ params }: { params: Promise<{ id: str
         </button>
       </div>
 
-      <main className="flex-1 overflow-y-auto p-8 relative z-0">
+      {/* STRIPPED: Replaced hardcoded p-8 with responsive padding */}
+      <main className="flex-1 overflow-y-auto p-4 md:p-6 lg:p-8 relative z-0">
         
         {/* SECTOR 1: FEATURES & BUGS */}
         {activeSector === 'FEATURES' && (
-          <div className="max-w-6xl mx-auto animate-in fade-in slide-in-from-bottom-4 duration-300">
+          // STRIPPED max-w-6xl mx-auto -> REPLACED with w-full
+          <div className="w-full animate-in fade-in slide-in-from-bottom-4 duration-300">
             <div className="mb-8">
               <h2 className="text-lg font-black uppercase tracking-widest mb-1 text-brand-primary">Continuous Integration</h2>
               <p className="text-xs text-slate-400 font-mono">Track client feature requests for future upsells, and log system bugs for patching.</p>
@@ -150,7 +152,8 @@ export default function ProjectWorkspace({ params }: { params: Promise<{ id: str
 
         {/* SECTOR 2: STOREFRONT BLUEPRINT */}
         {activeSector === 'STOREFRONT' && (
-          <div className="max-w-5xl mx-auto animate-in fade-in slide-in-from-bottom-4 duration-300">
+          // STRIPPED max-w-5xl mx-auto -> REPLACED with w-full
+          <div className="w-full animate-in fade-in slide-in-from-bottom-4 duration-300">
             <div className="flex justify-between items-end mb-8">
               <div>
                 <h2 className="text-lg font-black uppercase tracking-widest mb-1 text-fuchsia-400">Storefront Blueprint</h2>
@@ -163,7 +166,7 @@ export default function ProjectWorkspace({ params }: { params: Promise<{ id: str
             
             <div className="grid md:grid-cols-2 gap-6">
               <div className="bg-black/60 border border-slate-800 rounded-2xl p-6">
-                 <h3 className="text-xs font-bold font-mono uppercase tracking-widest text-slate-500 mb-6 border-b border-slate-800 pb-2">1. The Hero Section</h3>
+                 <h3 className="text-xs font-bold font-mono uppercase tracking-widest text-slate-500 mb-6 border-b border-slate-800 pb-2">The Hero Section</h3>
                  <div className="space-y-4">
                     <div>
                       <label className="text-[10px] font-mono text-slate-400 uppercase tracking-widest mb-2 block">Status Badge</label>
@@ -192,7 +195,8 @@ export default function ProjectWorkspace({ params }: { params: Promise<{ id: str
 
         {/* SECTOR 3: HYBRID FUNDING & SPLITS */}
         {activeSector === 'FUNDING' && (
-          <div className="max-w-5xl mx-auto animate-in fade-in slide-in-from-bottom-4 duration-300">
+          // STRIPPED max-w-5xl mx-auto -> REPLACED with w-full
+          <div className="w-full animate-in fade-in slide-in-from-bottom-4 duration-300">
              <div className="flex justify-between items-end mb-8">
               <div>
                 <h2 className="text-lg font-black uppercase tracking-widest mb-1 text-amber-400">Hybrid Deal Engine</h2>
@@ -253,7 +257,8 @@ export default function ProjectWorkspace({ params }: { params: Promise<{ id: str
 
         {/* SECTOR 4: CLIENT DESK */}
         {activeSector === 'CONTRACT' && (
-          <div className="max-w-4xl mx-auto animate-in fade-in slide-in-from-bottom-4 duration-300">
+          // STRIPPED max-w-4xl mx-auto -> REPLACED with w-full
+          <div className="w-full animate-in fade-in slide-in-from-bottom-4 duration-300">
              <div className="mb-8 text-center">
                 <Briefcase size={48} className="mx-auto text-emerald-400 mb-4 opacity-50" />
                 <h2 className="text-2xl font-black uppercase tracking-widest mb-2 text-emerald-400">The Deal Desk</h2>

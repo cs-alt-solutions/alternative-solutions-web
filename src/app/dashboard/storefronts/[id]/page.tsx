@@ -6,18 +6,35 @@ import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { supabase } from '@/utils/supabase';
 import { 
-  Layout, Server, ExternalLink, Loader2, MonitorSmartphone, RefreshCw,
-  PenTool, Palette, Image as ImageIcon, Layers, Save, ArrowLeft,
-  PanelLeftClose, PanelLeftOpen, Lock, ShieldAlert, Unlock, FileUp, Tag, Scale
+  Layout, 
+  Server, 
+  ExternalLink, 
+  Loader2, 
+  MonitorSmartphone, 
+  RefreshCw,
+  PenTool,
+  Palette,
+  Image as ImageIcon,
+  Layers,
+  Save,
+  ArrowLeft,
+  PanelLeftClose,
+  PanelLeftOpen,
+  Lock,
+  ShieldAlert,
+  Unlock,
+  FileUp,
+  Tag,
+  Scale
 } from 'lucide-react';
 
 import CoreTab from '@/components/dashboard/storefronts/editor/CoreTab';
 import VisualArchitecture from '@/components/dashboard/storefronts/editor/core/VisualArchitecture';
 import MediaTab from '@/components/dashboard/storefronts/editor/MediaTab';
 import CapabilitiesTab from '@/components/dashboard/storefronts/editor/CapabilitiesTab';
+import LogisticsTab from '@/components/dashboard/storefronts/editor/LogisticsTab';
 import GridTab from '@/components/dashboard/storefronts/editor/GridTab';
 import VaultTab from '@/components/dashboard/storefronts/editor/vault/VaultTab';
-import LogisticsTab from '@/components/dashboard/storefronts/editor/LogisticsTab';
 import { deleteStorefront } from '@/app/actions/storefronts';
 import { STOREFRONT_EDITOR_COPY } from '@/config/dashboard';
 
@@ -28,7 +45,7 @@ export default function TenantCommandHub() {
   const [formData, setFormData] = useState<any>(null);
   
   const [activeTab, setActiveTab] = useState<'canvas' | 'grid' | 'vault'>('canvas');
-  // 🚀 ADDED 'logistics' to the editor state
+  // 🚀 Integrated 'logistics' into the editor state
   const [editorTab, setEditorTab] = useState<'content' | 'design' | 'media' | 'services' | 'logistics'>('content');
   const [controlsExpanded, setControlsExpanded] = useState(true);
   
@@ -36,8 +53,7 @@ export default function TenantCommandHub() {
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [saveMessage, setSaveMessage] = useState('');
-  
-  const [refreshKey, setRefreshKey] = useState(0); 
+  const [refreshKey, setRefreshKey] = useState(Date.now());
   
   const [isUnlocked, setIsUnlocked] = useState(false);
 
@@ -70,6 +86,15 @@ export default function TenantCommandHub() {
       window.removeEventListener('sidebar-collapse', handleCollapse);
     };
   }, [id]);
+
+  // 🚀 THE FIX: This cures the "Ghost Gap" bug you showed in the video.
+  // Whenever the sidebar, controls, or tabs change, it forces the browser to recalculate the iframe width instantly.
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      window.dispatchEvent(new Event('resize'));
+    }, 100);
+    return () => clearTimeout(timer);
+  }, [isSidebarCollapsed, controlsExpanded, activeTab, editorTab]);
 
   const reloadCanvas = () => setRefreshKey(Date.now());
 
@@ -130,6 +155,7 @@ export default function TenantCommandHub() {
   return (
     <div className={`fixed top-0 right-0 bottom-0 left-0 transition-all duration-300 ${isSidebarCollapsed ? 'md:left-20' : 'md:left-64'} z-40 bg-black flex flex-col overflow-hidden animate-in fade-in duration-300`}>
       
+      {/* HUB HEADER */}
       <header className="border-b border-white/5 bg-zinc-950 px-4 md:px-6 py-4 flex items-center justify-between shrink-0">
         <div className="flex items-center gap-4">
           <Link 
@@ -178,6 +204,7 @@ export default function TenantCommandHub() {
         </div>
       </header>
 
+      {/* COMMAND NAVIGATION */}
       <nav className="flex items-center gap-4 md:gap-6 px-4 md:px-6 border-b border-zinc-800 bg-zinc-950 shrink-0">
         <button 
           onClick={() => setActiveTab('canvas')}
@@ -199,7 +226,10 @@ export default function TenantCommandHub() {
         </button>
       </nav>
 
+      {/* DYNAMIC WORKSPACE */}
       <div className="flex-1 flex overflow-hidden w-full relative">
+        
+        {/* TAB 1: THE CANVAS */}
         {activeTab === 'canvas' && (
           <div className="flex w-full h-full">
             {controlsExpanded && (
@@ -226,20 +256,19 @@ export default function TenantCommandHub() {
                 </div>
 
                 <div className="flex flex-wrap items-center gap-1 p-2 border-b border-zinc-800 bg-zinc-900/50">
-                  <button onClick={() => setEditorTab('content')} className={`flex-1 flex items-center justify-center gap-1.5 py-2 rounded-md text-[9px] font-bold tracking-widest uppercase transition-all cursor-pointer ${editorTab === 'content' ? 'bg-zinc-800 text-white shadow-sm' : 'text-zinc-500 hover:text-zinc-300 hover:bg-zinc-800/50'}`}>
+                  <button onClick={() => setEditorTab('content')} className={`flex-1 flex items-center justify-center gap-1.5 py-2 rounded-md text-[9px] md:text-[10px] font-bold tracking-widest uppercase transition-all cursor-pointer ${editorTab === 'content' ? 'bg-zinc-800 text-white shadow-sm' : 'text-zinc-500 hover:text-zinc-300 hover:bg-zinc-800/50'}`}>
                     <PenTool className="w-3.5 h-3.5 hidden xl:block" /> Content
                   </button>
-                  <button onClick={() => setEditorTab('design')} className={`flex-1 flex items-center justify-center gap-1.5 py-2 rounded-md text-[9px] font-bold tracking-widest uppercase transition-all cursor-pointer ${editorTab === 'design' ? 'bg-zinc-800 text-white shadow-sm' : 'text-zinc-500 hover:text-zinc-300 hover:bg-zinc-800/50'}`}>
+                  <button onClick={() => setEditorTab('design')} className={`flex-1 flex items-center justify-center gap-1.5 py-2 rounded-md text-[9px] md:text-[10px] font-bold tracking-widest uppercase transition-all cursor-pointer ${editorTab === 'design' ? 'bg-zinc-800 text-white shadow-sm' : 'text-zinc-500 hover:text-zinc-300 hover:bg-zinc-800/50'}`}>
                     <Palette className="w-3.5 h-3.5 hidden xl:block" /> Design
                   </button>
-                  <button onClick={() => setEditorTab('media')} className={`flex-1 flex items-center justify-center gap-1.5 py-2 rounded-md text-[9px] font-bold tracking-widest uppercase transition-all cursor-pointer ${editorTab === 'media' ? 'bg-zinc-800 text-white shadow-sm' : 'text-zinc-500 hover:text-zinc-300 hover:bg-zinc-800/50'}`}>
-                    <ImageIcon className="w-3.5 h-3.5 hidden xl:block" /> Core
+                  <button onClick={() => setEditorTab('media')} className={`flex-1 flex items-center justify-center gap-1.5 py-2 rounded-md text-[9px] md:text-[10px] font-bold tracking-widest uppercase transition-all cursor-pointer ${editorTab === 'media' ? 'bg-zinc-800 text-white shadow-sm' : 'text-zinc-500 hover:text-zinc-300 hover:bg-zinc-800/50'}`}>
+                    <ImageIcon className="w-3.5 h-3.5 hidden xl:block" /> Media
                   </button>
-                  <button onClick={() => setEditorTab('services')} className={`flex-1 flex items-center justify-center gap-1.5 py-2 rounded-md text-[9px] font-bold tracking-widest uppercase transition-all cursor-pointer ${editorTab === 'services' ? 'bg-zinc-800 text-white shadow-sm' : 'text-zinc-500 hover:text-zinc-300 hover:bg-zinc-800/50'}`}>
+                  <button onClick={() => setEditorTab('services')} className={`flex-1 flex items-center justify-center gap-1.5 py-2 rounded-md text-[9px] md:text-[10px] font-bold tracking-widest uppercase transition-all cursor-pointer ${editorTab === 'services' ? 'bg-zinc-800 text-white shadow-sm' : 'text-zinc-500 hover:text-zinc-300 hover:bg-zinc-800/50'}`}>
                     <Layers className="w-3.5 h-3.5 hidden xl:block" /> {servicesTabLabel.split(' ')[0]}
                   </button>
-                  {/* 🚀 NEW: Dedicated Logistics Tab */}
-                  <button onClick={() => setEditorTab('logistics')} className={`flex-1 flex items-center justify-center gap-1.5 py-2 rounded-md text-[9px] font-bold tracking-widest uppercase transition-all cursor-pointer ${editorTab === 'logistics' ? 'bg-zinc-800 text-white shadow-sm' : 'text-zinc-500 hover:text-zinc-300 hover:bg-zinc-800/50'}`}>
+                  <button onClick={() => setEditorTab('logistics')} className={`flex-1 flex items-center justify-center gap-1.5 py-2 rounded-md text-[9px] md:text-[10px] font-bold tracking-widest uppercase transition-all cursor-pointer ${editorTab === 'logistics' ? 'bg-zinc-800 text-white shadow-sm' : 'text-zinc-500 hover:text-zinc-300 hover:bg-zinc-800/50'}`}>
                     <Scale className="w-3.5 h-3.5 hidden xl:block" /> Logistics
                   </button>
                 </div>
@@ -253,7 +282,6 @@ export default function TenantCommandHub() {
                   )}
                   {editorTab === 'media' && <MediaTab formData={formData} setFormData={setFormData} onReload={reloadCanvas} />}
                   {editorTab === 'services' && <CapabilitiesTab formData={formData} setFormData={setFormData} onReload={reloadCanvas} />}
-                  {/* 🚀 Render Logistics Workspace */}
                   {editorTab === 'logistics' && <LogisticsTab formData={formData} setFormData={setFormData} />}
                 </div>
               </div>
@@ -299,10 +327,12 @@ export default function TenantCommandHub() {
           </div>
         )}
 
+        {/* TAB 2: THE GRID */}
         {activeTab === 'grid' && (
            <GridTab formData={formData} setFormData={setFormData} onTerminate={handleStorefrontTermination} />
         )}
 
+        {/* TAB 3: THE VAULT */}
         {activeTab === 'vault' && (
           <div className="flex-1 overflow-y-auto w-full relative custom-scrollbar">
             <VaultTab 
@@ -314,32 +344,47 @@ export default function TenantCommandHub() {
           </div>
         )}
 
+        {/* 🚨 THE GLOBAL SYSTEM LOCK SHIELD 🚨 */}
         {['IN REVIEW', 'APPROVED', 'LIVE', 'CHANGES_REQUESTED'].includes(formData.status) && activeTab === 'canvas' && !isUnlocked && (
           <div className="absolute inset-0 z-100 bg-black/60 backdrop-blur-md flex flex-col items-center justify-center border border-cyan-500/20 shadow-[inset_0_0_100px_rgba(6,182,212,0.05)] transition-all duration-500 animate-in fade-in zoom-in-95">
+            
             <div className="bg-zinc-950/90 border border-zinc-800 p-8 rounded-2xl flex flex-col items-center max-w-sm text-center shadow-2xl">
               <div className="p-4 bg-cyan-500/10 rounded-full mb-4 border border-cyan-500/20">
                 <Lock size={32} className="text-cyan-400 animate-pulse" />
               </div>
+              
               <h2 className="text-lg font-black text-white tracking-[0.2em] uppercase mb-2">
                 {STOREFRONT_EDITOR_COPY.SYSTEM_LOCK.TITLE}
               </h2>
+              
               <div className="text-[10px] font-mono font-bold text-cyan-400 bg-cyan-500/10 px-3 py-1 rounded border border-cyan-500/20 mb-4 tracking-widest uppercase">
                 {STOREFRONT_EDITOR_COPY.SYSTEM_LOCK.STATUS_PREFIX} {formData.status}
               </div>
+              
               <p className="text-[11px] text-zinc-400 leading-relaxed font-medium mb-8 px-4">
                 {STOREFRONT_EDITOR_COPY.SYSTEM_LOCK.BODY}
               </p>
+              
               <div className="flex flex-col gap-3 w-full">
-                <button onClick={() => setIsUnlocked(true)} className="w-full flex items-center justify-center gap-2 bg-cyan-500 hover:bg-cyan-400 text-zinc-950 font-black py-3 px-4 rounded-md text-[10px] uppercase tracking-widest transition-all shadow-[0_0_15px_rgba(6,182,212,0.4)] cursor-pointer">
+                <button 
+                  onClick={() => setIsUnlocked(true)}
+                  className="w-full flex items-center justify-center gap-2 bg-cyan-500 hover:bg-cyan-400 text-zinc-950 font-black py-3 px-4 rounded-md text-[10px] uppercase tracking-widest transition-all shadow-[0_0_15px_rgba(6,182,212,0.4)] cursor-pointer"
+                >
                   <Unlock size={14} /> {STOREFRONT_EDITOR_COPY.SYSTEM_LOCK.BTN_OVERRIDE}
                 </button>
-                <button onClick={() => setFormData({ ...formData, status: 'BUILDING' })} className="w-full flex items-center justify-center gap-2 bg-zinc-900 hover:bg-zinc-800 text-zinc-300 border border-zinc-700 hover:border-amber-500/50 py-3 px-4 rounded-md text-[10px] font-black uppercase tracking-widest transition-all group cursor-pointer">
-                  <ShieldAlert size={12} className="group-hover:text-amber-400 transition-colors" /> {STOREFRONT_EDITOR_COPY.SYSTEM_LOCK.BTN_REVERT}
+
+                <button 
+                  onClick={() => setFormData({ ...formData, status: 'BUILDING' })}
+                  className="w-full flex items-center justify-center gap-2 bg-zinc-900 hover:bg-zinc-800 text-zinc-300 border border-zinc-700 hover:border-amber-500/50 py-3 px-4 rounded-md text-[10px] font-black uppercase tracking-widest transition-all group cursor-pointer"
+                >
+                  <ShieldAlert size={12} className="group-hover:text-amber-400 transition-colors" />
+                  {STOREFRONT_EDITOR_COPY.SYSTEM_LOCK.BTN_REVERT}
                 </button>
               </div>
             </div>
           </div>
         )}
+
       </div>
     </div>
   );

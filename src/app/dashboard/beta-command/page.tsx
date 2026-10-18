@@ -8,7 +8,8 @@ export default function BetaCommandPage() {
   const copy = WEBSITE_COPY.DASHBOARD.BETA_COMMAND;
 
   return (
-    <div className="p-8 relative max-w-7xl mx-auto">
+    // STRIPPED: max-w-7xl mx-auto. Replaced with w-full and responsive padding.
+    <div className="p-4 md:p-6 lg:p-8 relative w-full animate-in fade-in duration-500">
       {/* THE COMMAND HEADER */}
       <header className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-10 border-b border-white/5 pb-8">
         <div>

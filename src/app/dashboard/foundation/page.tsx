@@ -1,3 +1,4 @@
+/* src/app/dashboard/foundation/page.tsx */
 'use client';
 
 import React, { useState } from 'react';
@@ -17,7 +18,8 @@ export default function DraftingTablePage() {
   ] as const;
 
   return (
-    <div className="w-full max-w-7xl mx-auto space-y-8 animate-in fade-in duration-500">
+    // STRIPPED: max-w-7xl mx-auto. Added responsive padding and w-full.
+    <div className="p-4 md:p-6 lg:p-8 w-full space-y-8 animate-in fade-in duration-500">
       
       {/* Dynamic Header */}
       <div>

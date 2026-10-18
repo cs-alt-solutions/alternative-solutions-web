@@ -1,20 +1,19 @@
+/* src/components/dashboard/storefronts/StorefrontsManager.tsx */
 'use client';
 
 import React, { useState } from 'react';
 import Link from 'next/link';
-import { 
-  Settings, Globe, ShieldAlert, Search, Users, FlaskConical, 
-  LayoutGrid, ArrowUpDown, Filter, ChevronUp, ChevronDown, User, Eye 
-} from 'lucide-react';
+import {
+   Settings, Globe, ShieldAlert, Search, Users, FlaskConical,
+   LayoutGrid, ArrowUpDown, Filter, ChevronUp, ChevronDown, User, Eye
+ } from 'lucide-react';
 import { STOREFRONT_LIFECYCLE, StorefrontStatus } from '@/config/lifecycle';
 import NewStorefrontModal from './NewStorefrontModal';
 
 export default function StorefrontsManager({ initialData }: { initialData: any[] }) {
   const [search, setSearch] = useState('');
-  // 🚀 Automatically defaults to Active Clients on load
   const [activeTab, setActiveTab] = useState<'ALL' | 'CLIENTS' | 'PROTOTYPES'>('CLIENTS');
   const [storefronts, setStorefronts] = useState(initialData);
-
   const [sortConfig, setSortConfig] = useState<{ key: string; direction: 'asc' | 'desc' } | null>({ key: 'created_at', direction: 'desc' });
   const [statusFilter, setStatusFilter] = useState<string>('ALL'); 
   const [planFilter, setPlanFilter] = useState<string>('ALL');
@@ -133,17 +132,17 @@ export default function StorefrontsManager({ initialData }: { initialData: any[]
             </div>
           </div>
         </td>
-
+        
         <td className="px-6 py-4 hidden md:table-cell text-xs font-medium text-zinc-400 capitalize">
           {displayCategory}
         </td>
-
+        
         <td className="px-6 py-4 hidden lg:table-cell">
           <span className="text-[10px] font-black text-zinc-300 bg-zinc-800/50 px-2 py-1 rounded border border-zinc-700/50 uppercase tracking-widest">
             {displayPlan}
           </span>
         </td>
-        
+
         <td className="px-6 py-4">
           <span className={`inline-flex items-center px-2.5 py-1 rounded-md text-[10px] font-black uppercase tracking-widest border ${config.badgeColor}`}>
             {config.label}
@@ -205,7 +204,8 @@ export default function StorefrontsManager({ initialData }: { initialData: any[]
   };
 
   return (
-    <div className="max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-6 space-y-6">
+    // THE FIX: Removed max-w-7xl mx-auto to let it span edge-to-edge
+    <div className="w-full px-4 sm:px-6 lg:px-8 py-6 space-y-6">
       
       {/* HEADER */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-zinc-800/50">
@@ -267,7 +267,6 @@ export default function StorefrontsManager({ initialData }: { initialData: any[]
               ))}
             </select>
           </div>
-
           <div className="relative flex-1 sm:flex-none">
             <Filter className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-zinc-500 pointer-events-none" />
             <select
@@ -281,7 +280,6 @@ export default function StorefrontsManager({ initialData }: { initialData: any[]
               ))}
             </select>
           </div>
-
           <div className="relative flex-1 sm:flex-none">
             <Filter className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-zinc-500 pointer-events-none" />
             <select
@@ -299,7 +297,7 @@ export default function StorefrontsManager({ initialData }: { initialData: any[]
       </div>
 
       {/* TABLE VIEW */}
-      <div className="bg-stardust border border-zinc-800/80 rounded-xl shadow-xl p-4 sm:p-6">
+      <div className="bg-[#0a0a0c] border border-zinc-800/80 rounded-xl shadow-xl p-4 sm:p-6">
         <div className="overflow-x-auto rounded-lg border border-zinc-800/50 bg-zinc-950/50">
           {processedData.length === 0 ? (
             <div className="p-16 text-center flex flex-col items-center justify-center">
@@ -370,7 +368,6 @@ export default function StorefrontsManager({ initialData }: { initialData: any[]
           )}
         </div>
       </div>
-
     </div>
   );
 }

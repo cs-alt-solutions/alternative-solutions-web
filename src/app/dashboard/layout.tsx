@@ -1,4 +1,4 @@
-// src/app/dashboard/layout.tsx
+/* src/app/dashboard/layout.tsx */
 'use client';
 
 import React, { useState, useEffect } from 'react';
@@ -10,11 +10,9 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const [isMobileOpen, setIsMobileOpen] = useState(false);
 
   useEffect(() => {
-    // THE FIX: Check the browser's memory the exact millisecond the layout mounts
     const storedState = localStorage.getItem('sidebar-collapsed') === 'true';
     setIsCollapsed(storedState);
     
-    // THE FIX: Instantly broadcast the state to the rest of the app.
     window.dispatchEvent(new CustomEvent('sidebar-collapse', { 
       detail: { isCollapsed: storedState } 
     }));
@@ -28,20 +26,16 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const closeMobileMenu = () => setIsMobileOpen(false);
 
   return (
-    <div className="flex h-screen overflow-hidden bg-bg-app w-screen">
-      {/* Explicitly passing props to satisfy SidebarProps */}
+    <div className="flex h-screen overflow-hidden bg-bg-app w-full">
       <Sidebar isOpen={isMobileOpen} closeMenu={closeMobileMenu} />
       
-      {/* 
-        min-w-0 tells the flexbox to perfectly absorb whatever space the sidebar leaves it.
-        relative ensures your fullscreen Storefront Editor binds perfectly to this box.
-      */}
       <main className="flex-1 h-full min-w-0 overflow-hidden bg-black flex flex-col relative transition-all duration-300">
         <DashboardMobileHeader isOpen={isMobileOpen} toggleMenu={toggleMobileMenu} />
         
-        <div className="flex-1 overflow-y-auto relative">
-          {/* 🚀 THE WIDE LAYOUT FIX: Applying the global width wrapper here */}
-          <div className="w-full max-w-[1600px] mx-auto h-full">
+        <div className="flex-1 overflow-y-auto overflow-x-hidden relative custom-scrollbar">
+          {/* THE FLUID LAYOUT FIX: Changed from max-w-[1600px] mx-auto to w-full. 
+              Now the layout will span 100% of the screen horizontally on EVERY tab. */}
+          <div className="w-full h-full">
             {children}
           </div>
         </div>

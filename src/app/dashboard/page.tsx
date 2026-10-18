@@ -22,9 +22,7 @@ export default async function DashboardOverview() {
       .from('storefront_applications') 
       .select('*')
       .eq('status', 'PENDING')
-      // 1. Pin Priority/Fast-Track leads to the very top
       .order('is_priority', { ascending: false, nullsFirst: false })
-      // 2. 🚀 THE FIX: Sort by oldest first (FIFO) for standard queue
       .order('created_at', { ascending: true })
       .limit(6); 
 
@@ -43,7 +41,6 @@ export default async function DashboardOverview() {
     console.error("Failed to fetch pending applications:", err);
   }
 
-  // The Two-Step Manual Join for Active Client Requests
   let activeRequests: any[] = [];
   try {
     const { data: tickets, error } = await supabase
@@ -78,9 +75,10 @@ export default async function DashboardOverview() {
   }
 
   return (
-    <div className="p-4 md:p-8 w-full max-w-7xl mx-auto space-y-8 animate-in fade-in duration-500">
+    // FIX: Removed max-w-7xl so it fills the 1600px wrapper, and reduced top padding to kill the gap
+    <div className="p-4 md:p-6 w-full space-y-6 animate-in fade-in duration-500">
       
-      <div className="flex flex-col md:flex-row items-start md:items-end justify-between gap-4 pb-6 border-b border-zinc-800">
+      <div className="flex flex-col md:flex-row items-start md:items-end justify-between gap-4 pb-4 border-b border-zinc-800">
         <div>
           <h1 className="text-3xl md:text-4xl font-black text-white tracking-tight uppercase">
             {copy.TITLE}
@@ -97,13 +95,8 @@ export default async function DashboardOverview() {
 
       <div className="grid grid-cols-1 xl:grid-cols-12 gap-6">
         
+        {/* LEFT COLUMN: The Primary Focus */}
         <div className="xl:col-span-8 space-y-6">
-          
-          <div className="bg-zinc-950 border border-amber-500/30 rounded-2xl overflow-hidden shadow-2xl relative animate-in fade-in slide-in-from-top-4">
-            <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-amber-500 to-orange-500" />
-            <ActiveClientRequests requests={activeRequests} />
-          </div>
-
           <div className="bg-zinc-950 border border-zinc-800 rounded-2xl overflow-hidden shadow-2xl relative">
             <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-fuchsia-500 to-cyan-500" />
             <StorefrontIntakePanel items={recentLeads} copy={copy.DIRECTIVE} />
@@ -115,7 +108,14 @@ export default async function DashboardOverview() {
           </div>
         </div>
 
+        {/* RIGHT COLUMN: Infrastructure & Radars */}
         <div className="xl:col-span-4 space-y-6">
+          
+          <div className="bg-zinc-950 border border-amber-500/30 rounded-2xl overflow-hidden shadow-2xl relative animate-in fade-in slide-in-from-top-4">
+            <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-amber-500 to-orange-500" />
+            <ActiveClientRequests requests={activeRequests} />
+          </div>
+
           <PlatformTrackerPanel copy={copy.INFRASTRUCTURE} />
         </div>
 

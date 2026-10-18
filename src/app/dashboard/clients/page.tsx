@@ -15,7 +15,8 @@ export default async function ClientsDirectoryPage() {
     .order('created_at', { ascending: false });
 
   return (
-    <div className="p-8 max-w-7xl mx-auto space-y-8 animate-in fade-in duration-700">
+    // STRIPPED max-w-7xl mx-auto -> REPLACED with w-full
+    <div className="p-4 md:p-6 lg:p-8 w-full space-y-8 animate-in fade-in duration-700">
       
       {/* HEADER */}
       <div className="flex items-center gap-4 border-b border-white/5 pb-8">

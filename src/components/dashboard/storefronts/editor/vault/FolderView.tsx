@@ -23,7 +23,8 @@ export default function FolderView({
   const folderImages = galleryItems.filter((i: any) => i.category === activeFolder && i.imageUrl && i.imageUrl.trim() !== '');
 
   return (
-    <div className="max-w-7xl mx-auto w-full p-4 sm:p-6 lg:p-8 space-y-6 animate-in slide-in-from-right-8 duration-300 pb-24">
+    // THE FIX: Removed 'max-w-7xl mx-auto' so it fluidly spans edge-to-edge
+    <div className="w-full p-4 sm:p-6 lg:p-8 space-y-6 animate-in slide-in-from-right-8 duration-300 pb-24">
       <button onClick={() => setActiveFolder(null)} className="flex items-center gap-2 text-zinc-400 hover:text-white transition-colors text-xs font-black uppercase tracking-widest">
         <ChevronLeft size={16} /> {copy.BTN_BACK}
       </button>
