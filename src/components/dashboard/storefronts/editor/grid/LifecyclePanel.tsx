@@ -71,7 +71,7 @@ export default function LifecyclePanel({ formData, setFormData }: { formData: an
           formData.id, 
           formData.slug, 
           formData.business_name || 'Your Storefront', 
-          formData.primary_contact || 'Founder',
+          formData.primary_contact || 'Founder', 
           formData.contact_email,
           formData.plan_tier || 'Foundation Plan'
         );
@@ -121,7 +121,7 @@ export default function LifecyclePanel({ formData, setFormData }: { formData: an
       </div>
 
       <div className="p-6 flex-1 flex flex-col overflow-y-auto custom-scrollbar">
-        <div className="space-y-6 relative before:absolute before:inset-0 before:ml-3.5 before:-translate-x-px md:before:mx-auto md:before:translate-x-0 before:h-full before:w-0.5 before:bg-linear-to-b before:from-transparent before:via-zinc-800 before:to-transparent">
+        <div className="space-y-6 relative before:absolute before:inset-0 before:ml-3.5 before:-translate-x-px md:before:mx-auto md:before:translate-x-0 before:h-full before:w-0.5 before:bg-gradient-to-b before:from-transparent before:via-zinc-800 before:to-transparent">
           
           <div className={`relative flex items-center justify-between md:justify-normal md:odd:flex-row-reverse group transition-opacity duration-300 ${currentIndex >= 0 ? 'opacity-100' : 'opacity-40'}`}>
             <div className={`flex items-center justify-center w-7 h-7 rounded-full border-2 shrink-0 md:order-1 md:group-odd:-translate-x-1/2 md:group-even:translate-x-1/2 shadow-sm ${currentIndex > 0 ? 'bg-amber-500 border-amber-500 text-black' : currentIndex === 0 ? 'bg-zinc-950 border-amber-500 text-amber-500' : 'bg-zinc-950 border-zinc-800 text-zinc-600'}`}>
