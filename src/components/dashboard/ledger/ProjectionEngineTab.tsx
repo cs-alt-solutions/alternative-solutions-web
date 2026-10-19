@@ -1,23 +1,31 @@
+/* src/components/dashboard/ledger/ProjectionEngineTab.tsx */
 'use client';
 
 import React, { useState, useEffect } from 'react';
 import { supabase } from '@/utils/supabase';
 import { SYSTEM_CONFIG } from '@/utils/glossary';
-import { Calculator, Target, Flame, Briefcase, Loader2, Zap, Landmark } from 'lucide-react';
+import { Calculator, Target, Flame, Briefcase, Loader2, Zap, Landmark, Settings2 } from 'lucide-react';
 
 export default function ProjectionEngineTab() {
   const matrix = SYSTEM_CONFIG.PAYROLL_MATRIX;
-  const foundationRate = 5.00; 
-  const proRate = 15.00;
+  
+  // --- STATE: DYNAMIC PRICING LEVERS ---
+  // No longer hardcoded. You can slide these to see what a price hike does to your MRR.
+  const [foundationRate, setFoundationRate] = useState(5.00); 
+  const [proRate, setProRate] = useState(15.00);
 
-  const [liveStorefronts, setLiveStorefronts] = useState(0);
+  // --- STATE: REALITY (Fetched from DB) ---
+  const [liveFoundation, setLiveFoundation] = useState(0);
+  const [livePro, setLivePro] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
 
+  // --- STATE: THE BURN RATE (Categorized for future taxes) ---
   const [rent, setRent] = useState(1000);
   const [utilities, setUtilities] = useState(200);
   const [dependentCare, setDependentCare] = useState(300); 
   const [bizOverhead, setBizOverhead] = useState(150); 
 
+  // --- STATE: THE LEVERS (Projections on top of reality) ---
   const [partTimeHours, setPartTimeHours] = useState(20);
   const [partTimeRate, setPartTimeRate] = useState(18); 
   const [otherExternalFuel, setOtherExternalFuel] = useState(0); 
@@ -26,24 +34,44 @@ export default function ProjectionEngineTab() {
   const [clientBuilds, setClientBuilds] = useState(0);
   const [supportIncome, setSupportIncome] = useState(400); 
 
+  // --- FETCH REALITY ---
   useEffect(() => {
     const fetchBedrockData = async () => {
       setIsLoading(true);
-      const { count } = await supabase
+      
+      // We pull the actual tier names to calculate EXACT true MRR baseline
+      const { data } = await supabase
         .from('storefronts')
-        .select('*', { count: 'exact', head: true })
+        .select('plan_tier')
         .in('status', ['ACTIVE', 'LIVE'])
         .not('stripe_subscription_id', 'is', null);
 
-      if (count) setLiveStorefronts(count);
+      if (data) {
+        let fndCount = 0;
+        let proCount = 0;
+        data.forEach((store: any) => {
+          const tier = store.plan_tier?.toLowerCase() || '';
+          if (tier.includes('pro') || tier.includes('professional')) {
+            proCount++;
+          } else {
+            fndCount++;
+          }
+        });
+        setLiveFoundation(fndCount);
+        setLivePro(proCount);
+      }
       setIsLoading(false);
     };
     fetchBedrockData();
   }, []);
 
+  // --- THE MATH ENGINE ---
   const totalBurn = rent + utilities + dependentCare + bizOverhead;
-  const realMrr = liveStorefronts * foundationRate;
-  
+
+  // Real Money based on Dynamic Rates
+  const realMrr = (liveFoundation * foundationRate) + (livePro * proRate);
+
+  // Projected Money
   const projectedW2 = partTimeHours * partTimeRate * 4; 
   const projectedNewFoundation = newFoundationGoal * foundationRate;
   const projectedNewPro = newProGoal * proRate;
@@ -89,14 +117,42 @@ export default function ProjectionEngineTab() {
                <div className="flex justify-between items-center bg-black/40 border border-zinc-800 p-4 rounded-lg">
                  <div>
                    <p className="text-sm font-bold text-white">Live Storefronts (MRR)</p>
-                   <p className="text-[10px] font-mono text-zinc-500 uppercase">{liveStorefronts} Active Sites</p>
+                   <p className="text-[10px] font-mono text-zinc-500 uppercase">
+                     {liveFoundation} Standard | {livePro} Pro
+                   </p>
                  </div>
                  <span className="text-xl font-black text-emerald-400">+${realMrr.toFixed(2)}/mo</span>
                </div>
              )}
           </div>
 
-          {/* Section 2: The Burn Rate */}
+          {/* Section 2: Pricing Logic Modifiers */}
+          <div className="bg-zinc-950/50 border border-purple-500/20 rounded-xl p-6 shadow-md">
+            <h3 className="text-xs font-mono text-purple-400 uppercase tracking-widest mb-4 flex items-center gap-2">
+              <Settings2 size={14} /> Subscription Pricing Engine
+            </h3>
+            <div className="grid grid-cols-2 gap-6">
+              <div>
+                <div className="flex justify-between items-center mb-2">
+                  <label className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest">Standard Tier</label>
+                  <span className="text-white font-mono font-bold">${foundationRate}/mo</span>
+                </div>
+                <input type="range" min="1" max="50" value={foundationRate} onChange={(e) => setFoundationRate(Number(e.target.value))} className="w-full accent-cyan-500 cursor-ew-resize" />
+              </div>
+              <div>
+                <div className="flex justify-between items-center mb-2">
+                  <label className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest">Professional Tier</label>
+                  <span className="text-white font-mono font-bold">${proRate}/mo</span>
+                </div>
+                <input type="range" min="5" max="150" value={proRate} onChange={(e) => setProRate(Number(e.target.value))} className="w-full accent-fuchsia-500 cursor-ew-resize" />
+              </div>
+            </div>
+            <p className="text-[9px] font-mono text-zinc-500 mt-4 uppercase tracking-widest">
+              * Adjusting these levers instantly updates the Locked Reality and Projection Math.
+            </p>
+          </div>
+
+          {/* Section 3: The Burn Rate */}
           <div className="bg-zinc-950/50 border border-orange-500/20 rounded-xl p-6 shadow-md">
             <h3 className="text-xs font-mono text-orange-400 uppercase tracking-widest mb-4 flex items-center gap-2">
               <Flame size={14} /> Itemized Burn Rate
@@ -125,7 +181,7 @@ export default function ProjectionEngineTab() {
             </div>
           </div>
 
-          {/* Section 3: The Income Levers */}
+          {/* Section 4: The Income Levers */}
           <div className="bg-zinc-950/50 border border-brand-primary/20 rounded-xl p-6 shadow-md">
             <h3 className="text-xs font-mono text-brand-primary uppercase tracking-widest mb-4 flex items-center gap-2">
               <Briefcase size={14} /> Projection Levers
@@ -147,7 +203,7 @@ export default function ProjectionEngineTab() {
 
               <div>
                 <div className="flex justify-between items-center mb-2">
-                  <label className="text-sm font-bold text-emerald-400">New Standard Sites ($5/mo)</label>
+                  <label className="text-sm font-bold text-emerald-400">New Standard Sites (${foundationRate}/mo)</label>
                   <span className="text-emerald-400 font-mono text-sm">+${projectedNewFoundation}/mo</span>
                 </div>
                 <input type="range" min="0" max="50" value={newFoundationGoal} onChange={(e) => setNewFoundationGoal(Number(e.target.value))} className="w-full accent-emerald-500 cursor-ew-resize" />
@@ -160,7 +216,7 @@ export default function ProjectionEngineTab() {
 
               <div>
                 <div className="flex justify-between items-center mb-2">
-                  <label className="text-sm font-bold text-cyan-400">New Professional Sites ($15/mo)</label>
+                  <label className="text-sm font-bold text-cyan-400">New Professional Sites (${proRate}/mo)</label>
                   <span className="text-cyan-400 font-mono text-sm">+${projectedNewPro}/mo</span>
                 </div>
                 <input type="range" min="0" max="50" value={newProGoal} onChange={(e) => setNewProGoal(Number(e.target.value))} className="w-full accent-cyan-500 cursor-ew-resize" />

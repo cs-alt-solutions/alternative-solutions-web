@@ -1,10 +1,17 @@
+/* src/components/dashboard/ledger/SubscriptionsTab.tsx */
 'use client';
 
 import React, { useState, useEffect } from 'react';
 import { supabase } from '@/utils/supabase';
-import { CreditCard, Zap, RefreshCw, Loader2, CalendarClock, Receipt, AlertTriangle, TrendingDown, ChevronDown, ChevronUp, ExternalLink, Eye } from 'lucide-react';
+import { CreditCard, Zap, RefreshCw, Loader2, CalendarClock, Receipt, AlertTriangle, TrendingDown, ChevronDown, ChevronUp, Eye, BarChart3, PieChart } from 'lucide-react';
 import { getGlobalInvoices } from '@/app/actions/billing';
 import GlobalPaymentHistory from './feed/GlobalPaymentHistory';
+
+const formatCurrency = (val: any) => {
+  if (val === null || val === undefined) return '0.00';
+  const num = Number(val);
+  return isNaN(num) ? '0.00' : num.toFixed(2);
+};
 
 export default function SubscriptionsTab() {
   const [enrichedStorefronts, setEnrichedStorefronts] = useState<any[]>([]);
@@ -38,6 +45,7 @@ export default function SubscriptionsTab() {
         'BUILDING_CORE', 
         'IN_REVIEW', 
         'CONTENT_ASSEMBLY', 
+        'AWAITING_ASSETS', 
         'ACTIVE', 
         'LIVE', 
         'MAINTENANCE', 
@@ -70,8 +78,9 @@ export default function SubscriptionsTab() {
         };
       });
 
-      setGlobalInvoices(allLedger);
+      // 🚀 THE BARTOK FIX: We now explicitly set the global feed to strictLedger, permanently hiding unlinked ghost payments.
       const strictLedger = allLedger.filter((inv: any) => inv.isMatched);
+      setGlobalInvoices(strictLedger);
 
       let gross = 0;
       let net = 0;
@@ -90,6 +99,8 @@ export default function SubscriptionsTab() {
           inv.customerId === store.stripe_customer_id || inv.subscriptionId === store.stripe_subscription_id
         );
 
+        const ltv = storeInvoices.reduce((sum: number, inv: any) => sum + (Number(inv.amount) || 0), 0);
+
         let actualPaid = expectedPrice;
         let originalPrice = expectedPrice;
         let isPromo = false;
@@ -97,8 +108,15 @@ export default function SubscriptionsTab() {
 
         if (storeInvoices.length > 0) {
           const latestInv = storeInvoices[0];
-          actualPaid = parseFloat(latestInv.amount);
-          originalPrice = latestInv.subtotal ? parseFloat(latestInv.subtotal) : expectedPrice;
+          
+          // 🚀 THE PROMO MATH FIX: We explicitly check for undefined/null so $0.00 isn't treated as a falsy error.
+          actualPaid = latestInv.amount !== undefined && latestInv.amount !== null 
+            ? Number(latestInv.amount) 
+            : expectedPrice;
+            
+          originalPrice = latestInv.subtotal !== undefined && latestInv.subtotal !== null 
+            ? Number(latestInv.subtotal) 
+            : expectedPrice;
           
           if (originalPrice > actualPaid) {
             isPromo = true;
@@ -113,6 +131,7 @@ export default function SubscriptionsTab() {
           displayTier,
           expectedPrice: originalPrice,
           actualPaid,
+          ltv,
           isPromo,
           promoDetails,
           invoices: storeInvoices
@@ -134,22 +153,23 @@ export default function SubscriptionsTab() {
   }, []);
 
   const activeCount = enrichedStorefronts.length;
+  
+  const totalSubs = metrics.foundation + metrics.pro || 1;
+  const fndStroke = (metrics.foundation / totalSubs) * 100;
+  const proStroke = (metrics.pro / totalSubs) * 100;
+  const trendBars = [40, 60, 45, 80, 75, 100]; 
 
   return (
     <div className="space-y-8 animate-in fade-in duration-500 pb-20 relative">
       
-      {/* HEADER: STOREFRONT REVENUE */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-zinc-900/40 border border-emerald-500/30 rounded-2xl p-6 relative overflow-hidden shadow-xl backdrop-blur-sm">
         <div className="absolute top-0 right-0 w-96 h-96 bg-emerald-500/10 rounded-full blur-[100px] -z-10 pointer-events-none" />
-        
         <div>
           <h2 className="text-2xl font-black text-white mb-1 flex items-center gap-3 tracking-tight uppercase">
-            <CreditCard size={24} className="text-emerald-400" />
-            Storefront Revenue
+            <CreditCard size={24} className="text-emerald-400" /> Storefront Revenue
           </h2>
           <p className="text-zinc-400 font-mono text-sm">Live client subscriptions funding the ecosystem.</p>
         </div>
-        
         <div className="flex items-center gap-2">
           {!isInvoicesLoading && (
             <>
@@ -161,12 +181,8 @@ export default function SubscriptionsTab() {
               </span>
             </>
           )}
-          <button 
-            onClick={fetchAllData}
-            className="flex items-center justify-center gap-2 px-4 py-2 bg-zinc-800 text-zinc-400 border border-zinc-700 rounded-lg text-xs font-mono uppercase tracking-widest transition-all hover:bg-zinc-700 hover:text-white shrink-0 cursor-pointer"
-          >
-            {isLoading || isInvoicesLoading ? <Loader2 size={14} className="animate-spin" /> : <RefreshCw size={14} />} 
-            Sync Stripe
+          <button onClick={fetchAllData} className="flex items-center justify-center gap-2 px-4 py-2 bg-zinc-800 text-zinc-400 border border-zinc-700 rounded-lg text-xs font-mono uppercase tracking-widest transition-all hover:bg-zinc-700 hover:text-white shrink-0 cursor-pointer">
+            {isLoading || isInvoicesLoading ? <Loader2 size={14} className="animate-spin" /> : <RefreshCw size={14} />} Sync Stripe
           </button>
         </div>
       </div>
@@ -181,49 +197,53 @@ export default function SubscriptionsTab() {
         </div>
       )}
 
-      {/* QUICK STATS */}
+      {/* QUICK STATS WITH EMBEDDED CHARTS */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div className="bg-black/40 border border-cyan-500/20 rounded-2xl p-6 relative overflow-hidden group hover:border-cyan-500/40 transition-all shadow-lg flex flex-col justify-between">
-          <div className="absolute -right-6 -top-6 w-24 h-24 bg-cyan-500/10 rounded-full blur-2xl group-hover:bg-cyan-500/20 transition-all" />
-          <div className="flex items-center gap-3 mb-2 relative z-10">
-            <div className="p-2 bg-cyan-500/10 rounded-lg text-cyan-400"><Zap size={16} /></div>
-            <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest">Active Portals</span>
-          </div>
+        
+        {/* ACTIVE PORTALS CARD WITH DONUT CHART */}
+        <div className="bg-black/40 border border-cyan-500/20 rounded-2xl p-6 relative overflow-hidden shadow-lg flex justify-between items-center">
+          <div className="absolute -right-6 -top-6 w-24 h-24 bg-cyan-500/10 rounded-full blur-2xl transition-all" />
           <div className="relative z-10">
-            <h2 className="text-3xl font-black text-white">{activeCount} <span className="text-sm text-zinc-500 font-medium">Deployed</span></h2>
-            <div className="mt-4 pt-3 border-t border-zinc-800/50 flex items-center justify-between text-[10px] font-mono">
-              <div className="text-cyan-400">Foundation: <span className="text-white">{metrics.foundation}</span></div>
-              <div className="text-cyan-400">Pro: <span className="text-white">{metrics.pro}</span></div>
+            <div className="flex items-center gap-3 mb-2">
+              <div className="p-2 bg-cyan-500/10 rounded-lg text-cyan-400"><Zap size={16} /></div>
+              <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest">Active Portals</span>
             </div>
+            <h2 className="text-3xl font-black text-white">{activeCount} <span className="text-sm text-zinc-500 font-medium">Deployed</span></h2>
+            <div className="mt-4 flex items-center gap-4 text-[10px] font-mono">
+              <div className="text-cyan-400">STD: <span className="text-white">{metrics.foundation}</span></div>
+              <div className="text-fuchsia-400">PRO: <span className="text-white">{metrics.pro}</span></div>
+            </div>
+          </div>
+          <div className="relative w-16 h-16 mr-4">
+            <svg viewBox="0 0 32 32" className="w-full h-full -rotate-90 rounded-full overflow-visible drop-shadow-[0_0_10px_rgba(6,182,212,0.3)]">
+              <circle r="15.91549431" cx="16" cy="16" fill="transparent" stroke="#06b6d4" strokeWidth="4" strokeDasharray={`${fndStroke} 100`} />
+              <circle r="15.91549431" cx="16" cy="16" fill="transparent" stroke="#d946ef" strokeWidth="4" strokeDasharray={`${proStroke} 100`} strokeDashoffset={-fndStroke} />
+            </svg>
           </div>
         </div>
 
-        <div className="bg-black/40 border border-emerald-500/20 rounded-2xl p-6 relative overflow-hidden group hover:border-emerald-500/40 transition-all shadow-lg flex flex-col justify-between">
-          <div className="absolute -right-6 -top-6 w-24 h-24 bg-emerald-500/10 rounded-full blur-2xl group-hover:bg-emerald-500/20 transition-all" />
-          <div className="flex items-center justify-between mb-2 relative z-10">
-            <div className="flex items-center gap-3">
-              <div className="p-2 bg-emerald-500/10 rounded-lg text-emerald-400"><RefreshCw size={16} /></div>
+        {/* NET MRR CARD WITH BAR CHART */}
+        <div className="bg-black/40 border border-emerald-500/20 rounded-2xl p-6 relative overflow-hidden shadow-lg flex justify-between items-end">
+          <div className="absolute -right-6 -top-6 w-24 h-24 bg-emerald-500/10 rounded-full blur-2xl transition-all" />
+          <div className="relative z-10">
+            <div className="flex items-center gap-3 mb-2">
+              <div className="p-2 bg-emerald-500/10 rounded-lg text-emerald-400"><BarChart3 size={16} /></div>
               <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest">Net MRR</span>
             </div>
-            {metrics.discount > 0 && (
-              <span className="text-[9px] font-mono font-bold text-rose-400 bg-rose-500/10 px-2 py-0.5 rounded border border-rose-500/20 flex items-center gap-1">
-                <TrendingDown size={10} /> Promo Active
-              </span>
-            )}
-          </div>
-          <div className="relative z-10">
-            <h2 className="text-3xl font-black text-white">${metrics.net.toFixed(2)}<span className="text-sm text-zinc-500 font-medium">/mo</span></h2>
-            <div className="mt-4 pt-3 border-t border-zinc-800/50 flex items-center justify-between text-[10px] font-mono">
-              <div className="text-zinc-400">Gross: <span className="text-white">${metrics.gross.toFixed(2)}</span></div>
-              {metrics.discount > 0 && (
-                <div className="text-rose-400">Discounts: -${metrics.discount.toFixed(2)}</div>
-              )}
+            <h2 className="text-3xl font-black text-white">${formatCurrency(metrics.net)}<span className="text-sm text-zinc-500 font-medium">/mo</span></h2>
+            <div className="mt-4 flex flex-col text-[10px] font-mono">
+              <div className="text-zinc-400">Gross: <span className="text-white">${formatCurrency(metrics.gross)}</span></div>
+              {metrics.discount > 0 && <div className="text-rose-400">Discounts: -${formatCurrency(metrics.discount)}</div>}
             </div>
+          </div>
+          <div className="flex items-end gap-1.5 h-16 opacity-80 pb-2">
+            {trendBars.map((height, i) => (
+              <div key={i} className={`w-3 rounded-t-sm ${i === trendBars.length - 1 ? 'bg-emerald-400 shadow-[0_0_10px_rgba(16,185,129,0.5)]' : 'bg-zinc-800'}`} style={{ height: `${height}%` }} />
+            ))}
           </div>
         </div>
       </div>
 
-      {/* SIDE-BY-SIDE LAYOUT */}
       <div className="grid grid-cols-1 xl:grid-cols-12 gap-8 mt-4">
         
         {/* LEFT COLUMN: ACTIVE SUBSCRIPTIONS */}
@@ -240,7 +260,7 @@ export default function SubscriptionsTab() {
                 <tr className="border-b border-zinc-800/50 bg-black/40">
                   <th className="p-4 text-[10px] font-mono text-zinc-500 uppercase tracking-widest">Client / Storefront</th>
                   <th className="p-4 text-[10px] font-mono text-zinc-500 uppercase tracking-widest">Tier</th>
-                  <th className="p-4 text-[10px] font-mono text-zinc-500 uppercase tracking-widest">Promo</th>
+                  <th className="p-4 text-[10px] font-mono text-zinc-500 uppercase tracking-widest">LTV</th>
                   <th className="p-4 text-[10px] font-mono text-emerald-400 uppercase tracking-widest text-right">Revenue</th>
                 </tr>
               </thead>
@@ -281,13 +301,9 @@ export default function SubscriptionsTab() {
                           <td className="p-4 text-xs font-mono text-zinc-400 capitalize">{store.displayTier}</td>
                           
                           <td className="p-4">
-                            {store.isPromo ? (
-                              <span className="text-[9px] font-mono font-bold text-amber-400 bg-amber-500/10 px-2 py-1 rounded border border-amber-500/20 uppercase">
-                                {store.promoDetails}
-                              </span>
-                            ) : (
-                              <span className="text-[9px] font-mono text-zinc-600 uppercase">None</span>
-                            )}
+                             <span className="text-[10px] font-mono text-emerald-400/80 uppercase tracking-widest">
+                               ${formatCurrency(store.ltv)}
+                             </span>
                           </td>
                           
                           <td className="p-4 text-right">
@@ -295,15 +311,15 @@ export default function SubscriptionsTab() {
                               {store.isPromo ? (
                                 <div className="flex flex-col items-end gap-1">
                                   <span className="text-sm text-emerald-400 font-bold">
-                                    ${store.actualPaid.toFixed(2)} <span className="text-[10px] text-zinc-500 font-normal">/mo</span>
+                                    ${formatCurrency(store.actualPaid)} <span className="text-[10px] text-zinc-500 font-normal">/mo</span>
                                   </span>
-                                  <span className="text-[9px] font-mono text-rose-400/80 bg-rose-500/10 px-1.5 py-0.5 rounded border border-rose-500/20">
-                                    <span className="line-through">${store.expectedPrice.toFixed(2)}</span>
+                                  <span className="text-[9px] font-mono text-amber-400 bg-amber-500/10 px-1.5 py-0.5 rounded border border-amber-500/20 uppercase tracking-widest">
+                                    PROMO
                                   </span>
                                 </div>
                               ) : (
                                 <span className="text-sm text-emerald-400 font-bold">
-                                  ${store.actualPaid.toFixed(2)} <span className="text-[10px] text-zinc-500 font-normal">/mo</span>
+                                  ${formatCurrency(store.actualPaid)} <span className="text-[10px] text-zinc-500 font-normal">/mo</span>
                                 </span>
                               )}
                               {isExpanded ? <ChevronUp size={16} className="text-zinc-500" /> : <ChevronDown size={16} className="text-zinc-500 group-hover:text-cyan-400" />}
@@ -311,7 +327,6 @@ export default function SubscriptionsTab() {
                           </td>
                         </tr>
 
-                        {/* ACCORDION DRILL-DOWN */}
                         {isExpanded && (
                           <tr className="bg-black/40 border-b border-zinc-800/80 animate-in fade-in slide-in-from-top-2">
                             <td colSpan={4} className="p-0">
@@ -335,7 +350,7 @@ export default function SubscriptionsTab() {
                                           </span>
                                         </div>
                                         <div className="flex items-center gap-4">
-                                          <span className="text-sm font-bold text-emerald-400">${inv.amount}</span>
+                                          <span className="text-sm font-bold text-emerald-400">${formatCurrency(inv.amount)}</span>
                                           {inv.hostedUrl && (
                                             <button 
                                               onClick={() => handleOpenPopup(inv.hostedUrl)}
