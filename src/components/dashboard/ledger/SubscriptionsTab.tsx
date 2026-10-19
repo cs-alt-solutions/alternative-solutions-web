@@ -15,11 +15,8 @@ export default function SubscriptionsTab() {
   const [isInvoicesLoading, setIsInvoicesLoading] = useState(true);
   const [syncError, setSyncError] = useState<string | null>(null);
 
-  // 🚀 UI STATES
   const [expandedStoreId, setExpandedStoreId] = useState<string | null>(null);
 
-  // 🚀 THE SECURE POPUP HANDLER
-  // Opens a floating browser window instead of an iframe to bypass Stripe's security block
   const handleOpenPopup = (url: string) => {
     const width = 800;
     const height = 900;
@@ -36,7 +33,6 @@ export default function SubscriptionsTab() {
     const { data: activeStores, error } = await supabase
       .from('storefronts')
       .select('id, business_name, contact_email, plan_tier, created_at, status, stripe_subscription_id, stripe_customer_id')
-      // 🚀 THE FIX: Now includes ALL paying lifecycle stages, catching anyone past AWAITING_PAYMENT
       .in('status', [
         'PENDING_BUILD', 
         'BUILDING_CORE', 
@@ -47,7 +43,7 @@ export default function SubscriptionsTab() {
         'MAINTENANCE', 
         'HIDDEN'
       ])
-      .not('stripe_subscription_id', 'is', null) 
+      .not('stripe_subscription_id', 'is', null)
       .order('created_at', { ascending: false });
 
     if (error) {
@@ -75,7 +71,6 @@ export default function SubscriptionsTab() {
       });
 
       setGlobalInvoices(allLedger);
-
       const strictLedger = allLedger.filter((inv: any) => inv.isMatched);
 
       let gross = 0;
@@ -84,7 +79,7 @@ export default function SubscriptionsTab() {
       let pro = 0;
 
       const enriched = activeStores.map((store: any) => {
-        const displayTier = store.plan_tier || 'Foundation';
+        const displayTier = store.plan_tier || 'Standard';
         const isPro = displayTier.toLowerCase().includes('pro') || displayTier.toLowerCase().includes('professional');
         const expectedPrice = isPro ? 15 : 5;
         
@@ -120,7 +115,7 @@ export default function SubscriptionsTab() {
           actualPaid,
           isPromo,
           promoDetails,
-          invoices: storeInvoices 
+          invoices: storeInvoices
         };
       });
 
@@ -144,7 +139,7 @@ export default function SubscriptionsTab() {
     <div className="space-y-8 animate-in fade-in duration-500 pb-20 relative">
       
       {/* HEADER: STOREFRONT REVENUE */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-bg-surface-200/50 border border-emerald-500/30 rounded-2xl p-6 relative overflow-hidden shadow-[0_0_40px_rgba(16,185,129,0.05)]">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-zinc-900/40 border border-emerald-500/30 rounded-2xl p-6 relative overflow-hidden shadow-xl backdrop-blur-sm">
         <div className="absolute top-0 right-0 w-96 h-96 bg-emerald-500/10 rounded-full blur-[100px] -z-10 pointer-events-none" />
         
         <div>
@@ -152,7 +147,7 @@ export default function SubscriptionsTab() {
             <CreditCard size={24} className="text-emerald-400" />
             Storefront Revenue
           </h2>
-          <p className="text-slate-400 font-mono text-sm">Live client subscriptions funding the ecosystem.</p>
+          <p className="text-zinc-400 font-mono text-sm">Live client subscriptions funding the ecosystem.</p>
         </div>
         
         <div className="flex items-center gap-2">
@@ -161,14 +156,14 @@ export default function SubscriptionsTab() {
               <span className={`text-[10px] font-mono font-bold uppercase tracking-widest px-2 py-1 rounded border ${diagnostics.env === 'LIVE MODE' ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' : 'bg-amber-500/10 text-amber-400 border-amber-500/20'}`}>
                 {diagnostics.env}
               </span>
-              <span className="text-[10px] font-mono text-slate-500 uppercase tracking-widest px-2 py-1 rounded border border-white/10 bg-black/40 hidden sm:inline-block">
+              <span className="text-[10px] font-mono text-zinc-500 uppercase tracking-widest px-2 py-1 rounded border border-zinc-800 bg-black/40 hidden sm:inline-block">
                 INVOICES: {diagnostics.count}
               </span>
             </>
           )}
           <button 
             onClick={fetchAllData}
-            className="flex items-center justify-center gap-2 px-4 py-2 bg-white/5 text-slate-400 border border-white/10 rounded-lg text-xs font-mono uppercase tracking-widest transition-all hover:bg-white/10 hover:text-white shrink-0 cursor-pointer"
+            className="flex items-center justify-center gap-2 px-4 py-2 bg-zinc-800 text-zinc-400 border border-zinc-700 rounded-lg text-xs font-mono uppercase tracking-widest transition-all hover:bg-zinc-700 hover:text-white shrink-0 cursor-pointer"
           >
             {isLoading || isInvoicesLoading ? <Loader2 size={14} className="animate-spin" /> : <RefreshCw size={14} />} 
             Sync Stripe
@@ -196,7 +191,7 @@ export default function SubscriptionsTab() {
           </div>
           <div className="relative z-10">
             <h2 className="text-3xl font-black text-white">{activeCount} <span className="text-sm text-zinc-500 font-medium">Deployed</span></h2>
-            <div className="mt-4 pt-3 border-t border-white/5 flex items-center justify-between text-[10px] font-mono">
+            <div className="mt-4 pt-3 border-t border-zinc-800/50 flex items-center justify-between text-[10px] font-mono">
               <div className="text-cyan-400">Foundation: <span className="text-white">{metrics.foundation}</span></div>
               <div className="text-cyan-400">Pro: <span className="text-white">{metrics.pro}</span></div>
             </div>
@@ -218,7 +213,7 @@ export default function SubscriptionsTab() {
           </div>
           <div className="relative z-10">
             <h2 className="text-3xl font-black text-white">${metrics.net.toFixed(2)}<span className="text-sm text-zinc-500 font-medium">/mo</span></h2>
-            <div className="mt-4 pt-3 border-t border-white/5 flex items-center justify-between text-[10px] font-mono">
+            <div className="mt-4 pt-3 border-t border-zinc-800/50 flex items-center justify-between text-[10px] font-mono">
               <div className="text-zinc-400">Gross: <span className="text-white">${metrics.gross.toFixed(2)}</span></div>
               {metrics.discount > 0 && (
                 <div className="text-rose-400">Discounts: -${metrics.discount.toFixed(2)}</div>
@@ -232,23 +227,24 @@ export default function SubscriptionsTab() {
       <div className="grid grid-cols-1 xl:grid-cols-12 gap-8 mt-4">
         
         {/* LEFT COLUMN: ACTIVE SUBSCRIPTIONS */}
-        <div className="xl:col-span-7 bg-bg-surface-100 border border-white/5 rounded-2xl overflow-hidden shadow-xl flex flex-col">
-          <div className="p-4 border-b border-white/5 bg-black/20 shrink-0">
+        <div className="xl:col-span-7 bg-zinc-950 border border-zinc-800/80 rounded-2xl overflow-hidden shadow-xl flex flex-col">
+          <div className="p-4 border-b border-zinc-800/80 bg-zinc-900/50 shrink-0">
             <h3 className="text-xs font-bold text-white uppercase tracking-widest flex items-center gap-2">
               <CalendarClock size={14} className="text-emerald-500" /> Active Subscriptions
             </h3>
           </div>
+
           <div className="overflow-x-auto flex-1">
             <table className="w-full text-left border-collapse whitespace-nowrap">
               <thead>
-                <tr className="border-b border-white/5 bg-black/40">
-                  <th className="p-4 text-[10px] font-mono text-slate-500 uppercase tracking-widest">Client / Storefront</th>
-                  <th className="p-4 text-[10px] font-mono text-slate-500 uppercase tracking-widest">Tier</th>
-                  <th className="p-4 text-[10px] font-mono text-slate-500 uppercase tracking-widest">Promo</th>
+                <tr className="border-b border-zinc-800/50 bg-black/40">
+                  <th className="p-4 text-[10px] font-mono text-zinc-500 uppercase tracking-widest">Client / Storefront</th>
+                  <th className="p-4 text-[10px] font-mono text-zinc-500 uppercase tracking-widest">Tier</th>
+                  <th className="p-4 text-[10px] font-mono text-zinc-500 uppercase tracking-widest">Promo</th>
                   <th className="p-4 text-[10px] font-mono text-emerald-400 uppercase tracking-widest text-right">Revenue</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-white/5">
+              <tbody className="divide-y divide-zinc-800/50">
                 {isLoading ? (
                   <tr>
                     <td colSpan={4} className="p-8 text-center text-zinc-500 font-mono text-xs uppercase tracking-widest">
@@ -264,12 +260,11 @@ export default function SubscriptionsTab() {
                 ) : (
                   enrichedStorefronts.map((store) => {
                     const isExpanded = expandedStoreId === store.id;
-
                     return (
                       <React.Fragment key={store.id}>
                         <tr 
                           onClick={() => setExpandedStoreId(isExpanded ? null : store.id)}
-                          className={`transition-colors group cursor-pointer ${isExpanded ? 'bg-white/5' : 'hover:bg-white/5'}`}
+                          className={`transition-colors group cursor-pointer ${isExpanded ? 'bg-zinc-900' : 'hover:bg-zinc-900/50'}`}
                         >
                           <td className="p-4">
                             <div className="flex flex-col gap-1">
@@ -282,7 +277,8 @@ export default function SubscriptionsTab() {
                               )}
                             </div>
                           </td>
-                          <td className="p-4 text-xs font-mono text-slate-400 capitalize">{store.displayTier}</td>
+                          
+                          <td className="p-4 text-xs font-mono text-zinc-400 capitalize">{store.displayTier}</td>
                           
                           <td className="p-4">
                             {store.isPromo ? (
@@ -293,13 +289,13 @@ export default function SubscriptionsTab() {
                               <span className="text-[9px] font-mono text-zinc-600 uppercase">None</span>
                             )}
                           </td>
-
+                          
                           <td className="p-4 text-right">
                             <div className="flex items-center justify-end gap-3">
                               {store.isPromo ? (
                                 <div className="flex flex-col items-end gap-1">
                                   <span className="text-sm text-emerald-400 font-bold">
-                                    ${store.actualPaid.toFixed(2)} <span className="text-[10px] text-slate-500 font-normal">/mo</span>
+                                    ${store.actualPaid.toFixed(2)} <span className="text-[10px] text-zinc-500 font-normal">/mo</span>
                                   </span>
                                   <span className="text-[9px] font-mono text-rose-400/80 bg-rose-500/10 px-1.5 py-0.5 rounded border border-rose-500/20">
                                     <span className="line-through">${store.expectedPrice.toFixed(2)}</span>
@@ -307,7 +303,7 @@ export default function SubscriptionsTab() {
                                 </div>
                               ) : (
                                 <span className="text-sm text-emerald-400 font-bold">
-                                  ${store.actualPaid.toFixed(2)} <span className="text-[10px] text-slate-500 font-normal">/mo</span>
+                                  ${store.actualPaid.toFixed(2)} <span className="text-[10px] text-zinc-500 font-normal">/mo</span>
                                 </span>
                               )}
                               {isExpanded ? <ChevronUp size={16} className="text-zinc-500" /> : <ChevronDown size={16} className="text-zinc-500 group-hover:text-cyan-400" />}
@@ -317,9 +313,9 @@ export default function SubscriptionsTab() {
 
                         {/* ACCORDION DRILL-DOWN */}
                         {isExpanded && (
-                          <tr className="bg-black/20 border-b border-white/5 animate-in fade-in slide-in-from-top-2">
+                          <tr className="bg-black/40 border-b border-zinc-800/80 animate-in fade-in slide-in-from-top-2">
                             <td colSpan={4} className="p-0">
-                              <div className="p-4 md:p-6 bg-zinc-950/50 shadow-inner">
+                              <div className="p-4 md:p-6 bg-zinc-950 shadow-inner">
                                 <h4 className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest mb-3 flex items-center gap-2">
                                   <Receipt size={12}/> Invoice Ledger
                                 </h4>
@@ -331,9 +327,9 @@ export default function SubscriptionsTab() {
                                 ) : (
                                   <div className="space-y-2">
                                     {store.invoices.map((inv: any) => (
-                                      <div key={inv.id} className="flex items-center justify-between p-3 bg-zinc-900/50 border border-zinc-800 rounded-xl">
+                                      <div key={inv.id} className="flex items-center justify-between p-3 bg-zinc-900 border border-zinc-800 rounded-xl">
                                         <div className="flex items-center gap-4">
-                                          <span className="text-xs font-mono text-slate-400">{inv.date}</span>
+                                          <span className="text-xs font-mono text-zinc-400">{inv.date}</span>
                                           <span className="text-[10px] font-black uppercase tracking-widest px-2 py-0.5 rounded border bg-emerald-500/10 text-emerald-400 border-emerald-500/20">
                                             {inv.status}
                                           </span>
@@ -342,7 +338,7 @@ export default function SubscriptionsTab() {
                                           <span className="text-sm font-bold text-emerald-400">${inv.amount}</span>
                                           {inv.hostedUrl && (
                                             <button 
-                                              onClick={() => handleOpenPopup(inv.hostedUrl)} 
+                                              onClick={() => handleOpenPopup(inv.hostedUrl)}
                                               className="text-[10px] font-bold text-cyan-400 hover:text-cyan-300 uppercase tracking-widest flex items-center gap-1.5 transition-colors cursor-pointer"
                                             >
                                               <Eye size={12}/> View

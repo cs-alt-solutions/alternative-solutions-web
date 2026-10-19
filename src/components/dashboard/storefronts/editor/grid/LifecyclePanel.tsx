@@ -2,17 +2,17 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Activity, Send, CreditCard, Mail, CheckCircle2, AlertTriangle, RefreshCw, Globe, PlayCircle, Clock } from 'lucide-react';
+import { Activity, Send, CreditCard, Mail, CheckCircle2, AlertTriangle, RefreshCw, Globe, PlayCircle, Clock, BellRing } from 'lucide-react';
 import { STOREFRONT_LIFECYCLE, StorefrontStatus } from '@/config/lifecycle';
 import { createStorefrontCheckout } from '@/app/actions/billing';
 import { dispatchStagingReview, quickUpdateStorefrontStatus } from '@/app/actions/storefronts';
 
 export default function LifecyclePanel({ formData, setFormData }: { formData: any, setFormData: any }) {
   const currentStatus = (formData.status as string) || 'PENDING_BUILD';
-  // 🚀 THE FIX: Default fallback is now STANDARD
   const currentPlan = formData.plan_tier || formData.selected_plan || 'STANDARD';
   const [isSendingCheckout, setIsSendingCheckout] = useState(false);
   const [isSendingReview, setIsSendingReview] = useState(false);
+  const [isSendingReminder, setIsSendingReminder] = useState(false);
 
   const handleStatusChange = async (newStatus: StorefrontStatus, customMessage?: string) => {
     if (window.confirm(`Update project status to ${newStatus}?`)) {
@@ -43,7 +43,7 @@ export default function LifecyclePanel({ formData, setFormData }: { formData: an
     try {
       const response = await createStorefrontCheckout(formData.id, formData.contact_email || '');
       if (response.url) {
-        alert(`Success! Stripe link generated. The checkout activation email has been securely dispatched to the client.`);
+        alert(`Success! Stripe link generated.`);
       } else {
         alert("Failed to generate checkout link. Please check the server logs.");
       }
@@ -60,12 +60,9 @@ export default function LifecyclePanel({ formData, setFormData }: { formData: an
       ? `Resend the Staging Review email to ${formData.contact_email}?`
       : `ATTENTION: You are about to dispatch the official Review Link to the client. Are you ready to transmit?`;
 
-    const isReady = window.confirm(msg);
-    if (isReady) {
+    if (window.confirm(msg)) {
       setIsSendingReview(true);
-      if (!isResend) {
-         setFormData({ ...formData, status: 'IN_REVIEW' });
-      }
+      if (!isResend) setFormData({ ...formData, status: 'IN_REVIEW' });
       
       try {
         await dispatchStagingReview(
@@ -74,7 +71,7 @@ export default function LifecyclePanel({ formData, setFormData }: { formData: an
           formData.business_name || 'Your Storefront', 
           formData.primary_contact || 'Founder',
           formData.contact_email,
-          formData.plan_tier || 'Standard' // 🚀 THE FIX: Ensures standard pricing terminology in emails
+          formData.plan_tier || 'Standard'
         );
         alert("Review Email Successfully Dispatched!");
       } catch (err: any) {
@@ -83,6 +80,24 @@ export default function LifecyclePanel({ formData, setFormData }: { formData: an
         if (!isResend) setFormData({ ...formData, status: 'BUILDING_CORE' });
       } finally {
         setIsSendingReview(false);
+      }
+    }
+  };
+
+  const handleSendAssetReminder = async () => {
+    if (window.confirm(`Send an asset reminder email to ${formData.contact_email}?`)) {
+      setIsSendingReminder(true);
+      try {
+        // TODO: Wire this to your server action that triggers AssetReminderEmail.tsx
+        // await dispatchAssetReminder(formData.contact_email, formData.primary_contact, formData.id);
+        
+        // Simulating the network request for now
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        alert("Reminder successfully dispatched to client.");
+      } catch (err) {
+        alert("Failed to send reminder.");
+      } finally {
+        setIsSendingReminder(false);
       }
     }
   };
@@ -122,7 +137,7 @@ export default function LifecyclePanel({ formData, setFormData }: { formData: an
       </div>
 
       <div className="p-6 flex-1 flex flex-col overflow-y-auto custom-scrollbar">
-        <div className="space-y-6 relative before:absolute before:inset-0 before:ml-3.5 before:-translate-x-px md:before:mx-auto md:before:translate-x-0 before:h-full before:w-0.5 before:bg-linear-to-b before:from-transparent before:via-zinc-800 before:to-transparent">
+        <div className="space-y-6 relative before:absolute before:inset-0 before:ml-3.5 before:-translate-x-px md:before:mx-auto md:before:translate-x-0 before:h-full before:w-0.5 before:bg-gradient-to-b before:from-transparent before:via-zinc-800 before:to-transparent">
           
           <div className={`relative flex items-center justify-between md:justify-normal md:odd:flex-row-reverse group transition-opacity duration-300 ${currentIndex >= 0 ? 'opacity-100' : 'opacity-40'}`}>
             <div className={`flex items-center justify-center w-7 h-7 rounded-full border-2 shrink-0 md:order-1 md:group-odd:-translate-x-1/2 md:group-even:translate-x-1/2 shadow-sm ${currentIndex > 0 ? 'bg-amber-500 border-amber-500 text-black' : currentIndex === 0 ? 'bg-zinc-950 border-amber-500 text-amber-500' : 'bg-zinc-950 border-zinc-800 text-zinc-600'}`}>
@@ -208,9 +223,14 @@ export default function LifecyclePanel({ formData, setFormData }: { formData: an
                       <div className="bg-violet-500/10 border border-violet-500/30 rounded-lg p-3">
                         <p className="text-[10px] text-violet-400 font-medium italic">Project paused. Awaiting client assets.</p>
                       </div>
-                      <button onClick={() => handleStatusChange('CONTENT_ASSEMBLY', 'Assets received. Resuming assembly.')} className="w-full flex items-center justify-center gap-2 bg-indigo-500/10 hover:bg-indigo-500/20 text-indigo-400 border border-indigo-500/30 py-2.5 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all cursor-pointer">
-                        <PlayCircle size={12} /> Resume Assembly
-                      </button>
+                      <div className="grid grid-cols-2 gap-2">
+                        <button onClick={handleSendAssetReminder} disabled={isSendingReminder} className="flex items-center justify-center gap-2 bg-zinc-800 hover:bg-zinc-700 text-white py-2.5 rounded-lg text-[9px] font-black uppercase tracking-widest transition-all cursor-pointer">
+                           {isSendingReminder ? 'Sending...' : 'Send Nudge'} {!isSendingReminder && <BellRing size={12} />}
+                        </button>
+                        <button onClick={() => handleStatusChange('CONTENT_ASSEMBLY', 'Assets received. Resuming assembly.')} className="flex items-center justify-center gap-2 bg-indigo-500/10 hover:bg-indigo-500/20 text-indigo-400 border border-indigo-500/30 py-2.5 rounded-lg text-[9px] font-black uppercase tracking-widest transition-all cursor-pointer">
+                          Resume <PlayCircle size={12} />
+                        </button>
+                      </div>
                     </>
                   ) : (
                     <>

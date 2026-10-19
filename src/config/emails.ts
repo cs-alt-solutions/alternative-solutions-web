@@ -146,5 +146,16 @@ export const EMAIL_COPY = {
     ...STANDARD_SIGNATURE
   },
 
+  // 🚀 THE ASSET NUDGE EMAIL
+  ASSET_REMINDER: {
+    HEADER: 'Action Required',
+    SUBHEADER: 'Asset Collection',
+    GREETING: 'Hey',
+    BODY_1: "Just touching base! I'm actively assembling your storefront, but I'm currently paused waiting on a few final assets from your end.",
+    BODY_2: "Whenever you have a minute, just drop those files directly into your secure Media Vault. The second they are uploaded, I'll resume the build and get this pushed live.",
+    CTA_BUTTON: 'Open Media Vault',
+    ...STANDARD_SIGNATURE
+  },
+
   INVITE_SUBJECT: 'Access Granted: Secure Workspace'
 };
