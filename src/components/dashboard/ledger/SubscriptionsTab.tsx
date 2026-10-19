@@ -3,15 +3,12 @@
 
 import React, { useState, useEffect } from 'react';
 import { supabase } from '@/utils/supabase';
-import { CreditCard, Zap, RefreshCw, Loader2, CalendarClock, Receipt, AlertTriangle, TrendingDown, ChevronDown, ChevronUp, Eye, BarChart3, PieChart } from 'lucide-react';
+import { CreditCard, RefreshCw, Loader2, AlertTriangle } from 'lucide-react';
 import { getGlobalInvoices } from '@/app/actions/billing';
 import GlobalPaymentHistory from './feed/GlobalPaymentHistory';
-
-const formatCurrency = (val: any) => {
-  if (val === null || val === undefined) return '0.00';
-  const num = Number(val);
-  return isNaN(num) ? '0.00' : num.toFixed(2);
-};
+import MetricsOverview from './MetricsOverview';
+import ActiveSubscriptionsTable from './ActiveSubscriptionsTable';
+import ReceiptModal from './ReceiptModal';
 
 export default function SubscriptionsTab() {
   const [enrichedStorefronts, setEnrichedStorefronts] = useState<any[]>([]);
@@ -22,15 +19,7 @@ export default function SubscriptionsTab() {
   const [isInvoicesLoading, setIsInvoicesLoading] = useState(true);
   const [syncError, setSyncError] = useState<string | null>(null);
 
-  const [expandedStoreId, setExpandedStoreId] = useState<string | null>(null);
-
-  const handleOpenPopup = (url: string) => {
-    const width = 800;
-    const height = 900;
-    const left = (window.innerWidth - width) / 2;
-    const top = (window.innerHeight - height) / 2;
-    window.open(url, 'StripeReceipt', `width=${width},height=${height},top=${top},left=${left},scrollbars=yes`);
-  };
+  const [previewReceiptUrl, setPreviewReceiptUrl] = useState<string | null>(null);
 
   const fetchAllData = async () => {
     setIsLoading(true);
@@ -39,18 +28,8 @@ export default function SubscriptionsTab() {
 
     const { data: activeStores, error } = await supabase
       .from('storefronts')
-      .select('id, business_name, contact_email, plan_tier, created_at, status, stripe_subscription_id, stripe_customer_id')
-      .in('status', [
-        'PENDING_BUILD', 
-        'BUILDING_CORE', 
-        'IN_REVIEW', 
-        'CONTENT_ASSEMBLY', 
-        'AWAITING_ASSETS', 
-        'ACTIVE', 
-        'LIVE', 
-        'MAINTENANCE', 
-        'HIDDEN'
-      ])
+      .select('id, business_name, contact_email, plan_tier, created_at, status, stripe_subscription_id, stripe_customer_id, current_period_end')
+      .in('status', ['PENDING_BUILD', 'BUILDING_CORE', 'IN_REVIEW', 'CONTENT_ASSEMBLY', 'AWAITING_ASSETS', 'ACTIVE', 'LIVE', 'MAINTENANCE', 'HIDDEN'])
       .not('stripe_subscription_id', 'is', null)
       .order('created_at', { ascending: false });
 
@@ -78,7 +57,6 @@ export default function SubscriptionsTab() {
         };
       });
 
-      // 🚀 THE BARTOK FIX: We now explicitly set the global feed to strictLedger, permanently hiding unlinked ghost payments.
       const strictLedger = allLedger.filter((inv: any) => inv.isMatched);
       setGlobalInvoices(strictLedger);
 
@@ -108,15 +86,8 @@ export default function SubscriptionsTab() {
 
         if (storeInvoices.length > 0) {
           const latestInv = storeInvoices[0];
-          
-          // 🚀 THE PROMO MATH FIX: We explicitly check for undefined/null so $0.00 isn't treated as a falsy error.
-          actualPaid = latestInv.amount !== undefined && latestInv.amount !== null 
-            ? Number(latestInv.amount) 
-            : expectedPrice;
-            
-          originalPrice = latestInv.subtotal !== undefined && latestInv.subtotal !== null 
-            ? Number(latestInv.subtotal) 
-            : expectedPrice;
+          actualPaid = latestInv.amount !== undefined && latestInv.amount !== null ? Number(latestInv.amount) : expectedPrice;
+          originalPrice = latestInv.subtotal !== undefined && latestInv.subtotal !== null ? Number(latestInv.subtotal) : expectedPrice;
           
           if (originalPrice > actualPaid) {
             isPromo = true;
@@ -152,16 +123,10 @@ export default function SubscriptionsTab() {
     fetchAllData();
   }, []);
 
-  const activeCount = enrichedStorefronts.length;
-  
-  const totalSubs = metrics.foundation + metrics.pro || 1;
-  const fndStroke = (metrics.foundation / totalSubs) * 100;
-  const proStroke = (metrics.pro / totalSubs) * 100;
-  const trendBars = [40, 60, 45, 80, 75, 100]; 
-
   return (
     <div className="space-y-8 animate-in fade-in duration-500 pb-20 relative">
       
+      {/* HEADER */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-zinc-900/40 border border-emerald-500/30 rounded-2xl p-6 relative overflow-hidden shadow-xl backdrop-blur-sm">
         <div className="absolute top-0 right-0 w-96 h-96 bg-emerald-500/10 rounded-full blur-[100px] -z-10 pointer-events-none" />
         <div>
@@ -197,196 +162,34 @@ export default function SubscriptionsTab() {
         </div>
       )}
 
-      {/* QUICK STATS WITH EMBEDDED CHARTS */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        
-        {/* ACTIVE PORTALS CARD WITH DONUT CHART */}
-        <div className="bg-black/40 border border-cyan-500/20 rounded-2xl p-6 relative overflow-hidden shadow-lg flex justify-between items-center">
-          <div className="absolute -right-6 -top-6 w-24 h-24 bg-cyan-500/10 rounded-full blur-2xl transition-all" />
-          <div className="relative z-10">
-            <div className="flex items-center gap-3 mb-2">
-              <div className="p-2 bg-cyan-500/10 rounded-lg text-cyan-400"><Zap size={16} /></div>
-              <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest">Active Portals</span>
-            </div>
-            <h2 className="text-3xl font-black text-white">{activeCount} <span className="text-sm text-zinc-500 font-medium">Deployed</span></h2>
-            <div className="mt-4 flex items-center gap-4 text-[10px] font-mono">
-              <div className="text-cyan-400">STD: <span className="text-white">{metrics.foundation}</span></div>
-              <div className="text-fuchsia-400">PRO: <span className="text-white">{metrics.pro}</span></div>
-            </div>
-          </div>
-          <div className="relative w-16 h-16 mr-4">
-            <svg viewBox="0 0 32 32" className="w-full h-full -rotate-90 rounded-full overflow-visible drop-shadow-[0_0_10px_rgba(6,182,212,0.3)]">
-              <circle r="15.91549431" cx="16" cy="16" fill="transparent" stroke="#06b6d4" strokeWidth="4" strokeDasharray={`${fndStroke} 100`} />
-              <circle r="15.91549431" cx="16" cy="16" fill="transparent" stroke="#d946ef" strokeWidth="4" strokeDasharray={`${proStroke} 100`} strokeDashoffset={-fndStroke} />
-            </svg>
-          </div>
-        </div>
-
-        {/* NET MRR CARD WITH BAR CHART */}
-        <div className="bg-black/40 border border-emerald-500/20 rounded-2xl p-6 relative overflow-hidden shadow-lg flex justify-between items-end">
-          <div className="absolute -right-6 -top-6 w-24 h-24 bg-emerald-500/10 rounded-full blur-2xl transition-all" />
-          <div className="relative z-10">
-            <div className="flex items-center gap-3 mb-2">
-              <div className="p-2 bg-emerald-500/10 rounded-lg text-emerald-400"><BarChart3 size={16} /></div>
-              <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest">Net MRR</span>
-            </div>
-            <h2 className="text-3xl font-black text-white">${formatCurrency(metrics.net)}<span className="text-sm text-zinc-500 font-medium">/mo</span></h2>
-            <div className="mt-4 flex flex-col text-[10px] font-mono">
-              <div className="text-zinc-400">Gross: <span className="text-white">${formatCurrency(metrics.gross)}</span></div>
-              {metrics.discount > 0 && <div className="text-rose-400">Discounts: -${formatCurrency(metrics.discount)}</div>}
-            </div>
-          </div>
-          <div className="flex items-end gap-1.5 h-16 opacity-80 pb-2">
-            {trendBars.map((height, i) => (
-              <div key={i} className={`w-3 rounded-t-sm ${i === trendBars.length - 1 ? 'bg-emerald-400 shadow-[0_0_10px_rgba(16,185,129,0.5)]' : 'bg-zinc-800'}`} style={{ height: `${height}%` }} />
-            ))}
-          </div>
-        </div>
-      </div>
+      {/* ISOLATED VIEW COMPONENTS */}
+      <MetricsOverview 
+        metrics={metrics} 
+        activeCount={enrichedStorefronts.length} 
+        enrichedStorefronts={enrichedStorefronts} 
+        isLoading={isLoading} 
+      />
 
       <div className="grid grid-cols-1 xl:grid-cols-12 gap-8 mt-4">
-        
-        {/* LEFT COLUMN: ACTIVE SUBSCRIPTIONS */}
-        <div className="xl:col-span-7 bg-zinc-950 border border-zinc-800/80 rounded-2xl overflow-hidden shadow-xl flex flex-col">
-          <div className="p-4 border-b border-zinc-800/80 bg-zinc-900/50 shrink-0">
-            <h3 className="text-xs font-bold text-white uppercase tracking-widest flex items-center gap-2">
-              <CalendarClock size={14} className="text-emerald-500" /> Active Subscriptions
-            </h3>
-          </div>
-
-          <div className="overflow-x-auto flex-1">
-            <table className="w-full text-left border-collapse whitespace-nowrap">
-              <thead>
-                <tr className="border-b border-zinc-800/50 bg-black/40">
-                  <th className="p-4 text-[10px] font-mono text-zinc-500 uppercase tracking-widest">Client / Storefront</th>
-                  <th className="p-4 text-[10px] font-mono text-zinc-500 uppercase tracking-widest">Tier</th>
-                  <th className="p-4 text-[10px] font-mono text-zinc-500 uppercase tracking-widest">LTV</th>
-                  <th className="p-4 text-[10px] font-mono text-emerald-400 uppercase tracking-widest text-right">Revenue</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-zinc-800/50">
-                {isLoading ? (
-                  <tr>
-                    <td colSpan={4} className="p-8 text-center text-zinc-500 font-mono text-xs uppercase tracking-widest">
-                      Loading Subscriptions...
-                    </td>
-                  </tr>
-                ) : enrichedStorefronts.length === 0 ? (
-                  <tr>
-                    <td colSpan={4} className="p-8 text-center text-zinc-500 font-mono text-xs uppercase tracking-widest">
-                      No active storefronts found.
-                    </td>
-                  </tr>
-                ) : (
-                  enrichedStorefronts.map((store) => {
-                    const isExpanded = expandedStoreId === store.id;
-                    return (
-                      <React.Fragment key={store.id}>
-                        <tr 
-                          onClick={() => setExpandedStoreId(isExpanded ? null : store.id)}
-                          className={`transition-colors group cursor-pointer ${isExpanded ? 'bg-zinc-900' : 'hover:bg-zinc-900/50'}`}
-                        >
-                          <td className="p-4">
-                            <div className="flex flex-col gap-1">
-                              <span className="text-sm text-white font-bold flex items-center gap-3">
-                                <div className="w-2 h-2 rounded-full bg-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.5)] animate-pulse shrink-0" />
-                                {store.business_name}
-                              </span>
-                              {store.contact_email && (
-                                <span className="text-[10px] font-mono text-zinc-500 ml-5">{store.contact_email}</span>
-                              )}
-                            </div>
-                          </td>
-                          
-                          <td className="p-4 text-xs font-mono text-zinc-400 capitalize">{store.displayTier}</td>
-                          
-                          <td className="p-4">
-                             <span className="text-[10px] font-mono text-emerald-400/80 uppercase tracking-widest">
-                               ${formatCurrency(store.ltv)}
-                             </span>
-                          </td>
-                          
-                          <td className="p-4 text-right">
-                            <div className="flex items-center justify-end gap-3">
-                              {store.isPromo ? (
-                                <div className="flex flex-col items-end gap-1">
-                                  <span className="text-sm text-emerald-400 font-bold">
-                                    ${formatCurrency(store.actualPaid)} <span className="text-[10px] text-zinc-500 font-normal">/mo</span>
-                                  </span>
-                                  <span className="text-[9px] font-mono text-amber-400 bg-amber-500/10 px-1.5 py-0.5 rounded border border-amber-500/20 uppercase tracking-widest">
-                                    PROMO
-                                  </span>
-                                </div>
-                              ) : (
-                                <span className="text-sm text-emerald-400 font-bold">
-                                  ${formatCurrency(store.actualPaid)} <span className="text-[10px] text-zinc-500 font-normal">/mo</span>
-                                </span>
-                              )}
-                              {isExpanded ? <ChevronUp size={16} className="text-zinc-500" /> : <ChevronDown size={16} className="text-zinc-500 group-hover:text-cyan-400" />}
-                            </div>
-                          </td>
-                        </tr>
-
-                        {isExpanded && (
-                          <tr className="bg-black/40 border-b border-zinc-800/80 animate-in fade-in slide-in-from-top-2">
-                            <td colSpan={4} className="p-0">
-                              <div className="p-4 md:p-6 bg-zinc-950 shadow-inner">
-                                <h4 className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest mb-3 flex items-center gap-2">
-                                  <Receipt size={12}/> Invoice Ledger
-                                </h4>
-                                
-                                {store.invoices.length === 0 ? (
-                                  <p className="text-xs text-zinc-500 font-mono uppercase tracking-widest p-4 border border-dashed border-zinc-800 rounded-xl text-center">
-                                    No invoices generated yet.
-                                  </p>
-                                ) : (
-                                  <div className="space-y-2">
-                                    {store.invoices.map((inv: any) => (
-                                      <div key={inv.id} className="flex items-center justify-between p-3 bg-zinc-900 border border-zinc-800 rounded-xl">
-                                        <div className="flex items-center gap-4">
-                                          <span className="text-xs font-mono text-zinc-400">{inv.date}</span>
-                                          <span className="text-[10px] font-black uppercase tracking-widest px-2 py-0.5 rounded border bg-emerald-500/10 text-emerald-400 border-emerald-500/20">
-                                            {inv.status}
-                                          </span>
-                                        </div>
-                                        <div className="flex items-center gap-4">
-                                          <span className="text-sm font-bold text-emerald-400">${formatCurrency(inv.amount)}</span>
-                                          {inv.hostedUrl && (
-                                            <button 
-                                              onClick={() => handleOpenPopup(inv.hostedUrl)}
-                                              className="text-[10px] font-bold text-cyan-400 hover:text-cyan-300 uppercase tracking-widest flex items-center gap-1.5 transition-colors cursor-pointer"
-                                            >
-                                              <Eye size={12}/> View
-                                            </button>
-                                          )}
-                                        </div>
-                                      </div>
-                                    ))}
-                                  </div>
-                                )}
-                              </div>
-                            </td>
-                          </tr>
-                        )}
-                      </React.Fragment>
-                    );
-                  })
-                )}
-              </tbody>
-            </table>
-          </div>
+        <div className="xl:col-span-7">
+          <ActiveSubscriptionsTable 
+            storefronts={enrichedStorefronts} 
+            isLoading={isLoading} 
+            onViewReceipt={setPreviewReceiptUrl} 
+          />
         </div>
-
-        {/* RIGHT COLUMN: MODULARIZED MONTHLY FEED */}
         <div className="xl:col-span-5">
           <GlobalPaymentHistory 
             globalInvoices={globalInvoices} 
             isInvoicesLoading={isInvoicesLoading} 
-            onViewReceipt={handleOpenPopup} 
+            onViewReceipt={setPreviewReceiptUrl} 
           />
         </div>
-
       </div>
+
+      {previewReceiptUrl && (
+        <ReceiptModal url={previewReceiptUrl} onClose={() => setPreviewReceiptUrl(null)} />
+      )}
     </div>
   );
 }
