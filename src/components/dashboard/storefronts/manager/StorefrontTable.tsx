@@ -2,7 +2,7 @@
 import React from 'react';
 import Link from 'next/link';
 import { Settings, Globe, Eye, User, ArrowUpDown, ChevronUp, ChevronDown, Clock } from 'lucide-react';
-import { STOREFRONT_LIFECYCLE, StorefrontStatus } from '@/config/lifecycle';
+import { STOREFRONT_LIFECYCLE, StorefrontStatus, hasPortalAccess } from '@/config/lifecycle';
 
 interface TableProps {
   processedData: any[];
@@ -27,7 +27,8 @@ export default function StorefrontTable({
     if (isEditMode) return 'bg-amber-500/[0.02] hover:bg-amber-500/[0.05] border-l-2 border-l-amber-500/50';
     if (isOffline) return 'opacity-60 hover:bg-white/5 border-l-2 border-l-transparent';
     switch(status) {
-      case 'ACTIVE': return 'bg-emerald-500/[0.02] hover:bg-emerald-500/[0.05] border-l-2 border-l-emerald-500/50';
+      case 'ACTIVE': 
+      case 'LIVE': return 'bg-emerald-500/[0.02] hover:bg-emerald-500/[0.05] border-l-2 border-l-emerald-500/50';
       case 'IN_REVIEW': return 'bg-cyan-500/[0.02] hover:bg-cyan-500/[0.05] border-l-2 border-l-cyan-500/50';
       case 'CONTENT_ASSEMBLY': return 'bg-indigo-500/[0.02] hover:bg-indigo-500/[0.05] border-l-2 border-l-indigo-500/50';
       case 'BUILDING_CORE': return 'bg-fuchsia-500/[0.02] hover:bg-fuchsia-500/[0.05] border-l-2 border-l-fuchsia-500/50';
@@ -79,7 +80,8 @@ export default function StorefrontTable({
             const config = STOREFRONT_LIFECYCLE[status] || { label: rawStatus, badgeColor: 'bg-zinc-800 text-zinc-400 border-zinc-700' };
             const isOffline = rawStatus === 'MAINTENANCE' || rawStatus === 'HIDDEN' || rawStatus === 'CANCELED' || rawStatus === 'ON_HOLD';
             
-            // 🚀 THE FIX: Awaiting Assets and In Review are real, LIVE websites. 
+            // 🚀 THE FIX: Use central helper so middle table clients keep portal access
+            const isPortalActive = hasPortalAccess(rawStatus);
             const isLive = ['ACTIVE', 'MAINTENANCE', 'HIDDEN', 'AWAITING_ASSETS', 'IN_REVIEW'].includes(rawStatus);
 
             const createdDate = new Date(store.created_at);
@@ -93,6 +95,7 @@ export default function StorefrontTable({
                   <div className="flex items-center gap-4">
                     <div className="w-10 h-10 rounded-md bg-zinc-900 border border-zinc-800 flex items-center justify-center shrink-0 overflow-hidden">
                       {store.brand_logo ? (
+                        // eslint-disable-next-line @next/next/no-img-element
                         <img src={store.brand_logo} alt="Logo" className="w-full h-full object-cover" />
                       ) : (
                         <span className="font-bold text-sm text-zinc-600 uppercase">{store.business_name?.charAt(0) || '?'}</span>
@@ -167,16 +170,23 @@ export default function StorefrontTable({
                 <td className="px-6 py-4 text-right">
                   <div className="flex items-center justify-end gap-2">
                     
-                    <Link 
-                      href={`/portal/${store.id}`}
-                      target="_blank"
-                      className="p-1.5 rounded-md text-fuchsia-400 bg-fuchsia-500/10 hover:bg-fuchsia-500/20 border border-fuchsia-500/20 transition-all flex items-center justify-center"
-                      title="Enter Client Portal (Impersonate)"
-                    >
-                      <User size={14} />
-                    </Link>
+                    {/* PORTAL IMPERSONATE BUTTON (Governed by hasPortalAccess) */}
+                    {isPortalActive ? (
+                      <Link 
+                        href={`/portal/${store.id}`}
+                        target="_blank"
+                        className="p-1.5 rounded-md text-fuchsia-400 bg-fuchsia-500/10 hover:bg-fuchsia-500/20 border border-fuchsia-500/20 transition-all flex items-center justify-center"
+                        title="Enter Client Portal (Impersonate)"
+                      >
+                        <User size={14} />
+                      </Link>
+                    ) : (
+                      <span className="p-1.5 rounded-md text-zinc-600 bg-zinc-900/50 border border-zinc-800 cursor-not-allowed" title="Portal locked until build or payment clears">
+                        <User size={14} />
+                      </span>
+                    )}
 
-                    {/* 🚀 THE FIX: It now correctly assigns the Emerald Globe to these Live sites */}
+                    {/* VIEW SITE / STAGING PREVIEW */}
                     <a 
                       href={`https://storefronts.alternativesolutions.io/${store.slug}`}
                       target="_blank"
@@ -191,6 +201,7 @@ export default function StorefrontTable({
                       {isLive ? <Globe size={14} /> : <Eye size={14} />}
                     </a>
 
+                    {/* COMMAND HUB */}
                     <Link 
                       href={`/dashboard/storefronts/${store.id}`}
                       className="p-1.5 rounded-md text-violet-400 bg-violet-500/10 hover:bg-violet-500/20 border border-violet-500/20 transition-all flex items-center justify-center"

@@ -18,6 +18,7 @@ export interface LifecycleConfig {
   badgeColor: string;
   isPubliclyVisible: boolean;
   isCanvasLocked: boolean;
+  isPortalUnlocked: boolean; // 🚀 NEW: Controls whether the client can enter their portal
   allowedNextStates: StorefrontStatus[];
   description: string;
 }
@@ -28,6 +29,7 @@ export const STOREFRONT_LIFECYCLE: Record<StorefrontStatus, LifecycleConfig> = {
     badgeColor: 'bg-amber-500/10 text-amber-500 border-amber-500/20',
     isPubliclyVisible: false,
     isCanvasLocked: true,
+    isPortalUnlocked: false,
     allowedNextStates: ['PENDING_BUILD', 'CANCELED'],
     description: 'Application approved. Awaiting $5 Stripe checkout completion.'
   },
@@ -36,6 +38,7 @@ export const STOREFRONT_LIFECYCLE: Record<StorefrontStatus, LifecycleConfig> = {
     badgeColor: 'bg-zinc-500/10 text-zinc-400 border-zinc-500/20',
     isPubliclyVisible: false,
     isCanvasLocked: true,
+    isPortalUnlocked: false,
     allowedNextStates: ['BUILDING_CORE', 'CANCELED'],
     description: 'Payment cleared. Project is officially in the queue.'
   },
@@ -44,6 +47,7 @@ export const STOREFRONT_LIFECYCLE: Record<StorefrontStatus, LifecycleConfig> = {
     badgeColor: 'bg-fuchsia-500/10 text-fuchsia-400 border-fuchsia-500/20',
     isPubliclyVisible: false,
     isCanvasLocked: false, 
+    isPortalUnlocked: false,
     allowedNextStates: ['IN_REVIEW', 'CANCELED'],
     description: 'Constructing layout, colors, typography, and routing.'
   },
@@ -51,7 +55,8 @@ export const STOREFRONT_LIFECYCLE: Record<StorefrontStatus, LifecycleConfig> = {
     label: 'Client Review',
     badgeColor: 'bg-cyan-500/10 text-cyan-400 border-cyan-500/20',
     isPubliclyVisible: true,
-    isCanvasLocked: true,    
+    isCanvasLocked: true,     
+    isPortalUnlocked: true, // 🚀 UNLOCKED: Internal tracker only, client can access portal
     allowedNextStates: ['BUILDING_CORE', 'CONTENT_ASSEMBLY', 'CANCELED'], 
     description: 'Staging link transmitted. Canvas locked pending architectural sign-off.'
   },
@@ -60,6 +65,7 @@ export const STOREFRONT_LIFECYCLE: Record<StorefrontStatus, LifecycleConfig> = {
     badgeColor: 'bg-indigo-500/10 text-indigo-400 border-indigo-500/20',
     isPubliclyVisible: true,
     isCanvasLocked: false,
+    isPortalUnlocked: true, // 🚀 UNLOCKED: Client can drop files & view progress
     allowedNextStates: ['ACTIVE', 'CANCELED', 'AWAITING_ASSETS'],
     description: 'Architecture locked. Uploading Drop Vault assets and formatting copy.'
   },
@@ -68,6 +74,7 @@ export const STOREFRONT_LIFECYCLE: Record<StorefrontStatus, LifecycleConfig> = {
     badgeColor: 'bg-violet-500/10 text-violet-400 border-violet-500/20',
     isPubliclyVisible: true,
     isCanvasLocked: false,
+    isPortalUnlocked: true, // 🚀 UNLOCKED: Client has full portal & Media Vault access!
     allowedNextStates: ['ACTIVE', 'CONTENT_ASSEMBLY', 'CANCELED'],
     description: 'Site is active but waiting on client to upload final media or text.'
   },
@@ -76,6 +83,7 @@ export const STOREFRONT_LIFECYCLE: Record<StorefrontStatus, LifecycleConfig> = {
     badgeColor: 'bg-rose-500/10 text-rose-400 border-rose-500/20',
     isPubliclyVisible: false,
     isCanvasLocked: true,
+    isPortalUnlocked: false,
     allowedNextStates: ['BUILDING_CORE', 'CANCELED'],
     description: 'Project frozen or paused.'
   },
@@ -84,6 +92,7 @@ export const STOREFRONT_LIFECYCLE: Record<StorefrontStatus, LifecycleConfig> = {
     badgeColor: 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20 ring-emerald-500/30',
     isPubliclyVisible: true,
     isCanvasLocked: true,
+    isPortalUnlocked: true, // 🚀 UNLOCKED
     allowedNextStates: ['MAINTENANCE', 'HIDDEN', 'CANCELED'],
     description: 'Site fully populated and live. Recurring revenue pipeline active.'
   },
@@ -92,6 +101,7 @@ export const STOREFRONT_LIFECYCLE: Record<StorefrontStatus, LifecycleConfig> = {
     badgeColor: 'bg-blue-500/10 text-blue-400 border-blue-500/20',
     isPubliclyVisible: false, 
     isCanvasLocked: false,    
+    isPortalUnlocked: true, // 🚀 UNLOCKED: Client can still reach support/vault during maintenance
     allowedNextStates: ['ACTIVE', 'HIDDEN', 'CANCELED'],
     description: 'Temporarily offline for scheduled upgrades or massive structural edits.'
   },
@@ -100,6 +110,7 @@ export const STOREFRONT_LIFECYCLE: Record<StorefrontStatus, LifecycleConfig> = {
     badgeColor: 'bg-slate-500/10 text-slate-400 border-slate-500/20',
     isPubliclyVisible: false,
     isCanvasLocked: true,
+    isPortalUnlocked: true,
     allowedNextStates: ['ACTIVE', 'MAINTENANCE', 'CANCELED'],
     description: 'Active subscription, but temporarily removed from public directories.'
   },
@@ -108,7 +119,16 @@ export const STOREFRONT_LIFECYCLE: Record<StorefrontStatus, LifecycleConfig> = {
     badgeColor: 'bg-rose-500/10 text-rose-400 border-rose-500/20',
     isPubliclyVisible: false,
     isCanvasLocked: true,
+    isPortalUnlocked: false,
     allowedNextStates: ['PENDING_BUILD'], 
     description: 'Project terminated or archived.'
   }
 };
+
+// 🚀 CENTRAL HELPER: Single source of truth for checking if a storefront can access the Portal
+export function hasPortalAccess(status?: string | null): boolean {
+  if (!status) return false;
+  if (status === 'LIVE') return true; // Legacy fallback
+  const config = STOREFRONT_LIFECYCLE[status as StorefrontStatus];
+  return config ? config.isPortalUnlocked : false;
+}

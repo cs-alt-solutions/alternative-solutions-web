@@ -8,6 +8,7 @@ import { usePathname } from 'next/navigation';
 import { supabase } from '@/utils/supabase'; 
 import { PORTAL_COPY } from '@/config/clients/portal'; 
 import { getPortalTheme } from './theme'; 
+import { hasPortalAccess } from '@/config/lifecycle';
 
 const parseAdminReplies = (replyString: string | null) => {
   if (!replyString) return [];
@@ -24,9 +25,7 @@ export default function PortalSidebar({ clientId }: { clientId: string }) {
   const [isOpen, setIsOpen] = useState(false); 
   const [showSwitchWorkspace, setShowSwitchWorkspace] = useState(false); 
   const [hasUnreadSupport, setHasUnreadSupport] = useState(false);
-  
   const [brandData, setBrandData] = useState<{ logo: string | null, name: string }>({ logo: null, name: PORTAL_COPY.sidebar.title });
-
   const currentTheme = getPortalTheme(clientId);
 
   useEffect(() => { 
@@ -38,7 +37,8 @@ export default function PortalSidebar({ clientId }: { clientId: string }) {
           .select('status, is_template') 
           .eq('contact_email', user.email);
 
-        const activeCount = workspaces?.filter(s => (s.status === 'ACTIVE' || s.status === 'LIVE') && !s.is_template).length || 0; 
+        // 🚀 FIXED: Uses the central lifecycle helper instead of hardcoded status strings
+        const activeCount = workspaces?.filter(s => hasPortalAccess(s.status) && !s.is_template).length || 0; 
         if (activeCount > 1) setShowSwitchWorkspace(true); 
       }
 
@@ -73,7 +73,6 @@ export default function PortalSidebar({ clientId }: { clientId: string }) {
     initSidebar(); 
     fetchUnreadStatus();
 
-    // 🚀 Instantly syncs the Sidebar dot with the auto-sweep function
     const channel = supabase
       .channel('sidebar-notifications')
       .on('postgres_changes', { event: '*', schema: 'public', table: 'support_tickets', filter: `storefront_id=eq.${clientId}` }, () => {
@@ -142,14 +141,13 @@ export default function PortalSidebar({ clientId }: { clientId: string }) {
                 href={item.href} 
                 onClick={() => setIsOpen(false)} 
                 className={`flex items-center gap-3 px-3 py-3 rounded-xl transition-all duration-300 ${ 
-                  isActive  
-                    ? `${currentTheme.bg} ${currentTheme.text} border ${currentTheme.border} shadow-sm`  
+                  isActive 
+                    ? `${currentTheme.bg} ${currentTheme.text} border${currentTheme.border} shadow-sm` 
                     : `text-zinc-500 border border-transparent hover:text-white hover:bg-white/5` 
                 }`} 
               > 
                 <div className="relative">
                   <item.icon className="w-4 h-4 shrink-0" /> 
-                  {/* 🚀 The Glowing Indicator Badge */}
                   {item.id === 'nav-support' && hasUnreadSupport && (
                     <span className={`absolute -top-1 -right-1 w-2 h-2 rounded-full ${badgeColor} animate-pulse shadow-md border border-zinc-950`} />
                   )}
@@ -162,7 +160,7 @@ export default function PortalSidebar({ clientId }: { clientId: string }) {
 
         {showSwitchWorkspace && ( 
           <div className="p-4 border-t border-white/5 bg-black/20"> 
-            <Link  
+            <Link 
               href="/portal" 
               className="flex items-center justify-center gap-2 px-3 py-3 w-full rounded-xl border border-zinc-800 text-zinc-400 hover:text-white hover:border-zinc-600 hover:bg-zinc-900 transition-all group" 
             > 
