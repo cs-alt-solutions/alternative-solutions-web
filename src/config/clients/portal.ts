@@ -1,4 +1,5 @@
 /* src/config/clients/portal.ts */
+
 export const PORTAL_COPY = {
   header: {
     signOut: "SIGN OUT",
@@ -79,17 +80,15 @@ export const PORTAL_COPY = {
       { id: 'question', label: 'Just a Question', description: 'General inquiries, minor content updates, or "how-to" help.' },
       { id: 'broken', label: 'Something Broke', description: 'Glitches, display errors, or something is malfunctioning.' },
       { id: 'idea', label: 'Big New Idea', description: 'Scope out a custom upgrade, new page, or structural shift.' },
-      // 🚀 NEW: The Positivity Channel
       { id: 'update', label: 'Business Update', description: 'Share a win, a milestone, or just tell me how things are going!' } 
     ],
     topics: [
-  'Live Storefront Edits',
-  'Media Vault & Assets',
-  'Billing & Subscriptions',
-  'New Feature Request',
-  'General Strategy & Check-in',
-  'Reporting a Bug'
-],
+      'Live Storefront',
+      'Client Portal',
+      'Billing & Subscription',
+      'Custom Upgrade / Expansion',
+      'Other'
+    ],
     btnSend: "Send Message",
     btnSending: "Sending...",
     btnSent: "Message Sent!",
@@ -99,5 +98,44 @@ export const PORTAL_COPY = {
     emergencyBody: "If your website goes completely offline or something is seriously broken, flag it as 'Something Broke'. This bypasses the normal inbox and alerts me immediately so we can put out the fire fast.",
     historyTitle: "Message History",
     historyEmpty: "You haven't sent any messages yet."
+  },
+  // 🚀 NEW: The Network Dictionary
+  network: {
+    title: "The Network",
+    subtitle: "Ecosystem Expansion & Links",
+    qrStudio: {
+      title: "The QR Studio",
+      headline: "Design your brand's physical bridge.",
+      description: "This QR code dynamically maps to your active web infrastructure. Because we handle the routing, it will never break—even if you upgrade your domain name later. Customize your code below, download the high-res image, and drop it straight onto your business cards, flyers, or window decals.",
+      liveRoute: "Live Route:",
+      controls: {
+        classic: "Classic",
+        inverse: "Inverse",
+        accent: "Accent",
+        transparent: "Transp.",
+        toggleLogo: "Toggle Logo",
+        toggleName: "Toggle Name"
+      },
+      downloadBtn: "Download Print Asset",
+      downloadingBtn: "Downloading..."
+    },
+    referral: {
+      constructionTitle: "Building The Engine",
+      constructionDesc: "Pardon the dust! We are actively wiring up this referral program so you can easily earn free hosting by bringing other builders into the network. Check back soon.",
+      agreementTitle: "The Trade Agreement",
+      agreementHeadline: "Grow the network.",
+      agreementHighlight: "Unlock your hosting.",
+      agreementDesc: "You bring a builder into the network, I cover your hosting for a month. No points, no tiers, no bullshit. One for one. Pass your Uplink Code to a friend. When they use it, they get their first month 100% free, and your next invoice is on me.",
+      uplinkTitle: "Your Private Uplink Code",
+      btnCopy: "Copy Code",
+      btnCopied: "Copied to Clipboard",
+      uplinkHint: "They can enter this code during their secure Stripe checkout to instantly bypass the paywall for their first month.",
+      ledgerTitle: "The Ledger",
+      activeNodes: "Active Nodes",
+      activeNodesSub: "Cleared Invoices",
+      pendingLinks: "Pending Links",
+      pendingLinksSub: "Awaiting 30-Day Clear",
+      totalEarned: "Total Free Months Earned:"
+    }
   }
 };

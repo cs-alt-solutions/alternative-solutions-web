@@ -7,6 +7,7 @@ import { Network } from 'lucide-react';
 import { getPortalTheme } from '../core/theme';
 import QrStudioPanel from './QrStudioPanel';
 import ReferralEnginePanel from './ReferralEnginePanel';
+import { PORTAL_COPY } from '@/config/clients/portal';
 
 export default function NetworkModule({ clientId }: { clientId: string }) {
   const [storeName, setStoreName] = useState('LOADING...');
@@ -14,6 +15,7 @@ export default function NetworkModule({ clientId }: { clientId: string }) {
   const [storeLogo, setStoreLogo] = useState<string | null>(null);
   const [brandColor, setBrandColor] = useState('cyan-500');
   const currentTheme = getPortalTheme(clientId);
+  const copy = PORTAL_COPY.network;
 
   useEffect(() => {
     const fetchStore = async () => {
@@ -45,8 +47,8 @@ export default function NetworkModule({ clientId }: { clientId: string }) {
           <Network className={`${currentTheme.text} w-6 h-6`} />
         </div>
         <div>
-          <h1 className="text-xl font-black text-white uppercase tracking-widest">The Network</h1>
-          <p className="text-xs text-zinc-500 font-mono uppercase tracking-widest mt-1">Ecosystem Expansion & Links</p>
+          <h1 className="text-xl font-black text-white uppercase tracking-widest">{copy.title}</h1>
+          <p className="text-xs text-zinc-500 font-mono uppercase tracking-widest mt-1">{copy.subtitle}</p>
         </div>
       </div>
 
@@ -56,11 +58,13 @@ export default function NetworkModule({ clientId }: { clientId: string }) {
         storeUrl={storeUrl}
         storeLogo={storeLogo}
         brandColor={brandColor}
+        copy={copy.qrStudio}
       />
 
       <ReferralEnginePanel 
         currentTheme={currentTheme}
         storeName={storeName}
+        copy={copy.referral}
       />
     </div>
   );
