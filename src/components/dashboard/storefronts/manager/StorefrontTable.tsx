@@ -80,9 +80,9 @@ export default function StorefrontTable({
             const config = STOREFRONT_LIFECYCLE[status] || { label: rawStatus, badgeColor: 'bg-zinc-800 text-zinc-400 border-zinc-700' };
             const isOffline = rawStatus === 'MAINTENANCE' || rawStatus === 'HIDDEN' || rawStatus === 'CANCELED' || rawStatus === 'ON_HOLD';
             
-            // 🚀 THE FIX: Use central helper so middle table clients keep portal access
+            // 🚀 THE FIX: Uses central lifecycle helper so ANY active build status unlocks portal access
             const isPortalActive = hasPortalAccess(rawStatus);
-            const isLive = ['ACTIVE', 'MAINTENANCE', 'HIDDEN', 'AWAITING_ASSETS', 'IN_REVIEW'].includes(rawStatus);
+            const isLive = ['ACTIVE', 'MAINTENANCE', 'HIDDEN', 'AWAITING_ASSETS', 'IN_REVIEW', 'LIVE'].includes(rawStatus);
 
             const createdDate = new Date(store.created_at);
             const formattedDate = createdDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
@@ -170,7 +170,7 @@ export default function StorefrontTable({
                 <td className="px-6 py-4 text-right">
                   <div className="flex items-center justify-end gap-2">
                     
-                    {/* PORTAL IMPERSONATE BUTTON (Governed by hasPortalAccess) */}
+                    {/* PORTAL IMPERSONATE BUTTON (Active for any build past queue/payment) */}
                     {isPortalActive ? (
                       <Link 
                         href={`/portal/${store.id}`}
@@ -181,7 +181,7 @@ export default function StorefrontTable({
                         <User size={14} />
                       </Link>
                     ) : (
-                      <span className="p-1.5 rounded-md text-zinc-600 bg-zinc-900/50 border border-zinc-800 cursor-not-allowed" title="Portal locked until build or payment clears">
+                      <span className="p-1.5 rounded-md text-zinc-600 bg-zinc-900/50 border border-zinc-800 cursor-not-allowed" title="Portal locked until payment or build initializes">
                         <User size={14} />
                       </span>
                     )}

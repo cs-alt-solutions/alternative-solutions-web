@@ -279,7 +279,7 @@ export async function dispatchStagingReview(id: string, slug: string, businessNa
   const { error: dbError } = await supabase
     .from('storefronts')
     .update({ 
-      status: 'IN REVIEW',
+      status: 'IN_REVIEW', // 🚀 THE FIX: Changed from 'IN REVIEW' to 'IN_REVIEW' to match the Config file perfectly!
       audit_notes: updatedLogs 
     })
     .eq('id', id);
