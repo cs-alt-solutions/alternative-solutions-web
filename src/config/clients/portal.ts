@@ -99,22 +99,22 @@ export const PORTAL_COPY = {
     historyTitle: "Message History",
     historyEmpty: "You haven't sent any messages yet."
   },
-  // 🚀 NEW: The Network Dictionary
   network: {
     title: "The Network",
     subtitle: "Ecosystem Expansion & Links",
     qrStudio: {
       title: "The QR Studio",
-      headline: "Design your brand's physical bridge.",
-      description: "This QR code dynamically maps to your active web infrastructure. Because we handle the routing, it will never break—even if you upgrade your domain name later. Customize your code below, download the high-res image, and drop it straight onto your business cards, flyers, or window decals.",
+      headline: "Your permanent digital sticker.",
+      description: "This QR code links straight to your live website. Since I handle the routing under the hood, this code is yours forever—even if you change your web address later, it'll never break. Tweak the vibe below, download the high-res image, and slap it on your business cards, flyers, or window decals. Sweet, right?",
       liveRoute: "Live Route:",
       controls: {
         classic: "Classic",
         inverse: "Inverse",
-        accent: "Accent",
+        primary: "Primary",
+        secondary: "Secondary",
         transparent: "Transp.",
-        toggleLogo: "Toggle Logo",
-        toggleName: "Toggle Name"
+        toggleLogo: "Logo",
+        toggleName: "Name"
       },
       downloadBtn: "Download Print Asset",
       downloadingBtn: "Downloading..."

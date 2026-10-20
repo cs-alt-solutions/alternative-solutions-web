@@ -14,6 +14,7 @@ export default function NetworkModule({ clientId }: { clientId: string }) {
   const [storeUrl, setStoreUrl] = useState('');
   const [storeLogo, setStoreLogo] = useState<string | null>(null);
   const [brandColor, setBrandColor] = useState('cyan-500');
+  const [secondaryColor, setSecondaryColor] = useState('fuchsia-500');
   const currentTheme = getPortalTheme(clientId);
   const copy = PORTAL_COPY.network;
 
@@ -21,7 +22,7 @@ export default function NetworkModule({ clientId }: { clientId: string }) {
     const fetchStore = async () => {
       const { data } = await supabase
         .from('storefronts')
-        .select('business_name, slug, custom_domain, brand_logo, brand_color')
+        .select('business_name, slug, custom_domain, brand_logo, brand_color, secondary_brand_color')
         .eq('id', clientId)
         .single();
         
@@ -29,7 +30,9 @@ export default function NetworkModule({ clientId }: { clientId: string }) {
         const cleanCode = data.business_name?.replace(/[^a-zA-Z0-9]/g, '').toUpperCase() || 'UPLINK';
         setStoreName(cleanCode);
         setStoreLogo(data.brand_logo);
+        
         if (data.brand_color) setBrandColor(data.brand_color);
+        if (data.secondary_brand_color) setSecondaryColor(data.secondary_brand_color);
 
         const activeUrl = data.custom_domain 
           ? `https://${data.custom_domain}` 
@@ -58,6 +61,7 @@ export default function NetworkModule({ clientId }: { clientId: string }) {
         storeUrl={storeUrl}
         storeLogo={storeLogo}
         brandColor={brandColor}
+        secondaryBrandColor={secondaryColor}
         copy={copy.qrStudio}
       />
 
