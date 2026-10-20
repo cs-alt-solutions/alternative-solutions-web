@@ -3,6 +3,7 @@ import React from 'react';
 import { redirect } from 'next/navigation';
 import { createClient } from '@/utils/supabase/server';
 import DashboardModule from '@/components/portal/dashboard/DashboardModule';
+import { hasPortalAccess } from '@/config/lifecycle';
 
 export default async function ClientDashboardHome({ 
   params 
@@ -19,8 +20,8 @@ export default async function ClientDashboardHome({
     .eq('id', clientId)
     .single();
 
-  // If they are BUILDING, IN_REVIEW, or somehow bypassed the main gate, kick them out
-  if (!store || (store.status !== 'ACTIVE' && store.status !== 'LIVE')) {
+  // 🚀 THE FIX: If they don't have portal access based on our central config, kick them out
+  if (!store || !hasPortalAccess(store.status)) {
     redirect('/portal');
   }
 

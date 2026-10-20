@@ -206,7 +206,7 @@ export default function QrStudioPanel({ currentTheme, storeName, storeUrl, store
         <div className="flex flex-col items-center gap-4 w-full md:w-auto shrink-0">
           
           {/* The "Badge" Preview Card */}
-          <div className={`p-8 rounded-3xl border transition-colors shadow-2xl flex flex-col items-center justify-center min-w-[280px] w-full max-w-[340px]
+          <div className={`p-8 rounded-3xl border transition-colors shadow-2xl flex flex-col items-center justify-center min-w-70 w-full max-w-85
             ${!isTransparent && qrMode === 'light' ? 'bg-zinc-950 border-zinc-800' : !isTransparent ? 'bg-white border-zinc-200' : 'bg-[url("https://www.transparenttextures.com/patterns/cubes.png")] bg-zinc-900 border-zinc-800'}`}
           >
             {storeUrl ? (
@@ -238,7 +238,7 @@ export default function QrStudioPanel({ currentTheme, storeName, storeUrl, store
                 )}
               </div>
             ) : (
-              <div className="w-[200px] h-[200px] bg-zinc-200/20 animate-pulse rounded-lg flex items-center justify-center">
+              <div className="w-50 h-50 bg-zinc-200/20 animate-pulse rounded-lg flex items-center justify-center">
                 <Loader2 className="w-8 h-8 text-zinc-500 animate-spin" />
               </div>
             )}
