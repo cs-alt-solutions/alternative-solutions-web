@@ -114,7 +114,7 @@ export default function MetricsOverview({ metrics, activeCount, enrichedStorefro
             upcomingPayments.map((pay: any, i: number) => (
               <div key={i} className="flex items-center justify-between border-b border-zinc-800/50 pb-2 last:border-0 last:pb-0">
                 <div className="flex flex-col">
-                  <span className="text-sm font-bold text-white truncate max-w-[120px] md:max-w-[180px]">{pay.name}</span>
+                  <span className="text-sm font-bold text-white truncate max-w-30 md:max-w-45">{pay.name}</span>
                   <span className="text-[9px] font-mono text-zinc-500 uppercase">{pay.dateStr}</span>
                 </div>
                 <span className="text-sm font-black text-emerald-400">+${pay.amount}</span>

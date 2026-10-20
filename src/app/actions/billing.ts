@@ -8,14 +8,14 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY as string, {
   apiVersion: '2026-02-25.clover',
 });
 
-export async function createStorefrontCheckout(storefrontId: string, customerEmail: string) {
+// 🚀 THE FIX: Added existingCustomerId parameter
+export async function createStorefrontCheckout(storefrontId: string, customerEmail: string, existingCustomerId?: string) {
   try {
     const headersList = await headers();
     const origin = headersList.get('origin') || process.env.NEXT_PUBLIC_BASE_URL || 'https://www.alternativesolutions.io';
 
-    const session = await stripe.checkout.sessions.create({
+    const sessionConfig: Stripe.Checkout.SessionCreateParams = {
       payment_method_types: ['card'],
-      customer_email: customerEmail || undefined,
       client_reference_id: storefrontId,
       metadata: { storefront_id: storefrontId },
       line_items: [{ price: process.env.STRIPE_PRICE_ID_FOUNDATION, quantity: 1 }],
@@ -26,22 +26,30 @@ export async function createStorefrontCheckout(storefrontId: string, customerEma
       success_url: `${origin}/portal/${storefrontId}?payment=success`,
       cancel_url: `${origin}/portal/${storefrontId}?payment=canceled`,
       allow_promotion_codes: true, 
-    });
+    };
 
+    // 🚀 THE ID LOCK: Forces Stripe to use their existing profile instead of creating a duplicate
+    if (existingCustomerId) {
+      sessionConfig.customer = existingCustomerId;
+    } else {
+      sessionConfig.customer_email = customerEmail || undefined;
+    }
+
+    const session = await stripe.checkout.sessions.create(sessionConfig);
     return { url: session.url };
   } catch (error: any) {
     return { error: error.message };
   }
 }
 
-export async function createProTierCheckout(storefrontId: string, customerEmail: string, customDomain: string) {
+// 🚀 THE FIX: Added existingCustomerId parameter
+export async function createProTierCheckout(storefrontId: string, customerEmail: string, customDomain: string, existingCustomerId?: string) {
   try {
     const headersList = await headers();
     const origin = headersList.get('origin') || process.env.NEXT_PUBLIC_BASE_URL || 'https://www.alternativesolutions.io';
 
-    const session = await stripe.checkout.sessions.create({
+    const sessionConfig: Stripe.Checkout.SessionCreateParams = {
       payment_method_types: ['card'],
-      customer_email: customerEmail || undefined,
       client_reference_id: storefrontId,
       metadata: { storefront_id: storefrontId },
       line_items: [{ price: process.env.STRIPE_PRICE_ID_PROFESSIONAL, quantity: 1 }],
@@ -52,8 +60,16 @@ export async function createProTierCheckout(storefrontId: string, customerEmail:
       success_url: `${origin}/portal/${storefrontId}?payment=success`,
       cancel_url: `${origin}/portal/${storefrontId}?payment=canceled`,
       allow_promotion_codes: true,
-    });
+    };
 
+    // 🚀 THE ID LOCK: Forces Stripe to use their existing profile
+    if (existingCustomerId) {
+      sessionConfig.customer = existingCustomerId;
+    } else {
+      sessionConfig.customer_email = customerEmail || undefined;
+    }
+
+    const session = await stripe.checkout.sessions.create(sessionConfig);
     return { url: session.url };
   } catch (error: any) {
     return { error: error.message };
@@ -117,7 +133,6 @@ export async function getGlobalInvoices() {
   try {
     const isTestMode = process.env.STRIPE_SECRET_KEY?.includes('sk_test');
     
-    // We grab all invoices so the Frontend bouncer can do the filtering
     const invoices = await stripe.invoices.list({
       limit: 100,
       expand: ['data.customer', 'data.subscription'], 
@@ -131,7 +146,7 @@ export async function getGlobalInvoices() {
         id: inv.id,
         date: new Date(inv.created * 1000).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
         amount: (inv.amount_paid / 100).toFixed(2),
-        subtotal: (inv.subtotal / 100).toFixed(2), // 🚀 RESTORED
+        subtotal: (inv.subtotal / 100).toFixed(2),
         status: inv.status,
         customerEmail: inv.customer_email || inv.customer?.email || 'Unknown Client',
         customerName: inv.customer_name || inv.customer?.name || 'No Name',

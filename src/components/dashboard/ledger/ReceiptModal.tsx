@@ -8,7 +8,7 @@ interface ReceiptModalProps {
 
 export default function ReceiptModal({ url, onClose }: ReceiptModalProps) {
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 sm:p-8 bg-black/80 backdrop-blur-sm animate-in fade-in duration-200">
+    <div className="fixed inset-0 z-100 flex items-center justify-center p-4 sm:p-8 bg-black/80 backdrop-blur-sm animate-in fade-in duration-200">
       <div className="bg-zinc-950 border border-zinc-800 w-full max-w-4xl h-[85vh] rounded-2xl shadow-2xl flex flex-col overflow-hidden relative">
         <div className="flex items-center justify-between p-4 border-b border-zinc-800 bg-zinc-900/50">
           <h3 className="text-xs font-bold text-white uppercase tracking-widest flex items-center gap-2">

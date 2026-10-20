@@ -14,10 +14,12 @@ export async function POST(req: Request) {
     return new NextResponse('Configuration Error', { status: 500 });
   }
 
+  // 1. Initialize Stripe
   const stripe = new Stripe(secretKey, {
     apiVersion: '2026-02-25.clover',
   });
 
+  // 2. Initialize a secure Supabase Admin connection (Bypasses RLS)
   const supabaseAdmin = createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.SUPABASE_SERVICE_ROLE_KEY!
@@ -60,10 +62,13 @@ export async function POST(req: Request) {
   if (event.type === 'checkout.session.completed') {
     const session = event.data.object as Stripe.Checkout.Session;
     let targetIdentifier = session.client_reference_id || session.metadata?.storefront_id;
+    let currentPeriodEnd = null;
 
-    if (!targetIdentifier && session.subscription) {
+    if (session.subscription) {
       const subscription = await stripe.subscriptions.retrieve(session.subscription as string);
-      targetIdentifier = subscription.metadata?.storefront_id;
+      if (!targetIdentifier) targetIdentifier = subscription.metadata?.storefront_id;
+      // 🚀 THE TS FIX: Cast to any to bypass strict type checking
+      currentPeriodEnd = new Date((subscription as any).current_period_end * 1000).toISOString();
     }
 
     if (targetIdentifier) {
@@ -88,6 +93,7 @@ export async function POST(req: Request) {
             plan_tier: requestedTier,
             stripe_customer_id: session.customer as string,
             stripe_subscription_id: session.subscription as string,
+            current_period_end: currentPeriodEnd, 
             updated_at: new Date().toISOString()
           })
           .eq(queryColumn, targetIdentifier);
@@ -163,12 +169,16 @@ export async function POST(req: Request) {
 
       const isCanceled = event.type === 'customer.subscription.deleted' || subscription.status === 'canceled';
       const updatedStatus = isCanceled ? 'CANCELED' : store.status;
+      
+      // 🚀 THE TS FIX: Cast to any to bypass strict type checking
+      const currentPeriodEnd = new Date((subscription as any).current_period_end * 1000).toISOString();
 
       await supabaseAdmin
         .from('storefronts')
         .update({
           plan_tier: updatedPlan,
           status: updatedStatus,
+          current_period_end: currentPeriodEnd,
           updated_at: new Date().toISOString()
         })
         .eq('id', store.id);

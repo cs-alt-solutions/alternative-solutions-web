@@ -1,10 +1,14 @@
+/* src/components/portal/billing-plans/BillingModule.tsx */
 'use client';
 
 import React, { useState, useEffect } from 'react';
 import { supabase } from '@/utils/supabase';
-import { CreditCard, Receipt, Loader2, ShieldCheck, Zap, Download, Calendar, ExternalLink, Globe } from 'lucide-react';
-import { createCustomerPortalSession, getClientInvoices, getUpcomingInvoice, createProTierCheckout } from '@/app/actions/billing';
-import DomainConcierge from './DomainConcierge';
+import { 
+  CreditCard, Receipt, Loader2, ShieldCheck, Zap, 
+  Download, Calendar, Globe, AlertTriangle, ExternalLink, Server, Unlink, ArrowRight
+} from 'lucide-react';
+import { createCustomerPortalSession, getClientInvoices, getUpcomingInvoice } from '@/app/actions/billing';
+import { addCustomDomainToVercel, removeCustomDomainFromVercel } from '@/app/actions/domains';
 
 export default function BillingModule({ clientId }: { clientId: string }) {
   const [store, setStore] = useState<any>(null);
@@ -12,7 +16,11 @@ export default function BillingModule({ clientId }: { clientId: string }) {
   const [upcoming, setUpcoming] = useState<{ amount: string, date: string } | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isRedirecting, setIsRedirecting] = useState(false);
-  const [isUpgrading, setIsUpgrading] = useState(false);
+
+  const [customDomain, setCustomDomain] = useState('');
+  const [isConnectingDomain, setIsConnectingDomain] = useState(false);
+  const [isRemovingDomain, setIsRemovingDomain] = useState(false);
+  const [domainError, setDomainError] = useState<string | null>(null);
 
   useEffect(() => {
     const init = async () => {
@@ -33,24 +41,59 @@ export default function BillingModule({ clientId }: { clientId: string }) {
     init();
   }, [clientId]);
 
+  // 🚀 THE FIX: Exclusive routing to the Customer Portal for all upgrades/changes
   const handlePortalRedirect = async () => {
     if (!store?.stripe_customer_id || !clientId) return;
     setIsRedirecting(true);
     const { url } = await createCustomerPortalSession(store.stripe_customer_id, clientId);
     if (url) window.location.href = url;
-    else { alert("Failed to connect to billing portal."); setIsRedirecting(false); }
+    else { 
+      alert("Failed to connect to billing portal."); 
+      setIsRedirecting(false); 
+    }
   };
 
-  const handleProUpgrade = async () => {
-    setIsUpgrading(true);
-    const { url, error } = await createProTierCheckout(clientId, store?.contact_email || '', '');
-    if (url) window.location.href = url;
-    else { alert(`Checkout failed: ${error}`); setIsUpgrading(false); }
+  const handleConnectDomain = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!customDomain.trim()) return;
+    setIsConnectingDomain(true);
+    setDomainError(null);
+
+    const result = await addCustomDomainToVercel(clientId, customDomain);
+    
+    if (result.success) {
+      setStore({ ...store, custom_domain: result.data });
+      setCustomDomain('');
+    } else {
+      setDomainError(result.error || "Failed to route domain. Please try again.");
+    }
+    setIsConnectingDomain(false);
   };
 
-  if (isLoading) return <div className="h-full min-h-[60vh] flex flex-col items-center justify-center"><Loader2 className="w-8 h-8 text-emerald-500 animate-spin mb-4" /></div>;
+  const handleRemoveDomain = async () => {
+    if (!store?.custom_domain) return;
+    if (!window.confirm(`Are you sure you want to disconnect ${store.custom_domain}? This will take your storefront offline.`)) return;
+    
+    setIsRemovingDomain(true);
+    const result = await removeCustomDomainFromVercel(clientId, store.custom_domain);
+    if (result.success) {
+      setStore({ ...store, custom_domain: null });
+    } else {
+      alert("Failed to disconnect domain.");
+    }
+    setIsRemovingDomain(false);
+  };
 
-  const isPro = store?.plan_tier?.toLowerCase() === 'professional';
+  if (isLoading) {
+    return (
+      <div className="h-full min-h-[60vh] flex flex-col items-center justify-center">
+        <Loader2 className="w-8 h-8 text-emerald-500 animate-spin mb-4" />
+        <span className="text-xs font-mono text-emerald-500 uppercase tracking-widest animate-pulse">Syncing Ledger...</span>
+      </div>
+    );
+  }
+
+  const isPro = store?.plan_tier?.toLowerCase().includes('pro') || store?.plan_tier?.toLowerCase().includes('professional');
 
   return (
     <div className="h-full max-w-6xl mx-auto animate-in fade-in duration-500 pb-12 mt-2">
@@ -66,130 +109,161 @@ export default function BillingModule({ clientId }: { clientId: string }) {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+        
         <div className="lg:col-span-7 space-y-6">
-          
-          {/* SUBSCRIPTION STATUS CARD */}
-          <div className="bg-black/40 border border-emerald-500/20 rounded-3xl p-8 shadow-[0_0_30px_rgba(16,185,129,0.05)] relative overflow-hidden">
-            <div className="absolute -top-24 -right-24 w-64 h-64 bg-emerald-500/10 rounded-full blur-[80px] pointer-events-none" />
-            <div className="relative z-10">
-              <div className="flex items-center justify-between mb-8">
-                <span className="text-[10px] font-black text-emerald-400 uppercase tracking-widest px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20">
-                  {store?.status === 'ACTIVE' || store?.status === 'LIVE' ? 'Active Subscription' : 'Pending Activation'}
+          <div className="bg-black/40 border border-emerald-500/20 rounded-3xl p-8 relative overflow-hidden shadow-xl">
+            <div className="absolute top-0 right-0 w-64 h-64 bg-emerald-500/5 rounded-full blur-[80px] pointer-events-none" />
+            
+            <div className="flex justify-between items-start mb-6 relative z-10">
+              <div>
+                <span className="text-[10px] font-bold text-emerald-500 uppercase tracking-widest bg-emerald-500/10 px-3 py-1.5 rounded-full border border-emerald-500/20">
+                  Active Plan
                 </span>
-                <ShieldCheck className="text-emerald-500/50 w-6 h-6" />
+                <h2 className="text-3xl font-black text-white mt-4 tracking-tight">
+                  {store?.plan_tier || 'Standard'} Tier
+                </h2>
               </div>
-              <h2 className="text-3xl font-black text-white uppercase tracking-wider mb-2">
-                The {store?.plan_tier || 'Foundation'} Plan
-              </h2>
-              <div className="flex items-baseline gap-1 mb-6">
-                <span className="text-4xl font-black text-emerald-400">${isPro ? '15' : '5'}</span>
-                <span className="text-sm font-bold text-zinc-500 uppercase tracking-widest">/ month</span>
+              <div className="text-right">
+                <p className="text-2xl font-black text-white">${isPro ? '15' : '5'}<span className="text-sm text-zinc-500 font-medium">/mo</span></p>
+                {upcoming && (
+                  <p className="text-[10px] font-mono text-zinc-500 mt-1 uppercase tracking-widest">
+                    Next Auto-Pay: {upcoming.date}
+                  </p>
+                )}
               </div>
+            </div>
 
-              {upcoming ? (
-                <div className="bg-emerald-500/5 border border-emerald-500/20 rounded-xl p-4 mb-6 flex items-center gap-4">
-                  <div className="p-2 bg-emerald-500/10 rounded-lg"><Calendar className="w-4 h-4 text-emerald-400" /></div>
-                  <div>
-                    <p className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest mb-0.5">Next Auto-Pay</p>
-                    <p className="text-sm font-mono text-emerald-400">${upcoming.amount} <span className="text-zinc-500 text-xs">on</span> {upcoming.date}</p>
-                  </div>
-                </div>
-              ) : (
-                <div className="bg-zinc-900/50 border border-zinc-800/50 rounded-xl p-4 mb-6 flex items-center gap-4">
-                  <div className="p-2 bg-zinc-800/50 rounded-lg"><Calendar className="w-4 h-4 text-zinc-500" /></div>
-                  <div>
-                    <p className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest mb-0.5">Next Auto-Pay</p>
-                    <p className="text-sm font-mono text-zinc-400">Pending Stripe Sync</p>
-                  </div>
-                </div>
-              )}
+            <div className="space-y-4 pt-6 border-t border-white/5 relative z-10">
+              <div className="flex items-center gap-3 text-sm text-zinc-300">
+                <Zap className="w-4 h-4 text-emerald-500 shrink-0" /><span>Enterprise Next.js Hosting & Edge Delivery</span>
+              </div>
+              <div className="flex items-center gap-3 text-sm text-zinc-300">
+                <ShieldCheck className="w-4 h-4 text-emerald-500 shrink-0" /><span>Content Management Portal Access</span>
+              </div>
+              <div className="flex items-center gap-3 text-sm text-zinc-300">
+                <Calendar className="w-4 h-4 text-emerald-500 shrink-0" /><span>Forever Legacy Rate Lock</span>
+              </div>
             </div>
           </div>
-          
-          <div className="bg-zinc-950 border border-zinc-800/80 rounded-3xl p-6 flex flex-col md:flex-row md:items-center justify-between gap-6 shadow-xl">
+
+          <div className="bg-zinc-950 border border-zinc-800/80 rounded-3xl p-6 md:p-8 flex flex-col md:flex-row md:items-center justify-between group gap-6 shadow-xl">
             <div className="flex-1">
               <h3 className="text-sm font-bold text-white tracking-widest uppercase mb-2">Manage Subscription & Billing</h3>
               <p className="text-xs text-zinc-400 leading-relaxed mb-4 max-w-md">
-                Securely update your credit card or download historical tax receipts directly through our Stripe portal.
+                Securely update your credit card, <strong className="text-white font-medium">upgrade your plan</strong>, download historical tax receipts, or cancel your active subscription directly through our secure billing portal.
               </p>
+              <div className="flex items-center gap-2 text-[10px] font-mono text-zinc-500 uppercase tracking-widest">
+                <AlertTriangle size={12} className="text-amber-500/60" />
+                <span>Cancellations & Upgrades take effect immediately.</span>
+              </div>
             </div>
             <button
               onClick={handlePortalRedirect}
               disabled={isRedirecting || !store?.stripe_customer_id}
-              className="shrink-0 px-6 py-4 bg-zinc-900 border border-zinc-700 hover:border-emerald-500/50 hover:text-emerald-400 hover:bg-zinc-800 text-white rounded-xl text-[10px] font-bold uppercase tracking-widest transition-all cursor-pointer"
+              className="shrink-0 px-6 py-4 bg-zinc-900 border border-zinc-700 hover:border-emerald-500/50 hover:text-emerald-400 hover:bg-zinc-800 text-white rounded-xl text-[10px] font-bold uppercase tracking-widest transition-all disabled:opacity-50 flex items-center justify-center gap-2 w-full md:w-auto cursor-pointer shadow-lg"
             >
-              {isRedirecting ? <Loader2 size={14} className="animate-spin inline mr-2" /> : <ExternalLink size={14} className="inline mr-2" />}
-              Open Portal
+              {isRedirecting ? <Loader2 size={14} className="animate-spin" /> : <ExternalLink size={14} />}
+              {isRedirecting ? 'Connecting...' : 'Open Billing Portal'}
             </button>
-          </div>
-
-          <div className="pt-4">
-            <h3 className="text-xs font-black text-cyan-500 uppercase tracking-widest mb-4 pl-2">
-              {isPro ? 'Domain Architecture' : 'Available Upgrades'}
-            </h3>
-            
-            {isPro ? (
-              <DomainConcierge clientId={clientId} store={store} onUpdate={setStore} />
-            ) : (
-              <div className="relative flex flex-col rounded-3xl p-6 md:p-8 bg-zinc-950 border border-cyan-500/30 shadow-xl overflow-hidden transition-all">
-                <div className="absolute top-0 right-0 w-32 h-32 bg-cyan-500/10 rounded-full blur-[60px] pointer-events-none" />
-                
-                <div className="mb-6 relative z-10">
-                  <h3 className="text-xl font-black uppercase tracking-wide text-white">The Professional</h3>
-                  <div className="mt-2 flex items-baseline gap-1">
-                    <span className="text-4xl font-black text-cyan-400">$15</span>
-                    <span className="text-xs text-zinc-500 font-medium uppercase tracking-widest">/ month</span>
-                  </div>
-                  <p className="text-xs text-zinc-400 font-medium mt-4 leading-relaxed max-w-md">
-                    Upgrade your architecture to support your own custom domain (e.g., yourname.com).
-                  </p>
-                </div>
-                <div className="relative z-10">
-                  <button 
-                    onClick={handleProUpgrade}
-                    disabled={isUpgrading}
-                    className="w-full sm:w-auto bg-cyan-600 hover:bg-cyan-500 text-zinc-950 font-black text-[10px] uppercase tracking-widest px-8 py-4 rounded-xl transition-all shadow-lg cursor-pointer"
-                  >
-                    {isUpgrading ? 'Generating Checkout...' : 'Upgrade to Professional'}
-                  </button>
-                </div>
-              </div>
-            )}
           </div>
         </div>
 
-        {/* RIGHT COL: Invoice Table (Unchanged) */}
-        <div className="lg:col-span-5 flex flex-col">
-          <div className="bg-zinc-950 border border-zinc-800/80 rounded-3xl p-6 md:p-8 flex flex-col h-full shadow-xl">
-            <div className="flex items-center gap-3 mb-6 pb-4 border-b border-white/5">
-              <Receipt className="text-emerald-500 w-5 h-5" />
-              <h3 className="text-sm font-bold text-white uppercase tracking-widest">Billing History</h3>
+        <div className="lg:col-span-5 space-y-6">
+          <div className={`bg-black/40 border rounded-3xl p-6 relative overflow-hidden transition-all ${isPro ? 'border-cyan-500/30 shadow-[0_0_20px_rgba(6,182,212,0.1)]' : 'border-white/5 opacity-70 grayscale'}`}>
+            <div className="flex items-center gap-3 mb-4">
+              <div className={`p-2 rounded-lg ${isPro ? 'bg-cyan-500/20 text-cyan-400' : 'bg-zinc-800 text-zinc-500'}`}>
+                <Globe size={18} />
+              </div>
+              <div>
+                <h3 className="text-sm font-bold text-white uppercase tracking-widest">Custom Domain</h3>
+                <p className="text-[10px] font-mono text-zinc-500 uppercase tracking-widest">Pro Tier Feature</p>
+              </div>
+            </div>
+
+            {!isPro ? (
+              <div className="p-4 border border-dashed border-zinc-700/50 rounded-xl bg-zinc-900/30 text-center">
+                <p className="text-xs text-zinc-400 mb-3">Upgrade to the Professional Tier to connect your own .com domain.</p>
+                <button onClick={handlePortalRedirect} className="text-[10px] font-bold uppercase tracking-widest text-emerald-400 hover:text-emerald-300 flex items-center justify-center gap-1 mx-auto cursor-pointer">
+                  Upgrade in Portal <ArrowRight size={12} />
+                </button>
+              </div>
+            ) : store?.custom_domain ? (
+              <div className="p-4 border border-cyan-500/20 rounded-xl bg-cyan-500/5 flex items-center justify-between">
+                <div>
+                  <p className="text-xs text-zinc-400 mb-1">Active Route</p>
+                  <a href={`https://${store.custom_domain}`} target="_blank" rel="noopener noreferrer" className="text-sm font-bold text-cyan-400 hover:text-cyan-300 transition-colors flex items-center gap-1">
+                    {store.custom_domain} <ExternalLink size={12} />
+                  </a>
+                </div>
+                <button 
+                  onClick={handleRemoveDomain}
+                  disabled={isRemovingDomain}
+                  className="p-2 text-rose-400 hover:bg-rose-500/10 rounded-lg transition-colors border border-transparent hover:border-rose-500/20 cursor-pointer disabled:opacity-50"
+                  title="Disconnect Domain"
+                >
+                  {isRemovingDomain ? <Loader2 size={16} className="animate-spin" /> : <Unlink size={16} />}
+                </button>
+              </div>
+            ) : (
+              <form onSubmit={handleConnectDomain} className="space-y-3">
+                {domainError && <p className="text-[10px] font-mono text-rose-400 p-2 bg-rose-500/10 rounded border border-rose-500/20">{domainError}</p>}
+                <div className="relative">
+                  <Server className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500 w-4 h-4" />
+                  <input 
+                    type="text" 
+                    value={customDomain}
+                    onChange={(e) => setCustomDomain(e.target.value.toLowerCase().replace(/^https?:\/\//, ''))}
+                    placeholder="e.g. yourbusiness.com" 
+                    className="w-full bg-zinc-950 border border-zinc-800 rounded-xl pl-10 pr-4 py-3 text-sm text-white focus:border-cyan-500 outline-none transition-all"
+                  />
+                </div>
+                <button 
+                  type="submit" 
+                  disabled={isConnectingDomain || !customDomain.trim()}
+                  className="w-full py-3 bg-cyan-500 hover:bg-cyan-400 text-black font-bold uppercase tracking-widest text-[10px] rounded-xl transition-all disabled:opacity-50 flex items-center justify-center gap-2 cursor-pointer shadow-lg shadow-cyan-500/20"
+                >
+                  {isConnectingDomain ? <Loader2 size={14} className="animate-spin" /> : <Globe size={14} />}
+                  Connect Domain
+                </button>
+              </form>
+            )}
+          </div>
+
+          <div className="bg-black/40 border border-white/5 rounded-3xl p-6 flex flex-col h-75 shadow-xl">
+            <div className="flex items-center gap-3 mb-4 pb-4 border-b border-white/5 shrink-0">
+              <Receipt size={16} className="text-emerald-500" />
+              <h3 className="text-sm font-bold text-white uppercase tracking-widest">Recent Invoices</h3>
             </div>
             
-            <div className="flex-1 overflow-y-auto pr-2 custom-scrollbar">
+            <div className="flex-1 overflow-y-auto pr-2 space-y-2 custom-scrollbar">
               {invoices.length === 0 ? (
-                <div className="text-center py-12 border-2 border-dashed border-zinc-800/50 rounded-2xl bg-zinc-900/20 flex flex-col items-center justify-center">
-                  <p className="text-xs text-zinc-500 font-mono tracking-widest uppercase">No invoices yet.</p>
+                <div className="h-full flex flex-col items-center justify-center text-center">
+                  <p className="text-[10px] font-mono text-zinc-600 uppercase tracking-widest">No invoice history available.</p>
                 </div>
               ) : (
-                <div className="space-y-3">
-                  {invoices.map((inv) => (
-                    <div key={inv.id} className="flex items-center justify-between p-4 rounded-2xl bg-zinc-900/50 border border-zinc-800">
-                      <div>
-                        <div className="text-sm font-bold text-white mb-1">${inv.amount}</div>
-                        <div className="text-[10px] font-mono text-zinc-500">{inv.date}</div>
-                      </div>
-                      {inv.pdfUrl && (
-                        <a href={inv.pdfUrl} target="_blank" rel="noopener noreferrer" className="p-2 bg-zinc-800 text-zinc-400 hover:text-white rounded-lg">
-                          <Download size={14} />
-                        </a>
-                      )}
+                invoices.map((inv: any) => (
+                  <div key={inv.id} className="flex items-center justify-between p-3 bg-white/5 hover:bg-white/10 rounded-xl transition-colors border border-transparent hover:border-white/10">
+                    <div>
+                      <p className="text-xs font-mono text-zinc-400">{inv.date}</p>
+                      <p className="text-[10px] font-bold text-emerald-400 uppercase tracking-widest mt-0.5">${inv.amount} {inv.status}</p>
                     </div>
-                  ))}
-                </div>
+                    {inv.hostedUrl && (
+                      <a 
+                        href={inv.hostedUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="p-2 text-zinc-400 hover:text-emerald-400 bg-black/40 rounded-lg border border-white/5 transition-colors"
+                        title="View Receipt"
+                      >
+                        <ExternalLink size={14} />
+                      </a>
+                    )}
+                  </div>
+                ))
               )}
             </div>
           </div>
+
         </div>
       </div>
     </div>
