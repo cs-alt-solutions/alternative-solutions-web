@@ -110,6 +110,8 @@ export default function CategoryAccordion({ cap, index, isOpen, setOpenCapIndex,
     }
   };
 
+  const currentAvailability = isMenuMode ? (cap.price || 'All Day') : (cap.price || '');
+
   return (
     <div className={`flex flex-col rounded-xl relative shadow-md overflow-hidden transition-all border ${isAlaCarte ? 'bg-zinc-950 border-fuchsia-900/40' : 'bg-zinc-950 border-zinc-800'}`}>
       
@@ -149,13 +151,33 @@ export default function CategoryAccordion({ cap, index, isOpen, setOpenCapIndex,
                 placeholder={isAlaCarte ? 'Add-on Name' : isMenuMode ? 'Category Name (e.g., Starters)' : 'Package Name'}
                 className="flex-1 bg-black/50 border border-zinc-800 rounded-lg px-3 py-2 text-sm text-white font-bold outline-none focus:border-cyan-500 transition-colors"
               />
-              <input 
-                type="text" 
-                value={cap.price || ''} 
-                onChange={(e) => updateField('price', e.target.value)} 
-                placeholder="Price"
-                className="w-1/3 bg-black/50 border border-zinc-800 rounded-lg px-3 py-2 text-sm text-fuchsia-400 font-bold outline-none focus:border-fuchsia-500 transition-colors"
-              />
+              
+              {isMenuMode ? (
+                <div className="relative w-1/3">
+                  <select
+                    value={currentAvailability}
+                    onChange={(e) => updateField('price', e.target.value)}
+                    className="w-full bg-black/50 border border-zinc-800 rounded-lg pl-3 pr-8 py-2 text-sm font-bold text-emerald-400 outline-none focus:border-emerald-500 transition-colors appearance-none cursor-pointer"
+                  >
+                    <option value="All Day">All Day</option>
+                    <option value="Breakfast">Breakfast</option>
+                    <option value="Brunch">Brunch</option>
+                    <option value="Lunch">Lunch</option>
+                    <option value="Dinner">Dinner</option>
+                    <option value="Late Night">Late Night</option>
+                    <option value="Happy Hour">Happy Hour</option>
+                  </select>
+                  <ChevronDown size={14} className="absolute right-3 top-1/2 -translate-y-1/2 text-emerald-500/50 pointer-events-none" />
+                </div>
+              ) : (
+                <input 
+                  type="text" 
+                  value={cap.price || ''} 
+                  onChange={(e) => updateField('price', e.target.value)} 
+                  placeholder="Price"
+                  className="w-1/3 bg-black/50 border border-zinc-800 rounded-lg px-3 py-2 text-sm text-fuchsia-400 font-bold outline-none focus:border-fuchsia-500 transition-colors"
+                />
+              )}
             </div>
             <textarea 
               value={cap.description || ''} 
@@ -227,7 +249,7 @@ export default function CategoryAccordion({ cap, index, isOpen, setOpenCapIndex,
 
                 <div className="space-y-3 pt-4 border-t border-zinc-800/50">
                   <label className="text-[9px] font-bold text-zinc-500 uppercase tracking-widest flex items-center gap-2">
-                    <ImageIcon size={12} className="text-cyan-500" /> Package Cover Photo
+                    <ImageIcon size={12} /> Package Cover Photo
                   </label>
                   
                   {cap.coverImage ? (

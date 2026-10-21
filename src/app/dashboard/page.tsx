@@ -4,11 +4,11 @@ import { createClient } from '@/utils/supabase/server';
 import { WEBSITE_COPY } from '@/utils/glossary';
 
 import StorefrontIntakePanel, { ApplicationItem } from '@/components/dashboard/overview/StorefrontIntakePanel';
-import PriorityQueuePanel from '@/components/dashboard/overview/PriorityQueuePanel';
 import PlatformTrackerPanel from '@/components/dashboard/overview/PlatformTrackerPanel';
 import TelemetryRow from '@/components/dashboard/overview/TelemetryRow';
 import NetworkPulse from '@/components/dashboard/overview/NetworkPulse';
 import ActiveClientRequests from '@/components/dashboard/overview/ActiveClientRequests'; 
+import QuickQrCard from '@/components/dashboard/overview/QuickQrCard'; 
 
 export const dynamic = 'force-dynamic';
 
@@ -75,7 +75,6 @@ export default async function DashboardOverview() {
   }
 
   return (
-    // FIX: Removed max-w-7xl so it fills the 1600px wrapper, and reduced top padding to kill the gap
     <div className="p-4 md:p-6 w-full space-y-6 animate-in fade-in duration-500">
       
       <div className="flex flex-col md:flex-row items-start md:items-end justify-between gap-4 pb-4 border-b border-zinc-800">
@@ -104,7 +103,7 @@ export default async function DashboardOverview() {
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <NetworkPulse />
-            <PriorityQueuePanel queue={[]} copy={WEBSITE_COPY.DASHBOARD.BETA_COMMAND} commonCopy={WEBSITE_COPY.DASHBOARD.COMMON} />
+            <QuickQrCard />
           </div>
         </div>
 

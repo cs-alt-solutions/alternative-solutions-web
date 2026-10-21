@@ -2,12 +2,16 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { Plus, Briefcase, Utensils, Trash2 } from 'lucide-react';
+import { Plus, Briefcase, Utensils, Trash2, Save, Loader2 } from 'lucide-react';
+import { useRouter } from 'next/navigation';
+import { updateStorefrontCapabilities } from '@/app/actions/storefronts';
 import CategoryAccordion from './capabilities/CategoryAccordion';
 
 export default function CapabilitiesTab({ formData, setFormData, onReload }: { formData: any; setFormData: any; onReload?: () => void; }) {
+  const router = useRouter();
   const [localCaps, setLocalCaps] = useState<any[]>([]);
   const [openCapIndex, setOpenCapIndex] = useState<number | null>(0);
+  const [isSaving, setIsSaving] = useState(false);
 
   // THE FIX: Trigger off the Industry Tag, not the layout constraint!
   const isMenuMode = formData?.industry_tag === 'Culinary';
@@ -23,7 +27,13 @@ export default function CapabilitiesTab({ formData, setFormData, onReload }: { f
   }, [formData.capabilities]);
 
   const addPackage = () => {
-    const updated = [{ title: '', description: '', price: '', bullets: [], isAlaCarte: false }, ...localCaps];
+    const updated = [{ 
+      title: '', 
+      description: '', 
+      price: isMenuMode ? 'All Day' : '', 
+      bullets: [], 
+      isAlaCarte: false 
+    }, ...localCaps];
     setLocalCaps(updated);
     setFormData((prev: any) => ({ ...prev, capabilities: updated }));
     setOpenCapIndex(0); // Opens the newly created package accordion
@@ -31,7 +41,13 @@ export default function CapabilitiesTab({ formData, setFormData, onReload }: { f
 
   const addAddon = () => {
     // Add-ons drop to the bottom of the local array so they don't interrupt packages
-    const updated = [...localCaps, { title: '', description: '', price: '', bullets: [], isAlaCarte: true }];
+    const updated = [...localCaps, { 
+      title: '', 
+      description: '', 
+      price: isMenuMode ? 'All Day' : '', 
+      bullets: [], 
+      isAlaCarte: true 
+    }];
     setLocalCaps(updated);
     setFormData((prev: any) => ({ ...prev, capabilities: updated }));
   };
@@ -47,6 +63,20 @@ export default function CapabilitiesTab({ formData, setFormData, onReload }: { f
     const updated = localCaps.filter((_, i) => i !== index);
     setLocalCaps(updated);
     setFormData((prev: any) => ({ ...prev, capabilities: updated }));
+  };
+
+  const handleSave = async () => {
+    setIsSaving(true);
+    try {
+      await updateStorefrontCapabilities(formData.id, localCaps);
+      setFormData((prev: any) => ({ ...prev, capabilities: localCaps }));
+      router.refresh();
+      if (onReload) onReload();
+    } catch (err) {
+      alert("Failed to save architecture.");
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   // Separate the data for rendering
@@ -162,6 +192,18 @@ export default function CapabilitiesTab({ formData, setFormData, onReload }: { f
           )}
         </div>
       </div>
+
+      <button 
+        type="button"
+        onClick={handleSave} 
+        disabled={isSaving} 
+        className={`w-full flex items-center justify-center gap-2 text-white font-black tracking-widest text-[10px] uppercase py-3.5 rounded-lg transition-all disabled:opacity-50 mt-4 cursor-pointer ${
+          isMenuMode ? 'bg-fuchsia-600 hover:bg-fuchsia-500 shadow-[0_0_15px_rgba(192,38,211,0.2)]' : 'bg-cyan-600 hover:bg-cyan-500 shadow-[0_0_15px_rgba(8,145,178,0.2)]'
+        }`}
+      >
+        {isSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />} 
+        {isSaving ? 'SYNCING ARCHITECTURE...' : 'SAVE ARCHITECTURE'}
+      </button>
 
     </div>
   );
