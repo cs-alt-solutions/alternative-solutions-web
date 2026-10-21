@@ -1,8 +1,10 @@
+/* src/components/dashboard/overview/TelemetryRow.tsx */
 'use client';
 
 import React, { useState, useEffect } from 'react';
 import { supabase } from '@/utils/supabase';
 import { CreditCard, Users, Loader2, TrendingDown, Hammer, Zap, CheckCircle2, Globe, Beaker, Sparkles } from 'lucide-react';
+import { getGlobalInvoices } from '@/app/actions/billing';
 
 export default function TelemetryRow() {
   const [metrics, setMetrics] = useState({
@@ -23,61 +25,97 @@ export default function TelemetryRow() {
     const fetchTelemetry = async () => {
       setIsLoading(true);
       
-      const { data: storefronts } = await supabase
-        .from('storefronts')
-        .select('status, plan_tier, stripe_subscription_id, is_template');
+      try {
+        // 1. Fetch Storefront Data
+        const { data: storefronts } = await supabase
+          .from('storefronts')
+          .select('status, plan_tier, stripe_subscription_id, stripe_customer_id, is_template');
+          
+        let gross = 0;
+        let net = 0;
+        let deployed = 0;
+        let active = 0;
+        let queue = 0;
+        let payment = 0;
+        let prototypes = 0;
+
+        if (storefronts) {
+          // Identify the real paying clients based on the same rules as the Ledger
+          const activeStores = storefronts.filter(store => 
+            !store.is_template && 
+            store.status !== 'PROTOTYPE' &&
+            ['PENDING_BUILD', 'BUILDING_CORE', 'IN_REVIEW', 'CONTENT_ASSEMBLY', 'AWAITING_ASSETS', 'ACTIVE', 'LIVE', 'MAINTENANCE', 'HIDDEN'].includes(store.status) &&
+            store.stripe_subscription_id
+          );
+          
+          // 2. Fetch the Master Ledger (Stripe API) to match the real MRR
+          const invoiceData = await getGlobalInvoices();
+          const validInvoices = (invoiceData.success && invoiceData.invoices) ? invoiceData.invoices : [];
+          
+          // Only map invoices that belong to our active subset
+          const activeCustomerIds = activeStores.map(s => s.stripe_customer_id).filter(Boolean);
+          const strictLedger = validInvoices.filter((inv: any) => activeCustomerIds.includes(inv.customerId));
+
+          // 3. Mirror the Exact Math from the Ledger
+          activeStores.forEach((store) => {
+             const rawTier = (store.plan_tier || '').toLowerCase();
+             const isPro = rawTier.includes('pro') || rawTier.includes('professional');
+             const expectedPrice = isPro ? 15 : 5;
+             gross += expectedPrice;
+             
+             // Check the ledger for their actual payment amount
+             const storeInvoices = strictLedger.filter((inv: any) => inv.customerId === store.stripe_customer_id);
+             let actualPaid = expectedPrice;
+             
+             if (storeInvoices.length > 0) {
+                const latestInv = storeInvoices[0];
+                actualPaid = latestInv.amount !== undefined && latestInv.amount !== null 
+                  ? Number(latestInv.amount) 
+                  : expectedPrice;
+             }
+             
+             net += actualPaid;
+          });
+          
+          // Calculate Pipeline Volumes
+          storefronts.forEach((store) => {
+            // Isolate Prototypes / Demos into The Lab
+            if (store.is_template || store.status === 'PROTOTYPE') {
+              prototypes++;
+            } else {
+              // Live Sites Count (Only finished sites)
+              if (['ACTIVE', 'LIVE'].includes(store.status)) {
+                deployed++;
+              }
+              
+              // Drafting Table Pipeline Math
+              if (['BUILDING_CORE', 'CONTENT_ASSEMBLY', 'IN_REVIEW', 'AWAITING_ASSETS'].includes(store.status)) active++;
+              if (store.status === 'PENDING_BUILD') queue++;
+              if (store.status === 'AWAITING_PAYMENT') payment++;
+            }
+          });
+        }
         
-      let gross = 0;
-      let promo = 5; // Hardcoded promo for now
-      let deployed = 0;
-      let active = 0;
-      let queue = 0;
-      let payment = 0;
-      let prototypes = 0;
+        // 4. Fetch the Application Radar Leads
+        const { count: reviewCount } = await supabase
+          .from('storefront_applications')
+          .select('*', { count: 'exact', head: true })
+          .eq('status', 'PENDING');
 
-      if (storefronts) {
-        storefronts.forEach((store) => {
-          // Isolate Prototypes / Demos into The Lab
-          if (store.is_template || store.status === 'PROTOTYPE') {
-            prototypes++;
-          } else {
-            // 🚀 THE FIX: MRR Math now includes EVERYONE who has paid (past AWAITING_PAYMENT)
-            const isPayingClient = ['PENDING_BUILD', 'BUILDING_CORE', 'IN_REVIEW', 'CONTENT_ASSEMBLY', 'ACTIVE', 'LIVE', 'MAINTENANCE', 'HIDDEN'].includes(store.status);
-            
-            if (isPayingClient && store.stripe_subscription_id) {
-              const plan = (store.plan_tier || '').toLowerCase();
-              gross += (plan.includes('pro') || plan.includes('professional')) ? 15 : 5;
-            }
-
-            // Live Sites Count (Only finished sites)
-            if (['ACTIVE', 'LIVE'].includes(store.status)) {
-              deployed++;
-            }
-            
-            // Drafting Table Pipeline Math
-            if (['BUILDING_CORE', 'CONTENT_ASSEMBLY'].includes(store.status)) active++;
-            if (store.status === 'PENDING_BUILD') queue++;
-            if (store.status === 'AWAITING_PAYMENT') payment++;
-          }
+        setMetrics({
+          grossMrr: gross,
+          netMrr: net,
+          promoDiscount: gross - net, // Accurately calculates the exact delta
+          totalDeployed: deployed,
+          activeBuilds: active,
+          workQueue: queue,
+          awaitingPayment: payment,
+          awaitingReview: reviewCount || 0,
+          prototypeCount: prototypes
         });
+      } catch (err) {
+        console.error("Telemetry Sync Error:", err);
       }
-      
-      const { count: reviewCount } = await supabase
-        .from('storefront_applications')
-        .select('*', { count: 'exact', head: true })
-        .eq('status', 'PENDING');
-
-      setMetrics({
-        grossMrr: gross,
-        promoDiscount: promo,
-        netMrr: gross - promo,
-        totalDeployed: deployed,
-        activeBuilds: active,
-        workQueue: queue,
-        awaitingPayment: payment,
-        awaitingReview: reviewCount || 0,
-        prototypeCount: prototypes
-      });
       
       setIsLoading(false);
     };
