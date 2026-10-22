@@ -67,7 +67,7 @@ export async function POST(req: Request) {
     if (session.subscription) {
       const subscription = await stripe.subscriptions.retrieve(session.subscription as string);
       if (!targetIdentifier) targetIdentifier = subscription.metadata?.storefront_id;
-      // 🚀 THE TS FIX: Cast to any to bypass strict type checking
+      
       currentPeriodEnd = new Date((subscription as any).current_period_end * 1000).toISOString();
     }
 
@@ -132,7 +132,7 @@ export async function POST(req: Request) {
         await resend.emails.send({
           from: process.env.RESEND_FROM_EMAIL || "portal@alternativesolutions.io",
           to: [process.env.ADMIN_EMAIL || 'courtney@alternativesolutions.io'],
-          subject: `💳 PAID INTAKE: ${storeData.business_name} ($${session.amount_total ? session.amount_total / 100 : '5'}/mo)`,
+          subject: `🚨 PAID INTAKE: ${storeData.business_name} ($${session.amount_total ? session.amount_total / 100 : '5'}/mo)`,
           html: `
             <div style="font-family: monospace; background-color: #09090b; color: #10b981; padding: 24px; border-radius: 8px; border: 1px solid #059669;">
               <h2 style="color: #34d399; margin: 0 0 12px 0;">New Paid Client in Work Queue</h2>
@@ -170,7 +170,6 @@ export async function POST(req: Request) {
       const isCanceled = event.type === 'customer.subscription.deleted' || subscription.status === 'canceled';
       const updatedStatus = isCanceled ? 'CANCELED' : store.status;
       
-      // 🚀 THE TS FIX: Cast to any to bypass strict type checking
       const currentPeriodEnd = new Date((subscription as any).current_period_end * 1000).toISOString();
 
       await supabaseAdmin
@@ -189,8 +188,8 @@ export async function POST(req: Request) {
           from: process.env.RESEND_FROM_EMAIL || "portal@alternativesolutions.io",
           to: [process.env.ADMIN_EMAIL || 'courtney@alternativesolutions.io'],
           subject: isCanceled 
-            ? `⚠️ CANCELLATION: ${store.business_name} canceled subscription`
-            : `🚀 TIER CHANGE: ${store.business_name} switched to ${updatedPlan}`,
+            ? `🛑 CANCELLATION: ${store.business_name} canceled subscription`
+            : `📈 TIER CHANGE: ${store.business_name} switched to ${updatedPlan}`,
           html: `<p>Subscription update for <strong>${store.business_name}</strong>. Current Status: ${updatedStatus}, Tier: ${updatedPlan}.</p>`
         });
       }
@@ -199,7 +198,43 @@ export async function POST(req: Request) {
   }
 
   // ====================================================================
-  // 3. FAILED CHARGES (Declined Cards / Past Due)
+  // 3. THE RECOVERY (invoice.payment_succeeded) 🚀 NEW FIX
+  // ====================================================================
+  if (event.type === 'invoice.payment_succeeded') {
+    const invoice = event.data.object as Stripe.Invoice;
+    const customerId = invoice.customer as string;
+    
+    // We only care if this is a recurring subscription payment
+    if ((invoice as any).subscription) {
+      const { data: store } = await supabaseAdmin
+        .from('storefronts')
+        .select('*')
+        .eq('stripe_customer_id', customerId)
+        .maybeSingle();
+  
+      // If they were stuck in MAINTENANCE or CANCELED, revive them!
+      if (store && (store.status === 'MAINTENANCE' || store.status === 'CANCELED')) {
+        await supabaseAdmin
+          .from('storefronts')
+          .update({
+            status: 'ACTIVE',
+            updated_at: new Date().toISOString()
+          })
+          .eq('id', store.id);
+  
+        await resend.emails.send({
+          from: process.env.RESEND_FROM_EMAIL || "portal@alternativesolutions.io",
+          to: [process.env.ADMIN_EMAIL || 'courtney@alternativesolutions.io'],
+          subject: `🟢 RECOVERY: ${store.business_name} Paid!`,
+          html: `<p>Payment successfully cleared for <strong>${store.business_name}</strong>. The system has automatically removed the MAINTENANCE lock and restored them to ACTIVE status.</p>`
+        });
+      }
+    }
+    return NextResponse.json({ received: true });
+  }
+
+  // ====================================================================
+  // 4. FAILED CHARGES (Declined Cards / Past Due)
   // ====================================================================
   if (event.type === 'invoice.payment_failed') {
     const invoice = event.data.object as Stripe.Invoice;
@@ -223,7 +258,7 @@ export async function POST(req: Request) {
       await resend.emails.send({
         from: process.env.RESEND_FROM_EMAIL || "portal@alternativesolutions.io",
         to: [process.env.ADMIN_EMAIL || 'courtney@alternativesolutions.io'],
-        subject: `🚨 FAILED PAYMENT: ${store.business_name}`,
+        subject: `⚠️ FAILED PAYMENT: ${store.business_name}`,
         html: `<p>Payment failed for <strong>${store.business_name}</strong>. System placed site into MAINTENANCE mode.</p>`
       });
     }
