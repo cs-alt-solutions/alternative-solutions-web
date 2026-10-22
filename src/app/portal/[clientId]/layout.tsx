@@ -1,25 +1,57 @@
 /* src/app/portal/[clientId]/layout.tsx */
-'use client';
-
-import { usePathname } from 'next/navigation';
+import { redirect } from 'next/navigation';
+import { createClient } from '@/utils/supabase/server';
 import PortalSidebar from '@/components/portal/core/PortalSidebar';
 import PortalHeader from '@/components/portal/core/PortalHeader';
 
-export default function PortalLayout({
+export default async function PortalLayout({
   children,
+  params,
 }: {
   children: React.ReactNode;
+  params: Promise<{ clientId: string }> | { clientId: string };
 }) {
-  const pathname = usePathname();
-  
-  // Extract clientId from the URL (e.g., /portal/luckystrike -> luckystrike)
-  const segments = pathname.split('/');
-  const clientId = segments[2] || 'unknown';
+  // Await params for Next.js 15+ compatibility
+  const resolvedParams = await params;
+  const clientId = resolvedParams.clientId;
+
+  const supabase = await createClient();
+
+  // 1. Grab the currently logged-in user
+  const { data: { user } } = await supabase.auth.getUser();
+
+  if (!user || !user.email) {
+    redirect('/login');
+  }
+
+  // 2. THE BOUNCER: Verify this exact user owns this exact storefront
+  // We also check for admin emails so you (the architect) don't get locked out of client portals!
+  const adminEmails = [
+    process.env.NEXT_PUBLIC_ADMIN_EMAIL,
+    'courtney@alternativesolutions.io',
+    'courtneysulenski@gmail.com'
+  ].filter(Boolean);
+
+  const isAdmin = adminEmails.includes(user.email);
+
+  if (!isAdmin) {
+    const { data: store } = await supabase
+      .from('storefronts')
+      .select('id')
+      .eq('id', clientId)
+      .eq('contact_email', user.email)
+      .single();
+
+    // If no match is found, they are snooping. Kick them to the curb.
+    if (!store) {
+      redirect('/portal');
+    }
+  }
 
   return (
     <div className="flex h-screen w-full bg-[#0B0F19] overflow-hidden relative">
-      
-      {/* 🚀 GLOBAL WATERMARK: Massive scale so it peeks out around the cards */}
+             
+      {/* GLOBAL WATERMARK */}
       <div className="fixed inset-0 pointer-events-none flex items-center justify-center z-0 opacity-[0.07]">
         <img 
           src="/logo.png" 
@@ -33,17 +65,17 @@ export default function PortalLayout({
 
       {/* The Main Content Area */}
       <div className="flex-1 flex flex-col h-full overflow-hidden relative w-full z-10">
-        
-        {/* The Universal Header - Wrapped to add left padding on mobile for the hamburger button */}
+                 
+        {/* The Universal Header */}
         <div className="lg:pl-0 pl-14 transition-all">
           <PortalHeader clientId={clientId} />
         </div>
-        
-        {/* The Dynamic Switchboard Content Goes Here */}
+                 
+        {/* The Dynamic Switchboard Content */}
         <main className="flex-1 overflow-y-auto p-4 lg:p-8 relative z-10">
           {children}
         </main>
-        
+               
       </div>
     </div>
   );
