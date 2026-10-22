@@ -122,7 +122,6 @@ export async function approveAndSendCheckout(id: string, overrides?: any) {
 
     if (fetchError || !app) throw new Error('Application not found');
 
-    // 🚀 NEW: Checks if you passed an override slug from the modal first!
     let baseSlug = overrides?.slug || (app.business_name || 'store').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, '');
     let finalSlug = baseSlug;
 
@@ -245,5 +244,57 @@ export async function updateApplicationStatus(id: string, newStatus: 'CANCELED')
   } catch (error: any) {
     console.error('STATUS UPDATE ERROR:', error);
     return { success: false, error: error.message || 'Failed to update status' };
+  }
+}
+
+export async function sendPaymentNudge(id: string, contactEmail: string, businessName: string) {
+  const supabase = await createClient();
+
+  try {
+    const checkout = await createStorefrontCheckout(id, contactEmail);
+    
+    if (!checkout?.url) throw new Error('Failed to generate fresh checkout link');
+
+    if (process.env.RESEND_API_KEY) {
+      await resend.emails.send({
+        from: process.env.RESEND_FROM_EMAIL || "Courtney <hello@alternativesolutions.io>",
+        to: [contactEmail],
+        subject: `Build Status • Queue Check-In: ${businessName}`,
+        html: `
+          <div style="font-family: sans-serif; background-color: #09090b; color: #ffffff; padding: 32px; border-radius: 12px;">
+            <h2 style="color: #f59e0b; margin-top: 0;">Queue Check-In</h2>
+            <p style="color: #d4d4d8;">Hey! I noticed your build application for <strong>${businessName}</strong> has been sitting in the "Awaiting Payment" queue for a bit.</p>
+            <p style="color: #d4d4d8;">My active drafting table is pretty packed right now, so I do routine sweeps to clear out inactive files and make room for the next founder on the waitlist.</p>
+            <p style="color: #d4d4d8;">I wanted to check in personally before I archive your project: Are you still wanting to lock in your foundation and get this built?</p>
+            
+            <div style="margin: 24px 0;">
+              <a href="${checkout.url}" style="display: inline-block; background-color: #22d3ee; color: #000000; font-weight: bold; padding: 14px 28px; border-radius: 8px; text-decoration: none; margin-right: 12px;">Yes, Start My Build ($5/mo)</a>
+            </div>
+            
+            <p style="color: #71717a; font-size: 12px; margin-top: 24px;">If I don't hear back, I'll go ahead and archive the file so we can clear the slot. Talk soon!</p>
+          </div>
+        `
+      });
+    }
+
+    const { data: storeData } = await supabase.from('storefronts').select('audit_notes').eq('id', id).single();
+    
+    const nudgeLog = {
+      id: crypto.randomUUID(),
+      timestamp: new Date().toISOString(),
+      author: "ADMIN",
+      type: "PAYMENT_REMINDER_SENT",
+      message: "Payment reminder and fresh checkout link transmitted to client."
+    };
+
+    const updatedLogs = [...(storeData?.audit_notes || []), nudgeLog];
+
+    await supabase.from('storefronts').update({ audit_notes: updatedLogs }).eq('id', id);
+
+    revalidatePath('/dashboard/storefronts');
+    return { success: true };
+  } catch (error: any) {
+    console.error('NUDGE ERROR:', error);
+    return { success: false, error: error.message || 'Failed to send payment nudge' };
   }
 }

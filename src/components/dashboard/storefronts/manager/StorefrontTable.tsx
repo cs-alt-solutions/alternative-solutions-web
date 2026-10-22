@@ -1,8 +1,9 @@
 /* src/components/dashboard/storefronts/manager/StorefrontTable.tsx */
-import React from 'react';
+import React, { useState } from 'react';
 import Link from 'next/link';
-import { Settings, Globe, Eye, User, ArrowUpDown, ChevronUp, ChevronDown, Clock } from 'lucide-react';
+import { Settings, Globe, Eye, User, ArrowUpDown, ChevronUp, ChevronDown, Clock, Mail, Loader2, CheckCircle2 } from 'lucide-react';
 import { STOREFRONT_LIFECYCLE, StorefrontStatus, hasPortalAccess } from '@/config/lifecycle';
+import { sendPaymentNudge } from '@/app/actions/storefront_applications'; // 🚀 Added our new server action
 
 interface TableProps {
   processedData: any[];
@@ -15,8 +16,31 @@ interface TableProps {
 }
 
 export default function StorefrontTable({ 
-  processedData, requestSort, sortConfig, isEditMode, handleRowUpdate, availableStatuses, availableCategories
+  processedData, requestSort, sortConfig, isEditMode, handleRowUpdate, availableStatuses, availableCategories 
 }: TableProps) {
+
+  // 🚀 Local state to manage the spinning loading wheel on individual buttons
+  const [nudgingId, setNudgingId] = useState<string | null>(null);
+  const [nudgedSuccessId, setNudgedSuccessId] = useState<string | null>(null);
+
+  const handleNudgeClient = async (id: string, email: string, businessName: string) => {
+    if (!window.confirm(`Send an automated payment reminder to ${email}?`)) return;
+    
+    setNudgingId(id);
+    try {
+      const result = await sendPaymentNudge(id, email, businessName);
+      if (result.success) {
+        setNudgedSuccessId(id);
+        setTimeout(() => setNudgedSuccessId(null), 3000);
+      } else {
+        alert(result.error || "Failed to dispatch reminder.");
+      }
+    } catch (err) {
+      alert("A system error occurred while sending the nudge.");
+    } finally {
+      setNudgingId(null);
+    }
+  };
 
   const getSortIcon = (columnKey: string) => {
     if (sortConfig?.key !== columnKey) return <ArrowUpDown size={12} className="text-zinc-700 group-hover:text-zinc-500 transition-colors" />;
@@ -26,6 +50,7 @@ export default function StorefrontTable({
   const getRowStyle = (status: string, isOffline: boolean) => {
     if (isEditMode) return 'bg-amber-500/[0.02] hover:bg-amber-500/[0.05] border-l-2 border-l-amber-500/50';
     if (isOffline) return 'opacity-60 hover:bg-white/5 border-l-2 border-l-transparent';
+    
     switch(status) {
       case 'ACTIVE': 
       case 'LIVE': return 'bg-emerald-500/[0.02] hover:bg-emerald-500/[0.05] border-l-2 border-l-emerald-500/50';
@@ -78,12 +103,11 @@ export default function StorefrontTable({
             const rawStatus = (store.status || 'PENDING_BUILD') as string;
             const status = rawStatus as StorefrontStatus;
             const config = STOREFRONT_LIFECYCLE[status] || { label: rawStatus, badgeColor: 'bg-zinc-800 text-zinc-400 border-zinc-700' };
+
             const isOffline = rawStatus === 'MAINTENANCE' || rawStatus === 'HIDDEN' || rawStatus === 'CANCELED' || rawStatus === 'ON_HOLD';
-            
-            // 🚀 THE FIX: Uses central lifecycle helper so ANY active build status unlocks portal access
             const isPortalActive = hasPortalAccess(rawStatus);
             const isLive = ['ACTIVE', 'MAINTENANCE', 'HIDDEN', 'AWAITING_ASSETS', 'IN_REVIEW', 'LIVE'].includes(rawStatus);
-
+            
             const createdDate = new Date(store.created_at);
             const formattedDate = createdDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
             const daysActive = Math.floor((Date.now() - createdDate.getTime()) / (1000 * 60 * 60 * 24));
@@ -122,7 +146,7 @@ export default function StorefrontTable({
                     <select 
                       value={store.industry_tag || store.category || store.industry || ''} 
                       onChange={(e) => handleRowUpdate(store.id, 'category', e.target.value)}
-                      className="bg-zinc-950 border border-zinc-700 text-zinc-300 text-[10px] font-black uppercase tracking-widest rounded px-2 py-1.5 focus:border-amber-500 outline-none cursor-pointer w-full max-w-37.5"
+                      className="bg-zinc-950 border border-zinc-700 text-zinc-300 text-[10px] font-black uppercase tracking-widest rounded px-2 py-1.5 focus:border-amber-500 outline-none cursor-pointer w-full max-w-[150px]"
                     >
                       <option value="" disabled>Select Category</option>
                       {availableCategories.map(cat => (
@@ -170,7 +194,25 @@ export default function StorefrontTable({
                 <td className="px-6 py-4 text-right">
                   <div className="flex items-center justify-end gap-2">
                     
-                    {/* PORTAL IMPERSONATE BUTTON (Active for any build past queue/payment) */}
+                    {/* 🚀 THE NUDGE BUTTON (Only shows if AWAITING_PAYMENT) */}
+                    {rawStatus === 'AWAITING_PAYMENT' && (
+                      <button 
+                        onClick={() => handleNudgeClient(store.id, store.contact_email, store.business_name)}
+                        disabled={nudgingId === store.id || nudgedSuccessId === store.id}
+                        className={`p-1.5 rounded-md transition-all flex items-center justify-center cursor-pointer shadow-sm ${
+                          nudgedSuccessId === store.id
+                            ? 'text-emerald-400 bg-emerald-500/10 border border-emerald-500/20'
+                            : 'text-amber-400 bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/20'
+                        }`}
+                        title="Send Payment Nudge"
+                      >
+                        {nudgingId === store.id ? <Loader2 size={14} className="animate-spin" /> 
+                         : nudgedSuccessId === store.id ? <CheckCircle2 size={14} /> 
+                         : <Mail size={14} />}
+                      </button>
+                    )}
+
+                    {/* PORTAL IMPERSONATE BUTTON */}
                     {isPortalActive ? (
                       <Link 
                         href={`/portal/${store.id}`}
@@ -209,7 +251,6 @@ export default function StorefrontTable({
                     >
                       <Settings size={14} />
                     </Link>
-
                   </div>
                 </td>
               </tr>
