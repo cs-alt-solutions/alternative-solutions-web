@@ -5,7 +5,7 @@ import React, { useState } from 'react';
 import { supabase } from '@/utils/supabase';
 import { 
   Save, CheckCircle2, Loader2, PenTool, Layers, 
-  Unlock, Lock, AlertTriangle, MonitorSmartphone, RefreshCw 
+  Unlock, Lock, AlertTriangle, MonitorSmartphone
 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { PORTAL_COPY } from '@/config/clients/portal';
@@ -21,12 +21,9 @@ export default function StorefrontManager({ store }: { store: any }) {
   
   const [editorTab, setEditorTab] = useState<'content' | 'services'>('content');
   const [isEditing, setIsEditing] = useState(false);
-  const [refreshKey, setRefreshKey] = useState(0);
 
   const currentTheme = getPortalTheme(store.id);
   const [formData, setFormData] = useState(store);
-
-  const reloadCanvas = () => setRefreshKey(Date.now());
 
   const handleUnlock = () => {
     const isSure = window.confirm("Hold up! 🚨 You are unlocking the live editor. This isn't a test mode—anything you publish here instantly updates your actual website. Ready to dive in?");
@@ -44,8 +41,9 @@ export default function StorefrontManager({ store }: { store: any }) {
       if (error) throw error;
       
       setSaved(true);
+      
+      // This tells the server to re-fetch the data AND triggers the iframe to reload
       router.refresh(); 
-      reloadCanvas();
       
       setTimeout(() => setSaved(false), 3000);
     } catch (error) {
@@ -56,12 +54,8 @@ export default function StorefrontManager({ store }: { store: any }) {
     }
   };
 
-  // 🚀 FIXED: Smart environment routing matching your page.tsx
-  const isDev = process.env.NODE_ENV === 'development';
-  const PREVIEW_BASE_URL = isDev ? 'http://localhost:3001' : 'https://storefronts.alternativesolutions.io';
-
   return (
-    <div className="flex flex-col h-full overflow-hidden animate-in fade-in duration-300">
+    <div className="flex flex-col h-full overflow-hidden shrink-0">
       
       {/* MOBILE WARNING */}
       <div className="md:hidden mb-6 bg-cyan-500/10 border border-cyan-500/30 rounded-3xl p-6 text-center shadow-lg shrink-0">
@@ -73,18 +67,18 @@ export default function StorefrontManager({ store }: { store: any }) {
       </div>
 
       {/* VIBE CHECK BANNER */}
-      <div className={`shrink-0 mb-6 bg-zinc-950/80 border ${currentTheme.border} rounded-3xl p-5 md:p-6 flex flex-col md:flex-row gap-4 shadow-xl backdrop-blur-md items-start md:items-center`}>
-        <div className={`p-3 ${currentTheme.bg} rounded-xl shrink-0`}>
-          <PenTool className={`w-6 h-6 ${currentTheme.text}`} />
-        </div>
-        <div className="flex-1">
-          <h3 className={`text-sm font-black ${currentTheme.text} uppercase tracking-widest mb-1.5`}>
+      <div className={`shrink-0 mb-6 bg-zinc-950/80 border ${currentTheme.border} rounded-3xl p-5 flex flex-col gap-4 shadow-xl backdrop-blur-md`}>
+        <div className="flex items-center gap-3">
+          <div className={`p-2.5 ${currentTheme.bg} rounded-xl shrink-0`}>
+            <PenTool className={`w-5 h-5 ${currentTheme.text}`} />
+          </div>
+          <h3 className={`text-sm font-black ${currentTheme.text} uppercase tracking-widest`}>
             {PORTAL_COPY.storefront.vibeCheckTitle}
           </h3>
-          <p className="text-xs text-zinc-400 leading-relaxed">
-            {PORTAL_COPY.storefront.vibeCheckBody}
-          </p>
         </div>
+        <p className="text-xs text-zinc-400 leading-relaxed">
+          {PORTAL_COPY.storefront.vibeCheckBody}
+        </p>
       </div>
 
       {/* COMMAND BAR */}
@@ -126,11 +120,9 @@ export default function StorefrontManager({ store }: { store: any }) {
         </div>
       )}
 
-      {/* SPLIT SCREEN WORKSPACE */}
-      <div className={`flex-1 flex flex-col lg:flex-row gap-6 min-h-0 overflow-hidden transition-all duration-500 ${!isEditing ? 'opacity-50 grayscale-30 pointer-events-none' : 'opacity-100'}`}>
-        
-        {/* LEFT: CONTROLS */}
-        <div className="w-full lg:w-96 xl:w-112.5 flex flex-col border border-zinc-800 bg-zinc-950 rounded-2xl overflow-hidden shrink-0 shadow-xl">
+      {/* THE ACTUAL EDITOR TABS */}
+      <div className={`flex-1 flex flex-col min-h-0 overflow-hidden transition-all duration-500 ${!isEditing ? 'opacity-50 grayscale-[30%] pointer-events-none' : 'opacity-100'}`}>
+        <div className="flex flex-col border border-zinc-800 bg-zinc-950 rounded-2xl overflow-hidden h-full shadow-xl">
           <div className="flex items-center gap-1 p-2 border-b border-zinc-800 bg-zinc-900/50 shrink-0">
             <button onClick={() => setEditorTab('content')} className={`flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-md text-[10px] font-bold tracking-widest uppercase transition-all cursor-pointer ${editorTab === 'content' ? 'bg-zinc-800 text-white shadow-sm' : 'text-zinc-500 hover:text-zinc-300 hover:bg-zinc-800/50'}`}>
               <PenTool className="w-3.5 h-3.5" /> Content
@@ -141,36 +133,11 @@ export default function StorefrontManager({ store }: { store: any }) {
           </div>
 
           <div className="flex-1 overflow-y-auto custom-scrollbar p-4">
-            {editorTab === 'content' && <CoreTab formData={formData} setFormData={setFormData} onReload={reloadCanvas} />}
-            {editorTab === 'services' && <CapabilitiesTab formData={formData} setFormData={setFormData} onReload={reloadCanvas} />}
+            {editorTab === 'content' && <CoreTab formData={formData} setFormData={setFormData} onReload={() => router.refresh()} />}
+            {editorTab === 'services' && <CapabilitiesTab formData={formData} setFormData={setFormData} onReload={() => router.refresh()} />}
           </div>
         </div>
-
-        {/* RIGHT: LIVE IFRAME PREVIEW */}
-        <div className="hidden md:flex flex-1 flex-col bg-zinc-950 border border-zinc-800 rounded-2xl overflow-hidden shadow-xl">
-          <div className="bg-zinc-900 border-b border-zinc-800 px-4 py-2 flex items-center justify-between shrink-0">
-            <div className="flex items-center gap-2 overflow-hidden">
-              <MonitorSmartphone className="w-3 h-3 text-cyan-500 shrink-0" />
-              <span className="text-[10px] font-mono text-zinc-400 truncate">
-                {PREVIEW_BASE_URL}/{formData.slug}?mode=canvas
-              </span>
-            </div>
-            <button onClick={reloadCanvas} className="p-1.5 hover:bg-cyan-500/20 rounded-md text-zinc-500 hover:text-cyan-400 transition-all border border-transparent hover:border-cyan-500/30 shrink-0 cursor-pointer" title="Refresh Live Canvas">
-              <RefreshCw className="w-3 h-3" />
-            </button>
-          </div>
-          <div className="flex-1 w-full h-full relative bg-zinc-950">
-            <iframe 
-              key={refreshKey} 
-              src={`${PREVIEW_BASE_URL}/${formData.slug}?mode=canvas&t=${refreshKey}`} 
-              className="absolute inset-0 w-full h-full border-none" 
-              title="Live Canvas" 
-            />
-          </div>
-        </div>
-
       </div>
-
     </div>
   );
 }

@@ -30,14 +30,18 @@ export default async function LiveStorefrontPage({
   // 🚨 SMART ENVIRONMENT ROUTING 🚨
   const isDev = process.env.NODE_ENV === 'development';
   
-  // This looks at your .env.local first. If it's missing, it defaults to port 3000.
+  // Forces the iframe to look at Repo 2 (Port 3001) during local development
   const templateBaseUrl = isDev 
-    ? (process.env.NEXT_PUBLIC_ENGINE_URL || 'http://localhost:3000') 
+    ? (process.env.NEXT_PUBLIC_ENGINE_URL || 'http://localhost:3001') 
     : 'https://storefronts.alternativesolutions.io';
 
   const liveUrl = (store.custom_domain && !isDev) 
     ? `https://${store.custom_domain}` 
     : `${templateBaseUrl}/${store.slug}`;
+
+  // Automatically generates a new timestamp so the iframe instantly reloads when you hit "Publish Changes"
+  const refreshKey = Date.now();
+  const previewUrlWithRefresh = `${liveUrl}${liveUrl.includes('?') ? '&' : '?'}mode=canvas&t=${refreshKey}`;
 
   return (
     <div className="h-[calc(100vh-4rem)] flex flex-col xl:flex-row gap-8 p-4 lg:p-8 animate-in fade-in duration-500 overflow-hidden">
@@ -60,8 +64,8 @@ export default async function LiveStorefrontPage({
       </div>
 
       {/* RIGHT COLUMN: The Live Preview Iframe */}
-      <div className="w-full xl:w-2/3 h-full rounded-2xl overflow-hidden relative">
-        <AppIframe url={liveUrl} title={`${store.business_name} Live View`} />
+      <div className="w-full xl:w-2/3 h-full rounded-2xl overflow-hidden relative shadow-xl">
+        <AppIframe url={previewUrlWithRefresh} title={`${store.business_name} Live View`} />
       </div>
 
     </div>
