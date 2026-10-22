@@ -2,11 +2,59 @@
 'use server';
 
 import { revalidatePath } from 'next/cache';
-import { createClient } from '@/utils/supabase/server';
+import { createClient } from '@/utils/supabase/server'; 
 import { dispatchSystemEmail } from '@/app/actions/emails';
 
-export async function createStorefront(formData: FormData) {
+// ==========================================
+// 🛡️ THE UNIVERSAL BOUNCER (SECURITY LOCK)
+// ==========================================
+async function verifyClearance(targetStoreId?: string) {
   const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  
+  if (!user || !user.email) {
+    throw new Error("Security Violation: No active authenticated session.");
+  }
+
+  const adminEmails = [
+    process.env.NEXT_PUBLIC_ADMIN_EMAIL,
+    process.env.ADMIN_EMAIL,
+    'courtney@alternativesolutions.io'
+  ].filter(Boolean);
+
+  // 1. Admins get a universal free pass to all functions
+  if (adminEmails.includes(user.email)) {
+    return true; 
+  }
+
+  // 2. If it's a globally restricted action (like create/delete), and they aren't admin, block them.
+  if (!targetStoreId) {
+    throw new Error("Security Violation: Insufficient clearance for system-level action.");
+  }
+
+  // 3. If it's a store-specific action, verify they actually own the store they are trying to edit
+  const { data: store } = await supabase
+    .from('storefronts')
+    .select('id')
+    .eq('id', targetStoreId)
+    .eq('contact_email', user.email)
+    .single();
+
+  if (!store) {
+    throw new Error("Security Violation: You do not have authorization to modify this storefront.");
+  }
+  
+  return true;
+}
+
+// ==========================================
+// 🚀 ACTIONS
+// ==========================================
+
+export async function createStorefront(formData: FormData) {
+  await verifyClearance(); // STRICTLY ADMIN ONLY
+
+  const supabase = await createClient(); 
   
   const slug = formData.get('slug') as string;
   if (!slug) throw new Error("Slug is required");
@@ -53,7 +101,7 @@ export async function createStorefront(formData: FormData) {
     gallery_items: [],
     logo_size: 'large',
     industry_tag: formData.get('industry_tag') || 'General',
-    audit_notes: []
+    audit_notes: [] 
   };
 
   const { error } = await supabase.from('storefronts').insert(storefrontData);
@@ -64,8 +112,9 @@ export async function createStorefront(formData: FormData) {
 }
 
 export async function updateStorefrontCore(id: string, formData: FormData) {
+  await verifyClearance(id); // Admin OR Store Owner
+
   const supabase = await createClient();
-  
   const updateData: any = {};
 
   const fields = [
@@ -84,15 +133,12 @@ export async function updateStorefrontCore(id: string, formData: FormData) {
   if (formData.has('capabilities')) {
     updateData.capabilities = JSON.parse(formData.get('capabilities') as string);
   }
-
   if (formData.has('operational_terms')) {
     updateData.operational_terms = JSON.parse(formData.get('operational_terms') as string);
   }
-
   if (formData.has('is_template')) {
     updateData.is_template = formData.get('is_template') === 'true';
   }
-  
   if (formData.has('is_published')) {
     updateData.is_published = formData.get('is_published') === 'true';
   }
@@ -107,6 +153,8 @@ export async function updateStorefrontCore(id: string, formData: FormData) {
 }
 
 export async function updateStorefrontMedia(id: string, slug: string, formData: FormData) {
+  await verifyClearance(id); // Admin OR Store Owner
+
   const supabase = await createClient();
   
   async function uploadFile(file: File | null, prefix: string) {
@@ -128,7 +176,6 @@ export async function updateStorefrontMedia(id: string, slug: string, formData: 
   const heroFile = formData.get('hero_file') as File;
   const aboutFile = formData.get('about_file') as File;
   const logoFile = formData.get('logo_file') as File;
-  
   const logoSize = formData.get('logo_size') as string;
   const heroPosition = formData.get('hero_position') as string;
 
@@ -140,7 +187,6 @@ export async function updateStorefrontMedia(id: string, slug: string, formData: 
   if (heroUrl) updateData.hero_image = heroUrl;
   if (aboutUrl) updateData.about_image = aboutUrl;
   if (logoUrl) updateData.brand_logo = logoUrl;
-  
   if (logoSize) updateData.logo_size = logoSize;
   if (heroPosition) updateData.hero_position = heroPosition;
 
@@ -151,11 +197,12 @@ export async function updateStorefrontMedia(id: string, slug: string, formData: 
 
   revalidatePath('/dashboard/storefronts', 'layout');
   revalidatePath('/', 'layout'); 
-
   return { success: true, updatedMedia: updateData };
 }
 
 export async function updateStorefrontCapabilities(id: string, capabilities: any[]) {
+  await verifyClearance(id); // Admin OR Store Owner
+
   const supabase = await createClient();
   const { error } = await supabase.from('storefronts').update({ capabilities }).eq('id', id);
   if (error) throw new Error(error.message);
@@ -165,6 +212,8 @@ export async function updateStorefrontCapabilities(id: string, capabilities: any
 }
 
 export async function updateStorefrontGallery(id: string, slug: string, formData: FormData) {
+  await verifyClearance(id); // Admin OR Store Owner
+
   const supabase = await createClient();
   const files = formData.getAll('images') as File[];
   
@@ -199,11 +248,12 @@ export async function updateStorefrontGallery(id: string, slug: string, formData
 
   revalidatePath('/dashboard/storefronts', 'layout');
   revalidatePath('/', 'layout'); 
-
   return { success: true, gallery_items: updatedGallery };
 }
 
 export async function removeImageFromGallery(storeId: string, imageUrlToRemove: string) {
+  await verifyClearance(storeId); // Admin OR Store Owner
+
   const supabase = await createClient();
 
   const { data: store, error: fetchError } = await supabase
@@ -234,11 +284,12 @@ export async function removeImageFromGallery(storeId: string, imageUrlToRemove: 
   revalidatePath('/dashboard/storefronts', 'layout');
   revalidatePath(`/${store.slug}`, 'page');
   revalidatePath('/', 'layout'); 
-
   return { success: true };
 }
 
 export async function deleteStorefront(id: string) {
+  await verifyClearance(); // STRICTLY ADMIN ONLY
+
   const supabase = await createClient(); 
   
   const { data, error } = await supabase
@@ -253,11 +304,12 @@ export async function deleteStorefront(id: string) {
   revalidatePath('/dashboard/storefronts', 'layout');
   revalidatePath('/dashboard', 'layout');
   revalidatePath('/', 'layout');
-
   return { success: true };
 }
 
 export async function dispatchStagingReview(id: string, slug: string, businessName: string, contactEmail: string, planTier: string, clientName: string) {
+  await verifyClearance(); // STRICTLY ADMIN ONLY
+
   const supabase = await createClient();
 
   const { data: storeData } = await supabase
@@ -279,7 +331,7 @@ export async function dispatchStagingReview(id: string, slug: string, businessNa
   const { error: dbError } = await supabase
     .from('storefronts')
     .update({ 
-      status: 'IN_REVIEW', // 🚀 THE FIX: Changed from 'IN REVIEW' to 'IN_REVIEW' to match the Config file perfectly!
+      status: 'IN_REVIEW',
       audit_notes: updatedLogs 
     })
     .eq('id', id);
@@ -310,6 +362,8 @@ export async function dispatchStagingReview(id: string, slug: string, businessNa
 }
 
 export async function quickUpdateStorefrontStatus(id: string, newStatus: string, logEntry?: any) {
+  await verifyClearance(); // STRICTLY ADMIN ONLY
+
   const supabase = await createClient();
   let updatePayload: any = { status: newStatus };
   
@@ -328,8 +382,9 @@ export async function quickUpdateStorefrontStatus(id: string, newStatus: string,
 }
 
 export async function quickToggleStorefrontFlags(id: string, payload: { is_published?: boolean, is_template?: boolean }) {
+  await verifyClearance(); // STRICTLY ADMIN ONLY
+
   const supabase = await createClient();
-  
   const { error } = await supabase
     .from('storefronts')
     .update(payload)
@@ -343,8 +398,9 @@ export async function quickToggleStorefrontFlags(id: string, payload: { is_publi
 }
 
 export async function addStorefrontAuditLog(storeId: string, author: string, type: string, message: string) {
+  await verifyClearance(storeId); // Admin OR Store Owner
+
   const supabase = await createClient();
-  
   const { data: store, error: fetchError } = await supabase
     .from('storefronts')
     .select('audit_notes')
@@ -371,6 +427,5 @@ export async function addStorefrontAuditLog(storeId: string, author: string, typ
   if (updateError) throw new Error("Failed to append audit log.");
 
   revalidatePath(`/dashboard/storefronts/${storeId}`, 'layout');
-  
   return { success: true, log: newLog };
 }
