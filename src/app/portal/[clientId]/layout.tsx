@@ -28,8 +28,7 @@ export default async function PortalLayout({
   // We also check for admin emails so you (the architect) don't get locked out of client portals!
   const adminEmails = [
     process.env.NEXT_PUBLIC_ADMIN_EMAIL,
-    'courtney@alternativesolutions.io',
-    'courtneysulenski@gmail.com'
+    'courtney@alternativesolutions.io'
   ].filter(Boolean);
 
   const isAdmin = adminEmails.includes(user.email);

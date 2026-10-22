@@ -68,8 +68,7 @@ export async function proxy(request: NextRequest) {
   // even if your local env variables fail to load!
   const adminEmails = [
     process.env.ADMIN_EMAIL, 
-    'courtney@alternativesolutions.io', 
-    'courtneysulenski@gmail.com'
+    'courtney@alternativesolutions.io'
   ].filter(Boolean);
   
   const isAdmin = user && adminEmails.includes(user.email || '');

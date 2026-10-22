@@ -45,8 +45,7 @@ export default function PortalHeader({ clientId }: { clientId: string }) {
         
         const adminEmails = [
           process.env.NEXT_PUBLIC_ADMIN_EMAIL, 
-          'courtney@alternativesolutions.io', 
-          'courtneysulenski@gmail.com'
+          'courtney@alternativesolutions.io'
         ].filter(Boolean);
         
         setIsAdminMode(adminEmails.includes(user.email));
