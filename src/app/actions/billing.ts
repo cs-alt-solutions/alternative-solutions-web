@@ -8,7 +8,7 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY as string, {
   apiVersion: '2026-02-25.clover',
 });
 
-// 🚀 THE FIX: Added existingCustomerId parameter
+// 🚀 THE FIX: We are adding root metadata AND subscription metadata so both webhooks can find the user.
 export async function createStorefrontCheckout(storefrontId: string, customerEmail: string, existingCustomerId?: string) {
   try {
     const headersList = await headers();
@@ -17,9 +17,11 @@ export async function createStorefrontCheckout(storefrontId: string, customerEma
     const sessionConfig: Stripe.Checkout.SessionCreateParams = {
       payment_method_types: ['card'],
       client_reference_id: storefrontId,
+      // 🚀 ROOT METADATA (For the immediate checkout webhook)
       metadata: { storefront_id: storefrontId },
       line_items: [{ price: process.env.STRIPE_PRICE_ID_FOUNDATION, quantity: 1 }],
       mode: 'subscription',
+      // 🚀 SUBSCRIPTION METADATA (For the recurring invoice webhooks)
       subscription_data: {
         metadata: { storefront_id: storefrontId, tier: 'FOUNDATION' },
       },
@@ -28,7 +30,6 @@ export async function createStorefrontCheckout(storefrontId: string, customerEma
       allow_promotion_codes: true, 
     };
 
-    // 🚀 THE ID LOCK: Forces Stripe to use their existing profile instead of creating a duplicate
     if (existingCustomerId) {
       sessionConfig.customer = existingCustomerId;
     } else {
@@ -42,7 +43,6 @@ export async function createStorefrontCheckout(storefrontId: string, customerEma
   }
 }
 
-// 🚀 THE FIX: Added existingCustomerId parameter
 export async function createProTierCheckout(storefrontId: string, customerEmail: string, customDomain: string, existingCustomerId?: string) {
   try {
     const headersList = await headers();
@@ -51,9 +51,11 @@ export async function createProTierCheckout(storefrontId: string, customerEmail:
     const sessionConfig: Stripe.Checkout.SessionCreateParams = {
       payment_method_types: ['card'],
       client_reference_id: storefrontId,
+      // 🚀 ROOT METADATA
       metadata: { storefront_id: storefrontId },
       line_items: [{ price: process.env.STRIPE_PRICE_ID_PROFESSIONAL, quantity: 1 }],
       mode: 'subscription',
+      // 🚀 SUBSCRIPTION METADATA
       subscription_data: {
         metadata: { storefront_id: storefrontId, tier: 'PROFESSIONAL', custom_domain: customDomain },
       },
@@ -62,7 +64,6 @@ export async function createProTierCheckout(storefrontId: string, customerEmail:
       allow_promotion_codes: true,
     };
 
-    // 🚀 THE ID LOCK: Forces Stripe to use their existing profile
     if (existingCustomerId) {
       sessionConfig.customer = existingCustomerId;
     } else {
