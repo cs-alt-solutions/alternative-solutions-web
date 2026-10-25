@@ -1,41 +1,32 @@
 /* src/app/dashboard/settings/page.tsx */
 import React from 'react';
-import { Settings, ShieldAlert } from 'lucide-react';
+import { WEBSITE_COPY } from '@/utils/glossary';
+import TaskLibraryManager from '@/components/dashboard/settings/TaskLibraryManager';
+import TaskAutomations from '@/components/dashboard/settings/TaskAutomations';
 
-export const metadata = {
-  title: 'Platform Settings | System Admin'
-};
+export const dynamic = 'force-dynamic';
 
-export default function AdminSettingsPage() {
+export default function SettingsPage() {
+  const copy = WEBSITE_COPY.DASHBOARD.COMMON;
+
   return (
-    // STRIPPED: max-w-5xl mx-auto. Added responsive padding and w-full.
-    <div className="p-4 md:p-6 lg:p-8 w-full animate-in fade-in duration-500 pb-24">
-      <header className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-8 border-b border-white/5 pb-8">
+    // Removed max-w-5xl and mx-auto so it spans the full available width
+    <div className="p-4 md:p-8 w-full space-y-8 animate-in fade-in duration-500 pb-20 h-full overflow-y-auto custom-scrollbar">
+      
+      <div className="flex flex-col md:flex-row items-start md:items-end justify-between gap-4 pb-6 border-b border-zinc-800">
         <div>
-          <div className="flex items-center gap-2 mb-2">
-            <Settings className="text-fuchsia-400" size={16} />
-            <span className="text-xs font-mono tracking-[0.2em] text-fuchsia-400 uppercase">
-              System Admin
-            </span>
-          </div>
-          <h1 className="text-3xl md:text-4xl font-black tracking-tighter text-white uppercase">
-            Platform Settings
+          <h1 className="text-3xl md:text-4xl font-black text-white tracking-tight uppercase">
+            System Admin
           </h1>
+          <p className="text-zinc-400 mt-1">Configure global triggers and backend rules.</p>
         </div>
-      </header>
-
-      <div className="bg-zinc-950 border border-white/5 rounded-3xl p-8 md:p-12 shadow-xl flex flex-col items-center justify-center text-center h-[50vh] relative overflow-hidden">
-         {/* Background Glow */}
-         <div className="absolute top-0 right-0 w-64 h-64 bg-fuchsia-500/10 rounded-full blur-[80px] pointer-events-none" />
-
-         <ShieldAlert size={48} className="text-zinc-600 mb-6 relative z-10" />
-         <h2 className="text-xl font-black text-white uppercase tracking-widest mb-2 relative z-10">
-           Admin Settings Offline
-         </h2>
-         <p className="text-sm text-zinc-400 max-w-md mx-auto leading-relaxed relative z-10">
-           The global configuration and security settings module is currently under construction. Infrastructure updates are pending.
-         </p>
       </div>
+
+      <div className="space-y-8">
+        <TaskLibraryManager />
+        <TaskAutomations />
+      </div>
+      
     </div>
   );
 }

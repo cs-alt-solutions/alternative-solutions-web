@@ -121,7 +121,7 @@ export default function StorefrontManager({ store }: { store: any }) {
       )}
 
       {/* THE ACTUAL EDITOR TABS */}
-      <div className={`flex-1 flex flex-col min-h-0 overflow-hidden transition-all duration-500 ${!isEditing ? 'opacity-50 grayscale-[30%] pointer-events-none' : 'opacity-100'}`}>
+      <div className={`flex-1 flex flex-col min-h-0 overflow-hidden transition-all duration-500 ${!isEditing ? 'opacity-50 grayscale-30 pointer-events-none' : 'opacity-100'}`}>
         <div className="flex flex-col border border-zinc-800 bg-zinc-950 rounded-2xl overflow-hidden h-full shadow-xl">
           <div className="flex items-center gap-1 p-2 border-b border-zinc-800 bg-zinc-900/50 shrink-0">
             <button onClick={() => setEditorTab('content')} className={`flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-md text-[10px] font-bold tracking-widest uppercase transition-all cursor-pointer ${editorTab === 'content' ? 'bg-zinc-800 text-white shadow-sm' : 'text-zinc-500 hover:text-zinc-300 hover:bg-zinc-800/50'}`}>

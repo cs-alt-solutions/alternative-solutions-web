@@ -146,7 +146,7 @@ export default function StorefrontTable({
                     <select 
                       value={store.industry_tag || store.category || store.industry || ''} 
                       onChange={(e) => handleRowUpdate(store.id, 'category', e.target.value)}
-                      className="bg-zinc-950 border border-zinc-700 text-zinc-300 text-[10px] font-black uppercase tracking-widest rounded px-2 py-1.5 focus:border-amber-500 outline-none cursor-pointer w-full max-w-[150px]"
+                      className="bg-zinc-950 border border-zinc-700 text-zinc-300 text-[10px] font-black uppercase tracking-widest rounded px-2 py-1.5 focus:border-amber-500 outline-none cursor-pointer w-full max-w-37.5"
                     >
                       <option value="" disabled>Select Category</option>
                       {availableCategories.map(cat => (
