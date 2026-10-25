@@ -22,7 +22,8 @@ import {
   ChevronLeft,
   ChevronRight,
   LifeBuoy,
-  Activity // 🚀 NEW: Added for Analytics
+  Activity,
+  Lightbulb
 } from 'lucide-react';
 import { DASHBOARD_COPY } from '@/config/dashboard';
 import { ROUTES } from '@/utils/glossary';
@@ -69,6 +70,7 @@ export default function Sidebar({ isOpen, closeMenu }: SidebarProps) {
         { name: copy.FOUNDATION || 'FOUNDATION', href: ROUTES.DASHBOARD.FOUNDATION, icon: Construction },
         { name: copy.ECOSYSTEM_MANAGER || 'ECOSYSTEM', href: ROUTES.DASHBOARD.ECOSYSTEM, icon: Box },
         { name: copy.STOREFRONTS || 'STOREFRONTS', href: ROUTES.DASHBOARD.STOREFRONTS, icon: Store },
+        { name: 'STRATEGY HUB', href: '/dashboard/strategy', icon: Lightbulb },
         { name: copy.BROADCAST || 'BROADCAST', href: ROUTES.DASHBOARD.BROADCAST, icon: Radio },
       ]
     },
@@ -83,8 +85,7 @@ export default function Sidebar({ isOpen, closeMenu }: SidebarProps) {
     {
       label: copy.GROUPS?.LOGISTICS || 'LIFE & LOGISTICS', 
       items: [
-        // 🚀 STRIPPED OUT THE (any) HACKS AND ADDED ANALYTICS
-        { name: copy.SUPPORT_DESK || 'SUPPORT DESK', href: '/dashboard/support-desk', icon: LifeBuoy },
+        { name: (copy as any).SUPPORT_DESK || 'SUPPORT DESK', href: (ROUTES.DASHBOARD as any).SUPPORT_DESK || '/dashboard/support-desk', icon: LifeBuoy },
         { name: copy.TASKS || 'TASKS', href: ROUTES.DASHBOARD.TASKS, icon: CheckSquare },
         { name: copy.LEDGER || 'LEDGER', href: ROUTES.DASHBOARD.LEDGER, icon: Wallet },
         { name: copy.ANALYTICS || 'LIVE TRAFFIC', href: '/dashboard/analytics', icon: Activity },

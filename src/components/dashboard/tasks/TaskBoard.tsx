@@ -4,8 +4,14 @@ import React from 'react';
 import TaskCard from './TaskCard';
 import { Briefcase, Layers, CheckCircle2 } from 'lucide-react';
 
-export default function TaskBoard({ tasks, clients }: { tasks: any[], clients: any[] }) {
-  // Group tasks by storefront_id (Client)
+interface TaskBoardProps {
+  tasks: any[];
+  clients: any[];
+  onUpdateStatus: (id: string, status: string) => void;
+  onDeleteTask: (id: string) => void;
+}
+
+export default function TaskBoard({ tasks, clients, onUpdateStatus, onDeleteTask }: TaskBoardProps) {
   const groupedTasks = tasks.reduce((acc: any, task) => {
     const key = task.storefront_id || 'internal';
     if (!acc[key]) acc[key] = [];
@@ -39,10 +45,14 @@ export default function TaskBoard({ tasks, clients }: { tasks: any[], clients: a
                 </span>
               </div>
 
-              {/* 🚀 FIX: Stacked Row Layout instead of Grid */}
               <div className="flex flex-col gap-2">
                 {clientTasks.map((task: any) => (
-                  <TaskCard key={task.id} task={task} />
+                  <TaskCard 
+                    key={task.id} 
+                    task={task} 
+                    onUpdateStatus={onUpdateStatus}
+                    onDelete={onDeleteTask}
+                  />
                 ))}
               </div>
             </div>

@@ -2,7 +2,7 @@
 'use client';
 import React, { useState, useEffect } from 'react';
 import { supabase } from '@/utils/supabase';
-import { Plus, Loader2 } from 'lucide-react';
+import { Plus } from 'lucide-react';
 import TaskBoard from './TaskBoard';
 import TaskEditorModal from './TaskEditorModal';
 
@@ -13,49 +13,46 @@ export default function TasksManager() {
   const [isSaving, setIsSaving] = useState(false);
 
   const fetchCoreData = async () => {
-    // 🚀 FIX: Only grab REAL clients, completely ignoring prototypes
-    const { data: clientData } = await supabase
-      .from('storefronts')
-      .select('id, business_name')
-      .eq('is_template', false); 
-      
+    const { data: clientData } = await supabase.from('storefronts').select('id, business_name').eq('is_template', false); 
     if (clientData) setClients(clientData);
     
-    const { data: taskData } = await supabase
-      .from('tasks')
-      .select('*')
-      .order('created_at', { ascending: false });
-      
+    const { data: taskData } = await supabase.from('tasks').select('*').order('created_at', { ascending: false });
     if (taskData) setTasks(taskData);
   };
 
-  useEffect(() => {
-    fetchCoreData();
-  }, []);
+  useEffect(() => { fetchCoreData(); }, []);
 
   const handleSaveTask = async (taskData: any) => {
     setIsSaving(true);
     try {
       const payload = {
         title: taskData.title,
-        description: taskData.description, // 🚀 ADDED: Passes the notes into the database
+        description: taskData.description,
         storefront_id: taskData.storefront_id === 'internal' ? null : taskData.storefront_id,
         priority: taskData.priority,
         status: taskData.status,
         assignee: 'System'
       };
-
       const { error } = await supabase.from('tasks').insert([payload]);
       if (error) throw error;
-
       await fetchCoreData(); 
       setIsModalOpen(false);
     } catch (err: any) {
-      console.error("Task Save Error:", err);
       alert("Failed to save task. Check console.");
     } finally {
       setIsSaving(false);
     }
+  };
+
+  const handleUpdateStatus = async (taskId: string, newStatus: string) => {
+    setTasks(prev => prev.map(t => t.id === taskId ? { ...t, status: newStatus } : t));
+    await supabase.from('tasks').update({ status: newStatus }).eq('id', taskId);
+  };
+
+  const handleDeleteTask = async (taskId: string) => {
+    if (!window.confirm("Delete this task permanently?")) return;
+    setTasks(prev => prev.filter(t => t.id !== taskId));
+    await supabase.from('tasks').delete().eq('id', taskId);
   };
 
   return (
@@ -73,7 +70,12 @@ export default function TasksManager() {
         </button>
       </div>
 
-      <TaskBoard tasks={tasks} clients={clients} />
+      <TaskBoard 
+        tasks={tasks} 
+        clients={clients} 
+        onUpdateStatus={handleUpdateStatus} 
+        onDeleteTask={handleDeleteTask} 
+      />
 
       {isModalOpen && (
         <TaskEditorModal 

@@ -10,10 +10,9 @@ export default function SettingsPage() {
   const copy = WEBSITE_COPY.DASHBOARD.COMMON;
 
   return (
-    // Removed max-w-5xl and mx-auto so it spans the full available width
-    <div className="p-4 md:p-8 w-full space-y-8 animate-in fade-in duration-500 pb-20 h-full overflow-y-auto custom-scrollbar">
+    <div className="p-4 md:p-8 w-full animate-in fade-in duration-500 pb-20 h-full overflow-y-auto custom-scrollbar">
       
-      <div className="flex flex-col md:flex-row items-start md:items-end justify-between gap-4 pb-6 border-b border-zinc-800">
+      <div className="flex flex-col md:flex-row items-start md:items-end justify-between gap-4 pb-6 mb-8 border-b border-zinc-800">
         <div>
           <h1 className="text-3xl md:text-4xl font-black text-white tracking-tight uppercase">
             System Admin
@@ -22,7 +21,8 @@ export default function SettingsPage() {
         </div>
       </div>
 
-      <div className="space-y-8">
+      {/* 🚀 THE FIX: Reverted back to a clean, full-width vertical stack */}
+      <div className="flex flex-col gap-8 w-full">
         <TaskLibraryManager />
         <TaskAutomations />
       </div>
