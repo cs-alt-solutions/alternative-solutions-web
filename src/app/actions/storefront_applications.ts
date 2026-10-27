@@ -76,7 +76,6 @@ export async function submitStorefrontApplication(formData: FormData) {
 
     try {
       if (process.env.RESEND_API_KEY) {
-        // 1. Client Confirmation Email (Removed 'selectedPlan')
         await resend.emails.send({
           from: 'Courtney <hello@alternativesolutions.io>',
           to: payload.applicant_email,
@@ -87,7 +86,6 @@ export async function submitStorefrontApplication(formData: FormData) {
           })
         });
 
-        // 2. Admin Intake Notification (Removed 'phone', 'existingWebsite', 'selectedPlan', and 'isPriority')
         await resend.emails.send({
           from: 'System <system@alternativesolutions.io>',
           to: process.env.ADMIN_EMAIL || 'hello@alternativesolutions.io',
@@ -104,8 +102,7 @@ export async function submitStorefrontApplication(formData: FormData) {
       console.error('EMAIL DISPATCH FAILED:', emailDispatchError);
     }
 
-    revalidatePath('/dashboard/storefronts');
-    revalidatePath('/dashboard');
+    revalidatePath('/', 'layout');
     return { success: true };
   } catch (error: any) {
     console.error('CRITICAL SUBMISSION ERROR:', error);
@@ -113,7 +110,7 @@ export async function submitStorefrontApplication(formData: FormData) {
   }
 }
 
-// 🚀 THE ENGINE: Approves the lead, sends Stripe link, and triggers the Discovery Board automation
+// 🚀 THE ENGINE: Approves the lead, sends Stripe link, triggers Discovery Board, and spawns Tasks
 export async function approveAndSendCheckout(id: string, overrides?: any) {
   const supabase = await createClient();
   
@@ -158,7 +155,7 @@ export async function approveAndSendCheckout(id: string, overrides?: any) {
       }
     ];
 
-    // 1. Initialize Storefront in AWAITING_PAYMENT (This fires the Discovery Board trigger)
+    // 1. Initialize Storefront in AWAITING_PAYMENT
     const { data: newStore, error: insertError } = await supabase.from('storefronts').insert([{
       business_name: app.business_name,
       contact_email: app.contact_email || app.applicant_email, 
@@ -199,11 +196,23 @@ export async function approveAndSendCheckout(id: string, overrides?: any) {
 
     if (clientError) console.error('Failed to initialize client portal:', clientError);
 
-    // 3. Generate Stripe Checkout session
+    // 🚀 3. GUARANTEE THE GLOBAL TASK CREATION
+    const { error: taskError } = await supabase.from('tasks').insert([{
+      storefront_id: newStore.id,
+      title: `Client Research & Architecture: ${app.business_name}`,
+      description: 'Review the generated Discovery Board in the Strategy Hub, compile social assets, and draft the initial value-trade ledger.',
+      priority: 'High',
+      status: 'Todo',
+      assignee: 'System'
+    }]);
+
+    if (taskError) console.error('Failed to spawn initial task:', taskError);
+
+    // 4. Generate Stripe Checkout session
     const checkout = await createStorefrontCheckout(newStore.id, app.applicant_email);
     if (!checkout?.url) throw new Error('Failed to create Stripe link');
 
-    // 4. Send the client the checkout link
+    // 5. Send the client the checkout link
     if (process.env.RESEND_API_KEY) {
       await resend.emails.send({
         from: process.env.RESEND_FROM_EMAIL || "Courtney <hello@alternativesolutions.io>",
@@ -220,8 +229,8 @@ export async function approveAndSendCheckout(id: string, overrides?: any) {
       });
     }
 
-    // 5. Update application record status
-    await supabase
+    // 🚀 6. FORCE CLEAR CACHE & UPDATE TO APPROVED
+    const { error: appUpdateError } = await supabase
       .from('storefront_applications')
       .update({ 
         status: 'APPROVED',
@@ -230,9 +239,10 @@ export async function approveAndSendCheckout(id: string, overrides?: any) {
       })
       .eq('id', id);
 
-    revalidatePath('/dashboard/storefronts');
-    revalidatePath('/dashboard/clients');
-    revalidatePath('/dashboard'); 
+    if (appUpdateError) throw new Error("Failed to clear application from pending queue: " + appUpdateError.message);
+
+    // By aggressively nuking the 'layout' cache, the homepage is forced to re-fetch and drop them from the list.
+    revalidatePath('/', 'layout'); 
     return { success: true };
   } catch (error: any) {
     console.error('APPROVAL ERROR:', error);
@@ -249,8 +259,7 @@ export async function updateApplicationStatus(id: string, newStatus: 'CANCELED')
       .eq('id', id);
 
     if (error) throw error;
-    revalidatePath('/dashboard/storefronts');
-    revalidatePath('/dashboard');
+    revalidatePath('/', 'layout');
     return { success: true };
   } catch (error: any) {
     console.error('STATUS UPDATE ERROR:', error);
@@ -302,7 +311,7 @@ export async function sendPaymentNudge(id: string, contactEmail: string, busines
 
     await supabase.from('storefronts').update({ audit_notes: updatedLogs }).eq('id', id);
 
-    revalidatePath('/dashboard/storefronts');
+    revalidatePath('/', 'layout');
     return { success: true };
   } catch (error: any) {
     console.error('NUDGE ERROR:', error);
