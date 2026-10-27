@@ -1,4 +1,4 @@
-// src/app/actions/storefront_applications.ts
+/* src/app/actions/storefront_applications.ts */
 'use server';
 
 import { createClient } from '@/utils/supabase/server';
@@ -79,7 +79,7 @@ export async function submitStorefrontApplication(formData: FormData) {
         await resend.emails.send({
           from: 'Courtney <hello@alternativesolutions.io>',
           to: payload.applicant_email,
-          subject: `Application received: ${payload.business_name}`,
+          subject: `Sweet! Got your application for ${payload.business_name}`,
           react: StorefrontConfirmationEmail({ 
             name: payload.applicant_name, 
             projectName: payload.business_name
@@ -93,7 +93,7 @@ export async function submitStorefrontApplication(formData: FormData) {
           react: AdminIntakeEmail({
             name: payload.applicant_name,
             email: payload.applicant_email,
-            socials: formData.get('socials')?.toString() || 'None provided',
+            socials: formData.get('socials')?.toString() || '',
             businessName: payload.business_name
           })
         });
@@ -103,6 +103,7 @@ export async function submitStorefrontApplication(formData: FormData) {
     }
 
     revalidatePath('/dashboard/storefronts');
+    revalidatePath('/dashboard');
     return { success: true };
   } catch (error: any) {
     console.error('CRITICAL SUBMISSION ERROR:', error);
@@ -110,6 +111,7 @@ export async function submitStorefrontApplication(formData: FormData) {
   }
 }
 
+// 🚀 THE ENGINE: Approves the lead, sends Stripe link, and triggers the Discovery Board automation
 export async function approveAndSendCheckout(id: string, overrides?: any) {
   const supabase = await createClient();
   
@@ -154,6 +156,7 @@ export async function approveAndSendCheckout(id: string, overrides?: any) {
       }
     ];
 
+    // 1. Initialize Storefront in AWAITING_PAYMENT (This fires the Discovery Board trigger)
     const { data: newStore, error: insertError } = await supabase.from('storefronts').insert([{
       business_name: app.business_name,
       contact_email: app.contact_email || app.applicant_email, 
@@ -176,12 +179,14 @@ export async function approveAndSendCheckout(id: string, overrides?: any) {
       about_heading: 'About Us',
       about_bio: app.business_description || 'Dedicated to providing top-tier services and products to the community. Check out the gallery to see recent work!',
       social_url: app.existing_domain || '',
+      social_links: app.social_handles || {},
       gallery_items: [],
       audit_notes: initialLogs
     }]).select().single();
     
     if (insertError) throw new Error("Storefront Creation Blocked by Database: " + insertError.message);
 
+    // 2. Initialize Client Portal
     const { error: clientError } = await supabase.from('clients').insert([{
       id: finalSlug,
       name: app.business_name,
@@ -192,9 +197,11 @@ export async function approveAndSendCheckout(id: string, overrides?: any) {
 
     if (clientError) console.error('Failed to initialize client portal:', clientError);
 
+    // 3. Generate Stripe Checkout session
     const checkout = await createStorefrontCheckout(newStore.id, app.applicant_email);
     if (!checkout?.url) throw new Error('Failed to create Stripe link');
 
+    // 4. Send the client the checkout link
     if (process.env.RESEND_API_KEY) {
       await resend.emails.send({
         from: process.env.RESEND_FROM_EMAIL || "Courtney <hello@alternativesolutions.io>",
@@ -211,6 +218,7 @@ export async function approveAndSendCheckout(id: string, overrides?: any) {
       });
     }
 
+    // 5. Update application record status
     await supabase
       .from('storefront_applications')
       .update({ 
@@ -240,6 +248,7 @@ export async function updateApplicationStatus(id: string, newStatus: 'CANCELED')
 
     if (error) throw error;
     revalidatePath('/dashboard/storefronts');
+    revalidatePath('/dashboard');
     return { success: true };
   } catch (error: any) {
     console.error('STATUS UPDATE ERROR:', error);

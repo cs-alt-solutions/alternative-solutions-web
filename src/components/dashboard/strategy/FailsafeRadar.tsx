@@ -3,7 +3,7 @@
 
 import React, { useState } from 'react';
 import { supabase } from '@/utils/supabase';
-import { AlertTriangle, ChevronDown, CheckCircle2, ShieldAlert, Loader2 } from 'lucide-react';
+import { AlertTriangle, ChevronDown, CheckCircle2, ShieldAlert, Loader2, Plus } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 
 const BYPASS_REASONS = [
@@ -21,10 +21,33 @@ export default function FailsafeRadar({ missingClients }: { missingClients: any[
 
   if (!missingClients || missingClients.length === 0) return null;
 
+  // 🚀 NEW: Generate an active board manually
+  const handleGenerateBoard = async (clientId: string, businessName: string) => {
+    setIsProcessing(clientId);
+    try {
+      const { error } = await supabase.from('ideas_ledger').insert({
+        storefront_id: clientId,
+        title: `Discovery Board: ${businessName}`,
+        type: 'CLIENT_RESEARCH',
+        classification: 'STRATEGY',
+        status: 'ACTIVE',
+        phases: { brain_dump: "", value_trade: "", competitor_links: [] }
+      });
+
+      if (error) throw error;
+      setActiveDropdown(null);
+      router.refresh();
+    } catch (err) {
+      console.error("Failed to generate board:", err);
+      alert("Failed to generate board.");
+    } finally {
+      setIsProcessing(null);
+    }
+  };
+
   const handleBypass = async (clientId: string, clientName: string, reason: string) => {
     setIsProcessing(clientId);
     try {
-      // Create an ARCHIVED board just to satisfy the system and leave a paper trail
       const { error } = await supabase.from('ideas_ledger').insert({
         storefront_id: clientId,
         title: `[BYPASSED] ${reason}`,
@@ -38,11 +61,8 @@ export default function FailsafeRadar({ missingClients }: { missingClients: any[
       });
 
       if (error) throw error;
-      
-      // Refresh the page so the server fetches the new list and the radar clears
       setActiveDropdown(null);
       router.refresh();
-      
     } catch (err) {
       console.error("Failed to bypass client:", err);
       alert("Failed to process bypass.");
@@ -64,7 +84,7 @@ export default function FailsafeRadar({ missingClients }: { missingClients: any[
         The following active clients bypassed the automation trigger and do not have a Discovery Board attached to their account. Generate one manually, or bypass them with a logged reason.
       </p>
       
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
         {missingClients.map(client => (
           <div key={client.id} className="bg-black/60 border border-red-500/20 rounded-xl p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             
@@ -83,7 +103,6 @@ export default function FailsafeRadar({ missingClients }: { missingClients: any[
                   <Loader2 size={14} className="animate-spin" /> Processing
                 </div>
               ) : activeDropdown === client.id ? (
-                // THE BYPASS DROPDOWN REASONS
                 <div className="absolute right-0 top-0 mt-0 w-64 bg-zinc-950 border border-red-500/40 rounded-xl shadow-2xl z-50 overflow-hidden animate-in fade-in slide-in-from-top-2">
                   <div className="bg-red-950/40 px-3 py-2 border-b border-red-500/20 flex items-center justify-between">
                     <span className="text-[9px] font-black text-red-400 uppercase tracking-widest">Select Reason</span>
@@ -102,8 +121,15 @@ export default function FailsafeRadar({ missingClients }: { missingClients: any[
                   </div>
                 </div>
               ) : (
-                // DEFAULT ACTIONS
-                <div className="flex items-center gap-2">
+                <div className="flex flex-wrap items-center gap-2">
+                  {/* 🚀 THE NEW GENERATE BUTTON */}
+                  <button 
+                    onClick={() => handleGenerateBoard(client.id, client.business_name)}
+                    className="flex items-center gap-1.5 px-3 py-2 rounded-lg bg-amber-500/10 text-amber-500 hover:bg-amber-500/20 border border-amber-500/30 transition-colors text-[10px] font-black uppercase tracking-widest"
+                  >
+                    <Plus size={12} /> Initialize
+                  </button>
+
                   <button 
                     onClick={() => setActiveDropdown(client.id)}
                     className="flex items-center gap-1.5 px-3 py-2 rounded-lg bg-red-500/10 text-red-400 hover:bg-red-500/20 border border-red-500/30 transition-colors text-[10px] font-black uppercase tracking-widest"
