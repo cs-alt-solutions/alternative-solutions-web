@@ -2,6 +2,7 @@
 'use server';
 
 import { createClient } from '@/utils/supabase/server';
+import { createClient as createAdminClient } from '@supabase/supabase-js';
 import { revalidatePath } from 'next/cache';
 import { headers } from 'next/headers';
 import { Resend } from 'resend';
@@ -196,11 +197,47 @@ export async function approveAndSendCheckout(id: string, overrides?: any) {
 
     if (clientError) console.error('Failed to initialize client portal:', clientError);
 
-    // 🚀 3. Send the "Portal First" Handoff Email (NOW WITH DYNAMIC HEADERS)
+    // 🚀 3. GENERATE AUTHENTICATED MAGIC LINK
     const headersList = await headers();
     const origin = headersList.get('origin') || process.env.NEXT_PUBLIC_BASE_URL || 'https://www.alternativesolutions.io';
-    const portalUrl = `${origin}/portal/${newStore.id}`;
+    
+    // We start with a fallback URL, but we will immediately try to upgrade it to a Magic Link
+    let magicLinkUrl = `${origin}/portal/${newStore.id}`;
 
+    try {
+      const supabaseAdmin = createAdminClient(
+        process.env.NEXT_PUBLIC_SUPABASE_URL as string,
+        process.env.SUPABASE_SERVICE_ROLE_KEY as string 
+      );
+
+      // Generate the passwordless login URL directly into their portal
+      const { data: linkData, error: linkError } = await supabaseAdmin.auth.admin.generateLink({
+        type: 'magiclink',
+        email: app.applicant_email,
+        options: {
+          redirectTo: `${origin}/portal/${newStore.id}`
+        }
+      });
+
+      if (linkData?.properties?.action_link) {
+        magicLinkUrl = linkData.properties.action_link; // Overwrite fallback with secure token
+        
+        // Make sure their profile natively exists in the database so the Magic Link succeeds
+        if (linkData.user?.id) {
+          await supabaseAdmin.from('profiles').upsert({
+            id: linkData.user.id,
+            email: app.applicant_email,
+            full_name: app.applicant_name,
+            role: 'CLIENT_OWNER',
+            workspace_id: newStore.id
+          }, { onConflict: 'id' });
+        }
+      }
+    } catch (adminErr) {
+      console.error("Failed to generate admin magic link:", adminErr);
+    }
+
+    // 4. Send the Handoff Email with the Secure Magic Link
     if (process.env.RESEND_API_KEY) {
       await resend.emails.send({
         from: process.env.RESEND_FROM_EMAIL || "Courtney <hello@alternativesolutions.io>",
@@ -214,7 +251,7 @@ export async function approveAndSendCheckout(id: string, overrides?: any) {
             <p style="color: #d4d4d8; font-size: 15px; line-height: 1.6; margin-top: 24px;">I've provisioned your private Client Portal. Log in below to complete your initial Brain Dump so I know exactly what we're working with before I lay down the groundwork.</p>
             
             <div style="margin: 32px 0;">
-              <a href="${portalUrl}" style="display: inline-block; background-color: #22d3ee; color: #000000; font-weight: bold; padding: 14px 28px; border-radius: 8px; text-decoration: none; font-size: 14px; text-transform: uppercase; letter-spacing: 1px;">Enter Your Workspace</a>
+              <a href="${magicLinkUrl}" style="display: inline-block; background-color: #22d3ee; color: #000000; font-weight: bold; padding: 14px 28px; border-radius: 8px; text-decoration: none; font-size: 14px; text-transform: uppercase; letter-spacing: 1px;">Enter Your Workspace</a>
             </div>
             
             <div style="margin-top: 48px; border-top: 1px solid #27272a; padding-top: 24px;">
@@ -227,7 +264,7 @@ export async function approveAndSendCheckout(id: string, overrides?: any) {
       });
     }
 
-    // 4. Update application record status
+    // 5. Update application record status
     await supabase
       .from('storefront_applications')
       .update({ 
