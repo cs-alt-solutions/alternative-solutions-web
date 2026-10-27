@@ -3,6 +3,7 @@ import React from 'react';
 import { redirect } from 'next/navigation';
 import { createClient } from '@/utils/supabase/server';
 import DashboardModule from '@/components/portal/dashboard/DashboardModule';
+import BrainDump from '@/components/portal/onboarding/BrainDump';
 import { hasPortalAccess } from '@/config/lifecycle';
 
 export default async function ClientDashboardHome({ 
@@ -13,15 +14,22 @@ export default async function ClientDashboardHome({
   const { clientId } = await params;
   const supabase = await createClient();
 
-  // THE BOUNCER: Check if they actually have an active subscription
   const { data: store } = await supabase
     .from('storefronts')
-    .select('status')
+    .select('status, contact_email')
     .eq('id', clientId)
     .single();
 
-  // 🚀 THE FIX: If they don't have portal access based on our central config, kick them out
-  if (!store || !hasPortalAccess(store.status)) {
+  if (!store) {
+    redirect('/portal');
+  }
+
+  // 🚀 THE INTERCEPT: If they haven't paid yet, force them into the Brain Dump
+  if (store.status === 'AWAITING_PAYMENT') {
+    return <BrainDump clientId={clientId} contactEmail={store.contact_email} />;
+  }
+
+  if (!hasPortalAccess(store.status)) {
     redirect('/portal');
   }
 

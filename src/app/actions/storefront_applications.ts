@@ -79,7 +79,7 @@ export async function submitStorefrontApplication(formData: FormData) {
         await resend.emails.send({
           from: 'Courtney <hello@alternativesolutions.io>',
           to: payload.applicant_email,
-          subject: `Sweet! Got your application for ${payload.business_name}`,
+          subject: `Application received: ${payload.business_name}`,
           react: StorefrontConfirmationEmail({ 
             name: payload.applicant_name, 
             projectName: payload.business_name
@@ -93,7 +93,7 @@ export async function submitStorefrontApplication(formData: FormData) {
           react: AdminIntakeEmail({
             name: payload.applicant_name,
             email: payload.applicant_email,
-            socials: formData.get('socials')?.toString() || '',
+            socials: formData.get('socials')?.toString() || 'None provided',
             businessName: payload.business_name
           })
         });
@@ -102,7 +102,7 @@ export async function submitStorefrontApplication(formData: FormData) {
       console.error('EMAIL DISPATCH FAILED:', emailDispatchError);
     }
 
-    revalidatePath('/', 'layout');
+    revalidatePath('/dashboard/storefronts');
     return { success: true };
   } catch (error: any) {
     console.error('CRITICAL SUBMISSION ERROR:', error);
@@ -110,7 +110,7 @@ export async function submitStorefrontApplication(formData: FormData) {
   }
 }
 
-// 🚀 THE ENGINE: Approves the lead, sends Stripe link, triggers Discovery Board, and spawns Tasks
+// 🚀 REPLACED: Now skips Stripe entirely and sends them directly to the Brain Dump Portal intercept
 export async function approveAndSendCheckout(id: string, overrides?: any) {
   const supabase = await createClient();
   
@@ -151,11 +151,11 @@ export async function approveAndSendCheckout(id: string, overrides?: any) {
         timestamp: new Date().toISOString(),
         author: "ADMIN",
         type: "AWAITING_PAYMENT",
-        message: "Application approved. Checkout link dispatched."
+        message: "Application approved. Portal provisioned for Brain Dump onboarding."
       }
     ];
 
-    // 1. Initialize Storefront in AWAITING_PAYMENT
+    // 1. Initialize Storefront in AWAITING_PAYMENT (This triggers the Brain Dump intercept)
     const { data: newStore, error: insertError } = await supabase.from('storefronts').insert([{
       business_name: app.business_name,
       contact_email: app.contact_email || app.applicant_email, 
@@ -178,7 +178,6 @@ export async function approveAndSendCheckout(id: string, overrides?: any) {
       about_heading: 'About Us',
       about_bio: app.business_description || 'Dedicated to providing top-tier services and products to the community. Check out the gallery to see recent work!',
       social_url: app.existing_domain || '',
-      social_links: app.social_handles || {},
       gallery_items: [],
       audit_notes: initialLogs
     }]).select().single();
@@ -196,41 +195,38 @@ export async function approveAndSendCheckout(id: string, overrides?: any) {
 
     if (clientError) console.error('Failed to initialize client portal:', clientError);
 
-    // 🚀 3. GUARANTEE THE GLOBAL TASK CREATION
-    const { error: taskError } = await supabase.from('tasks').insert([{
-      storefront_id: newStore.id,
-      title: `Client Research & Architecture: ${app.business_name}`,
-      description: 'Review the generated Discovery Board in the Strategy Hub, compile social assets, and draft the initial value-trade ledger.',
-      priority: 'High',
-      status: 'Todo',
-      assignee: 'System'
-    }]);
+    // 🚀 3. Send the "Portal First" Handoff Email
+    const origin = process.env.NEXT_PUBLIC_BASE_URL || 'https://www.alternativesolutions.io';
+    const portalUrl = `${origin}/portal/${newStore.id}`;
 
-    if (taskError) console.error('Failed to spawn initial task:', taskError);
-
-    // 4. Generate Stripe Checkout session
-    const checkout = await createStorefrontCheckout(newStore.id, app.applicant_email);
-    if (!checkout?.url) throw new Error('Failed to create Stripe link');
-
-    // 5. Send the client the checkout link
     if (process.env.RESEND_API_KEY) {
       await resend.emails.send({
         from: process.env.RESEND_FROM_EMAIL || "Courtney <hello@alternativesolutions.io>",
         to: [app.applicant_email],
-        subject: `Application Approved: Complete Setup for ${app.business_name}`,
+        subject: `Application Approved: Workspace Ready for ${app.business_name}`,
         html: `
-          <div style="font-family: sans-serif; background-color: #09090b; color: #ffffff; padding: 32px; border-radius: 12px;">
-            <h2 style="color: #22d3ee; margin-top: 0;">You're Approved!</h2>
-            <p style="color: #d4d4d8;">I reviewed your application for <strong>${app.business_name}</strong> and everything looks solid. To lock in your spot in the build queue and gain access to your private portal, activate your hosting subscription below:</p>
-            <a href="${checkout.url}" style="display: inline-block; background-color: #22d3ee; color: #000000; font-weight: bold; padding: 14px 28px; border-radius: 8px; text-decoration: none; margin: 16px 0;">Activate Subscription ($5/mo)</a>
-            <p style="color: #71717a; font-size: 12px;">Once payment clears, your workspace will unlock immediately and building begins.</p>
+          <div style="font-family: sans-serif; background-color: #09090b; color: #ffffff; padding: 32px; border-radius: 12px; border: 1px solid #27272a; max-width: 600px; margin: 0 auto;">
+            <h2 style="color: #22d3ee; margin-top: 0; font-size: 24px; text-transform: uppercase; letter-spacing: 1px;">You're Approved!</h2>
+            <p style="color: #d4d4d8; font-size: 15px; line-height: 1.6;">I reviewed your application for <strong>${app.business_name}</strong> and everything looks solid. I am super pumped to get this off the ground.</p>
+            
+            <p style="color: #d4d4d8; font-size: 15px; line-height: 1.6; margin-top: 24px;">I've provisioned your private Client Portal. Log in below to complete your initial Brain Dump so I know exactly what we're working with before I lay down the groundwork.</p>
+            
+            <div style="margin: 32px 0;">
+              <a href="${portalUrl}" style="display: inline-block; background-color: #22d3ee; color: #000000; font-weight: bold; padding: 14px 28px; border-radius: 8px; text-decoration: none; font-size: 14px; text-transform: uppercase; letter-spacing: 1px;">Enter Your Workspace</a>
+            </div>
+            
+            <div style="margin-top: 48px; border-top: 1px solid #27272a; padding-top: 24px;">
+              <p style="color: #71717a; font-size: 12px; margin: 0; text-transform: uppercase; letter-spacing: 1px;">Let's get this thing built,</p>
+              <p style="color: #22d3ee; font-size: 14px; font-weight: bold; margin: 8px 0 0 0;">Courtney</p>
+              <p style="color: #52525b; font-size: 10px; font-family: monospace; margin: 4px 0 0 0;">Alternative Solutions</p>
+            </div>
           </div>
         `
       });
     }
 
-    // 🚀 6. FORCE CLEAR CACHE & UPDATE TO APPROVED
-    const { error: appUpdateError } = await supabase
+    // 4. Update application record status
+    await supabase
       .from('storefront_applications')
       .update({ 
         status: 'APPROVED',
@@ -239,10 +235,9 @@ export async function approveAndSendCheckout(id: string, overrides?: any) {
       })
       .eq('id', id);
 
-    if (appUpdateError) throw new Error("Failed to clear application from pending queue: " + appUpdateError.message);
-
-    // By aggressively nuking the 'layout' cache, the homepage is forced to re-fetch and drop them from the list.
-    revalidatePath('/', 'layout'); 
+    revalidatePath('/dashboard/storefronts');
+    revalidatePath('/dashboard/clients');
+    revalidatePath('/dashboard'); 
     return { success: true };
   } catch (error: any) {
     console.error('APPROVAL ERROR:', error);
@@ -250,6 +245,7 @@ export async function approveAndSendCheckout(id: string, overrides?: any) {
   }
 }
 
+// 🚀 REJECT/CANCEL FALLBACK
 export async function updateApplicationStatus(id: string, newStatus: 'CANCELED') {
   const supabase = await createClient();
   try {
@@ -259,7 +255,7 @@ export async function updateApplicationStatus(id: string, newStatus: 'CANCELED')
       .eq('id', id);
 
     if (error) throw error;
-    revalidatePath('/', 'layout');
+    revalidatePath('/dashboard/storefronts');
     return { success: true };
   } catch (error: any) {
     console.error('STATUS UPDATE ERROR:', error);
@@ -311,7 +307,7 @@ export async function sendPaymentNudge(id: string, contactEmail: string, busines
 
     await supabase.from('storefronts').update({ audit_notes: updatedLogs }).eq('id', id);
 
-    revalidatePath('/', 'layout');
+    revalidatePath('/dashboard/storefronts');
     return { success: true };
   } catch (error: any) {
     console.error('NUDGE ERROR:', error);
