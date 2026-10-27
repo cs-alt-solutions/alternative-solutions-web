@@ -76,6 +76,7 @@ export async function submitStorefrontApplication(formData: FormData) {
 
     try {
       if (process.env.RESEND_API_KEY) {
+        // 1. Client Confirmation Email (Removed 'selectedPlan')
         await resend.emails.send({
           from: 'Courtney <hello@alternativesolutions.io>',
           to: payload.applicant_email,
@@ -86,6 +87,7 @@ export async function submitStorefrontApplication(formData: FormData) {
           })
         });
 
+        // 2. Admin Intake Notification (Removed 'phone', 'existingWebsite', 'selectedPlan', and 'isPriority')
         await resend.emails.send({
           from: 'System <system@alternativesolutions.io>',
           to: process.env.ADMIN_EMAIL || 'hello@alternativesolutions.io',
