@@ -3,6 +3,7 @@
 
 import { createClient } from '@/utils/supabase/server';
 import { revalidatePath } from 'next/cache';
+import { headers } from 'next/headers';
 import { Resend } from 'resend';
 import StorefrontConfirmationEmail from '@/components/emails/StorefrontConfirmationEmail';
 import AdminIntakeEmail from '@/components/emails/AdminIntakeEmail';
@@ -195,8 +196,9 @@ export async function approveAndSendCheckout(id: string, overrides?: any) {
 
     if (clientError) console.error('Failed to initialize client portal:', clientError);
 
-    // 🚀 3. Send the "Portal First" Handoff Email
-    const origin = process.env.NEXT_PUBLIC_BASE_URL || 'https://www.alternativesolutions.io';
+    // 🚀 3. Send the "Portal First" Handoff Email (NOW WITH DYNAMIC HEADERS)
+    const headersList = await headers();
+    const origin = headersList.get('origin') || process.env.NEXT_PUBLIC_BASE_URL || 'https://www.alternativesolutions.io';
     const portalUrl = `${origin}/portal/${newStore.id}`;
 
     if (process.env.RESEND_API_KEY) {
