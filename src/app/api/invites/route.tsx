@@ -1,3 +1,4 @@
+/* src/app/api/invites/route.tsx */
 import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { Resend } from 'resend';
@@ -22,7 +23,6 @@ export async function POST(request: Request) {
 
     const origin = request.headers.get('origin') || process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000';
 
-    // Single Source of Truth for defaults
     let workspaceName = GLOSSARY?.DEFAULT_WORKSPACE_NAME || 'Workspace'; 
     
     if (workspace && workspace !== 'NONE') {
@@ -30,17 +30,15 @@ export async function POST(request: Request) {
       if (clientData) workspaceName = clientData.name;
     }
 
-    // Strict typing instead of 'any'
     let linkData: Record<string, any> | null = null;
     let linkError: Error | null = null;
 
-    // ATTEMPT 1: Try to generate a fresh invite link
+    // ATTEMPT 1: Try to generate a fresh invite link WITHOUT redirectTo
     const inviteResponse = await supabaseAdmin.auth.admin.generateLink({
       type: 'invite',
       email: email,
       options: {
-        data: { full_name: fullName, role: role, workspace_id: workspace === 'NONE' ? null : workspace },
-        redirectTo: `${origin}/api/auth/callback`
+        data: { full_name: fullName, role: role, workspace_id: workspace === 'NONE' ? null : workspace }
       }
     });
 
@@ -49,7 +47,6 @@ export async function POST(request: Request) {
       const magicLinkResponse = await supabaseAdmin.auth.admin.generateLink({
          type: 'magiclink',
          email: email,
-         options: { redirectTo: `${origin}/api/auth/callback` }
       });
       linkData = magicLinkResponse.data;
       linkError = magicLinkResponse.error;
@@ -71,6 +68,13 @@ export async function POST(request: Request) {
       }, { onConflict: 'id' });
     }
 
+    // THE FIX: Construct the secure route manually to bypass the Hash Fragment trap
+    let secureLink = `${origin}/login`;
+    if (linkData?.properties?.hashed_token) {
+       const typeParam = linkData.properties.verification_type || 'invite';
+       secureLink = `${origin}/api/auth/callback?token_hash=${linkData.properties.hashed_token}&type=${typeParam}`;
+    }
+
     // Blast out the custom React Email
     const { error: emailError } = await resend.emails.send({
       from: process.env.EMAIL_FROM_ADDRESS || 'Alternative Solutions <system@alternativesolutions.io>', 
@@ -80,7 +84,7 @@ export async function POST(request: Request) {
         <PortalInviteEmail 
           clientName={fullName || GLOSSARY?.ROLES?.DEFAULT_OPERATOR || 'Operator'}
           workspaceName={workspaceName}
-          magicLink={linkData?.properties?.action_link || `${origin}/login`}
+          magicLink={secureLink}
           role={role === 'CLIENT_OWNER' ? GLOSSARY?.ROLES?.CLIENT_OWNER || 'Client Owner' : role}
         />
       )

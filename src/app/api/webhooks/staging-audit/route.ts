@@ -7,7 +7,6 @@ import StagingAuditReceiptEmail, {
   StagingAuditReceiptEmailProps 
 } from "@/components/emails/StagingAuditReceiptEmail";
 
-// Initialize Resend with our environment variable (Single Source of Truth)
 const resend = new Resend(process.env.RESEND_API_KEY);
 
 interface StagingAuditRecord {
@@ -19,7 +18,6 @@ interface StagingAuditRecord {
   business_name?: string; 
   notes?: string | null;
   plan_tier?: string;
-  storefront_slug: string; // 🚨 ADDED: Strict identifier matching
 }
 
 interface SupabaseWebhookPayload {
@@ -44,43 +42,33 @@ export async function POST(req: Request) {
     const rawNotes = record.notes?.trim() || "";
     const hasNotes = rawNotes.length > 0;
     
-    // 1. Email Component Status (Strict typing for React Email)
-    const emailStatus: "APPROVED" | "CHANGES_REQUESTED" = hasNotes 
+    const status: "APPROVED" | "CHANGES_REQUESTED" = hasNotes 
       ? "CHANGES_REQUESTED" 
       : "APPROVED";
-      
-    // 2. Database Lifecycle Status (Strict typing for Supabase Constraint)
-    const dbStatus = hasNotes 
-      ? "BUILDING_CORE" 
-      : "CONTENT_ASSEMBLY";
     
     const statusLabel = hasNotes ? "Adjustments Logged" : "Approved & Locked";
     const projectLabel = record.business_name || record.project_name || "Your Storefront";
 
     // ==========================================================
-    // LOG NOTES TO THE STOREFRONT LEDGER & ADVANCE PIPELINE
+    // DATABASE SYNC: UPDATE STOREFRONTS TABLE & LEDGER
     // ==========================================================
-    
-    // We need the admin client to bypass row-level security for webhooks
     const supabaseAdmin = createClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
       process.env.SUPABASE_SERVICE_ROLE_KEY!
     );
 
-    // 1. Find the exact storefront attached to this audit using the unique slug
     const { data: storeData } = await supabaseAdmin
       .from('storefronts')
       .select('id, audit_notes')
-      .eq('slug', record.storefront_slug)
+      .eq('contact_email', record.client_email)
       .single();
 
     if (storeData) {
-      // 2. Create the Ledger Entry
       const reviewLog = {
         id: crypto.randomUUID(),
         timestamp: new Date().toISOString(),
         author: "CLIENT",
-        type: emailStatus,
+        type: status,
         message: hasNotes 
           ? `Client requests adjustments: "${rawNotes}"` 
           : "Client verified and approved the staging architecture. Zero changes requested."
@@ -88,16 +76,13 @@ export async function POST(req: Request) {
 
       const updatedLogs = [...(storeData.audit_notes || []), reviewLog];
 
-      // 3. Save the log and update the storefront to the new lifecycle stage
       await supabaseAdmin
         .from('storefronts')
         .update({ 
-          status: dbStatus, 
+          status: status, 
           audit_notes: updatedLogs 
         })
         .eq('id', storeData.id);
-    } else {
-      console.warn(`Could not attach log: Storefront not found for slug ${record.storefront_slug}`);
     }
     // ==========================================================
 
@@ -107,7 +92,7 @@ export async function POST(req: Request) {
       name: record.client_name || "Founder",
       businessName: projectLabel,
       clientEmail: record.client_email,
-      status: emailStatus,
+      status: status,
       completedSteps: [0, 1, 2, 3],
       sectionNotes: sectionNotes,
       planTier: record.plan_tier || "Standard Starter",
@@ -139,33 +124,13 @@ export async function POST(req: Request) {
     ]);
 
     if (clientResult.error || adminResult.error) {
-      console.error("Resend delivery failure:", {
-        clientError: clientResult.error,
-        adminError: adminResult.error,
-      });
-      
-      const errorMessage = clientResult.error?.message || 
-                           adminResult.error?.message || 
-                           "Email delivery failed.";
-                           
-      return NextResponse.json({ error: errorMessage }, { status: 500 });
+      return NextResponse.json({ error: "Email delivery failed." }, { status: 500 });
     }
 
-    return NextResponse.json(
-      { 
-        success: true, 
-        clientEmailId: clientResult.data?.id,
-        adminEmailId: adminResult.data?.id,
-        statusEvaluated: emailStatus 
-      },
-      { status: 200 }
-    );
+    return NextResponse.json({ success: true, statusEvaluated: status }, { status: 200 });
 
   } catch (err: any) {
     console.error("Webhook processing error:", err);
-    return NextResponse.json(
-      { error: "Internal server error processing staging audit webhook." },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: "Internal server error." }, { status: 500 });
   }
 }

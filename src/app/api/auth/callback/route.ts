@@ -15,7 +15,7 @@ export async function GET(request: Request) {
   const supabase = await createClient();
   let userToRoute = null;
 
-  // The bot-proof logic
+  // The bot-proof authentication logic
   if (code) {
     const { error, data } = await supabase.auth.exchangeCodeForSession(code);
     if (!error && data?.user) {
@@ -55,12 +55,12 @@ export async function GET(request: Request) {
       
       let nextRoute = '/dashboard'; // Default fallback
 
-      // SCALABLE ROUTING: No more hardcoded client names!
+      // SCALABLE ROUTING: Dynamic client & admin routing
       if (role === 'ADMIN' || role === 'STAFF') {
         // Internal team always lands at the master command center
         nextRoute = '/dashboard';
       } else if (workspaceId && workspaceId !== 'NONE') {
-        // ALL clients and beta testers dynamically route to their unified sandbox
+        // ALL clients and beta testers dynamically route to their unified portal workspace
         nextRoute = `/portal/${workspaceId}`;
       } else if (role === 'BETA' || role === 'CLIENT_OWNER') {
         // Edge case fallback if they have a role but no workspace assigned

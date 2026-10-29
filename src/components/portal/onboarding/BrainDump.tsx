@@ -21,7 +21,11 @@ export default function BrainDump({ clientId, contactEmail }: { clientId: string
     setIsProcessing(true);
     try {
       // 1. Save their Brain Dump answers to the database
-      const { data: store } = await supabase.from('storefronts').select('application_data, audit_notes').eq('id', clientId).single();
+      const { data: store } = await supabase
+        .from('storefronts')
+        .select('application_data, audit_notes')
+        .eq('id', clientId)
+        .single();
       
       const newAppData = { ...(store?.application_data || {}), brain_dump: answers };
       const newLog = {
@@ -75,7 +79,7 @@ export default function BrainDump({ clientId, contactEmail }: { clientId: string
               <p className="text-zinc-400 leading-relaxed mb-8 text-lg">
                 Your private portal is officially live. Before I dive in and start building your actual site, I just need to grab a few basic details from you. Let's do a quick brain dump so I know exactly what we're working with.
               </p>
-              <button onClick={handleNext} className="bg-cyan-400 hover:bg-cyan-300 text-black font-black uppercase tracking-widest py-4 px-8 rounded-xl flex items-center gap-3 transition-colors">
+              <button onClick={handleNext} className="bg-cyan-400 hover:bg-cyan-300 text-black font-black uppercase tracking-widest py-4 px-8 rounded-xl flex items-center gap-3 transition-colors cursor-pointer">
                 Let's Do This <ArrowRight size={18} />
               </button>
             </div>
@@ -89,11 +93,11 @@ export default function BrainDump({ clientId, contactEmail }: { clientId: string
                 Hey, do you have a logo? Feel free to upload what you have right now so I can take a look. Are you completely satisfied with it, or is it something we might need to tweak later? Don't stress about the quality right now, just drop in whatever you're currently using!
               </p>
               <div className="flex flex-col gap-3">
-                <button onClick={() => { setAnswers({ ...answers, logo: 'Will upload current logo inside portal' }); handleNext(); }} className="w-full text-left p-5 rounded-xl border border-zinc-800 hover:border-cyan-400 hover:bg-cyan-400/5 transition-all text-white font-medium flex items-center gap-4">
+                <button onClick={() => { setAnswers({ ...answers, logo: 'Will upload current logo inside portal' }); handleNext(); }} className="w-full text-left p-5 rounded-xl border border-zinc-800 hover:border-cyan-400 hover:bg-cyan-400/5 transition-all text-white font-medium flex items-center gap-4 cursor-pointer">
                   <ImageIcon size={20} className="text-cyan-400" /> I have one, I'll upload it inside.
                 </button>
-                <button onClick={() => { setAnswers({ ...answers, logo: 'No logo yet' }); handleNext(); }} className="w-full text-left p-5 rounded-xl border border-zinc-800 hover:border-amber-500 hover:bg-amber-500/5 transition-all text-white font-medium flex items-center gap-4">
-                  <MessageSquare size={20} className="text-amber-500" /> I don't have one yet—skip for now.
+                <button onClick={() => { setAnswers({ ...answers, logo: 'No logo yet' }); handleNext(); }} className="w-full text-left p-5 rounded-xl border border-zinc-800 hover:border-amber-500 hover:bg-amber-500/5 transition-all text-white font-medium flex items-center gap-4 cursor-pointer">
+                  <MessageSquare size={20} className="text-amber-500" /> I don't have one yet — skip for now.
                 </button>
               </div>
             </div>
@@ -107,13 +111,13 @@ export default function BrainDump({ clientId, contactEmail }: { clientId: string
                 Is there anything specific you want me to look at for images? Do you want me to pull specific photos from your social media, or do you have some specific ones you'd rather upload directly to me right now?
               </p>
               <div className="flex flex-col gap-3">
-                <button onClick={() => { setAnswers({ ...answers, visuals: 'Pull from socials' }); handleNext(); }} className="w-full text-left p-5 rounded-xl border border-zinc-800 hover:border-cyan-400 hover:bg-cyan-400/5 transition-all text-white font-medium">
+                <button onClick={() => { setAnswers({ ...answers, visuals: 'Pull from socials' }); handleNext(); }} className="w-full text-left p-5 rounded-xl border border-zinc-800 hover:border-cyan-400 hover:bg-cyan-400/5 transition-all text-white font-medium cursor-pointer">
                   Just pull from my social media for now.
                 </button>
-                <button onClick={() => { setAnswers({ ...answers, visuals: 'Has specific uploads' }); handleNext(); }} className="w-full text-left p-5 rounded-xl border border-zinc-800 hover:border-cyan-400 hover:bg-cyan-400/5 transition-all text-white font-medium">
+                <button onClick={() => { setAnswers({ ...answers, visuals: 'Has specific uploads' }); handleNext(); }} className="w-full text-left p-5 rounded-xl border border-zinc-800 hover:border-cyan-400 hover:bg-cyan-400/5 transition-all text-white font-medium cursor-pointer">
                   I have some specific ones I'll upload inside.
                 </button>
-                <button onClick={() => { setAnswers({ ...answers, visuals: 'Needs help with visuals' }); handleNext(); }} className="w-full text-left p-5 rounded-xl border border-zinc-800 hover:border-amber-500 hover:bg-amber-500/5 transition-all text-white font-medium">
+                <button onClick={() => { setAnswers({ ...answers, visuals: 'Needs help with visuals' }); handleNext(); }} className="w-full text-left p-5 rounded-xl border border-zinc-800 hover:border-amber-500 hover:bg-amber-500/5 transition-all text-white font-medium cursor-pointer">
                   I have absolutely nothing, help.
                 </button>
               </div>
@@ -125,18 +129,18 @@ export default function BrainDump({ clientId, contactEmail }: { clientId: string
             <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
               <h2 className="text-2xl font-black text-white uppercase tracking-tight mb-4">The Main Focus</h2>
               <p className="text-zinc-400 leading-relaxed mb-6">
-                When someone lands on your new site, what is the #1 thing you want them to know or do? Don't worry about making it sound professional—I will polish the words. Just tell me what you do!
+                When someone lands on your new site, what is the #1 thing you want them to know or do? Don't worry about making it sound professional — I will polish the words. Just tell me what you do!
               </p>
               <textarea 
                 value={answers.goal}
                 onChange={(e) => setAnswers({ ...answers, goal: e.target.value })}
                 placeholder="e.g., I sell custom baked goods, or I just need a digital business card..."
-                className="w-full bg-black border border-zinc-800 rounded-xl p-4 text-white min-h-[150px] focus:outline-none focus:border-cyan-400 transition-colors mb-6 resize-none"
+                className="w-full bg-black border border-zinc-800 rounded-xl p-4 text-white min-h-37.5 focus:outline-none focus:border-cyan-400 transition-colors mb-6 resize-none"
               />
               <button 
                 disabled={!answers.goal.trim()} 
                 onClick={handleNext} 
-                className="bg-cyan-400 hover:bg-cyan-300 disabled:bg-zinc-800 disabled:text-zinc-500 text-black font-black uppercase tracking-widest py-4 px-8 rounded-xl flex items-center gap-3 transition-colors"
+                className="bg-cyan-400 hover:bg-cyan-300 disabled:bg-zinc-800 disabled:text-zinc-500 text-black font-black uppercase tracking-widest py-4 px-8 rounded-xl flex items-center gap-3 transition-colors cursor-pointer"
               >
                 Next Step <ArrowRight size={18} />
               </button>
@@ -155,13 +159,13 @@ export default function BrainDump({ clientId, contactEmail }: { clientId: string
                 <div className="bg-amber-500/10 border border-amber-500/20 p-5 rounded-xl text-amber-200/80 text-sm">
                   <strong>Just a quick heads-up on how I operate:</strong> I build quickly, I'm efficient, and I keep communication tight. But to be totally transparent, I'm also juggling this alongside other work and being a full-time parent until this becomes my primary gig. I will always get things done, but bear with me on timing, and always reach out if you need anything!
                 </div>
-                <p>To make this official, lock your file into my active build queue, and fully unlock your portal—activate your monthly hosting subscription below.</p>
+                <p>To make this official, lock your file into my active build queue, and fully unlock your portal — activate your monthly hosting subscription below.</p>
               </div>
               
               <button 
                 onClick={handleCheckout} 
                 disabled={isProcessing}
-                className="w-full sm:w-auto bg-emerald-400 hover:bg-emerald-300 text-black font-black uppercase tracking-widest py-4 px-8 rounded-xl flex items-center justify-center gap-3 transition-colors"
+                className="w-full sm:w-auto bg-emerald-400 hover:bg-emerald-300 text-black font-black uppercase tracking-widest py-4 px-8 rounded-xl flex items-center justify-center gap-3 transition-colors cursor-pointer"
               >
                 {isProcessing ? (
                   <><Loader2 className="animate-spin" size={18} /> Securing Gateway...</>

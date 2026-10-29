@@ -13,8 +13,7 @@ export async function GET(request: Request) {
   }
 
   try {
-    // 🚨 THE FIX: Use Admin Client. The client clicking this is public/unauthenticated!
-    // If we use standard cookies, Supabase RLS will block the database update.
+    // 🚨 THE FIX: Use Admin Client. The client clicking this from an email is unauthenticated!
     const supabaseAdmin = createClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
       process.env.SUPABASE_SERVICE_ROLE_KEY!
@@ -24,7 +23,7 @@ export async function GET(request: Request) {
     const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(storefrontIdentifier);
     const queryColumn = isUUID ? 'id' : 'slug';
 
-    // 2. Fetch the storefront to get client details & current logs
+    // 2. Fetch the storefront to get client details & audit notes
     const { data: store, error: fetchError } = await supabaseAdmin
       .from('storefronts')
       .select('*')
@@ -44,7 +43,7 @@ export async function GET(request: Request) {
 
     const updatedLogs = [...(store.audit_notes || []), approvalLog];
 
-    // 4. Change the status to APPROVED & save the log
+    // 4. Change status to APPROVED & save ledger using Admin Client
     await supabaseAdmin
       .from('storefronts')
       .update({ 
@@ -65,7 +64,7 @@ export async function GET(request: Request) {
            checkoutResponse.url
        );
 
-       // 7. BOOM: Bulletproof standard browser redirect
+       // 7. BOOM: Standard browser redirect to Stripe
        return new Response(null, {
          status: 302,
          headers: {
@@ -78,7 +77,6 @@ export async function GET(request: Request) {
 
   } catch (error) {
     console.error("Approval Automation Failed:", error);
-    // If something fails, safely route them back to your main site with an error flag
     const fallbackUrl = process.env.NODE_ENV === 'development' 
       ? 'http://localhost:3000/dashboard?error=approval_failed'
       : 'https://alternativesolutions.io?error=approval_failed';

@@ -1,6 +1,7 @@
+/* src/components/dashboard/ApplicationReviewModal.tsx */
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { supabase } from '@/utils/supabase';
 import { 
@@ -51,6 +52,9 @@ export default function ApplicationReviewModal({
   const [verifyMode, setVerifyMode] = useState(false);
   const [customSlug, setCustomSlug] = useState('');
   
+  // Synchronous hardware lock to prevent rapid double-clicks
+  const submitLockRef = useRef(false);
+  
   const router = useRouter();
   const targetApp = app || application || {};
 
@@ -73,7 +77,7 @@ export default function ApplicationReviewModal({
     if (onClose) onClose();
     else if (propCloseModal) propCloseModal();
     else if (handleClose) handleClose();
-    else router.back();
+    else router.push('/dashboard/storefronts');
   };
 
   const handleInitiateApproval = () => {
@@ -87,7 +91,8 @@ export default function ApplicationReviewModal({
   };
 
   const handleConfirmDispatch = async () => {
-    if (isProcessing || !targetApp.id) return;
+    if (submitLockRef.current || isProcessing || !targetApp.id) return;
+    submitLockRef.current = true;
     setIsProcessing(true);
     
     try {
@@ -95,40 +100,41 @@ export default function ApplicationReviewModal({
       
       if (result && result.success) {
         setIsSuccess(true);
-        router.refresh(); 
         
         setTimeout(() => {
-          triggerClose();
-          // 🚀 FORCE CACHE CLEAR: Ensure it instantly vanishes from the dashboard
-          window.location.href = '/dashboard';
-        }, 2000);
+          // Cleanly hard-navigate to the Storefronts table (without ?application= query param)
+          window.location.href = '/dashboard/storefronts';
+        }, 1500);
       } else {
         alert(`Approval Error: ${result?.error || 'Unknown failure'}`);
+        submitLockRef.current = false;
         setIsProcessing(false);
       }
     } catch (err: any) {
       console.error("Critical execution crash:", err);
       alert(`Execution Error: ${err.message || 'Check the server logs.'}`);
+      submitLockRef.current = false;
       setIsProcessing(false);
     }
   };
 
   const handleDeny = async () => {
-    if (!targetApp.id) return;
+    if (submitLockRef.current || isProcessing || !targetApp.id) return;
+    submitLockRef.current = true;
     setIsProcessing(true);
     try {
       const result = await updateApplicationStatus(targetApp.id, 'CANCELED');
       if (result && result.success) {
-        triggerClose();
-        // 🚀 FORCE CACHE CLEAR: Ensure it instantly vanishes upon rejection
         window.location.href = '/dashboard';
       } else {
         alert(`Database Error: ${result?.error || 'Unknown failure'}`);
+        submitLockRef.current = false;
         setIsProcessing(false);
       }
     } catch (err: any) {
       console.error("Critical execution crash:", err);
       alert(`Execution Error: ${err.message || 'Check the server logs.'}`);
+      submitLockRef.current = false;
       setIsProcessing(false);
     }
   };
@@ -157,7 +163,7 @@ export default function ApplicationReviewModal({
             <CheckCircle2 size={40} className="animate-pulse" />
           </div>
           <h2 className="text-2xl font-black text-white uppercase tracking-tight mb-2">Lead Approved</h2>
-          <p className="text-sm text-emerald-400/80 font-mono tracking-widest uppercase">Checkout Link Dispatched</p>
+          <p className="text-sm text-emerald-400/80 font-mono tracking-widest uppercase">Portal & Brain Dump Dispatched</p>
         </div>
       </div>
     );
@@ -200,7 +206,7 @@ export default function ApplicationReviewModal({
             </div>
             <h3 className="text-2xl font-black text-white uppercase tracking-tight mb-3">Verify Routing Slug</h3>
             <p className="text-sm text-zinc-400 max-w-md mx-auto mb-8 leading-relaxed">
-              We generated this URL based on their business name. Clean out any "LLC"s or weird formatting before we dispatch the checkout link.
+              We generated this URL based on their business name. Clean out any "LLC"s or weird formatting before we dispatch their portal invite.
             </p>
             
             <div className="flex items-center w-full max-w-md bg-zinc-950 border border-zinc-700 rounded-xl overflow-hidden focus-within:border-cyan-400 focus-within:ring-1 focus-within:ring-cyan-400 transition-all shadow-inner">
@@ -322,7 +328,7 @@ export default function ApplicationReviewModal({
              {verifyMode && (
                <button 
                  onClick={handleConfirmDispatch} disabled={isProcessing || !customSlug}
-                 className="w-full sm:w-auto flex items-center justify-center gap-2 px-8 py-3 rounded-xl text-xs font-black tracking-widest uppercase transition-all shadow-[0_0_20px_rgba(8,145,178,0.3)] bg-cyan-600 hover:bg-cyan-500 text-zinc-950 cursor-pointer"
+                 className="w-full sm:w-auto flex items-center justify-center gap-2 px-8 py-3 rounded-xl text-xs font-black tracking-widest uppercase transition-all shadow-[0_0_20px_rgba(8,145,178,0.3)] bg-cyan-600 hover:bg-cyan-500 text-zinc-950 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
                >
                  {isProcessing ? <span>DISPATCHING...</span> : <><Rocket size={16} /> <span>Lock Routing & Dispatch</span></>}
                </button>

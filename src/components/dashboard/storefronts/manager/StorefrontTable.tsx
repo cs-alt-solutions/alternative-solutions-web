@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 import Link from 'next/link';
 import { Settings, Globe, Eye, User, ArrowUpDown, ChevronUp, ChevronDown, Clock, Mail, Loader2, CheckCircle2 } from 'lucide-react';
 import { STOREFRONT_LIFECYCLE, StorefrontStatus, hasPortalAccess } from '@/config/lifecycle';
-import { sendPaymentNudge } from '@/app/actions/storefront_applications'; // 🚀 Added our new server action
+import { sendPortalNudge } from '@/app/actions/storefront_applications'; // 🚀 Added our new server action
 
 interface TableProps {
   processedData: any[];
@@ -28,7 +28,7 @@ export default function StorefrontTable({
     
     setNudgingId(id);
     try {
-      const result = await sendPaymentNudge(id, email, businessName);
+      const result = await sendPortalNudge(id, email, businessName);
       if (result.success) {
         setNudgedSuccessId(id);
         setTimeout(() => setNudgedSuccessId(null), 3000);

@@ -101,15 +101,20 @@ export async function POST(req: Request) {
         // Send Welcome Magic Link to Client
         if (clientEmail) {
           try {
-            const { data: linkData } = await supabaseAdmin.auth.admin.generateLink({
+            // Generate link WITHOUT the redirectTo option so we can capture the raw hashed_token
+            const { data: linkData, error: linkError } = await supabaseAdmin.auth.admin.generateLink({
               type: 'magiclink',
               email: clientEmail,
-              options: {
-                redirectTo: `${process.env.NEXT_PUBLIC_BASE_URL || 'https://alternativesolutions.io'}/portal/${storeData.id}`
-              }
             });
 
-            if (linkData?.properties?.action_link) {
+            if (linkError) throw linkError;
+
+            if (linkData?.properties?.hashed_token) {
+              const origin = process.env.NEXT_PUBLIC_BASE_URL || 'https://alternativesolutions.io';
+              
+              // Construct the secure route manually to bypass the Hash Fragment trap
+              const secureLink = `${origin}/api/auth/callback?token_hash=${linkData.properties.hashed_token}&type=magiclink`;
+
               await resend.emails.send({
                 from: process.env.RESEND_FROM_EMAIL || "portal@alternativesolutions.io",
                 to: [clientEmail],
@@ -118,7 +123,7 @@ export async function POST(req: Request) {
                   <div style="font-family: sans-serif; background-color: #09090b; color: #ffffff; padding: 32px; border-radius: 12px;">
                     <h2 style="color: #22d3ee; margin-top: 0;">Payment Cleared!</h2>
                     <p style="color: #a1a1aa;">Your subscription for <strong>${storeData.business_name}</strong> is confirmed and your build is officially in the queue.</p>
-                    <a href="${linkData.properties.action_link}" style="display: inline-block; background-color: #22d3ee; color: #000000; font-weight: bold; padding: 12px 24px; border-radius: 8px; text-decoration: none; margin-top: 16px;">Enter Your Workspace</a>
+                    <a href="${secureLink}" style="display: inline-block; background-color: #22d3ee; color: #000000; font-weight: bold; padding: 12px 24px; border-radius: 8px; text-decoration: none; margin-top: 16px;">Enter Your Workspace</a>
                   </div>
                 `
               });
@@ -182,7 +187,6 @@ export async function POST(req: Request) {
         })
         .eq('id', store.id);
 
-      // Alert Admin on Plan Upgrades or Churn
       if (store.plan_tier !== updatedPlan || isCanceled) {
         await resend.emails.send({
           from: process.env.RESEND_FROM_EMAIL || "portal@alternativesolutions.io",
@@ -198,13 +202,12 @@ export async function POST(req: Request) {
   }
 
   // ====================================================================
-  // 3. THE RECOVERY (invoice.payment_succeeded) 🚀 NEW FIX
+  // 3. THE RECOVERY (invoice.payment_succeeded)
   // ====================================================================
   if (event.type === 'invoice.payment_succeeded') {
     const invoice = event.data.object as Stripe.Invoice;
     const customerId = invoice.customer as string;
     
-    // We only care if this is a recurring subscription payment
     if ((invoice as any).subscription) {
       const { data: store } = await supabaseAdmin
         .from('storefronts')
@@ -212,7 +215,6 @@ export async function POST(req: Request) {
         .eq('stripe_customer_id', customerId)
         .maybeSingle();
   
-      // If they were stuck in MAINTENANCE or CANCELED, revive them!
       if (store && (store.status === 'MAINTENANCE' || store.status === 'CANCELED')) {
         await supabaseAdmin
           .from('storefronts')
