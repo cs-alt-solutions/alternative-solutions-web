@@ -49,22 +49,17 @@ export async function GET(request: Request) {
           .eq('id', userToRoute.id);
       }
 
-      // THE SMART ROUTER: Use the live database values
-      const workspaceId = profile.workspace_id;
       const role = profile.role;
       
-      let nextRoute = '/dashboard'; // Default fallback
+      // 🚀 THE FIX: We default ALL clients to the Traffic Cop ('/portal')
+      // By stripping out the specific workspace routing here, the Traffic Cop 
+      // can evaluate if they have multiple storefronts and show the grid.
+      let nextRoute = '/portal'; 
 
       // SCALABLE ROUTING: Dynamic client & admin routing
       if (role === 'ADMIN' || role === 'STAFF') {
         // Internal team always lands at the master command center
         nextRoute = '/dashboard';
-      } else if (workspaceId && workspaceId !== 'NONE') {
-        // ALL clients and beta testers dynamically route to their unified portal workspace
-        nextRoute = `/portal/${workspaceId}`;
-      } else if (role === 'BETA' || role === 'CLIENT_OWNER') {
-        // Edge case fallback if they have a role but no workspace assigned
-        nextRoute = '/portal/unassigned';
       }
 
       return NextResponse.redirect(new URL(nextRoute, requestUrl.origin));

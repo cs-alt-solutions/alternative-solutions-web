@@ -41,10 +41,14 @@ export default function StorefrontsManager({ initialData }: { initialData: any[]
     setSortConfig({ key, direction });
   };
 
-  let processedData = storefronts.filter(store => 
-    store.status !== 'CANCELED' &&
-    (store.business_name?.toLowerCase().includes(search.toLowerCase()) || store.slug?.toLowerCase().includes(search.toLowerCase()))
-  );
+  // 🚀 THE FIX: If the search is empty, show everything. Otherwise, safely search.
+  let processedData = storefronts.filter(store => {
+    if (store.status === 'PENDING' || store.status === 'CANCELED') return false;
+    if (!search.trim()) return true;
+    
+    const term = search.toLowerCase();
+    return (store.business_name?.toLowerCase().includes(term) || store.slug?.toLowerCase().includes(term));
+  });
 
   if (activeTab === 'CLIENTS') processedData = processedData.filter(store => !store.is_template);
   if (activeTab === 'PROTOTYPES') processedData = processedData.filter(store => store.is_template);
@@ -79,8 +83,8 @@ export default function StorefrontsManager({ initialData }: { initialData: any[]
     });
   }
 
-  // 🚀 THE FIX: AWAITING_PAYMENT is back in the Active Workshop array to hold your capacity limits
-  const activeWorkshopData = processedData.filter(s => ['AWAITING_PAYMENT', 'PENDING_BUILD', 'BUILDING_CORE', 'CONTENT_ASSEMBLY'].includes(s.status || 'PENDING_BUILD'));
+  // 🚀 THE FIX: Swapped 'AWAITING_PAYMENT' for 'ONBOARDING' so your new clients show up in the Active Workshop!
+  const activeWorkshopData = processedData.filter(s => ['ONBOARDING', 'PENDING_BUILD', 'BUILDING_CORE', 'CONTENT_ASSEMBLY'].includes(s.status || 'PENDING_BUILD'));
   const holdingPatternData = processedData.filter(s => ['IN_REVIEW', 'AWAITING_ASSETS', 'ON_HOLD'].includes(s.status));
   const liveProductionData = processedData.filter(s => ['ACTIVE', 'MAINTENANCE', 'HIDDEN'].includes(s.status));
 

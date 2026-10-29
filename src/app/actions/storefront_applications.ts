@@ -225,7 +225,7 @@ export async function approveAndSendCheckout(id: string, overrides?: any) {
         .insert([{
           business_name: app.business_name,
           contact_email: targetEmail, 
-          status: 'AWAITING_PAYMENT',
+          status: 'ONBOARDING',
           slug: finalSlug, 
           plan_tier: finalPlan,
           theme_style: finalVibe,

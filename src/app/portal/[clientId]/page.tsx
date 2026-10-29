@@ -32,14 +32,12 @@ export default async function ClientDashboardHome({
 
   let currentStatus = store.status;
 
-  // 🚀 STRIPE RETURN SAFETY NET:
-  // If the client just completed checkout on Step 5 of BrainDump and beat the Stripe Webhook by a millisecond,
-  // immediately promote them from AWAITING_PAYMENT -> PENDING_BUILD so they never see the BrainDump twice.
   const isReturningFromStripe = 
     resolvedSearchParams?.payment === 'success' || 
     Boolean(resolvedSearchParams?.session_id);
 
-  if (currentStatus === 'AWAITING_PAYMENT' && isReturningFromStripe) {
+  // Auto-promote to PENDING_BUILD after checkout to skip the BrainDump loop
+  if (currentStatus === 'ONBOARDING' && isReturningFromStripe) {
     try {
       const supabaseAdmin = createAdminClient(
         process.env.NEXT_PUBLIC_SUPABASE_URL as string,
@@ -56,8 +54,8 @@ export default async function ClientDashboardHome({
     }
   }
 
-  // 🚀 THE INTERCEPT: If they haven't paid yet, force them into the Brain Dump
-  if (currentStatus === 'AWAITING_PAYMENT') {
+  // 🚀 THE INTERCEPT: Force them into Brain Dump during ONBOARDING
+  if (currentStatus === 'ONBOARDING') {
     return <BrainDump clientId={clientId} contactEmail={store.contact_email} />;
   }
 
