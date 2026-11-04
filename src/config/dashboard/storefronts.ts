@@ -49,12 +49,25 @@ export const STOREFRONT_ENGINE_COPY = {
 
 export const STOREFRONT_EDITOR_COPY = {
   INDUSTRIES: [
-    { id: 'E-Commerce', label: 'E-Commerce' }, { id: 'Automotive', label: 'Automotive' },
-    { id: 'Culinary', label: 'Culinary' }, { id: 'Wellness', label: 'Wellness' },
-    { id: 'Creative', label: 'Creative' }, { id: 'Contracting', label: 'Contracting' },
-    { id: 'Consulting', label: 'Consulting' }, { id: 'Tech & SaaS', label: 'Tech & SaaS' },
-    { id: 'Local Services', label: 'Local Services' }, { id: 'General', label: 'General / Other' }
-  ],
+  { id: 'Agriculture & Farming', label: 'Agriculture & Farming', description: 'Farms, ranches, livestock, agritourism, and local produce.' },
+  { id: 'Automotive', label: 'Automotive', description: 'Mechanics, detailing, custom shops, and dealerships.' },
+  { id: 'Beauty & Personal Care', label: 'Beauty & Personal Care', description: 'Barbershops, salons, tattoo studios, and estheticians.' },
+  { id: 'Consulting', label: 'Consulting & Professional', description: 'B2B services, coaching, legal, and financial advisors.' },
+  { id: 'Contracting', label: 'Contracting & Trades', description: 'Construction, landscaping, HVAC, and home services.' },
+  { id: 'Creative', label: 'Creative & Media', description: 'Photographers, designers, portfolios, and agencies.' },
+  { id: 'Culinary', label: 'Culinary & Hospitality', description: 'Restaurants, coffee shops, bakeries, food trucks, and meal prep.' },
+  { id: 'E-Commerce', label: 'E-Commerce', description: 'Online stores, physical products, merch, and apparel.' },
+  { id: 'Events & Entertainment', label: 'Events & Entertainment', description: 'Venues, party rentals, DJs, and special appearances.' },
+  { id: 'Fitness & Athletics', label: 'Fitness & Athletics', description: 'Gyms, personal trainers, yoga studios, and coaching.' },
+  { id: 'Local Services', label: 'Local Services', description: 'Cleaning, moving, repair, and general community services.' },
+  { id: 'Non-Profit & Community', label: 'Non-Profit & Community', description: 'Charities, sanctuaries, clubs, and local organizations.' },
+  { id: 'Pets & Animal Care', label: 'Pets & Animal Care', description: 'Grooming, boarding, training, and pet supplies.' },
+  { id: 'Real Estate & Property', label: 'Real Estate & Property', description: 'Agents, property management, and short-term rentals.' },
+  { id: 'Retail & Boutique', label: 'Retail & Boutique', description: 'Local storefronts, makers, florists, and specialty shops.' },
+  { id: 'Tech & SaaS', label: 'Tech & SaaS', description: 'Software, mobile apps, and digital tools.' },
+  { id: 'Wellness', label: 'Wellness & Holistic', description: 'Apothecaries, spas, holistic healing, and therapy.' },
+  { id: 'General', label: 'General / Other', description: 'Standard business operations.' }
+],
   DYNAMIC_TABS: { CULINARY: "Menu Builder", CREATIVE: "Portfolio Engine", CONTRACTING: "Scope & Proof", DEFAULT: "Services" },
   TERMINATION: { CONFIRM_PREFIX: "Are you absolutely sure you want to permanently delete \"", CONFIRM_SUFFIX: "\"? This will obliterate client data and cannot be reversed." },
   SYSTEM_LOCK: { TITLE: "System Locked", STATUS_PREFIX: "STATUS:", BODY: "The architecture is currently secured for client review or active deployment. The Canvas and all Editor configurations are strictly read-only to prevent accidental data contamination.", BTN_OVERRIDE: "Silent Admin Override", BTN_REVERT: "Revert to Building" }

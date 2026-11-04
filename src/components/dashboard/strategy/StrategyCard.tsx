@@ -5,7 +5,7 @@ import React, { useState } from 'react';
 import { supabase } from '@/utils/supabase';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { ArrowRight, MoreVertical, Archive, Loader2 } from 'lucide-react';
+import { ArrowRight, MoreVertical, Archive, Loader2, CheckCircle2 } from 'lucide-react';
 
 export default function StrategyCard({ board }: { board: any }) {
   const router = useRouter();
@@ -29,7 +29,13 @@ export default function StrategyCard({ board }: { board: any }) {
     }
   };
 
-  const isPending = board.storefronts?.status === 'AWAITING_PAYMENT';
+  const storeStatus = board.storefronts?.status || 'ONBOARDING';
+  const isOnboarding = storeStatus === 'ONBOARDING' || storeStatus === 'AWAITING_PAYMENT';
+
+  const rawAppData = typeof board.storefronts?.application_data === 'string'
+    ? JSON.parse(board.storefronts.application_data)
+    : (board.storefronts?.application_data || {});
+  const brainDump = rawAppData?.brain_dump || board.phases?.client_brain_dump;
 
   if (isArchiving) {
     return (
@@ -44,13 +50,21 @@ export default function StrategyCard({ board }: { board: any }) {
     <div className="bg-zinc-900/50 border border-zinc-800/80 rounded-2xl p-6 shadow-xl hover:border-amber-500/30 transition-colors group flex flex-col h-full relative">
       
       <div className="flex items-center justify-between mb-4 pb-4 border-b border-zinc-800">
-        <span className={`px-2.5 py-1 rounded text-[9px] font-black uppercase tracking-widest border ${
-          isPending 
-            ? 'bg-amber-500/10 text-amber-500 border-amber-500/20'
-            : 'bg-cyan-500/10 text-cyan-400 border-cyan-500/20'
-        }`}>
-          {isPending ? 'Pending Payment' : 'Active Build'}
-        </span>
+        <div className="flex items-center gap-2">
+          <span className={`px-2.5 py-1 rounded text-[9px] font-black uppercase tracking-widest border ${
+            isOnboarding 
+              ? 'bg-amber-500/10 text-amber-500 border-amber-500/20'
+              : 'bg-cyan-500/10 text-cyan-400 border-cyan-500/20'
+          }`}>
+            {isOnboarding ? 'Onboarding' : 'Active Build'}
+          </span>
+
+          {brainDump?.goal && (
+            <span className="px-2 py-1 rounded text-[9px] font-black uppercase tracking-widest bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 flex items-center gap-1" title="Client completed Brain Dump">
+              <CheckCircle2 size={10} /> Intake Ready
+            </span>
+          )}
+        </div>
         
         <div className="flex items-center gap-3">
           <span className="text-[10px] font-mono text-zinc-500">
@@ -60,7 +74,7 @@ export default function StrategyCard({ board }: { board: any }) {
           <div className="relative">
             <button 
               onClick={() => setIsMenuOpen(!isMenuOpen)}
-              className="text-zinc-500 hover:text-white transition-colors p-1"
+              className="text-zinc-500 hover:text-white transition-colors p-1 cursor-pointer"
             >
               <MoreVertical size={14} />
             </button>
@@ -71,7 +85,7 @@ export default function StrategyCard({ board }: { board: any }) {
                 <div className="absolute right-0 top-full mt-2 w-40 bg-zinc-950 border border-zinc-800 rounded-xl shadow-2xl z-50 overflow-hidden animate-in fade-in zoom-in-95">
                   <button
                     onClick={handleArchive}
-                    className="w-full text-left px-4 py-3 text-[10px] font-bold text-rose-400 hover:bg-rose-500/10 hover:text-rose-300 transition-colors flex items-center justify-between"
+                    className="w-full text-left px-4 py-3 text-[10px] font-bold text-rose-400 hover:bg-rose-500/10 hover:text-rose-300 transition-colors flex items-center justify-between cursor-pointer"
                   >
                     Archive Board <Archive size={12} />
                   </button>
@@ -85,11 +99,22 @@ export default function StrategyCard({ board }: { board: any }) {
       <h3 className="text-lg font-black text-white uppercase tracking-wider mb-1 truncate pr-4">
         {board.storefronts?.business_name || 'Unknown Client'}
       </h3>
-      <p className="text-xs text-zinc-400 mb-6 font-mono truncate">
+      <p className="text-xs text-zinc-400 mb-4 font-mono truncate">
         {board.title}
       </p>
 
-      <div className="mt-auto pt-4">
+      {/* Preview of Client's Brain Dump Objective right on the card */}
+      {brainDump?.goal ? (
+        <div className="mb-4 p-3 rounded-xl bg-black/40 border border-cyan-500/20 text-xs text-zinc-300 line-clamp-2 italic">
+          "{brainDump.goal}"
+        </div>
+      ) : (
+        <div className="mb-4 p-3 rounded-xl bg-black/20 border border-dashed border-zinc-800/80 text-[10px] font-mono text-zinc-600 uppercase tracking-widest">
+          Awaiting Client Brain Dump...
+        </div>
+      )}
+
+      <div className="mt-auto pt-2">
         <Link 
           href={`/dashboard/strategy/${board.id}`}
           className="flex items-center justify-between w-full bg-zinc-950 border border-zinc-800 hover:border-amber-500/50 hover:text-amber-400 text-zinc-300 px-4 py-3 rounded-xl text-xs font-bold uppercase tracking-widest transition-all group-hover:shadow-[0_0_15px_rgba(245,158,11,0.1)]"

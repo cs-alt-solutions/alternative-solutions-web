@@ -78,7 +78,7 @@ export default function StorefrontCanvas({
               <Palette className="w-3.5 h-3.5 hidden xl:block" /> Design
             </button>
             <button onClick={() => setEditorTab('media')} className={`flex-1 flex items-center justify-center gap-1.5 py-2 rounded-md text-[9px] md:text-[10px] font-bold tracking-widest uppercase transition-all cursor-pointer ${editorTab === 'media' ? 'bg-zinc-800 text-white shadow-sm' : 'text-zinc-500 hover:text-zinc-300 hover:bg-zinc-800/50'}`}>
-              <ImageIcon className="w-3.5 h-3.5 hidden xl:block" /> Media
+              <ImageIcon className="w-3.5 h-3.5 hidden xl:block" /> Core
             </button>
             <button onClick={() => setEditorTab('services')} className={`flex-1 flex items-center justify-center gap-1.5 py-2 rounded-md text-[9px] md:text-[10px] font-bold tracking-widest uppercase transition-all cursor-pointer ${editorTab === 'services' ? 'bg-zinc-800 text-white shadow-sm' : 'text-zinc-500 hover:text-zinc-300 hover:bg-zinc-800/50'}`}>
               <Layers className="w-3.5 h-3.5 hidden xl:block" /> {servicesTabLabel.split(' ')[0]}

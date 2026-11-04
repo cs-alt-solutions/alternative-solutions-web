@@ -10,7 +10,7 @@ export const dynamic = 'force-dynamic';
 export default async function StrategyHubPage() {
   const { data: boards } = await supabase
     .from('ideas_ledger')
-    .select('*, storefronts(business_name, status)')
+    .select('*, storefronts(business_name, status, application_data)')
     .eq('type', 'CLIENT_RESEARCH')
     .order('created_at', { ascending: false });
 

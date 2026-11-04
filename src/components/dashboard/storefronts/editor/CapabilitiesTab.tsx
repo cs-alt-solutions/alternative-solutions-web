@@ -193,17 +193,7 @@ export default function CapabilitiesTab({ formData, setFormData, onReload }: { f
         </div>
       </div>
 
-      <button 
-        type="button"
-        onClick={handleSave} 
-        disabled={isSaving} 
-        className={`w-full flex items-center justify-center gap-2 text-white font-black tracking-widest text-[10px] uppercase py-3.5 rounded-lg transition-all disabled:opacity-50 mt-4 cursor-pointer ${
-          isMenuMode ? 'bg-fuchsia-600 hover:bg-fuchsia-500 shadow-[0_0_15px_rgba(192,38,211,0.2)]' : 'bg-cyan-600 hover:bg-cyan-500 shadow-[0_0_15px_rgba(8,145,178,0.2)]'
-        }`}
-      >
-        {isSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />} 
-        {isSaving ? 'SYNCING ARCHITECTURE...' : 'SAVE ARCHITECTURE'}
-      </button>
+      
 
     </div>
   );

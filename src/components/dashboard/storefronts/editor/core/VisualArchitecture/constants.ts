@@ -22,8 +22,8 @@ export const BRAND_COLORS = [
 ];
 
 export const ALL_HEROS = ['center', 'split-left', 'split-right', 'cinematic', 'glass'];
-// 🚀 THE FIX: Added 'menu' to the official content constraints
-export const ALL_CONTENTS = ['classic', 'bento', 'sticky', 'accordion', 'editorial', 'menu']; 
+// 🚀 ADDED 'lookbook' and 'hub' to the official content constraints
+export const ALL_CONTENTS = ['classic', 'bento', 'sticky', 'accordion', 'editorial', 'menu', 'lookbook', 'hub']; 
 export const ALL_ABOUTS = ['split', 'editorial', 'minimal', 'card'];
 
 export const THEME_CONSTRAINTS: Record<string, { hero: string[], content: string[], about: string[] }> = {

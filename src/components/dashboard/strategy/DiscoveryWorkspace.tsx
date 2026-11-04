@@ -3,10 +3,16 @@
 
 import React, { useState } from 'react';
 import { supabase } from '@/utils/supabase';
-import { BrainCircuit, Handshake, Link as LinkIcon, Save, Loader2, Plus, X, ExternalLink, Contact, Mail, Phone, AtSign } from 'lucide-react';
+import { 
+  BrainCircuit, Handshake, Link as LinkIcon, Save, Loader2, 
+  Plus, X, ExternalLink, Contact, Mail, Phone, AtSign, 
+  Target, Type, Image as ImageIcon, CheckCircle2, Sparkles, Copy
+} from 'lucide-react';
 
 export default function DiscoveryWorkspace({ initialBoard }: { initialBoard: any }) {
   const [isSaving, setIsSaving] = useState(false);
+  const [isPushingToStore, setIsPushingToStore] = useState(false);
+  const [saveBanner, setSaveBanner] = useState<string | null>(null);
   
   const [phases, setPhases] = useState(initialBoard.phases || {
     brain_dump: "",
@@ -18,14 +24,22 @@ export default function DiscoveryWorkspace({ initialBoard }: { initialBoard: any
 
   // Safely extract client info from the joined storefront data
   const store = initialBoard.storefronts || {};
-  const email = store.contact_email || store.email;
-  const phone = store.phone || store.contact_phone;
+  const email = store.contact_email || store.email || store.applicant_email;
+  const phone = store.phone || store.contact_phone || store.applicant_phone;
   
-  // 🚀 THE FIX: We are now explicitly targeting the `social_links` column from your Supabase database
-  const socials = store.social_links || store.social_handles || store.socials || {};
+  // Safely parse social handles from the database record
+  const rawSocials = store.social_links || store.social_handles || store.socials || {};
+  const socials = typeof rawSocials === 'string' ? JSON.parse(rawSocials) : rawSocials;
+
+  // 🚀 Extract the Client's Onboarding Brain Dump from storefronts.application_data
+  const rawAppData = typeof store.application_data === 'string' 
+    ? JSON.parse(store.application_data) 
+    : (store.application_data || {});
+  const clientBrainDump = rawAppData?.brain_dump || null;
 
   const handleSave = async () => {
     setIsSaving(true);
+    setSaveBanner(null);
     try {
       const { error } = await supabase
         .from('ideas_ledger')
@@ -33,11 +47,54 @@ export default function DiscoveryWorkspace({ initialBoard }: { initialBoard: any
         .eq('id', initialBoard.id);
       
       if (error) throw error;
+      setSaveBanner("Blueprint Saved");
+      setTimeout(() => setSaveBanner(null), 3000);
     } catch (err) {
       console.error("Failed to save board:", err);
       alert("Failed to save changes.");
     } finally {
       setIsSaving(false);
+    }
+  };
+
+  // 🚀 Copy client's onboarding answers directly into your editable scratchpad
+  const handlePullIntoScratchpad = () => {
+    if (!clientBrainDump) return;
+    const formattedNotes = [
+      `--- CLIENT ONBOARDING BRAIN DUMP ---`,
+      `• Primary Objective: ${clientBrainDump.goal || 'N/A'}`,
+      `• Logo Status: ${clientBrainDump.logo || 'N/A'}`,
+      `• Visuals Preference: ${clientBrainDump.visuals || 'N/A'}`,
+      `------------------------------------`,
+      phases.brain_dump || ''
+    ].filter(Boolean).join('\n');
+
+    setPhases((prev: any) => ({ ...prev, brain_dump: formattedNotes }));
+  };
+
+  // 🚀 Push client's primary objective straight into their Storefront subtext & about_bio
+  const handlePushGoalToStorefront = async () => {
+    if (!clientBrainDump?.goal || !store.id) return;
+    if (!window.confirm("Push the client's Primary Objective into their Storefront Subtext & About Bio?")) return;
+
+    setIsPushingToStore(true);
+    try {
+      const { error } = await supabase
+        .from('storefronts')
+        .update({
+          subtext: clientBrainDump.goal,
+          about_bio: clientBrainDump.goal
+        })
+        .eq('id', store.id);
+
+      if (error) throw error;
+      setSaveBanner("Pushed to Storefront!");
+      setTimeout(() => setSaveBanner(null), 3000);
+    } catch (err) {
+      console.error("Failed to push to storefront:", err);
+      alert("Failed to push details to storefront.");
+    } finally {
+      setIsPushingToStore(false);
     }
   };
 
@@ -66,13 +123,13 @@ export default function DiscoveryWorkspace({ initialBoard }: { initialBoard: any
       <div className="flex flex-col gap-2 mt-2">
         {Object.entries(socials).map(([network, handle]) => {
           if (!handle) return null;
-          // Clean up the URL so it's always clickable
-          const url = String(handle).startsWith('http') ? String(handle) : `https://${network}.com/${String(handle).replace('@', '')}`;
+          const handleStr = String(handle);
+          const url = handleStr.startsWith('http') ? handleStr : `https://${network}.com/${handleStr.replace('@', '')}`;
           return (
             <a key={network} href={url} target="_blank" rel="noopener noreferrer" className="flex items-center justify-between px-3 py-2 bg-black/40 border border-zinc-800/80 rounded-lg hover:border-indigo-500/30 group transition-all">
               <div className="flex items-center gap-2 min-w-0">
                 <AtSign size={12} className="text-zinc-500 group-hover:text-indigo-400 transition-colors shrink-0" />
-                <span className="text-xs font-mono text-zinc-300 capitalize truncate">{network}</span>
+                <span className="text-xs font-mono text-zinc-300 capitalize truncate">{network}: {handleStr}</span>
               </div>
               <ExternalLink size={12} className="text-zinc-600 group-hover:text-indigo-400 transition-colors shrink-0" />
             </a>
@@ -95,23 +152,35 @@ export default function DiscoveryWorkspace({ initialBoard }: { initialBoard: any
             <span className="text-[10px] font-mono text-zinc-500 uppercase tracking-widest">
               Storefront ID: {initialBoard.storefront_id?.split('-')[0]}
             </span>
+            {clientBrainDump && (
+              <span className="px-2.5 py-1 rounded text-[9px] font-black uppercase tracking-widest border bg-emerald-500/10 text-emerald-400 border-emerald-500/20 flex items-center gap-1">
+                <CheckCircle2 size={10} /> Client Brain Dump Synced
+              </span>
+            )}
           </div>
           <h1 className="text-2xl md:text-3xl font-black text-white uppercase tracking-tight">
             {initialBoard.storefronts?.business_name || 'Unknown Client'}
           </h1>
         </div>
         
-        <button 
-          onClick={handleSave}
-          disabled={isSaving}
-          className="flex items-center justify-center gap-2 bg-amber-500 hover:bg-amber-400 text-zinc-950 px-6 py-3 rounded-xl text-xs font-black uppercase tracking-widest transition-all shadow-[0_0_15px_rgba(245,158,11,0.2)] disabled:opacity-50 cursor-pointer"
-        >
-          {isSaving ? <Loader2 size={16} className="animate-spin" /> : <Save size={16} />}
-          {isSaving ? 'Saving...' : 'Save Blueprint'}
-        </button>
+        <div className="flex items-center gap-3">
+          {saveBanner && (
+            <span className="text-[10px] font-mono font-bold text-emerald-400 uppercase tracking-widest flex items-center gap-1.5 animate-in fade-in">
+              <CheckCircle2 size={14} /> {saveBanner}
+            </span>
+          )}
+          <button 
+            onClick={handleSave}
+            disabled={isSaving}
+            className="flex items-center justify-center gap-2 bg-amber-500 hover:bg-amber-400 text-zinc-950 px-6 py-3 rounded-xl text-xs font-black uppercase tracking-widest transition-all shadow-[0_0_15px_rgba(245,158,11,0.2)] disabled:opacity-50 cursor-pointer"
+          >
+            {isSaving ? <Loader2 size={16} className="animate-spin" /> : <Save size={16} />}
+            {isSaving ? 'Saving...' : 'Save Blueprint'}
+          </button>
+        </div>
       </div>
 
-      {/* THE NEW 3-COLUMN WAR ROOM GRID */}
+      {/* 3-COLUMN WAR ROOM GRID */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
         
         {/* COLUMN 1: Intake Profile & Contacts (3 Cols) */}
@@ -161,22 +230,93 @@ export default function DiscoveryWorkspace({ initialBoard }: { initialBoard: any
         {/* COLUMN 2: The Core Blueprints (6 Cols) */}
         <div className="lg:col-span-6 space-y-6">
           {/* THE BRAIN DUMP */}
-          <div className="bg-zinc-900/50 border border-zinc-800 rounded-2xl p-6 shadow-xl">
-            <div className="flex items-center gap-3 mb-4">
-              <div className="p-2 bg-cyan-500/10 rounded-lg text-cyan-400 border border-cyan-500/20">
-                <BrainCircuit size={18} />
-              </div>
-              <div>
-                <h2 className="text-sm font-black text-white uppercase tracking-widest">The Brain Dump</h2>
-                <p className="text-[10px] font-mono text-zinc-400 uppercase tracking-widest mt-0.5">Raw notes, requirements, and unstructured ideas.</p>
+          <div className="bg-zinc-900/50 border border-zinc-800 rounded-2xl p-6 shadow-xl space-y-5">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="p-2 bg-cyan-500/10 rounded-lg text-cyan-400 border border-cyan-500/20">
+                  <BrainCircuit size={18} />
+                </div>
+                <div>
+                  <h2 className="text-sm font-black text-white uppercase tracking-widest">The Brain Dump</h2>
+                  <p className="text-[10px] font-mono text-zinc-400 uppercase tracking-widest mt-0.5">Client onboarding answers & your architectural notes.</p>
+                </div>
               </div>
             </div>
-            <textarea 
-              value={phases.brain_dump || ''}
-              onChange={(e) => setPhases({...phases, brain_dump: e.target.value})}
-              placeholder="What did they say on the phone? What are their core vibes?"
-              className="w-full h-[280px] bg-zinc-950 border border-zinc-800 rounded-xl p-4 text-xs font-mono text-zinc-300 focus:border-cyan-500 focus:outline-none resize-none custom-scrollbar shadow-inner"
-            />
+
+            {/* 🚀 LIVE CLIENT ONBOARDING ANSWERS CARD */}
+            {clientBrainDump ? (
+              <div className="p-5 rounded-xl bg-cyan-950/20 border border-cyan-500/30 space-y-4 shadow-inner">
+                <div className="flex flex-wrap items-center justify-between gap-2 border-b border-cyan-500/20 pb-3">
+                  <span className="text-[10px] font-black text-cyan-400 uppercase tracking-widest flex items-center gap-2">
+                    <Target size={14} /> Client Portal Onboarding Responses
+                  </span>
+                  <div className="flex items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={handlePullIntoScratchpad}
+                      className="flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-zinc-900 hover:bg-zinc-800 text-zinc-300 border border-zinc-700 text-[9px] font-bold uppercase tracking-widest transition-colors cursor-pointer"
+                      title="Copy answers into your scratchpad below"
+                    >
+                      <Copy size={10} /> Copy to Notes
+                    </button>
+                    <button
+                      type="button"
+                      onClick={handlePushGoalToStorefront}
+                      disabled={isPushingToStore}
+                      className="flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-cyan-500/20 hover:bg-cyan-500 hover:text-zinc-950 text-cyan-300 border border-cyan-500/40 text-[9px] font-black uppercase tracking-widest transition-all cursor-pointer disabled:opacity-50"
+                      title="Push objective into Storefront Subtext & Bio"
+                    >
+                      {isPushingToStore ? <Loader2 size={10} className="animate-spin" /> : <Sparkles size={10} />}
+                      Push to Storefront
+                    </button>
+                  </div>
+                </div>
+
+                <div>
+                  <span className="text-[9px] font-mono text-zinc-400 uppercase tracking-widest block mb-1">Primary Objective (#1 Goal)</span>
+                  <p className="text-sm text-white font-medium leading-relaxed bg-black/40 p-3 rounded-lg border border-white/5">
+                    "{clientBrainDump.goal || 'No objective entered yet.'}"
+                  </p>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
+                  <div className="bg-black/40 p-3 rounded-lg border border-white/5">
+                    <span className="text-[9px] font-mono text-zinc-500 uppercase tracking-widest flex items-center gap-1.5 mb-1">
+                      <Type size={11} className="text-cyan-400" /> Logo Status
+                    </span>
+                    <p className="text-xs font-bold text-zinc-200">{clientBrainDump.logo || 'Pending'}</p>
+                  </div>
+                  <div className="bg-black/40 p-3 rounded-lg border border-white/5">
+                    <span className="text-[9px] font-mono text-zinc-500 uppercase tracking-widest flex items-center gap-1.5 mb-1">
+                      <ImageIcon size={11} className="text-cyan-400" /> Visual Direction
+                    </span>
+                    <p className="text-xs font-bold text-zinc-200">{clientBrainDump.visuals || 'Pending'}</p>
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <div className="p-4 rounded-xl bg-black/30 border border-dashed border-zinc-800 flex items-center justify-between">
+                <span className="text-[10px] font-mono text-zinc-500 uppercase tracking-widest">
+                  Awaiting client's portal Brain Dump submission...
+                </span>
+                <span className="text-[9px] font-black text-amber-500 bg-amber-500/10 px-2 py-0.5 rounded border border-amber-500/20 uppercase tracking-widest">
+                  Onboarding
+                </span>
+              </div>
+            )}
+
+            {/* ARCHITECT SCRATCHPAD */}
+            <div>
+              <label className="text-[9px] font-black uppercase tracking-widest text-zinc-500 block mb-2">
+                Architect Scratchpad & Call Notes
+              </label>
+              <textarea 
+                value={phases.brain_dump || ''}
+                onChange={(e) => setPhases({...phases, brain_dump: e.target.value})}
+                placeholder="What did they say on the phone? What are their core vibes?"
+                className="w-full h-[240px] bg-zinc-950 border border-zinc-800 rounded-xl p-4 text-xs font-mono text-zinc-300 focus:border-cyan-500 focus:outline-none resize-none custom-scrollbar shadow-inner"
+              />
+            </div>
           </div>
 
           {/* THE VALUE-TRADE LEDGER */}

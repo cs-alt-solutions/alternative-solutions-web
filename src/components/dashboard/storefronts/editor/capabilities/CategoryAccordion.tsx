@@ -2,7 +2,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { GripVertical, ChevronDown, X, Plus, Image as ImageIcon, List, Loader2, UploadCloud } from 'lucide-react';
+import { GripVertical, ChevronDown, X, Plus, Image as ImageIcon, List, Loader2, UploadCloud, Layers } from 'lucide-react';
 import { supabase } from '@/utils/supabase';
 import MenuCardEditor from './MenuCardEditor';
 
@@ -87,6 +87,28 @@ export default function CategoryAccordion({ cap, index, isOpen, setOpenCapIndex,
     const updated = [...localCaps];
     updated[index].bullets.splice(bulletIndex, 1);
     setLocalCaps(updated);
+  };
+
+  // 🚀 THE FIX: Specific Package Options (Price-free)
+  const addAddon = () => {
+    const updated = [...localCaps];
+    if (!updated[index].addons) updated[index].addons = [];
+    updated[index].addons.push({ title: '' });
+    setLocalCaps(updated);
+  };
+
+  const updateAddon = (addonIndex: number, field: string, value: string) => {
+    const updated = [...localCaps];
+    updated[index].addons[addonIndex] = { ...updated[index].addons[addonIndex], [field]: value };
+    setLocalCaps(updated);
+    setFormData((prev: any) => ({ ...prev, capabilities: updated }));
+  };
+
+  const removeAddon = (addonIndex: number) => {
+    const updated = [...localCaps];
+    updated[index].addons.splice(addonIndex, 1);
+    setLocalCaps(updated);
+    setFormData((prev: any) => ({ ...prev, capabilities: updated }));
   };
 
   const handleCoverUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -249,7 +271,33 @@ export default function CategoryAccordion({ cap, index, isOpen, setOpenCapIndex,
 
                 <div className="space-y-3 pt-4 border-t border-zinc-800/50">
                   <label className="text-[9px] font-bold text-zinc-500 uppercase tracking-widest flex items-center gap-2">
-                    <ImageIcon size={12} /> Package Cover Photo
+                    <Layers size={12} className="text-fuchsia-500" /> Inquiry Options & Selections
+                  </label>
+                  
+                  {cap.addons && cap.addons.length > 0 && (
+                    <div className="space-y-2">
+                      {cap.addons.map((addon: any, addonIdx: number) => (
+                        <div key={addonIdx} className="flex items-center gap-2">
+                          <input 
+                            value={addon.title || ''}
+                            onChange={(e) => updateAddon(addonIdx, 'title', e.target.value)}
+                            placeholder="Option (e.g. Meat Sales or Nico Appearance)"
+                            className="flex-1 bg-black/40 border border-zinc-800 rounded px-2.5 py-1 text-[10px] text-zinc-300 focus:border-fuchsia-500 outline-none"
+                          />
+                          <button type="button" onClick={() => removeAddon(addonIdx)} className="text-zinc-600 hover:text-rose-400 cursor-pointer"><X size={12} /></button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
+                  <button type="button" onClick={addAddon} className="text-[9px] font-bold text-zinc-500 hover:text-fuchsia-400 uppercase tracking-widest flex items-center gap-1.5 mt-2 cursor-pointer">
+                    <Plus size={10} /> Add Inquiry Option
+                  </button>
+                </div>
+
+                <div className="space-y-3 pt-4 border-t border-zinc-800/50">
+                  <label className="text-[9px] font-bold text-zinc-500 uppercase tracking-widest flex items-center gap-2">
+                    <ImageIcon size={12} className="text-cyan-500" /> Package Cover Photo
                   </label>
                   
                   {cap.coverImage ? (

@@ -163,14 +163,28 @@ export function ContentSelector({ formData, setFormData, allowedLayouts }: any) 
           </button>
           
           <button 
+             disabled={!allowedLayouts.content.includes('lookbook')}
              onClick={() => handleSelect('lookbook')} 
-             className={`flex flex-col items-center justify-center p-3 border-2 rounded-xl transition-all ${formData.content_layout === 'lookbook' ? 'border-fuchsia-500 bg-fuchsia-500/10' : 'border-zinc-800 bg-zinc-950 hover:border-zinc-700'}`}
+             className={`flex flex-col items-center justify-center p-3 border-2 rounded-xl transition-all disabled:opacity-20 disabled:cursor-not-allowed ${formData.content_layout === 'lookbook' ? 'border-fuchsia-500 bg-fuchsia-500/10' : 'border-zinc-800 bg-zinc-950 hover:border-zinc-700'}`}
           >
             <div className="w-full h-10 border border-zinc-700 bg-zinc-900 mb-2 flex p-1 gap-1 rounded items-start justify-center">
               <div className="w-1/2 flex flex-col gap-1"><div className="w-full h-6 bg-fuchsia-500/50 rounded-sm" /><div className="w-full h-3 bg-zinc-600 rounded-sm" /></div>
               <div className="w-1/2 flex flex-col gap-1"><div className="w-full h-3 bg-zinc-600 rounded-sm" /><div className="w-full h-6 bg-fuchsia-500/50 rounded-sm" /></div>
             </div>
-            <span className={`text-[11px] font-bold uppercase tracking-wider ${formData.content_layout === 'lookbook' ? 'text-fuchsia-400' : 'text-zinc-500'}`}>{VISUAL_ARCH_COPY.LAYOUTS.LABELS.LOOKBOOK}</span>
+            <span className={`text-[11px] font-bold uppercase tracking-wider ${formData.content_layout === 'lookbook' ? 'text-fuchsia-400' : 'text-zinc-500'}`}>Lookbook Grid</span>
+          </button>
+
+          <button 
+            disabled={!allowedLayouts.content.includes('hub')}
+            onClick={() => handleSelect('hub')}
+            className={`flex flex-col items-center justify-center p-3 border-2 rounded-xl transition-all disabled:opacity-20 disabled:cursor-not-allowed ${formData.content_layout === 'hub' ? 'border-fuchsia-500 bg-fuchsia-500/10' : 'border-zinc-800 bg-zinc-950 hover:border-zinc-700'}`}
+          >
+            <div className="w-full h-10 border border-zinc-700 bg-zinc-900 mb-2 flex p-1 gap-1 rounded items-start justify-center">
+              <div className="w-1/3 h-full bg-fuchsia-500/50 rounded-sm" />
+              <div className="w-1/3 h-full bg-zinc-600 rounded-sm" />
+              <div className="w-1/3 h-full bg-zinc-600 rounded-sm" />
+            </div>
+            <span className={`text-[11px] font-bold uppercase tracking-wider ${formData.content_layout === 'hub' ? 'text-fuchsia-400' : 'text-zinc-500'}`}>Department Hub</span>
           </button>
         </div>
       )}
