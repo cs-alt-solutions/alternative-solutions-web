@@ -4,7 +4,7 @@
 import React, { useState, useEffect } from 'react';
 import { 
   PenTool, Palette, Image as ImageIcon, Layers, Scale, 
-  PanelLeftClose, PanelLeftOpen, MonitorSmartphone, RefreshCw, Tag 
+  PanelLeftClose, PanelLeftOpen, MonitorSmartphone, RefreshCw, Tag, Server
 } from 'lucide-react';
 
 import CoreTab from './CoreTab';
@@ -32,12 +32,20 @@ export default function StorefrontCanvas({
   const [controlsExpanded, setControlsExpanded] = useState(true);
 
   const industryTag = formData.industry_tag || 'General';
-  let servicesTabLabel = STOREFRONT_EDITOR_COPY.DYNAMIC_TABS?.DEFAULT || 'Services';
-  if (industryTag === 'Culinary') servicesTabLabel = STOREFRONT_EDITOR_COPY.DYNAMIC_TABS?.CULINARY || 'Menu';
-  if (industryTag === 'Creative') servicesTabLabel = STOREFRONT_EDITOR_COPY.DYNAMIC_TABS?.CREATIVE || 'Portfolio';
-  if (industryTag === 'Contracting') servicesTabLabel = STOREFRONT_EDITOR_COPY.DYNAMIC_TABS?.CONTRACTING || 'Services';
+  // 🚀 Track the engine_mode from formData (defaults to 'core')
+  const engineMode = formData.engine_mode || 'core';
 
-  // Fixes the ghost iframe gap issue when tabs change
+  let servicesTabLabel = STOREFRONT_EDITOR_COPY.DYNAMIC_TABS?.DEFAULT || 'Services';
+  
+  // 🚀 Dynamically adjust tab naming based on Engine Mode first, then Industry
+  if (engineMode === 'hub') {
+    servicesTabLabel = 'Departments';
+  } else {
+    if (industryTag === 'Culinary') servicesTabLabel = STOREFRONT_EDITOR_COPY.DYNAMIC_TABS?.CULINARY || 'Menu';
+    if (industryTag === 'Creative') servicesTabLabel = STOREFRONT_EDITOR_COPY.DYNAMIC_TABS?.CREATIVE || 'Portfolio';
+    if (industryTag === 'Contracting') servicesTabLabel = STOREFRONT_EDITOR_COPY.DYNAMIC_TABS?.CONTRACTING || 'Services';
+  }
+
   useEffect(() => {
     const timer = setTimeout(() => window.dispatchEvent(new Event('resize')), 100);
     return () => clearTimeout(timer);
@@ -46,11 +54,11 @@ export default function StorefrontCanvas({
   return (
     <div className="flex w-full h-full relative">
       
-      {/* THE SIDEBAR EDITOR */}
       {controlsExpanded && (
         <div className="w-full lg:w-96 xl:w-md flex flex-col border-r border-zinc-800 bg-zinc-950 z-10 shrink-0 animate-in slide-in-from-left-4 duration-300">
           
-          <div className="p-4 border-b border-zinc-800 bg-zinc-900/40 shrink-0">
+          <div className="p-4 border-b border-zinc-800 bg-zinc-900/40 shrink-0 space-y-3">
+            {/* Industry Selector */}
             <div className="bg-zinc-900 border border-zinc-800 rounded-lg p-2.5 flex items-center gap-3 shadow-inner">
               <div className="p-1.5 bg-zinc-800 rounded text-cyan-400">
                 <Tag size={12} />
@@ -65,6 +73,24 @@ export default function StorefrontCanvas({
                   {STOREFRONT_EDITOR_COPY.INDUSTRIES?.map((cat: { id: string, label: string }) => (
                     <option key={cat.id} value={cat.id} className="bg-zinc-900 text-white">{cat.label}</option>
                   ))}
+                </select>
+              </div>
+            </div>
+
+            {/* 🚀 NEW: Storefront Engine Mode Toggle */}
+            <div className="bg-zinc-900 border border-zinc-800 rounded-lg p-2.5 flex items-center gap-3 shadow-inner">
+              <div className={`p-1.5 rounded ${engineMode === 'hub' ? 'bg-indigo-500/20 text-indigo-400' : 'bg-zinc-800 text-zinc-400'}`}>
+                <Server size={12} />
+              </div>
+              <div className="flex-1">
+                <label className="text-[9px] font-bold text-zinc-500 uppercase tracking-widest block mb-0.5">Architecture Tier</label>
+                <select 
+                  value={engineMode}
+                  onChange={(e) => setFormData({ ...formData, engine_mode: e.target.value })}
+                  className={`w-full bg-transparent text-xs font-bold outline-none cursor-pointer appearance-none ${engineMode === 'hub' ? 'text-indigo-400' : 'text-white'}`}
+                >
+                  <option value="core" className="bg-zinc-900 text-white">Standard Core (Single-Page)</option>
+                  <option value="hub" className="bg-zinc-900 text-indigo-400">Department Hub (Multi-Page)</option>
                 </select>
               </div>
             </div>
@@ -104,7 +130,6 @@ export default function StorefrontCanvas({
         </div>
       )}
 
-      {/* THE IFRAME PREVIEW */}
       <div className="hidden lg:flex flex-1 bg-black relative flex-col transition-all duration-300 w-full">
         <div className="bg-zinc-900 border-b border-zinc-800 px-4 py-2 flex items-center gap-4 shrink-0 shadow-sm">
           <div className="hidden sm:flex gap-1.5 ml-2 items-center">
@@ -143,7 +168,6 @@ export default function StorefrontCanvas({
         </div>
       </div>
 
-      {/* THE GLOBAL SYSTEM LOCK SHIELD OVERLAY */}
       {isLocked && (
         <SystemLockShield 
           status={formData.status}
