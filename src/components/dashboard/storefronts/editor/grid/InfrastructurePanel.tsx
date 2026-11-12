@@ -1,32 +1,14 @@
+/* src/components/dashboard/storefronts/editor/grid/InfrastructurePanel.tsx */
 'use client';
 
-import React, { useState } from 'react';
-import { Globe, Server, Code, Save, Loader2, Eye } from 'lucide-react';
-import { updateStorefrontCore } from '@/app/actions/storefronts';
+import React from 'react';
+import { Globe, Server, Code, Eye, Layers } from 'lucide-react';
+import { EDITOR_WORKSPACE_COPY } from '@/config/dashboard/editor';
 
 export default function InfrastructurePanel({ formData, setFormData }: { formData: any, setFormData: any }) {
-  const [isSaving, setIsSaving] = useState(false);
-
-  const handleSaveInfrastructure = async () => {
-    setIsSaving(true);
-    try {
-      const uploadData = new FormData();
-      uploadData.append('custom_domain', formData.custom_domain || '');
-      uploadData.append('is_template', formData.is_template ? 'true' : 'false');
-      // NEW: Append the visibility state to be saved to the database
-      uploadData.append('is_published', formData.is_published ? 'true' : 'false');
-      
-      // Execute the save to the database
-      await updateStorefrontCore(formData.id, uploadData);
-      
-      alert("Infrastructure settings saved securely.");
-    } catch (err) {
-      console.error("Infrastructure save error:", err);
-      alert("Failed to save infrastructure settings.");
-    } finally {
-      setIsSaving(false);
-    }
-  };
+  const copy = EDITOR_WORKSPACE_COPY.GRID_TAB.INFRASTRUCTURE;
+  const hubCopy = EDITOR_WORKSPACE_COPY.COMMAND_HUB;
+  const engineMode = formData.engine_mode || 'core';
 
   return (
     <div className="bg-zinc-900/60 border border-zinc-800 rounded-xl overflow-hidden shadow-2xl backdrop-blur-md h-full flex flex-col">
@@ -34,54 +16,61 @@ export default function InfrastructurePanel({ formData, setFormData }: { formDat
       {/* HEADER */}
       <div className="border-b border-zinc-800 bg-black/40 p-4 flex items-center justify-between shrink-0">
         <div className="flex items-center gap-3">
-          <div className="p-1.5 bg-zinc-800 rounded-md border border-zinc-700 shadow-inner">
-             <Server size={14} className="text-zinc-400" />
+          <div className="p-1.5 bg-zinc-800 rounded-md border border-zinc-700 shadow-inner"> 
+            <Server size={14} className="text-zinc-400" />
           </div>
-          <h3 className="text-[11px] font-black text-white uppercase tracking-[0.2em]">Infrastructure</h3>
+          <h3 className="text-[11px] font-black text-white uppercase tracking-[0.2em]">{copy.TITLE}</h3>
         </div>
-        
-        {/* Master Save Button for Infrastructure */}
-        <button 
-          onClick={handleSaveInfrastructure}
-          disabled={isSaving}
-          className="flex items-center gap-2 bg-zinc-800 hover:bg-zinc-700 text-white px-3 py-1.5 rounded-md text-[10px] font-black uppercase tracking-widest transition-colors cursor-pointer disabled:opacity-50"
-        >
-          {isSaving ? <Loader2 size={12} className="animate-spin" /> : <Save size={12} />}
-          Save Config
-        </button>
       </div>
 
       <div className="p-5 flex-1 flex flex-col justify-start gap-4 overflow-y-auto">
         
         {/* Module 1: Domain Routing */}
         <div className="bg-black/50 border border-zinc-800/80 rounded-lg p-4 flex flex-col justify-center shrink-0">
-          <label className="flex items-center gap-2 text-[9px] font-bold text-zinc-500 uppercase tracking-widest mb-3">
-             <Globe size={12} className="text-zinc-500" /> Edge Network Domain
+          <label className="flex items-center gap-2 text-[9px] font-bold text-zinc-500 uppercase tracking-widest mb-3"> 
+            <Globe size={12} className="text-zinc-500" /> {copy.DOMAIN_LABEL}
           </label>
-          <div className="flex gap-2">
-            <div className="relative flex-1">
-              <span className="absolute inset-y-0 left-0 pl-3 flex items-center text-zinc-600 text-xs font-mono pointer-events-none">
-                https://
-              </span>
-              <input
-                type="text"
-                value={formData.custom_domain || ''}
-                onChange={(e) => setFormData({ ...formData, custom_domain: e.target.value })}
-                placeholder="client-domain.com"
-                className="w-full bg-zinc-900 border border-zinc-700 rounded-md pl-16 pr-3 py-2 text-[11px] text-cyan-400 font-mono focus:outline-none focus:border-cyan-500 transition-colors"
-              />
-            </div>
-            <button 
-              onClick={handleSaveInfrastructure}
-              disabled={isSaving}
-              className="bg-cyan-600/10 hover:bg-cyan-600/20 text-cyan-400 border border-cyan-500/30 px-4 py-2 rounded-md text-[10px] font-black uppercase tracking-widest transition-all cursor-pointer disabled:opacity-50"
-            >
-              Link
-            </button>
+          <div className="relative w-full">
+            <span className="absolute inset-y-0 left-0 pl-3 flex items-center text-zinc-600 text-xs font-mono pointer-events-none">
+              {copy.DOMAIN_PREFIX}
+            </span>
+            <input
+              type="text"
+              value={formData.custom_domain || ''}
+              onChange={(e) => setFormData({ ...formData, custom_domain: e.target.value })}
+              placeholder={copy.DOMAIN_PLACEHOLDER}
+              className="w-full bg-zinc-900 border border-zinc-700 rounded-md pl-16 pr-3 py-2 text-[11px] text-cyan-400 font-mono focus:outline-none focus:border-cyan-500 transition-colors"
+            />
           </div>
         </div>
 
-        {/* Module 2: System Classification (Template Engine Toggle) */}
+        {/* Module 2: Architecture Tier */}
+        <div className="bg-black/50 border border-zinc-800/80 rounded-lg p-4 flex flex-col justify-center shrink-0">
+          <div className="flex items-center justify-between w-full gap-4">
+            <div className="flex items-center gap-3">
+              <div className={`p-2 rounded-md border transition-colors ${engineMode === 'hub' ? 'bg-indigo-500/10 border-indigo-500/30 text-indigo-400' : 'bg-cyan-500/10 border-cyan-500/30 text-cyan-400'}`}>
+                <Layers size={14} />
+              </div>
+              <div>
+                <span className="block text-[11px] font-black text-white uppercase tracking-wider mb-0.5">{copy.ARCH_TITLE}</span>
+                <span className="block text-[9px] font-mono text-zinc-500 uppercase">{copy.ARCH_SUBTITLE}</span>
+              </div>
+            </div>
+
+            <select
+              value={engineMode}
+              onChange={(e) => setFormData({ ...formData, engine_mode: e.target.value })}
+              className={`bg-zinc-900 border border-zinc-700 rounded-md px-3 py-1.5 text-[10px] font-black uppercase tracking-widest outline-none cursor-pointer ${
+                engineMode === 'hub' ? 'text-indigo-400 border-indigo-500/40' : 'text-cyan-400'
+              }`}
+            >
+              <option value="core" className="bg-zinc-900 text-white">{hubCopy.TIER_CORE}</option>
+              <option value="hub" className="bg-zinc-900 text-indigo-400">{hubCopy.TIER_HUB}</option>
+            </select>
+          </div>
+        </div>
+
+        {/* Module 3: System Classification (Template Engine Toggle) */}
         <div className="bg-black/50 border border-zinc-800/80 rounded-lg p-4 flex flex-col justify-center shrink-0">
            <div className="flex items-center justify-between w-full">
               <div className="flex items-center gap-3">
@@ -89,8 +78,8 @@ export default function InfrastructurePanel({ formData, setFormData }: { formDat
                     <Code size={14} />
                  </div>
                  <div>
-                    <span className="block text-[11px] font-black text-white uppercase tracking-wider mb-0.5">Template Engine</span>
-                    <span className="block text-[9px] font-mono text-zinc-500 uppercase">Classify as Reusable Architecture</span>
+                    <span className="block text-[11px] font-black text-white uppercase tracking-wider mb-0.5">{copy.TEMPLATE_TITLE}</span>
+                    <span className="block text-[9px] font-mono text-zinc-500 uppercase">{copy.TEMPLATE_SUBTITLE}</span>
                  </div>
               </div>
               
@@ -106,7 +95,7 @@ export default function InfrastructurePanel({ formData, setFormData }: { formDat
            </div>
         </div>
 
-        {/* Module 3: Directory Visibility (The Kill Switch) */}
+        {/* Module 4: Directory Visibility (The Kill Switch) */}
         <div className="bg-black/50 border border-zinc-800/80 rounded-lg p-4 flex flex-col justify-center shrink-0">
            <div className="flex items-center justify-between w-full">
               <div className="flex items-center gap-3">
@@ -114,8 +103,8 @@ export default function InfrastructurePanel({ formData, setFormData }: { formDat
                     <Eye size={14} />
                  </div>
                  <div>
-                    <span className="block text-[11px] font-black text-white uppercase tracking-wider mb-0.5">Directory Exposure</span>
-                    <span className="block text-[9px] font-mono text-zinc-500 uppercase">Showcase on Live Public Grid</span>
+                    <span className="block text-[11px] font-black text-white uppercase tracking-wider mb-0.5">{copy.DIRECTORY_TITLE}</span>
+                    <span className="block text-[9px] font-mono text-zinc-500 uppercase">{copy.DIRECTORY_SUBTITLE}</span>
                  </div>
               </div>
               

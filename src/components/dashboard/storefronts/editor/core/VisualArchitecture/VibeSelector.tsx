@@ -17,7 +17,7 @@ export default function VibeSelector({ currentTheme, onChange }: { currentTheme:
               key={family.id}
               type="button"
               onClick={() => onChange(family.default)}
-              className={`relative h-24 border-2 transition-all rounded-lg group overflow-hidden ${
+              className={`relative h-24 border-2 transition-all rounded-lg group overflow-hidden cursor-pointer ${
                 isActive 
                   ? 'ring-2 ring-emerald-500 z-10 scale-105' 
                   : 'opacity-60 hover:opacity-100 hover:scale-105'
@@ -28,6 +28,7 @@ export default function VibeSelector({ currentTheme, onChange }: { currentTheme:
                   {family.label}
                 </span>
               </div>
+
               {isActive && (
                 <div className="absolute -top-1.5 -right-1.5 w-3 h-3 bg-emerald-500 rounded-full border-2 border-zinc-900 shadow-[0_0_10px_rgba(16,185,129,0.5)] z-20" />
               )}
@@ -46,14 +47,14 @@ export default function VibeSelector({ currentTheme, onChange }: { currentTheme:
             <button
               type="button"
               onClick={() => onChange(activeFamily.light!)}
-              className={`px-5 py-2 rounded-md text-[11px] font-black uppercase tracking-widest transition-all ${isLightModeActive ? 'bg-zinc-800 text-white shadow-sm' : 'text-zinc-600 hover:text-zinc-400'}`}
+              className={`px-5 py-2 rounded-md text-[11px] font-black uppercase tracking-widest transition-all cursor-pointer ${isLightModeActive ? 'bg-zinc-800 text-white shadow-sm' : 'text-zinc-600 hover:text-zinc-400'}`}
             >
               {VISUAL_ARCH_COPY.VIBE.LIGHT}
             </button>
             <button
               type="button"
               onClick={() => onChange(activeFamily.dark!)}
-              className={`px-5 py-2 rounded-md text-[11px] font-black uppercase tracking-widest transition-all ${!isLightModeActive ? 'bg-zinc-800 text-white shadow-sm' : 'text-zinc-600 hover:text-zinc-400'}`}
+              className={`px-5 py-2 rounded-md text-[11px] font-black uppercase tracking-widest transition-all cursor-pointer ${!isLightModeActive ? 'bg-zinc-800 text-white shadow-sm' : 'text-zinc-600 hover:text-zinc-400'}`}
             >
               {VISUAL_ARCH_COPY.VIBE.DARK}
             </button>

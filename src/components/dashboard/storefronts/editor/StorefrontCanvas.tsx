@@ -3,17 +3,16 @@
 
 import React, { useState, useEffect } from 'react';
 import { 
-  PenTool, Palette, Image as ImageIcon, Layers, Scale, 
-  PanelLeftClose, PanelLeftOpen, MonitorSmartphone, RefreshCw, Tag, Server
+  PenTool, Image as ImageIcon, Layers, Scale, 
+  PanelLeftClose, PanelLeftOpen, MonitorSmartphone, RefreshCw
 } from 'lucide-react';
 
 import CoreTab from './CoreTab';
-import VisualArchitecture from './core/VisualArchitecture';
 import MediaTab from './MediaTab';
 import CapabilitiesTab from './CapabilitiesTab';
 import LogisticsTab from './LogisticsTab';
 import SystemLockShield from './SystemLockShield';
-import { STOREFRONT_EDITOR_COPY } from '@/config/dashboard';
+import { EDITOR_WORKSPACE_COPY, getActiveBlueprint } from '@/config/dashboard/editor';
 
 interface StorefrontCanvasProps {
   formData: any;
@@ -28,23 +27,15 @@ interface StorefrontCanvasProps {
 export default function StorefrontCanvas({
   formData, setFormData, refreshKey, reloadCanvas, isLocked, setIsUnlocked, previewBaseUrl
 }: StorefrontCanvasProps) {
-  const [editorTab, setEditorTab] = useState<'content' | 'design' | 'media' | 'services' | 'logistics'>('content');
+  const [editorTab, setEditorTab] = useState<'core' | 'content' | 'services' | 'logistics'>('core');
   const [controlsExpanded, setControlsExpanded] = useState(true);
 
   const industryTag = formData.industry_tag || 'General';
-  // 🚀 Track the engine_mode from formData (defaults to 'core')
   const engineMode = formData.engine_mode || 'core';
+  const copy = EDITOR_WORKSPACE_COPY.CANVAS;
 
-  let servicesTabLabel = STOREFRONT_EDITOR_COPY.DYNAMIC_TABS?.DEFAULT || 'Services';
-  
-  // 🚀 Dynamically adjust tab naming based on Engine Mode first, then Industry
-  if (engineMode === 'hub') {
-    servicesTabLabel = 'Departments';
-  } else {
-    if (industryTag === 'Culinary') servicesTabLabel = STOREFRONT_EDITOR_COPY.DYNAMIC_TABS?.CULINARY || 'Menu';
-    if (industryTag === 'Creative') servicesTabLabel = STOREFRONT_EDITOR_COPY.DYNAMIC_TABS?.CREATIVE || 'Portfolio';
-    if (industryTag === 'Contracting') servicesTabLabel = STOREFRONT_EDITOR_COPY.DYNAMIC_TABS?.CONTRACTING || 'Services';
-  }
+  const activeBlueprint = getActiveBlueprint(industryTag, engineMode);
+  const servicesTabLabel = activeBlueprint.tabLabel;
 
   useEffect(() => {
     const timer = setTimeout(() => window.dispatchEvent(new Event('resize')), 100);
@@ -57,73 +48,27 @@ export default function StorefrontCanvas({
       {controlsExpanded && (
         <div className="w-full lg:w-96 xl:w-md flex flex-col border-r border-zinc-800 bg-zinc-950 z-10 shrink-0 animate-in slide-in-from-left-4 duration-300">
           
-          <div className="p-4 border-b border-zinc-800 bg-zinc-900/40 shrink-0 space-y-3">
-            {/* Industry Selector */}
-            <div className="bg-zinc-900 border border-zinc-800 rounded-lg p-2.5 flex items-center gap-3 shadow-inner">
-              <div className="p-1.5 bg-zinc-800 rounded text-cyan-400">
-                <Tag size={12} />
-              </div>
-              <div className="flex-1">
-                <label className="text-[9px] font-bold text-zinc-500 uppercase tracking-widest block mb-0.5">Industry Category</label>
-                <select 
-                  value={industryTag}
-                  onChange={(e) => setFormData({ ...formData, industry_tag: e.target.value })}
-                  className="w-full bg-transparent text-xs text-white font-bold outline-none cursor-pointer appearance-none"
-                >
-                  {STOREFRONT_EDITOR_COPY.INDUSTRIES?.map((cat: { id: string, label: string }) => (
-                    <option key={cat.id} value={cat.id} className="bg-zinc-900 text-white">{cat.label}</option>
-                  ))}
-                </select>
-              </div>
-            </div>
-
-            {/* 🚀 NEW: Storefront Engine Mode Toggle */}
-            <div className="bg-zinc-900 border border-zinc-800 rounded-lg p-2.5 flex items-center gap-3 shadow-inner">
-              <div className={`p-1.5 rounded ${engineMode === 'hub' ? 'bg-indigo-500/20 text-indigo-400' : 'bg-zinc-800 text-zinc-400'}`}>
-                <Server size={12} />
-              </div>
-              <div className="flex-1">
-                <label className="text-[9px] font-bold text-zinc-500 uppercase tracking-widest block mb-0.5">Architecture Tier</label>
-                <select 
-                  value={engineMode}
-                  onChange={(e) => setFormData({ ...formData, engine_mode: e.target.value })}
-                  className={`w-full bg-transparent text-xs font-bold outline-none cursor-pointer appearance-none ${engineMode === 'hub' ? 'text-indigo-400' : 'text-white'}`}
-                >
-                  <option value="core" className="bg-zinc-900 text-white">Standard Core (Single-Page)</option>
-                  <option value="hub" className="bg-zinc-900 text-indigo-400">Department Hub (Multi-Page)</option>
-                </select>
-              </div>
-            </div>
-          </div>
-
-          <div className="flex flex-wrap items-center gap-1 p-2 border-b border-zinc-800 bg-zinc-900/50">
-            <button onClick={() => setEditorTab('content')} className={`flex-1 flex items-center justify-center gap-1.5 py-2 rounded-md text-[9px] md:text-[10px] font-bold tracking-widest uppercase transition-all cursor-pointer ${editorTab === 'content' ? 'bg-zinc-800 text-white shadow-sm' : 'text-zinc-500 hover:text-zinc-300 hover:bg-zinc-800/50'}`}>
-              <PenTool className="w-3.5 h-3.5 hidden xl:block" /> Content
+          {/* 4-TAB CONSOLIDATED NAVIGATION (Now pinned cleanly to the top!) */}
+          <div className="flex flex-wrap items-center gap-1 p-2 border-b border-zinc-800 bg-zinc-900/50 shrink-0">
+            <button onClick={() => setEditorTab('core')} className={`flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-md text-[9px] md:text-[10px] font-bold tracking-widest uppercase transition-all cursor-pointer ${editorTab === 'core' ? 'bg-zinc-800 text-white shadow-sm' : 'text-zinc-500 hover:text-zinc-300 hover:bg-zinc-800/50'}`}>
+              <ImageIcon className="w-3.5 h-3.5 hidden xl:block" /> {copy.TABS.CORE}
             </button>
-            <button onClick={() => setEditorTab('design')} className={`flex-1 flex items-center justify-center gap-1.5 py-2 rounded-md text-[9px] md:text-[10px] font-bold tracking-widest uppercase transition-all cursor-pointer ${editorTab === 'design' ? 'bg-zinc-800 text-white shadow-sm' : 'text-zinc-500 hover:text-zinc-300 hover:bg-zinc-800/50'}`}>
-              <Palette className="w-3.5 h-3.5 hidden xl:block" /> Design
+            <button onClick={() => setEditorTab('content')} className={`flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-md text-[9px] md:text-[10px] font-bold tracking-widest uppercase transition-all cursor-pointer ${editorTab === 'content' ? 'bg-zinc-800 text-white shadow-sm' : 'text-zinc-500 hover:text-zinc-300 hover:bg-zinc-800/50'}`}>
+              <PenTool className="w-3.5 h-3.5 hidden xl:block" /> {copy.TABS.CONTENT}
             </button>
-            <button onClick={() => setEditorTab('media')} className={`flex-1 flex items-center justify-center gap-1.5 py-2 rounded-md text-[9px] md:text-[10px] font-bold tracking-widest uppercase transition-all cursor-pointer ${editorTab === 'media' ? 'bg-zinc-800 text-white shadow-sm' : 'text-zinc-500 hover:text-zinc-300 hover:bg-zinc-800/50'}`}>
-              <ImageIcon className="w-3.5 h-3.5 hidden xl:block" /> Core
+            <button onClick={() => setEditorTab('services')} className={`flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-md text-[9px] md:text-[10px] font-bold tracking-widest uppercase transition-all cursor-pointer ${editorTab === 'services' ? 'bg-zinc-800 text-white shadow-sm' : 'text-zinc-500 hover:text-zinc-300 hover:bg-zinc-800/50'}`}>
+              <Layers className="w-3.5 h-3.5 hidden xl:block" /> {servicesTabLabel}
             </button>
-            <button onClick={() => setEditorTab('services')} className={`flex-1 flex items-center justify-center gap-1.5 py-2 rounded-md text-[9px] md:text-[10px] font-bold tracking-widest uppercase transition-all cursor-pointer ${editorTab === 'services' ? 'bg-zinc-800 text-white shadow-sm' : 'text-zinc-500 hover:text-zinc-300 hover:bg-zinc-800/50'}`}>
-              <Layers className="w-3.5 h-3.5 hidden xl:block" /> {servicesTabLabel.split(' ')[0]}
-            </button>
-            <button onClick={() => setEditorTab('logistics')} className={`flex-1 flex items-center justify-center gap-1.5 py-2 rounded-md text-[9px] md:text-[10px] font-bold tracking-widest uppercase transition-all cursor-pointer ${editorTab === 'logistics' ? 'bg-zinc-800 text-white shadow-sm' : 'text-zinc-500 hover:text-zinc-300 hover:bg-zinc-800/50'}`}>
-              <Scale className="w-3.5 h-3.5 hidden xl:block" /> Logistics
+            <button onClick={() => setEditorTab('logistics')} className={`flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-md text-[9px] md:text-[10px] font-bold tracking-widest uppercase transition-all cursor-pointer ${editorTab === 'logistics' ? 'bg-zinc-800 text-white shadow-sm' : 'text-zinc-500 hover:text-zinc-300 hover:bg-zinc-800/50'}`}>
+              <Scale className="w-3.5 h-3.5 hidden xl:block" /> {copy.TABS.LOGISTICS}
             </button>
           </div>
 
           <div className="flex-1 overflow-y-auto custom-scrollbar p-4 bg-[#050505]">
             <div className={`${isLocked ? 'opacity-50 pointer-events-none grayscale' : ''} transition-all duration-300`}>
-              {editorTab === 'content' && <CoreTab formData={formData} setFormData={setFormData} onReload={reloadCanvas} />}
-              {editorTab === 'design' && (
-                <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500 pb-12 p-2 pt-6 relative">
-                  <VisualArchitecture formData={formData} setFormData={setFormData} />
-                </div>
-              )}
-              {editorTab === 'media' && <MediaTab formData={formData} setFormData={setFormData} onReload={reloadCanvas} />}
-              {editorTab === 'services' && <CapabilitiesTab formData={formData} setFormData={setFormData} onReload={reloadCanvas} />}
+              {editorTab === 'core' && <MediaTab formData={formData} setFormData={setFormData} onReload={reloadCanvas} isClientPortal={false} />}
+              {editorTab === 'content' && <CoreTab formData={formData} setFormData={setFormData} onReload={reloadCanvas} isClientPortal={false} />}
+              {editorTab === 'services' && <CapabilitiesTab formData={formData} setFormData={setFormData} onReload={reloadCanvas} isClientPortal={false} />}
               {editorTab === 'logistics' && <LogisticsTab formData={formData} setFormData={setFormData} />}
             </div>
           </div>
@@ -136,7 +81,7 @@ export default function StorefrontCanvas({
             <button 
               onClick={() => setControlsExpanded(!controlsExpanded)} 
               className="p-1.5 bg-zinc-950 border border-zinc-800 hover:border-cyan-500/50 rounded-lg text-zinc-400 hover:text-cyan-400 transition-colors cursor-pointer"
-              title={controlsExpanded ? "Collapse Controls" : "Expand Controls"}
+              title={controlsExpanded ? copy.COLLAPSE_CONTROLS : copy.EXPAND_CONTROLS}
             >
               {controlsExpanded ? <PanelLeftClose className="w-4 h-4" /> : <PanelLeftOpen className="w-4 h-4" />}
             </button>
@@ -149,10 +94,11 @@ export default function StorefrontCanvas({
                 {previewBaseUrl}/{formData.slug}?mode=canvas
               </span>
             </div>
-            <button onClick={reloadCanvas} className="p-1.5 hover:bg-cyan-500/20 rounded-md text-zinc-500 hover:text-cyan-400 transition-all border border-transparent hover:border-cyan-500/30 shrink-0 cursor-pointer" title="Refresh Live Canvas">
+            <button onClick={reloadCanvas} className="p-1.5 hover:bg-cyan-500/20 rounded-md text-zinc-500 hover:text-cyan-400 transition-all border border-transparent hover:border-cyan-500/30 shrink-0 cursor-pointer" title={copy.REFRESH_CANVAS}>
               <RefreshCw className="w-3 h-3" />
             </button>
           </div>
+
           <div className="w-10 hidden sm:block"></div> 
         </div>
 
@@ -175,7 +121,6 @@ export default function StorefrontCanvas({
           onRevert={() => setFormData({ ...formData, status: 'BUILDING' })}
         />
       )}
-
     </div>
   );
 }

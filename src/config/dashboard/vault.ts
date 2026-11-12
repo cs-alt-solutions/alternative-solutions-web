@@ -27,6 +27,7 @@ export const VAULT_COPY = {
     ROUTE_MEDIA_TITLE: "Route Media",
     BTN_CREATE_CARD: "+ Create New Card",
     REPLACE_LABEL: "Replace:",
+    EMPTY_SLOT_FALLBACK: "Empty Slot"
   },
   FOLDER_VIEW: {
     BTN_BACK: "Back to Portfolios",
@@ -38,9 +39,12 @@ export const VAULT_COPY = {
     BTN_REMOVE_IMAGE: "Remove from Folder",
     PLACEHOLDER_TITLE: "Image Title / Caption",
     PLACEHOLDER_DESC: "Detailed description...",
+    PORTFOLIO_ALT: "Portfolio Asset"
   },
   ALERTS: {
     SCANNING: "Scanning Drop Vault...",
+    UPLOADING_PREFIX: "Uploading",
+    UPLOADING_SUFFIX: "file(s)...",
     PROMPT_NEW_FOLDER: "Enter new folder name:",
     PROMPT_RENAME_FOLDER: "Enter new folder name:",
     CONFIRM_DELETE_FILE: "Permanently delete this file from the vault?",

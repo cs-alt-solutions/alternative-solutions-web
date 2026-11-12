@@ -1,58 +1,39 @@
-// src/components/dashboard/storefronts/NewStorefrontModal.tsx
+/* src/components/dashboard/storefronts/NewStorefrontModal.tsx */
 'use client';
 
 import React, { useState, useRef } from 'react';
 import Link from 'next/link';
 import { X, Plus, Store, Link as LinkIcon, Palette, Sparkles, UploadCloud, LayoutTemplate, Columns, MonitorPlay, Check, Rocket } from 'lucide-react';
 import { createStorefront } from '@/app/actions/storefronts';
+import { BRAND_COLORS, THEME_FAMILIES, VISUAL_ARCH_COPY } from '@/config/dashboard/editor';
+import { STOREFRONT_MANAGER_COPY } from '@/config/dashboard/manager';
 
-const BRAND_COLORS = [
-  { name: 'Slate Gray', value: 'slate-500' },
-  { name: 'Crimson Red', value: 'red-500' },
-  { name: 'Rose', value: 'rose-500' },
-  { name: 'Industrial Orange', value: 'orange-500' },
-  { name: 'Amber Gold', value: 'amber-500' },
-  { name: 'Electric Yellow', value: 'yellow-400' },
-  { name: 'Lime', value: 'lime-400' },
-  { name: 'Emerald Green', value: 'emerald-500' },
-  { name: 'Teal', value: 'teal-500' },
-  { name: 'Cyber Cyan', value: 'cyan-500' },
-  { name: 'Ocean Blue', value: 'blue-500' },
-  { name: 'Deep Indigo', value: 'indigo-500' },
-  { name: 'Royal Violet', value: 'violet-500' },
-  { name: 'Neon Fuchsia', value: 'fuchsia-500' },
-  { name: 'Hot Pink', value: 'pink-500' },
+const LBL = VISUAL_ARCH_COPY.LAYOUTS.LABELS;
+
+const MODAL_THEMES = THEME_FAMILIES.flatMap(f => {
+  const list = [];
+  if (f.dark) list.push({ name: f.light ? `${f.label} (${VISUAL_ARCH_COPY.VIBE.DARK})` : f.label, value: f.dark });
+  if (f.light) list.push({ name: f.dark ? `${f.label} (${VISUAL_ARCH_COPY.VIBE.LIGHT})` : f.label, value: f.light });
+  return list;
+});
+
+const MODAL_HEROS = [
+  { name: LBL.CENTERED, value: 'center' },
+  { name: LBL.SPLIT_LEFT, value: 'split-left' },
+  { name: LBL.SPLIT_RIGHT, value: 'split-right' },
+  { name: LBL.CINEMATIC, value: 'cinematic' },
+  { name: LBL.GLASS, value: 'glass' }
 ];
 
-const THEMES = [
-  { name: 'Raw & Industrial (Dark)', value: 'industrial' },
-  { name: 'Clinical Industrial (Light)', value: 'industrial-light' },
-  { name: 'Neo-Brutalist (Light)', value: 'neo' },
-  { name: 'Neo-Brutalist (Dark)', value: 'neo-dark' },
-  { name: 'Neon Cyberpunk (Dark)', value: 'cyberpunk' },
-  { name: 'Tech Docs (Cyberpunk Light)', value: 'cyberpunk-light' },
-  { name: 'Clean & Minimal', value: 'minimal' },
-  { name: 'High Editorial', value: 'elegant' },
-  { name: 'Earthy & Organic', value: 'organic' },
-  { name: 'Classic Editorial', value: 'editorial' },
-  { name: 'Midnight Onyx', value: 'midnight' }
-];
-
-const HERO_LAYOUTS = [
-  { name: 'Centered Focus', value: 'center' },
-  { name: 'Bold Left Split', value: 'split-left' },
-  { name: 'Bold Right Split', value: 'split-right' },
-  { name: 'Full Cinematic', value: 'cinematic' },
-  { name: 'Frosted Glass', value: 'glass' }
-];
-
-const CONTENT_LAYOUTS = [
-  { name: 'Standard Stack', value: 'classic' },
-  { name: 'Bento Grid', value: 'bento' },
-  { name: 'Sticky Scroll', value: 'sticky' },
-  { name: 'Editorial Hover', value: 'editorial' },
-  { name: 'Accordion Flow', value: 'accordion' },
-  { name: 'Culinary Menu', value: 'menu' } // 🚀 ADDED 'menu'
+const MODAL_CONTENTS = [
+  { name: LBL.STACKED, value: 'classic' },
+  { name: LBL.BENTO, value: 'bento' },
+  { name: LBL.STICKY, value: 'sticky' },
+  { name: LBL.EDITORIAL, value: 'editorial' },
+  { name: LBL.ACCORDION, value: 'accordion' },
+  { name: LBL.MENU, value: 'menu' },
+  { name: LBL.LOOKBOOK, value: 'lookbook' },
+  { name: LBL.HUB, value: 'hub' }
 ];
 
 export default function NewStorefrontModal() {
@@ -61,8 +42,8 @@ export default function NewStorefrontModal() {
   const [businessName, setBusinessName] = useState('');
   const [slug, setSlug] = useState('');
   const [isTemplate, setIsTemplate] = useState(false);
-  
   const formRef = useRef<HTMLFormElement>(null);
+  const copy = STOREFRONT_MANAGER_COPY.NEW_MODAL;
 
   const handleNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const val = e.target.value;
@@ -81,7 +62,7 @@ export default function NewStorefrontModal() {
       if (formRef.current) formRef.current.reset();
     } catch (error) {
       console.error(error);
-      alert("Failed to provision storefront. Check console.");
+      alert(copy.ERROR_ALERT);
     } finally {
       setIsSubmitting(false);
     }
@@ -93,20 +74,21 @@ export default function NewStorefrontModal() {
         href="/storefronts/apply"
         target="_blank"
         className="flex items-center gap-2 bg-fuchsia-500/10 hover:bg-fuchsia-500/20 border border-fuchsia-500/20 text-fuchsia-400 font-bold px-4 py-2.5 rounded-md transition-all duration-300"
-        title="Open interactive wizard for in-person clients"
+        title={copy.BTN_LAUNCH_TITLE}
       >
         <Rocket className="w-4 h-4" />
-        <span className="hidden sm:inline">LAUNCH APPLICATION</span>
-        <span className="sm:hidden">POS</span>
+        <span className="hidden sm:inline">{copy.BTN_LAUNCH_APP}</span>
+        <span className="sm:hidden">{copy.BTN_LAUNCH_POS}</span>
       </Link>
 
       <button 
+        type="button"
         onClick={() => setIsOpen(true)}
-        className="flex items-center gap-2 bg-cyan-600 hover:bg-cyan-500 text-zinc-950 font-bold px-4 py-2.5 rounded-md transition-all duration-300 transform hover:scale-105 shadow-[0_0_15px_rgba(8,145,178,0.4)]"
+        className="flex items-center gap-2 bg-cyan-600 hover:bg-cyan-500 text-zinc-950 font-bold px-4 py-2.5 rounded-md transition-all duration-300 transform hover:scale-105 shadow-[0_0_15px_rgba(8,145,178,0.4)] cursor-pointer"
       >
         <Plus className="w-4 h-4" />
-        <span className="hidden sm:inline">MANUAL PROVISION</span>
-        <span className="sm:hidden">MANUAL</span>
+        <span className="hidden sm:inline">{copy.BTN_MANUAL}</span>
+        <span className="sm:hidden">{copy.BTN_MANUAL_SHORT}</span>
       </button>
 
       {isOpen && (
@@ -119,11 +101,11 @@ export default function NewStorefrontModal() {
                   <Sparkles className="w-5 h-5 text-cyan-400" />
                 </div>
                 <div>
-                  <h2 className="text-xl font-bold text-white tracking-tight">Provision New Storefront</h2>
-                  <p className="text-xs text-zinc-500 uppercase tracking-widest mt-1">Instant SaaS Deployment</p>
+                  <h2 className="text-xl font-bold text-white tracking-tight">{copy.MODAL_TITLE}</h2>
+                  <p className="text-xs text-zinc-500 uppercase tracking-widest mt-1">{copy.MODAL_SUBTITLE}</p>
                 </div>
               </div>
-              <button onClick={() => setIsOpen(false)} className="text-zinc-500 hover:text-white transition-colors">
+              <button type="button" onClick={() => setIsOpen(false)} className="text-zinc-500 hover:text-white transition-colors cursor-pointer">
                 <X className="w-6 h-6" />
               </button>
             </div>
@@ -135,7 +117,7 @@ export default function NewStorefrontModal() {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="space-y-2">
                   <label className="text-xs font-bold text-zinc-400 uppercase tracking-widest flex items-center gap-2">
-                    <Store className="w-3 h-3" /> Business Name
+                    <Store className="w-3 h-3" /> {copy.BUSINESS_NAME_LABEL}
                   </label>
                   <input 
                     required
@@ -143,12 +125,12 @@ export default function NewStorefrontModal() {
                     value={businessName}
                     onChange={handleNameChange}
                     className="w-full bg-zinc-950 border border-zinc-800 rounded-lg px-4 py-3 text-white focus:border-cyan-500 outline-none transition-colors"
-                    placeholder="e.g. BB's Bodega"
+                    placeholder={copy.BUSINESS_NAME_PLACEHOLDER}
                   />
                 </div>
                 <div className="space-y-2">
                   <label className="text-xs font-bold text-zinc-400 uppercase tracking-widest flex items-center gap-2">
-                    <LinkIcon className="w-3 h-3" /> URL Routing Slug
+                    <LinkIcon className="w-3 h-3" /> {copy.SLUG_LABEL}
                   </label>
                   <div className="relative">
                     <span className="absolute left-4 top-3 text-zinc-600">/</span>
@@ -166,13 +148,13 @@ export default function NewStorefrontModal() {
               <div className="grid grid-cols-1 md:grid-cols-12 gap-6">
                 <div className="space-y-2 md:col-span-8">
                   <label className="text-xs font-bold text-zinc-400 uppercase tracking-widest">
-                    Primary Tagline (H1)
+                    {copy.TAGLINE_LABEL}
                   </label>
                   <input 
                     required
                     name="tagline"
                     className="w-full bg-zinc-950 border border-zinc-800 rounded-lg px-4 py-3 text-white outline-none focus:border-cyan-500 transition-colors"
-                    placeholder="e.g. Loud. Unapologetic. Limited supply."
+                    placeholder={copy.TAGLINE_PLACEHOLDER}
                   />
                 </div>
                 
@@ -185,7 +167,7 @@ export default function NewStorefrontModal() {
                         {isTemplate && <Check className="w-3 h-3 text-zinc-950" strokeWidth={4} />}
                      </div>
                      <span className={`text-[10px] font-bold uppercase tracking-widest ${isTemplate ? 'text-cyan-400' : 'text-zinc-500'}`}>
-                        Public Prototype
+                        {copy.PROTOTYPE_TOGGLE}
                      </span>
                      <MonitorPlay className={`w-4 h-4 ml-auto ${isTemplate ? 'text-cyan-400' : 'text-zinc-600'}`} />
                    </div>
@@ -195,24 +177,24 @@ export default function NewStorefrontModal() {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-6 border-t border-zinc-800/50">
                 <div className="space-y-2">
                   <label className="text-xs font-bold text-zinc-400 uppercase tracking-widest flex items-center gap-2">
-                    <Palette className="w-3 h-3" /> Design Vibe
+                    <Palette className="w-3 h-3" /> {copy.VIBE_LABEL}
                   </label>
                   <select 
                     name="theme_style"
-                    className="w-full bg-zinc-950 border border-zinc-800 rounded-lg px-4 py-3 text-white outline-none appearance-none focus:border-cyan-500"
+                    className="w-full bg-zinc-950 border border-zinc-800 rounded-lg px-4 py-3 text-white outline-none appearance-none focus:border-cyan-500 cursor-pointer"
                   >
-                    {THEMES.map(theme => (
+                    {MODAL_THEMES.map(theme => (
                       <option key={theme.value} value={theme.value}>{theme.name}</option>
                     ))}
                   </select>
                 </div>
                 <div className="space-y-2">
                   <label className="text-xs font-bold text-zinc-400 uppercase tracking-widest flex items-center gap-2">
-                    <Palette className="w-3 h-3 text-transparent" /> Brand Color
+                    <Palette className="w-3 h-3 text-transparent" /> {copy.COLOR_LABEL}
                   </label>
                   <select 
                     name="brand_color"
-                    className="w-full bg-zinc-950 border border-zinc-800 rounded-lg px-4 py-3 text-white outline-none appearance-none focus:border-cyan-500"
+                    className="w-full bg-zinc-950 border border-zinc-800 rounded-lg px-4 py-3 text-white outline-none appearance-none focus:border-cyan-500 cursor-pointer"
                   >
                     {BRAND_COLORS.map(color => (
                       <option key={color.value} value={color.value}>{color.name}</option>
@@ -224,26 +206,26 @@ export default function NewStorefrontModal() {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="space-y-2">
                   <label className="text-xs font-bold text-zinc-400 uppercase tracking-widest flex items-center gap-2">
-                    <LayoutTemplate className="w-3 h-3" /> Hero Structure
+                    <LayoutTemplate className="w-3 h-3" /> {copy.HERO_LABEL}
                   </label>
                   <select 
                     name="hero_layout"
-                    className="w-full bg-zinc-950 border border-zinc-800 rounded-lg px-4 py-3 text-white outline-none appearance-none focus:border-cyan-500"
+                    className="w-full bg-zinc-950 border border-zinc-800 rounded-lg px-4 py-3 text-white outline-none appearance-none focus:border-cyan-500 cursor-pointer"
                   >
-                    {HERO_LAYOUTS.map(layout => (
+                    {MODAL_HEROS.map(layout => (
                       <option key={layout.value} value={layout.value}>{layout.name}</option>
                     ))}
                   </select>
                 </div>
                 <div className="space-y-2">
                   <label className="text-xs font-bold text-zinc-400 uppercase tracking-widest flex items-center gap-2">
-                    <Columns className="w-3 h-3" /> Content Flow
+                    <Columns className="w-3 h-3" /> {copy.CONTENT_LABEL}
                   </label>
                   <select 
                     name="content_layout"
-                    className="w-full bg-zinc-950 border border-zinc-800 rounded-lg px-4 py-3 text-white outline-none appearance-none focus:border-cyan-500"
+                    className="w-full bg-zinc-950 border border-zinc-800 rounded-lg px-4 py-3 text-white outline-none appearance-none focus:border-cyan-500 cursor-pointer"
                   >
-                    {CONTENT_LAYOUTS.map(layout => (
+                    {MODAL_CONTENTS.map(layout => (
                       <option key={layout.value} value={layout.value}>{layout.name}</option>
                     ))}
                   </select>
@@ -253,7 +235,7 @@ export default function NewStorefrontModal() {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-6 border-t border-zinc-800/50">
                 <div className="space-y-2">
                   <label className="text-xs font-bold text-zinc-400 uppercase tracking-widest flex items-center gap-2">
-                    <UploadCloud className="w-4 h-4 text-cyan-500" /> Hero Background
+                    <UploadCloud className="w-4 h-4 text-cyan-500" /> {copy.HERO_BG_LABEL}
                   </label>
                   <input 
                     type="file"
@@ -265,7 +247,7 @@ export default function NewStorefrontModal() {
                 </div>
                 <div className="space-y-2">
                   <label className="text-xs font-bold text-zinc-400 uppercase tracking-widest flex items-center gap-2">
-                    <UploadCloud className="w-4 h-4 text-cyan-500" /> About Section
+                    <UploadCloud className="w-4 h-4 text-cyan-500" /> {copy.ABOUT_IMG_LABEL}
                   </label>
                   <input 
                     type="file"
@@ -283,17 +265,16 @@ export default function NewStorefrontModal() {
                   onClick={() => setIsOpen(false)}
                   className="px-6 py-3 rounded-lg font-bold text-zinc-400 hover:text-white transition-colors cursor-pointer"
                 >
-                  CANCEL
+                  {copy.BTN_CANCEL}
                 </button>
                 <button 
                   type="submit"
                   disabled={isSubmitting}
                   className="px-8 py-3 rounded-lg font-black tracking-widest uppercase bg-cyan-600 hover:bg-cyan-500 text-zinc-950 disabled:opacity-50 transition-all cursor-pointer shadow-[0_0_15px_rgba(8,145,178,0.4)]"
                 >
-                  {isSubmitting ? 'PROVISIONING...' : 'DEPLOY STOREFRONT'}
+                  {isSubmitting ? copy.BTN_PROVISIONING : copy.BTN_DEPLOY}
                 </button>
               </div>
-
             </form>
           </div>
         </div>

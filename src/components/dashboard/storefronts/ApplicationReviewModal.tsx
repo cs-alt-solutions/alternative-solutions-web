@@ -1,4 +1,4 @@
-/* src/components/dashboard/ApplicationReviewModal.tsx */
+/* src/components/dashboard/storefronts/ApplicationReviewModal.tsx */
 'use client';
 
 import React, { useState, useEffect, useRef } from 'react';
@@ -10,6 +10,7 @@ import {
   Facebook, Hash, Link as LinkIcon, Clock, ArrowRight, Settings2, CheckCircle2
 } from 'lucide-react';
 import { approveAndSendCheckout, updateApplicationStatus } from '@/app/actions/storefront_applications';
+import { STOREFRONT_MANAGER_COPY } from '@/config/dashboard/manager';
 
 interface ApplicationReviewModalProps {
   app?: any;
@@ -25,16 +26,15 @@ const formatSocialData = (platform: string, handle: string) => {
     if (display.length > 22) display = display.substring(0, 22) + '...';
     return { url: handle, display };
   }
-  
   const cleanHandle = handle.replace(/^@/, '');
-  let url = `https://${cleanHandle}`; 
+  let url = `https://${cleanHandle}`;
   
   if (platform === 'Instagram') url = `https://instagram.com/${cleanHandle}`;
   else if (platform === 'X / Twitter') url = `https://twitter.com/${cleanHandle}`;
   else if (platform === 'LinkedIn') url = `https://linkedin.com/in/${cleanHandle}`;
   else if (platform === 'Facebook') url = `https://facebook.com/${cleanHandle}`;
   else if (platform === 'TikTok') url = `https://tiktok.com/@${cleanHandle}`;
-  
+
   return { url, display: `@${cleanHandle}` };
 };
 
@@ -48,15 +48,13 @@ export default function ApplicationReviewModal({
   const [isProcessing, setIsProcessing] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
   const [activeBuildCount, setActiveBuildCount] = useState<number | null>(null);
-  
   const [verifyMode, setVerifyMode] = useState(false);
   const [customSlug, setCustomSlug] = useState('');
-  
-  // Synchronous hardware lock to prevent rapid double-clicks
+
   const submitLockRef = useRef(false);
-  
   const router = useRouter();
   const targetApp = app || application || {};
+  const copy = STOREFRONT_MANAGER_COPY.APPLICATION_MODAL;
 
   useEffect(() => {
     const fetchCapacity = async () => {
@@ -84,7 +82,7 @@ export default function ApplicationReviewModal({
     const autoSlug = (targetApp.business_name || 'store')
       .toLowerCase()
       .replace(/[^a-z0-9]+/g, '-')
-      .replace(/(^-|-$)+/g, ''); 
+      .replace(/(^-|-$)+/g, '');
       
     setCustomSlug(autoSlug);
     setVerifyMode(true);
@@ -100,9 +98,7 @@ export default function ApplicationReviewModal({
       
       if (result && result.success) {
         setIsSuccess(true);
-        
         setTimeout(() => {
-          // Cleanly hard-navigate to the Storefronts table (without ?application= query param)
           window.location.href = '/dashboard/storefronts';
         }, 1500);
       } else {
@@ -122,6 +118,7 @@ export default function ApplicationReviewModal({
     if (submitLockRef.current || isProcessing || !targetApp.id) return;
     submitLockRef.current = true;
     setIsProcessing(true);
+
     try {
       const result = await updateApplicationStatus(targetApp.id, 'CANCELED');
       if (result && result.success) {
@@ -141,9 +138,8 @@ export default function ApplicationReviewModal({
 
   const rawSocials = targetApp.social_handles;
   const safeSocials = typeof rawSocials === 'string' ? JSON.parse(rawSocials) : (rawSocials || {});
-
-  const applicantName = targetApp.applicant_name || 'Pending Data';
-  const applicantEmail = targetApp.applicant_email || 'No Email';
+  const applicantName = targetApp.applicant_name || copy.PENDING_NAME;
+  const applicantEmail = targetApp.applicant_email || copy.NO_EMAIL;
   const isPriority = targetApp.is_priority;
 
   const socialProfiles = [
@@ -162,8 +158,8 @@ export default function ApplicationReviewModal({
           <div className="w-20 h-20 bg-emerald-500/20 text-emerald-400 rounded-full flex items-center justify-center mb-6 border border-emerald-500/40 shadow-[0_0_30px_rgba(16,185,129,0.3)]">
             <CheckCircle2 size={40} className="animate-pulse" />
           </div>
-          <h2 className="text-2xl font-black text-white uppercase tracking-tight mb-2">Lead Approved</h2>
-          <p className="text-sm text-emerald-400/80 font-mono tracking-widest uppercase">Portal & Brain Dump Dispatched</p>
+          <h2 className="text-2xl font-black text-white uppercase tracking-tight mb-2">{copy.SUCCESS_TITLE}</h2>
+          <p className="text-sm text-emerald-400/80 font-mono tracking-widest uppercase">{copy.SUCCESS_SUBTITLE}</p>
         </div>
       </div>
     );
@@ -179,22 +175,22 @@ export default function ApplicationReviewModal({
           <div>
             <div className="flex items-center gap-3 mb-1">
               <span className="px-2.5 py-0.5 rounded-full text-[9px] font-black uppercase tracking-widest bg-cyan-500/10 text-cyan-400 border border-cyan-500/20 flex items-center gap-1.5">
-                <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-ping" /> Intake Brief
+                <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-ping" /> {copy.BADGE_BRIEF}
               </span>
-              <span className="text-zinc-500 text-xs font-mono tracking-wider">ID: {targetApp.id?.slice(0, 8) || 'PENDING'}</span>
+              <span className="text-zinc-500 text-xs font-mono tracking-wider">{copy.ID_PREFIX} {targetApp.id?.slice(0, 8) || copy.PENDING_ID}</span>
               
               {isPriority && (
                 <span className="px-2 py-0.5 rounded text-[9px] font-black uppercase tracking-widest bg-amber-500/10 text-amber-400 border border-amber-500/20 flex items-center gap-1">
-                  <Zap size={10} /> Fast Track
+                  <Zap size={10} /> {copy.BADGE_PRIORITY}
                 </span>
               )}
             </div>
             <h2 className="text-2xl md:text-3xl font-black text-white uppercase tracking-tight leading-none">
-              {targetApp.business_name || 'Unnamed Project'}
+              {targetApp.business_name || copy.UNNAMED_PROJECT}
             </h2>
           </div>
           
-          <button onClick={triggerClose} className="p-2.5 rounded-xl bg-zinc-900 border border-zinc-800 text-zinc-400 hover:text-white hover:bg-zinc-800 transition-all shrink-0 cursor-pointer">
+          <button type="button" onClick={triggerClose} className="p-2.5 rounded-xl bg-zinc-900 border border-zinc-800 text-zinc-400 hover:text-white hover:bg-zinc-800 transition-all shrink-0 cursor-pointer">
             <X size={20} />
           </button>
         </div>
@@ -204,14 +200,14 @@ export default function ApplicationReviewModal({
             <div className="w-16 h-16 bg-cyan-500/10 text-cyan-400 rounded-2xl flex items-center justify-center mb-6 border border-cyan-500/20 shadow-[0_0_30px_rgba(34,211,238,0.15)]">
               <Settings2 size={32} />
             </div>
-            <h3 className="text-2xl font-black text-white uppercase tracking-tight mb-3">Verify Routing Slug</h3>
+            <h3 className="text-2xl font-black text-white uppercase tracking-tight mb-3">{copy.VERIFY_TITLE}</h3>
             <p className="text-sm text-zinc-400 max-w-md mx-auto mb-8 leading-relaxed">
-              We generated this URL based on their business name. Clean out any "LLC"s or weird formatting before we dispatch their portal invite.
+              {copy.VERIFY_DESC}
             </p>
             
             <div className="flex items-center w-full max-w-md bg-zinc-950 border border-zinc-700 rounded-xl overflow-hidden focus-within:border-cyan-400 focus-within:ring-1 focus-within:ring-cyan-400 transition-all shadow-inner">
               <span className="px-4 py-4 bg-zinc-900 text-zinc-500 font-mono text-sm border-r border-zinc-800 shrink-0">
-                storefronts.alternativesolutions.io/
+                {copy.DOMAIN_PREFIX}
               </span>
               <input
                 type="text"
@@ -233,7 +229,7 @@ export default function ApplicationReviewModal({
                       <User size={16} />
                     </div>
                     <div>
-                      <p className="text-[10px] font-black uppercase tracking-widest text-zinc-500">Applicant</p>
+                      <p className="text-[10px] font-black uppercase tracking-widest text-zinc-500">{copy.APPLICANT_LABEL}</p>
                       <p className="text-sm font-bold text-white mb-0.5">{applicantName}</p>
                       <a href={`mailto:${applicantEmail}`} className="text-xs font-mono text-cyan-400 hover:underline">{applicantEmail}</a>
                     </div>
@@ -242,7 +238,7 @@ export default function ApplicationReviewModal({
 
                 <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-5 space-y-4">
                   <h3 className="text-[10px] font-black text-zinc-400 uppercase tracking-widest flex items-center gap-2">
-                    <Share2 size={13} className="text-indigo-400" /> Digital Footprint
+                    <Share2 size={13} className="text-indigo-400" /> {copy.FOOTPRINT_LABEL}
                   </h3>
                   
                   {socialProfiles.length > 0 ? (
@@ -261,7 +257,7 @@ export default function ApplicationReviewModal({
                     </div>
                   ) : (
                     <div className="bg-black/50 border border-zinc-800/80 rounded-lg p-3 text-center">
-                      <span className="text-xs font-mono italic text-zinc-500">No socials provided.</span>
+                      <span className="text-xs font-mono italic text-zinc-500">{copy.NO_SOCIALS}</span>
                     </div>
                   )}
                 </div>
@@ -275,18 +271,18 @@ export default function ApplicationReviewModal({
                 }`}>
                   <h3 className="text-[10px] font-black uppercase tracking-widest flex items-center gap-2 mb-3 text-zinc-400">
                     {isPriority ? <Zap size={13} className="text-amber-400" /> : <Clock size={13} className="text-cyan-400" />}
-                    Build Lane Selection
+                    {copy.LANE_LABEL}
                   </h3>
                   
                   {isPriority ? (
                     <div>
-                      <h4 className="text-xl font-black text-amber-400 uppercase tracking-tight mb-1">Fast-Track</h4>
-                      <p className="text-xs text-amber-400/80 leading-relaxed font-medium">This client bypassed the standard queue and is awaiting their secure portal and checkout link.</p>
+                      <h4 className="text-xl font-black text-amber-400 uppercase tracking-tight mb-1">{copy.PRIORITY_TITLE}</h4>
+                      <p className="text-xs text-amber-400/80 leading-relaxed font-medium">{copy.PRIORITY_DESC}</p>
                     </div>
                   ) : (
                     <div>
-                      <h4 className="text-xl font-black text-white uppercase tracking-tight mb-1">Standard Queue</h4>
-                      <p className="text-xs text-zinc-500 leading-relaxed font-medium">This client requested a free working draft before locking in their subscription.</p>
+                      <h4 className="text-xl font-black text-white uppercase tracking-tight mb-1">{copy.STANDARD_TITLE}</h4>
+                      <p className="text-xs text-zinc-500 leading-relaxed font-medium">{copy.STANDARD_DESC}</p>
                     </div>
                   )}
                 </div>
@@ -295,14 +291,15 @@ export default function ApplicationReviewModal({
                   <div className="bg-rose-500/10 border border-rose-500/30 rounded-2xl p-5 shadow-inner">
                     <div className="flex items-center gap-2 mb-2">
                       <AlertTriangle size={16} className="text-rose-400" />
-                      <h4 className="text-sm font-black text-rose-400 uppercase tracking-widest">At Capacity</h4>
+                      <h4 className="text-sm font-black text-rose-400 uppercase tracking-widest">{copy.CAPACITY_TITLE}</h4>
                     </div>
                     <p className="text-xs text-rose-300/80 leading-relaxed">
-                      You currently have <strong className="text-white">{activeBuildCount} active builds</strong> in progress. The approval function is locked until a project reaches Production.
+                      {copy.CAPACITY_PREFIX} <strong className="text-white">{activeBuildCount} {copy.CAPACITY_MID}</strong> {copy.CAPACITY_SUFFIX}
                     </p>
                   </div>
                 )}
               </div>
+
             </div>
           </div>
         )}
@@ -310,40 +307,44 @@ export default function ApplicationReviewModal({
         <div className="flex flex-col-reverse sm:flex-row items-center justify-between gap-4 p-4 md:p-6 border-t border-zinc-800 bg-zinc-950 shrink-0">
            {verifyMode ? (
              <button 
+               type="button"
                onClick={() => setVerifyMode(false)} disabled={isProcessing}
                className="w-full sm:w-auto px-6 py-3 text-xs font-bold uppercase tracking-widest text-zinc-500 hover:text-white transition-colors cursor-pointer"
              >
-               Back
+               {copy.BTN_BACK}
              </button>
            ) : (
              <button 
+               type="button"
                onClick={handleDeny} disabled={isProcessing || !targetApp.id}
                className="w-full sm:w-auto flex items-center justify-center gap-2 px-6 py-3 rounded-xl border border-rose-500/20 bg-rose-500/5 hover:bg-rose-500/10 text-rose-400 hover:text-rose-300 text-xs font-black tracking-widest uppercase transition-all disabled:opacity-50 cursor-pointer"
              >
-               <XCircle size={15} /> Reject Lead
+               <XCircle size={15} /> {copy.BTN_REJECT}
              </button>
            )}
 
            <div className="flex items-center gap-3 w-full sm:w-auto">
              {verifyMode && (
                <button 
+                 type="button"
                  onClick={handleConfirmDispatch} disabled={isProcessing || !customSlug}
                  className="w-full sm:w-auto flex items-center justify-center gap-2 px-8 py-3 rounded-xl text-xs font-black tracking-widest uppercase transition-all shadow-[0_0_20px_rgba(8,145,178,0.3)] bg-cyan-600 hover:bg-cyan-500 text-zinc-950 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
                >
-                 {isProcessing ? <span>DISPATCHING...</span> : <><Rocket size={16} /> <span>Lock Routing & Dispatch</span></>}
+                 {isProcessing ? <span>{copy.BTN_DISPATCHING}</span> : <><Rocket size={16} /> <span>{copy.BTN_LOCK_DISPATCH}</span></>}
                </button>
              )}
              
              {!verifyMode && (
                <button 
+                 type="button"
                  onClick={handleInitiateApproval} disabled={isProcessing || !targetApp.id || isAtCapacity}
                  className={`w-full sm:w-auto flex items-center justify-center gap-2 px-8 py-3 rounded-xl text-xs font-black tracking-widest uppercase transition-all shadow-lg cursor-pointer ${
-                   isAtCapacity 
-                    ? 'bg-zinc-800 text-zinc-500 cursor-not-allowed opacity-50' 
-                    : 'bg-emerald-500 hover:bg-emerald-400 text-zinc-950 shadow-[0_0_20px_rgba(16,185,129,0.3)] hover:shadow-[0_0_30px_rgba(16,185,129,0.5)] disabled:opacity-50'
+                   isAtCapacity
+                     ? 'bg-zinc-800 text-zinc-500 cursor-not-allowed opacity-50'
+                     : 'bg-emerald-500 hover:bg-emerald-400 text-zinc-950 shadow-[0_0_20px_rgba(16,185,129,0.3)] hover:shadow-[0_0_30px_rgba(16,185,129,0.5)] disabled:opacity-50'
                  }`}
                >
-                 <ArrowRight size={16} className={isAtCapacity ? "text-zinc-500" : "text-zinc-950"} /> <span>Verify Routing</span>
+                 <ArrowRight size={16} className={isAtCapacity ? "text-zinc-500" : "text-zinc-950"} /> <span>{copy.BTN_VERIFY_ROUTING}</span>
                </button>
              )}
            </div>

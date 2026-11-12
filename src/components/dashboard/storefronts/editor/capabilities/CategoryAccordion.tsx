@@ -5,10 +5,13 @@ import React, { useState } from 'react';
 import { GripVertical, ChevronDown, X, Plus, Image as ImageIcon, List, Loader2, UploadCloud, Layers } from 'lucide-react';
 import { supabase } from '@/utils/supabase';
 import MenuCardEditor from './MenuCardEditor';
+import { EDITOR_WORKSPACE_COPY, getActiveBlueprint } from '@/config/dashboard/editor';
 
 export default function CategoryAccordion({ cap, index, isOpen, setOpenCapIndex, localCaps, setLocalCaps, formData, setFormData, onReload }: any) {
   const [isUploading, setIsUploading] = useState(false);
 
+  const copy = EDITOR_WORKSPACE_COPY.SERVICES_TAB;
+  const blueprint = getActiveBlueprint(formData?.industry_tag, formData?.engine_mode);
   const isMenuMode = formData?.content_layout === 'menu';
   const isAlaCarte = !!cap.isAlaCarte;
 
@@ -31,10 +34,12 @@ export default function CategoryAccordion({ cap, index, isOpen, setOpenCapIndex,
       if (updatedFormDataCaps[index]) {
         updatedFormDataCaps[index] = { ...updatedFormDataCaps[index], title: newTitle };
       }
+
       const updatedGallery = (prev.gallery_items || []).map((item: any) => {
         if (oldTitle !== undefined && item.category === oldTitle) return { ...item, category: newTitle };
         return item;
       });
+
       return { ...prev, capabilities: updatedFormDataCaps, gallery_items: updatedGallery };
     });
   };
@@ -75,26 +80,29 @@ export default function CategoryAccordion({ cap, index, isOpen, setOpenCapIndex,
     if (!updated[index].bullets) updated[index].bullets = [];
     updated[index].bullets.push('');
     setLocalCaps(updated);
+    setFormData((prev: any) => ({ ...prev, capabilities: updated }));
   };
 
   const updateBullet = (bulletIndex: number, value: string) => {
     const updated = [...localCaps];
     updated[index].bullets[bulletIndex] = value;
     setLocalCaps(updated);
+    setFormData((prev: any) => ({ ...prev, capabilities: updated }));
   };
 
   const removeBullet = (bulletIndex: number) => {
     const updated = [...localCaps];
     updated[index].bullets.splice(bulletIndex, 1);
     setLocalCaps(updated);
+    setFormData((prev: any) => ({ ...prev, capabilities: updated }));
   };
 
-  // 🚀 THE FIX: Specific Package Options (Price-free)
   const addAddon = () => {
     const updated = [...localCaps];
     if (!updated[index].addons) updated[index].addons = [];
     updated[index].addons.push({ title: '' });
     setLocalCaps(updated);
+    setFormData((prev: any) => ({ ...prev, capabilities: updated }));
   };
 
   const updateAddon = (addonIndex: number, field: string, value: string) => {
@@ -146,13 +154,13 @@ export default function CategoryAccordion({ cap, index, isOpen, setOpenCapIndex,
             <GripVertical className="w-4 h-4" />
           </button>
           <h3 className={`font-bold text-sm ${isAlaCarte ? 'text-fuchsia-400' : 'text-white'}`}>
-            {cap.title || (isAlaCarte ? 'Untitled Add-on' : isMenuMode ? 'Untitled Category' : 'Untitled Package')}
+            {cap.title || (isAlaCarte ? copy.UNTITLED_ADDON : isMenuMode ? copy.UNTITLED_CATEGORY : copy.UNTITLED_PACKAGE)}
           </h3>
-          {isAlaCarte && <span className="px-2 py-0.5 rounded-md text-[9px] font-bold uppercase tracking-widest bg-fuchsia-500/10 text-fuchsia-400 border border-fuchsia-500/20">Add-on</span>}
+          {isAlaCarte && <span className="px-2 py-0.5 rounded-md text-[9px] font-bold uppercase tracking-widest bg-fuchsia-500/10 text-fuchsia-400 border border-fuchsia-500/20">{copy.ADDON_BADGE}</span>}
         </div>
         <div className="flex items-center gap-4">
           {isMenuMode && (
-            <span className="text-[10px] text-zinc-500 font-mono uppercase tracking-widest">{categoryImages.length} Cards</span>
+            <span className="text-[10px] text-zinc-500 font-mono uppercase tracking-widest">{categoryImages.length} {copy.CARDS_COUNT_SUFFIX}</span>
           )}
           <ChevronDown className={`w-4 h-4 text-zinc-500 transition-transform duration-300 ${isOpen ? 'rotate-180' : ''}`} />
           <button type="button" onClick={(e) => { e.stopPropagation(); removeCap(); }} className="p-1.5 text-zinc-600 hover:text-rose-400 transition-colors cursor-pointer">
@@ -170,7 +178,7 @@ export default function CategoryAccordion({ cap, index, isOpen, setOpenCapIndex,
                 type="text" 
                 value={cap.title || ''} 
                 onChange={(e) => updateTitle(e.target.value)} 
-                placeholder={isAlaCarte ? 'Add-on Name' : isMenuMode ? 'Category Name (e.g., Starters)' : 'Package Name'}
+                placeholder={isAlaCarte ? copy.ADDON_NAME_PLACEHOLDER : blueprint.titlePlaceholder}
                 className="flex-1 bg-black/50 border border-zinc-800 rounded-lg px-3 py-2 text-sm text-white font-bold outline-none focus:border-cyan-500 transition-colors"
               />
               
@@ -181,49 +189,46 @@ export default function CategoryAccordion({ cap, index, isOpen, setOpenCapIndex,
                     onChange={(e) => updateField('price', e.target.value)}
                     className="w-full bg-black/50 border border-zinc-800 rounded-lg pl-3 pr-8 py-2 text-sm font-bold text-emerald-400 outline-none focus:border-emerald-500 transition-colors appearance-none cursor-pointer"
                   >
-                    <option value="All Day">All Day</option>
-                    <option value="Breakfast">Breakfast</option>
-                    <option value="Brunch">Brunch</option>
-                    <option value="Lunch">Lunch</option>
-                    <option value="Dinner">Dinner</option>
-                    <option value="Late Night">Late Night</option>
-                    <option value="Happy Hour">Happy Hour</option>
+                    {copy.AVAILABILITY_OPTIONS.map((opt: string) => (
+                      <option key={opt} value={opt}>{opt}</option>
+                    ))}
                   </select>
                   <ChevronDown size={14} className="absolute right-3 top-1/2 -translate-y-1/2 text-emerald-500/50 pointer-events-none" />
                 </div>
               ) : (
                 <input 
                   type="text" 
-                  value={cap.price || ''} 
+                  value={cap.price === 'All Day' ? '' : (cap.price || '')} 
                   onChange={(e) => updateField('price', e.target.value)} 
-                  placeholder="Price"
-                  className="w-1/3 bg-black/50 border border-zinc-800 rounded-lg px-3 py-2 text-sm text-fuchsia-400 font-bold outline-none focus:border-fuchsia-500 transition-colors"
+                  placeholder={blueprint.pricePlaceholder}
+                  className="w-1/3 bg-black/50 border border-zinc-800 rounded-lg px-3 py-2 text-xs text-fuchsia-400 font-bold outline-none focus:border-fuchsia-500 transition-colors"
                 />
               )}
             </div>
+
             <textarea 
               value={cap.description || ''} 
               onChange={(e) => updateField('description', e.target.value)} 
-              placeholder="Short description..."
+              placeholder={copy.SHORT_DESC_PLACEHOLDER}
               rows={2}
               className="w-full bg-black/50 border border-zinc-800 rounded-lg px-3 py-2 text-xs text-zinc-300 outline-none focus:border-cyan-500 transition-colors resize-none"
             />
           </div>
 
-          {/* IF MENU MODE: Render Menu Card Editor mapping for gallery items under this category */}
+          {/* IF MENU LAYOUT MODE: Render Menu Card Editor */}
           {isMenuMode ? (
             <div className="space-y-4 pt-4 border-t border-zinc-800/50">
               <div className="flex items-center justify-between">
                 <label className="text-[9px] font-bold text-fuchsia-500 uppercase tracking-widest flex items-center gap-2">
-                  <ImageIcon size={12} /> Menu Cards ({categoryImages.length})
+                  <ImageIcon size={12} /> {copy.MENU_CARDS_LABEL} ({categoryImages.length})
                 </label>
                 <button type="button" onClick={addBlankCard} className="text-[9px] font-bold text-zinc-400 hover:text-fuchsia-400 uppercase tracking-widest flex items-center gap-1.5 transition-colors cursor-pointer">
-                  <Plus size={10} /> Add Blank Card
+                  <Plus size={10} /> {copy.ADD_BLANK_CARD_BTN}
                 </button>
               </div>
 
               {categoryImages.length === 0 ? (
-                <p className="text-[10px] text-zinc-600 italic">No menu cards added yet. Click above to create one.</p>
+                <p className="text-[10px] text-zinc-600 italic">{copy.EMPTY_MENU_CARDS}</p>
               ) : (
                 <div className="space-y-3">
                   {categoryImages.map((img: any, i: number) => (
@@ -243,12 +248,12 @@ export default function CategoryAccordion({ cap, index, isOpen, setOpenCapIndex,
               )}
             </div>
           ) : (
-            /* STANDARD PACKAGE MODE: Deliverables & Cover Photo */
+            /* STANDARD / LOOKBOOK / BENTO / HUB MODE: Dynamic Context-Aware Labels */
             !isAlaCarte && (
               <>
                 <div className="space-y-3 pt-4 border-t border-zinc-800/50">
                   <label className="text-[9px] font-bold text-zinc-500 uppercase tracking-widest flex items-center gap-2">
-                    <List size={12} className="text-cyan-500" /> Package Deliverables
+                    <List size={12} className="text-cyan-500" /> {blueprint.deliverablesLabel}
                   </label>
                   <div className="space-y-2">
                     {(cap.bullets || []).map((bullet: string, bIndex: number) => (
@@ -257,7 +262,7 @@ export default function CategoryAccordion({ cap, index, isOpen, setOpenCapIndex,
                         <input 
                           value={bullet}
                           onChange={(e) => updateBullet(bIndex, e.target.value)}
-                          placeholder="Deliverable..."
+                          placeholder={blueprint.deliverablePlaceholder}
                           className="flex-1 bg-transparent border-b border-zinc-800 py-1 text-xs text-zinc-300 focus:outline-none focus:border-cyan-500 transition-colors"
                         />
                         <button type="button" onClick={() => removeBullet(bIndex)} className="text-zinc-600 hover:text-rose-400 cursor-pointer"><X size={12} /></button>
@@ -265,13 +270,13 @@ export default function CategoryAccordion({ cap, index, isOpen, setOpenCapIndex,
                     ))}
                   </div>
                   <button type="button" onClick={addBullet} className="text-[9px] font-bold text-zinc-500 hover:text-cyan-400 uppercase tracking-widest flex items-center gap-1.5 mt-2 cursor-pointer">
-                    <Plus size={10} /> Add Deliverable
+                    <Plus size={10} /> {blueprint.addDeliverableBtn}
                   </button>
                 </div>
 
                 <div className="space-y-3 pt-4 border-t border-zinc-800/50">
                   <label className="text-[9px] font-bold text-zinc-500 uppercase tracking-widest flex items-center gap-2">
-                    <Layers size={12} className="text-fuchsia-500" /> Inquiry Options & Selections
+                    <Layers size={12} className="text-fuchsia-500" /> {blueprint.optionsLabel}
                   </label>
                   
                   {cap.addons && cap.addons.length > 0 && (
@@ -281,7 +286,7 @@ export default function CategoryAccordion({ cap, index, isOpen, setOpenCapIndex,
                           <input 
                             value={addon.title || ''}
                             onChange={(e) => updateAddon(addonIdx, 'title', e.target.value)}
-                            placeholder="Option (e.g. Meat Sales or Nico Appearance)"
+                            placeholder={blueprint.optionPlaceholder}
                             className="flex-1 bg-black/40 border border-zinc-800 rounded px-2.5 py-1 text-[10px] text-zinc-300 focus:border-fuchsia-500 outline-none"
                           />
                           <button type="button" onClick={() => removeAddon(addonIdx)} className="text-zinc-600 hover:text-rose-400 cursor-pointer"><X size={12} /></button>
@@ -291,17 +296,18 @@ export default function CategoryAccordion({ cap, index, isOpen, setOpenCapIndex,
                   )}
 
                   <button type="button" onClick={addAddon} className="text-[9px] font-bold text-zinc-500 hover:text-fuchsia-400 uppercase tracking-widest flex items-center gap-1.5 mt-2 cursor-pointer">
-                    <Plus size={10} /> Add Inquiry Option
+                    <Plus size={10} /> {blueprint.addOptionBtn}
                   </button>
                 </div>
 
                 <div className="space-y-3 pt-4 border-t border-zinc-800/50">
                   <label className="text-[9px] font-bold text-zinc-500 uppercase tracking-widest flex items-center gap-2">
-                    <ImageIcon size={12} className="text-cyan-500" /> Package Cover Photo
+                    <ImageIcon size={12} className="text-cyan-500" /> {copy.COVER_PHOTO_LABEL}
                   </label>
                   
                   {cap.coverImage ? (
                     <div className="relative w-full sm:w-48 aspect-video rounded-lg overflow-hidden border border-zinc-800 group">
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
                       <img src={cap.coverImage} alt="Cover" className="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-opacity" />
                       <button 
                         type="button"
@@ -314,7 +320,7 @@ export default function CategoryAccordion({ cap, index, isOpen, setOpenCapIndex,
                   ) : (
                     <label className="w-full sm:w-48 aspect-video rounded-lg border-2 border-dashed border-zinc-800 flex flex-col items-center justify-center cursor-pointer hover:border-cyan-500/50 hover:bg-cyan-500/5 transition-all">
                       {isUploading ? <Loader2 className="w-5 h-5 text-cyan-500 animate-spin" /> : <UploadCloud className="w-5 h-5 text-zinc-600 mb-2" />}
-                      <span className="text-[9px] font-bold uppercase tracking-widest text-zinc-500">Upload Cover</span>
+                      <span className="text-[9px] font-bold uppercase tracking-widest text-zinc-500">{copy.UPLOAD_COVER_BTN}</span>
                       <input type="file" accept="image/*" className="hidden" onChange={handleCoverUpload} disabled={isUploading} />
                     </label>
                   )}

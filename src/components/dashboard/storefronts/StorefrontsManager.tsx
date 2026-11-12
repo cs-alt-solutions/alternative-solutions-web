@@ -5,6 +5,7 @@ import React, { useState } from 'react';
 import { supabase } from '@/utils/supabase';
 import { Unlock, Lock, HardHat, Globe, Clock } from 'lucide-react';
 import { STOREFRONT_LIFECYCLE } from '@/config/lifecycle';
+import { STOREFRONT_MANAGER_COPY } from '@/config/dashboard/manager';
 import NewStorefrontModal from './NewStorefrontModal';
 import StorefrontLegend from './manager/StorefrontLegend';
 import StorefrontFilters from './manager/StorefrontFilters';
@@ -14,13 +15,14 @@ export default function StorefrontsManager({ initialData }: { initialData: any[]
   const [search, setSearch] = useState('');
   const [activeTab, setActiveTab] = useState<'ALL' | 'CLIENTS' | 'PROTOTYPES'>('CLIENTS');
   const [storefronts, setStorefronts] = useState(initialData);
+
   const [sortConfig, setSortConfig] = useState<{ key: string; direction: 'asc' | 'desc' } | null>({ key: 'status', direction: 'asc' });
   const [statusFilter, setStatusFilter] = useState<string>('ALL'); 
   const [planFilter, setPlanFilter] = useState<string>('ALL');
   const [categoryFilter, setCategoryFilter] = useState<string>('ALL');
-  
-  // ARCHITECT OVERRIDE TOGGLE
+
   const [isEditMode, setIsEditMode] = useState(false);
+  const copy = STOREFRONT_MANAGER_COPY;
 
   const availableStatuses = Object.keys(STOREFRONT_LIFECYCLE);
   const availablePlans = Array.from(new Set(storefronts.map(s => s.plan_tier || s.selected_plan).filter(Boolean))) as string[];
@@ -31,7 +33,7 @@ export default function StorefrontsManager({ initialData }: { initialData: any[]
     const { error } = await supabase.from('storefronts').update({ [field]: value }).eq('id', id);
     if (error) {
       console.error(`Failed to update ${field}:`, error);
-      alert("Database sync failed. Please refresh and try again.");
+      alert(copy.TABLE.SYNC_ERROR);
     }
   };
 
@@ -41,7 +43,6 @@ export default function StorefrontsManager({ initialData }: { initialData: any[]
     setSortConfig({ key, direction });
   };
 
-  // 🚀 THE FIX: If the search is empty, show everything. Otherwise, safely search.
   let processedData = storefronts.filter(store => {
     if (store.status === 'PENDING' || store.status === 'CANCELED') return false;
     if (!search.trim()) return true;
@@ -83,21 +84,21 @@ export default function StorefrontsManager({ initialData }: { initialData: any[]
     });
   }
 
-  // 🚀 THE FIX: Swapped 'AWAITING_PAYMENT' for 'ONBOARDING' so your new clients show up in the Active Workshop!
   const activeWorkshopData = processedData.filter(s => ['ONBOARDING', 'PENDING_BUILD', 'BUILDING_CORE', 'CONTENT_ASSEMBLY'].includes(s.status || 'PENDING_BUILD'));
   const holdingPatternData = processedData.filter(s => ['IN_REVIEW', 'AWAITING_ASSETS', 'ON_HOLD'].includes(s.status));
-  const liveProductionData = processedData.filter(s => ['ACTIVE', 'MAINTENANCE', 'HIDDEN'].includes(s.status));
+  const liveProductionData = processedData.filter(s => ['ACTIVE', 'LIVE', 'MAINTENANCE', 'HIDDEN'].includes(s.status));
 
   return (
     <div className="w-full px-4 sm:px-6 lg:px-8 py-6 space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-zinc-800/50">
         <div>
-          <h1 className="text-2xl font-black text-white uppercase tracking-tight">Storefront Engine</h1>
-          <p className="text-sm text-zinc-400 mt-1">Manage active client projects and sandbox prototypes.</p>
+          <h1 className="text-2xl font-black text-white uppercase tracking-tight">{copy.HEADER.TITLE}</h1>
+          <p className="text-sm text-zinc-400 mt-1">{copy.HEADER.SUBTITLE}</p>
         </div>
         
         <div className="flex items-center gap-3">
           <button 
+            type="button"
             onClick={() => setIsEditMode(!isEditMode)}
             className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all cursor-pointer ${
               isEditMode 
@@ -105,7 +106,7 @@ export default function StorefrontsManager({ initialData }: { initialData: any[]
                 : 'bg-zinc-900 text-zinc-400 border border-zinc-800 hover:text-white hover:border-zinc-600'
             }`}
           >
-            {isEditMode ? <><Lock size={14} /> Lock Grid</> : <><Unlock size={14} /> Architect Override</>}
+            {isEditMode ? <><Lock size={14} /> {copy.HEADER.BTN_LOCK_GRID}</> : <><Unlock size={14} /> {copy.HEADER.BTN_ARCHITECT_OVERRIDE}</>}
           </button>
           <NewStorefrontModal />
         </div>
@@ -126,7 +127,7 @@ export default function StorefrontsManager({ initialData }: { initialData: any[]
         {/* TIER 1: ACTIVE WORKSHOP TABLE */}
         <div className="mb-12">
           <h2 className="text-xs font-black text-cyan-400 uppercase tracking-widest mb-4 flex items-center gap-2">
-            <HardHat size={14} /> The Active Workshop
+            <HardHat size={14} /> {copy.TIERS.WORKSHOP}
           </h2>
           <StorefrontTable 
             processedData={activeWorkshopData}
@@ -142,7 +143,7 @@ export default function StorefrontsManager({ initialData }: { initialData: any[]
         {/* TIER 2: CLIENT ACTION REQUIRED */}
         <div className="mb-12">
           <h2 className="text-xs font-black text-amber-400 uppercase tracking-widest mb-4 flex items-center gap-2">
-            <Clock size={14} /> Awaiting Client Action
+            <Clock size={14} /> {copy.TIERS.HOLDING}
           </h2>
           <StorefrontTable 
             processedData={holdingPatternData}
@@ -158,7 +159,7 @@ export default function StorefrontsManager({ initialData }: { initialData: any[]
         {/* TIER 3: LIVE PRODUCTION TABLE */}
         <div>
           <h2 className="text-xs font-black text-emerald-400 uppercase tracking-widest mb-4 flex items-center gap-2">
-            <Globe size={14} /> Live Production Grid
+            <Globe size={14} /> {copy.TIERS.PRODUCTION}
           </h2>
           <StorefrontTable 
             processedData={liveProductionData}
@@ -170,7 +171,6 @@ export default function StorefrontsManager({ initialData }: { initialData: any[]
             availableCategories={availableCategories}
           />
         </div>
-
       </div>
     </div>
   );

@@ -5,13 +5,14 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { supabase } from '@/utils/supabase';
-import { Layout, Server, ExternalLink, Loader2, Save, ArrowLeft, FileUp } from 'lucide-react';
+import { Layout, Server, ExternalLink, Loader2, Save, ArrowLeft, FileUp, Layers } from 'lucide-react';
 
 import StorefrontCanvas from '@/components/dashboard/storefronts/editor/StorefrontCanvas';
 import GridTab from '@/components/dashboard/storefronts/editor/GridTab';
 import VaultTab from '@/components/dashboard/storefronts/editor/vault/VaultTab';
 import { deleteStorefront } from '@/app/actions/storefronts';
 import { STOREFRONT_EDITOR_COPY } from '@/config/dashboard';
+import { EDITOR_WORKSPACE_COPY } from '@/config/dashboard/editor';
 
 export default function TenantCommandHub() {
   const { id } = useParams();
@@ -28,6 +29,7 @@ export default function TenantCommandHub() {
   const [isUnlocked, setIsUnlocked] = useState(false);
 
   const PREVIEW_BASE_URL = 'https://storefronts.alternativesolutions.io';
+  const copy = EDITOR_WORKSPACE_COPY.COMMAND_HUB;
 
   useEffect(() => {
     const storedState = localStorage.getItem('sidebar-collapsed') || localStorage.getItem('isCollapsed');
@@ -72,14 +74,14 @@ export default function TenantCommandHub() {
       const { error } = await supabase.from('storefronts').update(formData).eq('id', formData.id);
       if (error) throw new Error(error.message || "Database rejected the payload.");
       
-      setSaveMessage('SYSTEM SAVED');
+      setSaveMessage(copy.SAVED_MSG);
       router.refresh();
       reloadCanvas();
       
       setTimeout(() => setSaveMessage(''), 3000);
     } catch (err: any) {
       console.error("Save error caught:", err);
-      setSaveMessage(err.message?.substring(0, 30) + '...' || 'SAVE ERROR');
+      setSaveMessage(err.message?.substring(0, 30) + '...' || copy.SAVE_ERR);
     } finally {
       setIsSaving(false);
     }
@@ -102,14 +104,15 @@ export default function TenantCommandHub() {
     return (
       <div className={`fixed top-0 right-0 bottom-0 left-0 transition-all duration-300 ${isSidebarCollapsed ? 'md:left-20' : 'md:left-64'} z-40 flex flex-col items-center justify-center bg-black`}>
         <Loader2 className="w-8 h-8 text-cyan-400 animate-spin mb-4" />
-        <span className="font-mono text-xs text-zinc-500 uppercase tracking-widest">Initializing Hub...</span>
+        <span className="font-mono text-xs text-zinc-500 uppercase tracking-widest">{copy.INITIALIZING}</span>
       </div>
     );
   }
 
-  if (!formData) return <div className={`fixed top-0 right-0 bottom-0 left-0 transition-all duration-300 ${isSidebarCollapsed ? 'md:left-20' : 'md:left-64'} z-40 p-8 text-white bg-black`}>Tenant not found.</div>;
+  if (!formData) return <div className={`fixed top-0 right-0 bottom-0 left-0 transition-all duration-300 ${isSidebarCollapsed ? 'md:left-20' : 'md:left-64'} z-40 p-8 text-white bg-black`}>{copy.NOT_FOUND}</div>;
 
   const isLocked = !isUnlocked && ['IN_REVIEW', 'ACTIVE', 'LIVE', 'MAINTENANCE'].includes(formData.status);
+  const engineMode = formData.engine_mode || 'core';
 
   return (
     <div className={`fixed top-0 right-0 bottom-0 left-0 transition-all duration-300 ${isSidebarCollapsed ? 'md:left-20' : 'md:left-64'} z-40 bg-black flex flex-col overflow-hidden animate-in fade-in duration-300`}>
@@ -123,7 +126,7 @@ export default function TenantCommandHub() {
           <div>
             <div className="flex items-center gap-3 mb-1">
               <span className="px-2 py-0.5 rounded-full bg-cyan-500/10 border border-cyan-500/20 text-[10px] font-mono text-cyan-400 uppercase tracking-widest">
-                Tenant Hub
+                {copy.BADGE}
               </span>
               <span className="text-zinc-500 font-mono text-xs">{formData.slug}</span>
             </div>
@@ -134,28 +137,52 @@ export default function TenantCommandHub() {
         </div>
         
         <div className="flex items-center gap-3">
-          {saveMessage && <span className="hidden sm:inline text-emerald-400 text-[10px] font-mono font-bold tracking-widest uppercase animate-pulse mr-2">• {saveMessage}</span>}
+          {saveMessage && (
+            <span className="hidden sm:inline text-emerald-400 text-[10px] font-mono font-bold tracking-widest uppercase animate-pulse mr-2">
+              • {saveMessage}
+            </span>
+          )}
           <button onClick={handleMasterSave} disabled={isSaving} className="flex items-center gap-2 bg-cyan-600 hover:bg-cyan-500 text-zinc-950 px-4 md:px-6 py-2 md:py-2.5 rounded-lg text-[10px] md:text-xs font-black uppercase tracking-widest transition-all shadow-[0_0_10px_rgba(8,145,178,0.3)] disabled:opacity-50 cursor-pointer">
             {isSaving ? <Loader2 className="animate-spin w-4 h-4" /> : <Save className="w-4 h-4" />}
-            <span className="hidden sm:inline">{isSaving ? 'SYNCING...' : 'SAVE STATE'}</span>
+            <span className="hidden sm:inline">{isSaving ? copy.SYNCING_BTN : copy.SAVE_BTN}</span>
           </button>
           <a href={`https://${formData.custom_domain || `storefronts.alternativesolutions.io/${formData.slug}`}`} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 bg-zinc-900 border border-zinc-800 hover:border-cyan-400 hover:text-cyan-400 text-zinc-300 px-3 md:px-4 py-2 md:py-2.5 rounded-lg text-[10px] md:text-xs font-bold uppercase tracking-widest transition-all">
-            <span className="hidden sm:inline">Live Telemetry</span> <ExternalLink size={14} />
+            <span className="hidden sm:inline">{copy.LIVE_TELEMETRY}</span> <ExternalLink size={14} />
           </a>
         </div>
       </header>
 
-      {/* COMMAND NAVIGATION */}
-      <nav className="flex items-center gap-4 md:gap-6 px-4 md:px-6 border-b border-zinc-800 bg-zinc-950 shrink-0">
-        <button onClick={() => setActiveTab('canvas')} className={`flex items-center gap-2 py-3 md:py-4 text-[10px] md:text-xs font-bold uppercase tracking-widest border-b-2 transition-colors cursor-pointer ${activeTab === 'canvas' ? 'border-cyan-400 text-cyan-400' : 'border-transparent text-zinc-500 hover:text-zinc-300'}`}>
-          <Layout size={14} className="md:w-4 md:h-4" /> The Canvas
-        </button>
-        <button onClick={() => setActiveTab('grid')} className={`flex items-center gap-2 py-3 md:py-4 text-[10px] md:text-xs font-bold uppercase tracking-widest border-b-2 transition-colors cursor-pointer ${activeTab === 'grid' ? 'border-emerald-400 text-emerald-400' : 'border-transparent text-zinc-500 hover:text-zinc-300'}`}>
-          <Server size={14} className="md:w-4 md:h-4" /> The Grid
-        </button>
-        <button onClick={() => setActiveTab('vault')} className={`flex items-center gap-2 py-3 md:py-4 text-[10px] md:text-xs font-bold uppercase tracking-widest border-b-2 transition-colors cursor-pointer ${activeTab === 'vault' ? 'border-amber-400 text-amber-400' : 'border-transparent text-zinc-500 hover:text-zinc-300'}`}>
-          <FileUp size={14} className="md:w-4 md:h-4" /> Drop Vault
-        </button>
+      {/* COMMAND NAVIGATION + ARCHITECTURE TIER SELECTOR */}
+      <nav className="flex flex-wrap items-center justify-between gap-4 px-4 md:px-6 border-b border-zinc-800 bg-zinc-950 shrink-0">
+        <div className="flex items-center gap-4 md:gap-6">
+          <button onClick={() => setActiveTab('canvas')} className={`flex items-center gap-2 py-3 md:py-4 text-[10px] md:text-xs font-bold uppercase tracking-widest border-b-2 transition-colors cursor-pointer ${activeTab === 'canvas' ? 'border-cyan-400 text-cyan-400' : 'border-transparent text-zinc-500 hover:text-zinc-300'}`}>
+            <Layout size={14} className="md:w-4 md:h-4" /> {copy.NAV_CANVAS}
+          </button>
+          <button onClick={() => setActiveTab('grid')} className={`flex items-center gap-2 py-3 md:py-4 text-[10px] md:text-xs font-bold uppercase tracking-widest border-b-2 transition-colors cursor-pointer ${activeTab === 'grid' ? 'border-emerald-400 text-emerald-400' : 'border-transparent text-zinc-500 hover:text-zinc-300'}`}>
+            <Server size={14} className="md:w-4 md:h-4" /> {copy.NAV_GRID}
+          </button>
+          <button onClick={() => setActiveTab('vault')} className={`flex items-center gap-2 py-3 md:py-4 text-[10px] md:text-xs font-bold uppercase tracking-widest border-b-2 transition-colors cursor-pointer ${activeTab === 'vault' ? 'border-amber-400 text-amber-400' : 'border-transparent text-zinc-500 hover:text-zinc-300'}`}>
+            <FileUp size={14} className="md:w-4 md:h-4" /> {copy.NAV_VAULT}
+          </button>
+        </div>
+
+        {/* ARCHITECTURE TIER PILL (Moved out of sidebar to save vertical space) */}
+        <div className="flex items-center gap-2.5 bg-zinc-900/90 border border-zinc-800 rounded-lg px-3 py-1.5 my-1.5 shadow-inner">
+          <Layers size={13} className={engineMode === 'hub' ? 'text-indigo-400' : 'text-cyan-400'} />
+          <span className="text-[9px] font-black text-zinc-500 uppercase tracking-widest hidden sm:inline">
+            {copy.ARCH_TIER_LABEL}
+          </span>
+          <select
+            value={engineMode}
+            onChange={(e) => setFormData({ ...formData, engine_mode: e.target.value })}
+            className={`bg-transparent text-[10px] font-black uppercase tracking-widest outline-none cursor-pointer appearance-none ${
+              engineMode === 'hub' ? 'text-indigo-400' : 'text-white'
+            }`}
+          >
+            <option value="core" className="bg-zinc-900 text-white">{copy.TIER_CORE}</option>
+            <option value="hub" className="bg-zinc-900 text-indigo-400">{copy.TIER_HUB}</option>
+          </select>
+        </div>
       </nav>
 
       {/* DYNAMIC WORKSPACE */}

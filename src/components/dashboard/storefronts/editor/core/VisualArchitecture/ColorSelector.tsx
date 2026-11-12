@@ -8,7 +8,6 @@ export default function ColorSelector({
 }: { 
   brandColor: string, secondaryBrandColor?: string, onChange: (val: string) => void, onSecondaryChange?: (val: string) => void 
 }) {
-  
   const getHexValue = (color: string) => {
     if (!color) return '#06b6d4'; 
     if (color.startsWith('#')) return color;
@@ -39,26 +38,25 @@ export default function ColorSelector({
                 value={getHexValue(brandColor)} 
                 onChange={(e) => onChange(e.target.value)}
                 className="absolute -inset-2 w-14 h-14 cursor-pointer"
-                title="Pick a custom color"
+                title={VISUAL_ARCH_COPY.COLORS.PICK_TITLE}
               />
               <Pipette className="absolute inset-0 m-auto w-4 h-4 text-white/50 pointer-events-none group-hover:text-white transition-colors drop-shadow-md" />
             </div>
             <div className="flex flex-col">
               <span className="text-xs font-bold text-white uppercase tracking-widest">{VISUAL_ARCH_COPY.COLORS.PRIMARY}</span>
               <span className="text-[10px] font-mono text-zinc-500 uppercase">
-                {brandColor.startsWith('#') ? 'Custom Hex' : VISUAL_ARCH_COPY.COLORS.PRESET}
+                {brandColor.startsWith('#') ? VISUAL_ARCH_COPY.COLORS.CUSTOM_HEX : VISUAL_ARCH_COPY.COLORS.PRESET}
               </span>
             </div>
           </div>
 
-          {/* Custom Hex Input Field */}
           <div className="flex items-center gap-2 bg-zinc-950 border border-zinc-800 rounded-lg px-3 py-2 w-full sm:w-auto">
             <Hash size={12} className="text-zinc-500" />
             <input
               type="text"
               value={brandColor.startsWith('#') ? brandColor.replace('#', '') : ''}
               onChange={(e) => handleHexType(e, onChange)}
-              placeholder="HEX CODE"
+              placeholder={VISUAL_ARCH_COPY.COLORS.HEX_PLACEHOLDER}
               className="bg-transparent text-xs font-mono text-cyan-400 focus:outline-none w-20 uppercase placeholder:text-zinc-700"
               maxLength={7}
             />
@@ -71,7 +69,7 @@ export default function ColorSelector({
               key={`primary-${c.value}`}
               type="button"
               onClick={() => onChange(c.value)}
-              className={`w-8 h-8 rounded-full border-2 shadow-md transition-all ${brandColor === c.value ? 'border-white scale-110 shadow-white/20' : 'border-zinc-800/50 hover:scale-105'} ${c.twBg}`}
+              className={`w-8 h-8 rounded-full border-2 shadow-md transition-all cursor-pointer ${brandColor === c.value ? 'border-white scale-110 shadow-white/20' : 'border-zinc-800/50 hover:scale-105'} ${c.twBg}`}
               title={c.name}
             />
           ))}
@@ -89,26 +87,25 @@ export default function ColorSelector({
                   value={getHexValue(secondaryBrandColor || brandColor)} 
                   onChange={(e) => onSecondaryChange(e.target.value)}
                   className="absolute -inset-2 w-14 h-14 cursor-pointer"
-                  title="Pick a custom color"
+                  title={VISUAL_ARCH_COPY.COLORS.PICK_TITLE}
                 />
                 <Pipette className="absolute inset-0 m-auto w-4 h-4 text-white/50 pointer-events-none group-hover:text-white transition-colors drop-shadow-md" />
               </div>
               <div className="flex flex-col">
                 <span className="text-xs font-bold text-white uppercase tracking-widest">{VISUAL_ARCH_COPY.COLORS.SECONDARY}</span>
                 <span className="text-[10px] font-mono text-zinc-500 uppercase">
-                  {(secondaryBrandColor || '').startsWith('#') ? 'Custom Hex' : VISUAL_ARCH_COPY.COLORS.PRESET}
+                  {(secondaryBrandColor || '').startsWith('#') ? VISUAL_ARCH_COPY.COLORS.CUSTOM_HEX : VISUAL_ARCH_COPY.COLORS.PRESET}
                 </span>
               </div>
             </div>
 
-            {/* Custom Hex Input Field */}
             <div className="flex items-center gap-2 bg-zinc-950 border border-zinc-800 rounded-lg px-3 py-2 w-full sm:w-auto">
               <Hash size={12} className="text-zinc-500" />
               <input
                 type="text"
                 value={(secondaryBrandColor || '').startsWith('#') ? secondaryBrandColor!.replace('#', '') : ''}
                 onChange={(e) => handleHexType(e, onSecondaryChange)}
-                placeholder="HEX CODE"
+                placeholder={VISUAL_ARCH_COPY.COLORS.HEX_PLACEHOLDER}
                 className="bg-transparent text-xs font-mono text-fuchsia-400 focus:outline-none w-20 uppercase placeholder:text-zinc-700"
                 maxLength={7}
               />
@@ -121,13 +118,14 @@ export default function ColorSelector({
                 key={`secondary-${c.value}`}
                 type="button"
                 onClick={() => onSecondaryChange(c.value)}
-                className={`w-8 h-8 rounded-full border-2 shadow-md transition-all ${secondaryBrandColor === c.value ? 'border-white scale-110 shadow-white/20' : 'border-zinc-800/50 hover:scale-105'} ${c.twBg}`}
+                className={`w-8 h-8 rounded-full border-2 shadow-md transition-all cursor-pointer ${secondaryBrandColor === c.value ? 'border-white scale-110 shadow-white/20' : 'border-zinc-800/50 hover:scale-105'} ${c.twBg}`}
                 title={c.name}
               />
             ))}
           </div>
         </div>
       )}
+
     </div>
   );
 }

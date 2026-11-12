@@ -1,8 +1,10 @@
-// src/components/dashboard/storefronts/editor/core/StoryAbout.tsx
+/* src/components/dashboard/storefronts/editor/core/StoryAbout.tsx */
 import React, { useState, useEffect } from 'react';
-import { BookOpen, Instagram, Facebook, Twitter, Linkedin, Send, Youtube, Sparkles, RefreshCw } from 'lucide-react';
+import { BookOpen, Instagram, Facebook, Twitter, Linkedin, Send, Youtube, Sparkles, RefreshCw, LayoutTemplate } from 'lucide-react';
 import { ALT_SOLUTIONS_HQ } from '@/config/agency';
 import EditorAccordion from '../shared/EditorAccordion';
+import { AboutSelector } from './VisualArchitecture/LayoutSelectors';
+import { EDITOR_WORKSPACE_COPY, THEME_CONSTRAINTS } from '@/config/dashboard/editor';
 
 const SOCIAL_PLATFORMS = [
   { id: 'instagram', icon: Instagram, placeholder: 'instagram handle' },
@@ -13,8 +15,14 @@ const SOCIAL_PLATFORMS = [
   { id: 'telegram', icon: Send, placeholder: 'telegram handle' },
 ];
 
-export default function StoryAbout({ formData, handleChange, setFormData }: { formData: any, handleChange: any, setFormData: any }) {
+export default function StoryAbout({ 
+  formData, handleChange, setFormData, allowedLayouts, isClientPortal = false 
+}: { 
+  formData: any; handleChange: any; setFormData: any; allowedLayouts?: any; isClientPortal?: boolean;
+}) {
   const [isOpen, setIsOpen] = useState(false);
+  const copy = EDITOR_WORKSPACE_COPY.CONTENT_TAB;
+  const safeLayouts = allowedLayouts || THEME_CONSTRAINTS[formData.theme_style || 'industrial'] || THEME_CONSTRAINTS['industrial'];
 
   useEffect(() => {
     if (formData.is_template) {
@@ -43,7 +51,7 @@ export default function StoryAbout({ formData, handleChange, setFormData }: { fo
 
   return (
     <EditorAccordion 
-      title="Story & About" 
+      title={copy.STORY_ACCORDION} 
       icon={BookOpen} 
       accentColor="rose" 
       progress={progress} 
@@ -51,38 +59,49 @@ export default function StoryAbout({ formData, handleChange, setFormData }: { fo
       onToggle={() => setIsOpen(!isOpen)}
     >
       <div className="space-y-5">
+        {!isClientPortal && (
+          <div className="pb-5 border-b border-zinc-800/70 space-y-3">
+            <div className="flex items-center gap-2 text-rose-400">
+              <LayoutTemplate size={12} />
+              <span className="text-[9px] font-black uppercase tracking-widest">{copy.STORY_LAYOUT_SUBHEADING}</span>
+            </div>
+            <AboutSelector formData={formData} setFormData={setFormData} allowedLayouts={safeLayouts} />
+          </div>
+        )}
+
         <div className="space-y-2">
-          <label className="text-[9px] font-bold text-zinc-500 uppercase tracking-widest block">About Heading</label>
+          <label className="text-[9px] font-bold text-zinc-500 uppercase tracking-widest block">{copy.ABOUT_HEADING_LABEL}</label>
           <input 
             type="text"
             name="about_heading" 
             value={formData.about_heading || ''} 
             onChange={handleChange} 
             className="w-full bg-zinc-950 p-3.5 rounded-xl border border-zinc-800 text-white focus:border-rose-500 outline-none transition-all text-xs placeholder:text-zinc-700" 
-            placeholder="e.g. Our Story"
+            placeholder={copy.ABOUT_HEADING_PLACEHOLDER}
           />
         </div>
+
         <div className="space-y-2">
-          <label className="text-[9px] font-bold text-zinc-500 uppercase tracking-widest block">About Bio</label>
+          <label className="text-[9px] font-bold text-zinc-500 uppercase tracking-widest block">{copy.ABOUT_BIO_LABEL}</label>
           <textarea 
             name="about_bio" 
             value={formData.about_bio || ''} 
             onChange={handleChange} 
             className="w-full bg-zinc-950 p-3.5 rounded-xl border border-zinc-800 text-white h-32 resize-none focus:border-rose-500 outline-none transition-all text-xs leading-relaxed placeholder:text-zinc-700" 
-            placeholder="Tell your story here..."
+            placeholder={copy.ABOUT_BIO_PLACEHOLDER}
           />
         </div>
       </div>
       
       <div className="pt-6 mt-6 border-t border-zinc-800/50 space-y-4">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-          <h4 className="text-[9px] font-bold text-zinc-500 uppercase tracking-[0.2em]">Social Connections</h4>
+          <h4 className="text-[9px] font-bold text-zinc-500 uppercase tracking-[0.2em]">{copy.SOCIALS_HEADING}</h4>
           
           {formData.is_template && (
             <div className="flex items-center gap-2 bg-rose-500/10 border border-rose-500/30 px-3 py-1 rounded-lg w-fit shadow-[0_0_15px_rgba(244,63,94,0.15)] animate-in fade-in duration-300">
               <Sparkles size={12} className="text-rose-400 animate-pulse shrink-0" />
               <span className="text-[9px] font-black uppercase tracking-widest text-rose-300">
-                HQ Routing Active
+                {copy.HQ_ROUTING_BADGE}
               </span>
               <button type="button" onClick={forceSyncHQ} className="ml-1 p-1 rounded hover:bg-rose-500/20 text-rose-400 hover:text-white transition-colors">
                 <RefreshCw size={11} />
@@ -95,6 +114,7 @@ export default function StoryAbout({ formData, handleChange, setFormData }: { fo
           {SOCIAL_PLATFORMS.map((p) => {
             const val = formData.social_links?.[p.id] || '';
             const isHQLink = val && Object.values(ALT_SOLUTIONS_HQ).includes(val);
+
             return (
               <div key={p.id} className={`flex items-center gap-3 px-3 py-3 rounded-xl bg-zinc-950 border transition-all ${isHQLink ? 'border-rose-500/40 bg-rose-500/5' : val ? 'border-emerald-500/50' : 'border-zinc-800'}`}>
                 <p.icon size={16} className={`shrink-0 ${isHQLink ? 'text-rose-400' : val ? 'text-emerald-400' : 'text-zinc-600'}`} />

@@ -2,8 +2,9 @@
 import React, { useState } from 'react';
 import Link from 'next/link';
 import { Settings, Globe, Eye, User, ArrowUpDown, ChevronUp, ChevronDown, Clock, Mail, Loader2, CheckCircle2 } from 'lucide-react';
-import { STOREFRONT_LIFECYCLE, StorefrontStatus, hasPortalAccess } from '@/config/lifecycle';
+import { STOREFRONT_LIFECYCLE, StorefrontStatus } from '@/config/lifecycle';
 import { sendPortalNudge } from '@/app/actions/storefront_applications'; 
+import { STOREFRONT_MANAGER_COPY } from '@/config/dashboard/manager';
 
 interface TableProps {
   processedData: any[];
@@ -18,14 +19,12 @@ interface TableProps {
 export default function StorefrontTable({ 
   processedData, requestSort, sortConfig, isEditMode, handleRowUpdate, availableStatuses, availableCategories 
 }: TableProps) {
-
-  // 🚀 Local state to manage the spinning loading wheel on individual buttons
   const [nudgingId, setNudgingId] = useState<string | null>(null);
   const [nudgedSuccessId, setNudgedSuccessId] = useState<string | null>(null);
+  const copy = STOREFRONT_MANAGER_COPY.TABLE;
 
   const handleNudgeClient = async (id: string, email: string, businessName: string) => {
-    // 🚀 THE FIX: Updated the confirmation text for the new flow
-    if (!window.confirm(`Send an automated portal login reminder to ${email}?`)) return;
+    if (!window.confirm(`${copy.NUDGE_CONFIRM_PREFIX} ${email}?`)) return;
     
     setNudgingId(id);
     try {
@@ -34,10 +33,10 @@ export default function StorefrontTable({
         setNudgedSuccessId(id);
         setTimeout(() => setNudgedSuccessId(null), 3000);
       } else {
-        alert(result.error || "Failed to dispatch reminder.");
+        alert(result.error || copy.NUDGE_ERROR);
       }
     } catch (err) {
-      alert("A system error occurred while sending the nudge.");
+      alert(copy.NUDGE_SYS_ERROR);
     } finally {
       setNudgingId(null);
     }
@@ -59,7 +58,7 @@ export default function StorefrontTable({
       case 'CONTENT_ASSEMBLY': return 'bg-indigo-500/[0.02] hover:bg-indigo-500/[0.05] border-l-2 border-l-indigo-500/50';
       case 'BUILDING_CORE': return 'bg-fuchsia-500/[0.02] hover:bg-fuchsia-500/[0.05] border-l-2 border-l-fuchsia-500/50';
       case 'AWAITING_ASSETS': return 'bg-violet-500/[0.02] hover:bg-violet-500/[0.05] border-l-2 border-l-violet-500/50';
-      case 'ONBOARDING': return 'bg-amber-500/[0.02] hover:bg-amber-500/[0.05] border-l-2 border-l-amber-500/50'; // 🚀 THE FIX: Swapped to ONBOARDING
+      case 'ONBOARDING': return 'bg-amber-500/[0.02] hover:bg-amber-500/[0.05] border-l-2 border-l-amber-500/50';
       case 'ON_HOLD': return 'bg-rose-500/[0.02] hover:bg-rose-500/[0.05] border-l-2 border-l-rose-500/50';
       case 'PENDING_BUILD': return 'bg-zinc-500/[0.02] hover:bg-zinc-500/[0.05] border-l-2 border-l-zinc-500/50';
       default: return 'hover:bg-white/5 border-l-2 border-l-transparent';
@@ -70,7 +69,7 @@ export default function StorefrontTable({
     return (
       <div className="overflow-x-auto rounded-lg border border-zinc-800/50 bg-zinc-950/50">
         <div className="p-10 text-center flex flex-col items-center justify-center">
-          <span className="text-zinc-600 font-mono text-[10px] uppercase tracking-widest">Queue clear.</span>
+          <span className="text-zinc-600 font-mono text-[10px] uppercase tracking-widest">{copy.EMPTY_QUEUE}</span>
         </div>
       </div>
     );
@@ -82,21 +81,21 @@ export default function StorefrontTable({
         <thead>
           <tr className="border-b border-zinc-800 bg-zinc-900/30 text-[10px] font-black uppercase tracking-widest text-zinc-500">
             <th className="px-6 py-4 cursor-pointer hover:bg-zinc-800/50 transition-colors group" onClick={() => requestSort('business_name')}>
-              <div className="flex items-center gap-2">Client / Business {getSortIcon('business_name')}</div>
+              <div className="flex items-center gap-2">{copy.COL_CLIENT} {getSortIcon('business_name')}</div>
             </th>
             <th className="px-6 py-4 hidden md:table-cell cursor-pointer hover:bg-zinc-800/50 transition-colors group" onClick={() => requestSort('category')}>
-              <div className="flex items-center gap-2">Category {getSortIcon('category')}</div>
+              <div className="flex items-center gap-2">{copy.COL_CATEGORY} {getSortIcon('category')}</div>
             </th>
             <th className="px-6 py-4 hidden lg:table-cell cursor-pointer hover:bg-zinc-800/50 transition-colors group" onClick={() => requestSort('plan_tier')}>
-              <div className="flex items-center gap-2">Plan Tier {getSortIcon('plan_tier')}</div>
+              <div className="flex items-center gap-2">{copy.COL_PLAN} {getSortIcon('plan_tier')}</div>
             </th>
             <th className="px-6 py-4 cursor-pointer hover:bg-zinc-800/50 transition-colors group" onClick={() => requestSort('status')}>
-              <div className="flex items-center gap-2">Current Status {getSortIcon('status')}</div>
+              <div className="flex items-center gap-2">{copy.COL_STATUS} {getSortIcon('status')}</div>
             </th>
             <th className="px-6 py-4 hidden xl:table-cell cursor-pointer hover:bg-zinc-800/50 transition-colors group" onClick={() => requestSort('created_at')}>
-              <div className="flex items-center gap-2">Timeline {getSortIcon('created_at')}</div>
+              <div className="flex items-center gap-2">{copy.COL_TIMELINE} {getSortIcon('created_at')}</div>
             </th>
-            <th className="px-6 py-4 text-right">System Actions</th>
+            <th className="px-6 py-4 text-right">{copy.COL_ACTIONS}</th>
           </tr>
         </thead>
         <tbody className="divide-y divide-zinc-800/50">
@@ -104,7 +103,6 @@ export default function StorefrontTable({
             const rawStatus = (store.status || 'PENDING_BUILD') as string;
             const status = rawStatus as StorefrontStatus;
             const config = STOREFRONT_LIFECYCLE[status] || { label: rawStatus, badgeColor: 'bg-zinc-800 text-zinc-400 border-zinc-700' };
-
             const isOffline = rawStatus === 'MAINTENANCE' || rawStatus === 'HIDDEN' || rawStatus === 'CANCELED' || rawStatus === 'ON_HOLD';
             const isLive = ['ACTIVE', 'MAINTENANCE', 'HIDDEN', 'AWAITING_ASSETS', 'IN_REVIEW', 'LIVE'].includes(rawStatus);
 
@@ -145,22 +143,22 @@ export default function StorefrontTable({
                   {isEditMode ? (
                     <select 
                       value={store.industry_tag || store.category || store.industry || ''} 
-                      onChange={(e) => handleRowUpdate(store.id, 'category', e.target.value)}
+                      onChange={(e) => handleRowUpdate(store.id, 'industry_tag', e.target.value)}
                       className="bg-zinc-950 border border-zinc-700 text-zinc-300 text-[10px] font-black uppercase tracking-widest rounded px-2 py-1.5 focus:border-amber-500 outline-none cursor-pointer w-full max-w-[150px]"
                     >
-                      <option value="" disabled>Select Category</option>
+                      <option value="" disabled>{copy.SELECT_CATEGORY}</option>
                       {availableCategories.map(cat => (
                         <option key={cat} value={cat}>{cat}</option>
                       ))}
                     </select>
                   ) : (
-                    store.industry_tag || store.category || store.industry || '--'
+                    store.industry_tag || store.category || store.industry || copy.EMPTY_CELL
                   )}
                 </td>
 
                 <td className="px-6 py-4 hidden lg:table-cell">
                   <span className="text-[10px] font-black text-zinc-300 bg-zinc-800/50 px-2 py-1 rounded border border-zinc-700/50 uppercase tracking-widest">
-                    {store.plan_tier || store.selected_plan || '--'}
+                    {store.plan_tier || store.selected_plan || copy.EMPTY_CELL}
                   </span>
                 </td>
 
@@ -186,17 +184,16 @@ export default function StorefrontTable({
                   <div className="flex flex-col">
                     <span className="text-xs text-zinc-300 font-mono">{formattedDate}</span>
                     <span className="text-[10px] text-zinc-500 font-mono uppercase tracking-widest mt-0.5 flex items-center gap-1">
-                      <Clock size={10} /> {daysActive === 0 ? 'Day 1' : `${daysActive} Days`}
+                      <Clock size={10} /> {daysActive === 0 ? copy.DAY_1 : `${daysActive} ${copy.DAYS_SUFFIX}`}
                     </span>
                   </div>
                 </td>
 
                 <td className="px-6 py-4 text-right">
                   <div className="flex items-center justify-end gap-2">
-
-                    {/* 🚀 THE FIX: Restored the Nudge Button and tied it to ONBOARDING */}
                     {rawStatus === 'ONBOARDING' && (
                       <button 
+                        type="button"
                         onClick={() => handleNudgeClient(store.id, store.contact_email, store.business_name)}
                         disabled={nudgingId === store.id || nudgedSuccessId === store.id}
                         className={`p-1.5 rounded-md transition-all flex items-center justify-center cursor-pointer shadow-sm ${
@@ -204,11 +201,11 @@ export default function StorefrontTable({
                             ? 'text-emerald-400 bg-emerald-500/10 border border-emerald-500/20'
                             : 'text-amber-400 bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/20'
                         }`}
-                        title="Send Workspace Login Reminder"
+                        title={copy.NUDGE_TITLE}
                       >
                         {nudgingId === store.id ? <Loader2 size={14} className="animate-spin" /> 
-                         : nudgedSuccessId === store.id ? <CheckCircle2 size={14} /> 
-                         : <Mail size={14} />}
+                          : nudgedSuccessId === store.id ? <CheckCircle2 size={14} /> 
+                          : <Mail size={14} />}
                       </button>
                     )}
 
@@ -216,7 +213,7 @@ export default function StorefrontTable({
                       href={`/portal/${store.id}`}
                       target="_blank"
                       className="p-1.5 rounded-md text-fuchsia-400 bg-fuchsia-500/10 hover:bg-fuchsia-500/20 border border-fuchsia-500/20 transition-all flex items-center justify-center"
-                      title="Enter Client Portal (Impersonate)"
+                      title={copy.PORTAL_TITLE}
                     >
                       <User size={14} />
                     </Link>
@@ -230,7 +227,7 @@ export default function StorefrontTable({
                           ? 'text-emerald-400 bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/20' 
                           : 'text-cyan-400 bg-cyan-500/10 hover:bg-cyan-500/20 border border-cyan-500/20'
                       }`}
-                      title={isLive ? "View Live Site" : "View Staging Preview"}
+                      title={isLive ? copy.LIVE_SITE_TITLE : copy.STAGING_PREVIEW_TITLE}
                     >
                       {isLive ? <Globe size={14} /> : <Eye size={14} />}
                     </a>
@@ -238,7 +235,7 @@ export default function StorefrontTable({
                     <Link 
                       href={`/dashboard/storefronts/${store.id}`}
                       className="p-1.5 rounded-md text-violet-400 bg-violet-500/10 hover:bg-violet-500/20 border border-violet-500/20 transition-all flex items-center justify-center"
-                      title="Open Command Hub"
+                      title={copy.COMMAND_HUB_TITLE}
                     >
                       <Settings size={14} />
                     </Link>

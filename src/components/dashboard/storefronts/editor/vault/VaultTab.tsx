@@ -4,7 +4,6 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '@/utils/supabase';
 import { Loader2, ShieldCheck } from 'lucide-react';
-
 import ActivePortfolios from './ActivePortfolios';
 import DropVault from './DropVault';
 import FolderView from './FolderView';
@@ -14,20 +13,17 @@ export default function VaultTab({ storeId, formData, setFormData, onReload }: {
   const [vaultFiles, setVaultFiles] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isPushing, setIsPushing] = useState<string | null>(null);
-  
   const [isUploading, setIsUploading] = useState(false);
   const [uploadStatus, setUploadStatus] = useState<string | null>(null);
-  
   const [openMenuId, setOpenMenuId] = useState<string | null>(null);
   const [renamingFile, setRenamingFile] = useState<string | null>(null);
   const [newName, setNewName] = useState<string>('');
-  
   const [activeFolder, setActiveFolder] = useState<string | null>(null);
 
   const bucketName = 'client-assets';
   const galleryItems = formData.gallery_items || [];
-  
   const isMenuMode = formData?.content_layout === 'menu';
+
   const serviceCategories = (formData.capabilities || []).map((c: any) => c.title).filter(Boolean);
   const folderCategories = Array.from(new Set(galleryItems.map((item: any) => item.category).filter(Boolean))) as string[];
   const availableCategories = Array.from(new Set([...serviceCategories, ...folderCategories]));
@@ -48,7 +44,7 @@ export default function VaultTab({ storeId, formData, setFormData, onReload }: {
     if (!files || files.length === 0) return;
 
     setIsUploading(true);
-    setUploadStatus(`Uploading ${files.length} file(s)...`);
+    setUploadStatus(`${VAULT_COPY.ALERTS.UPLOADING_PREFIX} ${files.length} ${VAULT_COPY.ALERTS.UPLOADING_SUFFIX}`);
 
     try {
       const newGalleryItems = [];
@@ -125,7 +121,6 @@ export default function VaultTab({ storeId, formData, setFormData, onReload }: {
   const handleCreateFolder = async () => {
     const folderName = window.prompt(VAULT_COPY.ALERTS.PROMPT_NEW_FOLDER);
     if (!folderName || !folderName.trim()) return;
-
     const updatedGallery = [...galleryItems, { id: `folder-init-${Date.now()}`, imageUrl: '', title: '', description: '', category: folderName.trim(), isVisible: false }];
     await supabase.from('storefronts').update({ gallery_items: updatedGallery }).eq('id', storeId);
     setFormData((prev: any) => ({ ...prev, gallery_items: updatedGallery }));
@@ -133,19 +128,17 @@ export default function VaultTab({ storeId, formData, setFormData, onReload }: {
   };
 
   const handleRenameFolder = async (oldName: string) => {
-    const newName = window.prompt(VAULT_COPY.ALERTS.PROMPT_RENAME_FOLDER, oldName);
-    if (!newName || !newName.trim() || newName === oldName) return;
-
-    const updatedGallery = galleryItems.map((item: any) => item.category === oldName ? { ...item, category: newName.trim() } : item);
+    const newFolderName = window.prompt(VAULT_COPY.ALERTS.PROMPT_RENAME_FOLDER, oldName);
+    if (!newFolderName || !newFolderName.trim() || newFolderName === oldName) return;
+    const updatedGallery = galleryItems.map((item: any) => item.category === oldName ? { ...item, category: newFolderName.trim() } : item);
     await supabase.from('storefronts').update({ gallery_items: updatedGallery }).eq('id', storeId);
     setFormData((prev: any) => ({ ...prev, gallery_items: updatedGallery }));
-    setActiveFolder(newName.trim());
+    setActiveFolder(newFolderName.trim());
     if (onReload) onReload();
   };
 
   const handleDeleteFolder = async (folderName: string) => {
     if (!window.confirm(`${VAULT_COPY.ALERTS.CONFIRM_DELETE_FOLDER_PREFIX} "${folderName}" ${VAULT_COPY.ALERTS.CONFIRM_DELETE_FOLDER_SUFFIX}`)) return;
-
     const updatedGallery = galleryItems.filter((item: any) => item.category !== folderName);
     await supabase.from('storefronts').update({ gallery_items: updatedGallery }).eq('id', storeId);
     setFormData((prev: any) => ({ ...prev, gallery_items: updatedGallery }));
@@ -197,7 +190,6 @@ export default function VaultTab({ storeId, formData, setFormData, onReload }: {
           removeImageFromFolder={removeImageFromFolder} updateFolderItem={updateFolderItem}
         />
       ) : (
-        // THE FIX: Removed 'max-w-7xl mx-auto' so it fluidly spans edge-to-edge
         <div className="w-full p-4 sm:p-6 lg:p-8 space-y-12 animate-in fade-in duration-500 pb-24">
           <ActivePortfolios 
             folderCategories={folderCategories} galleryItems={galleryItems} 

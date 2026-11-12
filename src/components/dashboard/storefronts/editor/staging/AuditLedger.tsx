@@ -1,3 +1,4 @@
+/* src/components/dashboard/storefronts/editor/staging/AuditLedger.tsx */
 'use client';
 
 import React, { useState } from 'react';
@@ -12,14 +13,14 @@ import {
   X,
   Send
 } from 'lucide-react';
+import { EDITOR_WORKSPACE_COPY } from '@/config/dashboard/editor';
 
 export default function AuditLedger({ formData }: { formData: any }) {
   const [showLegend, setShowLegend] = useState(false);
-  
-  // Look at the correct JSONB column safely
+  const copy = EDITOR_WORKSPACE_COPY.GRID_TAB.AUDIT_LEDGER;
+
   const auditLogs = formData?.audit_notes || [];
 
-  // Map to our exact Backend Event Types
   const getLedgerTheme = (type: string) => {
     switch(type) {
       case 'APPROVED':
@@ -55,16 +56,17 @@ export default function AuditLedger({ formData }: { formData: any }) {
       {/* HEADER WITH INFO BUTTON */}
       <div className="border-b border-zinc-800 bg-black/40 p-4 flex items-center justify-between shrink-0">
         <div className="flex items-center gap-3">
-          <div className="p-1.5 bg-zinc-800 rounded-md border border-zinc-700 shadow-inner">
-             <ClipboardCheck size={14} className="text-zinc-400" />
+          <div className="p-1.5 bg-zinc-800 rounded-md border border-zinc-700 shadow-inner"> 
+            <ClipboardCheck size={14} className="text-zinc-400" />
           </div>
-          <h3 className="text-[11px] font-black text-white uppercase tracking-[0.2em]">Project Timeline</h3>
+          <h3 className="text-[11px] font-black text-white uppercase tracking-[0.2em]">{copy.TITLE}</h3>
         </div>
         
         <button 
+          type="button"
           onClick={() => setShowLegend(true)}
           className="p-1.5 text-zinc-500 hover:text-cyan-400 hover:bg-cyan-500/10 rounded-md transition-colors cursor-pointer"
-          title="Timeline Legend"
+          title={copy.LEGEND_TITLE}
         >
           <Info size={14} />
         </button>
@@ -74,12 +76,11 @@ export default function AuditLedger({ formData }: { formData: any }) {
       <div className="p-5 flex-1 overflow-y-auto space-y-3 custom-scrollbar">
         {auditLogs.length === 0 ? (
           <div className="text-center p-8 bg-black/30 border border-zinc-800/80 rounded-lg text-zinc-500 text-sm">
-            No events logged yet.
+            {copy.EMPTY_STATE}
           </div>
         ) : (
           [...auditLogs].reverse().map((log: any, idx: number) => {
             const theme = getLedgerTheme(log.type);
-
             return (
               <div 
                 key={idx} 
@@ -96,7 +97,6 @@ export default function AuditLedger({ formData }: { formData: any }) {
                     {formatDate(log.timestamp)}
                   </span>
                 </div>
-
                 {log.message && (
                   <p className="text-sm text-zinc-300 ml-6 leading-relaxed">
                     {log.message}
@@ -114,36 +114,37 @@ export default function AuditLedger({ formData }: { formData: any }) {
           <div className="bg-zinc-950 border border-zinc-800 rounded-xl p-6 max-w-sm w-full shadow-2xl relative">
             
             <button 
+              type="button"
               onClick={() => setShowLegend(false)}
               className="absolute top-4 right-4 text-zinc-500 hover:text-white transition-colors cursor-pointer"
             >
               <X size={16} />
             </button>
 
-            <h4 className="text-[10px] font-mono text-zinc-400 uppercase tracking-widest mb-6">Status Legend</h4>
+            <h4 className="text-[10px] font-mono text-zinc-400 uppercase tracking-widest mb-6">{copy.STATUS_LEGEND_HEADING}</h4>
             
             <div className="space-y-4">
               <div className="flex items-start gap-3">
                 <CheckCircle2 size={16} className="text-emerald-400 shrink-0 mt-0.5" />
                 <div>
-                  <div className="text-sm font-bold text-emerald-400">Approved</div>
-                  <div className="text-xs text-zinc-500 mt-0.5">Client verified architecture.</div>
+                  <div className="text-sm font-bold text-emerald-400">{copy.APPROVED_TITLE}</div>
+                  <div className="text-xs text-zinc-500 mt-0.5">{copy.APPROVED_DESC}</div>
                 </div>
               </div>
               
               <div className="flex items-start gap-3">
                 <AlertCircle size={16} className="text-amber-400 shrink-0 mt-0.5" />
                 <div>
-                  <div className="text-sm font-bold text-amber-400">Changes Requested</div>
-                  <div className="text-xs text-zinc-500 mt-0.5">Client revisions logged and pending.</div>
+                  <div className="text-sm font-bold text-amber-400">{copy.CHANGES_TITLE}</div>
+                  <div className="text-xs text-zinc-500 mt-0.5">{copy.CHANGES_DESC}</div>
                 </div>
               </div>
 
               <div className="flex items-start gap-3">
                 <CreditCard size={16} className="text-fuchsia-400 shrink-0 mt-0.5" />
                 <div>
-                  <div className="text-sm font-bold text-fuchsia-400">Payment Cleared</div>
-                  <div className="text-xs text-zinc-500 mt-0.5">Subscription active. System Live.</div>
+                  <div className="text-sm font-bold text-fuchsia-400">{copy.PAYMENT_TITLE}</div>
+                  <div className="text-xs text-zinc-500 mt-0.5">{copy.PAYMENT_DESC}</div>
                 </div>
               </div>
             </div>
@@ -151,7 +152,6 @@ export default function AuditLedger({ formData }: { formData: any }) {
           </div>
         </div>
       )}
-
     </div>
   );
 }
