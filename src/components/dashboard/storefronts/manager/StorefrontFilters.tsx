@@ -14,7 +14,7 @@ interface FiltersProps {
   setPlanFilter: (val: string) => void;
   statusFilter: string;
   setStatusFilter: (val: string) => void;
-  availableCategories: string[];
+  masterIndustries: { id: string; label: string }[];
   availablePlans: string[];
   availableStatuses: string[];
 }
@@ -24,7 +24,7 @@ export default function StorefrontFilters({
   categoryFilter, setCategoryFilter,
   planFilter, setPlanFilter,
   statusFilter, setStatusFilter,
-  availableCategories, availablePlans, availableStatuses
+  masterIndustries, availablePlans, availableStatuses
 }: FiltersProps) {
   const copy = STOREFRONT_MANAGER_COPY.FILTERS;
 
@@ -45,9 +45,9 @@ export default function StorefrontFilters({
       <div className="flex flex-wrap items-center justify-start lg:justify-end gap-3 pt-2">
         <div className="relative flex-1 sm:flex-none">
           <Filter className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-zinc-500 pointer-events-none" />
-          <select value={categoryFilter} onChange={(e) => setCategoryFilter(e.target.value)} className="w-full sm:w-44 bg-zinc-950/50 border border-zinc-800 focus:border-cyan-500/50 rounded-lg pl-8 pr-4 py-2 text-[10px] font-black uppercase tracking-widest text-zinc-300 outline-none transition-all shadow-inner appearance-none cursor-pointer">
+          <select value={categoryFilter} onChange={(e) => setCategoryFilter(e.target.value)} className="w-full sm:w-52 bg-zinc-950/50 border border-zinc-800 focus:border-cyan-500/50 rounded-lg pl-8 pr-4 py-2 text-[10px] font-black uppercase tracking-widest text-zinc-300 outline-none transition-all shadow-inner appearance-none cursor-pointer">
             <option value="ALL">{copy.ALL_CATEGORIES}</option>
-            {availableCategories.map(cat => <option key={cat} value={cat}>{cat}</option>)}
+            {masterIndustries.map(cat => <option key={cat.id} value={cat.id}>{cat.label}</option>)}
           </select>
         </div>
         <div className="relative flex-1 sm:flex-none">
@@ -57,13 +57,15 @@ export default function StorefrontFilters({
             {availablePlans.map(plan => <option key={plan} value={plan}>{plan.replace('_', ' ')}</option>)}
           </select>
         </div>
-        <div className="relative flex-1 sm:flex-none">
-          <Filter className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-zinc-500 pointer-events-none" />
-          <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)} className="w-full sm:w-40 bg-zinc-950/50 border border-zinc-800 focus:border-cyan-500/50 rounded-lg pl-8 pr-4 py-2 text-[10px] font-black uppercase tracking-widest text-zinc-300 outline-none transition-all shadow-inner appearance-none cursor-pointer">
-            <option value="ALL">{copy.ALL_STATUSES}</option>
-            {availableStatuses.map(status => <option key={status} value={status}>{status.replace('_', ' ')}</option>)}
-          </select>
-        </div>
+        {activeTab !== 'PROTOTYPES' && (
+          <div className="relative flex-1 sm:flex-none">
+            <Filter className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-zinc-500 pointer-events-none" />
+            <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)} className="w-full sm:w-40 bg-zinc-950/50 border border-zinc-800 focus:border-cyan-500/50 rounded-lg pl-8 pr-4 py-2 text-[10px] font-black uppercase tracking-widest text-zinc-300 outline-none transition-all shadow-inner appearance-none cursor-pointer">
+              <option value="ALL">{copy.ALL_STATUSES}</option>
+              {availableStatuses.map(status => <option key={status} value={status}>{status.replace('_', ' ')}</option>)}
+            </select>
+          </div>
+        )}
       </div>
     </div>
   );

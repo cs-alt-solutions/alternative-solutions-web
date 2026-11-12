@@ -21,7 +21,6 @@ export default function TenantCommandHub() {
   const [formData, setFormData] = useState<any>(null);
   const [activeTab, setActiveTab] = useState<'canvas' | 'grid' | 'vault'>('canvas');
   
-  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [saveMessage, setSaveMessage] = useState('');
@@ -32,14 +31,6 @@ export default function TenantCommandHub() {
   const copy = EDITOR_WORKSPACE_COPY.COMMAND_HUB;
 
   useEffect(() => {
-    const storedState = localStorage.getItem('sidebar-collapsed') || localStorage.getItem('isCollapsed');
-    if (storedState === 'true') {
-      setIsSidebarCollapsed(true);
-    }
-
-    const handleCollapse = (e: any) => setIsSidebarCollapsed(e.detail.isCollapsed);
-    window.addEventListener('sidebar-collapse', handleCollapse);
-
     const fetchTenant = async () => {
       const { data, error } = await supabase
         .from('storefronts')
@@ -53,17 +44,13 @@ export default function TenantCommandHub() {
     };
     
     fetchTenant();
-
-    return () => {
-      window.removeEventListener('sidebar-collapse', handleCollapse);
-    };
   }, [id]);
 
-  // Window resize hack to fix iframe loading gaps on tab change
+  // Window resize trigger to ensure iframe fills smoothly on tab switch
   useEffect(() => {
     const timer = setTimeout(() => window.dispatchEvent(new Event('resize')), 100);
     return () => clearTimeout(timer);
-  }, [isSidebarCollapsed, activeTab]);
+  }, [activeTab]);
 
   const reloadCanvas = () => setRefreshKey(Date.now());
 
@@ -102,73 +89,73 @@ export default function TenantCommandHub() {
 
   if (isLoading) {
     return (
-      <div className={`fixed top-0 right-0 bottom-0 left-0 transition-all duration-300 ${isSidebarCollapsed ? 'md:left-20' : 'md:left-64'} z-40 flex flex-col items-center justify-center bg-black`}>
+      <div className="absolute inset-0 z-30 flex flex-col items-center justify-center bg-black">
         <Loader2 className="w-8 h-8 text-cyan-400 animate-spin mb-4" />
         <span className="font-mono text-xs text-zinc-500 uppercase tracking-widest">{copy.INITIALIZING}</span>
       </div>
     );
   }
 
-  if (!formData) return <div className={`fixed top-0 right-0 bottom-0 left-0 transition-all duration-300 ${isSidebarCollapsed ? 'md:left-20' : 'md:left-64'} z-40 p-8 text-white bg-black`}>{copy.NOT_FOUND}</div>;
+  if (!formData) return <div className="absolute inset-0 z-30 p-8 text-white bg-black">{copy.NOT_FOUND}</div>;
 
   const isLocked = !isUnlocked && ['IN_REVIEW', 'ACTIVE', 'LIVE', 'MAINTENANCE'].includes(formData.status);
   const engineMode = formData.engine_mode || 'core';
 
   return (
-    <div className={`fixed top-0 right-0 bottom-0 left-0 transition-all duration-300 ${isSidebarCollapsed ? 'md:left-20' : 'md:left-64'} z-40 bg-black flex flex-col overflow-hidden animate-in fade-in duration-300`}>
+    <div className="absolute inset-0 z-30 bg-black flex flex-col overflow-hidden animate-in fade-in duration-300">
       
       {/* HUB HEADER */}
-      <header className="border-b border-white/5 bg-zinc-950 px-4 md:px-6 py-4 flex items-center justify-between shrink-0">
-        <div className="flex items-center gap-4">
-          <Link href="/dashboard/storefronts" className="p-2 -ml-2 rounded-lg text-zinc-500 hover:text-white hover:bg-zinc-900 transition-all cursor-pointer">
-            <ArrowLeft className="w-5 h-5 md:w-6 md:h-6" />
+      <header className="border-b border-white/5 bg-zinc-950 px-3 sm:px-6 py-3 sm:py-4 flex items-center justify-between gap-2 shrink-0">
+        <div className="flex items-center gap-2.5 sm:gap-4 min-w-0">
+          <Link href="/dashboard/storefronts" className="p-2 -ml-1 rounded-lg text-zinc-500 hover:text-white hover:bg-zinc-900 transition-all cursor-pointer shrink-0">
+            <ArrowLeft className="w-5 h-5" />
           </Link>
-          <div>
-            <div className="flex items-center gap-3 mb-1">
-              <span className="px-2 py-0.5 rounded-full bg-cyan-500/10 border border-cyan-500/20 text-[10px] font-mono text-cyan-400 uppercase tracking-widest">
+          <div className="min-w-0">
+            <div className="flex items-center gap-2 sm:gap-3 mb-0.5">
+              <span className="px-2 py-0.5 rounded-full bg-cyan-500/10 border border-cyan-500/20 text-[9px] sm:text-[10px] font-mono text-cyan-400 uppercase tracking-widest shrink-0">
                 {copy.BADGE}
               </span>
-              <span className="text-zinc-500 font-mono text-xs">{formData.slug}</span>
+              <span className="text-zinc-500 font-mono text-[11px] truncate">/{formData.slug}</span>
             </div>
-            <h1 className="text-xl md:text-2xl font-black text-white uppercase tracking-tight">
+            <h1 className="text-base sm:text-xl md:text-2xl font-black text-white uppercase tracking-tight truncate">
               {formData.business_name}
             </h1>
           </div>
         </div>
         
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2 sm:gap-3 shrink-0">
           {saveMessage && (
-            <span className="hidden sm:inline text-emerald-400 text-[10px] font-mono font-bold tracking-widest uppercase animate-pulse mr-2">
+            <span className="hidden xl:inline text-emerald-400 text-[10px] font-mono font-bold tracking-widest uppercase animate-pulse mr-1">
               • {saveMessage}
             </span>
           )}
-          <button onClick={handleMasterSave} disabled={isSaving} className="flex items-center gap-2 bg-cyan-600 hover:bg-cyan-500 text-zinc-950 px-4 md:px-6 py-2 md:py-2.5 rounded-lg text-[10px] md:text-xs font-black uppercase tracking-widest transition-all shadow-[0_0_10px_rgba(8,145,178,0.3)] disabled:opacity-50 cursor-pointer">
+          <button type="button" onClick={handleMasterSave} disabled={isSaving} className="flex items-center gap-2 bg-cyan-600 hover:bg-cyan-500 text-zinc-950 px-3.5 sm:px-5 py-2 sm:py-2.5 rounded-lg text-[10px] md:text-xs font-black uppercase tracking-widest transition-all shadow-[0_0_10px_rgba(8,145,178,0.3)] disabled:opacity-50 cursor-pointer">
             {isSaving ? <Loader2 className="animate-spin w-4 h-4" /> : <Save className="w-4 h-4" />}
-            <span className="hidden sm:inline">{isSaving ? copy.SYNCING_BTN : copy.SAVE_BTN}</span>
+            <span>{isSaving ? copy.SYNCING_BTN : copy.SAVE_BTN}</span>
           </button>
-          <a href={`https://${formData.custom_domain || `storefronts.alternativesolutions.io/${formData.slug}`}`} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 bg-zinc-900 border border-zinc-800 hover:border-cyan-400 hover:text-cyan-400 text-zinc-300 px-3 md:px-4 py-2 md:py-2.5 rounded-lg text-[10px] md:text-xs font-bold uppercase tracking-widest transition-all">
-            <span className="hidden sm:inline">{copy.LIVE_TELEMETRY}</span> <ExternalLink size={14} />
+          <a href={`https://${formData.custom_domain || `storefronts.alternativesolutions.io/${formData.slug}`}`} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 bg-zinc-900 border border-zinc-800 hover:border-cyan-400 hover:text-cyan-400 text-zinc-300 px-3 sm:px-4 py-2 sm:py-2.5 rounded-lg text-[10px] md:text-xs font-bold uppercase tracking-widest transition-all">
+            <span className="hidden md:inline">{copy.LIVE_TELEMETRY}</span> <ExternalLink size={14} />
           </a>
         </div>
       </header>
 
       {/* COMMAND NAVIGATION + ARCHITECTURE TIER SELECTOR */}
-      <nav className="flex flex-wrap items-center justify-between gap-4 px-4 md:px-6 border-b border-zinc-800 bg-zinc-950 shrink-0">
-        <div className="flex items-center gap-4 md:gap-6">
-          <button onClick={() => setActiveTab('canvas')} className={`flex items-center gap-2 py-3 md:py-4 text-[10px] md:text-xs font-bold uppercase tracking-widest border-b-2 transition-colors cursor-pointer ${activeTab === 'canvas' ? 'border-cyan-400 text-cyan-400' : 'border-transparent text-zinc-500 hover:text-zinc-300'}`}>
-            <Layout size={14} className="md:w-4 md:h-4" /> {copy.NAV_CANVAS}
+      <nav className="flex flex-wrap items-center justify-between gap-2 px-3 sm:px-6 border-b border-zinc-800 bg-zinc-950 shrink-0">
+        <div className="flex items-center gap-3 sm:gap-6 overflow-x-auto hide-scrollbar">
+          <button type="button" onClick={() => setActiveTab('canvas')} className={`flex items-center gap-1.5 sm:gap-2 py-2.5 sm:py-3.5 text-[10px] md:text-xs font-bold uppercase tracking-widest border-b-2 transition-colors cursor-pointer whitespace-nowrap ${activeTab === 'canvas' ? 'border-cyan-400 text-cyan-400' : 'border-transparent text-zinc-500 hover:text-zinc-300'}`}>
+            <Layout size={14} /> {copy.NAV_CANVAS}
           </button>
-          <button onClick={() => setActiveTab('grid')} className={`flex items-center gap-2 py-3 md:py-4 text-[10px] md:text-xs font-bold uppercase tracking-widest border-b-2 transition-colors cursor-pointer ${activeTab === 'grid' ? 'border-emerald-400 text-emerald-400' : 'border-transparent text-zinc-500 hover:text-zinc-300'}`}>
-            <Server size={14} className="md:w-4 md:h-4" /> {copy.NAV_GRID}
+          <button type="button" onClick={() => setActiveTab('grid')} className={`flex items-center gap-1.5 sm:gap-2 py-2.5 sm:py-3.5 text-[10px] md:text-xs font-bold uppercase tracking-widest border-b-2 transition-colors cursor-pointer whitespace-nowrap ${activeTab === 'grid' ? 'border-emerald-400 text-emerald-400' : 'border-transparent text-zinc-500 hover:text-zinc-300'}`}>
+            <Server size={14} /> {copy.NAV_GRID}
           </button>
-          <button onClick={() => setActiveTab('vault')} className={`flex items-center gap-2 py-3 md:py-4 text-[10px] md:text-xs font-bold uppercase tracking-widest border-b-2 transition-colors cursor-pointer ${activeTab === 'vault' ? 'border-amber-400 text-amber-400' : 'border-transparent text-zinc-500 hover:text-zinc-300'}`}>
-            <FileUp size={14} className="md:w-4 md:h-4" /> {copy.NAV_VAULT}
+          <button type="button" onClick={() => setActiveTab('vault')} className={`flex items-center gap-1.5 sm:gap-2 py-2.5 sm:py-3.5 text-[10px] md:text-xs font-bold uppercase tracking-widest border-b-2 transition-colors cursor-pointer whitespace-nowrap ${activeTab === 'vault' ? 'border-amber-400 text-amber-400' : 'border-transparent text-zinc-500 hover:text-zinc-300'}`}>
+            <FileUp size={14} /> {copy.NAV_VAULT}
           </button>
         </div>
 
-        {/* ARCHITECTURE TIER PILL (Moved out of sidebar to save vertical space) */}
-        <div className="flex items-center gap-2.5 bg-zinc-900/90 border border-zinc-800 rounded-lg px-3 py-1.5 my-1.5 shadow-inner">
-          <Layers size={13} className={engineMode === 'hub' ? 'text-indigo-400' : 'text-cyan-400'} />
+        {/* ARCHITECTURE TIER PILL */}
+        <div className="flex items-center gap-2 bg-zinc-900/90 border border-zinc-800 rounded-lg px-2.5 py-1 my-1 shadow-inner shrink-0">
+          <Layers size={12} className={engineMode === 'hub' ? 'text-indigo-400' : 'text-cyan-400'} />
           <span className="text-[9px] font-black text-zinc-500 uppercase tracking-widest hidden sm:inline">
             {copy.ARCH_TIER_LABEL}
           </span>
@@ -186,7 +173,7 @@ export default function TenantCommandHub() {
       </nav>
 
       {/* DYNAMIC WORKSPACE */}
-      <div className="flex-1 flex overflow-hidden w-full relative">
+      <div className="flex-1 flex overflow-hidden w-full relative min-h-0">
         
         {activeTab === 'canvas' && (
           <StorefrontCanvas 

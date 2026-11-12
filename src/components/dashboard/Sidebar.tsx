@@ -40,18 +40,25 @@ export default function Sidebar({ isOpen, closeMenu }: SidebarProps) {
   const [isLoggingOut, setIsLoggingOut] = useState(false);
   const copy = DASHBOARD_COPY.SIDEBAR;
 
+  // Sync collapsed state with localStorage on mount
+  useEffect(() => {
+    const storedState = localStorage.getItem('sidebar-collapsed') === 'true';
+    setIsCollapsed(storedState);
+  }, []);
+
   useEffect(() => {
     if (isOpen) {
       document.body.style.overflow = 'hidden';
     } else {
       document.body.style.overflow = 'unset';
     }
-    return () => { document.body.style.overflow = 'unset'; }
+    return () => { document.body.style.overflow = 'unset'; };
   }, [isOpen]);
 
   const handleToggleCollapse = () => {
     const newState = !isCollapsed;
     setIsCollapsed(newState);
+    localStorage.setItem('sidebar-collapsed', String(newState));
     window.dispatchEvent(new CustomEvent('sidebar-collapse', { detail: { isCollapsed: newState } }));
   };
 
@@ -134,8 +141,8 @@ export default function Sidebar({ isOpen, closeMenu }: SidebarProps) {
 
       <aside className={`
         fixed md:static inset-y-0 left-0 z-50
-        bg-bg-surface-100 border-r border-white/5 h-screen flex flex-col
-        transition-transform duration-300 ease-in-out
+        bg-bg-surface-100 border-r border-white/5 h-screen flex flex-col shrink-0
+        transition-all duration-300 ease-in-out
         ${isOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'}
         ${isCollapsed ? 'md:w-20' : 'md:w-64'}
         w-64
@@ -156,6 +163,7 @@ export default function Sidebar({ isOpen, closeMenu }: SidebarProps) {
             </div>
           )}
           <button
+            type="button"
             onClick={handleToggleCollapse}
             className="hidden md:flex p-1.5 rounded-lg bg-white/5 border border-white/10 text-slate-400 hover:text-white hover:bg-white/10 transition-colors cursor-pointer"
             title={isCollapsed ? "Expand Sidebar" : "Minimize Sidebar"}
@@ -206,6 +214,7 @@ export default function Sidebar({ isOpen, closeMenu }: SidebarProps) {
 
           <div className="px-3">
             <button 
+              type="button"
               onClick={handleSignOut}
               disabled={isLoggingOut}
               title={isCollapsed ? (copy.EXIT || 'EXIT SYSTEM') : undefined}

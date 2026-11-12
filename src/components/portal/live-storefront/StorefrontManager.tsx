@@ -9,6 +9,7 @@ import {
 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { PORTAL_COPY } from '@/config/clients/portal';
+import { EDITOR_WORKSPACE_COPY, getActiveBlueprint } from '@/config/dashboard/editor';
 import { getPortalTheme } from '../core/theme';
 
 import CoreTab from '@/components/dashboard/storefronts/editor/CoreTab';
@@ -24,6 +25,10 @@ export default function StorefrontManager({ store }: { store: any }) {
 
   const currentTheme = getPortalTheme(store.id);
   const [formData, setFormData] = useState(store);
+
+  const activeBlueprint = getActiveBlueprint(formData?.industry_tag, formData?.engine_mode);
+  const servicesTabLabel = activeBlueprint.tabLabel;
+  const canvasCopy = EDITOR_WORKSPACE_COPY.CANVAS;
 
   const handleUnlock = () => {
     const isSure = window.confirm("Hold up! 🚨 You are unlocking the live editor. This isn't a test mode—anything you publish here instantly updates your actual website. Ready to dive in?");
@@ -42,7 +47,7 @@ export default function StorefrontManager({ store }: { store: any }) {
       
       setSaved(true);
       
-      // This tells the server to re-fetch the data AND triggers the iframe to reload
+      // Re-fetches server data AND triggers the parent page.tsx iframe to reload
       router.refresh(); 
       
       setTimeout(() => setSaved(false), 3000);
@@ -85,6 +90,7 @@ export default function StorefrontManager({ store }: { store: any }) {
       <div className="shrink-0 mb-6 flex gap-3">
         {!isEditing ? (
           <button 
+            type="button"
             onClick={handleUnlock}
             className={`w-full flex items-center justify-center gap-2 ${currentTheme.bg} hover:brightness-110 ${currentTheme.text} border ${currentTheme.border} px-6 py-4 rounded-xl text-xs font-black uppercase tracking-widest transition-all cursor-pointer shadow-[0_0_15px_rgba(6,182,212,0.1)]`}
           >
@@ -93,6 +99,7 @@ export default function StorefrontManager({ store }: { store: any }) {
         ) : (
           <>
             <button 
+              type="button"
               onClick={handleSave}
               disabled={isSaving}
               className="flex-1 flex items-center justify-center gap-2 bg-cyan-600 hover:bg-cyan-500 text-zinc-950 px-6 py-4 rounded-xl text-xs font-black uppercase tracking-widest transition-all shadow-[0_0_15px_rgba(8,145,178,0.3)] disabled:opacity-50 cursor-pointer"
@@ -100,6 +107,7 @@ export default function StorefrontManager({ store }: { store: any }) {
               {isSaving ? <><Loader2 size={16} className="animate-spin" /> Compiling...</> : saved ? <><CheckCircle2 size={16} /> Live Synced</> : <><Save size={16} /> Publish Changes</>}
             </button>
             <button 
+              type="button"
               onClick={() => setIsEditing(false)}
               disabled={isSaving}
               className="px-5 py-4 rounded-xl bg-zinc-900 border border-zinc-800 text-zinc-500 hover:text-white transition-colors flex items-center justify-center cursor-pointer disabled:opacity-50"
@@ -120,21 +128,35 @@ export default function StorefrontManager({ store }: { store: any }) {
         </div>
       )}
 
-      {/* THE ACTUAL EDITOR TABS */}
+      {/* THE ACTUAL EDITOR TABS (Design Pickers Hidden via isClientPortal={true}) */}
       <div className={`flex-1 flex flex-col min-h-0 overflow-hidden transition-all duration-500 ${!isEditing ? 'opacity-50 grayscale-30 pointer-events-none' : 'opacity-100'}`}>
         <div className="flex flex-col border border-zinc-800 bg-zinc-950 rounded-2xl overflow-hidden h-full shadow-xl">
           <div className="flex items-center gap-1 p-2 border-b border-zinc-800 bg-zinc-900/50 shrink-0">
-            <button onClick={() => setEditorTab('content')} className={`flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-md text-[10px] font-bold tracking-widest uppercase transition-all cursor-pointer ${editorTab === 'content' ? 'bg-zinc-800 text-white shadow-sm' : 'text-zinc-500 hover:text-zinc-300 hover:bg-zinc-800/50'}`}>
-              <PenTool className="w-3.5 h-3.5" /> Content
+            <button type="button" onClick={() => setEditorTab('content')} className={`flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-md text-[10px] font-bold tracking-widest uppercase transition-all cursor-pointer ${editorTab === 'content' ? 'bg-zinc-800 text-white shadow-sm' : 'text-zinc-500 hover:text-zinc-300 hover:bg-zinc-800/50'}`}>
+              <PenTool className="w-3.5 h-3.5" /> {canvasCopy.TABS.CONTENT}
             </button>
-            <button onClick={() => setEditorTab('services')} className={`flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-md text-[10px] font-bold tracking-widest uppercase transition-all cursor-pointer ${editorTab === 'services' ? 'bg-zinc-800 text-white shadow-sm' : 'text-zinc-500 hover:text-zinc-300 hover:bg-zinc-800/50'}`}>
-              <Layers className="w-3.5 h-3.5" /> Services
+            <button type="button" onClick={() => setEditorTab('services')} className={`flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-md text-[10px] font-bold tracking-widest uppercase transition-all cursor-pointer ${editorTab === 'services' ? 'bg-zinc-800 text-white shadow-sm' : 'text-zinc-500 hover:text-zinc-300 hover:bg-zinc-800/50'}`}>
+              <Layers className="w-3.5 h-3.5" /> {servicesTabLabel}
             </button>
           </div>
 
           <div className="flex-1 overflow-y-auto custom-scrollbar p-4">
-            {editorTab === 'content' && <CoreTab formData={formData} setFormData={setFormData} onReload={() => router.refresh()} />}
-            {editorTab === 'services' && <CapabilitiesTab formData={formData} setFormData={setFormData} onReload={() => router.refresh()} />}
+            {editorTab === 'content' && (
+              <CoreTab 
+                formData={formData} 
+                setFormData={setFormData} 
+                onReload={() => router.refresh()} 
+                isClientPortal={true} 
+              />
+            )}
+            {editorTab === 'services' && (
+              <CapabilitiesTab 
+                formData={formData} 
+                setFormData={setFormData} 
+                onReload={() => router.refresh()} 
+                isClientPortal={true} 
+              />
+            )}
           </div>
         </div>
       </div>

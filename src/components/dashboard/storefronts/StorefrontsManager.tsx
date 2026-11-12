@@ -3,8 +3,9 @@
 
 import React, { useState } from 'react';
 import { supabase } from '@/utils/supabase';
-import { Unlock, Lock, HardHat, Globe, Clock } from 'lucide-react';
+import { HardHat, Globe, Clock, FlaskConical } from 'lucide-react';
 import { STOREFRONT_LIFECYCLE } from '@/config/lifecycle';
+import { STOREFRONT_EDITOR_COPY } from '@/config/dashboard';
 import { STOREFRONT_MANAGER_COPY } from '@/config/dashboard/manager';
 import NewStorefrontModal from './NewStorefrontModal';
 import StorefrontLegend from './manager/StorefrontLegend';
@@ -16,19 +17,20 @@ export default function StorefrontsManager({ initialData }: { initialData: any[]
   const [activeTab, setActiveTab] = useState<'ALL' | 'CLIENTS' | 'PROTOTYPES'>('CLIENTS');
   const [storefronts, setStorefronts] = useState(initialData);
 
-  const [sortConfig, setSortConfig] = useState<{ key: string; direction: 'asc' | 'desc' } | null>({ key: 'status', direction: 'asc' });
+  const [sortConfig, setSortConfig] = useState<{ key: string; direction: 'asc' | 'desc' } | null>({ key: 'created_at', direction: 'desc' });
   const [statusFilter, setStatusFilter] = useState<string>('ALL'); 
   const [planFilter, setPlanFilter] = useState<string>('ALL');
   const [categoryFilter, setCategoryFilter] = useState<string>('ALL');
 
-  const [isEditMode, setIsEditMode] = useState(false);
   const copy = STOREFRONT_MANAGER_COPY;
 
   const availableStatuses = Object.keys(STOREFRONT_LIFECYCLE);
   const availablePlans = Array.from(new Set(storefronts.map(s => s.plan_tier || s.selected_plan).filter(Boolean))) as string[];
-  const availableCategories = Array.from(new Set(storefronts.map(s => s.industry_tag || s.category || s.industry).filter(Boolean))) as string[];
 
-  const handleRowUpdate = async (id: string, field: string, value: string) => {
+  // Pull master industry categories directly from STOREFRONT_EDITOR_COPY.INDUSTRIES
+  const masterIndustries: { id: string; label: string }[] = STOREFRONT_EDITOR_COPY.INDUSTRIES || [];
+
+  const handleRowUpdate = async (id: string, field: string, value: any) => {
     setStorefronts(prev => prev.map(store => store.id === id ? { ...store, [field]: value } : store));
     const { error } = await supabase.from('storefronts').update({ [field]: value }).eq('id', id);
     if (error) {
@@ -43,8 +45,9 @@ export default function StorefrontsManager({ initialData }: { initialData: any[]
     setSortConfig({ key, direction });
   };
 
+  // Never hide prototypes even if their status is PENDING, BUILDING, DRAFT, or null!
   let processedData = storefronts.filter(store => {
-    if (store.status === 'PENDING' || store.status === 'CANCELED') return false;
+    if (!store.is_template && (store.status === 'PENDING' || store.status === 'CANCELED')) return false;
     if (!search.trim()) return true;
     
     const term = search.toLowerCase();
@@ -55,7 +58,12 @@ export default function StorefrontsManager({ initialData }: { initialData: any[]
   if (activeTab === 'PROTOTYPES') processedData = processedData.filter(store => store.is_template);
   if (statusFilter !== 'ALL') processedData = processedData.filter(store => store.status === statusFilter);
   if (planFilter !== 'ALL') processedData = processedData.filter(store => (store.plan_tier === planFilter) || (store.selected_plan === planFilter));
-  if (categoryFilter !== 'ALL') processedData = processedData.filter(store => (store.industry_tag === categoryFilter) || (store.category === categoryFilter) || (store.industry === categoryFilter));
+  if (categoryFilter !== 'ALL') {
+    processedData = processedData.filter(store => {
+      const storeCat = store.industry_tag || store.category || store.industry || 'General';
+      return storeCat === categoryFilter;
+    });
+  }
 
   if (sortConfig !== null) {
     processedData.sort((a, b) => {
@@ -84,9 +92,13 @@ export default function StorefrontsManager({ initialData }: { initialData: any[]
     });
   }
 
-  const activeWorkshopData = processedData.filter(s => ['ONBOARDING', 'PENDING_BUILD', 'BUILDING_CORE', 'CONTENT_ASSEMBLY'].includes(s.status || 'PENDING_BUILD'));
-  const holdingPatternData = processedData.filter(s => ['IN_REVIEW', 'AWAITING_ASSETS', 'ON_HOLD'].includes(s.status));
-  const liveProductionData = processedData.filter(s => ['ACTIVE', 'LIVE', 'MAINTENANCE', 'HIDDEN'].includes(s.status));
+  // Client Pipeline Buckets (Including legacy statuses like 'BUILDING' or 'APPROVED' so nothing ever disappears)
+  const holdingStatuses = ['IN_REVIEW', 'IN REVIEW', 'AWAITING_ASSETS', 'ON_HOLD', 'CHANGES_REQUESTED'];
+  const liveStatuses = ['ACTIVE', 'LIVE', 'MAINTENANCE', 'HIDDEN'];
+
+  const activeWorkshopData = processedData.filter(s => !holdingStatuses.includes(s.status) && !liveStatuses.includes(s.status));
+  const holdingPatternData = processedData.filter(s => holdingStatuses.includes(s.status));
+  const liveProductionData = processedData.filter(s => liveStatuses.includes(s.status));
 
   return (
     <div className="w-full px-4 sm:px-6 lg:px-8 py-6 space-y-6">
@@ -97,17 +109,6 @@ export default function StorefrontsManager({ initialData }: { initialData: any[]
         </div>
         
         <div className="flex items-center gap-3">
-          <button 
-            type="button"
-            onClick={() => setIsEditMode(!isEditMode)}
-            className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all cursor-pointer ${
-              isEditMode 
-                ? 'bg-amber-500 text-amber-950 shadow-[0_0_20px_rgba(245,158,11,0.4)] hover:bg-amber-400' 
-                : 'bg-zinc-900 text-zinc-400 border border-zinc-800 hover:text-white hover:border-zinc-600'
-            }`}
-          >
-            {isEditMode ? <><Lock size={14} /> {copy.HEADER.BTN_LOCK_GRID}</> : <><Unlock size={14} /> {copy.HEADER.BTN_ARCHITECT_OVERRIDE}</>}
-          </button>
           <NewStorefrontModal />
         </div>
       </div>
@@ -118,59 +119,77 @@ export default function StorefrontsManager({ initialData }: { initialData: any[]
         categoryFilter={categoryFilter} setCategoryFilter={setCategoryFilter}
         planFilter={planFilter} setPlanFilter={setPlanFilter}
         statusFilter={statusFilter} setStatusFilter={setStatusFilter}
-        availableCategories={availableCategories} availablePlans={availablePlans} availableStatuses={availableStatuses}
+        masterIndustries={masterIndustries}
+        availablePlans={availablePlans}
+        availableStatuses={availableStatuses}
       />
 
-      <div className={`bg-stardust border rounded-xl shadow-xl p-4 sm:p-6 transition-colors duration-500 ${isEditMode ? 'border-amber-500/50' : 'border-zinc-800/80'}`}>
+      <div className="bg-stardust border border-zinc-800/80 rounded-xl shadow-xl p-4 sm:p-6 transition-colors duration-500">
         <StorefrontLegend />
         
-        {/* TIER 1: ACTIVE WORKSHOP TABLE */}
-        <div className="mb-12">
-          <h2 className="text-xs font-black text-cyan-400 uppercase tracking-widest mb-4 flex items-center gap-2">
-            <HardHat size={14} /> {copy.TIERS.WORKSHOP}
-          </h2>
-          <StorefrontTable 
-            processedData={activeWorkshopData}
-            requestSort={requestSort}
-            sortConfig={sortConfig}
-            isEditMode={isEditMode}
-            handleRowUpdate={handleRowUpdate}
-            availableStatuses={availableStatuses}
-            availableCategories={availableCategories}
-          />
-        </div>
+        {activeTab === 'PROTOTYPES' ? (
+          /* UNIFIED PROTOTYPES TABLE (So Bartok's Coffee & all templates show in one clean grid!) */
+          <div>
+            <h2 className="text-xs font-black text-fuchsia-400 uppercase tracking-widest mb-4 flex items-center gap-2">
+              <FlaskConical size={14} /> {copy.TIERS.PROTOTYPES_GRID} ({processedData.length})
+            </h2>
+            <StorefrontTable 
+              processedData={processedData}
+              requestSort={requestSort}
+              sortConfig={sortConfig}
+              handleRowUpdate={handleRowUpdate}
+              masterIndustries={masterIndustries}
+              isPrototypeView={true}
+            />
+          </div>
+        ) : (
+          <>
+            {/* TIER 1: ACTIVE WORKSHOP TABLE */}
+            <div className="mb-12">
+              <h2 className="text-xs font-black text-cyan-400 uppercase tracking-widest mb-4 flex items-center gap-2">
+                <HardHat size={14} /> {copy.TIERS.WORKSHOP} ({activeWorkshopData.length})
+              </h2>
+              <StorefrontTable 
+                processedData={activeWorkshopData}
+                requestSort={requestSort}
+                sortConfig={sortConfig}
+                handleRowUpdate={handleRowUpdate}
+                masterIndustries={masterIndustries}
+                isPrototypeView={false}
+              />
+            </div>
 
-        {/* TIER 2: CLIENT ACTION REQUIRED */}
-        <div className="mb-12">
-          <h2 className="text-xs font-black text-amber-400 uppercase tracking-widest mb-4 flex items-center gap-2">
-            <Clock size={14} /> {copy.TIERS.HOLDING}
-          </h2>
-          <StorefrontTable 
-            processedData={holdingPatternData}
-            requestSort={requestSort}
-            sortConfig={sortConfig}
-            isEditMode={isEditMode}
-            handleRowUpdate={handleRowUpdate}
-            availableStatuses={availableStatuses}
-            availableCategories={availableCategories}
-          />
-        </div>
+            {/* TIER 2: CLIENT ACTION REQUIRED */}
+            <div className="mb-12">
+              <h2 className="text-xs font-black text-amber-400 uppercase tracking-widest mb-4 flex items-center gap-2">
+                <Clock size={14} /> {copy.TIERS.HOLDING} ({holdingPatternData.length})
+              </h2>
+              <StorefrontTable 
+                processedData={holdingPatternData}
+                requestSort={requestSort}
+                sortConfig={sortConfig}
+                handleRowUpdate={handleRowUpdate}
+                masterIndustries={masterIndustries}
+                isPrototypeView={false}
+              />
+            </div>
 
-        {/* TIER 3: LIVE PRODUCTION TABLE */}
-        <div>
-          <h2 className="text-xs font-black text-emerald-400 uppercase tracking-widest mb-4 flex items-center gap-2">
-            <Globe size={14} /> {copy.TIERS.PRODUCTION}
-          </h2>
-          <StorefrontTable 
-            processedData={liveProductionData}
-            requestSort={requestSort}
-            sortConfig={sortConfig}
-            isEditMode={isEditMode}
-            handleRowUpdate={handleRowUpdate}
-            availableStatuses={availableStatuses}
-            availableCategories={availableCategories}
-          />
-        </div>
+            {/* TIER 3: LIVE PRODUCTION TABLE */}
+            <div>
+              <h2 className="text-xs font-black text-emerald-400 uppercase tracking-widest mb-4 flex items-center gap-2">
+                <Globe size={14} /> {copy.TIERS.PRODUCTION} ({liveProductionData.length})
+              </h2>
+              <StorefrontTable 
+                processedData={liveProductionData}
+                requestSort={requestSort}
+                sortConfig={sortConfig}
+                handleRowUpdate={handleRowUpdate}
+                masterIndustries={masterIndustries}
+                isPrototypeView={false}
+              />
+            </div>
+          </>
+        )}
       </div>
     </div>
   );
