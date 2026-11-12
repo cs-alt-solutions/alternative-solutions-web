@@ -3,7 +3,7 @@
 
 import React, { useState } from 'react';
 import { supabase } from '@/utils/supabase';
-import { HardHat, Globe, Clock, FlaskConical } from 'lucide-react';
+import { HardHat, Globe, Clock, FlaskConical, ChevronDown } from 'lucide-react';
 import { STOREFRONT_LIFECYCLE } from '@/config/lifecycle';
 import { STOREFRONT_EDITOR_COPY } from '@/config/dashboard';
 import { STOREFRONT_MANAGER_COPY } from '@/config/dashboard/manager';
@@ -22,12 +22,14 @@ export default function StorefrontsManager({ initialData }: { initialData: any[]
   const [planFilter, setPlanFilter] = useState<string>('ALL');
   const [categoryFilter, setCategoryFilter] = useState<string>('ALL');
 
+  // Collapsible tier states so you can fold sections as your list grows
+  const [collapsedTiers, setCollapsedTiers] = useState<Record<string, boolean>>({});
+  const toggleTier = (tierKey: string) => setCollapsedTiers(prev => ({ ...prev, [tierKey]: !prev[tierKey] }));
+
   const copy = STOREFRONT_MANAGER_COPY;
 
   const availableStatuses = Object.keys(STOREFRONT_LIFECYCLE);
   const availablePlans = Array.from(new Set(storefronts.map(s => s.plan_tier || s.selected_plan).filter(Boolean))) as string[];
-
-  // Pull master industry categories directly from STOREFRONT_EDITOR_COPY.INDUSTRIES
   const masterIndustries: { id: string; label: string }[] = STOREFRONT_EDITOR_COPY.INDUSTRIES || [];
 
   const handleRowUpdate = async (id: string, field: string, value: any) => {
@@ -45,7 +47,6 @@ export default function StorefrontsManager({ initialData }: { initialData: any[]
     setSortConfig({ key, direction });
   };
 
-  // Never hide prototypes even if their status is PENDING, BUILDING, DRAFT, or null!
   let processedData = storefronts.filter(store => {
     if (!store.is_template && (store.status === 'PENDING' || store.status === 'CANCELED')) return false;
     if (!search.trim()) return true;
@@ -92,7 +93,6 @@ export default function StorefrontsManager({ initialData }: { initialData: any[]
     });
   }
 
-  // Client Pipeline Buckets (Including legacy statuses like 'BUILDING' or 'APPROVED' so nothing ever disappears)
   const holdingStatuses = ['IN_REVIEW', 'IN REVIEW', 'AWAITING_ASSETS', 'ON_HOLD', 'CHANGES_REQUESTED'];
   const liveStatuses = ['ACTIVE', 'LIVE', 'MAINTENANCE', 'HIDDEN'];
 
@@ -101,11 +101,11 @@ export default function StorefrontsManager({ initialData }: { initialData: any[]
   const liveProductionData = processedData.filter(s => liveStatuses.includes(s.status));
 
   return (
-    <div className="w-full px-4 sm:px-6 lg:px-8 py-6 space-y-6">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-zinc-800/50">
+    <div className="w-full px-3 sm:px-6 lg:px-8 py-4 sm:py-6 space-y-4 sm:space-y-6">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 sm:pb-4 border-b border-zinc-800/50">
         <div>
-          <h1 className="text-2xl font-black text-white uppercase tracking-tight">{copy.HEADER.TITLE}</h1>
-          <p className="text-sm text-zinc-400 mt-1">{copy.HEADER.SUBTITLE}</p>
+          <h1 className="text-xl sm:text-2xl font-black text-white uppercase tracking-tight">{copy.HEADER.TITLE}</h1>
+          <p className="text-xs sm:text-sm text-zinc-400 mt-0.5">{copy.HEADER.SUBTITLE}</p>
         </div>
         
         <div className="flex items-center gap-3">
@@ -124,13 +124,12 @@ export default function StorefrontsManager({ initialData }: { initialData: any[]
         availableStatuses={availableStatuses}
       />
 
-      <div className="bg-stardust border border-zinc-800/80 rounded-xl shadow-xl p-4 sm:p-6 transition-colors duration-500">
+      <div className="bg-stardust border border-zinc-800/80 rounded-xl shadow-xl p-3 sm:p-6 transition-colors duration-500">
         <StorefrontLegend />
         
         {activeTab === 'PROTOTYPES' ? (
-          /* UNIFIED PROTOTYPES TABLE (So Bartok's Coffee & all templates show in one clean grid!) */
           <div>
-            <h2 className="text-xs font-black text-fuchsia-400 uppercase tracking-widest mb-4 flex items-center gap-2">
+            <h2 className="text-xs font-black text-fuchsia-400 uppercase tracking-widest mb-3 flex items-center gap-2">
               <FlaskConical size={14} /> {copy.TIERS.PROTOTYPES_GRID} ({processedData.length})
             </h2>
             <StorefrontTable 
@@ -143,52 +142,79 @@ export default function StorefrontsManager({ initialData }: { initialData: any[]
             />
           </div>
         ) : (
-          <>
-            {/* TIER 1: ACTIVE WORKSHOP TABLE */}
-            <div className="mb-12">
-              <h2 className="text-xs font-black text-cyan-400 uppercase tracking-widest mb-4 flex items-center gap-2">
-                <HardHat size={14} /> {copy.TIERS.WORKSHOP} ({activeWorkshopData.length})
-              </h2>
-              <StorefrontTable 
-                processedData={activeWorkshopData}
-                requestSort={requestSort}
-                sortConfig={sortConfig}
-                handleRowUpdate={handleRowUpdate}
-                masterIndustries={masterIndustries}
-                isPrototypeView={false}
-              />
-            </div>
-
-            {/* TIER 2: CLIENT ACTION REQUIRED */}
-            <div className="mb-12">
-              <h2 className="text-xs font-black text-amber-400 uppercase tracking-widest mb-4 flex items-center gap-2">
-                <Clock size={14} /> {copy.TIERS.HOLDING} ({holdingPatternData.length})
-              </h2>
-              <StorefrontTable 
-                processedData={holdingPatternData}
-                requestSort={requestSort}
-                sortConfig={sortConfig}
-                handleRowUpdate={handleRowUpdate}
-                masterIndustries={masterIndustries}
-                isPrototypeView={false}
-              />
-            </div>
-
-            {/* TIER 3: LIVE PRODUCTION TABLE */}
+          <div className="space-y-6 sm:space-y-10">
+            {/* TIER 1: ACTIVE WORKSHOP */}
             <div>
-              <h2 className="text-xs font-black text-emerald-400 uppercase tracking-widest mb-4 flex items-center gap-2">
-                <Globe size={14} /> {copy.TIERS.PRODUCTION} ({liveProductionData.length})
-              </h2>
-              <StorefrontTable 
-                processedData={liveProductionData}
-                requestSort={requestSort}
-                sortConfig={sortConfig}
-                handleRowUpdate={handleRowUpdate}
-                masterIndustries={masterIndustries}
-                isPrototypeView={false}
-              />
+              <button
+                type="button"
+                onClick={() => toggleTier('workshop')}
+                className="w-full flex items-center justify-between text-xs font-black text-cyan-400 uppercase tracking-widest mb-3 cursor-pointer group"
+              >
+                <span className="flex items-center gap-2">
+                  <HardHat size={14} /> {copy.TIERS.WORKSHOP} ({activeWorkshopData.length})
+                </span>
+                <ChevronDown size={15} className={`text-zinc-500 group-hover:text-cyan-400 transition-transform duration-200 ${collapsedTiers['workshop'] ? '-rotate-90' : ''}`} />
+              </button>
+              {!collapsedTiers['workshop'] && (
+                <StorefrontTable 
+                  processedData={activeWorkshopData}
+                  requestSort={requestSort}
+                  sortConfig={sortConfig}
+                  handleRowUpdate={handleRowUpdate}
+                  masterIndustries={masterIndustries}
+                  isPrototypeView={false}
+                />
+              )}
             </div>
-          </>
+
+            {/* TIER 2: AWAITING CLIENT ACTION */}
+            <div>
+              <button
+                type="button"
+                onClick={() => toggleTier('holding')}
+                className="w-full flex items-center justify-between text-xs font-black text-amber-400 uppercase tracking-widest mb-3 cursor-pointer group"
+              >
+                <span className="flex items-center gap-2">
+                  <Clock size={14} /> {copy.TIERS.HOLDING} ({holdingPatternData.length})
+                </span>
+                <ChevronDown size={15} className={`text-zinc-500 group-hover:text-amber-400 transition-transform duration-200 ${collapsedTiers['holding'] ? '-rotate-90' : ''}`} />
+              </button>
+              {!collapsedTiers['holding'] && (
+                <StorefrontTable 
+                  processedData={holdingPatternData}
+                  requestSort={requestSort}
+                  sortConfig={sortConfig}
+                  handleRowUpdate={handleRowUpdate}
+                  masterIndustries={masterIndustries}
+                  isPrototypeView={false}
+                />
+              )}
+            </div>
+
+            {/* TIER 3: LIVE PRODUCTION GRID */}
+            <div>
+              <button
+                type="button"
+                onClick={() => toggleTier('production')}
+                className="w-full flex items-center justify-between text-xs font-black text-emerald-400 uppercase tracking-widest mb-3 cursor-pointer group"
+              >
+                <span className="flex items-center gap-2">
+                  <Globe size={14} /> {copy.TIERS.PRODUCTION} ({liveProductionData.length})
+                </span>
+                <ChevronDown size={15} className={`text-zinc-500 group-hover:text-emerald-400 transition-transform duration-200 ${collapsedTiers['production'] ? '-rotate-90' : ''}`} />
+              </button>
+              {!collapsedTiers['production'] && (
+                <StorefrontTable 
+                  processedData={liveProductionData}
+                  requestSort={requestSort}
+                  sortConfig={sortConfig}
+                  handleRowUpdate={handleRowUpdate}
+                  masterIndustries={masterIndustries}
+                  isPrototypeView={false}
+                />
+              )}
+            </div>
+          </div>
         )}
       </div>
     </div>
