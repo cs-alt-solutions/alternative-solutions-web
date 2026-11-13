@@ -5,14 +5,15 @@ import React, { useState, useEffect } from 'react';
 import { QrCode, Download, Loader2, Link2, ChevronDown } from 'lucide-react';
 import { QRCodeCanvas } from 'qrcode.react';
 import { supabase } from '@/utils/supabase';
+import { OVERVIEW_COPY } from '@/config/dashboard/overview';
 
-// Helper to determine the correct base URL based on the environment
-const PREVIEW_BASE_URL = process.env.NEXT_PUBLIC_SITE_URL || process.env.NEXT_PUBLIC_BASE_URL || 'https://alternativesolutions.io';
+const HQ_BASE_URL = 'https://alternativesolutions.io';
+const STOREFRONT_BASE_URL = 'https://storefronts.alternativesolutions.io';
 
 const resolveToHex = (colorVal: string) => {
   if (!colorVal) return '#06b6d4'; 
   if (colorVal.startsWith('#')) return colorVal;
-  
+
   const map: Record<string, string> = {
     'cyan': '#06b6d4', 'cyan-400': '#22d3ee', 'cyan-500': '#06b6d4',
     'fuchsia': '#d946ef', 'fuchsia-400': '#e879f9', 'fuchsia-500': '#d946ef',
@@ -22,35 +23,35 @@ const resolveToHex = (colorVal: string) => {
     'indigo': '#6366f1', 'indigo-400': '#818cf8', 'indigo-500': '#6366f1',
     'zinc': '#71717a', 'zinc-400': '#a1a1aa', 'zinc-500': '#71717a',
   };
-  
+
   return map[colorVal.toLowerCase()] || map[`${colorVal.toLowerCase()}-500`] || '#06b6d4';
 };
 
 export default function QuickQrCard() {
-  const [storeUrl, setStoreUrl] = useState(PREVIEW_BASE_URL);
+  const [storeUrl, setStoreUrl] = useState(HQ_BASE_URL);
   const [brandColor, setBrandColor] = useState('cyan-500'); 
   const [isDownloading, setIsDownloading] = useState(false);
   const [availableUrls, setAvailableUrls] = useState<{name: string, url: string, color: string}[]>([]);
   const [isLoadingUrls, setIsLoadingUrls] = useState(true);
-  
+
+  const copy = OVERVIEW_COPY.QR;
   const primaryHex = resolveToHex(brandColor);
 
-  // Fetch only paying/active storefronts & prototypes
   useEffect(() => {
     const fetchStorefrontUrls = async () => {
       setIsLoadingUrls(true);
       try {
         const { data, error } = await supabase
           .from('storefronts')
-          .select('business_name, slug, custom_domain, status, brand_color')
-          .in('status', ['ACTIVE', 'LIVE', 'MAINTENANCE', 'HIDDEN', 'PROTOTYPE'])
+          .select('business_name, slug, custom_domain, status, brand_color, is_template')
+          .not('status', 'in', '("PENDING","CANCELED")')
           .order('business_name', { ascending: true });
 
         if (!error && data) {
           const formattedUrls = data.map(store => {
             const targetUrl = store.custom_domain 
               ? `https://${store.custom_domain}` 
-              : `${PREVIEW_BASE_URL}/${store.slug}`;
+              : `${STOREFRONT_BASE_URL}/${store.slug}`;
               
             return {
               name: store.business_name || store.slug || 'Unnamed Store',
@@ -59,7 +60,7 @@ export default function QuickQrCard() {
             };
           });
           
-          setAvailableUrls([{ name: 'Main HQ Site', url: PREVIEW_BASE_URL, color: 'cyan-500' }, ...formattedUrls]);
+          setAvailableUrls([{ name: copy.HQ_OPTION, url: HQ_BASE_URL, color: 'cyan-500' }, ...formattedUrls]);
         }
       } catch (err) {
         console.error("Failed to fetch storefront URLs for QR Generator", err);
@@ -67,15 +68,13 @@ export default function QuickQrCard() {
         setIsLoadingUrls(false);
       }
     };
-
     fetchStorefrontUrls();
-  }, []);
+  }, [copy.HQ_OPTION]);
 
   const handleUrlSelect = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const selectedUrl = e.target.value;
     setStoreUrl(selectedUrl);
     
-    // Automatically match the brand color to the selected client
     const selectedClient = availableUrls.find(u => u.url === selectedUrl);
     if (selectedClient && selectedClient.color) {
       setBrandColor(selectedClient.color);
@@ -97,13 +96,9 @@ export default function QuickQrCard() {
       finalCanvas.width = qrSize + (padding * 2);
       finalCanvas.height = qrSize + (padding * 2);
 
-      // Transparent Background
       ctx.clearRect(0, 0, finalCanvas.width, finalCanvas.height);
-
-      // Draw QR
       ctx.drawImage(qrCanvas, padding, padding);
 
-      // Trigger Download
       const pngUrl = finalCanvas.toDataURL("image/png").replace("image/png", "image/octet-stream");
       const downloadLink = document.createElement("a");
       downloadLink.href = pngUrl;
@@ -116,24 +111,24 @@ export default function QuickQrCard() {
       downloadLink.click();
       document.body.removeChild(downloadLink);
     }
+
     setTimeout(() => setIsDownloading(false), 1000);
   };
 
   return (
-    <div className="bg-zinc-950 border border-zinc-800 rounded-2xl overflow-hidden shadow-2xl relative flex flex-col h-full group hover:border-cyan-500/30 transition-all">
+    <div className="bg-zinc-950/80 border border-zinc-800/80 rounded-2xl overflow-hidden shadow-2xl relative flex flex-col h-full group hover:border-cyan-500/30 transition-all">
       <div className="p-4 border-b border-zinc-800/80 bg-zinc-900/50 flex items-center justify-between shrink-0">
         <div className="flex items-center gap-3">
           <QrCode size={16} className="text-cyan-400" />
-          <h3 className="font-bold text-xs uppercase tracking-widest text-white/80">Quick QR Generator</h3>
+          <h3 className="font-bold text-xs uppercase tracking-widest text-white/80">{copy.TITLE}</h3>
         </div>
       </div>
       
-      <div className="p-5 flex-1 flex flex-col justify-between gap-6 bg-black/40">
+      <div className="p-5 flex-1 flex flex-col justify-between gap-5 bg-black/40">
         
-        {/* Input Area */}
-        <div className="space-y-3">
+        <div className="space-y-2.5">
           <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest flex items-center gap-2">
-            <Link2 size={12} /> Target URL
+            <Link2 size={12} /> {copy.TARGET_LABEL}
           </label>
           
           <div className="relative">
@@ -144,7 +139,7 @@ export default function QuickQrCard() {
               className="w-full bg-zinc-900 border border-zinc-800 rounded-lg pl-3 pr-8 py-2 text-xs font-mono text-cyan-400 focus:border-cyan-500 outline-none transition-colors appearance-none cursor-pointer disabled:opacity-50"
             >
               {isLoadingUrls ? (
-                <option value={storeUrl}>Loading active targets...</option>
+                <option value={storeUrl}>{copy.LOADING_TARGETS}</option>
               ) : (
                 <>
                   {availableUrls.map((site, idx) => (
@@ -153,7 +148,7 @@ export default function QuickQrCard() {
                     </option>
                   ))}
                   {!availableUrls.some(u => u.url === storeUrl) && (
-                    <option value={storeUrl}>Custom Input</option>
+                    <option value={storeUrl}>{copy.CUSTOM_OPTION}</option>
                   )}
                 </>
               )}
@@ -170,30 +165,30 @@ export default function QuickQrCard() {
           />
         </div>
 
-        {/* QR Preview Area */}
         <div className="flex-1 flex flex-col items-center justify-center p-4 bg-zinc-900/50 border border-zinc-800/80 rounded-xl relative overflow-hidden">
           {storeUrl ? (
             <QRCodeCanvas 
               id="quick-qr-canvas"
               value={storeUrl}
-              size={120}
+              size={112}
               bgColor="transparent"
               fgColor={primaryHex}
               level={"H"} 
               includeMargin={false}
             />
           ) : (
-            <p className="text-[10px] font-mono text-zinc-500 uppercase tracking-widest text-center">Awaiting URL</p>
+            <p className="text-[10px] font-mono text-zinc-500 uppercase tracking-widest text-center">{copy.AWAITING_URL}</p>
           )}
         </div>
 
         <button 
+          type="button"
           onClick={handleDownloadQR}
           disabled={isDownloading || !storeUrl}
           className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all cursor-pointer shadow-[0_0_15px_rgba(6,182,212,0.1)] disabled:opacity-50 bg-cyan-600/10 hover:bg-cyan-500 hover:text-black border border-cyan-500/30 text-cyan-400"
         >
           {isDownloading ? <Loader2 size={14} className="animate-spin" /> : <Download size={14} />}
-          {isDownloading ? 'Generating...' : 'Export Asset'}
+          {isDownloading ? copy.BTN_GENERATING : copy.BTN_EXPORT}
         </button>
       </div>
     </div>

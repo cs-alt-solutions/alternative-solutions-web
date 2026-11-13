@@ -1,73 +1,169 @@
+/* src/components/dashboard/overview/NetworkPulse.tsx */
 'use client';
 
 import React, { useState, useEffect } from 'react';
 import { supabase } from '@/utils/supabase';
-import { Radio, ArrowRight, ShieldCheck, Zap, Loader2 } from 'lucide-react';
+import { Layers, ArrowRight, Loader2, HardHat, Clock, Globe, FlaskConical, CreditCard, CheckCircle2 } from 'lucide-react';
 import Link from 'next/link';
+import { getGlobalInvoices } from '@/app/actions/billing';
+import { OVERVIEW_COPY } from '@/config/dashboard/overview';
 
 export default function NetworkPulse() {
-  const [recentActivity, setRecentActivity] = useState<any[]>([]);
+  const [counts, setCounts] = useState({ workshop: 0, holding: 0, live: 0, prototypes: 0, total: 0 });
+  const [recentInvoices, setRecentInvoices] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const copy = OVERVIEW_COPY.PULSE;
 
   useEffect(() => {
-    const fetchActivity = async () => {
+    const fetchMirrorData = async () => {
       setIsLoading(true);
-      const { data } = await supabase
-        .from('storefronts')
-        .select('id, business_name, status, stripe_subscription_id, updated_at')
-        .order('updated_at', { ascending: false })
-        .limit(5);
+      try {
+        // 1. Mirror StorefrontsManager Tiers
+        const { data: stores } = await supabase
+          .from('storefronts')
+          .select('id, business_name, status, is_template');
 
-      if (data) setRecentActivity(data);
-      setIsLoading(false);
+        let workshop = 0;
+        let holding = 0;
+        let live = 0;
+        let prototypes = 0;
+
+        const holdingStatuses = ['IN_REVIEW', 'IN REVIEW', 'AWAITING_ASSETS', 'ON_HOLD', 'CHANGES_REQUESTED'];
+        const liveStatuses = ['ACTIVE', 'LIVE', 'MAINTENANCE', 'HIDDEN'];
+
+        (stores || []).forEach(s => {
+          if (s.is_template || s.status === 'PROTOTYPE') {
+            prototypes++;
+          } else if (!['PENDING', 'CANCELED'].includes(s.status)) {
+            if (liveStatuses.includes(s.status)) live++;
+            else if (holdingStatuses.includes(s.status)) holding++;
+            else workshop++;
+          }
+        });
+
+        const total = Math.max(1, workshop + holding + live + prototypes);
+        setCounts({ workshop, holding, live, prototypes, total });
+
+        // 2. Mirror Recent Cleared Payments from The Ledger
+        const invoiceRes = await getGlobalInvoices();
+        if (invoiceRes?.success && Array.isArray(invoiceRes.invoices)) {
+          setRecentInvoices(invoiceRes.invoices.slice(0, 3));
+        }
+      } catch (err) {
+        console.error("Mirror sync error:", err);
+      } finally {
+        setIsLoading(false);
+      }
     };
 
-    fetchActivity();
+    fetchMirrorData();
   }, []);
 
+  const tiers = [
+    { label: copy.TIER_WORKSHOP, count: counts.workshop, icon: HardHat, color: 'text-cyan-400', barColor: 'bg-cyan-400', border: 'border-cyan-500/20 bg-cyan-500/5' },
+    { label: copy.TIER_HOLDING, count: counts.holding, icon: Clock, color: 'text-amber-400', barColor: 'bg-amber-400', border: 'border-amber-500/20 bg-amber-500/5' },
+    { label: copy.TIER_LIVE, count: counts.live, icon: Globe, color: 'text-emerald-400', barColor: 'bg-emerald-400', border: 'border-emerald-500/20 bg-emerald-500/5' },
+    { label: copy.TIER_PROTOTYPES, count: counts.prototypes, icon: FlaskConical, color: 'text-fuchsia-400', barColor: 'bg-fuchsia-400', border: 'border-fuchsia-500/20 bg-fuchsia-500/5' },
+  ];
+
   return (
-    <div className="bg-black/40 border border-white/5 rounded-2xl p-6 backdrop-blur-sm shadow-xl group hover:border-cyan-500/20 transition-all h-full">
-      <div className="flex items-center gap-3 mb-6 pb-4 border-b border-white/5">
-        <Radio size={18} className="text-amber-500" />
-        <h2 className="text-sm font-bold text-white uppercase tracking-widest">Live Network Activity</h2>
-        <span className="ml-auto text-[10px] font-mono text-emerald-400 flex items-center gap-1.5 bg-emerald-500/10 px-2 py-1 rounded-md border border-emerald-500/20">
-          <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping" /> Syncing
-        </span>
-      </div>
+    <div className="bg-zinc-950/80 border border-zinc-800/80 rounded-2xl p-5 backdrop-blur-sm shadow-xl flex flex-col justify-between gap-6 h-full">
       
-      <div className="space-y-3 custom-scrollbar overflow-y-auto max-h-75 pr-2">
+      {/* TOP MIRROR: STOREFRONT PIPELINE BREAKDOWN */}
+      <div>
+        <div className="flex items-center justify-between mb-4 pb-3 border-b border-zinc-800/80">
+          <div className="flex items-center gap-2.5">
+            <Layers size={16} className="text-cyan-400" />
+            <h2 className="text-xs font-black text-white uppercase tracking-widest">{copy.PIPELINE_TITLE}</h2>
+          </div>
+          <Link href="/dashboard/storefronts" className="flex items-center gap-1 text-[10px] font-black uppercase tracking-widest text-cyan-400 hover:text-cyan-300 transition-colors">
+            {copy.OPEN_ENGINE_LINK} <ArrowRight size={12} />
+          </Link>
+        </div>
+
         {isLoading ? (
           <div className="flex items-center justify-center py-8">
-            <Loader2 className="w-5 h-5 text-amber-500 animate-spin" />
-          </div>
-        ) : recentActivity.length === 0 ? (
-          <div className="text-center py-8 text-zinc-500 font-mono text-xs uppercase tracking-widest">
-            No recent network activity logged.
+            <Loader2 className="w-5 h-5 text-cyan-500 animate-spin" />
           </div>
         ) : (
-          recentActivity.map((activity, idx) => (
-            <div key={idx} className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-3 rounded-xl bg-white/5 border border-white/5 hover:bg-white/10 transition-colors">
-              <div className="flex items-center gap-3">
-                <div className="p-2 rounded-lg bg-zinc-900 border border-zinc-800 text-zinc-400 shrink-0">
-                  {activity.stripe_subscription_id ? <ShieldCheck size={14} className="text-emerald-400" /> : <Zap size={14} className="text-amber-400" />}
-                </div>
-                <div>
-                  <h4 className="text-xs font-bold text-white tracking-wide truncate max-w-37.5">{activity.business_name}</h4>
-                  <p className="text-[9px] font-mono text-zinc-400 uppercase tracking-widest mt-0.5">
-                    Status: <span className={activity.status === 'ACTIVE' || activity.status === 'LIVE' ? 'text-emerald-400' : 'text-amber-400'}>{activity.status}</span>
-                  </p>
-                </div>
-              </div>
-              <Link 
-                href={`/dashboard/storefronts/${activity.id}`}
-                className="flex items-center gap-1 text-[9px] font-black uppercase tracking-widest text-cyan-400 hover:text-cyan-300 transition-colors shrink-0"
-              >
-                Hub <ArrowRight size={12} />
-              </Link>
+          <div className="space-y-4">
+            {/* Multi-Segment Visual Pipeline Bar */}
+            <div className="flex h-2.5 w-full rounded-full overflow-hidden bg-zinc-900 p-0.5 gap-0.5 border border-zinc-800">
+              {tiers.map((t) => (
+                t.count > 0 && (
+                  <div
+                    key={t.label}
+                    style={{ width: `${(t.count / counts.total) * 100}%` }}
+                    className={`h-full first:rounded-l-full last:rounded-r-full transition-all duration-700 ${t.barColor}`}
+                    title={`${t.label}: ${t.count}`}
+                  />
+                )
+              ))}
             </div>
-          ))
+
+            {/* 2x2 Tier Breakdown Pills */}
+            <div className="grid grid-cols-2 gap-2.5">
+              {tiers.map((t) => (
+                <Link
+                  key={t.label}
+                  href="/dashboard/storefronts"
+                  className={`p-3 rounded-xl border ${t.border} hover:brightness-125 transition-all flex items-center justify-between`}
+                >
+                  <div className="flex items-center gap-2 min-w-0">
+                    <t.icon size={14} className={`${t.color} shrink-0`} />
+                    <span className="text-[10px] font-bold text-zinc-300 uppercase tracking-wider truncate">{t.label}</span>
+                  </div>
+                  <span className={`text-base font-black ${t.color} ml-2`}>{t.count}</span>
+                </Link>
+              ))}
+            </div>
+          </div>
         )}
       </div>
+
+      {/* BOTTOM MIRROR: RECENT LEDGER ACTIVITY (Pulls straight from getGlobalInvoices) */}
+      <div className="pt-4 border-t border-zinc-800/80">
+        <div className="flex items-center justify-between mb-3">
+          <div className="flex items-center gap-2">
+            <CreditCard size={14} className="text-emerald-400" />
+            <h3 className="text-[11px] font-black text-white uppercase tracking-widest">{copy.LEDGER_TITLE}</h3>
+          </div>
+          <Link href="/dashboard/ledger" className="flex items-center gap-1 text-[10px] font-black uppercase tracking-widest text-emerald-400 hover:text-emerald-300 transition-colors">
+            {copy.OPEN_LEDGER_LINK} <ArrowRight size={12} />
+          </Link>
+        </div>
+
+        {!isLoading && recentInvoices.length === 0 ? (
+          <div className="p-4 rounded-xl bg-black/40 border border-zinc-800/60 text-center">
+            <span className="text-[10px] font-mono text-zinc-500 uppercase tracking-widest">{copy.EMPTY_LEDGER}</span>
+          </div>
+        ) : (
+          <div className="space-y-2">
+            {recentInvoices.map((inv: any, idx: number) => (
+              <Link
+                key={inv.id || idx}
+                href="/dashboard/ledger"
+                className="flex items-center justify-between p-2.5 rounded-xl bg-black/40 border border-zinc-800/70 hover:border-emerald-500/30 transition-all"
+              >
+                <div className="flex items-center gap-2.5 min-w-0">
+                  <CheckCircle2 size={13} className="text-emerald-400 shrink-0" />
+                  <div className="min-w-0">
+                    <p className="text-xs font-bold text-white truncate">{inv.customerName || inv.customerEmail || 'Storefront Client'}</p>
+                    <p className="text-[9px] font-mono text-zinc-500 uppercase">
+                      {inv.date ? new Date(inv.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : ''}
+                      {inv.hasPromo ? ` • ${copy.PROMO_TAG}` : ''}
+                    </p>
+                  </div>
+                </div>
+                <span className="text-xs font-mono font-black text-emerald-400 shrink-0 ml-2">
+                  +${Number(inv.amount || 0).toFixed(2)}
+                </span>
+              </Link>
+            ))}
+          </div>
+        )}
+      </div>
+
     </div>
   );
 }
