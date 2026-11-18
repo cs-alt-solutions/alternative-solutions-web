@@ -11,6 +11,7 @@ import NewStorefrontModal from './NewStorefrontModal';
 import StorefrontLegend from './manager/StorefrontLegend';
 import StorefrontFilters from './manager/StorefrontFilters';
 import StorefrontTable from './manager/StorefrontTable';
+import { classifyStorefront } from '@/config/dashboard/overview';
 
 export default function StorefrontsManager({ initialData }: { initialData: any[] }) {
   const [search, setSearch] = useState('');
@@ -96,9 +97,9 @@ export default function StorefrontsManager({ initialData }: { initialData: any[]
   const holdingStatuses = ['IN_REVIEW', 'IN REVIEW', 'AWAITING_ASSETS', 'ON_HOLD', 'CHANGES_REQUESTED'];
   const liveStatuses = ['ACTIVE', 'LIVE', 'MAINTENANCE', 'HIDDEN'];
 
-  const activeWorkshopData = processedData.filter(s => !holdingStatuses.includes(s.status) && !liveStatuses.includes(s.status));
-  const holdingPatternData = processedData.filter(s => holdingStatuses.includes(s.status));
-  const liveProductionData = processedData.filter(s => liveStatuses.includes(s.status));
+  const activeWorkshopData = processedData.filter(s => classifyStorefront(s) === 'WORKSHOP');
+const holdingPatternData = processedData.filter(s => classifyStorefront(s) === 'HOLDING');
+const liveProductionData = processedData.filter(s => classifyStorefront(s) === 'LIVE');
 
   return (
     <div className="w-full px-3 sm:px-6 lg:px-8 py-4 sm:py-6 space-y-4 sm:space-y-6">

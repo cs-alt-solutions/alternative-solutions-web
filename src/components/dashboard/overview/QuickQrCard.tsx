@@ -2,10 +2,10 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { QrCode, Download, Loader2, Link2, ChevronDown } from 'lucide-react';
+import { QrCode, Download, Loader2, Link2, ChevronDown, Filter } from 'lucide-react';
 import { QRCodeCanvas } from 'qrcode.react';
 import { supabase } from '@/utils/supabase';
-import { OVERVIEW_COPY } from '@/config/dashboard/overview';
+import { OVERVIEW_COPY, classifyStorefront } from '@/config/dashboard/overview';
 
 const HQ_BASE_URL = 'https://alternativesolutions.io';
 const STOREFRONT_BASE_URL = 'https://storefronts.alternativesolutions.io';
@@ -27,11 +27,19 @@ const resolveToHex = (colorVal: string) => {
   return map[colorVal.toLowerCase()] || map[`${colorVal.toLowerCase()}-500`] || '#06b6d4';
 };
 
+interface TargetSite {
+  name: string;
+  url: string;
+  color: string;
+  bucket: 'HQ' | 'LIVE' | 'BUILD';
+}
+
 export default function QuickQrCard() {
   const [storeUrl, setStoreUrl] = useState(HQ_BASE_URL);
   const [brandColor, setBrandColor] = useState('cyan-500'); 
   const [isDownloading, setIsDownloading] = useState(false);
-  const [availableUrls, setAvailableUrls] = useState<{name: string, url: string, color: string}[]>([]);
+  const [allSites, setAllSites] = useState<TargetSite[]>([]);
+  const [includeBuilds, setIncludeBuilds] = useState(false);
   const [isLoadingUrls, setIsLoadingUrls] = useState(true);
 
   const copy = OVERVIEW_COPY.QR;
@@ -44,23 +52,32 @@ export default function QuickQrCard() {
         const { data, error } = await supabase
           .from('storefronts')
           .select('business_name, slug, custom_domain, status, brand_color, is_template')
-          .not('status', 'in', '("PENDING","CANCELED")')
           .order('business_name', { ascending: true });
 
         if (!error && data) {
-          const formattedUrls = data.map(store => {
+          const parsed: TargetSite[] = [];
+
+          data.forEach(store => {
+            const bucket = classifyStorefront(store);
+            // Only keep real LIVE sites or active client builds (never prototypes or ignored rows)
+            if (bucket !== 'LIVE' && bucket !== 'HOLDING' && bucket !== 'WORKSHOP') return;
+
             const targetUrl = store.custom_domain 
               ? `https://${store.custom_domain}` 
               : `${STOREFRONT_BASE_URL}/${store.slug}`;
               
-            return {
+            parsed.push({
               name: store.business_name || store.slug || 'Unnamed Store',
               url: targetUrl,
-              color: store.brand_color || 'cyan-500'
-            };
+              color: store.brand_color || 'cyan-500',
+              bucket: bucket === 'LIVE' ? 'LIVE' : 'BUILD'
+            });
           });
           
-          setAvailableUrls([{ name: copy.HQ_OPTION, url: HQ_BASE_URL, color: 'cyan-500' }, ...formattedUrls]);
+          setAllSites([
+            { name: copy.HQ_OPTION, url: HQ_BASE_URL, color: 'cyan-500', bucket: 'HQ' },
+            ...parsed
+          ]);
         }
       } catch (err) {
         console.error("Failed to fetch storefront URLs for QR Generator", err);
@@ -71,11 +88,15 @@ export default function QuickQrCard() {
     fetchStorefrontUrls();
   }, [copy.HQ_OPTION]);
 
+  const liveSites = allSites.filter(s => s.bucket === 'LIVE');
+  const buildSites = allSites.filter(s => s.bucket === 'BUILD');
+  const visibleSites = includeBuilds ? allSites : allSites.filter(s => s.bucket === 'HQ' || s.bucket === 'LIVE');
+
   const handleUrlSelect = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const selectedUrl = e.target.value;
     setStoreUrl(selectedUrl);
     
-    const selectedClient = availableUrls.find(u => u.url === selectedUrl);
+    const selectedClient = allSites.find(u => u.url === selectedUrl);
     if (selectedClient && selectedClient.color) {
       setBrandColor(selectedClient.color);
     }
@@ -103,7 +124,7 @@ export default function QuickQrCard() {
       const downloadLink = document.createElement("a");
       downloadLink.href = pngUrl;
       
-      const selectedMatch = availableUrls.find(u => u.url === storeUrl);
+      const selectedMatch = allSites.find(u => u.url === storeUrl);
       const filenamePrefix = selectedMatch ? selectedMatch.name.replace(/[^a-zA-Z0-9]/g, '_') : 'Alt_Solutions';
       downloadLink.download = `${filenamePrefix}_QR.png`;
       
@@ -117,11 +138,26 @@ export default function QuickQrCard() {
 
   return (
     <div className="bg-zinc-950/80 border border-zinc-800/80 rounded-2xl overflow-hidden shadow-2xl relative flex flex-col h-full group hover:border-cyan-500/30 transition-all">
-      <div className="p-4 border-b border-zinc-800/80 bg-zinc-900/50 flex items-center justify-between shrink-0">
-        <div className="flex items-center gap-3">
-          <QrCode size={16} className="text-cyan-400" />
-          <h3 className="font-bold text-xs uppercase tracking-widest text-white/80">{copy.TITLE}</h3>
+      <div className="p-4 border-b border-zinc-800/80 bg-zinc-900/50 flex items-center justify-between gap-2 shrink-0">
+        <div className="flex items-center gap-2.5">
+          <QrCode size={16} className="text-cyan-400 shrink-0" />
+          <h3 className="font-bold text-xs uppercase tracking-widest text-white/80 truncate">{copy.TITLE}</h3>
         </div>
+
+        {/* Toggle between Strictly Live Sites (Default) vs. + In-Progress Client Builds */}
+        <button
+          type="button"
+          onClick={() => setIncludeBuilds(!includeBuilds)}
+          className={`flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[9px] font-black uppercase tracking-widest border transition-all cursor-pointer shrink-0 ${
+            includeBuilds
+              ? 'bg-amber-500/10 border-amber-500/30 text-amber-400'
+              : 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400'
+          }`}
+          title="Toggle between strictly Live Production websites or also including active client builds"
+        >
+          <Filter size={10} />
+          <span>{includeBuilds ? copy.TOGGLE_BUILDS_ON : copy.TOGGLE_BUILDS_OFF}</span>
+        </button>
       </div>
       
       <div className="p-5 flex-1 flex flex-col justify-between gap-5 bg-black/40">
@@ -142,12 +178,29 @@ export default function QuickQrCard() {
                 <option value={storeUrl}>{copy.LOADING_TARGETS}</option>
               ) : (
                 <>
-                  {availableUrls.map((site, idx) => (
-                    <option key={idx} value={site.url}>
-                      {site.name}
-                    </option>
-                  ))}
-                  {!availableUrls.some(u => u.url === storeUrl) && (
+                  <option value={HQ_BASE_URL}>{copy.HQ_OPTION}</option>
+
+                  {liveSites.length > 0 && (
+                    <optgroup label={copy.GROUP_LIVE} className="bg-zinc-950 text-emerald-400 font-sans font-bold">
+                      {liveSites.map((site, idx) => (
+                        <option key={`live-${idx}`} value={site.url} className="bg-zinc-900 text-white font-mono">
+                          {site.name}
+                        </option>
+                      ))}
+                    </optgroup>
+                  )}
+
+                  {includeBuilds && buildSites.length > 0 && (
+                    <optgroup label={copy.GROUP_BUILDS} className="bg-zinc-950 text-amber-400 font-sans font-bold">
+                      {buildSites.map((site, idx) => (
+                        <option key={`build-${idx}`} value={site.url} className="bg-zinc-900 text-zinc-300 font-mono">
+                          {site.name}
+                        </option>
+                      ))}
+                    </optgroup>
+                  )}
+
+                  {!visibleSites.some(u => u.url === storeUrl) && (
                     <option value={storeUrl}>{copy.CUSTOM_OPTION}</option>
                   )}
                 </>

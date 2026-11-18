@@ -6,7 +6,7 @@ import { supabase } from '@/utils/supabase';
 import { Layers, ArrowRight, Loader2, HardHat, Clock, Globe, FlaskConical, CreditCard, CheckCircle2 } from 'lucide-react';
 import Link from 'next/link';
 import { getGlobalInvoices } from '@/app/actions/billing';
-import { OVERVIEW_COPY } from '@/config/dashboard/overview';
+import { OVERVIEW_COPY, classifyStorefront } from '@/config/dashboard/overview';
 
 export default function NetworkPulse() {
   const [counts, setCounts] = useState({ workshop: 0, holding: 0, live: 0, prototypes: 0, total: 0 });
@@ -18,7 +18,6 @@ export default function NetworkPulse() {
     const fetchMirrorData = async () => {
       setIsLoading(true);
       try {
-        // 1. Mirror StorefrontsManager Tiers
         const { data: stores } = await supabase
           .from('storefronts')
           .select('id, business_name, status, is_template');
@@ -28,23 +27,17 @@ export default function NetworkPulse() {
         let live = 0;
         let prototypes = 0;
 
-        const holdingStatuses = ['IN_REVIEW', 'IN REVIEW', 'AWAITING_ASSETS', 'ON_HOLD', 'CHANGES_REQUESTED'];
-        const liveStatuses = ['ACTIVE', 'LIVE', 'MAINTENANCE', 'HIDDEN'];
-
         (stores || []).forEach(s => {
-          if (s.is_template || s.status === 'PROTOTYPE') {
-            prototypes++;
-          } else if (!['PENDING', 'CANCELED'].includes(s.status)) {
-            if (liveStatuses.includes(s.status)) live++;
-            else if (holdingStatuses.includes(s.status)) holding++;
-            else workshop++;
-          }
+          const bucket = classifyStorefront(s);
+          if (bucket === 'PROTOTYPE') prototypes++;
+          else if (bucket === 'LIVE') live++;
+          else if (bucket === 'HOLDING') holding++;
+          else if (bucket === 'WORKSHOP') workshop++;
         });
 
         const total = Math.max(1, workshop + holding + live + prototypes);
         setCounts({ workshop, holding, live, prototypes, total });
 
-        // 2. Mirror Recent Cleared Payments from The Ledger
         const invoiceRes = await getGlobalInvoices();
         if (invoiceRes?.success && Array.isArray(invoiceRes.invoices)) {
           setRecentInvoices(invoiceRes.invoices.slice(0, 3));
@@ -87,7 +80,6 @@ export default function NetworkPulse() {
           </div>
         ) : (
           <div className="space-y-4">
-            {/* Multi-Segment Visual Pipeline Bar */}
             <div className="flex h-2.5 w-full rounded-full overflow-hidden bg-zinc-900 p-0.5 gap-0.5 border border-zinc-800">
               {tiers.map((t) => (
                 t.count > 0 && (
@@ -101,7 +93,6 @@ export default function NetworkPulse() {
               ))}
             </div>
 
-            {/* 2x2 Tier Breakdown Pills */}
             <div className="grid grid-cols-2 gap-2.5">
               {tiers.map((t) => (
                 <Link
@@ -121,7 +112,7 @@ export default function NetworkPulse() {
         )}
       </div>
 
-      {/* BOTTOM MIRROR: RECENT LEDGER ACTIVITY (Pulls straight from getGlobalInvoices) */}
+      {/* BOTTOM MIRROR: RECENT LEDGER ACTIVITY */}
       <div className="pt-4 border-t border-zinc-800/80">
         <div className="flex items-center justify-between mb-3">
           <div className="flex items-center gap-2">

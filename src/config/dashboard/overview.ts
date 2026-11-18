@@ -1,5 +1,38 @@
 /* src/config/dashboard/overview.ts */
 
+export type StorefrontBucket = 'LIVE' | 'HOLDING' | 'WORKSHOP' | 'PROTOTYPE' | 'IGNORED';
+
+/**
+ * SINGLE SOURCE OF TRUTH: Classifies any storefront row into its exact operational bucket.
+ */
+export function classifyStorefront(store: any): StorefrontBucket {
+  if (!store) return 'IGNORED';
+  const rawStatus = (store.status || 'PENDING_BUILD').toUpperCase().trim();
+
+  // 1. Prototypes / Templates always go to The Lab
+  if (store.is_template === true || rawStatus === 'PROTOTYPE') {
+    return 'PROTOTYPE';
+  }
+
+  // 2. Unapproved applications, canceled, or hidden/archived rows are ignored from active counts
+  if (['PENDING', 'CANCELED', 'HIDDEN', 'MAINTENANCE'].includes(rawStatus)) {
+    return 'IGNORED';
+  }
+
+  // 3. Live Production Grid (Real, live websites)
+  if (['ACTIVE', 'LIVE'].includes(rawStatus)) {
+    return 'LIVE';
+  }
+
+  // 4. Awaiting Client Action (Ball is in the client's court)
+  if (['IN_REVIEW', 'IN REVIEW', 'AWAITING_ASSETS', 'ON_HOLD', 'CHANGES_REQUESTED'].includes(rawStatus)) {
+    return 'HOLDING';
+  }
+
+  // 5. The Active Workshop (Ball is in your court: Onboarding, Building Core, Content Assembly)
+  return 'WORKSHOP';
+}
+
 export const OVERVIEW_COPY = {
   TELEMETRY: {
     RADAR_TITLE: 'Application Radar',
@@ -56,9 +89,13 @@ export const OVERVIEW_COPY = {
   },
   QR: {
     TITLE: 'Quick QR Generator',
-    TARGET_LABEL: 'Target Storefront',
-    LOADING_TARGETS: 'Loading active targets...',
+    TARGET_LABEL: 'Target Live Storefront',
+    TOGGLE_BUILDS_OFF: 'Live Only',
+    TOGGLE_BUILDS_ON: '+ Active Builds',
+    LOADING_TARGETS: 'Loading live targets...',
     HQ_OPTION: 'Main HQ Site',
+    GROUP_LIVE: 'Live Production Websites',
+    GROUP_BUILDS: 'In-Progress Client Builds',
     CUSTOM_OPTION: 'Custom Input',
     AWAITING_URL: 'Awaiting URL',
     BTN_GENERATING: 'Generating...',

@@ -6,7 +6,7 @@ import Link from 'next/link';
 import { supabase } from '@/utils/supabase';
 import { CreditCard, Users, Loader2, Clock, Hammer, Zap, CheckCircle2, Globe, Beaker, Sparkles } from 'lucide-react';
 import { getGlobalInvoices } from '@/app/actions/billing';
-import { OVERVIEW_COPY } from '@/config/dashboard/overview';
+import { OVERVIEW_COPY, classifyStorefront } from '@/config/dashboard/overview';
 
 export default function TelemetryRow() {
   const [metrics, setMetrics] = useState({
@@ -43,15 +43,30 @@ export default function TelemetryRow() {
         let publicPrototypes = 0;
 
         if (storefronts) {
-          // 1. Identify real paying clients using the exact same rules as the Ledger
-          const activeStores = storefronts.filter(store => 
-            !store.is_template && 
-            store.status !== 'PROTOTYPE' &&
-            !['PENDING', 'CANCELED'].includes(store.status) &&
-            store.stripe_subscription_id
-          );
+          // 1. Classify every row using the shared Single Source of Truth helper
+          storefronts.forEach((store) => {
+            const bucket = classifyStorefront(store);
+            if (bucket === 'PROTOTYPE') {
+              prototypes++;
+              if (store.is_published) publicPrototypes++;
+            } else if (bucket === 'LIVE') {
+              deployed++;
+            } else if (bucket === 'HOLDING') {
+              holding++;
+            } else if (bucket === 'WORKSHOP') {
+              activeWorkshop++;
+              if (store.status === 'ONBOARDING' || store.status === 'AWAITING_PAYMENT') {
+                onboarding++;
+              }
+            }
+          });
+
+          // 2. Calculate Net MRR strictly from non-template, non-ignored stores with an active subscription
+          const activeStores = storefronts.filter(store => {
+            const bucket = classifyStorefront(store);
+            return (bucket === 'LIVE' || bucket === 'HOLDING' || bucket === 'WORKSHOP') && Boolean(store.stripe_subscription_id);
+          });
           
-          // 2. Pull directly from the Ledger's Stripe Invoice action
           const invoiceData = await getGlobalInvoices();
           const validInvoices = (invoiceData.success && invoiceData.invoices) ? invoiceData.invoices : [];
           
@@ -76,28 +91,9 @@ export default function TelemetryRow() {
             
             net += actualPaid;
           });
-          
-          // 3. Mirror StorefrontsManager Tiers Exactly
-          storefronts.forEach((store) => {
-            if (store.is_template || store.status === 'PROTOTYPE') {
-              prototypes++;
-              if (store.is_published) publicPrototypes++;
-            } else if (!['PENDING', 'CANCELED'].includes(store.status)) {
-              if (['ACTIVE', 'LIVE'].includes(store.status)) {
-                deployed++;
-              } else if (['IN_REVIEW', 'AWAITING_ASSETS', 'ON_HOLD'].includes(store.status)) {
-                holding++;
-              } else {
-                activeWorkshop++;
-                if (store.status === 'ONBOARDING' || store.status === 'AWAITING_PAYMENT') {
-                  onboarding++;
-                }
-              }
-            }
-          });
         }
         
-        // 4. Fetch Pending Applications
+        // 3. Fetch Pending Applications
         const { count: reviewCount } = await supabase
           .from('storefront_applications')
           .select('*', { count: 'exact', head: true })
@@ -179,7 +175,7 @@ export default function TelemetryRow() {
         </div>
       </div>
 
-      {/* 2. ACTIVE WORKSHOP CAPACITY (Links to Storefronts) */}
+      {/* 2. ACTIVE WORKSHOP CAPACITY */}
       <Link href="/dashboard/storefronts" className="bg-zinc-950/80 border border-cyan-500/20 rounded-2xl p-4 sm:p-5 relative overflow-hidden group hover:border-cyan-500/40 transition-all shadow-lg flex flex-col justify-between">
         <div className="absolute -right-6 -top-6 w-24 h-24 bg-cyan-500/10 rounded-full blur-2xl group-hover:bg-cyan-500/20 transition-all pointer-events-none" />
         
@@ -224,7 +220,7 @@ export default function TelemetryRow() {
         </div>
       </Link>
 
-      {/* 3. THE LAB (Links to Storefronts Prototypes) */}
+      {/* 3. THE LAB */}
       <Link href="/dashboard/storefronts" className="bg-zinc-950/80 border border-violet-500/20 rounded-2xl p-4 sm:p-5 relative overflow-hidden group hover:border-violet-500/40 transition-all shadow-lg flex flex-col justify-between">
         <div className="absolute -right-6 -top-6 w-24 h-24 bg-violet-500/10 rounded-full blur-2xl group-hover:bg-violet-500/20 transition-all pointer-events-none" />
         
@@ -251,7 +247,7 @@ export default function TelemetryRow() {
         </div>
       </Link>
 
-      {/* 4. NET MRR (Mirrors & Links Directly to The Ledger) */}
+      {/* 4. NET MRR */}
       <Link href="/dashboard/ledger" className="bg-zinc-950/80 border border-emerald-500/20 rounded-2xl p-4 sm:p-5 relative overflow-hidden group hover:border-emerald-500/40 transition-all shadow-lg flex flex-col justify-between">
         <div className="absolute -right-6 -top-6 w-24 h-24 bg-emerald-500/10 rounded-full blur-2xl group-hover:bg-emerald-500/20 transition-all pointer-events-none" />
         
