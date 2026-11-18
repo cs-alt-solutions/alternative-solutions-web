@@ -4,6 +4,9 @@ export type StorefrontBucket = 'LIVE' | 'HOLDING' | 'WORKSHOP' | 'PROTOTYPE' | '
 
 /**
  * SINGLE SOURCE OF TRUTH: Classifies any storefront row into its exact operational bucket.
+ * - WORKSHOP = Ball is in YOUR court (Work Queue, Core Architecture, Content Assembly)
+ * - HOLDING  = Ball is in CLIENT'S court (Onboarding, Awaiting Payment, Client Review, Awaiting Assets, On Hold)
+ * - LIVE     = Live Production Grid
  */
 export function classifyStorefront(store: any): StorefrontBucket {
   if (!store) return 'IGNORED';
@@ -24,12 +27,20 @@ export function classifyStorefront(store: any): StorefrontBucket {
     return 'LIVE';
   }
 
-  // 4. Awaiting Client Action (Ball is in the client's court)
-  if (['IN_REVIEW', 'IN REVIEW', 'AWAITING_ASSETS', 'ON_HOLD', 'CHANGES_REQUESTED'].includes(rawStatus)) {
+  // 4. Awaiting Client Action (Ball is in the client's court — never blocks your 5 build slots!)
+  if ([
+    'ONBOARDING',
+    'AWAITING_PAYMENT',
+    'IN_REVIEW',
+    'IN REVIEW',
+    'AWAITING_ASSETS',
+    'ON_HOLD',
+    'CHANGES_REQUESTED'
+  ].includes(rawStatus)) {
     return 'HOLDING';
   }
 
-  // 5. The Active Workshop (Ball is in your court: Onboarding, Building Core, Content Assembly)
+  // 5. The Active Workshop (Ball is in YOUR court: PENDING_BUILD, BUILDING_CORE, CONTENT_ASSEMBLY)
   return 'WORKSHOP';
 }
 
@@ -41,7 +52,7 @@ export const OVERVIEW_COPY = {
     AWAITING_REVIEW: '0 Awaiting Review',
     ONBOARDING_SUFFIX: 'Onboarding',
     CAPACITY_TITLE: 'Active Capacity',
-    IN_PROGRESS: 'In Progress',
+    IN_PROGRESS: 'In Your Court',
     SLOTS_OPEN: 'Slots Open',
     HOLDING_SUFFIX: 'Awaiting Client',
     LAB_TITLE: 'The Lab',

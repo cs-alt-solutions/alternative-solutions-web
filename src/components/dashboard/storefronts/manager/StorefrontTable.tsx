@@ -2,15 +2,11 @@
 'use client';
 
 import React, { useState } from 'react';
-import Link from 'next/link';
-import { 
-  Settings, Globe, Eye, EyeOff, User, ArrowUpDown, 
-  ChevronUp, ChevronDown, Clock, Mail, Loader2, CheckCircle2, 
-  FlaskConical, Users, MoreVertical, X 
-} from 'lucide-react';
+import { Eye, EyeOff, ArrowUpDown, ChevronUp, ChevronDown, Clock } from 'lucide-react';
 import { STOREFRONT_LIFECYCLE, StorefrontStatus } from '@/config/lifecycle';
-import { sendPortalNudge } from '@/app/actions/storefront_applications'; 
 import { STOREFRONT_MANAGER_COPY } from '@/config/dashboard/manager';
+import StorefrontObjectiveRadar from './StorefrontObjectiveRadar';
+import StorefrontActionMenu from './StorefrontActionMenu';
 
 interface TableProps {
   processedData: any[];
@@ -18,56 +14,34 @@ interface TableProps {
   sortConfig: { key: string; direction: 'asc' | 'desc' } | null;
   handleRowUpdate: (id: string, field: string, value: any) => void;
   masterIndustries: { id: string; label: string }[];
+  tasks?: any[];
+  ideas?: any[];
+  onOpenTaskModal?: (storeId: string, taskToEdit?: any) => void;
   isPrototypeView?: boolean;
 }
 
 export default function StorefrontTable({ 
-  processedData, requestSort, sortConfig, handleRowUpdate, masterIndustries, isPrototypeView = false 
+  processedData, 
+  requestSort, 
+  sortConfig, 
+  handleRowUpdate, 
+  masterIndustries, 
+  tasks = [], 
+  ideas = [], 
+  onOpenTaskModal,
+  isPrototypeView = false 
 }: TableProps) {
-  const [nudgingId, setNudgingId] = useState<string | null>(null);
-  const [nudgedSuccessId, setNudgedSuccessId] = useState<string | null>(null);
   const [openMenuId, setOpenMenuId] = useState<string | null>(null);
   const copy = STOREFRONT_MANAGER_COPY.TABLE;
 
-  const handleNudgeClient = async (id: string, email: string, businessName: string) => {
-    if (!window.confirm(`${copy.NUDGE_CONFIRM_PREFIX} ${email}?`)) return;
-    
-    setNudgingId(id);
-    try {
-      const result = await sendPortalNudge(id, email, businessName);
-      if (result.success) {
-        setNudgedSuccessId(id);
-        setTimeout(() => {
-          setNudgedSuccessId(null);
-          setOpenMenuId(null);
-        }, 1500);
-      } else {
-        alert(result.error || copy.NUDGE_ERROR);
-      }
-    } catch (err) {
-      alert(copy.NUDGE_SYS_ERROR);
-    } finally {
-      setNudgingId(null);
-    }
-  };
-
-  const handleTogglePrototype = (store: any) => {
-    const nextIsTemplate = !store.is_template;
-    const msg = nextIsTemplate ? copy.CONVERT_CONFIRM_PROTOTYPE : copy.CONVERT_CONFIRM_CLIENT;
-    setOpenMenuId(null);
-    if (!window.confirm(msg)) return;
-    handleRowUpdate(store.id, 'is_template', nextIsTemplate);
-  };
-
   const getSortIcon = (columnKey: string) => {
-    if (sortConfig?.key !== columnKey) return <ArrowUpDown size={12} className="text-zinc-700 group-hover:text-zinc-500 transition-colors" />;
-    return sortConfig.direction === 'asc' ? <ChevronUp size={14} className="text-cyan-400" /> : <ChevronDown size={14} className="text-cyan-400" />;
+    if (sortConfig?.key !== columnKey) return <ArrowUpDown size={12} className="text-zinc-700 group-hover:text-zinc-500 transition-colors shrink-0" />;
+    return sortConfig.direction === 'asc' ? <ChevronUp size={14} className="text-cyan-400 shrink-0" /> : <ChevronDown size={14} className="text-cyan-400 shrink-0" />;
   };
 
   const getRowStyle = (status: string, isOffline: boolean, isTemplate: boolean) => {
     if (isTemplate) return 'bg-fuchsia-500/[0.02] border-l-2 border-l-fuchsia-500/40';
     if (isOffline) return 'opacity-60 border-l-2 border-l-transparent';
-    
     switch(status) {
       case 'ACTIVE': 
       case 'LIVE': return 'bg-emerald-500/[0.02] border-l-2 border-l-emerald-500/50';
@@ -77,8 +51,7 @@ export default function StorefrontTable({
       case 'AWAITING_ASSETS': return 'bg-violet-500/[0.02] border-l-2 border-l-violet-500/50';
       case 'ONBOARDING': return 'bg-amber-500/[0.02] border-l-2 border-l-amber-500/50';
       case 'ON_HOLD': return 'bg-rose-500/[0.02] border-l-2 border-l-rose-500/50';
-      case 'PENDING_BUILD': return 'bg-zinc-500/[0.02] border-l-2 border-l-zinc-500/50';
-      default: return 'border-l-2 border-l-transparent';
+      default: return 'bg-zinc-500/[0.02] border-l-2 border-l-zinc-500/50';
     }
   };
 
@@ -107,7 +80,6 @@ export default function StorefrontTable({
     return { daysInStage, stageBadgeText, formattedCreated, formattedStageDate };
   };
 
-  // Shared Status / Exposure Pill helper
   const renderStatusPill = (store: any, config: any, isStrictlyActiveClient: boolean, daysInStage: number, stageBadgeText: string) => {
     if (store.is_template) {
       return (
@@ -158,22 +130,14 @@ export default function StorefrontTable({
 
   return (
     <>
-      {/* INVISIBLE OUTSIDE-TAP BACKDROP (Closes open menu cleanly on any outside tap) */}
-      {openMenuId && (
-        <div
-          className="fixed inset-0 z-30 bg-transparent"
-          onClick={() => setOpenMenuId(null)}
-        />
-      )}
+      {openMenuId && <div className="fixed inset-0 z-30 bg-transparent" onClick={() => setOpenMenuId(null)} />}
 
-      {/* MOBILE LIST (<768px) — Non-clickable row + Inline Expandable Action Tray */}
+      {/* MOBILE LIST (<768px) */}
       <div className="md:hidden space-y-2 relative z-40">
         {processedData.map((store) => {
           const rawStatus = (store.status || 'PENDING_BUILD') as string;
-          const status = rawStatus as StorefrontStatus;
-          const config = STOREFRONT_LIFECYCLE[status] || { label: rawStatus, badgeColor: 'bg-zinc-800 text-zinc-400 border-zinc-700' };
-          const isOffline = rawStatus === 'MAINTENANCE' || rawStatus === 'HIDDEN' || rawStatus === 'CANCELED' || rawStatus === 'ON_HOLD';
-          const isLive = ['ACTIVE', 'MAINTENANCE', 'HIDDEN', 'AWAITING_ASSETS', 'IN_REVIEW', 'LIVE'].includes(rawStatus);
+          const config = STOREFRONT_LIFECYCLE[rawStatus as StorefrontStatus] || { label: rawStatus, badgeColor: 'bg-zinc-800 text-zinc-400 border-zinc-700' };
+          const isOffline = ['MAINTENANCE', 'HIDDEN', 'CANCELED', 'ON_HOLD'].includes(rawStatus);
           const isStrictlyActiveClient = !store.is_template && (rawStatus === 'ACTIVE' || rawStatus === 'LIVE');
           const { daysInStage, stageBadgeText } = getStageTiming(store);
           const isMenuOpen = openMenuId === store.id;
@@ -185,10 +149,9 @@ export default function StorefrontTable({
                 isMenuOpen ? 'border-cyan-500/40 bg-zinc-900/90 shadow-lg' : 'border-zinc-800/70 bg-zinc-950/90'
               } ${getRowStyle(rawStatus, isOffline, !!store.is_template)}`}
             >
-              {/* Main Strip: Static Logo + Business Name + 3-Dots Toggle Button */}
-              <div className="px-3 py-2.5 flex items-center justify-between gap-3">
-                <div className="flex items-center gap-3 min-w-0 flex-1">
-                  <div className="w-10 h-10 rounded-lg bg-zinc-900 border border-zinc-800 flex items-center justify-center shrink-0 overflow-hidden">
+              <div className="px-3 py-2.5 flex items-start justify-between gap-3">
+                <div className="flex items-start gap-3 min-w-0 flex-1">
+                  <div className="w-10 h-10 rounded-lg bg-zinc-900 border border-zinc-800 flex items-center justify-center shrink-0 overflow-hidden mt-0.5">
                     {store.brand_logo ? (
                       // eslint-disable-next-line @next/next/no-img-element
                       <img src={store.brand_logo} alt="Logo" className="w-full h-full object-cover" />
@@ -198,135 +161,67 @@ export default function StorefrontTable({
                   </div>
 
                   <div className="flex flex-col gap-1 min-w-0 flex-1">
-                    <span className="text-sm font-bold text-white tracking-tight truncate">
-                      {store.business_name}
-                    </span>
+                    <span className="text-sm font-bold text-white tracking-tight truncate">{store.business_name}</span>
                     {renderStatusPill(store, config, isStrictlyActiveClient, daysInStage, stageBadgeText)}
+                    <StorefrontObjectiveRadar store={store} tasks={tasks} ideas={ideas} onOpenTaskModal={onOpenTaskModal} compact={true} />
                   </div>
                 </div>
 
-                <button
-                  type="button"
-                  onClick={() => setOpenMenuId(isMenuOpen ? null : store.id)}
-                  className={`p-2 rounded-lg border transition-all cursor-pointer flex items-center justify-center shrink-0 ${
-                    isMenuOpen
-                      ? 'bg-cyan-500/15 border-cyan-500/40 text-cyan-400'
-                      : 'bg-zinc-900/80 border-zinc-800 text-zinc-400 hover:text-white'
-                  }`}
-                  title={copy.MORE_ACTIONS_TITLE}
-                >
-                  {isMenuOpen ? <X size={16} /> : <MoreVertical size={16} />}
-                </button>
+                <StorefrontActionMenu
+                  store={store}
+                  isMenuOpen={isMenuOpen}
+                  onToggleMenu={() => setOpenMenuId(isMenuOpen ? null : store.id)}
+                  onCloseMenu={() => setOpenMenuId(null)}
+                  handleRowUpdate={handleRowUpdate}
+                  mode="mobile-button"
+                />
               </div>
 
-              {/* Inline Action Tray (Slides open inside the card without covering other rows!) */}
-              {isMenuOpen && (
-                <div className="px-3 pb-3 pt-2 border-t border-zinc-800/80 grid grid-cols-2 gap-2 animate-in fade-in slide-in-from-top-1 duration-150">
-                  <Link
-                    href={`/dashboard/storefronts/${store.id}`}
-                    onClick={() => setOpenMenuId(null)}
-                    className="flex items-center justify-center gap-2 py-2.5 px-3 rounded-lg bg-violet-500/15 border border-violet-500/30 text-violet-300 text-[10px] font-black uppercase tracking-wider"
-                  >
-                    <Settings size={13} className="shrink-0" />
-                    <span className="truncate">{copy.COMMAND_HUB_TITLE}</span>
-                  </Link>
-
-                  <a
-                    href={`https://storefronts.alternativesolutions.io/${store.slug}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    onClick={() => setOpenMenuId(null)}
-                    className={`flex items-center justify-center gap-2 py-2.5 px-3 rounded-lg border text-[10px] font-black uppercase tracking-wider ${
-                      isLive || store.is_published
-                        ? 'bg-emerald-500/15 border-emerald-500/30 text-emerald-300'
-                        : 'bg-cyan-500/15 border-cyan-500/30 text-cyan-300'
-                    }`}
-                  >
-                    {isLive || store.is_published ? <Globe size={13} className="shrink-0" /> : <Eye size={13} className="shrink-0" />}
-                    <span className="truncate">{isLive || store.is_published ? copy.LIVE_SITE_TITLE : copy.STAGING_PREVIEW_TITLE}</span>
-                  </a>
-
-                  {!store.is_template && (
-                    <Link
-                      href={`/portal/${store.id}`}
-                      target="_blank"
-                      onClick={() => setOpenMenuId(null)}
-                      className="flex items-center justify-center gap-2 py-2.5 px-3 rounded-lg bg-fuchsia-500/15 border border-fuchsia-500/30 text-fuchsia-300 text-[10px] font-black uppercase tracking-wider"
-                    >
-                      <User size={13} className="shrink-0" />
-                      <span className="truncate">{copy.PORTAL_TITLE}</span>
-                    </Link>
-                  )}
-
-                  {rawStatus === 'ONBOARDING' && !store.is_template && (
-                    <button
-                      type="button"
-                      onClick={() => handleNudgeClient(store.id, store.contact_email, store.business_name)}
-                      disabled={nudgingId === store.id || nudgedSuccessId === store.id}
-                      className="flex items-center justify-center gap-2 py-2.5 px-3 rounded-lg bg-amber-500/15 border border-amber-500/30 text-amber-300 text-[10px] font-black uppercase tracking-wider cursor-pointer"
-                    >
-                      {nudgingId === store.id ? (
-                        <Loader2 size={13} className="animate-spin shrink-0" />
-                      ) : nudgedSuccessId === store.id ? (
-                        <CheckCircle2 size={13} className="text-emerald-400 shrink-0" />
-                      ) : (
-                        <Mail size={13} className="shrink-0" />
-                      )}
-                      <span className="truncate">{nudgedSuccessId === store.id ? copy.NUDGE_SENT : copy.NUDGE_TITLE}</span>
-                    </button>
-                  )}
-
-                  {!isStrictlyActiveClient && (
-                    <button
-                      type="button"
-                      onClick={() => handleTogglePrototype(store)}
-                      className="col-span-2 flex items-center justify-center gap-2 py-2 px-3 rounded-lg bg-zinc-900 border border-zinc-800 text-zinc-400 hover:text-white text-[10px] font-bold uppercase tracking-wider cursor-pointer"
-                    >
-                      {store.is_template ? <Users size={13} className="text-amber-400 shrink-0" /> : <FlaskConical size={13} className="text-fuchsia-400 shrink-0" />}
-                      <span className="truncate">{store.is_template ? copy.CONVERT_TO_CLIENT_TITLE : copy.CONVERT_TO_PROTOTYPE_TITLE}</span>
-                    </button>
-                  )}
-                </div>
-              )}
+              <StorefrontActionMenu
+                store={store}
+                isMenuOpen={isMenuOpen}
+                onToggleMenu={() => setOpenMenuId(isMenuOpen ? null : store.id)}
+                onCloseMenu={() => setOpenMenuId(null)}
+                handleRowUpdate={handleRowUpdate}
+                mode="mobile-tray"
+              />
             </div>
           );
         })}
       </div>
 
-      {/* TABLET & DESKTOP TABLE (>=768px) */}
+      {/* TABLET & DESKTOP TABLE (>=768px) — Locked Column Widths via table-fixed! */}
       <div className="hidden md:block overflow-visible rounded-lg border border-zinc-800/50 bg-zinc-950/50 relative z-40">
-        <table className="w-full text-left border-collapse whitespace-nowrap select-none">
+        <table className="w-full table-fixed text-left border-collapse select-none">
           <thead>
             <tr className="border-b border-zinc-800 bg-zinc-900/30 text-[10px] font-black uppercase tracking-widest text-zinc-500">
-              <th className="px-4 sm:px-6 py-3.5 cursor-pointer hover:bg-zinc-800/50 transition-colors group" onClick={() => requestSort('business_name')}>
-                <div className="flex items-center gap-2">{copy.COL_CLIENT} {getSortIcon('business_name')}</div>
+              <th className={`${isPrototypeView ? 'w-[30%]' : 'w-[22%]'} px-4 sm:px-6 py-3.5 cursor-pointer hover:bg-zinc-800/50 transition-colors group`} onClick={() => requestSort('business_name')}>
+                <div className="flex items-center gap-2 truncate">{copy.COL_CLIENT} {getSortIcon('business_name')}</div>
               </th>
-              <th className="px-4 sm:px-6 py-3.5 cursor-pointer hover:bg-zinc-800/50 transition-colors group" onClick={() => requestSort('category')}>
-                <div className="flex items-center gap-2">{copy.COL_CATEGORY} {getSortIcon('category')}</div>
+              <th className={`${isPrototypeView ? 'w-[22%]' : 'w-[15%]'} px-4 sm:px-6 py-3.5 cursor-pointer hover:bg-zinc-800/50 transition-colors group`} onClick={() => requestSort('category')}>
+                <div className="flex items-center gap-2 truncate">{copy.COL_CATEGORY} {getSortIcon('category')}</div>
               </th>
               {!isPrototypeView && (
-                <th className="px-4 sm:px-6 py-3.5 hidden lg:table-cell cursor-pointer hover:bg-zinc-800/50 transition-colors group" onClick={() => requestSort('plan_tier')}>
-                  <div className="flex items-center gap-2">{copy.COL_PLAN} {getSortIcon('plan_tier')}</div>
+                <th className="w-[29%] px-4 sm:px-6 py-3.5">
+                  <div className="flex items-center gap-2 text-cyan-400/90 truncate">{copy.COL_OBJECTIVE}</div>
                 </th>
               )}
-              <th className="px-4 sm:px-6 py-3.5 cursor-pointer hover:bg-zinc-800/50 transition-colors group" onClick={() => requestSort('status')}>
-                <div className="flex items-center gap-2">
+              <th className={`${isPrototypeView ? 'w-[24%]' : 'w-[16%]'} px-4 sm:px-6 py-3.5 cursor-pointer hover:bg-zinc-800/50 transition-colors group`} onClick={() => requestSort('status')}>
+                <div className="flex items-center gap-2 truncate">
                   {isPrototypeView ? copy.COL_PROTOTYPE_VISIBILITY : copy.COL_STATUS} {getSortIcon('status')}
                 </div>
               </th>
-              <th className="px-4 sm:px-6 py-3.5 hidden xl:table-cell cursor-pointer hover:bg-zinc-800/50 transition-colors group" onClick={() => requestSort('created_at')}>
-                <div className="flex items-center gap-2">{copy.COL_TIMELINE} {getSortIcon('created_at')}</div>
+              <th className="w-[12%] px-4 sm:px-6 py-3.5 hidden xl:table-cell cursor-pointer hover:bg-zinc-800/50 transition-colors group" onClick={() => requestSort('created_at')}>
+                <div className="flex items-center gap-2 truncate">{copy.COL_TIMELINE} {getSortIcon('created_at')}</div>
               </th>
-              <th className="px-4 sm:px-6 py-3.5 text-right">{copy.COL_ACTIONS}</th>
+              <th className="w-[6%] px-4 sm:px-6 py-3.5 text-right">{copy.COL_ACTIONS}</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-zinc-800/50">
             {processedData.map((store) => {
               const rawStatus = (store.status || 'PENDING_BUILD') as string;
-              const status = rawStatus as StorefrontStatus;
-              const config = STOREFRONT_LIFECYCLE[status] || { label: rawStatus, badgeColor: 'bg-zinc-800 text-zinc-400 border-zinc-700' };
-              const isOffline = rawStatus === 'MAINTENANCE' || rawStatus === 'HIDDEN' || rawStatus === 'CANCELED' || rawStatus === 'ON_HOLD';
-              const isLive = ['ACTIVE', 'MAINTENANCE', 'HIDDEN', 'AWAITING_ASSETS', 'IN_REVIEW', 'LIVE'].includes(rawStatus);
+              const config = STOREFRONT_LIFECYCLE[rawStatus as StorefrontStatus] || { label: rawStatus, badgeColor: 'bg-zinc-800 text-zinc-400 border-zinc-700' };
+              const isOffline = ['MAINTENANCE', 'HIDDEN', 'CANCELED', 'ON_HOLD'].includes(rawStatus);
               const isStrictlyActiveClient = !store.is_template && (rawStatus === 'ACTIVE' || rawStatus === 'LIVE');
               const isMenuOpen = openMenuId === store.id;
 
@@ -335,10 +230,8 @@ export default function StorefrontTable({
 
               return (
                 <tr key={store.id} className={`transition-colors border-b border-zinc-800/50 ${getRowStyle(rawStatus, isOffline, !!store.is_template)}`}>
-                  
-                  {/* 1. CLIENT / BUSINESS (Static, non-clickable row) */}
-                  <td className="px-4 sm:px-6 py-3.5">
-                    <div className="flex items-center gap-3 sm:gap-4">
+                  <td className="px-4 sm:px-6 py-3.5 truncate">
+                    <div className="flex items-center gap-3 sm:gap-4 min-w-0">
                       <div className="w-9 h-9 rounded-md bg-zinc-900 border border-zinc-800 flex items-center justify-center shrink-0 overflow-hidden">
                         {store.brand_logo ? (
                           // eslint-disable-next-line @next/next/no-img-element
@@ -348,34 +241,28 @@ export default function StorefrontTable({
                         )}
                       </div>
                       <div className="flex flex-col min-w-0">
-                        <span className="text-sm font-bold text-white tracking-tight truncate max-w-[220px] lg:max-w-xs">{store.business_name}</span>
+                        <span className="text-sm font-bold text-white tracking-tight truncate">{store.business_name}</span>
                         <span className="text-[10px] font-mono text-zinc-500 truncate">/{store.slug}</span>
                       </div>
                     </div>
                   </td>
 
-                  {/* 2. FULL INDUSTRY CATEGORY */}
-                  <td className="px-4 sm:px-6 py-3.5 text-xs font-medium text-zinc-300">
+                  <td className="px-4 sm:px-6 py-3.5 text-xs font-medium text-zinc-300 truncate">
                     {getCategoryLabel(rawCategory)}
                   </td>
 
-                  {/* 3. PLAN TIER */}
                   {!isPrototypeView && (
-                    <td className="px-4 sm:px-6 py-3.5 hidden lg:table-cell">
-                      <span className="text-[10px] font-black text-zinc-300 bg-zinc-800/50 px-2 py-1 rounded border border-zinc-700/50 uppercase tracking-widest">
-                        {store.plan_tier || store.selected_plan || copy.EMPTY_CELL}
-                      </span>
+                    <td className="px-4 sm:px-6 py-3.5">
+                      <StorefrontObjectiveRadar store={store} tasks={tasks} ideas={ideas} onOpenTaskModal={onOpenTaskModal} />
                     </td>
                   )}
 
-                  {/* 4. CURRENT STATUS + CLEAN DAY COUNTER */}
                   <td className="px-4 sm:px-6 py-3.5">
                     {renderStatusPill(store, config, isStrictlyActiveClient, daysInStage, stageBadgeText)}
                   </td>
 
-                  {/* 5. KEY DATES */}
                   <td className="px-4 sm:px-6 py-3.5 hidden xl:table-cell">
-                    <div className="flex flex-col gap-0.5">
+                    <div className="flex flex-col gap-0.5 truncate">
                       <div className="flex items-center gap-2 text-[11px] font-sans">
                         <span className="text-zinc-500 text-[10px] uppercase font-bold tracking-wider">{copy.STAGE_SINCE_PREFIX}</span>
                         <span className="text-zinc-200 font-semibold">{formattedStageDate}</span>
@@ -387,97 +274,15 @@ export default function StorefrontTable({
                     </div>
                   </td>
 
-                  {/* 6. 3-DOTS ACTION MENU (Desktop Popover) */}
                   <td className="px-4 sm:px-6 py-3.5 text-right">
-                    <div className="relative inline-block text-left">
-                      <button
-                        type="button"
-                        onClick={() => setOpenMenuId(isMenuOpen ? null : store.id)}
-                        className={`p-2 rounded-lg border transition-all cursor-pointer flex items-center justify-center ${
-                          isMenuOpen
-                            ? 'bg-cyan-500/15 border-cyan-500/40 text-cyan-400'
-                            : 'bg-zinc-900/80 border-zinc-800 text-zinc-400 hover:text-white hover:bg-zinc-800'
-                        }`}
-                        title={copy.MORE_ACTIONS_TITLE}
-                      >
-                        {isMenuOpen ? <X size={16} /> : <MoreVertical size={16} />}
-                      </button>
-
-                      {isMenuOpen && (
-                        <div className="absolute right-0 top-full mt-1.5 w-52 bg-zinc-950 border border-zinc-800 rounded-xl shadow-[0_10px_40px_rgba(0,0,0,0.9)] py-1.5 z-50 animate-in fade-in zoom-in-95 duration-150 text-left">
-                          <Link
-                            href={`/dashboard/storefronts/${store.id}`}
-                            onClick={() => setOpenMenuId(null)}
-                            className="flex items-center gap-3 px-3.5 py-2.5 text-xs font-bold text-white hover:bg-violet-500/15 hover:text-violet-300 transition-colors"
-                          >
-                            <Settings size={14} className="text-violet-400 shrink-0" />
-                            <span>{copy.COMMAND_HUB_TITLE}</span>
-                          </Link>
-
-                          <a
-                            href={`https://storefronts.alternativesolutions.io/${store.slug}`}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            onClick={() => setOpenMenuId(null)}
-                            className="flex items-center gap-3 px-3.5 py-2.5 text-xs font-bold text-zinc-200 hover:bg-cyan-500/15 hover:text-cyan-300 transition-colors"
-                          >
-                            {isLive || store.is_published ? (
-                              <Globe size={14} className="text-emerald-400 shrink-0" />
-                            ) : (
-                              <Eye size={14} className="text-cyan-400 shrink-0" />
-                            )}
-                            <span>{isLive || store.is_published ? copy.LIVE_SITE_TITLE : copy.STAGING_PREVIEW_TITLE}</span>
-                          </a>
-
-                          {!store.is_template && (
-                            <Link
-                              href={`/portal/${store.id}`}
-                              target="_blank"
-                              onClick={() => setOpenMenuId(null)}
-                              className="flex items-center gap-3 px-3.5 py-2.5 text-xs font-bold text-zinc-200 hover:bg-fuchsia-500/15 hover:text-fuchsia-300 transition-colors"
-                            >
-                              <User size={14} className="text-fuchsia-400 shrink-0" />
-                              <span>{copy.PORTAL_TITLE}</span>
-                            </Link>
-                          )}
-
-                          {rawStatus === 'ONBOARDING' && !store.is_template && (
-                            <button
-                              type="button"
-                              onClick={() => handleNudgeClient(store.id, store.contact_email, store.business_name)}
-                              disabled={nudgingId === store.id || nudgedSuccessId === store.id}
-                              className="w-full flex items-center gap-3 px-3.5 py-2.5 text-xs font-bold text-amber-400 hover:bg-amber-500/15 transition-colors cursor-pointer text-left"
-                            >
-                              {nudgingId === store.id ? (
-                                <Loader2 size={14} className="animate-spin shrink-0" />
-                              ) : nudgedSuccessId === store.id ? (
-                                <CheckCircle2 size={14} className="text-emerald-400 shrink-0" />
-                              ) : (
-                                <Mail size={14} className="shrink-0" />
-                              )}
-                              <span>{nudgedSuccessId === store.id ? copy.NUDGE_SENT : copy.NUDGE_TITLE}</span>
-                            </button>
-                          )}
-
-                          {!isStrictlyActiveClient && (
-                            <div className="border-t border-zinc-800/80 mt-1 pt-1">
-                              <button
-                                type="button"
-                                onClick={() => handleTogglePrototype(store)}
-                                className="w-full flex items-center gap-3 px-3.5 py-2.5 text-xs font-bold text-zinc-400 hover:bg-zinc-900 hover:text-white transition-colors cursor-pointer text-left"
-                              >
-                                {store.is_template ? (
-                                  <Users size={14} className="text-amber-400 shrink-0" />
-                                ) : (
-                                  <FlaskConical size={14} className="text-fuchsia-400 shrink-0" />
-                                )}
-                                <span>{store.is_template ? copy.CONVERT_TO_CLIENT_TITLE : copy.CONVERT_TO_PROTOTYPE_TITLE}</span>
-                              </button>
-                            </div>
-                          )}
-                        </div>
-                      )}
-                    </div>
+                    <StorefrontActionMenu
+                      store={store}
+                      isMenuOpen={isMenuOpen}
+                      onToggleMenu={() => setOpenMenuId(isMenuOpen ? null : store.id)}
+                      onCloseMenu={() => setOpenMenuId(null)}
+                      handleRowUpdate={handleRowUpdate}
+                      mode="desktop-popover"
+                    />
                   </td>
                 </tr>
               );

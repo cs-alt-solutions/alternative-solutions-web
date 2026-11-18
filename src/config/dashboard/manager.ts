@@ -3,13 +3,13 @@
 export const STOREFRONT_MANAGER_COPY = {
   HEADER: {
     TITLE: 'Storefront Engine',
-    SUBTITLE: 'Manage active client projects and sandbox prototypes.',
+    SUBTITLE: 'Manage active client projects, next objectives, and sandbox prototypes.',
     BTN_LOCK_GRID: 'Lock Grid',
     BTN_ARCHITECT_OVERRIDE: 'Quick Edit Categories'
   },
   TIERS: {
-    WORKSHOP: 'The Active Workshop',
-    HOLDING: 'Awaiting Client Action',
+    WORKSHOP: 'The Active Workshop (In Your Court)',
+    HOLDING: 'Awaiting Client Action (In Their Court)',
     PRODUCTION: 'Live Production Grid',
     PROTOTYPES_GRID: 'Sandbox & Public Prototypes'
   },
@@ -39,6 +39,7 @@ export const STOREFRONT_MANAGER_COPY = {
     EMPTY_QUEUE: 'Queue clear.',
     COL_CLIENT: 'Client / Business',
     COL_CATEGORY: 'Industry Category',
+    COL_OBJECTIVE: 'Next Objective & Strategy Radar',
     COL_PLAN: 'Plan Tier',
     COL_STATUS: 'Current Status',
     COL_PROTOTYPE_VISIBILITY: 'Public Directory Exposure',
@@ -54,6 +55,11 @@ export const STOREFRONT_MANAGER_COPY = {
     PUBLIC_VISIBLE: 'Public Showcase',
     PUBLIC_HIDDEN: 'Internal Sandbox',
     TOGGLE_PUBLIC_TITLE: 'Toggle Public Showcase Visibility',
+    BRAIN_DUMP_READY: 'Brain Dump Ready',
+    AWAITING_BRAIN_DUMP: 'No Brain Dump Yet',
+    OPEN_STRATEGY_TITLE: 'Open Strategy & Discovery Workspace',
+    ADD_OBJECTIVE_BTN: '+ Set Objective',
+    NO_ACTIVE_TASK: 'No active objective set',
     CONVERT_TO_CLIENT_TITLE: 'Convert to Active Client',
     CONVERT_TO_PROTOTYPE_TITLE: 'Move to Prototypes',
     CONVERT_CONFIRM_PROTOTYPE: 'Move this record into your Prototypes tab?',

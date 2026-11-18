@@ -1,3 +1,4 @@
+/* src/app/dashboard/storefronts/page.tsx */
 import React, { Suspense } from 'react';
 import { createClient } from '@/utils/supabase/server';
 
@@ -18,15 +19,25 @@ export default async function StorefrontsPage({
   const resolvedSearchParams = await searchParams;
   const applicationId = resolvedSearchParams?.application;
 
-  // 2. Fetch your established storefronts for the main dashboard view
-  const { data: storefronts, error } = await supabase
-    .from('storefronts')
-    .select('*')
-    .or('status.neq.PENDING,status.is.null') 
-    .order('created_at', { ascending: false });
+  // 2. Fetch Storefronts, Active Tasks, and Strategy Hub Ideas in parallel!
+  const [storefrontsRes, tasksRes, ideasRes] = await Promise.all([
+    supabase
+      .from('storefronts')
+      .select('*')
+      .or('status.neq.PENDING,status.is.null')
+      .order('created_at', { ascending: false }),
+    supabase
+      .from('tasks')
+      .select('*')
+      .neq('status', 'DONE')
+      .order('created_at', { ascending: false }),
+    supabase
+      .from('ideas_ledger')
+      .select('id, storefront_id, title, description, reference_links')
+  ]);
 
-  if (error) {
-    console.error("Failed to fetch active storefronts:", error);
+  if (storefrontsRes.error) {
+    console.error("Failed to fetch active storefronts:", storefrontsRes.error);
   }
 
   // 3. If an application ID is in the URL, fetch its exact data from the intake schema
@@ -47,7 +58,11 @@ export default async function StorefrontsPage({
 
   return (
     <main className="w-full">
-      <StorefrontsManager initialData={storefronts || []} />
+      <StorefrontsManager 
+        initialData={storefrontsRes.data || []} 
+        initialTasks={tasksRes.data || []}
+        initialIdeas={ideasRes.data || []}
+      />
       
       {/* 4. Only mount the modal if the database successfully returned the application data */}
       {applicationToReview && (
