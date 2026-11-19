@@ -2,47 +2,47 @@
 
 export const TASK_COPY = {
   HEADER: {
-    TITLE: 'Global Task Grid',
-    SUBTITLE: 'Cross-client command center and sprint objectives.',
-    BTN_NEW: 'New Objective',
-    FILTER_ALL_CLIENTS: 'All Clients & Internal',
-    INTERNAL_OPTION: 'Alt Solutions (Internal HQ)'
+    TITLE: "Global Task Board",
+    SUBTITLE: "Track client deliverables, blockers, and build objectives.",
+    BTN_NEW: "New Objective",
+    FILTER_ALL_CLIENTS: "All Workspaces",
+    INTERNAL_OPTION: "Internal HQ"
   },
   COLUMNS: {
-    TODO: 'To Do',
-    IN_PROGRESS: 'In Progress',
-    DONE: 'Completed'
+    TODO: "To Do",
+    IN_PROGRESS: "In Progress",
+    DONE: "Completed"
   },
   PRIORITIES: {
-    LOW: 'Low',
-    MEDIUM: 'Medium',
-    HIGH: 'High',
-    CRITICAL: 'Critical'
+    LOW: "Low",
+    MEDIUM: "Medium",
+    HIGH: "High",
+    CRITICAL: "Critical"
   },
   BOARD: {
-    EMPTY_COLUMN: 'Queue clear.'
+    EMPTY_COLUMN: "No objectives in this queue."
   },
   CARD: {
-    INTERNAL_BADGE: 'Internal HQ',
-    NO_DUE_DATE: 'No Due Date',
-    MARK_COMPLETE: 'Toggle Completion Status'
+    INTERNAL_BADGE: "Internal",
+    NO_DUE_DATE: "No Due Date",
+    MARK_COMPLETE: "Toggle Complete"
   },
   MODAL: {
-    CREATE_TITLE: 'Assign New Objective',
-    EDIT_TITLE: 'Update Objective',
-    LABEL_TITLE: 'Objective / Task',
-    PLACEHOLDER_TITLE: 'Enter custom objective...',
-    LABEL_CLIENT: 'Target Client / Storefront',
-    INTERNAL_HQ: 'Alt Solutions (Internal HQ)',
-    LABEL_DUE: 'Target Due Date',
-    LABEL_PRIORITY: 'Priority Level',
-    LABEL_STATUS: 'Current Stage',
-    LABEL_DESC: 'Notes & Context',
-    PLACEHOLDER_DESC: 'Add specific details, links, or blockers...',
-    BTN_DELETE: 'Delete Objective',
-    CONFIRM_DELETE: 'Permanently delete this objective?',
-    BTN_CANCEL: 'Cancel',
-    BTN_SAVE: 'Save Objective',
-    BTN_SAVING: 'Saving...'
+    CREATE_TITLE: "New Objective",
+    EDIT_TITLE: "Edit Objective",
+    LABEL_TITLE: "Objective",
+    PLACEHOLDER_TITLE: "Enter custom objective...",
+    LABEL_CLIENT: "Client / Storefront",
+    INTERNAL_HQ: "Internal HQ",
+    LABEL_DUE: "Due Date",
+    LABEL_PRIORITY: "Priority",
+    LABEL_STATUS: "Status",
+    LABEL_DESC: "Notes",
+    PLACEHOLDER_DESC: "Add context, links, or next steps...",
+    BTN_DELETE: "Delete",
+    CONFIRM_DELETE: "Delete this objective?",
+    BTN_CANCEL: "Cancel",
+    BTN_SAVE: "Save Objective",
+    BTN_SAVING: "Saving..."
   }
 };

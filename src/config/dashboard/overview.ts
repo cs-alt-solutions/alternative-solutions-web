@@ -2,32 +2,22 @@
 
 export type StorefrontBucket = 'LIVE' | 'HOLDING' | 'WORKSHOP' | 'PROTOTYPE' | 'IGNORED';
 
-/**
- * SINGLE SOURCE OF TRUTH: Classifies any storefront row into its exact operational bucket.
- * - WORKSHOP = Ball is in YOUR court (Work Queue, Core Architecture, Content Assembly)
- * - HOLDING  = Ball is in CLIENT'S court (Onboarding, Awaiting Payment, Client Review, Awaiting Assets, On Hold)
- * - LIVE     = Live Production Grid
- */
 export function classifyStorefront(store: any): StorefrontBucket {
   if (!store) return 'IGNORED';
   const rawStatus = (store.status || 'PENDING_BUILD').toUpperCase().trim();
 
-  // 1. Prototypes / Templates always go to The Lab
   if (store.is_template === true || rawStatus === 'PROTOTYPE') {
     return 'PROTOTYPE';
   }
 
-  // 2. Unapproved applications, canceled, or hidden/archived rows are ignored from active counts
   if (['PENDING', 'CANCELED', 'HIDDEN', 'MAINTENANCE'].includes(rawStatus)) {
     return 'IGNORED';
   }
 
-  // 3. Live Production Grid (Real, live websites)
   if (['ACTIVE', 'LIVE'].includes(rawStatus)) {
     return 'LIVE';
   }
 
-  // 4. Awaiting Client Action (Ball is in the client's court — never blocks your 5 build slots!)
   if ([
     'ONBOARDING',
     'AWAITING_PAYMENT',
@@ -40,7 +30,6 @@ export function classifyStorefront(store: any): StorefrontBucket {
     return 'HOLDING';
   }
 
-  // 5. The Active Workshop (Ball is in YOUR court: PENDING_BUILD, BUILDING_CORE, CONTENT_ASSEMBLY)
   return 'WORKSHOP';
 }
 
@@ -51,19 +40,17 @@ export const OVERVIEW_COPY = {
     ACTION_REQUIRED: 'Action Required',
     AWAITING_REVIEW: '0 Awaiting Review',
     ONBOARDING_SUFFIX: 'Onboarding',
-    CAPACITY_TITLE: 'Active Capacity',
+    CAPACITY_TITLE: 'Active Workshop',
     IN_PROGRESS: 'In Your Court',
     SLOTS_OPEN: 'Slots Open',
-    HOLDING_SUFFIX: 'Awaiting Client',
-    LAB_TITLE: 'The Lab',
-    LAB_SUBTITLE: 'Models & Demos',
-    PUBLIC_SHOWCASE_SUFFIX: 'Public Showcase',
-    MRR_TITLE: 'Net MRR',
-    PER_MONTH: '/mo',
-    LIVE_SUFFIX: 'Live',
-    NET_PREFIX: 'Net:',
-    PROMO_PREFIX: 'Promo:',
-    GROSS_PREFIX: 'Gross:'
+    HOLDING_TITLE: 'Awaiting Client',
+    HOLDING_SUBTITLE: 'In Their Court',
+    ASSETS_SUFFIX: 'Assets / Review',
+    MRR_TITLE: 'Monthly Revenue',
+    COLLECTED_LABEL: 'Collected',
+    EXPECTED_PREFIX: 'Expected:',
+    UPCOMING_PREFIX: 'Upcoming:',
+    LIVE_SUFFIX: 'Live'
   },
   INTAKE: {
     TITLE: 'Pending Applications',
