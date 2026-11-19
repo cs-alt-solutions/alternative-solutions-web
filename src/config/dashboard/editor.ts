@@ -21,7 +21,19 @@ export const BRAND_COLORS = [
   { name: 'Zinc', value: 'zinc-500', twBg: 'bg-zinc-500' }
 ];
 
-export const ALL_HEROS = ['center', 'split-left', 'split-right', 'cinematic', 'glass'];
+export const ALL_HEROS = [
+  'center',
+  'split-left',
+  'split-right',
+  'cinematic',
+  'glass',
+  'editorial-frame',
+  'arch-spotlight',
+  'bento-hero',
+  'bottom-dock',
+  'top-dock',
+  'minimal-type'
+];
 export const ALL_CONTENTS = ['classic', 'bento', 'sticky', 'accordion', 'editorial', 'menu', 'lookbook', 'hub'];
 export const ALL_ABOUTS = ['split', 'editorial', 'minimal', 'card'];
 
@@ -172,6 +184,12 @@ export const VISUAL_ARCH_COPY = {
       SPLIT_RIGHT: 'Bold Right Split',
       CINEMATIC: 'Full Cinematic',
       GLASS: 'Frosted Glass',
+      EDITORIAL_FRAME: 'Editorial Frame',
+      ARCH_SPOTLIGHT: 'Arch Spotlight',
+      BENTO_HERO: 'Bento Collage',
+      BOTTOM_DOCK: 'Bottom Dock',
+      TOP_DOCK: 'Top Dock',
+      MINIMAL_TYPE: 'Kinetic Type',
       CLASSIC_SPLIT: 'Classic Split',
       EDITORIAL: 'Editorial Overlap',
       MINIMAL: 'Clean Minimal',

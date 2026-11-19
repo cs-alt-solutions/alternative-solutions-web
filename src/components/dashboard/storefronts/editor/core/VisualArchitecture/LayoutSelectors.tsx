@@ -3,6 +3,18 @@ import React, { useState } from 'react';
 import { ChevronDown, ChevronUp } from 'lucide-react';
 import { VISUAL_ARCH_COPY, ALL_HEROS, ALL_CONTENTS, ALL_ABOUTS } from '@/config/dashboard/editor';
 
+const ADVANCED_HERO_IDS = [
+  'glass',
+  'editorial-frame',
+  'arch-spotlight',
+  'bento-hero',
+  'bottom-dock',
+  'top-dock',
+  'minimal-type'
+];
+
+const ADVANCED_CONTENT_IDS = ['accordion', 'menu', 'lookbook', 'hub'];
+
 const AdvancedToggle = ({ isOpen, onClick, count }: { isOpen: boolean, onClick: () => void, count: number }) => {
   if (count <= 0) return null;
   return (
@@ -17,8 +29,24 @@ const AdvancedToggle = ({ isOpen, onClick, count }: { isOpen: boolean, onClick: 
 };
 
 export function HeroSelector({ formData, setFormData, allowedLayouts }: any) {
-  const [showAdvanced, setShowAdvanced] = useState(false);
+  const [showAdvanced, setShowAdvanced] = useState(() =>
+    ADVANCED_HERO_IDS.includes(formData?.hero_layout)
+  );
   const handleSelect = (val: string) => setFormData((prev: any) => ({ ...prev, hero_layout: val }));
+
+  const cardClass = (id: string, isDefault = false) => {
+    const active = formData.hero_layout === id || (isDefault && !formData.hero_layout);
+    return `flex flex-col items-center justify-center p-3 border-2 rounded-xl transition-all cursor-pointer disabled:opacity-20 disabled:cursor-not-allowed ${
+      active ? 'border-fuchsia-500 bg-fuchsia-500/10' : 'border-zinc-800 bg-zinc-950 hover:border-zinc-700'
+    }`;
+  };
+
+  const labelClass = (id: string, isDefault = false) => {
+    const active = formData.hero_layout === id || (isDefault && !formData.hero_layout);
+    return `text-[11px] font-bold uppercase tracking-wider text-center ${
+      active ? 'text-fuchsia-400' : 'text-zinc-500'
+    }`;
+  };
 
   return (
     <div className="space-y-3">
@@ -35,47 +63,155 @@ export function HeroSelector({ formData, setFormData, allowedLayouts }: any) {
         </label>
       </div>
 
+      {/* CORE 4 HERO ARCHETYPES */}
       <div className="grid grid-cols-2 gap-3">
-        <button type="button" disabled={!allowedLayouts.hero.includes('center')} onClick={() => handleSelect('center')} className={`flex flex-col items-center justify-center p-3 border-2 rounded-xl transition-all cursor-pointer disabled:opacity-20 disabled:cursor-not-allowed ${formData.hero_layout === 'center' || !formData.hero_layout ? 'border-fuchsia-500 bg-fuchsia-500/10' : 'border-zinc-800 bg-zinc-950 hover:border-zinc-700'}`}>
+        <button type="button" disabled={!allowedLayouts.hero.includes('center')} onClick={() => handleSelect('center')} className={cardClass('center', true)}>
           <div className="w-full h-10 border border-zinc-700 bg-zinc-900 mb-2 flex flex-col items-center justify-center gap-1 p-1 rounded">
-            <div className="w-1/2 h-0.5 bg-zinc-600 rounded" /><div className="w-3/4 h-1 bg-zinc-400 rounded" /><div className="w-1/4 h-1 bg-fuchsia-500 rounded mt-0.5" />
+            <div className="w-1/2 h-0.5 bg-zinc-600 rounded" />
+            <div className="w-3/4 h-1 bg-zinc-400 rounded" />
+            <div className="w-1/4 h-1 bg-fuchsia-500 rounded mt-0.5" />
           </div>
-          <span className={`text-[11px] font-bold uppercase tracking-wider ${formData.hero_layout === 'center' || !formData.hero_layout ? 'text-fuchsia-400' : 'text-zinc-500'}`}>{VISUAL_ARCH_COPY.LAYOUTS.LABELS.CENTERED}</span>
+          <span className={labelClass('center', true)}>{VISUAL_ARCH_COPY.LAYOUTS.LABELS.CENTERED}</span>
         </button>
 
-        <button type="button" disabled={!allowedLayouts.hero.includes('split-left')} onClick={() => handleSelect('split-left')} className={`flex flex-col items-center justify-center p-3 border-2 rounded-xl transition-all cursor-pointer disabled:opacity-20 disabled:cursor-not-allowed ${formData.hero_layout === 'split-left' ? 'border-fuchsia-500 bg-fuchsia-500/10' : 'border-zinc-800 bg-zinc-950 hover:border-zinc-700'}`}>
+        <button type="button" disabled={!allowedLayouts.hero.includes('split-left')} onClick={() => handleSelect('split-left')} className={cardClass('split-left')}>
           <div className="w-full h-10 border border-zinc-700 bg-zinc-900 mb-2 flex items-center p-1 gap-1.5 rounded">
-            <div className="w-1/2 h-full flex flex-col justify-center gap-0.5 pl-0.5"><div className="w-full h-1 bg-zinc-400 rounded" /><div className="w-2/3 h-0.5 bg-zinc-600 rounded" /><div className="w-1/2 h-1 bg-fuchsia-500 rounded mt-0.5" /></div>
+            <div className="w-1/2 h-full flex flex-col justify-center gap-0.5 pl-0.5">
+              <div className="w-full h-1 bg-zinc-400 rounded" />
+              <div className="w-2/3 h-0.5 bg-zinc-600 rounded" />
+              <div className="w-1/2 h-1 bg-fuchsia-500 rounded mt-0.5" />
+            </div>
             <div className="w-1/2 h-full bg-zinc-700 rounded-sm" />
           </div>
-          <span className={`text-[11px] font-bold uppercase tracking-wider ${formData.hero_layout === 'split-left' ? 'text-fuchsia-400' : 'text-zinc-500'}`}>{VISUAL_ARCH_COPY.LAYOUTS.LABELS.SPLIT_LEFT}</span>
+          <span className={labelClass('split-left')}>{VISUAL_ARCH_COPY.LAYOUTS.LABELS.SPLIT_LEFT}</span>
         </button>
 
-        <button type="button" disabled={!allowedLayouts.hero.includes('split-right')} onClick={() => handleSelect('split-right')} className={`flex flex-col items-center justify-center p-3 border-2 rounded-xl transition-all cursor-pointer disabled:opacity-20 disabled:cursor-not-allowed ${formData.hero_layout === 'split-right' ? 'border-fuchsia-500 bg-fuchsia-500/10' : 'border-zinc-800 bg-zinc-950 hover:border-zinc-700'}`}>
+        <button type="button" disabled={!allowedLayouts.hero.includes('split-right')} onClick={() => handleSelect('split-right')} className={cardClass('split-right')}>
           <div className="w-full h-10 border border-zinc-700 bg-zinc-900 mb-2 flex items-center p-1 gap-1.5 rounded">
             <div className="w-1/2 h-full bg-zinc-700 rounded-sm" />
-            <div className="w-1/2 h-full flex flex-col justify-center gap-0.5 pr-0.5"><div className="w-full h-1 bg-zinc-400 rounded" /><div className="w-2/3 h-0.5 bg-zinc-600 rounded" /><div className="w-1/2 h-1 bg-fuchsia-500 rounded mt-0.5" /></div>
+            <div className="w-1/2 h-full flex flex-col justify-center gap-0.5 pr-0.5">
+              <div className="w-full h-1 bg-zinc-400 rounded" />
+              <div className="w-2/3 h-0.5 bg-zinc-600 rounded" />
+              <div className="w-1/2 h-1 bg-fuchsia-500 rounded mt-0.5" />
+            </div>
           </div>
-          <span className={`text-[11px] font-bold uppercase tracking-wider ${formData.hero_layout === 'split-right' ? 'text-fuchsia-400' : 'text-zinc-500'}`}>{VISUAL_ARCH_COPY.LAYOUTS.LABELS.SPLIT_RIGHT}</span>
+          <span className={labelClass('split-right')}>{VISUAL_ARCH_COPY.LAYOUTS.LABELS.SPLIT_RIGHT}</span>
         </button>
 
-        <button type="button" disabled={!allowedLayouts.hero.includes('cinematic')} onClick={() => handleSelect('cinematic')} className={`flex flex-col items-center justify-center p-3 border-2 rounded-xl transition-all cursor-pointer disabled:opacity-20 disabled:cursor-not-allowed ${formData.hero_layout === 'cinematic' ? 'border-fuchsia-500 bg-fuchsia-500/10' : 'border-zinc-800 bg-zinc-950 hover:border-zinc-700'}`}>
+        <button type="button" disabled={!allowedLayouts.hero.includes('cinematic')} onClick={() => handleSelect('cinematic')} className={cardClass('cinematic')}>
           <div className="w-full h-10 border border-zinc-700 bg-zinc-700 mb-2 flex items-end p-1.5 relative overflow-hidden rounded">
             <div className="absolute inset-0 bg-linear-to-t from-zinc-950 to-transparent" />
-            <div className="relative z-10 w-full flex flex-col gap-0.5 pr-2"><div className="w-full h-1 bg-white rounded" /><div className="w-1/2 h-1 bg-fuchsia-500 rounded" /></div>
+            <div className="relative z-10 w-full flex flex-col gap-0.5 pr-2">
+              <div className="w-full h-1 bg-white rounded" />
+              <div className="w-1/2 h-1 bg-fuchsia-500 rounded" />
+            </div>
           </div>
-          <span className={`text-[11px] font-bold uppercase tracking-wider ${formData.hero_layout === 'cinematic' ? 'text-fuchsia-400' : 'text-zinc-500'}`}>{VISUAL_ARCH_COPY.LAYOUTS.LABELS.CINEMATIC}</span>
+          <span className={labelClass('cinematic')}>{VISUAL_ARCH_COPY.LAYOUTS.LABELS.CINEMATIC}</span>
         </button>
       </div>
 
+      {/* ADVANCED 7 HERO ARCHETYPES */}
       {showAdvanced && (
         <div className="grid grid-cols-2 gap-3 mt-3 animate-in fade-in slide-in-from-top-2 duration-200">
-          <button type="button" disabled={!allowedLayouts.hero.includes('glass')} onClick={() => handleSelect('glass')} className={`flex flex-col items-center justify-center p-3 border-2 rounded-xl transition-all cursor-pointer disabled:opacity-20 disabled:cursor-not-allowed ${formData.hero_layout === 'glass' ? 'border-fuchsia-500 bg-fuchsia-500/10' : 'border-zinc-800 bg-zinc-950 hover:border-zinc-700'}`}>
+          {/* Frosted Glass */}
+          <button type="button" disabled={!allowedLayouts.hero.includes('glass')} onClick={() => handleSelect('glass')} className={cardClass('glass')}>
             <div className="w-full h-10 border border-zinc-700 bg-zinc-900 mb-2 flex items-center justify-center p-1 rounded relative overflow-hidden">
               <div className="absolute inset-0 bg-zinc-800 opacity-20" />
-              <div className="relative z-10 w-2/3 h-2/3 bg-zinc-500/30 border border-white/20 rounded-sm flex flex-col items-center justify-center gap-0.5"><div className="w-3/4 h-0.5 bg-white rounded" /><div className="w-1/2 h-px bg-zinc-300 rounded" /></div>
+              <div className="relative z-10 w-2/3 h-2/3 bg-zinc-500/30 border border-white/20 rounded-sm flex flex-col items-center justify-center gap-0.5">
+                <div className="w-3/4 h-0.5 bg-white rounded" />
+                <div className="w-1/2 h-px bg-zinc-300 rounded" />
+              </div>
             </div>
-            <span className={`text-[11px] font-bold uppercase tracking-wider ${formData.hero_layout === 'glass' ? 'text-fuchsia-400' : 'text-zinc-500'}`}>{VISUAL_ARCH_COPY.LAYOUTS.LABELS.GLASS}</span>
+            <span className={labelClass('glass')}>{VISUAL_ARCH_COPY.LAYOUTS.LABELS.GLASS}</span>
+          </button>
+
+          {/* Editorial Frame */}
+          <button type="button" disabled={!allowedLayouts.hero.includes('editorial-frame')} onClick={() => handleSelect('editorial-frame')} className={cardClass('editorial-frame')}>
+            <div className="w-full h-10 border border-zinc-700 bg-zinc-900 mb-2 flex flex-col items-center justify-between p-1 rounded">
+              <div className="w-full flex flex-col items-center gap-0.5">
+                <div className="w-2/3 h-1 bg-zinc-400 rounded" />
+                <div className="w-1/4 h-0.5 bg-fuchsia-500 rounded" />
+              </div>
+              <div className="w-5/6 h-4 bg-zinc-700 border border-zinc-600 rounded-sm" />
+            </div>
+            <span className={labelClass('editorial-frame')}>{VISUAL_ARCH_COPY.LAYOUTS.LABELS.EDITORIAL_FRAME}</span>
+          </button>
+
+          {/* Arch Spotlight */}
+          <button type="button" disabled={!allowedLayouts.hero.includes('arch-spotlight')} onClick={() => handleSelect('arch-spotlight')} className={cardClass('arch-spotlight')}>
+            <div className="w-full h-10 border border-zinc-700 bg-zinc-900 mb-2 flex items-center justify-between px-1.5 py-1 gap-1.5 rounded">
+              <div className="w-1/2 flex flex-col gap-0.5">
+                <div className="w-full h-1 bg-zinc-400 rounded" />
+                <div className="w-2/3 h-0.5 bg-zinc-600 rounded" />
+                <div className="w-1/2 h-1 bg-fuchsia-500 rounded mt-0.5" />
+              </div>
+              <div className="w-1/2 h-full flex items-center justify-center">
+                <div className="w-5 h-7 bg-zinc-700 border border-fuchsia-500/60 rounded-t-full rounded-b-sm" />
+              </div>
+            </div>
+            <span className={labelClass('arch-spotlight')}>{VISUAL_ARCH_COPY.LAYOUTS.LABELS.ARCH_SPOTLIGHT}</span>
+          </button>
+
+          {/* Bento Collage */}
+          <button type="button" disabled={!allowedLayouts.hero.includes('bento-hero')} onClick={() => handleSelect('bento-hero')} className={cardClass('bento-hero')}>
+            <div className="w-full h-10 border border-zinc-700 bg-zinc-900 mb-2 grid grid-cols-2 gap-1 p-1 rounded">
+              <div className="h-full bg-zinc-800 border-t border-fuchsia-500 rounded-sm p-1 flex flex-col justify-between">
+                <div className="w-3/4 h-1 bg-zinc-400 rounded" />
+                <div className="w-1/2 h-1 bg-fuchsia-500 rounded" />
+              </div>
+              <div className="h-full grid grid-cols-2 gap-0.5">
+                <div className="col-span-2 h-3.5 bg-zinc-700 rounded-sm" />
+                <div className="h-3 bg-zinc-700/80 rounded-sm" />
+                <div className="h-3 bg-zinc-600 rounded-sm" />
+              </div>
+            </div>
+            <span className={labelClass('bento-hero')}>{VISUAL_ARCH_COPY.LAYOUTS.LABELS.BENTO_HERO}</span>
+          </button>
+
+          {/* Bottom Dock */}
+          <button type="button" disabled={!allowedLayouts.hero.includes('bottom-dock')} onClick={() => handleSelect('bottom-dock')} className={cardClass('bottom-dock')}>
+            <div className="w-full h-10 border border-zinc-700 bg-zinc-700 mb-2 flex items-end p-1 rounded relative overflow-hidden">
+              <div className="w-full h-3.5 bg-zinc-950/90 border border-white/20 rounded-sm px-1 flex items-center justify-between gap-1">
+                <div className="flex items-center gap-1">
+                  <div className="w-1.5 h-1.5 bg-zinc-400 rounded-full" />
+                  <div className="w-6 h-1 bg-white rounded" />
+                </div>
+                <div className="w-3 h-1.5 bg-fuchsia-500 rounded-sm" />
+              </div>
+            </div>
+            <span className={labelClass('bottom-dock')}>{VISUAL_ARCH_COPY.LAYOUTS.LABELS.BOTTOM_DOCK}</span>
+          </button>
+
+          {/* Top Dock */}
+          <button type="button" disabled={!allowedLayouts.hero.includes('top-dock')} onClick={() => handleSelect('top-dock')} className={cardClass('top-dock')}>
+            <div className="w-full h-10 border border-zinc-700 bg-zinc-700 mb-2 flex items-start p-1 rounded relative overflow-hidden">
+              <div className="w-full h-3.5 bg-zinc-950/90 border border-white/20 rounded-sm px-1 flex items-center justify-between gap-1">
+                <div className="flex items-center gap-1">
+                  <div className="w-1.5 h-1.5 bg-zinc-400 rounded-full" />
+                  <div className="w-6 h-1 bg-white rounded" />
+                </div>
+                <div className="w-3 h-1.5 bg-fuchsia-500 rounded-sm" />
+              </div>
+            </div>
+            <span className={labelClass('top-dock')}>{VISUAL_ARCH_COPY.LAYOUTS.LABELS.TOP_DOCK}</span>
+          </button>
+
+          {/* Kinetic Type */}
+          <button type="button" disabled={!allowedLayouts.hero.includes('minimal-type')} onClick={() => handleSelect('minimal-type')} className={cardClass('minimal-type')}>
+            <div className="w-full h-10 border border-zinc-700 bg-zinc-900 mb-2 flex flex-col justify-between p-1 rounded">
+              <div className="w-full flex items-end justify-between gap-1">
+                <div className="flex flex-col gap-0.5 w-2/3">
+                  <div className="w-full h-1.5 bg-zinc-300 rounded" />
+                  <div className="w-3/4 h-1.5 bg-zinc-400 rounded" />
+                </div>
+                <div className="w-4 h-3 bg-zinc-700 border border-zinc-600 rounded-sm shrink-0" />
+              </div>
+              <div className="w-full border-t border-zinc-700 pt-0.5 flex items-center justify-between">
+                <div className="w-1/2 h-0.5 bg-zinc-600 rounded" />
+                <div className="w-1/4 h-1 bg-fuchsia-500 rounded" />
+              </div>
+            </div>
+            <span className={labelClass('minimal-type')}>{VISUAL_ARCH_COPY.LAYOUTS.LABELS.MINIMAL_TYPE}</span>
           </button>
         </div>
       )}
@@ -129,7 +265,9 @@ export function AboutSelector({ formData, setFormData, allowedLayouts }: any) {
 }
 
 export function ContentSelector({ formData, setFormData, allowedLayouts }: any) {
-  const [showAdvanced, setShowAdvanced] = useState(false);
+  const [showAdvanced, setShowAdvanced] = useState(() =>
+    ADVANCED_CONTENT_IDS.includes(formData?.content_layout)
+  );
   const handleSelect = (val: string) => setFormData((prev: any) => ({ ...prev, content_layout: val }));
 
   return (
@@ -171,11 +309,11 @@ export function ContentSelector({ formData, setFormData, allowedLayouts }: any) 
             </div>
             <span className={`text-[11px] font-bold uppercase tracking-wider ${formData.content_layout === 'menu' ? 'text-fuchsia-400' : 'text-zinc-500'}`}>{VISUAL_ARCH_COPY.LAYOUTS.LABELS.MENU}</span>
           </button>
-          
-          <button 
+
+          <button
             type="button"
-            disabled={!allowedLayouts.content.includes('lookbook')} 
-            onClick={() => handleSelect('lookbook')} 
+            disabled={!allowedLayouts.content.includes('lookbook')}
+            onClick={() => handleSelect('lookbook')}
             className={`flex flex-col items-center justify-center p-3 border-2 rounded-xl transition-all cursor-pointer disabled:opacity-20 disabled:cursor-not-allowed ${formData.content_layout === 'lookbook' ? 'border-fuchsia-500 bg-fuchsia-500/10' : 'border-zinc-800 bg-zinc-950 hover:border-zinc-700'}`}
           >
             <div className="w-full h-10 border border-zinc-700 bg-zinc-900 mb-2 flex p-1 gap-1 rounded items-start justify-center">
@@ -185,7 +323,7 @@ export function ContentSelector({ formData, setFormData, allowedLayouts }: any) 
             <span className={`text-[11px] font-bold uppercase tracking-wider ${formData.content_layout === 'lookbook' ? 'text-fuchsia-400' : 'text-zinc-500'}`}>{VISUAL_ARCH_COPY.LAYOUTS.LABELS.LOOKBOOK}</span>
           </button>
 
-          <button 
+          <button
             type="button"
             disabled={!allowedLayouts.content.includes('hub')}
             onClick={() => handleSelect('hub')}

@@ -77,12 +77,13 @@ export default function TaskEditorModal({
 
     setIsSaving(true);
     const payload: Record<string, any> = {
-      title: finalTitle,
-      description: description.trim() || null,
-      status,
-      priority,
-      storefront_id: storefrontId || null,
-    };
+  title: finalTitle,
+  description: description.trim() || null,
+  status,
+  priority,
+  assignee: task?.assignee || 'System',
+  storefront_id: storefrontId || null,
+};
 
     if (dueDate) {
       payload.due_date = new Date(dueDate).toISOString();

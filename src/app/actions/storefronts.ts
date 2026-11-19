@@ -365,20 +365,43 @@ export async function quickUpdateStorefrontStatus(id: string, newStatus: string,
   await verifyClearance(); // STRICTLY ADMIN ONLY
 
   const supabase = await createClient();
-  let updatePayload: any = { status: newStatus };
-  
-  if (logEntry) {
-    const { data } = await supabase.from('storefronts').select('audit_notes').eq('id', id).single();
-    const currentLogs = data?.audit_notes || [];
-    updatePayload.audit_notes = [...currentLogs, logEntry];
-  }
-  
-  const { error } = await supabase.from('storefronts').update(updatePayload).eq('id', id);
+  const { data: currentStore } = await supabase
+    .from('storefronts')
+    .select('status, audit_notes')
+    .eq('id', id)
+    .single();
+
+  const previousStatus = currentStore?.status || 'PENDING_BUILD';
+  const currentLogs = Array.isArray(currentStore?.audit_notes) ? currentStore.audit_notes : [];
+  const now = new Date().toISOString();
+
+  const normalizedLog = {
+    id: logEntry?.id || crypto.randomUUID(),
+    timestamp: logEntry?.timestamp || now,
+    author: logEntry?.author || 'ADMIN',
+    type: logEntry?.type || newStatus,
+    fromStatus: previousStatus,
+    toStatus: newStatus,
+    message:
+      logEntry?.message ||
+      `Status shifted from ${previousStatus.replace(/_/g, ' ')} to ${newStatus.replace(/_/g, ' ')}.`,
+  };
+
+  const { error } = await supabase
+    .from('storefronts')
+    .update({
+      status: newStatus,
+      updated_at: now,
+      audit_notes: [...currentLogs, normalizedLog],
+    })
+    .eq('id', id);
+
   if (error) throw new Error(error.message);
-  
+
+  revalidatePath(`/dashboard/storefronts/${id}`, 'layout');
   revalidatePath('/dashboard/storefronts', 'layout');
-  revalidatePath('/', 'layout'); 
-  return { success: true };
+  revalidatePath('/', 'layout');
+  return { success: true, log: normalizedLog, updatedAt: now };
 }
 
 export async function quickToggleStorefrontFlags(id: string, payload: { is_published?: boolean, is_template?: boolean }) {

@@ -3,7 +3,7 @@
 
 import React from 'react';
 import Link from 'next/link';
-import { Lightbulb, Sparkles, CheckSquare, Plus } from 'lucide-react';
+import { Lightbulb, Sparkles, CheckSquare } from 'lucide-react';
 import { STOREFRONT_MANAGER_COPY } from '@/config/dashboard/manager';
 
 interface ObjectiveRadarProps {
@@ -33,9 +33,11 @@ export default function StorefrontObjectiveRadar({
     )
   );
 
+  // Only render when there is an active task or an existing brain dump to surface
+  if (storeTasks.length === 0 && !storeIdea) return null;
+
   return (
     <div className={`flex flex-wrap items-center gap-1.5 ${compact ? 'mt-1.5' : ''}`}>
-      {/* 1. Strategy Hub Brain Dump Pill */}
       {storeIdea && (
         <Link
           href={`/dashboard/strategy/${storeIdea.id}`}
@@ -51,7 +53,6 @@ export default function StorefrontObjectiveRadar({
         </Link>
       )}
 
-      {/* 2. Active Task Pills (Click to edit or complete) */}
       {storeTasks.map((t) => {
         const isWaitingTask = t.title?.toLowerCase().startsWith('awaiting');
         return (
@@ -59,7 +60,7 @@ export default function StorefrontObjectiveRadar({
             key={t.id}
             type="button"
             onClick={() => onOpenTaskModal && onOpenTaskModal(store.id, t)}
-            className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded text-[10px] font-bold border transition-all cursor-pointer max-w-[210px] ${
+            className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded text-[10px] font-bold border transition-all cursor-pointer max-w-[220px] ${
               isWaitingTask
                 ? 'bg-amber-500/10 border-amber-500/30 text-amber-300 hover:bg-amber-500/20'
                 : t.status === 'IN_PROGRESS'
@@ -73,18 +74,6 @@ export default function StorefrontObjectiveRadar({
           </button>
         );
       })}
-
-      {/* 3. Quick "+ Set Objective" Button */}
-      {onOpenTaskModal && (
-        <button
-          type="button"
-          onClick={() => onOpenTaskModal(store.id, null)}
-          className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[9px] font-black uppercase tracking-wider bg-zinc-900/90 hover:bg-cyan-500/15 text-zinc-400 hover:text-cyan-400 border border-dashed border-zinc-700 hover:border-cyan-500/40 transition-all cursor-pointer"
-        >
-          <Plus size={9} />
-          <span>{storeTasks.length === 0 ? copy.ADD_OBJECTIVE_BTN.replace(/^\+\s*/, '') : 'Add'}</span>
-        </button>
-      )}
     </div>
   );
 }
