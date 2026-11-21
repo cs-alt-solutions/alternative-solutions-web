@@ -36,7 +36,8 @@ export default function StorefrontCanvas({
   const engineMode = formData.engine_mode || 'core';
   const copy = EDITOR_WORKSPACE_COPY.CANVAS;
 
-  const activeBlueprint = getActiveBlueprint(industryTag, engineMode);
+  const isHub = engineMode === 'hub' || formData.content_layout === 'hub';
+const activeBlueprint = getActiveBlueprint(industryTag, isHub ? 'hub' : engineMode);
   const servicesTabLabel = activeBlueprint.tabLabel;
 
   useEffect(() => {

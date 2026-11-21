@@ -60,7 +60,7 @@ export default function StorefrontObjectiveRadar({
             key={t.id}
             type="button"
             onClick={() => onOpenTaskModal && onOpenTaskModal(store.id, t)}
-            className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded text-[10px] font-bold border transition-all cursor-pointer max-w-[220px] ${
+            className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded text-[10px] font-bold border transition-all cursor-pointer max-w-55 ${
               isWaitingTask
                 ? 'bg-amber-500/10 border-amber-500/30 text-amber-300 hover:bg-amber-500/20'
                 : t.status === 'IN_PROGRESS'

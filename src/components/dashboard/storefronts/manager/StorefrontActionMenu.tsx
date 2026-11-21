@@ -199,7 +199,7 @@ export default function StorefrontActionMenu({
       </button>
 
       {isMenuOpen && (
-        <div className="absolute right-0 top-full mt-1.5 w-56 bg-[#09090b] opacity-100 border border-zinc-700 rounded-xl shadow-[0_14px_45px_rgba(0,0,0,0.98)] p-1.5 z-50 animate-in fade-in zoom-in-95 duration-150 text-left space-y-1">
+        <div className="absolute right-0 top-full mt-1.5 w-56 bg-bg-app opacity-100 border border-zinc-700 rounded-xl shadow-[0_14px_45px_rgba(0,0,0,0.98)] p-1.5 z-50 animate-in fade-in zoom-in-95 duration-150 text-left space-y-1">
           <Link
             href={`/dashboard/storefronts/${store.id}`}
             onClick={onCloseMenu}

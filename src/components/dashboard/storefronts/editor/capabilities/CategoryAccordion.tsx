@@ -1,52 +1,75 @@
 /* src/components/dashboard/storefronts/editor/capabilities/CategoryAccordion.tsx */
 'use client';
 
-import React, { useState } from 'react';
-import { GripVertical, ChevronDown, X, Plus, Image as ImageIcon, List, Loader2, UploadCloud, Layers } from 'lucide-react';
-import { supabase } from '@/utils/supabase';
+import React from 'react';
+import { ChevronDown, Plus, Image as ImageIcon } from 'lucide-react';
 import MenuCardEditor from './MenuCardEditor';
+import CategoryRowHeader from './category/CategoryRowHeader';
+import LinkedPoliciesBar from './category/LinkedPoliciesBar';
+import StandardCategoryFields from './category/StandardCategoryFields';
 import { EDITOR_WORKSPACE_COPY, getActiveBlueprint } from '@/config/dashboard/editor';
 
-export default function CategoryAccordion({ cap, index, isOpen, setOpenCapIndex, localCaps, setLocalCaps, formData, setFormData, onReload }: any) {
-  const [isUploading, setIsUploading] = useState(false);
-
+export default function CategoryAccordion({
+  cap,
+  index,
+  isOpen,
+  setOpenCapIndex,
+  localCaps,
+  setLocalCaps,
+  formData,
+  setFormData,
+  onReload,
+}: any) {
   const copy = EDITOR_WORKSPACE_COPY.SERVICES_TAB;
-  const blueprint = getActiveBlueprint(formData?.industry_tag, formData?.engine_mode);
+  const isHub = formData?.engine_mode === 'hub' || formData?.content_layout === 'hub';
+  const blueprint = getActiveBlueprint(formData?.industry_tag, isHub ? 'hub' : formData?.engine_mode);
   const isMenuMode = formData?.content_layout === 'menu';
   const isAlaCarte = !!cap.isAlaCarte;
 
   const liveGallery = (formData.gallery_items || []).map((item: any, i: number) => {
-    if (typeof item === 'string') return { id: `gal-${i}`, imageUrl: item, title: '', description: '', category: '', price: '', isVisible: true };
+    if (typeof item === 'string') {
+      return { id: `gal-${i}`, imageUrl: item, title: '', description: '', category: '', price: '', isVisible: true };
+    }
     return { ...item, id: item.id || `gal-${i}`, isVisible: item.isVisible !== false };
   });
 
   const categoryImages = liveGallery.filter((img: any) => img.category === cap.title);
 
   const updateTitle = (newTitle: string) => {
-    const oldTitle = localCaps[index].title;
-    const updatedCaps = [...localCaps]; 
-    updatedCaps[index].title = newTitle; 
+    const oldTitle = localCaps[index]?.title;
+    const updatedCaps = localCaps.map((item: any, i: number) =>
+      i === index ? { ...item, title: newTitle } : item
+    );
     setLocalCaps(updatedCaps);
 
     setFormData((prev: any) => {
-      const prevCaps = prev.capabilities || [];
-      const updatedFormDataCaps = [...prevCaps];
-      if (updatedFormDataCaps[index]) {
-        updatedFormDataCaps[index] = { ...updatedFormDataCaps[index], title: newTitle };
-      }
+      const updatedFormDataCaps = (prev.capabilities || []).map((item: any, i: number) =>
+        i === index ? { ...item, title: newTitle } : item
+      );
 
-      const updatedGallery = (prev.gallery_items || []).map((item: any) => {
-        if (oldTitle !== undefined && item.category === oldTitle) return { ...item, category: newTitle };
-        return item;
-      });
+      const updatedGallery = (prev.gallery_items || []).map((item: any) =>
+        oldTitle !== undefined && item.category === oldTitle ? { ...item, category: newTitle } : item
+      );
 
-      return { ...prev, capabilities: updatedFormDataCaps, gallery_items: updatedGallery };
+      const updatedTerms = Array.isArray(prev.operational_terms)
+        ? prev.operational_terms.map((term: any) =>
+            oldTitle && term.appliesTo === oldTitle ? { ...term, appliesTo: newTitle } : term
+          )
+        : prev.operational_terms;
+
+      return {
+        ...prev,
+        capabilities: updatedFormDataCaps,
+        gallery_items: updatedGallery,
+        operational_terms: updatedTerms,
+      };
     });
   };
 
   const updateField = (field: string, value: any) => {
-    const updated = [...localCaps]; 
-    updated[index][field] = value; 
+    const updated = localCaps.map((item: any, i: number) =>
+      i === index ? { ...item, [field]: value } : item
+    );
     setLocalCaps(updated);
     setFormData((prev: any) => ({ ...prev, capabilities: updated }));
   };
@@ -55,174 +78,123 @@ export default function CategoryAccordion({ cap, index, isOpen, setOpenCapIndex,
     const updated = localCaps.filter((_: any, i: number) => i !== index);
     setLocalCaps(updated);
     setFormData((prev: any) => ({ ...prev, capabilities: updated }));
+    if (isOpen) setOpenCapIndex(null);
   };
 
-  const moveUp = () => {
-    if (index === 0) return; 
+  const moveItem = (direction: 'up' | 'down') => {
+    const target = direction === 'up' ? index - 1 : index + 1;
+    if (target < 0 || target >= localCaps.length) return;
     const updated = [...localCaps];
-    const temp = updated[index - 1]; 
-    updated[index - 1] = updated[index]; 
-    updated[index] = temp;
+    [updated[index], updated[target]] = [updated[target], updated[index]];
     setLocalCaps(updated);
     setFormData((prev: any) => ({ ...prev, capabilities: updated }));
+    if (isOpen) setOpenCapIndex(target);
   };
 
   const addBlankCard = () => {
     const newId = `card-${Date.now()}`;
     setFormData((prev: any) => ({
       ...prev,
-      gallery_items: [{ id: newId, imageUrl: '', title: '', description: '', price: '', category: cap.title, isVisible: true }, ...(prev.gallery_items || [])]
+      gallery_items: [
+        { id: newId, imageUrl: '', title: '', description: '', price: '', category: cap.title, isVisible: true },
+        ...(prev.gallery_items || []),
+      ],
     }));
   };
 
-  const addBullet = () => {
-    const updated = [...localCaps];
-    if (!updated[index].bullets) updated[index].bullets = [];
-    updated[index].bullets.push('');
-    setLocalCaps(updated);
-    setFormData((prev: any) => ({ ...prev, capabilities: updated }));
-  };
-
-  const updateBullet = (bulletIndex: number, value: string) => {
-    const updated = [...localCaps];
-    updated[index].bullets[bulletIndex] = value;
-    setLocalCaps(updated);
-    setFormData((prev: any) => ({ ...prev, capabilities: updated }));
-  };
-
-  const removeBullet = (bulletIndex: number) => {
-    const updated = [...localCaps];
-    updated[index].bullets.splice(bulletIndex, 1);
-    setLocalCaps(updated);
-    setFormData((prev: any) => ({ ...prev, capabilities: updated }));
-  };
-
-  const addAddon = () => {
-    const updated = [...localCaps];
-    if (!updated[index].addons) updated[index].addons = [];
-    updated[index].addons.push({ title: '' });
-    setLocalCaps(updated);
-    setFormData((prev: any) => ({ ...prev, capabilities: updated }));
-  };
-
-  const updateAddon = (addonIndex: number, field: string, value: string) => {
-    const updated = [...localCaps];
-    updated[index].addons[addonIndex] = { ...updated[index].addons[addonIndex], [field]: value };
-    setLocalCaps(updated);
-    setFormData((prev: any) => ({ ...prev, capabilities: updated }));
-  };
-
-  const removeAddon = (addonIndex: number) => {
-    const updated = [...localCaps];
-    updated[index].addons.splice(addonIndex, 1);
-    setLocalCaps(updated);
-    setFormData((prev: any) => ({ ...prev, capabilities: updated }));
-  };
-
-  const handleCoverUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    setIsUploading(true);
-    
-    try {
-      const fileExt = file.name.split('.').pop();
-      const filePath = `${formData.id}/cover-${Date.now()}.${fileExt}`;
-      const { error } = await supabase.storage.from('client-assets').upload(filePath, file);
-      if (error) throw error;
-      
-      const { data } = supabase.storage.from('client-assets').getPublicUrl(filePath);
-      updateField('coverImage', data.publicUrl);
-    } catch (err) {
-      console.error("Upload failed:", err);
-      alert("Failed to upload cover photo.");
-    } finally {
-      setIsUploading(false);
-    }
-  };
-
-  const currentAvailability = isMenuMode ? (cap.price || 'All Day') : (cap.price || '');
+  const currentAvailability = isMenuMode ? cap.price || 'All Day' : cap.price || '';
 
   return (
-    <div className={`flex flex-col rounded-xl relative shadow-md overflow-hidden transition-all border ${isAlaCarte ? 'bg-zinc-950 border-fuchsia-900/40' : 'bg-zinc-950 border-zinc-800'}`}>
-      
-      <div 
-        className={`flex items-center justify-between p-4 cursor-pointer transition-colors ${isOpen ? (isAlaCarte ? 'bg-fuchsia-500/5' : 'bg-zinc-900/80') : 'hover:bg-zinc-900/50'}`}
-        onClick={() => setOpenCapIndex(isOpen ? null : index)}
-      >
-        <div className="flex items-center gap-3">
-          <button type="button" onClick={(e) => { e.stopPropagation(); moveUp(); }} disabled={index === 0} className="text-zinc-600 hover:text-cyan-400 disabled:opacity-0 cursor-pointer">
-            <GripVertical className="w-4 h-4" />
-          </button>
-          <h3 className={`font-bold text-sm ${isAlaCarte ? 'text-fuchsia-400' : 'text-white'}`}>
-            {cap.title || (isAlaCarte ? copy.UNTITLED_ADDON : isMenuMode ? copy.UNTITLED_CATEGORY : copy.UNTITLED_PACKAGE)}
-          </h3>
-          {isAlaCarte && <span className="px-2 py-0.5 rounded-md text-[9px] font-bold uppercase tracking-widest bg-fuchsia-500/10 text-fuchsia-400 border border-fuchsia-500/20">{copy.ADDON_BADGE}</span>}
-        </div>
-        <div className="flex items-center gap-4">
-          {isMenuMode && (
-            <span className="text-[10px] text-zinc-500 font-mono uppercase tracking-widest">{categoryImages.length} {copy.CARDS_COUNT_SUFFIX}</span>
-          )}
-          <ChevronDown className={`w-4 h-4 text-zinc-500 transition-transform duration-300 ${isOpen ? 'rotate-180' : ''}`} />
-          <button type="button" onClick={(e) => { e.stopPropagation(); removeCap(); }} className="p-1.5 text-zinc-600 hover:text-rose-400 transition-colors cursor-pointer">
-            <X className="w-4 h-4" />
-          </button>
-        </div>
-      </div>
+    <div
+      className={`flex flex-col rounded-lg relative overflow-hidden transition-all border ${
+        isOpen
+          ? isAlaCarte
+            ? 'bg-zinc-950 border-fuchsia-500/40'
+            : 'bg-zinc-950 border-zinc-700'
+          : isAlaCarte
+            ? 'bg-zinc-950/80 border-fuchsia-900/30 hover:border-fuchsia-500/30'
+            : 'bg-zinc-950/80 border-zinc-800/80 hover:border-zinc-700'
+      }`}
+    >
+      <CategoryRowHeader
+        title={cap.title}
+        index={index}
+        totalCount={localCaps.length}
+        isOpen={isOpen}
+        isMenuMode={isMenuMode}
+        isAlaCarte={isAlaCarte}
+        cardsCount={categoryImages.length}
+        copy={copy}
+        onToggle={() => setOpenCapIndex(isOpen ? null : index)}
+        onMove={moveItem}
+        onRemove={removeCap}
+      />
 
       {isOpen && (
-        <div className="p-5 border-t border-zinc-800 flex flex-col gap-6 animate-in fade-in slide-in-from-top-2 duration-200">
-          
-          <div className="flex-1 space-y-3">
+        <div className="p-3.5 border-t border-zinc-800/80 flex flex-col gap-3.5 animate-in fade-in slide-in-from-top-1 duration-150">
+          <div className="space-y-2.5">
             <div className="flex gap-2 w-full">
-              <input 
-                type="text" 
-                value={cap.title || ''} 
-                onChange={(e) => updateTitle(e.target.value)} 
+              <input
+                type="text"
+                value={cap.title || ''}
+                onChange={(e) => updateTitle(e.target.value)}
                 placeholder={isAlaCarte ? copy.ADDON_NAME_PLACEHOLDER : blueprint.titlePlaceholder}
-                className="flex-1 bg-black/50 border border-zinc-800 rounded-lg px-3 py-2 text-sm text-white font-bold outline-none focus:border-cyan-500 transition-colors"
+                className="flex-1 min-w-0 bg-black/50 border border-zinc-800 rounded-md px-2.5 py-1.5 text-xs text-white font-bold outline-none focus:border-cyan-500 transition-colors"
               />
-              
+
               {isMenuMode ? (
-                <div className="relative w-1/3">
+                <div className="relative w-28 shrink-0">
                   <select
                     value={currentAvailability}
                     onChange={(e) => updateField('price', e.target.value)}
-                    className="w-full bg-black/50 border border-zinc-800 rounded-lg pl-3 pr-8 py-2 text-sm font-bold text-emerald-400 outline-none focus:border-emerald-500 transition-colors appearance-none cursor-pointer"
+                    className="w-full bg-black/50 border border-zinc-800 rounded-md pl-2.5 pr-6 py-1.5 text-xs font-bold text-emerald-400 outline-none focus:border-emerald-500 transition-colors appearance-none cursor-pointer"
                   >
                     {copy.AVAILABILITY_OPTIONS.map((opt: string) => (
-                      <option key={opt} value={opt}>{opt}</option>
+                      <option key={opt} value={opt}>
+                        {opt}
+                      </option>
                     ))}
                   </select>
-                  <ChevronDown size={14} className="absolute right-3 top-1/2 -translate-y-1/2 text-emerald-500/50 pointer-events-none" />
+                  <ChevronDown size={12} className="absolute right-2 top-1/2 -translate-y-1/2 text-emerald-500/60 pointer-events-none" />
                 </div>
-              ) : (
-                <input 
-                  type="text" 
-                  value={cap.price === 'All Day' ? '' : (cap.price || '')} 
-                  onChange={(e) => updateField('price', e.target.value)} 
+              ) : !isHub ? (
+                <input
+                  type="text"
+                  value={cap.price === 'All Day' ? '' : cap.price || ''}
+                  onChange={(e) => updateField('price', e.target.value)}
                   placeholder={blueprint.pricePlaceholder}
-                  className="w-1/3 bg-black/50 border border-zinc-800 rounded-lg px-3 py-2 text-xs text-fuchsia-400 font-bold outline-none focus:border-fuchsia-500 transition-colors"
+                  className="w-28 shrink-0 bg-black/50 border border-zinc-800 rounded-md px-2.5 py-1.5 text-xs text-fuchsia-400 font-bold outline-none focus:border-fuchsia-500 transition-colors"
                 />
-              )}
+              ) : null}
             </div>
 
-            <textarea 
-              value={cap.description || ''} 
-              onChange={(e) => updateField('description', e.target.value)} 
+            <textarea
+              value={cap.description || ''}
+              onChange={(e) => updateField('description', e.target.value)}
               placeholder={copy.SHORT_DESC_PLACEHOLDER}
               rows={2}
-              className="w-full bg-black/50 border border-zinc-800 rounded-lg px-3 py-2 text-xs text-zinc-300 outline-none focus:border-cyan-500 transition-colors resize-none"
+              className="w-full bg-black/50 border border-zinc-800 rounded-md px-2.5 py-1.5 text-xs text-zinc-300 outline-none focus:border-cyan-500 transition-colors resize-none"
             />
           </div>
 
-          {/* IF MENU LAYOUT MODE: Render Menu Card Editor */}
+          {!isAlaCarte && (
+            <LinkedPoliciesBar
+              categoryTitle={cap.title}
+              operationalTerms={formData.operational_terms}
+            />
+          )}
+
           {isMenuMode ? (
-            <div className="space-y-4 pt-4 border-t border-zinc-800/50">
+            <div className="space-y-3 pt-3 border-t border-zinc-800/60">
               <div className="flex items-center justify-between">
-                <label className="text-[9px] font-bold text-fuchsia-500 uppercase tracking-widest flex items-center gap-2">
-                  <ImageIcon size={12} /> {copy.MENU_CARDS_LABEL} ({categoryImages.length})
+                <label className="text-[9px] font-bold text-fuchsia-500 uppercase tracking-widest flex items-center gap-1.5">
+                  <ImageIcon size={11} /> {copy.MENU_CARDS_LABEL} ({categoryImages.length})
                 </label>
-                <button type="button" onClick={addBlankCard} className="text-[9px] font-bold text-zinc-400 hover:text-fuchsia-400 uppercase tracking-widest flex items-center gap-1.5 transition-colors cursor-pointer">
+                <button
+                  type="button"
+                  onClick={addBlankCard}
+                  className="text-[9px] font-bold text-zinc-400 hover:text-fuchsia-400 uppercase tracking-widest flex items-center gap-1 transition-colors cursor-pointer"
+                >
                   <Plus size={10} /> {copy.ADD_BLANK_CARD_BTN}
                 </button>
               </div>
@@ -230,9 +202,9 @@ export default function CategoryAccordion({ cap, index, isOpen, setOpenCapIndex,
               {categoryImages.length === 0 ? (
                 <p className="text-[10px] text-zinc-600 italic">{copy.EMPTY_MENU_CARDS}</p>
               ) : (
-                <div className="space-y-3">
+                <div className="space-y-2.5">
                   {categoryImages.map((img: any, i: number) => (
-                    <MenuCardEditor 
+                    <MenuCardEditor
                       key={img.id || `gal-${i}`}
                       img={img}
                       index={i}
@@ -248,87 +220,16 @@ export default function CategoryAccordion({ cap, index, isOpen, setOpenCapIndex,
               )}
             </div>
           ) : (
-            /* STANDARD / LOOKBOOK / BENTO / HUB MODE: Dynamic Context-Aware Labels */
             !isAlaCarte && (
-              <>
-                <div className="space-y-3 pt-4 border-t border-zinc-800/50">
-                  <label className="text-[9px] font-bold text-zinc-500 uppercase tracking-widest flex items-center gap-2">
-                    <List size={12} className="text-cyan-500" /> {blueprint.deliverablesLabel}
-                  </label>
-                  <div className="space-y-2">
-                    {(cap.bullets || []).map((bullet: string, bIndex: number) => (
-                      <div key={bIndex} className="flex items-center gap-2">
-                        <div className="w-1.5 h-1.5 rounded-full bg-zinc-600 shrink-0" />
-                        <input 
-                          value={bullet}
-                          onChange={(e) => updateBullet(bIndex, e.target.value)}
-                          placeholder={blueprint.deliverablePlaceholder}
-                          className="flex-1 bg-transparent border-b border-zinc-800 py-1 text-xs text-zinc-300 focus:outline-none focus:border-cyan-500 transition-colors"
-                        />
-                        <button type="button" onClick={() => removeBullet(bIndex)} className="text-zinc-600 hover:text-rose-400 cursor-pointer"><X size={12} /></button>
-                      </div>
-                    ))}
-                  </div>
-                  <button type="button" onClick={addBullet} className="text-[9px] font-bold text-zinc-500 hover:text-cyan-400 uppercase tracking-widest flex items-center gap-1.5 mt-2 cursor-pointer">
-                    <Plus size={10} /> {blueprint.addDeliverableBtn}
-                  </button>
-                </div>
-
-                <div className="space-y-3 pt-4 border-t border-zinc-800/50">
-                  <label className="text-[9px] font-bold text-zinc-500 uppercase tracking-widest flex items-center gap-2">
-                    <Layers size={12} className="text-fuchsia-500" /> {blueprint.optionsLabel}
-                  </label>
-                  
-                  {cap.addons && cap.addons.length > 0 && (
-                    <div className="space-y-2">
-                      {cap.addons.map((addon: any, addonIdx: number) => (
-                        <div key={addonIdx} className="flex items-center gap-2">
-                          <input 
-                            value={addon.title || ''}
-                            onChange={(e) => updateAddon(addonIdx, 'title', e.target.value)}
-                            placeholder={blueprint.optionPlaceholder}
-                            className="flex-1 bg-black/40 border border-zinc-800 rounded px-2.5 py-1 text-[10px] text-zinc-300 focus:border-fuchsia-500 outline-none"
-                          />
-                          <button type="button" onClick={() => removeAddon(addonIdx)} className="text-zinc-600 hover:text-rose-400 cursor-pointer"><X size={12} /></button>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-
-                  <button type="button" onClick={addAddon} className="text-[9px] font-bold text-zinc-500 hover:text-fuchsia-400 uppercase tracking-widest flex items-center gap-1.5 mt-2 cursor-pointer">
-                    <Plus size={10} /> {blueprint.addOptionBtn}
-                  </button>
-                </div>
-
-                <div className="space-y-3 pt-4 border-t border-zinc-800/50">
-                  <label className="text-[9px] font-bold text-zinc-500 uppercase tracking-widest flex items-center gap-2">
-                    <ImageIcon size={12} className="text-cyan-500" /> {copy.COVER_PHOTO_LABEL}
-                  </label>
-                  
-                  {cap.coverImage ? (
-                    <div className="relative w-full sm:w-48 aspect-video rounded-lg overflow-hidden border border-zinc-800 group">
-                      {/* eslint-disable-next-line @next/next/no-img-element */}
-                      <img src={cap.coverImage} alt="Cover" className="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-opacity" />
-                      <button 
-                        type="button"
-                        onClick={() => updateField('coverImage', '')}
-                        className="absolute top-2 right-2 p-1.5 bg-black/70 text-rose-400 rounded-md hover:bg-rose-500 hover:text-white transition-colors cursor-pointer"
-                      >
-                        <X size={14} />
-                      </button>
-                    </div>
-                  ) : (
-                    <label className="w-full sm:w-48 aspect-video rounded-lg border-2 border-dashed border-zinc-800 flex flex-col items-center justify-center cursor-pointer hover:border-cyan-500/50 hover:bg-cyan-500/5 transition-all">
-                      {isUploading ? <Loader2 className="w-5 h-5 text-cyan-500 animate-spin" /> : <UploadCloud className="w-5 h-5 text-zinc-600 mb-2" />}
-                      <span className="text-[9px] font-bold uppercase tracking-widest text-zinc-500">{copy.UPLOAD_COVER_BTN}</span>
-                      <input type="file" accept="image/*" className="hidden" onChange={handleCoverUpload} disabled={isUploading} />
-                    </label>
-                  )}
-                </div>
-              </>
+              <StandardCategoryFields
+                cap={cap}
+                storefrontId={formData.id}
+                blueprint={blueprint}
+                copy={copy}
+                onUpdateField={updateField}
+              />
             )
           )}
-
         </div>
       )}
     </div>

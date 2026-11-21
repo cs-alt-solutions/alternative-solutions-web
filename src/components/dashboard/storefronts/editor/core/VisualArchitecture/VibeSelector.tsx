@@ -3,13 +3,20 @@ import React from 'react';
 import { VISUAL_ARCH_COPY, THEME_FAMILIES } from '@/config/dashboard/editor';
 import { Moon, Sun } from 'lucide-react';
 
-export default function VibeSelector({ currentTheme, onChange }: { currentTheme: string, onChange: (val: string) => void }) {
-  const activeFamily = THEME_FAMILIES.find(f => f.light === currentTheme || f.dark === currentTheme) || THEME_FAMILIES[0];
+export default function VibeSelector({
+  currentTheme,
+  onChange,
+}: {
+  currentTheme: string;
+  onChange: (val: string) => void;
+}) {
+  const activeFamily =
+    THEME_FAMILIES.find((f) => f.light === currentTheme || f.dark === currentTheme) || THEME_FAMILIES[0];
   const isLightModeActive = activeFamily.light === currentTheme;
 
   return (
-    <div className="space-y-3">
-      <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-3">
+    <div className="space-y-2.5">
+      <div className="grid grid-cols-2 gap-2">
         {THEME_FAMILIES.map((family) => {
           const isActive = activeFamily.id === family.id;
           return (
@@ -17,20 +24,16 @@ export default function VibeSelector({ currentTheme, onChange }: { currentTheme:
               key={family.id}
               type="button"
               onClick={() => onChange(family.default)}
-              className={`relative h-24 border-2 transition-all rounded-lg group overflow-hidden cursor-pointer ${
-                isActive 
-                  ? 'ring-2 ring-emerald-500 z-10 scale-105' 
-                  : 'opacity-60 hover:opacity-100 hover:scale-105'
+              className={`relative h-12 border-2 transition-all rounded-lg group overflow-hidden cursor-pointer flex items-center justify-center px-2 ${
+                isActive ? 'ring-2 ring-emerald-500 z-10' : 'opacity-70 hover:opacity-100'
               } ${family.vibe}`}
             >
-              <div className="absolute inset-0 flex items-center justify-center p-3 pointer-events-none">
-                <span className="text-center drop-shadow-sm text-[11px] font-black uppercase leading-[1.3] tracking-wider transform -rotate-6 group-hover:-rotate-3 transition-transform duration-300">
-                  {family.label}
-                </span>
-              </div>
+              <span className="text-center drop-shadow-sm text-[10px] font-black uppercase leading-tight tracking-wider truncate">
+                {family.label}
+              </span>
 
               {isActive && (
-                <div className="absolute -top-1.5 -right-1.5 w-3 h-3 bg-emerald-500 rounded-full border-2 border-zinc-900 shadow-[0_0_10px_rgba(16,185,129,0.5)] z-20" />
+                <div className="absolute top-1 right-1 w-2 h-2 bg-emerald-500 rounded-full shadow-[0_0_8px_rgba(16,185,129,0.8)]" />
               )}
             </button>
           );
@@ -38,23 +41,33 @@ export default function VibeSelector({ currentTheme, onChange }: { currentTheme:
       </div>
 
       {activeFamily.dark && activeFamily.light && (
-        <div className="mt-4 p-4 bg-zinc-950/50 border border-zinc-800/80 rounded-xl flex items-center justify-between animate-in fade-in slide-in-from-top-2 shadow-inner">
-          <div className="flex items-center gap-2">
-            {isLightModeActive ? <Sun className="w-4 h-4 text-amber-400" /> : <Moon className="w-4 h-4 text-cyan-400" />}
-            <span className="text-[11px] font-black uppercase tracking-widest text-zinc-400">{VISUAL_ARCH_COPY.VIBE.MODE}</span>
+        <div className="px-3 py-2 bg-zinc-950/70 border border-zinc-800 rounded-lg flex items-center justify-between">
+          <div className="flex items-center gap-1.5">
+            {isLightModeActive ? (
+              <Sun className="w-3.5 h-3.5 text-amber-400" />
+            ) : (
+              <Moon className="w-3.5 h-3.5 text-cyan-400" />
+            )}
+            <span className="text-[10px] font-bold uppercase tracking-widest text-zinc-400">
+              {VISUAL_ARCH_COPY.VIBE.MODE}
+            </span>
           </div>
-          <div className="flex bg-black rounded-lg p-1 border border-zinc-800 shadow-sm">
+          <div className="flex bg-black rounded-md p-0.5 border border-zinc-800">
             <button
               type="button"
               onClick={() => onChange(activeFamily.light!)}
-              className={`px-5 py-2 rounded-md text-[11px] font-black uppercase tracking-widest transition-all cursor-pointer ${isLightModeActive ? 'bg-zinc-800 text-white shadow-sm' : 'text-zinc-600 hover:text-zinc-400'}`}
+              className={`px-3 py-1 rounded text-[10px] font-bold uppercase tracking-wider transition-all cursor-pointer ${
+                isLightModeActive ? 'bg-zinc-800 text-white' : 'text-zinc-500 hover:text-zinc-300'
+              }`}
             >
               {VISUAL_ARCH_COPY.VIBE.LIGHT}
             </button>
             <button
               type="button"
               onClick={() => onChange(activeFamily.dark!)}
-              className={`px-5 py-2 rounded-md text-[11px] font-black uppercase tracking-widest transition-all cursor-pointer ${!isLightModeActive ? 'bg-zinc-800 text-white shadow-sm' : 'text-zinc-600 hover:text-zinc-400'}`}
+              className={`px-3 py-1 rounded text-[10px] font-bold uppercase tracking-wider transition-all cursor-pointer ${
+                !isLightModeActive ? 'bg-zinc-800 text-white' : 'text-zinc-500 hover:text-zinc-300'
+              }`}
             >
               {VISUAL_ARCH_COPY.VIBE.DARK}
             </button>

@@ -9,10 +9,16 @@ import ContactSection from './core/ContactSection';
 import LeadCapture from './core/LeadCapture';
 import { THEME_CONSTRAINTS } from '@/config/dashboard/editor';
 
-export default function CoreTab({ 
-  formData, setFormData, onReload, isClientPortal = false 
-}: { 
-  formData: any; setFormData: any; onReload?: () => void; isClientPortal?: boolean;
+export default function CoreTab({
+  formData,
+  setFormData,
+  onReload,
+  isClientPortal = false,
+}: {
+  formData: any;
+  setFormData: any;
+  onReload?: () => void;
+  isClientPortal?: boolean;
 }) {
   const currentTheme = formData.theme_style || 'industrial';
   const allowedLayouts = THEME_CONSTRAINTS[currentTheme] || THEME_CONSTRAINTS['industrial'];
@@ -22,20 +28,20 @@ export default function CoreTab({
   };
 
   return (
-    <div className="space-y-4 animate-in fade-in slide-in-from-bottom-4 duration-500 pb-12 pt-6">
-      <HeroContent 
-        formData={formData} 
-        setFormData={setFormData} 
-        handleChange={handleChange} 
-        allowedLayouts={allowedLayouts} 
-        isClientPortal={isClientPortal} 
+    <div className="space-y-2 animate-in fade-in slide-in-from-bottom-4 duration-500 pb-12 pt-3">
+      <HeroContent
+        formData={formData}
+        setFormData={setFormData}
+        handleChange={handleChange}
+        allowedLayouts={allowedLayouts}
+        isClientPortal={isClientPortal}
       />
-      <StoryAbout 
-        formData={formData} 
-        handleChange={handleChange} 
-        setFormData={setFormData} 
-        allowedLayouts={allowedLayouts} 
-        isClientPortal={isClientPortal} 
+      <StoryAbout
+        formData={formData}
+        handleChange={handleChange}
+        setFormData={setFormData}
+        allowedLayouts={allowedLayouts}
+        isClientPortal={isClientPortal}
       />
       <ContactSection formData={formData} handleChange={handleChange} />
       <LeadCapture formData={formData} setFormData={setFormData} />

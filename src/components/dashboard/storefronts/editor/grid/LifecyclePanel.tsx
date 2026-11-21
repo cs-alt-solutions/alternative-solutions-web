@@ -209,7 +209,7 @@ export default function LifecyclePanel({
           return (
             <div key={step.id} className="relative flex items-start gap-3.5">
               {idx < pipelineSteps.length - 1 && (
-                <div className={`absolute left-3.5 top-7 bottom-[-12px] w-0.5 ${isCompleted ? 'bg-emerald-500/50' : 'bg-zinc-800'}`} />
+                <div className={`absolute left-3.5 top-7 -bottom-3 w-0.5 ${isCompleted ? 'bg-emerald-500/50' : 'bg-zinc-800'}`} />
               )}
 
               <div className={`relative z-10 w-7 h-7 rounded-full border-2 flex items-center justify-center shrink-0 mt-1 transition-all ${nodeClasses}`}>
