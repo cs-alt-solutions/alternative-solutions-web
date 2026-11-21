@@ -165,9 +165,11 @@ export default function VisualAssetsSection({
                     className="w-full bg-zinc-950 border border-zinc-800 rounded-md pl-2.5 pr-6 py-1 text-[10px] font-bold text-zinc-300 outline-none focus:border-amber-500 uppercase tracking-wider appearance-none cursor-pointer"
                   >
                     <option value="small">{copy.LOGO_SIZES.SMALL}</option>
-                    <option value="medium">{copy.LOGO_SIZES.MEDIUM}</option>
-                    <option value="large">{copy.LOGO_SIZES.LARGE}</option>
-                    <option value="massive">{copy.LOGO_SIZES.MASSIVE}</option>
+<option value="medium">{copy.LOGO_SIZES.MEDIUM}</option>
+<option value="large">{copy.LOGO_SIZES.LARGE}</option>
+<option value="massive">{copy.LOGO_SIZES.MASSIVE}</option>
+<option value="xlarge">{copy.LOGO_SIZES.XLARGE}</option>
+<option value="heroic">{copy.LOGO_SIZES.HEROIC}</option>
                   </select>
                   <ChevronDown size={11} className="absolute right-2 top-1/2 -translate-y-1/2 text-zinc-500 pointer-events-none" />
                 </div>
