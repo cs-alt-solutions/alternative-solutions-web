@@ -222,12 +222,13 @@ export default function CategoryAccordion({
           ) : (
             !isAlaCarte && (
               <StandardCategoryFields
-                cap={cap}
-                storefrontId={formData.id}
-                blueprint={blueprint}
-                copy={copy}
-                onUpdateField={updateField}
-              />
+  cap={cap}
+  storefrontId={formData.id}
+  galleryItems={formData.gallery_items || []}
+  setFormData={setFormData}
+  blueprint={blueprint}
+  onUpdateField={updateField}
+/>
             )
           )}
         </div>

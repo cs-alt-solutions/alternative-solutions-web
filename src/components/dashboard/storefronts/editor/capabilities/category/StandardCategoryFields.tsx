@@ -1,27 +1,27 @@
-/* eslint-disable @next/next/no-img-element */
 /* src/components/dashboard/storefronts/editor/capabilities/category/StandardCategoryFields.tsx */
 'use client';
 
 import React, { useState } from 'react';
-import { List, Layers, Image as ImageIcon, Plus, X, Loader2, UploadCloud, ChevronDown } from 'lucide-react';
-import { supabase } from '@/utils/supabase';
+import { List, Layers, Plus, X, ChevronDown } from 'lucide-react';
+import LinkedGalleryBar from './LinkedGalleryBar';
 
 interface StandardCategoryFieldsProps {
   cap: any;
   storefrontId: string;
+  galleryItems: any[];
+  setFormData: any;
   blueprint: any;
-  copy: any;
   onUpdateField: (field: string, value: any) => void;
 }
 
 export default function StandardCategoryFields({
   cap,
   storefrontId,
+  galleryItems,
+  setFormData,
   blueprint,
-  copy,
   onUpdateField,
 }: StandardCategoryFieldsProps) {
-  const [isUploading, setIsUploading] = useState(false);
   const [optionsOpen, setOptionsOpen] = useState(false);
 
   const bullets: string[] = cap.bullets || [];
@@ -41,27 +41,6 @@ export default function StandardCategoryFields({
     onUpdateField('addons', addons.map((a, i) => (i === idx ? { ...a, title: val } : a)));
   const handleRemoveAddon = (idx: number) =>
     onUpdateField('addons', addons.filter((_, i) => i !== idx));
-
-  const handleCoverUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    setIsUploading(true);
-
-    try {
-      const fileExt = file.name.split('.').pop();
-      const filePath = `${storefrontId}/cover-${Date.now()}.${fileExt}`;
-      const { error } = await supabase.storage.from('client-assets').upload(filePath, file);
-      if (error) throw error;
-
-      const { data } = supabase.storage.from('client-assets').getPublicUrl(filePath);
-      onUpdateField('coverImage', data.publicUrl);
-    } catch (err) {
-      console.error('Upload failed:', err);
-      alert('Failed to upload cover photo.');
-    } finally {
-      setIsUploading(false);
-    }
-  };
 
   return (
     <>
@@ -157,47 +136,15 @@ export default function StandardCategoryFields({
         )}
       </div>
 
-      {/* Cover Photo */}
-      <div className="space-y-2 pt-3 border-t border-zinc-800/60">
-        <label className="text-[9px] font-bold text-zinc-500 uppercase tracking-widest flex items-center gap-1.5">
-          <ImageIcon size={11} className="text-cyan-500" /> {copy.COVER_PHOTO_LABEL}
-        </label>
-
-        {cap.coverImage ? (
-          <div className="relative w-40 aspect-video rounded-md overflow-hidden border border-zinc-800 group">
-            <img
-              src={cap.coverImage}
-              alt="Cover"
-              className="w-full h-full object-cover opacity-85 group-hover:opacity-100 transition-opacity"
-            />
-            <button
-              type="button"
-              onClick={() => onUpdateField('coverImage', '')}
-              className="absolute top-1.5 right-1.5 p-1 bg-black/75 text-rose-400 rounded hover:bg-rose-500 hover:text-white transition-colors cursor-pointer"
-            >
-              <X size={12} />
-            </button>
-          </div>
-        ) : (
-          <label className="w-40 aspect-video rounded-md border border-dashed border-zinc-800 flex flex-col items-center justify-center cursor-pointer hover:border-cyan-500/50 hover:bg-cyan-500/5 transition-all">
-            {isUploading ? (
-              <Loader2 className="w-4 h-4 text-cyan-500 animate-spin" />
-            ) : (
-              <UploadCloud className="w-4 h-4 text-zinc-600 mb-1" />
-            )}
-            <span className="text-[9px] font-bold uppercase tracking-widest text-zinc-500">
-              {copy.UPLOAD_COVER_BTN}
-            </span>
-            <input
-              type="file"
-              accept="image/*"
-              className="hidden"
-              onChange={handleCoverUpload}
-              disabled={isUploading}
-            />
-          </label>
-        )}
-      </div>
+      {/* Unified Drop Vault Cover & Gallery Link */}
+      <LinkedGalleryBar
+        storefrontId={storefrontId}
+        categoryTitle={cap.title || ''}
+        legacyCoverImage={cap.coverImage}
+        galleryItems={galleryItems}
+        setFormData={setFormData}
+        onClearLegacyCover={() => onUpdateField('coverImage', '')}
+      />
     </>
   );
 }

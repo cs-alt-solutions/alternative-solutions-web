@@ -1,6 +1,8 @@
 /* src/components/dashboard/storefronts/editor/core/HeroContent.tsx */
+'use client';
+
 import React, { useState } from 'react';
-import { Type, HelpCircle, LayoutTemplate } from 'lucide-react';
+import { Type, HelpCircle, LayoutTemplate, Lock, Unlock } from 'lucide-react';
 import EditorAccordion from '../shared/EditorAccordion';
 import { HeroSelector } from './VisualArchitecture/LayoutSelectors';
 import { EDITOR_WORKSPACE_COPY, THEME_CONSTRAINTS } from '@/config/dashboard/editor';
@@ -36,6 +38,9 @@ export default function HeroContent({
   const safeLayouts =
     allowedLayouts || THEME_CONSTRAINTS[formData.theme_style || 'industrial'] || THEME_CONSTRAINTS['industrial'];
 
+  const isHubMode = formData.engine_mode === 'hub' || formData.content_layout === 'hub';
+  const isStaticHubHero = formData.hub_hero_static === true;
+
   const fields = [formData.tagline, formData.subtext, formData.hero_cta];
   const filled = fields.filter((f) => f && f.trim() !== '').length;
   const progress = Math.round((filled / 3) * 100);
@@ -59,6 +64,41 @@ export default function HeroContent({
               </span>
             </div>
             <HeroSelector formData={formData} setFormData={setFormData} allowedLayouts={safeLayouts} />
+
+            {isHubMode && (
+              <button
+                type="button"
+                onClick={() =>
+                  setFormData((prev: any) => ({ ...prev, hub_hero_static: !prev.hub_hero_static }))
+                }
+                className={`w-full mt-2 px-3 py-2 rounded-lg border flex items-center justify-between gap-2 text-left transition-all cursor-pointer ${
+                  isStaticHubHero
+                    ? 'bg-amber-500/15 border-amber-500/40 text-amber-300'
+                    : 'bg-zinc-950 border-zinc-800 text-zinc-400 hover:border-zinc-700 hover:text-zinc-200'
+                }`}
+              >
+                <div className="flex items-center gap-2 min-w-0">
+                  {isStaticHubHero ? <Lock size={12} className="shrink-0" /> : <Unlock size={12} className="shrink-0" />}
+                  <div className="min-w-0">
+                    <span className="text-[10px] font-bold uppercase tracking-wider block">
+                      Keep Main Hero Static
+                    </span>
+                    <span className="text-[9px] text-zinc-500 block truncate">
+                      {isStaticHubHero
+                        ? 'Locked to main Core hero photo across all departments'
+                        : 'Swaps Hero banner to each department #1 Cover'}
+                    </span>
+                  </div>
+                </div>
+                <span
+                  className={`px-2 py-0.5 rounded text-[9px] font-mono font-bold uppercase shrink-0 ${
+                    isStaticHubHero ? 'bg-amber-500 text-black' : 'bg-zinc-900 text-zinc-500'
+                  }`}
+                >
+                  {isStaticHubHero ? 'ON' : 'OFF'}
+                </span>
+              </button>
+            )}
           </div>
         )}
 
