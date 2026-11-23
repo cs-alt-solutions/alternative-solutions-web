@@ -3,7 +3,7 @@
 
 import React from 'react';
 import { Plus, Trash2 } from 'lucide-react';
-import { Fee } from './logisticsConfig';
+import { Fee } from '@/config/dashboard/editor';
 
 interface PolicyRuleRatesProps {
   fees: Fee[];

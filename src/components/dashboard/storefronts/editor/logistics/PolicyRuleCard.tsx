@@ -2,10 +2,18 @@
 'use client';
 
 import React from 'react';
-import { ChevronUp, ChevronDown, Trash2, Tag } from 'lucide-react';
-import { OperationalTerm, RULE_TYPES, WEEK_DAYS, getRuleTypeMeta } from './logisticsConfig';
+import { ChevronUp, ChevronDown, Trash2, Tag, CalendarDays, Truck, ShieldCheck, AlertTriangle } from 'lucide-react';
+import { OperationalTerm, RuleType, RULE_TYPES, WEEK_DAYS } from '@/config/dashboard/editor';
 import DaySchedulePicker from './DaySchedulePicker';
 import PolicyRuleRates from './PolicyRuleRates';
+
+const RULE_TYPE_ICONS: Record<RuleType, React.ElementType> = {
+  schedule: CalendarDays,
+  travel: Truck,
+  booking: ShieldCheck,
+  rates: Tag,
+  notice: AlertTriangle,
+};
 
 interface PolicyRuleCardProps {
   term: OperationalTerm;
@@ -34,8 +42,7 @@ export default function PolicyRuleCard({
   onMove,
   onRemove,
 }: PolicyRuleCardProps) {
-  const typeMeta = getRuleTypeMeta(term.type);
-  const TypeIcon = typeMeta.icon;
+  const TypeIcon = RULE_TYPE_ICONS[term.type || 'booking'] || ShieldCheck;
   const scopeLabel = !term.appliesTo || term.appliesTo === 'ALL' ? 'Storewide' : term.appliesTo;
   const activeDaysSummary = (term.days || [])
     .map((key) => WEEK_DAYS.find((d) => d.key === key)?.label)
@@ -50,7 +57,6 @@ export default function PolicyRuleCard({
           : 'bg-zinc-950/80 border-zinc-800/80 hover:border-zinc-700'
       }`}
     >
-      {/* Compact Row Header */}
       <div
         onClick={onToggle}
         className="px-2.5 py-2 flex items-center justify-between gap-2 cursor-pointer select-none"
@@ -87,7 +93,7 @@ export default function PolicyRuleCard({
                 {term.title?.trim() || 'Untitled Policy'}
               </span>
               {term.badge?.trim() && (
-                <span className="px-1.5 py-0.2 rounded bg-indigo-500/15 text-indigo-300 text-[9px] font-mono shrink-0">
+                <span className="px-1.5 py-0.5 rounded bg-indigo-500/15 text-indigo-300 text-[9px] font-mono shrink-0">
                   {term.badge}
                 </span>
               )}
@@ -120,13 +126,11 @@ export default function PolicyRuleCard({
         </div>
       </div>
 
-      {/* Expanded Body */}
       {isOpen && (
         <div className="px-3 pb-3 pt-2.5 border-t border-zinc-800/80 space-y-3">
-          {/* Rule Type Pill Bar */}
           <div className="grid grid-cols-5 gap-1">
             {RULE_TYPES.map((rt) => {
-              const Icon = rt.icon;
+              const Icon = RULE_TYPE_ICONS[rt.id];
               const selected = (term.type || 'booking') === rt.id;
               return (
                 <button
@@ -146,7 +150,6 @@ export default function PolicyRuleCard({
             })}
           </div>
 
-          {/* Title + Quick Badge */}
           <div className="grid grid-cols-1 sm:grid-cols-12 gap-2">
             <div className="sm:col-span-7 space-y-1">
               <label className="text-[9px] font-bold text-zinc-500 uppercase tracking-widest">
@@ -173,7 +176,6 @@ export default function PolicyRuleCard({
             </div>
           </div>
 
-          {/* Applies To Scope */}
           <div className="space-y-1">
             <label className="text-[9px] font-bold text-zinc-500 uppercase tracking-widest flex items-center gap-1">
               <Tag size={9} className="text-indigo-400" />
@@ -193,7 +195,6 @@ export default function PolicyRuleCard({
             </select>
           </div>
 
-          {/* Interactive Weekly Schedule Picker */}
           <DaySchedulePicker
             days={term.days || []}
             scheduleMode={term.scheduleMode || 'active'}
@@ -201,7 +202,6 @@ export default function PolicyRuleCard({
             onChange={(patch) => onUpdate(patch)}
           />
 
-          {/* Policy Details */}
           <div className="space-y-1">
             <label className="text-[9px] font-bold text-zinc-500 uppercase tracking-widest">
               {copy.CAVEATS_LABEL}
@@ -214,7 +214,6 @@ export default function PolicyRuleCard({
             />
           </div>
 
-          {/* Attached Rates / Modifiers */}
           <PolicyRuleRates
             fees={term.fees || []}
             label={copy.RATES_LABEL}

@@ -3,7 +3,7 @@
 
 import React, { useState } from 'react';
 import { CalendarDays, X, Clock } from 'lucide-react';
-import { WEEK_DAYS, ScheduleMode } from './logisticsConfig';
+import { WEEK_DAYS, ScheduleMode } from '@/config/dashboard/editor';
 
 interface DaySchedulePickerProps {
   days?: string[];
@@ -50,7 +50,6 @@ export default function DaySchedulePicker({
 
   return (
     <div className="p-2.5 rounded-lg bg-zinc-950 border border-zinc-800 space-y-2.5">
-      {/* Header + Mode Switch */}
       <div className="flex items-center justify-between gap-2">
         <div className="flex items-center bg-black rounded-md p-0.5 border border-zinc-800">
           <button
@@ -83,7 +82,6 @@ export default function DaySchedulePicker({
         </button>
       </div>
 
-      {/* Clickable 7-Day Strip */}
       <div className="grid grid-cols-7 gap-1">
         {WEEK_DAYS.map((day) => {
           const isSelected = days.includes(day.key);
@@ -109,7 +107,6 @@ export default function DaySchedulePicker({
         })}
       </div>
 
-      {/* Optional Window / Note */}
       <div className="relative">
         <Clock size={11} className="text-zinc-500 absolute left-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
         <input

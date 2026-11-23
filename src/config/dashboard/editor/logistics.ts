@@ -1,5 +1,4 @@
-/* src/components/dashboard/storefronts/editor/logistics/logisticsConfig.ts */
-import { CalendarDays, Truck, ShieldCheck, Tag, AlertTriangle } from 'lucide-react';
+/* src/config/dashboard/editor/logistics.ts */
 
 export type RuleType = 'schedule' | 'travel' | 'booking' | 'rates' | 'notice';
 export type ScheduleMode = 'active' | 'blackout';
@@ -31,24 +30,20 @@ export const WEEK_DAYS = [
   { key: 'sat', short: 'S', label: 'Sat' },
 ] as const;
 
-export const RULE_TYPES: { id: RuleType; label: string; icon: React.ElementType }[] = [
-  { id: 'schedule', label: 'Schedule', icon: CalendarDays },
-  { id: 'travel', label: 'Travel', icon: Truck },
-  { id: 'booking', label: 'Booking', icon: ShieldCheck },
-  { id: 'rates', label: 'Rates', icon: Tag },
-  { id: 'notice', label: 'Notice', icon: AlertTriangle },
+export const RULE_TYPES: { id: RuleType; label: string }[] = [
+  { id: 'schedule', label: 'Schedule' },
+  { id: 'travel', label: 'Travel' },
+  { id: 'booking', label: 'Booking' },
+  { id: 'rates', label: 'Rates' },
+  { id: 'notice', label: 'Notice' },
 ];
-
-export function getRuleTypeMeta(type?: RuleType) {
-  return RULE_TYPES.find((r) => r.id === type) || RULE_TYPES[2];
-}
 
 export interface PolicyPreset {
   label: string;
   template: OperationalTerm;
 }
 
-const INDUSTRY_PRESETS: Record<string, PolicyPreset[]> = {
+const LOGISTICS_PRESETS: Record<string, PolicyPreset[]> = {
   Hub: [
     {
       label: 'Travel Schedule',
@@ -203,6 +198,6 @@ const INDUSTRY_PRESETS: Record<string, PolicyPreset[]> = {
   ],
 };
 
-export function getPresetsForBlueprint(blueprintId: string): PolicyPreset[] {
-  return INDUSTRY_PRESETS[blueprintId] || INDUSTRY_PRESETS.DEFAULT;
+export function getLogisticsPresets(blueprintId: string): PolicyPreset[] {
+  return LOGISTICS_PRESETS[blueprintId] || LOGISTICS_PRESETS.DEFAULT;
 }

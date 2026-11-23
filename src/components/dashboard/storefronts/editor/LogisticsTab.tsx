@@ -3,9 +3,14 @@
 
 import React, { useState } from 'react';
 import { Scale, Plus, Sparkles } from 'lucide-react';
-import { EDITOR_WORKSPACE_COPY, getActiveBlueprint } from '@/config/dashboard/editor';
-import { OperationalTerm, getPresetsForBlueprint } from './logistics/logisticsConfig';
+import {
+  EDITOR_WORKSPACE_COPY,
+  getActiveBlueprint,
+  OperationalTerm,
+  getLogisticsPresets,
+} from '@/config/dashboard/editor';
 import PolicyRuleCard from './logistics/PolicyRuleCard';
+import EventsAccordion from './events/EventsAccordion';
 
 export default function LogisticsTab({ formData, setFormData }: { formData: any; setFormData: any }) {
   const terms: OperationalTerm[] = Array.isArray(formData.operational_terms) ? formData.operational_terms : [];
@@ -14,7 +19,7 @@ export default function LogisticsTab({ formData, setFormData }: { formData: any;
   const copy = EDITOR_WORKSPACE_COPY.LOGISTICS_TAB;
   const isHub = formData?.engine_mode === 'hub' || formData?.content_layout === 'hub';
   const blueprint = getActiveBlueprint(formData?.industry_tag, isHub ? 'hub' : formData?.engine_mode);
-  const presets = getPresetsForBlueprint(blueprint.id);
+  const presets = getLogisticsPresets(blueprint.id);
 
   const availableTargets: string[] = Array.isArray(formData.capabilities)
     ? Array.from(
@@ -60,8 +65,7 @@ export default function LogisticsTab({ formData, setFormData }: { formData: any;
   };
 
   return (
-    <div className="space-y-3.5 animate-in fade-in slide-in-from-bottom-4 duration-500 pb-12 pt-3">
-      {/* Header */}
+    <div className="space-y-4 animate-in fade-in slide-in-from-bottom-4 duration-500 pb-12 pt-3">
       <div className="flex items-center justify-between gap-2 border-b border-zinc-800 pb-3">
         <div className="flex items-center gap-2 text-indigo-400 min-w-0">
           <Scale className="w-4 h-4 shrink-0" />
@@ -80,7 +84,6 @@ export default function LogisticsTab({ formData, setFormData }: { formData: any;
 
       <p className="text-[11px] text-zinc-500 leading-relaxed">{blueprint.logisticsHelper}</p>
 
-      {/* 1-Click Industry Quick-Add Chips */}
       <div className="flex flex-wrap items-center gap-1.5">
         <span className="text-[9px] font-mono uppercase tracking-wider text-zinc-600 flex items-center gap-1 mr-0.5">
           <Sparkles size={10} className="text-indigo-400" /> Quick Add:
@@ -97,9 +100,8 @@ export default function LogisticsTab({ formData, setFormData }: { formData: any;
         ))}
       </div>
 
-      {/* Collapsible Rules List */}
       {terms.length === 0 ? (
-        <div className="p-8 border border-dashed border-zinc-800 rounded-xl bg-zinc-900/25 text-center">
+        <div className="p-6 border border-dashed border-zinc-800 rounded-xl bg-zinc-900/25 text-center">
           <span className="text-[11px] text-zinc-500 font-mono tracking-widest uppercase">
             {copy.EMPTY_STATE}
           </span>
@@ -124,6 +126,12 @@ export default function LogisticsTab({ formData, setFormData }: { formData: any;
           ))}
         </div>
       )}
+
+      <EventsAccordion
+        formData={formData}
+        setFormData={setFormData}
+        blueprintId={blueprint.id}
+      />
     </div>
   );
 }
