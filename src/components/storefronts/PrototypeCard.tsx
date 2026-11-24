@@ -6,14 +6,18 @@ import { ExternalLink, ArrowRight, Info, RotateCcw, Loader2, Sparkles, LayoutTem
 
 const VIBE_NAMES: Record<string, string> = {
   industrial: "Raw & Industrial",
+  'industrial-light': "Industrial Light",
   neo: "Neo-Brutalist",
+  'neo-dark': "Neo-Brutalist Dark",
   cyberpunk: "Neon Tech",
+  'cyberpunk-light': "Cyberpunk Light",
   minimal: "Clean & Minimal",
   elegant: "High Editorial",
   organic: "Earthy & Natural",
   editorial: "Magazine Style",
   retropop: "Retro Pop",
-  midnight: "Midnight Onyx"
+  midnight: "Midnight Onyx",
+  noir: "Gilded Noir"
 };
 
 const HERO_STRUCTURES: Record<string, string> = {
@@ -21,7 +25,15 @@ const HERO_STRUCTURES: Record<string, string> = {
   'split-left': "Bold Left Split",
   'split-right': "Bold Right Split",
   'cinematic': "Full Cinematic",
-  'minimal-type': "Typography Focus",
+  'glass': "Frosted Glass",
+  'editorial-frame': "Editorial Frame",
+  'arch-spotlight': "Arch Spotlight",
+  'bento-hero': "Bento Collage",
+  'bottom-dock': "Bottom Dock",
+  'top-dock': "Top Dock",
+  'minimal-type': "Kinetic Type",
+  'masthead': "Brand Masthead",
+  'masthead-wash': "Brand Masthead (Wash)",
   'fullscreen-video': "Immersive Video"
 };
 
@@ -31,6 +43,12 @@ const STORY_FLOWS: Record<string, string> = {
   'sticky': "Sticky Scroll",
   'editorial': "Hover Stack",
   'accordion': "Accordion Flow",
+  'menu': "Culinary Menu",
+  'lookbook': "Lookbook Grid",
+  'hub': "Department Hub",
+  'split': "Classic Split",
+  'minimal': "Clean Minimal",
+  'card': "Glass Card",
   'split-story': "Split-Screen",
   'zigzag': "Z-Pattern Flow"
 };

@@ -9,6 +9,7 @@ export const THEME_FAMILIES = [
   { id: 'organic', label: 'Organic', default: 'organic', dark: null, light: 'organic', vibe: 'bg-[#F4F1EA] border border-[#2C3B2D] text-[#2C3B2D] font-serif rounded-tl-xl rounded-br-xl' },
   { id: 'editorial', label: 'Editorial', default: 'editorial', dark: null, light: 'editorial', vibe: 'bg-[#EAE8E3] border-y-2 border-black text-black font-serif font-bold uppercase tracking-widest' },
   { id: 'midnight', label: 'Midnight Onyx', default: 'midnight', dark: 'midnight', light: null, vibe: 'bg-zinc-950 border-zinc-800 text-white font-sans tracking-tight shadow-[inset_0_0_20px_rgba(255,255,255,0.02)]' },
+  { id: 'noir', label: 'Gilded Noir', default: 'noir', dark: 'noir', light: null, vibe: 'bg-[#0B0A09] border border-amber-500/40 text-[#F3EFE6] font-serif tracking-wide' },
 ];
 
 export const BRAND_COLORS = [
@@ -19,6 +20,14 @@ export const BRAND_COLORS = [
   { name: 'Rose', value: 'rose-500', twBg: 'bg-rose-500' },
   { name: 'Indigo', value: 'indigo-500', twBg: 'bg-indigo-500' },
   { name: 'Zinc', value: 'zinc-500', twBg: 'bg-zinc-500' },
+];
+
+export const MASTHEAD_FONTS = [
+  { id: 'default', label: 'Theme Default' },
+  { id: 'gothic', label: 'Old English' },
+  { id: 'pirata', label: 'Tattoo Gothic' },
+  { id: 'grenze', label: 'Dark Editorial' },
+  { id: 'cinzel', label: 'Engraved' },
 ];
 
 export const ALL_HEROS = [
@@ -33,10 +42,30 @@ export const ALL_HEROS = [
   'bottom-dock',
   'top-dock',
   'minimal-type',
+  'masthead',
+  'masthead--gothic',
+  'masthead--pirata',
+  'masthead--grenze',
+  'masthead--cinzel',
+  'masthead-wash',
+  'masthead-wash--gothic',
+  'masthead-wash--pirata',
+  'masthead-wash--grenze',
+  'masthead-wash--cinzel',
 ];
 
 export const ALL_CONTENTS = ['classic', 'bento', 'sticky', 'accordion', 'editorial', 'menu', 'lookbook', 'hub'];
-export const ALL_ABOUTS = ['split', 'editorial', 'minimal', 'card'];
+
+export const ALL_ABOUTS = [
+  'split',
+  'editorial',
+  'minimal',
+  'card',
+  'manifesto',
+  'wash',
+  'plaque',
+  'portrait',
+];
 
 export const THEME_CONSTRAINTS: Record<string, { hero: string[]; content: string[]; about: string[] }> = {
   industrial: { hero: ALL_HEROS, content: ALL_CONTENTS, about: ALL_ABOUTS },
@@ -50,6 +79,7 @@ export const THEME_CONSTRAINTS: Record<string, { hero: string[]; content: string
   organic: { hero: ALL_HEROS, content: ALL_CONTENTS, about: ALL_ABOUTS },
   editorial: { hero: ALL_HEROS, content: ALL_CONTENTS, about: ALL_ABOUTS },
   midnight: { hero: ALL_HEROS, content: ALL_CONTENTS, about: ALL_ABOUTS },
+  noir: { hero: ALL_HEROS, content: ALL_CONTENTS, about: ALL_ABOUTS },
 };
 
 export const VISUAL_ARCH_COPY = {
@@ -78,6 +108,10 @@ export const VISUAL_ARCH_COPY = {
     LOCK_BG_TITLE: 'Lock the background image in place on scroll',
     ADVANCED_SHOW: 'Show Advanced Layouts',
     ADVANCED_HIDE: 'Hide Advanced Layouts',
+    MASTHEAD_BACKDROP: 'Masthead Backdrop',
+    MASTHEAD_PURE: 'Pure Wall',
+    MASTHEAD_WASH: 'Faint Wash',
+    MASTHEAD_FONT: 'Display Lettering',
     LABELS: {
       CENTERED: 'Centered Focus',
       SPLIT_LEFT: 'Bold Left Split',
@@ -90,10 +124,15 @@ export const VISUAL_ARCH_COPY = {
       BOTTOM_DOCK: 'Bottom Dock',
       TOP_DOCK: 'Top Dock',
       MINIMAL_TYPE: 'Kinetic Type',
+      MASTHEAD: 'Brand Masthead',
       CLASSIC_SPLIT: 'Classic Split',
       EDITORIAL: 'Editorial Overlap',
       MINIMAL: 'Clean Minimal',
       GLASS_CARD: 'Glass Card',
+      MANIFESTO: 'Gallery Manifesto',
+      WASH: 'Atmospheric Wash',
+      PLAQUE: 'Framed Plaque',
+      PORTRAIT: 'Gallery Portrait',
       STACKED: 'Standard Stack',
       BENTO: 'Bento Grid',
       STICKY: 'Sticky Scroll',
