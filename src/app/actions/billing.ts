@@ -361,13 +361,18 @@ export async function getGlobalInvoices() {
 
     const invoices = await stripe.invoices.list({
       limit: 100,
-      expand: ['data.customer', 'data.subscription'],
+      expand: ['data.customer'],
     });
 
     const formattedInvoices = invoices.data.map((inv: any) => {
       const rawLineItem = inv.lines?.data?.[0]?.description || 'Storefront Subscription';
       const cleanLineItem = rawLineItem.split(' (at')[0].replace(/^1\s*[xX]\s*/, '').trim();
       const displayCents = inv.status === 'paid' ? inv.amount_paid : inv.amount_due;
+      const rawSub =
+        inv.subscription ||
+        inv.parent?.subscription_details?.subscription ||
+        inv.lines?.data?.[0]?.parent?.subscription_item_details?.subscription ||
+        '';
 
       return {
         id: inv.id,
@@ -385,8 +390,7 @@ export async function getGlobalInvoices() {
         customerEmail: inv.customer_email || inv.customer?.email || 'Unknown Client',
         customerName: inv.customer_name || inv.customer?.name || 'No Name',
         customerId: typeof inv.customer === 'string' ? inv.customer : inv.customer?.id || '',
-        subscriptionId:
-          typeof inv.subscription === 'string' ? inv.subscription : inv.subscription?.id || '',
+        subscriptionId: typeof rawSub === 'string' ? rawSub : rawSub?.id || '',
         pdfUrl: inv.invoice_pdf,
         hostedUrl: inv.hosted_invoice_url,
         lineItem: cleanLineItem,

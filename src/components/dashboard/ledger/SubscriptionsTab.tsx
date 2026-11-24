@@ -29,7 +29,18 @@ export default function SubscriptionsTab() {
     const { data: activeStores, error } = await supabase
       .from('storefronts')
       .select('id, business_name, contact_email, plan_tier, created_at, status, stripe_subscription_id, stripe_customer_id, current_period_end')
-      .in('status', ['PENDING_BUILD', 'BUILDING_CORE', 'IN_REVIEW', 'CONTENT_ASSEMBLY', 'AWAITING_ASSETS', 'ACTIVE', 'LIVE', 'MAINTENANCE', 'HIDDEN'])
+      .in('status', [
+        'PENDING_BUILD',
+        'BUILD_READY',
+        'BUILDING_CORE',
+        'IN_REVIEW',
+        'CONTENT_ASSEMBLY',
+        'AWAITING_ASSETS',
+        'ACTIVE',
+        'LIVE',
+        'MAINTENANCE',
+        'HIDDEN',
+      ])
       .not('stripe_subscription_id', 'is', null)
       .order('created_at', { ascending: false });
 
@@ -49,11 +60,15 @@ export default function SubscriptionsTab() {
 
     if (activeStores) {
       const allLedger = validInvoices.map((inv: any) => {
-        const matchedStore = activeStores.find((s: any) => s.stripe_customer_id === inv.customerId || s.stripe_subscription_id === inv.subscriptionId);
+        const matchedStore = activeStores.find(
+          (s: any) =>
+            (s.stripe_customer_id && inv.customerId && s.stripe_customer_id === inv.customerId) ||
+            (s.stripe_subscription_id && inv.subscriptionId && s.stripe_subscription_id === inv.subscriptionId)
+        );
         return {
           ...inv,
           storefrontName: matchedStore ? matchedStore.business_name : 'Unlinked Stripe Payment',
-          isMatched: !!matchedStore
+          isMatched: !!matchedStore,
         };
       });
 
@@ -69,12 +84,14 @@ export default function SubscriptionsTab() {
         const displayTier = store.plan_tier || 'Standard';
         const isPro = displayTier.toLowerCase().includes('pro') || displayTier.toLowerCase().includes('professional');
         const expectedPrice = isPro ? 15 : 5;
-        
+
         if (isPro) pro++; else foundation++;
         gross += expectedPrice;
 
-        const storeInvoices = strictLedger.filter((inv: any) => 
-          inv.customerId === store.stripe_customer_id || inv.subscriptionId === store.stripe_subscription_id
+        const storeInvoices = strictLedger.filter(
+          (inv: any) =>
+            (store.stripe_customer_id && inv.customerId === store.stripe_customer_id) ||
+            (store.stripe_subscription_id && inv.subscriptionId === store.stripe_subscription_id)
         );
 
         const ltv = storeInvoices.reduce((sum: number, inv: any) => sum + (Number(inv.amount) || 0), 0);
@@ -88,10 +105,10 @@ export default function SubscriptionsTab() {
           const latestInv = storeInvoices[0];
           actualPaid = latestInv.amount !== undefined && latestInv.amount !== null ? Number(latestInv.amount) : expectedPrice;
           originalPrice = latestInv.subtotal !== undefined && latestInv.subtotal !== null ? Number(latestInv.subtotal) : expectedPrice;
-          
+
           if (originalPrice > actualPaid) {
             isPromo = true;
-            promoDetails = actualPaid === 0 ? "100% OFF" : `DISCOUNT APPLIED`;
+            promoDetails = actualPaid === 0 ? '100% OFF' : 'DISCOUNT APPLIED';
           }
         }
 
@@ -105,7 +122,7 @@ export default function SubscriptionsTab() {
           ltv,
           isPromo,
           promoDetails,
-          invoices: storeInvoices
+          invoices: storeInvoices,
         };
       });
 
@@ -114,7 +131,7 @@ export default function SubscriptionsTab() {
     }
 
     if (invoiceData.error) setSyncError(invoiceData.error);
-    
+
     setIsLoading(false);
     setIsInvoicesLoading(false);
   };
@@ -125,7 +142,7 @@ export default function SubscriptionsTab() {
 
   return (
     <div className="space-y-8 animate-in fade-in duration-500 pb-20 relative">
-      
+
       {/* HEADER */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-zinc-900/40 border border-emerald-500/30 rounded-2xl p-6 relative overflow-hidden shadow-xl backdrop-blur-sm">
         <div className="absolute top-0 right-0 w-96 h-96 bg-emerald-500/10 rounded-full blur-[100px] -z-10 pointer-events-none" />
@@ -163,26 +180,26 @@ export default function SubscriptionsTab() {
       )}
 
       {/* ISOLATED VIEW COMPONENTS */}
-      <MetricsOverview 
-        metrics={metrics} 
-        activeCount={enrichedStorefronts.length} 
-        enrichedStorefronts={enrichedStorefronts} 
-        isLoading={isLoading} 
+      <MetricsOverview
+        metrics={metrics}
+        activeCount={enrichedStorefronts.length}
+        enrichedStorefronts={enrichedStorefronts}
+        isLoading={isLoading}
       />
 
       <div className="grid grid-cols-1 xl:grid-cols-12 gap-8 mt-4">
         <div className="xl:col-span-7">
-          <ActiveSubscriptionsTable 
-            storefronts={enrichedStorefronts} 
-            isLoading={isLoading} 
-            onViewReceipt={setPreviewReceiptUrl} 
+          <ActiveSubscriptionsTable
+            storefronts={enrichedStorefronts}
+            isLoading={isLoading}
+            onViewReceipt={setPreviewReceiptUrl}
           />
         </div>
         <div className="xl:col-span-5">
-          <GlobalPaymentHistory 
-            globalInvoices={globalInvoices} 
-            isInvoicesLoading={isInvoicesLoading} 
-            onViewReceipt={setPreviewReceiptUrl} 
+          <GlobalPaymentHistory
+            globalInvoices={globalInvoices}
+            isInvoicesLoading={isInvoicesLoading}
+            onViewReceipt={setPreviewReceiptUrl}
           />
         </div>
       </div>
