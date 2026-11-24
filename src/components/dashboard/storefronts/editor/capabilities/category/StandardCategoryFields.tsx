@@ -2,8 +2,10 @@
 'use client';
 
 import React, { useState } from 'react';
-import { List, Layers, Plus, X, ChevronDown } from 'lucide-react';
+import { List, Layers, Plus, X, ChevronDown, CalendarClock } from 'lucide-react';
+import { EDITOR_WORKSPACE_COPY } from '@/config/dashboard/editor';
 import LinkedGalleryBar from './LinkedGalleryBar';
+import DepartmentFaqsEditor, { DepartmentFaq } from './DepartmentFaqsEditor';
 
 interface StandardCategoryFieldsProps {
   cap: any;
@@ -23,9 +25,12 @@ export default function StandardCategoryFields({
   onUpdateField,
 }: StandardCategoryFieldsProps) {
   const [optionsOpen, setOptionsOpen] = useState(false);
+  const copy = EDITOR_WORKSPACE_COPY.SERVICES_TAB;
 
   const bullets: string[] = cap.bullets || [];
   const addons: { title?: string }[] = cap.addons || [];
+  const faqs: DepartmentFaq[] = Array.isArray(cap.faqs) ? cap.faqs : [];
+  const askTimeframe = cap.askTimeframe === true;
 
   const handleAddBullet = () => onUpdateField('bullets', [...bullets, '']);
   const handleUpdateBullet = (idx: number, val: string) =>
@@ -80,7 +85,7 @@ export default function StandardCategoryFields({
         </button>
       </div>
 
-      {/* Collapsible Quick Inquiry Options */}
+      {/* Collapsible Quick Inquiry Options + Soft Timeframe Toggle */}
       <div className="pt-2.5 border-t border-zinc-800/60 space-y-2">
         <button
           type="button"
@@ -89,7 +94,7 @@ export default function StandardCategoryFields({
         >
           <span className="text-[9px] font-bold text-zinc-500 group-hover:text-zinc-300 uppercase tracking-widest flex items-center gap-1.5">
             <Layers size={11} className="text-fuchsia-500" />
-            {blueprint.optionsLabel} ({addons.length})
+            {blueprint.optionsLabel} ({addons.length}{askTimeframe ? ' · Timeframe ON' : ''})
           </span>
           <ChevronDown
             size={12}
@@ -98,10 +103,34 @@ export default function StandardCategoryFields({
         </button>
 
         {optionsOpen && (
-          <div className="space-y-2 pt-1 animate-in fade-in slide-in-from-top-1 duration-150">
-            <p className="text-[10px] text-zinc-500 leading-relaxed">
-              Optional checkboxes shown inside the Quick Inquiry form when a visitor inquires about this item.
-            </p>
+          <div className="space-y-2.5 pt-1 animate-in fade-in slide-in-from-top-1 duration-150">
+            {/* Soft Preferred Timeframe Toggle */}
+            <button
+              type="button"
+              onClick={() => onUpdateField('askTimeframe', !askTimeframe)}
+              className={`w-full p-2.5 rounded-lg border text-left flex items-start justify-between gap-2.5 transition-colors cursor-pointer ${
+                askTimeframe
+                  ? 'bg-fuchsia-500/10 border-fuchsia-500/40'
+                  : 'bg-black/40 border-zinc-800 hover:border-zinc-700'
+              }`}
+            >
+              <div className="space-y-0.5 min-w-0">
+                <div className="flex items-center gap-1.5 text-[11px] font-bold text-white">
+                  <CalendarClock size={12} className={askTimeframe ? 'text-fuchsia-400' : 'text-zinc-500'} />
+                  <span>{copy.TIMEFRAME_TOGGLE_LABEL}</span>
+                </div>
+                <p className="text-[10px] text-zinc-500 leading-relaxed">{copy.TIMEFRAME_TOGGLE_HELPER}</p>
+              </div>
+              <span
+                className={`px-2 py-0.5 rounded font-mono text-[9px] font-bold uppercase shrink-0 ${
+                  askTimeframe ? 'bg-fuchsia-500 text-white' : 'bg-zinc-800 text-zinc-400'
+                }`}
+              >
+                {askTimeframe ? 'ON' : 'OFF'}
+              </span>
+            </button>
+
+            <p className="text-[10px] text-zinc-500 leading-relaxed">{copy.OPTIONS_HELPER}</p>
 
             {addons.length > 0 && (
               <div className="space-y-1.5">
@@ -135,6 +164,9 @@ export default function StandardCategoryFields({
           </div>
         )}
       </div>
+
+      {/* Collapsible Department FAQs */}
+      <DepartmentFaqsEditor faqs={faqs} onChange={(updated) => onUpdateField('faqs', updated)} />
 
       {/* Unified Drop Vault Cover & Gallery Link */}
       <LinkedGalleryBar

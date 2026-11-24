@@ -21,6 +21,17 @@ export const SERVICES_TAB_COPY = {
   EMPTY_MENU_CARDS: 'No menu cards added yet. Click above to create one.',
   COVER_PHOTO_LABEL: 'Category / Package Cover Photo',
   UPLOAD_COVER_BTN: 'Upload Cover',
+  OPTIONS_HELPER: 'Optional checkboxes shown inside the Quick Inquiry form when a visitor inquires about this item.',
+  TIMEFRAME_TOGGLE_LABEL: 'Ask for Preferred Timeframe',
+  TIMEFRAME_TOGGLE_HELPER: 'Adds soft "Preferred Date / Timeframe" & "Backup Window" fields to the inquiry form (request only, not a confirmed booking).',
+  FAQ_EDITOR: {
+    LABEL: 'Frequently Asked Questions',
+    HELPER: 'Shown as a collapsible FAQ accordion inside this item’s Photos & Details view.',
+    ADD_BTN: 'Add FAQ',
+    QUESTION_PLACEHOLDER: 'Question (e.g., Do I need my own fencing?)',
+    ANSWER_PLACEHOLDER: 'Clear, helpful answer...',
+    REMOVE_TITLE: 'Remove FAQ',
+  },
   AVAILABILITY_OPTIONS: [
     'All Day',
     'Seasonal',
