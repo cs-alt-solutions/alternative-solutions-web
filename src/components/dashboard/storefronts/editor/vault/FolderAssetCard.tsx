@@ -3,13 +3,14 @@
 'use client';
 
 import React from 'react';
-import { ChevronLeft, ChevronRight, Crop, Eye, EyeOff, Trash2, Star } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Crop, Eye, EyeOff, Trash2, Star, Layers, X } from 'lucide-react';
 
 interface FolderAssetCardProps {
   img: any;
   index: number;
   totalCount: number;
   availableCategories: string[];
+  availableCollections?: string[];
   copy: any;
   onOpenFraming: () => void;
   onSetCover: () => void;
@@ -24,6 +25,7 @@ export default function FolderAssetCard({
   index,
   totalCount,
   availableCategories,
+  availableCollections = [],
   copy,
   onOpenFraming,
   onSetCover,
@@ -39,6 +41,11 @@ export default function FolderAssetCard({
   const fy = img.focalPoint?.y ?? 50;
   const zoom = img.imageZoom ?? 1;
   const hasCustomFrame = isContain || fx !== 50 || fy !== 50 || zoom > 1;
+
+  const currentCollection = (img.collection || '').trim();
+  const quickPickCollections = availableCollections.filter(
+    (name) => name.toLowerCase() !== currentCollection.toLowerCase()
+  );
 
   return (
     <div
@@ -109,6 +116,14 @@ export default function FolderAssetCard({
           <Crop size={11} />
           <span>{isContain ? 'Fit' : 'Frame'}</span>
         </button>
+
+        {/* Bottom Left Collection Pill Badge */}
+        {currentCollection && (
+          <div className="absolute bottom-2 left-2 z-20 inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-cyan-500/90 text-zinc-950 text-[9px] font-mono font-bold uppercase tracking-wider shadow-sm">
+            <Layers size={9} />
+            <span className="max-w-36 truncate">{currentCollection}</span>
+          </div>
+        )}
       </div>
 
       {/* Compact Control Toolbar */}
@@ -176,7 +191,7 @@ export default function FolderAssetCard({
         </div>
       </div>
 
-      {/* Story Title & Caption */}
+      {/* Story Title, Caption & Collection Group */}
       <div className="p-3 space-y-2">
         <input
           type="text"
@@ -192,6 +207,50 @@ export default function FolderAssetCard({
           rows={2}
           className="w-full bg-zinc-950 border border-zinc-800 rounded-md px-2.5 py-1.5 text-xs text-zinc-400 focus:outline-none focus:border-emerald-500 transition-colors resize-none"
         />
+
+        {/* Sub-Collection / Artist / Project Tag */}
+        <div className="pt-1.5 border-t border-zinc-800/70 space-y-1.5">
+          <div className="relative flex items-center">
+            <Layers
+              size={11}
+              className={`absolute left-2.5 pointer-events-none ${
+                currentCollection ? 'text-cyan-400' : 'text-zinc-600'
+              }`}
+            />
+            <input
+              type="text"
+              value={img.collection || ''}
+              onChange={(e) => onPatch({ collection: e.target.value })}
+              placeholder="Collection / Artist / Project (optional)"
+              className="w-full bg-zinc-950 border border-zinc-800 rounded-md pl-7 pr-7 py-1.5 text-[11px] font-medium text-cyan-200 placeholder:text-zinc-600 focus:outline-none focus:border-cyan-500 transition-colors"
+            />
+            {currentCollection && (
+              <button
+                type="button"
+                onClick={() => onPatch({ collection: '' })}
+                className="absolute right-2 text-zinc-500 hover:text-white cursor-pointer"
+                title="Clear collection tag"
+              >
+                <X size={11} />
+              </button>
+            )}
+          </div>
+
+          {quickPickCollections.length > 0 && (
+            <div className="flex flex-wrap items-center gap-1">
+              {quickPickCollections.map((name) => (
+                <button
+                  key={name}
+                  type="button"
+                  onClick={() => onPatch({ collection: name })}
+                  className="px-2 py-0.5 rounded bg-zinc-950 border border-zinc-800 hover:border-cyan-500/50 text-[10px] text-zinc-400 hover:text-cyan-300 transition-colors cursor-pointer"
+                >
+                  + {name}
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );

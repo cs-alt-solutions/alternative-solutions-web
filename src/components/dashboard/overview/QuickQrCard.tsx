@@ -2,7 +2,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { QrCode, Download, Loader2, Link2, ChevronDown, Filter } from 'lucide-react';
+import { QrCode, Download, Loader2, Link2, ChevronDown, Filter, ExternalLink, Copy, Check } from 'lucide-react';
 import { QRCodeCanvas } from 'qrcode.react';
 import { supabase } from '@/utils/supabase';
 import { OVERVIEW_COPY, classifyStorefront } from '@/config/dashboard/overview';
@@ -38,12 +38,18 @@ export default function QuickQrCard() {
   const [storeUrl, setStoreUrl] = useState(HQ_BASE_URL);
   const [brandColor, setBrandColor] = useState('cyan-500'); 
   const [isDownloading, setIsDownloading] = useState(false);
+  const [copied, setCopied] = useState(false);
   const [allSites, setAllSites] = useState<TargetSite[]>([]);
   const [includeBuilds, setIncludeBuilds] = useState(false);
   const [isLoadingUrls, setIsLoadingUrls] = useState(true);
 
   const copy = OVERVIEW_COPY.QR;
   const primaryHex = resolveToHex(brandColor);
+
+  // Ensure manually typed URLs without https:// still open cleanly when clicked
+  const clickableUrl = storeUrl.trim()
+    ? (/^https?:\/\//i.test(storeUrl.trim()) ? storeUrl.trim() : `https://${storeUrl.trim()}`)
+    : '';
 
   useEffect(() => {
     const fetchStorefrontUrls = async () => {
@@ -59,7 +65,6 @@ export default function QuickQrCard() {
 
           data.forEach(store => {
             const bucket = classifyStorefront(store);
-            // Only keep real LIVE sites or active client builds (never prototypes or ignored rows)
             if (bucket !== 'LIVE' && bucket !== 'HOLDING' && bucket !== 'WORKSHOP') return;
 
             const targetUrl = store.custom_domain 
@@ -99,6 +104,17 @@ export default function QuickQrCard() {
     const selectedClient = allSites.find(u => u.url === selectedUrl);
     if (selectedClient && selectedClient.color) {
       setBrandColor(selectedClient.color);
+    }
+  };
+
+  const handleCopyLink = async () => {
+    if (!clickableUrl) return;
+    try {
+      await navigator.clipboard.writeText(clickableUrl);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 1800);
+    } catch (err) {
+      console.error("Failed to copy URL", err);
     }
   };
 
@@ -144,7 +160,6 @@ export default function QuickQrCard() {
           <h3 className="font-bold text-xs uppercase tracking-widest text-white/80 truncate">{copy.TITLE}</h3>
         </div>
 
-        {/* Toggle between Strictly Live Sites (Default) vs. + In-Progress Client Builds */}
         <button
           type="button"
           onClick={() => setIncludeBuilds(!includeBuilds)}
@@ -218,31 +233,57 @@ export default function QuickQrCard() {
           />
         </div>
 
-        <div className="flex-1 flex flex-col items-center justify-center p-4 bg-zinc-900/50 border border-zinc-800/80 rounded-xl relative overflow-hidden">
-          {storeUrl ? (
+        {/* CLICKABLE QR PREVIEW AREA */}
+        {clickableUrl ? (
+          <a
+            href={clickableUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            title={`Open ${clickableUrl}`}
+            className="flex-1 flex flex-col items-center justify-center gap-2.5 p-4 bg-zinc-900/50 border border-zinc-800/80 hover:border-cyan-500/50 hover:bg-zinc-900/80 rounded-xl relative overflow-hidden transition-all cursor-pointer group/qr"
+          >
             <QRCodeCanvas 
               id="quick-qr-canvas"
-              value={storeUrl}
+              value={clickableUrl}
               size={112}
               bgColor="transparent"
               fgColor={primaryHex}
               level={"H"} 
               includeMargin={false}
+              className="transition-transform duration-200 group-hover/qr:scale-105"
             />
-          ) : (
+            <span className="flex items-center gap-1 text-[9px] font-mono uppercase tracking-widest text-zinc-500 group-hover/qr:text-cyan-400 transition-colors">
+              Tap QR to open <ExternalLink size={10} />
+            </span>
+          </a>
+        ) : (
+          <div className="flex-1 flex flex-col items-center justify-center p-4 bg-zinc-900/50 border border-zinc-800/80 rounded-xl relative overflow-hidden">
             <p className="text-[10px] font-mono text-zinc-500 uppercase tracking-widest text-center">{copy.AWAITING_URL}</p>
-          )}
-        </div>
+          </div>
+        )}
 
-        <button 
-          type="button"
-          onClick={handleDownloadQR}
-          disabled={isDownloading || !storeUrl}
-          className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all cursor-pointer shadow-[0_0_15px_rgba(6,182,212,0.1)] disabled:opacity-50 bg-cyan-600/10 hover:bg-cyan-500 hover:text-black border border-cyan-500/30 text-cyan-400"
-        >
-          {isDownloading ? <Loader2 size={14} className="animate-spin" /> : <Download size={14} />}
-          {isDownloading ? copy.BTN_GENERATING : copy.BTN_EXPORT}
-        </button>
+        <div className="flex items-center gap-2">
+          <button 
+            type="button"
+            onClick={handleDownloadQR}
+            disabled={isDownloading || !clickableUrl}
+            className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all cursor-pointer shadow-[0_0_15px_rgba(6,182,212,0.1)] disabled:opacity-50 bg-cyan-600/10 hover:bg-cyan-500 hover:text-black border border-cyan-500/30 text-cyan-400"
+          >
+            {isDownloading ? <Loader2 size={14} className="animate-spin" /> : <Download size={14} />}
+            {isDownloading ? copy.BTN_GENERATING : copy.BTN_EXPORT}
+          </button>
+
+          <button
+            type="button"
+            onClick={handleCopyLink}
+            disabled={!clickableUrl}
+            title="Copy clickable URL"
+            className="flex items-center justify-center gap-1.5 px-3 py-2.5 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all cursor-pointer disabled:opacity-50 bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 text-zinc-300 hover:text-white shrink-0"
+          >
+            {copied ? <Check size={14} className="text-emerald-400" /> : <Copy size={14} />}
+            <span>{copied ? 'Copied' : 'Copy'}</span>
+          </button>
+        </div>
       </div>
     </div>
   );

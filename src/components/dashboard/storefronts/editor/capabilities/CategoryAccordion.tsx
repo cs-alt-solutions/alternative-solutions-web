@@ -60,9 +60,21 @@ export default function CategoryAccordion({
   const bulletsCount = Array.isArray(cap.bullets)
     ? cap.bullets.filter((b: string) => b && b.trim()).length
     : 0;
+  const profilesCount = Array.isArray(cap.collectionProfiles)
+    ? cap.collectionProfiles.filter((p: any) => p && p.name?.trim()).length
+    : 0;
+  const highlightsBadgeCount = bulletsCount + profilesCount;
+
   const addonsCount = Array.isArray(cap.addons) ? cap.addons.length : 0;
   const faqsCount = Array.isArray(cap.faqs) ? cap.faqs.length : 0;
-  const inquiryBadgeCount = addonsCount + faqsCount + (cap.askTimeframe ? 1 : 0);
+  const isTimingActive = cap.timeframeMode
+    ? cap.timeframeMode !== 'off'
+    : cap.askTimeframe === true;
+  const hasCustomAction = Boolean(
+    cap.ctaLabel?.trim() || cap.detailsLabel?.trim() || cap.bookingUrl?.trim()
+  );
+  const inquiryBadgeCount =
+    addonsCount + faqsCount + (isTimingActive ? 1 : 0) + (hasCustomAction ? 1 : 0);
 
   const effectiveTab: FocusTab = isMenuMode
     ? focusTab === 'cards'
@@ -127,7 +139,7 @@ export default function CategoryAccordion({
       ]
     : [
         { id: 'pitch', label: 'Pitch', icon: FileText },
-        { id: 'highlights', label: 'Highlights', icon: Sparkles, count: bulletsCount },
+        { id: 'highlights', label: 'Highlights', icon: Sparkles, count: highlightsBadgeCount },
         { id: 'inquiry', label: 'Inquiry', icon: SlidersHorizontal, count: inquiryBadgeCount },
         { id: 'photos', label: 'Photos', icon: ImageIcon, count: categoryImages.length },
       ];

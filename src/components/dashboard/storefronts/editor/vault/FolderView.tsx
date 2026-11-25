@@ -1,8 +1,8 @@
 /* src/components/dashboard/storefronts/editor/vault/FolderView.tsx */
 'use client';
 
-import React, { useState } from 'react';
-import { ChevronLeft, Edit2, Trash2, Loader2, Upload, FolderDown } from 'lucide-react';
+import React, { useState, useMemo } from 'react';
+import { ChevronLeft, Edit2, Trash2, Loader2, Upload, FolderDown, Layers } from 'lucide-react';
 import { VAULT_COPY } from '@/config/dashboard/vault';
 import FolderAssetCard from './FolderAssetCard';
 import ImageFramingModal from './ImageFramingModal';
@@ -46,14 +46,62 @@ export default function FolderView({
   reorderFolderItem,
 }: FolderViewProps) {
   const [framingItemId, setFramingItemId] = useState<string | null>(null);
+  const [collectionFilter, setCollectionFilter] = useState<string>('ALL');
   const copy = VAULT_COPY.FOLDER_VIEW;
 
-  const folderImages = galleryItems.filter(
-    (i: any) =>
-      i.category?.trim().toLowerCase() === activeFolder.trim().toLowerCase() &&
-      i.imageUrl &&
-      i.imageUrl.trim() !== ''
+  const folderImages = useMemo(
+    () =>
+      galleryItems.filter(
+        (i: any) =>
+          i.category?.trim().toLowerCase() === activeFolder.trim().toLowerCase() &&
+          i.imageUrl &&
+          i.imageUrl.trim() !== ''
+      ),
+    [galleryItems, activeFolder]
   );
+
+  // Deduplicated collection names (preserving first-seen casing) + counts
+  const collectionStats = useMemo(() => {
+    const map = new Map<string, { name: string; count: number }>();
+    let untaggedCount = 0;
+
+    for (const item of folderImages) {
+      const raw = item.collection?.trim();
+      if (!raw) {
+        untaggedCount += 1;
+        continue;
+      }
+      const key = raw.toLowerCase();
+      const existing = map.get(key);
+      if (existing) existing.count += 1;
+      else map.set(key, { name: raw, count: 1 });
+    }
+
+    return {
+      groups: Array.from(map.values()),
+      names: Array.from(map.values()).map((g) => g.name),
+      untaggedCount,
+    };
+  }, [folderImages]);
+
+  // Fall back to ALL automatically if a filtered collection gets cleared/renamed
+  const effectiveFilter =
+    collectionFilter === 'ALL' ||
+    (collectionFilter === '__UNTAGGED__' && collectionStats.untaggedCount > 0) ||
+    collectionStats.names.some((n) => n.toLowerCase() === collectionFilter.toLowerCase())
+      ? collectionFilter
+      : 'ALL';
+
+  const visibleEntries = useMemo(() => {
+    return folderImages
+      .map((img: any, trueIndex: number) => ({ img, trueIndex }))
+      .filter(({ img }) => {
+        if (effectiveFilter === 'ALL') return true;
+        if (effectiveFilter === '__UNTAGGED__') return !img.collection?.trim();
+        return img.collection?.trim().toLowerCase() === effectiveFilter.toLowerCase();
+      });
+  }, [folderImages, effectiveFilter]);
+
   const framingIndex = folderImages.findIndex((i: any) => i.id === framingItemId);
   const framingItem = framingIndex !== -1 ? folderImages[framingIndex] : null;
 
@@ -89,7 +137,7 @@ export default function FolderView({
             </button>
           </div>
           <p className="text-xs text-zinc-500 font-mono uppercase tracking-widest mt-1">
-            {folderImages.length} {copy.IMAGES_IN_PORTFOLIO} · Star sets Hero Cover · Eye toggles Gallery visibility
+            {folderImages.length} {copy.IMAGES_IN_PORTFOLIO} · Star sets Hero Cover · Group tags build Artist / Project cards
           </p>
         </div>
 
@@ -126,19 +174,73 @@ export default function FolderView({
         </div>
       )}
 
+      {/* Sub-Collection Filter Bar (auto-appears once any photo in this folder has a group tag) */}
+      {collectionStats.groups.length > 0 && (
+        <div className="flex flex-wrap items-center gap-2 p-3 rounded-xl bg-zinc-900/50 border border-zinc-800/80">
+          <span className="inline-flex items-center gap-1.5 text-[10px] font-mono font-bold uppercase tracking-widest text-zinc-500 mr-1">
+            <Layers size={12} className="text-cyan-400" /> Collections:
+          </span>
+
+          <button
+            type="button"
+            onClick={() => setCollectionFilter('ALL')}
+            className={`px-2.5 py-1 rounded-md text-[10px] font-bold uppercase tracking-wider border transition-colors cursor-pointer ${
+              effectiveFilter === 'ALL'
+                ? 'bg-cyan-500 text-zinc-950 border-cyan-400'
+                : 'bg-zinc-950 text-zinc-400 border-zinc-800 hover:text-white'
+            }`}
+          >
+            All ({folderImages.length})
+          </button>
+
+          {collectionStats.groups.map((grp) => {
+            const isSelected = effectiveFilter.toLowerCase() === grp.name.toLowerCase();
+            return (
+              <button
+                key={grp.name}
+                type="button"
+                onClick={() => setCollectionFilter(grp.name)}
+                className={`px-2.5 py-1 rounded-md text-[10px] font-bold uppercase tracking-wider border transition-colors cursor-pointer ${
+                  isSelected
+                    ? 'bg-cyan-500 text-zinc-950 border-cyan-400'
+                    : 'bg-zinc-950 text-zinc-300 border-zinc-800 hover:border-cyan-500/40 hover:text-white'
+                }`}
+              >
+                {grp.name} ({grp.count})
+              </button>
+            );
+          })}
+
+          {collectionStats.untaggedCount > 0 && (
+            <button
+              type="button"
+              onClick={() => setCollectionFilter('__UNTAGGED__')}
+              className={`px-2.5 py-1 rounded-md text-[10px] font-bold uppercase tracking-wider border transition-colors cursor-pointer ${
+                effectiveFilter === '__UNTAGGED__'
+                  ? 'bg-amber-500 text-zinc-950 border-amber-400'
+                  : 'bg-zinc-950 text-zinc-500 border-zinc-800 hover:text-zinc-300'
+              }`}
+            >
+              Untagged ({collectionStats.untaggedCount})
+            </button>
+          )}
+        </div>
+      )}
+
       {folderImages.length === 0 ? (
         <div className="py-12 border-2 border-dashed border-zinc-800/80 rounded-2xl bg-black/20 text-center">
           <p className="text-xs text-zinc-500 font-mono uppercase tracking-widest">{copy.EMPTY_STATE}</p>
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-          {folderImages.map((img: any, idx: number) => (
+          {visibleEntries.map(({ img, trueIndex }) => (
             <FolderAssetCard
               key={img.id}
               img={img}
-              index={idx}
+              index={trueIndex}
               totalCount={folderImages.length}
               availableCategories={availableCategories}
+              availableCollections={collectionStats.names}
               copy={copy}
               onOpenFraming={() => setFramingItemId(img.id)}
               onSetCover={() => setCoverPhoto(img.id, activeFolder)}

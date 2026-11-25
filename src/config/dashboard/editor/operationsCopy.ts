@@ -21,9 +21,20 @@ export const SERVICES_TAB_COPY = {
   EMPTY_MENU_CARDS: 'No menu cards added yet. Click above to create one.',
   COVER_PHOTO_LABEL: 'Category / Package Cover Photo',
   UPLOAD_COVER_BTN: 'Upload Cover',
-  OPTIONS_HELPER: 'Optional checkboxes shown inside the Quick Inquiry form when a visitor inquires about this item.',
+  OPTIONS_HELPER: 'Optional choices shown inside the Quick Inquiry form when a visitor inquires about this item.',
+  ADDON_SELECT_MODES: {
+    SINGLE: 'Pick One',
+    MULTIPLE: 'Select Any',
+  },
   TIMEFRAME_TOGGLE_LABEL: 'Ask for Preferred Timeframe',
   TIMEFRAME_TOGGLE_HELPER: 'Adds soft "Preferred Date / Timeframe" & "Backup Window" fields to the inquiry form (request only, not a confirmed booking).',
+  TIMEFRAME_MODE_LABEL: 'Preferred Timing Selector',
+  TIMEFRAME_MODE_HELPER: 'Choose whether visitors see quick flexible timing chips, flexible chips + a specific date calendar, or no timing field at all.',
+  TIMEFRAME_MODES: {
+    OFF: 'Off',
+    FLEXIBLE: 'Flexible',
+    CALENDAR: '+ Calendar',
+  },
   FAQ_EDITOR: {
     LABEL: 'Frequently Asked Questions',
     HELPER: 'Shown as a collapsible FAQ accordion inside this item’s Photos & Details view.',
