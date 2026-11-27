@@ -39,6 +39,23 @@ function parseAuditTrail(raw: StagingAuditRecord['audit_notes']) {
   }
 }
 
+function formatTweakSummary(
+  trailNotes: Record<number, string>,
+  sectionLabels: Record<number, string>,
+  fallbackNotes: string
+): string {
+  const entries = Object.entries(trailNotes).filter(([, text]) => text && text.trim());
+  if (entries.length > 0) {
+    return entries
+      .map(([idx, text]) => {
+        const label = sectionLabels[Number(idx)] || `Section ${Number(idx) + 1}`;
+        return `[${label}]\n${text.trim()}`;
+      })
+      .join('\n\n');
+  }
+  return fallbackNotes.trim();
+}
+
 export async function POST(req: Request) {
   try {
     const payload: SupabaseWebhookPayload = await req.json();
@@ -55,19 +72,23 @@ export async function POST(req: Request) {
     const rawNotes = record.notes?.trim() || '';
     const trailNotes: Record<number, string> =
       trail?.client_notes && typeof trail.client_notes === 'object' ? trail.client_notes : {};
+    const sectionLabels: Record<number, string> =
+      trail?.section_labels && typeof trail.section_labels === 'object' ? trail.section_labels : {};
 
     const hasNotes = rawNotes.length > 0 || Object.keys(trailNotes).length > 0;
     const emailStatus: 'APPROVED' | 'CHANGES_REQUESTED' = hasNotes
       ? 'CHANGES_REQUESTED'
       : 'APPROVED';
 
-    // Map cleanly to real STOREFRONT_LIFECYCLE statuses
+    // Map cleanly to valid STOREFRONT_LIFECYCLE statuses
     const requestedStage = trail?.next_stage as string | undefined;
     const targetLifecycleStatus = hasNotes
       ? 'BUILDING_CORE'
       : requestedStage === 'ACTIVE'
         ? 'ACTIVE'
-        : 'CONTENT_ASSEMBLY';
+        : requestedStage === 'AWAITING_ASSETS'
+          ? 'AWAITING_ASSETS'
+          : 'CONTENT_ASSEMBLY';
 
     const statusLabel = hasNotes
       ? 'Adjustments Logged'
@@ -76,6 +97,9 @@ export async function POST(req: Request) {
         : 'Approved — Content Assembly';
 
     const projectLabel = record.business_name || record.project_name || 'Your Storefront';
+    const formattedTweaks = hasNotes
+      ? formatTweakSummary(trailNotes, sectionLabels, rawNotes)
+      : '';
 
     // 1. SYNC STOREFRONTS TABLE & TIMELINE LEDGER
     const supabaseAdmin = createClient(
@@ -97,6 +121,7 @@ export async function POST(req: Request) {
         .from('storefronts')
         .select('id, status, audit_notes')
         .eq('contact_email', record.client_email)
+        .limit(1)
         .maybeSingle();
       storeData = data;
     }
@@ -111,7 +136,7 @@ export async function POST(req: Request) {
         fromStatus: storeData.status || 'IN_REVIEW',
         toStatus: targetLifecycleStatus,
         message: hasNotes
-          ? `Client requested adjustments: "${rawNotes}"`
+          ? `Client requested staging tweaks:\n${formattedTweaks}`
           : targetLifecycleStatus === 'ACTIVE'
             ? 'Client approved staging build and cleared it for Live Production.'
             : 'Client approved core architecture — moved to Content Assembly for final photos/content.',
@@ -125,9 +150,25 @@ export async function POST(req: Request) {
           audit_notes: [...(storeData.audit_notes || []), reviewLog],
         })
         .eq('id', storeData.id);
+
+      // 2. AUTO-OPEN SUPPORT DESK TICKET ON TWEAKS (lights up Homepage Radar + Support Desk)
+      if (hasNotes) {
+        const { error: ticketError } = await supabaseAdmin.from('support_tickets').insert([
+          {
+            storefront_id: storeData.id,
+            category: 'Staging Review',
+            topic: `Staging Tweaks — ${projectLabel}`,
+            details: formattedTweaks,
+            status: 'OPEN',
+          },
+        ]);
+        if (ticketError) {
+          console.error('Failed to auto-create Support Desk ticket:', ticketError.message);
+        }
+      }
     }
 
-    // 2. SEND RECEIPT + ADMIN ALERT
+    // 3. SEND RECEIPT + ADMIN ALERT
     const sectionNotes: Record<number, string> =
       Object.keys(trailNotes).length > 0 ? trailNotes : hasNotes ? { 0: rawNotes } : {};
 
