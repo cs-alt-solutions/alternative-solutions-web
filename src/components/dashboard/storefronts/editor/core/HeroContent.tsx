@@ -2,7 +2,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Type, HelpCircle, LayoutTemplate } from 'lucide-react';
+import { Type, HelpCircle, LayoutTemplate, AlignLeft } from 'lucide-react';
 import EditorAccordion from '../shared/EditorAccordion';
 import { HeroSelector } from './VisualArchitecture/LayoutSelectors';
 import HeroSizingControls from './HeroSizingControls';
@@ -52,9 +52,10 @@ export default function HeroContent({
       isOpen={isOpen}
       onToggle={() => setIsOpen(!isOpen)}
     >
-      <div className="space-y-3">
+      <div className="space-y-4">
+        {/* SECTION 1: LAYOUT & STYLING */}
         {!isClientPortal && setFormData && (
-          <div className="pb-3.5 border-b border-zinc-800/70 space-y-2.5">
+          <div className="space-y-3 pb-4 border-b border-zinc-800/70">
             <div className="flex items-center gap-1.5 text-amber-400">
               <LayoutTemplate size={11} />
               <span className="text-[9px] font-black uppercase tracking-widest">
@@ -62,41 +63,57 @@ export default function HeroContent({
               </span>
             </div>
             <HeroSelector formData={formData} setFormData={setFormData} allowedLayouts={safeLayouts} />
+          </div>
+        )}
+
+        {/* SECTION 2: FRAMING & SIZING */}
+        {!isClientPortal && setFormData && (
+          <div className="pb-4 border-b border-zinc-800/70">
             <HeroSizingControls formData={formData} setFormData={setFormData} />
           </div>
         )}
 
-        <div>
-          <TooltipLabel label={copy.TAGLINE_LABEL} tooltip={copy.TAGLINE_TOOLTIP} />
-          <input
-            name="tagline"
-            value={formData.tagline || ''}
-            onChange={handleChange}
-            className="w-full bg-zinc-950 px-2.5 py-2 rounded-md border border-zinc-800 text-white focus:border-amber-500 outline-none transition-all text-xs placeholder:text-zinc-700"
-            placeholder={copy.TAGLINE_PLACEHOLDER}
-          />
-        </div>
+        {/* SECTION 3: HERO COPY & CTA */}
+        <div className="space-y-3">
+          <div className="flex items-center gap-1.5 text-zinc-400">
+            <AlignLeft size={11} className="text-amber-400" />
+            <span className="text-[9px] font-black uppercase tracking-widest">
+              Hero Copy & Action
+            </span>
+          </div>
 
-        <div>
-          <TooltipLabel label={copy.SUBTEXT_LABEL} tooltip={copy.SUBTEXT_TOOLTIP} />
-          <textarea
-            name="subtext"
-            value={formData.subtext || ''}
-            onChange={handleChange}
-            className="w-full bg-zinc-950 px-2.5 py-2 rounded-md border border-zinc-800 text-white h-20 resize-none focus:border-amber-500 outline-none transition-all text-xs leading-relaxed placeholder:text-zinc-700"
-            placeholder={copy.SUBTEXT_PLACEHOLDER}
-          />
-        </div>
+          <div>
+            <TooltipLabel label={copy.TAGLINE_LABEL} tooltip={copy.TAGLINE_TOOLTIP} />
+            <input
+              name="tagline"
+              value={formData.tagline || ''}
+              onChange={handleChange}
+              className="w-full bg-zinc-950 px-2.5 py-2 rounded-md border border-zinc-800 text-white focus:border-amber-500 outline-none transition-all text-xs placeholder:text-zinc-700"
+              placeholder={copy.TAGLINE_PLACEHOLDER}
+            />
+          </div>
 
-        <div className="pt-2.5 border-t border-zinc-800/60">
-          <TooltipLabel label={copy.HERO_CTA_LABEL} tooltip={copy.HERO_CTA_TOOLTIP} />
-          <input
-            name="hero_cta"
-            value={formData.hero_cta || ''}
-            onChange={handleChange}
-            className="w-full bg-zinc-950 px-2.5 py-2 rounded-md border border-zinc-800 text-white focus:border-amber-500 outline-none transition-all text-xs placeholder:text-zinc-700"
-            placeholder={copy.HERO_CTA_PLACEHOLDER}
-          />
+          <div>
+            <TooltipLabel label={copy.SUBTEXT_LABEL} tooltip={copy.SUBTEXT_TOOLTIP} />
+            <textarea
+              name="subtext"
+              value={formData.subtext || ''}
+              onChange={handleChange}
+              className="w-full bg-zinc-950 px-2.5 py-2 rounded-md border border-zinc-800 text-white h-20 resize-none focus:border-amber-500 outline-none transition-all text-xs leading-relaxed placeholder:text-zinc-700"
+              placeholder={copy.SUBTEXT_PLACEHOLDER}
+            />
+          </div>
+
+          <div>
+            <TooltipLabel label={copy.HERO_CTA_LABEL} tooltip={copy.HERO_CTA_TOOLTIP} />
+            <input
+              name="hero_cta"
+              value={formData.hero_cta || ''}
+              onChange={handleChange}
+              className="w-full bg-zinc-950 px-2.5 py-2 rounded-md border border-zinc-800 text-white focus:border-amber-500 outline-none transition-all text-xs placeholder:text-zinc-700"
+              placeholder={copy.HERO_CTA_PLACEHOLDER}
+            />
+          </div>
         </div>
       </div>
     </EditorAccordion>

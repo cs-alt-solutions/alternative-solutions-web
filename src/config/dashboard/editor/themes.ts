@@ -106,12 +106,17 @@ export const VISUAL_ARCH_COPY = {
   LAYOUTS: {
     LOCK_BG: 'Lock Hero Background',
     LOCK_BG_TITLE: 'Lock the background image in place on scroll',
+    ACTIVE_LAYOUT: 'Active Layout',
+    CHANGE_LAYOUT: 'Change',
+    DONE_LAYOUT: 'Done',
     ADVANCED_SHOW: 'Show Advanced Layouts',
     ADVANCED_HIDE: 'Hide Advanced Layouts',
-    MASTHEAD_BACKDROP: 'Masthead Backdrop',
+    MASTHEAD_STUDIO: 'Masthead Studio',
+    MASTHEAD_BACKDROP: 'Backdrop',
     MASTHEAD_PURE: 'Pure Wall',
     MASTHEAD_WASH: 'Faint Wash',
     MASTHEAD_FONT: 'Display Lettering',
+    MASTHEAD_COLOR: 'Lettering Finish',
     LABELS: {
       CENTERED: 'Centered Focus',
       SPLIT_LEFT: 'Bold Left Split',
