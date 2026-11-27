@@ -88,26 +88,26 @@ export const EMAIL_COPY = {
   // 3. THE REVIEW & DEPLOYMENT PIPELINE
   STAGING_REVIEW: {
     HEADER: 'Build Progress',
-    SUBHEADER: 'Staging Environment',
+    SUBHEADER: 'Client Verification',
     GREETING: 'Hey',
-    BODY_1: "Here is what we've got going on so far. I think it's looking great, but I wanted you to review it and get your go-ahead to clear it to push live.",
-    INSTRUCTIONS_TITLE: 'What happens next?',
-    INSTRUCTIONS_INTRO: 'Instead of going back and forth over email, I want to get you set up in your private client portal so we can collaborate and finish this efficiently.',
-    INSTRUCTION_1_TITLE: '1. Take a look',
-    INSTRUCTION_1_BODY: 'Click the link below, view the progress, and see the groundwork I am putting together for you.',
-    INSTRUCTION_2_TITLE: '2. Lock it in',
-    INSTRUCTION_2_BODY: 'When you are ready to proceed, click the button on the staging widget to set up your subscription.',
-    INSTRUCTION_3_TITLE: '3. Enter your portal',
-    INSTRUCTION_3_BODY: 'Once active, you unlock your portal. That is where you will upload your images and drop your specific tweaks so I can finish getting you exactly where you need to be.',
-    CTA_BUTTON: 'Check out your site',
+    BODY_1: "Here is where your storefront stands right now. I think it's coming together great—take a quick scroll through on your phone and computer so we can dial in any tweaks or clear it for launch.",
+    INSTRUCTIONS_TITLE: 'How the live review works:',
+    INSTRUCTIONS_INTRO: 'There is a quick review widget tucked in the bottom-right corner of your preview link.',
+    INSTRUCTION_1_TITLE: '1. Walk through each section',
+    INSTRUCTION_1_BODY: 'Check your colors, wording, galleries, and contact routing. Drop a note directly on any section if you want something adjusted.',
+    INSTRUCTION_2_TITLE: '2. Still adding photos or details?',
+    INSTRUCTION_2_BODY: 'Approve the layout and choose Content Assembly—you can drop final photos or edits into your Client Portal whenever you are ready.',
+    INSTRUCTION_3_TITLE: '3. Love it as-is?',
+    INSTRUCTION_3_BODY: 'Choose Ready to Go Live on the final step and we will flip the switch straight into Live Production.',
+    CTA_BUTTON: 'Review Your Storefront',
     ...STANDARD_SIGNATURE
   },
 
   STAGING_RECEIPT: {
-    CLIENT_APPROVED: 'Thank you for completing your live review. You verified all checkpoints with zero requested changes. This build is officially in my queue to go live. Keep an eye out for your hosting activation link.',
-    CLIENT_CHANGES: 'Thank you for completing your live review. I have logged your requested tweaks below. I am jumping under the hood to knock these out. Once applied, I will send an updated link for your final approval.',
-    ADMIN_APPROVED: 'Client has locked the build! Verify their recurring subscription plan is active and get their domain connected.',
-    ADMIN_CHANGES: 'Client requested specific adjustments. Make the requested tweaks and push for a second review.',
+    CLIENT_APPROVED: 'Thank you for completing your live review! Your sign-off is locked in—jump into your Client Portal anytime to drop final photos or manage updates.',
+    CLIENT_CHANGES: 'Thank you for completing your live review! I have logged your requested tweaks below and moved your build back to my desk. Once applied, I will send a fresh link for your final look.',
+    ADMIN_APPROVED: 'Client verified their staging build! Check the Timeline Ledger to see if they moved into Content Assembly or cleared it straight for Live Production.',
+    ADMIN_CHANGES: 'Client requested adjustments—status moved back to Core Architecture (In Your Court) so your Canvas is unlocked and ready to edit.',
     ...STANDARD_SIGNATURE
   },
 
