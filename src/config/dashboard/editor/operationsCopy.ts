@@ -1,6 +1,23 @@
 /* src/config/dashboard/editor/operationsCopy.ts */
 
 export const SERVICES_TAB_COPY = {
+  DIRECTORY: {
+    ADD_BTN: 'Add',
+    ALL_DAY_DEFAULT: 'All Day',
+    UNTITLED_ITEM: 'Untitled',
+    ITEM_FALLBACK_PREFIX: 'Item',
+    CARD_SINGULAR: 'Card',
+    CARD_PLURAL: 'Cards',
+    HIGHLIGHT_SINGULAR: 'Highlight',
+    HIGHLIGHT_PLURAL: 'Highlights',
+    PHOTO_SINGULAR: 'Photo',
+    PHOTO_PLURAL: 'Photos',
+    FAQ_SINGULAR: 'FAQ',
+    FAQ_PLURAL: 'FAQs',
+    MOVE_UP_TITLE: 'Move Up',
+    MOVE_DOWN_TITLE: 'Move Down',
+    DELETE_TITLE: 'Delete',
+  },
   FLOW_ACCORDION: 'Content Flow Architecture',
   FLOW_HELPER: 'Select how your offerings and gallery items render on the live storefront.',
   ADDONS_HEADING: 'Flexible Upgrades (Quick Add-ons)',

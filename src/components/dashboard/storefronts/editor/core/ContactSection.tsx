@@ -27,7 +27,15 @@ const TooltipLabel = ({
   </div>
 );
 
-export default function ContactSection({ formData, handleChange }: { formData: any; handleChange: any }) {
+export default function ContactSection({
+  formData,
+  handleChange,
+  embedded = false,
+}: {
+  formData: any;
+  handleChange: any;
+  embedded?: boolean;
+}) {
   const [isOpen, setIsOpen] = useState(false);
   const copy = EDITOR_WORKSPACE_COPY.CONTENT_TAB;
 
@@ -39,6 +47,68 @@ export default function ContactSection({ formData, handleChange }: { formData: a
   ];
   const progress = Math.round((fields.filter((f) => f && f.trim() !== '').length / 4) * 100);
 
+  const content = (
+    <div className="space-y-3">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 items-end">
+        <div>
+          <TooltipLabel label={copy.CONTACT_HEADING_LABEL} tooltip={copy.CONTACT_HEADING_TOOLTIP} />
+          <input
+            name="primary_cta"
+            value={formData.primary_cta || ''}
+            onChange={handleChange}
+            className="w-full bg-zinc-950 px-2.5 py-2 rounded-md border border-zinc-800 text-white focus:border-indigo-500 outline-none transition-all text-xs placeholder:text-zinc-700"
+            placeholder={copy.CONTACT_HEADING_PLACEHOLDER}
+          />
+        </div>
+
+        <div>
+          <TooltipLabel
+            label={copy.CONTACT_BTN_LABEL}
+            tooltip={copy.CONTACT_BTN_TOOLTIP}
+            alignRight={true}
+          />
+          <input
+            name="secondary_cta"
+            value={formData.secondary_cta || ''}
+            onChange={handleChange}
+            className="w-full bg-zinc-950 px-2.5 py-2 rounded-md border border-zinc-800 text-white focus:border-indigo-500 outline-none transition-all text-xs placeholder:text-zinc-700"
+            placeholder={copy.CONTACT_BTN_PLACEHOLDER}
+          />
+        </div>
+      </div>
+
+      <div className="pt-3 border-t border-zinc-800/60 grid grid-cols-1 sm:grid-cols-2 gap-2.5 items-end">
+        <div>
+          <TooltipLabel label={copy.SERVICES_HEADING_LABEL} tooltip={copy.SERVICES_HEADING_TOOLTIP} />
+          <input
+            name="capabilities_heading"
+            value={formData.capabilities_heading || ''}
+            onChange={handleChange}
+            className="w-full bg-zinc-950 px-2.5 py-2 rounded-md border border-zinc-800 text-white focus:border-indigo-500 outline-none transition-all text-xs placeholder:text-zinc-700"
+            placeholder={copy.SERVICES_HEADING_PLACEHOLDER}
+          />
+        </div>
+
+        <div>
+          <TooltipLabel
+            label={copy.GALLERY_HEADING_LABEL}
+            tooltip={copy.GALLERY_HEADING_TOOLTIP}
+            alignRight={true}
+          />
+          <input
+            name="gallery_heading"
+            value={formData.gallery_heading || ''}
+            onChange={handleChange}
+            className="w-full bg-zinc-950 px-2.5 py-2 rounded-md border border-zinc-800 text-white focus:border-indigo-500 outline-none transition-all text-xs placeholder:text-zinc-700"
+            placeholder={copy.GALLERY_HEADING_PLACEHOLDER}
+          />
+        </div>
+      </div>
+    </div>
+  );
+
+  if (embedded) return content;
+
   return (
     <EditorAccordion
       title={copy.CONTACT_ACCORDION}
@@ -48,63 +118,7 @@ export default function ContactSection({ formData, handleChange }: { formData: a
       isOpen={isOpen}
       onToggle={() => setIsOpen(!isOpen)}
     >
-      <div className="space-y-3">
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 items-end">
-          <div>
-            <TooltipLabel label={copy.CONTACT_HEADING_LABEL} tooltip={copy.CONTACT_HEADING_TOOLTIP} />
-            <input
-              name="primary_cta"
-              value={formData.primary_cta || ''}
-              onChange={handleChange}
-              className="w-full bg-zinc-950 px-2.5 py-2 rounded-md border border-zinc-800 text-white focus:border-indigo-500 outline-none transition-all text-xs placeholder:text-zinc-700"
-              placeholder={copy.CONTACT_HEADING_PLACEHOLDER}
-            />
-          </div>
-
-          <div>
-            <TooltipLabel
-              label={copy.CONTACT_BTN_LABEL}
-              tooltip={copy.CONTACT_BTN_TOOLTIP}
-              alignRight={true}
-            />
-            <input
-              name="secondary_cta"
-              value={formData.secondary_cta || ''}
-              onChange={handleChange}
-              className="w-full bg-zinc-950 px-2.5 py-2 rounded-md border border-zinc-800 text-white focus:border-indigo-500 outline-none transition-all text-xs placeholder:text-zinc-700"
-              placeholder={copy.CONTACT_BTN_PLACEHOLDER}
-            />
-          </div>
-        </div>
-
-        <div className="pt-3 border-t border-zinc-800/60 grid grid-cols-1 sm:grid-cols-2 gap-2.5 items-end">
-          <div>
-            <TooltipLabel label="Services Heading" tooltip={copy.SERVICES_HEADING_TOOLTIP} />
-            <input
-              name="capabilities_heading"
-              value={formData.capabilities_heading || ''}
-              onChange={handleChange}
-              className="w-full bg-zinc-950 px-2.5 py-2 rounded-md border border-zinc-800 text-white focus:border-indigo-500 outline-none transition-all text-xs placeholder:text-zinc-700"
-              placeholder={copy.SERVICES_HEADING_PLACEHOLDER}
-            />
-          </div>
-
-          <div>
-            <TooltipLabel
-              label={copy.GALLERY_HEADING_LABEL}
-              tooltip={copy.GALLERY_HEADING_TOOLTIP}
-              alignRight={true}
-            />
-            <input
-              name="gallery_heading"
-              value={formData.gallery_heading || ''}
-              onChange={handleChange}
-              className="w-full bg-zinc-950 px-2.5 py-2 rounded-md border border-zinc-800 text-white focus:border-indigo-500 outline-none transition-all text-xs placeholder:text-zinc-700"
-              placeholder={copy.GALLERY_HEADING_PLACEHOLDER}
-            />
-          </div>
-        </div>
-      </div>
+      {content}
     </EditorAccordion>
   );
 }

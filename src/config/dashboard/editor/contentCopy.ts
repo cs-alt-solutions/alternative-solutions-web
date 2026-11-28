@@ -55,6 +55,13 @@ export const CORE_TAB_COPY = {
 };
 
 export const CONTENT_TAB_COPY = {
+  SUB_TABS: {
+    HERO: 'Hero',
+    STORY: 'Story',
+    CONTACT: 'CTA & Titles',
+    LEADS: 'Leads',
+  },
+  HERO_COPY_SUBHEADING: 'Hero Copy & Action',
   HERO_ACCORDION: 'Hero Content & Structure',
   HERO_LAYOUT_SUBHEADING: 'Hero Layout Structure',
   TAGLINE_LABEL: 'Primary Hook (H1 Tagline)',
