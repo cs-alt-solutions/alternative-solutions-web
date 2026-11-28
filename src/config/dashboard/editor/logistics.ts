@@ -1,6 +1,7 @@
 /* src/config/dashboard/editor/logistics.ts */
 
 export type RuleType = 'schedule' | 'travel' | 'booking' | 'rates' | 'notice' | 'faq';
+export type ScheduleMode = 'active' | 'blackout';
 
 export interface Fee {
   name: string;
@@ -29,7 +30,7 @@ export const WEEK_DAYS = [
   { key: 'sat', short: 'S', label: 'Sat' },
 ] as const;
 
-export const RULE_TYPES: { id: RuleType; label: string }[] = [
+export const RULE_TYPES: { id: Exclude<RuleType, 'faq'>; label: string }[] = [
   { id: 'schedule', label: 'Schedule' },
   { id: 'travel', label: 'Travel' },
   { id: 'booking', label: 'Booking' },
