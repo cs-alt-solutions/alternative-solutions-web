@@ -1,7 +1,6 @@
 /* src/config/dashboard/editor/logistics.ts */
 
-export type RuleType = 'schedule' | 'travel' | 'booking' | 'rates' | 'notice';
-export type ScheduleMode = 'active' | 'blackout';
+export type RuleType = 'schedule' | 'travel' | 'booking' | 'rates' | 'notice' | 'faq';
 
 export interface Fee {
   name: string;

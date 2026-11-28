@@ -1,16 +1,15 @@
 /* src/components/dashboard/storefronts/editor/CoreTab.tsx */
-/* Architecture Note: Renders the "Content" Tab with 4-Pill Sub-Navigation (Hero, Story, CTA & Titles, Leads) */
+/* Architecture Note: Renders the "Content" Tab with 3-Pill Sub-Navigation (Hero, Story, Leads & Contact) */
 'use client';
 
 import React, { useState } from 'react';
-import { Type, BookOpen, MousePointerClick, MessageSquareText } from 'lucide-react';
+import { Type, BookOpen, MessageSquareText } from 'lucide-react';
 import HeroContent from './core/HeroContent';
 import StoryAbout from './core/StoryAbout';
-import ContactSection from './core/ContactSection';
 import LeadCapture from './core/LeadCapture';
 import { EDITOR_WORKSPACE_COPY, THEME_CONSTRAINTS } from '@/config/dashboard/editor';
 
-type ContentSubTab = 'hero' | 'story' | 'contact' | 'leads';
+type ContentSubTab = 'hero' | 'story' | 'leads';
 
 export default function CoreTab({
   formData,
@@ -50,12 +49,6 @@ export default function CoreTab({
       activeClass: 'bg-rose-500/15 border-rose-500/50 text-rose-300',
     },
     {
-      id: 'contact',
-      label: copy.SUB_TABS.CONTACT,
-      icon: MousePointerClick,
-      activeClass: 'bg-indigo-500/15 border-indigo-500/50 text-indigo-300',
-    },
-    {
       id: 'leads',
       label: copy.SUB_TABS.LEADS,
       icon: MessageSquareText,
@@ -65,8 +58,8 @@ export default function CoreTab({
 
   return (
     <div className="space-y-3 animate-in fade-in duration-300 pb-12 pt-3">
-      {/* 4-PILL SUB-NAV BAR (Stacked icon + full readable label, zero dots) */}
-      <div className="grid grid-cols-4 gap-1 p-1 rounded-xl bg-zinc-950 border border-zinc-800/90 sticky top-0 z-20">
+      {/* 3-PILL SUB-NAV BAR */}
+      <div className="grid grid-cols-3 gap-1 p-1 rounded-xl bg-zinc-950 border border-zinc-800/90 sticky top-0 z-20">
         {subTabs.map((tab) => {
           const Icon = tab.icon;
           const isActive = activeSubTab === tab.id;
@@ -76,7 +69,7 @@ export default function CoreTab({
               key={tab.id}
               type="button"
               onClick={() => setActiveSubTab(tab.id)}
-              className={`flex flex-col items-center justify-center gap-1 py-2 px-1 rounded-lg text-[9px] font-black uppercase tracking-wide border transition-all cursor-pointer ${
+              className={`flex flex-col items-center justify-center gap-1 py-2 px-1 rounded-lg text-[9px] font-black uppercase tracking-wider border transition-all cursor-pointer ${
                 isActive
                   ? tab.activeClass
                   : 'border-transparent text-zinc-500 hover:text-zinc-300 hover:bg-zinc-900/70'
@@ -113,18 +106,11 @@ export default function CoreTab({
           />
         )}
 
-        {activeSubTab === 'contact' && (
-          <ContactSection
-            formData={formData}
-            handleChange={handleChange}
-            embedded={true}
-          />
-        )}
-
         {activeSubTab === 'leads' && (
           <LeadCapture
             formData={formData}
             setFormData={setFormData}
+            handleChange={handleChange}
             embedded={true}
           />
         )}

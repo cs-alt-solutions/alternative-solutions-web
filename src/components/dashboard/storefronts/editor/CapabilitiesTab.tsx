@@ -30,6 +30,7 @@ export default function CapabilitiesTab({
   const [activeSubTab, setActiveSubTab] = useState<'primary' | 'addons'>('primary');
 
   const copy = EDITOR_WORKSPACE_COPY.SERVICES_TAB;
+  const contentCopy = EDITOR_WORKSPACE_COPY.CONTENT_TAB;
   const isHub = formData?.engine_mode === 'hub' || formData?.content_layout === 'hub';
   const blueprint = getActiveBlueprint(formData?.industry_tag, isHub ? 'hub' : formData?.engine_mode);
   const isMenuLayout = formData?.content_layout === 'menu';
@@ -66,6 +67,11 @@ export default function CapabilitiesTab({
     () => localCaps.map((c, i) => ({ ...c, originalIndex: i })).filter((c) => c.isAlaCarte),
     [localCaps]
   );
+
+  const handleHeadingChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setFormData((prev: any) => ({ ...prev, [name]: value }));
+  };
 
   const addPackage = () => {
     const updated = [
@@ -157,6 +163,39 @@ export default function CapabilitiesTab({
             </span>
           </div>
           <ContentSelector formData={formData} setFormData={setFormData} allowedLayouts={allowedLayouts} />
+        </div>
+      )}
+
+      {/* SECTION HEADINGS (Shown directly alongside the content they label) */}
+      {!isHub && (
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 pb-3 border-b border-zinc-800/70">
+          <div className="space-y-1">
+            <label className="text-[9px] font-bold text-zinc-500 uppercase tracking-widest block truncate">
+              {contentCopy.SERVICES_HEADING_LABEL}
+            </label>
+            <input
+              name="capabilities_heading"
+              value={formData.capabilities_heading || ''}
+              onChange={handleHeadingChange}
+              placeholder={contentCopy.SERVICES_HEADING_PLACEHOLDER}
+              className="w-full bg-zinc-950 px-2.5 py-2 rounded-md border border-zinc-800 text-white focus:border-cyan-500 outline-none transition-all text-xs placeholder:text-zinc-700"
+            />
+          </div>
+
+          {!isMenuLayout && (
+            <div className="space-y-1">
+              <label className="text-[9px] font-bold text-zinc-500 uppercase tracking-widest block truncate">
+                {contentCopy.GALLERY_HEADING_LABEL}
+              </label>
+              <input
+                name="gallery_heading"
+                value={formData.gallery_heading || ''}
+                onChange={handleHeadingChange}
+                placeholder={contentCopy.GALLERY_HEADING_PLACEHOLDER}
+                className="w-full bg-zinc-950 px-2.5 py-2 rounded-md border border-zinc-800 text-white focus:border-cyan-500 outline-none transition-all text-xs placeholder:text-zinc-700"
+              />
+            </div>
+          )}
         </div>
       )}
 

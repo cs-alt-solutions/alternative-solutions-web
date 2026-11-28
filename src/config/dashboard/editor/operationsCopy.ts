@@ -102,6 +102,31 @@ export const SERVICES_TAB_COPY = {
 };
 
 export const LOGISTICS_TAB_COPY = {
+  SUB_TABS: {
+    POLICIES: 'Policies',
+    FAQS: 'FAQs',
+    EVENTS: 'Events',
+  },
+  FAQ_SECTION: {
+    HEADING: 'Frequently Asked Questions',
+    HELPER: 'Tag FAQs as Storewide to show them on the main page above your bottom CTA, or tie them to a specific package/department.',
+    ADD_BTN: 'Add FAQ',
+    EMPTY_STATE: 'No FAQs defined yet.',
+    UNTITLED_QUESTION: 'Untitled Question',
+    STOREWIDE_LABEL: 'Storewide (Main Page)',
+    STOREWIDE_OPTION: 'All / Storewide (Main Page)',
+    SCOPE_LABEL: 'Applies To',
+    QUESTION_LABEL: 'Question',
+    QUESTION_PLACEHOLDER: 'e.g., What is the turnaround time for final images?',
+    ANSWER_LABEL: 'Answer',
+    ANSWER_PLACEHOLDER: 'Write a clear, helpful answer...',
+    DELETE_TITLE: 'Delete FAQ',
+    MOVE_UP_TITLE: 'Move Up',
+    MOVE_DOWN_TITLE: 'Move Down',
+    LEGACY_BANNER_PREFIX: 'Found',
+    LEGACY_BANNER_SUFFIX: 'legacy package FAQ(s).',
+    LEGACY_IMPORT_BTN: 'Move Here',
+  },
   HEADING: 'Logistics & Operational Terms',
   ADD_RULE_BTN: 'Add Rule',
   HELPER_TEXT: 'Configure universal terms like preorder lead times, travel radii, deposit policies, and allergy disclaimers. Attach multiple rate tiers inside any rule.',

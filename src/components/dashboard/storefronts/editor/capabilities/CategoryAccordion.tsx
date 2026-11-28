@@ -66,16 +66,13 @@ export default function CategoryAccordion({
   const highlightsBadgeCount = bulletsCount + profilesCount;
 
   const addonsCount = Array.isArray(cap.addons) ? cap.addons.length : 0;
-  const faqsCount = Array.isArray(cap.faqs) ? cap.faqs.length : 0;
   const isTimingActive = cap.timeframeMode
     ? cap.timeframeMode !== 'off'
     : cap.askTimeframe === true;
   const hasCustomAction = Boolean(
     cap.ctaLabel?.trim() || cap.detailsLabel?.trim() || cap.bookingUrl?.trim()
   );
-  const inquiryBadgeCount =
-    addonsCount + faqsCount + (isTimingActive ? 1 : 0) + (hasCustomAction ? 1 : 0);
-
+  const inquiryBadgeCount = addonsCount + (isTimingActive ? 1 : 0) + (hasCustomAction ? 1 : 0);
   const effectiveTab: FocusTab = isMenuMode
     ? focusTab === 'cards'
       ? 'cards'

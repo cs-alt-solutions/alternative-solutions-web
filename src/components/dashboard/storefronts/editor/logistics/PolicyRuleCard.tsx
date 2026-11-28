@@ -2,10 +2,11 @@
 'use client';
 
 import React from 'react';
-import { ChevronUp, ChevronDown, Trash2, Tag, CalendarDays, Truck, ShieldCheck, AlertTriangle } from 'lucide-react';
+import { ChevronUp, ChevronDown, Trash2, Tag, CalendarDays, Truck, ShieldCheck, AlertTriangle, HelpCircle } from 'lucide-react';
 import { OperationalTerm, RuleType, RULE_TYPES, WEEK_DAYS } from '@/config/dashboard/editor';
 import DaySchedulePicker from './DaySchedulePicker';
 import PolicyRuleRates from './PolicyRuleRates';
+
 
 const RULE_TYPE_ICONS: Record<RuleType, React.ElementType> = {
   schedule: CalendarDays,
@@ -13,6 +14,7 @@ const RULE_TYPE_ICONS: Record<RuleType, React.ElementType> = {
   booking: ShieldCheck,
   rates: Tag,
   notice: AlertTriangle,
+  faq: HelpCircle,
 };
 
 interface PolicyRuleCardProps {
